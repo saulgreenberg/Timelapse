@@ -1,0 +1,26 @@
+﻿<Window x:Class="Timelapse.Dialog.EditLog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:Timelapse"
+        Title="Edit notes for this image set" 
+        MinHeight="480" MinWidth="768"
+		Height="600" Width="768"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded">
+    <DockPanel>
+        <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" Icon="Question" 
+                            What="Record any notes about this image set that you may want to refer to in the future. Your notes will be saved and viewable at any time through this software, but it will not be saved in the spreadsheet csv file. Typical uses are to log activities, list to-do items, leave messages for others, etc."
+                            Title="Edit Notes for this Image Set"/>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="ChangesButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click" IsEnabled="False">_Save</Button>
+            </StackPanel>
+            <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Top"/>
+            <TextBox Name="Log" MinHeight="100" MinWidth="100"  DockPanel.Dock="Top" HorizontalAlignment="Stretch" TextWrapping="Wrap" AcceptsTab="True" AcceptsReturn="True" FontSize="14" VerticalScrollBarVisibility="Auto" TextChanged="LogTextBox_TextChanged" />
+            
+        </DockPanel>
+    </DockPanel>
+</Window>

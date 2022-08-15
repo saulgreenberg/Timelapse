@@ -1,0 +1,101 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateTimeRereadFromSelectedMetadataField"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        mc:Ignorable="d"
+        Title="Read dates and times from a metadata field" 
+		MinHeight="600" MinWidth="768"
+		Height="856" Width="840"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <DockPanel Grid.Row="0">
+            <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" 
+                            Icon="Question"
+                            Title="Read dates and times from a metadata field..."
+                            What="Some files, especially videos, record its creation date/time in a metadata field unknown to Timelapse.
+                                  &#10;If the Timelapse DateTime field appears wrong, see if that file contains a metadata field with the correct date to use instead."
+                            Solution="For all your files, you can update your DateTime field with a metadata field of your choosing.
+                            
+&#10;1. The list below includes metadata found by MetadataExtractor (fast) vs. ExifTool (better at finding all metadata fields but 15x slower)
+&#10;    (only  metadata fields that can be interpretted as containing a date and/or time are listed).
+&#10;2. Select the metadata field containing the desired DateTime from the list
+&#10;3. Click Start to scan and update your selected files for that file's metadata date value. 
+&#10;4. Be patient: if you have a large number of file as it does take time to do this!"
+                            Result="For each file, its Date/Time fields will be updated to the date / time contained in that file's selected metadata field.
+                                &#10;Files missing that metadata field, or that contain an invalid date will remain unchanged."
+                            ShowExplanationVisibility="False" />
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
+                <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                <StackPanel Name="ToolSelectionPanel" Orientation="Horizontal">
+                    <Label Content="Choose a metadata inspection tool:" FontWeight="Bold" Margin="5,0,20,0"/>
+                    <RadioButton Name="MetadataExtractorRB" Content="MetadataExtractor (faster)" IsChecked="True" VerticalAlignment="Center" GroupName="MetadataToolType"/>
+                    <RadioButton Name="ExifToolRB" Content="ExifTool (slower, more comprehensive)" VerticalAlignment="Center" Margin="15,0,0,0" GroupName="MetadataToolType"/>
+                </StackPanel>
+                <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                <Grid Name="PanelHeader">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition MinWidth="80" Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition MinWidth="80" Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Label Content="Example file:" Height="28" Margin="5,0,0,0" HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" Grid.Column="0"/>
+                    <Label Content="--" Height="28" Margin="0,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"  FontSize="12" FontWeight="Normal" Name="lblImageName" Grid.Column="1"/>
+                    <Label Content="Selected metadata field :" Height="28" Margin="5,0,0,0" HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" Grid.Column="4"/>
+                    <Label Content="--" Height="28" Margin="0,0,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"  FontSize="12" FontWeight="Normal" Name="MetadataDisplayText" Grid.Column="5"/>
+                </Grid>
+            </StackPanel>
+
+            <DockPanel LastChildFill="True" >
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="False" Click="Start_Click">_Start</Button>
+                </StackPanel>
+
+                <Grid Name="PrimaryPanel" Visibility="Visible">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="147*" />
+                        <ColumnDefinition Width="31*"/>
+                        <ColumnDefinition Width="116*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <DataGrid Name="AvailableMetadataDataGrid" Margin="0.017,0,9.878,0" ColumnWidth="*" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    AutoGenerateColumns="True" SelectionUnit="FullRow" SelectionMode="Single" SelectedCellsChanged="Datagrid_SelectedCellsChanged" 
+                    AutoGeneratedColumns="AvailableMetadataDatagrid_AutoGeneratedColumns" 
+                    Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3">
+                    </DataGrid>
+
+                </Grid>
+                <Grid Name="FeedbackPanel" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Name="PopulatingMessage" FontWeight="Bold" Text="--" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" Margin="10,10,10,0" />
+                    <DataGrid Name="FeedbackGrid" Margin="0,0,10,0" ColumnWidth="*" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    AutoGenerateColumns="True" SelectionUnit="FullRow" SelectionMode="Single" 
+                    AutoGeneratedColumns="FeedbackDatagrid_AutoGeneratedColumns" 
+                    Grid.Column="0" Grid.Row="1">
+                    </DataGrid>
+
+                </Grid>
+            </DockPanel>
+        </DockPanel>
+
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click" DisplayImmediately="True"/>
+
+    </Grid>
+</controls:BusyableDialogWindow>

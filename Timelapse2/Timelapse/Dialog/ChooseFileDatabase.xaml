@@ -1,0 +1,38 @@
+﻿<Window x:Class="Timelapse.Dialog.ChooseFileDatabaseFile"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:Timelapse"
+        mc:Ignorable="d"
+        Title="Select the data file to use" Height="550" Width="650" MinHeight="550" MinWidth="650" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
+                            Title="Choose a Data File"
+                            Problem="There are multiple Timelapse data files (.ddb) in the same folder as the template."
+                            Solution="Choose the Timelapse data file you want to use."
+                            Result="Timelapse will read data from and save data to the chosen data file." 
+                            Hint="Timelapse data files store the information you (or someone else) had previously entered for this image set, so its important that you choose the right one."/>
+        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1"></Rectangle>
+        <Label FontWeight="Bold" Content="Select a database file:"  Grid.Row="2" Margin="5,0,0,0"/>
+        <ListBox Name="FileDatabases" Grid.Row="3" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10,0,10,5" MouseDoubleClick="FileDatabases_MouseDoubleClick" SelectionChanged="FileDatabases_SelectionChanged"
+                 />
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+            <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+            <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+        </StackPanel>
+
+    </Grid>
+</Window>

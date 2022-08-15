@@ -1,0 +1,53 @@
+﻿<Window x:Class="Timelapse.Dialog.WarningToUpdateDBFilesToSQL"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:Timelapse.Dialog"
+        mc:Ignorable="d"
+        Title="Warning: You may need to update your Timelapse.ddb and .tdb files" 
+        MinHeight="480" MinWidth="768"
+		Height="550" Width="768" Loaded="Window_Loaded" 
+        >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <controls:StockMessageControl x:Name="Message" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Icon="Warning"
+                            Title="Very Important Message Concerning this Update..." 
+                            
+                            What="This update fixes long-standing internal issues in Timelapse, where fixes are NOT backwards compatable. 
+                            &#10;Critically, you will need to upgrade previously-created template (.tdb) and data (.ddb) files if you want to reuse them.
+                            &#10;&#10;Upgrading your .ddb and .tdb files is easy.
+                            &#10;1. Use the button below to open the UpgradeFiles.exe program  (or  select it in your Timelapse executables folder).
+                            &#10;2  A window will appear containing instructions directing you to 
+                                      &#10;    &#x2022; select and convert individual .tdb and .ddb files, or 
+                                      &#10;       search a folder and its sub-folders for those files and convert all of them.
+                                      &#10;    &#x2022; decide what to do with the ImageQuality field."
+                            Result="An upgraded version of each file (using a different suffix) is created in the same folder. 
+                            &#10;&#x2022; templates: A new .tdb template file will be created from your .tdb file
+                            &#10;&#x2022; data: A new .ddb data file will be created from your .ddb file
+                            &#10;&#x2022; your original .tdb and .ddb files are moved to its corresponding Backups folder."
+                            Details="The following changes may affect you.
+                                      &#10;&#x2022; 'ImageQuality' field (which is rarely used) is renamed to a 'Dark' flag field with true/false values, or optionally deleted;
+                                      &#10;&#x2022; Exported CSV files will no longer have an 'ImageQuality' column, but may include a Dark column.
+                                      &#10;&#x2022; 'Dark' classification is now done by populating a flag field of your choice (via Edit|Populate a field with Dark... );
+                                      &#10;&#x2022; 'DateTimes' no longer use timezone offsets, and can be exported in different CSV formats (via Options|Preferences);
+                                      &#10;&#x2022; 'Folder' field is optionally included in CSV exports as the renamed 'RootFolder' column (via Options|Preferences);
+                                      &#10;&#x2022; Importing data from prevously generated CSV files may produce (easily repaired) warnings;
+                                      &#10;&#x2022; Redesigned internal database tables. If details are needed, see the Timelapse Database Guide on the web site."     
+                                      />
+        <CheckBox Name="CheckBoxDontShowAgain" Grid.Row="1" Grid.Column="0" Content="_Don't show this message again." Margin="10,20,0,0"  />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Name="OpenUpgraderButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OpenUpgraderButton_Click">_Open the UpgradeFiles Program</Button>
+            <Button Name="OkButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+        </StackPanel>
+    </Grid>
+
+</Window>

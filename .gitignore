@@ -1,0 +1,49 @@
+# User-specific files 
+*.suo
+*.user
+*.sln
+
+# dependent .exes (they should be downloaded from their official sites)
+*ffmpeg.exe
+*exiftool(-k).exe
+
+# But keep these dll as they are custom and not retrievable via NuGet
+!**/CustomAvalonDll3.4/*Xceed.Wpf.AvalonDock.dll
+!**/CustomAvalonDll3.4/*Xceed.Wpf.Toolkit.dll
+
+# Build results 
+bin/
+packages/
+obj/
+**/StyleCop.Cache
+
+# NuGet Packages
+**/packages/*
+
+# except build/, which is used as an MSBuild target.
+# and any custom dlls that aren't from NuGet
+!**/packages/build/
+
+# Profiling results
+*.vsp
+*.vspx
+
+# Visual Studio 2015 cache/options directory
+.vs/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Timelapse output
+Backups/
+
+# Visual Studio 2015 cache/options directory 
+.vs/
+
+# Local Documents and backups
+ToDo.docx
+~$ToDo.docx
+*.tmp
+
+debug.log

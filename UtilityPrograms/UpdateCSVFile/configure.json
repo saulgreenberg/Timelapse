@@ -1,0 +1,22 @@
+{
+"HeaderUpdates": 
+	{ 
+	"Project ID": "ProjectID",
+	"Deployment ID": "DeploymentID",	
+	"Image ID": "File",     
+	"Location": "Location" 
+	"Photo Type": "PhotoType",
+	"Photo Type Identified by": "PhotoTypeIdentifiedBy",
+	"Genus Species": "GenusSpecies",
+	"Uncertainty": "Uncertainty",
+	"IUCN Identification Number": "IUCNIdentificationNumber",
+	"Date_Time Captured": "DateTimeOriginal",
+	"Age": "Age",
+	"Sex": "Sex",	
+	"Individual ID": "IndividualID",
+	"Count": "Count" },
+	"Animal recognizable (Y/N)": "AnimalRecognizable",
+	"Individual Animal Notes": "IndividualAnimalNotes",
+	"Animal Notes": "AnimalNotes"
+        }
+}

@@ -1,0 +1,62 @@
+﻿<Window x:Class="Timelapse.Dialog.TemplateChangedAndUpdate"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:Timelapse"
+        Title="This Template is Not Compatible with this Data" 
+		MinHeight="600" MinWidth="800"
+		Height="800" Width="800"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
+    <DockPanel>
+        <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" 
+                            Icon="Question"
+                            Title="Update your data file to match the fields defined in your template?"
+                            What="The Template .tdb file describes how you see and edit data in Timelapse.
+                                      &#10;However, the new template you provided differs from the original old template used to manage your image set's data." 
+                            Reason="This may be intended. Due to changing needs, someone may have updated the template to:
+                                    &#10;&#x2022; add new controls and data fields, 
+                                    &#10;&#x2022; delete controls and data fields that are no longer useful, 
+                                    &#10;&#x2022; rename controls as desired, which preserves its previously entered data. 
+                                    &#10;Alternately, you may be accidentally using a wrong template."
+                            Solution="After reading the warnings,take one of the following actions.
+                                      &#10;&#x2022; 'Open using New Template':   updates how you see and edit data to match the template as detailed below
+                                      &#10;&#x2022; 'Open using Old Template:'   ignores the new template and leaves everything as is."
+                            Hint="Timelapse cannot differentiate between a renamed control vs. adding a new control and deleting an old one.  
+                                      &#10;If this occurs, the choices below will let you differentiate between the two cases, including how renaming is to be done.  
+                                      &#10;This is important, as a renamed control will preserve its previously entered data."                                      
+                            ShowExplanationVisibility="True"/>
+        <DockPanel >
+            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"></Rectangle>
+
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseOldTemplate_Click">Open using Old Template</Button>
+                <Button IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewTemplateButton_Click" IsEnabled="True">Open using New Template</Button>
+            </StackPanel>
+
+            <ScrollViewer DockPanel.Dock="Top" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <StackPanel Orientation="Vertical">
+                    <Label FontWeight="Bold" Content=" If you choose 'Open using New template', Timelapse will update these controls and their associated data columns as follows."/>
+                    <Grid Name="ActionGrid"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock  FontWeight="Bold" Text="Control type" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <TextBlock  FontWeight="Bold" Text="Data label" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                        <TextBlock  FontWeight="Bold" Text="Update action to be performed" Grid.Row="0" Grid.ColumnSpan="3" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                    </Grid>
+                    <TextBlock Name="TextBlockDetails" HorizontalAlignment="Left" Margin="10,10,10,0" VerticalAlignment="Stretch" TextWrapping="Wrap" FontSize="12" />
+                </StackPanel>
+            </ScrollViewer>
+            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Bottom"></Rectangle>
+        </DockPanel>
+    </DockPanel>
+</Window>

@@ -1,0 +1,48 @@
+﻿<Window x:Class="Timelapse.Dialog.ExceptionShutdownDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:Timelapse.Dialog"
+        mc:Ignorable="d"
+              Title="Skip bogus image or video files?" Width="650" MinWidth="650" Height="550" Loaded="Window_Loaded">
+    <Grid  VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Error"
+                            What="Please help us fix it! 
+                                    &#10;&#x2022; Press 'Mail this report' to mail a bug report to us.  
+                                    &#10;&#x2022; Alternately, select 'Copy report, and paste the report into an email to saul@ucalgary.ca."
+                            Hint="If you can, also describe what you were doing at the time of the crash."/>
+        <StackPanel Orientation="Horizontal"  Grid.Row="1">
+            <TextBlock Text="Technical problem description" Margin="10,10,5,10" Grid.Row="1" FontSize="14" FontWeight="Bold"/>
+            <TextBlock Text="to send to the Timelapse Developer" Margin="0,10,20,10" Grid.Row="1" FontSize="14" FontStyle="Italic"/>
+        </StackPanel>
+        <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto"  Grid.Row="2" Height="200" Margin="20,10,20,10">
+            <TextBox Name="ExceptionReport" VerticalAlignment="Top" FontSize="10" TextWrapping="Wrap" IsReadOnly="True" />
+        </ScrollViewer>
+        <Grid Grid.Row="3" Margin="0,0,10,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+        <!--<StackPanel  Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3" Margin="0,0,10,0">-->
+            <Button Grid.Column="0" Name="CopyReport" IsCancel="false" VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="10" Margin="15,10,10,10" Click="CopyButton_Click">Copy report</Button>
+            
+            <Button Grid.Column="2" Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">Cancel</Button>
+            <Button Grid.Column="3" Name="MailButton" IsDefault="false" AutomationProperties.AutomationId="MailButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="MailButton_Click">Mail this report...</Button>
+        <!--</StackPanel>-->
+        </Grid>
+
+    </Grid>
+</Window>

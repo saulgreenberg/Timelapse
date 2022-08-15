@@ -1,0 +1,61 @@
+﻿<Window x:Class="UpdateCSVFile.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UpdateCSVFile"
+        mc:Ignorable="d"
+        Title="Update CSV File" Height="609" Width="850">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="250" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Visible" Height="Auto">
+            <TextBlock TextWrapping="Wrap" Margin="10">
+                <Bold>Update  CSV file.</Bold><LineBreak/>
+                - Creates a new updated CSV file  suffixed by '_updated.csv'.<LineBreak/> 
+                - Depending on what you do, the CSV file will contain updated headers, file names and relative paths. See below. <LineBreak/><LineBreak/>
+                <Bold>Headers</Bold>. Update headers as needed to exactly match the data labels in your TimelapseTemplate.<LineBreak/>
+                - use a text editor to create a 'headerTranslations.json' located in the same folder as your CSV file.<LineBreak/> 
+                - that file should list the old and new header names as in the example below, illustrating three headers that require updating.<LineBreak/>   
+                <Separator Width="20" Visibility="Hidden"/>{<LineBreak/>
+                <Separator Width="20" Visibility="Hidden"/>&quot;Image Name&quot;: &quot;File&quot;,<LineBreak/>
+                <Separator Width="20" Visibility="Hidden"/>&quot;ProjectID&quot;: &quot;ProjectID&quot;,<LineBreak/>
+                <Separator Width="20" Visibility="Hidden"/>&quot;Deployment Identificaton&quot;: &quot;DeploymentID&quot;,<LineBreak/>
+                <Separator Width="20" Visibility="Hidden"/>}<LineBreak/><LineBreak/>
+                
+                <Bold>File names and RelativePath</Bold>.<LineBreak/>
+                In the CSV file, <LineBreak/>
+                - a <Bold>File</Bold> column is required, containing the image file names<LineBreak/>
+                - a <Bold>RelativePath</Bold> column is required if any images are in subfolders, where it contains the relative path from the root folder to the folder name.<LineBreak/>
+                You can correct your CSV file's File column if stores the full path of each file, for example, as <Italic>C:/Documents/Project/Site1/image01.jpg</Italic><LineBreak/>
+                To illustrate, you can trim and split the path into its valid File <Italic>image01.jpg</Italic> and RelativePath <Italic>Site1</Italic> as follows.<LineBreak/>
+                - check the 'Trim characters...' checkbox and set the Slider to trim 21 characters off the path (i.e. <Italic>C:/Documents/Project/</Italic>) <LineBreak/>
+                - check the 'Create a relative path...' checkbox to split and store the remaining part of the File path into its File portion and RelativePath portion, <LineBreak/>
+                <Separator Width="10" Visibility="Hidden"/>which will automatically be stored in the File and Relative Path columns<LineBreak/><LineBreak/>
+                See the user manual for more details on how you can manipulate header and file names.
+            </TextBlock> 
+        </ScrollViewer >
+        <TextBox x:Name="FeedbackText" Height="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="10"  VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Text="" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" />
+        <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="2"  VerticalAlignment="Bottom">
+            <Button Name="StartButton" Content="Update CSV File"  Click="StartButton_Click"/>
+            <StackPanel Orientation="Vertical" Margin="0" Grid.Row="2"  VerticalAlignment="Bottom">
+                <StackPanel Orientation="Horizontal"  Grid.Row="2"  VerticalAlignment="Bottom">
+                    <CheckBox Name="TrimFileCheckBox" Content="Trim characters from the file name"  Margin="50,0,0,0" VerticalAlignment="Center" Unchecked="TrimFile_CheckedChanged" Checked="TrimFile_CheckedChanged"/>
+                    <Slider Name="TrimSlider" IsEnabled="False" Width="200" Maximum="50" SmallChange="1" TickFrequency="1" Value="33" VerticalAlignment="Center" IsSnapToTickEnabled="True"/>
+                    <Label Name="NumbCharacters" Content="{Binding ElementName=TrimSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Label Content="characters to trim"/>
+                </StackPanel >
+                <StackPanel Orientation="Horizontal" Grid.Row="2"  VerticalAlignment="Bottom">
+                    <CheckBox Name="CreateRelativePathCheckBox" IsChecked="False" Content="Create a relative path from the remaining file path"  Margin="50,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel >
+            </StackPanel >
+        </StackPanel>
+    </Grid>
+</Window>

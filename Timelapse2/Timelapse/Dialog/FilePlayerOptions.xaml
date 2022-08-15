@@ -1,0 +1,65 @@
+﻿<Window x:Class="Timelapse.Dialog.FilePlayerOptions"
+       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        Title="FilePlayer Options" Height="450" Width="802.111" Loaded="Window_Loaded">
+    <StackPanel Orientation="Vertical" Width="811" Margin="2,0,1,3">
+        <controls:StockMessageControl x:Name="Message" Margin="15,0,15,0" Icon="Question"
+                            Title="FilePlayer Options"
+                            What="The FilePlayer, located at the upper right corner of the Timelapse window, includes 'slide show' controls, where you can 
+                                      &#10;play your images at slow or fast speed, which can make it easier to review them.
+                                      &#10;&#10;Use the sliders below to adjust the display rate when playing images at slow and fast speeds." 
+                            Hint="&#x2022; Slower is often better, as it gives you more time to review your images.
+                                  &#10;&#x2022; Some computers have trouble displaying images quickly, resulting in erratic display speeds and even crashes!
+                                      &#10;  If this happens, try slower display rates. " />
+
+        <!-- Slow speed adjustment -->
+        <GroupBox Margin="90,0,15,0" BorderThickness="0" Padding="10,0,0,0" FontWeight="Bold" FontSize="12" Width="700" HorizontalAlignment="Left">
+            <GroupBox.Header>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Display rate using slow controls"/>
+                    <Image Source="pack://application:,,/Icons/MediaControl-Rewind-Speed2.png" Width="16" />
+                    <Image  Source="pack://application:,,/Icons/MediaControl-PlaySpeed2.png" Width="16" Margin="10,0,0,0"/>
+                </StackPanel>
+            </GroupBox.Header>
+            <Grid Width="680">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="480"/>
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical" Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <Slider Name="SlowSpeedSlider" Width="300" IsSnapToTickEnabled="True" TickFrequency=".25" SmallChange=".25" LargeChange=".25" VerticalAlignment="Top"/>
+                        <TextBlock Name="SlowSpeedText" Text="--" FontWeight="Normal" Margin="5,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <Button Name="ResetSlowSpeedSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" VerticalAlignment="Bottom" Click="ResetSlowSpeedSlider_Click"></Button>
+            </Grid>
+        </GroupBox>
+
+        <!-- Fast speed adjustment -->
+        <GroupBox Margin="90,0,15,0" BorderThickness="0" Padding="10,0,10,0" FontWeight="Bold" FontSize="12" Width="700" HorizontalAlignment="Left">
+            <GroupBox.Header>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Display rate using fast controls"/>
+                    <Image Source="pack://application:,,/Icons/MediaControl-Rewind-Speed3.png" Width="16"/>
+                    <Image  Source="pack://application:,,/Icons/MediaControl-PlaySpeed3.png" Width="16" Margin="10,0,0,0"/>
+                </StackPanel>
+            </GroupBox.Header>
+            <Grid Width="680">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="480"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical" Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <Slider Name="FastSpeedSlider" Width="300" IsSnapToTickEnabled="True" TickFrequency=".02" SmallChange=".02" LargeChange=".02" VerticalAlignment="Top"/>
+                        <TextBlock Name="FastSpeedText" Text="--" FontWeight="Normal"  Margin="5,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Name="ResetFastSpeedSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" Margin="0,0,0,0" VerticalAlignment="Bottom" Click="ResetFastSpeedSlider_Click"></Button>
+            </Grid>
+        </GroupBox>
+        <Button Margin="698,20,37,0" x:Name="OkButton" Content="Ok" IsDefault="True" Height="34" Click="OkButton_Click" AutomationProperties.AutomationId="OkButton" />
+    </StackPanel>
+</Window>

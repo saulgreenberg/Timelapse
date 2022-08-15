@@ -1,0 +1,40 @@
+﻿<Window x:Class="Timelapse.Dialog.EpisodeOptions"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        Title="Episode Options" Height="420" Width="811.111" Loaded="Window_Loaded">
+    <StackPanel Orientation="Vertical"  Margin="2,0,1,3">
+        <controls:StockMessageControl x:Name="Message" Margin="15,0,15,0" Icon="Question"
+                            Title="Episode Options"
+                            What="An 'episode' is a sequence of images triggered by motion, such as an animal moving through a scene. 
+                                      &#10;Timelapse identifies successive files as part an 'episode' when the time difference between them is less than a time threshold.
+                                      &#10;You can then have Timelapse show the episode information, which can help you consider those images as a set."
+                            Hint="To determine the best time threshold:
+                                      &#10;&#x2022; Check your motion-triggered image sequence to get a sense of the time difference between images,
+                                      &#10;   then set the threshold to the high end of those time differences.
+                                      &#10;&#x2022; Or, set the threshold to a value that typically captures a related burst of activity. 
+                                      &#10;&#x2022; Long thresholds may incorrectly group unrelated images, e.g., a wind-triggered image connecting two unrelated sequences"/>
+        <!-- Slow speed adjustment -->
+        <GroupBox Margin="90,0,15,0" BorderThickness="0" Padding="10,0,0,0" FontWeight="Bold" FontSize="12" Width="700" HorizontalAlignment="Left">
+            <GroupBox.Header>
+                <Label Content="Set the time threshold"/>
+            </GroupBox.Header>
+            <Grid Width="680">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="480"/>
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical" Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <Slider Name="TimeThresholdSlider" Width="300" IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="10" VerticalAlignment="Top"/>                        <TextBlock Name="TimeThresholdText" Text="--" FontWeight="Normal" Margin="5,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <Button Name="ResetTimeThresholdSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" VerticalAlignment="Bottom" Click="ResetTimeThresholdSlider_Click"></Button>
+            </Grid>
+        </GroupBox>
+        <Button Margin="698,20,37,0" x:Name="OkButton" Content="Ok" IsDefault="True" Height="34" Click="OkButton_Click" AutomationProperties.AutomationId="OkButton" />
+    </StackPanel>
+</Window>
