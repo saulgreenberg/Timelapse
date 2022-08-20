@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Timelapse.Util;
 
 namespace Timelapse.Database
@@ -66,7 +67,7 @@ namespace Timelapse.Database
         public ColumnTuple(string column, float value)
         {
             this.Name = column;
-            this.Value = value.ToString();
+            this.Value = value.ToString(CultureInfo.InvariantCulture);
         }
         #endregion
     }

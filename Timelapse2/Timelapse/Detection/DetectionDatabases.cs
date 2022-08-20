@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using Timelapse.Database;
 using Timelapse.Util;
@@ -284,13 +285,15 @@ namespace Timelapse.Detection
                                     continue;
                                 }
 
-                                // Populate each classification category row
+                                // Populate each classification category row, making sure the bounding box  will be written with decimal places (in case its a ,-based culture)
                                 string bboxAsString = (detection.bbox == null || detection.bbox.Length != 4)
                                     ? String.Empty
-                                    : String.Format("{0}, {1}, {2}, {3}", detection.bbox[0], detection.bbox[1], detection.bbox[2], detection.bbox[3]);
+                                    : String.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}, {3}", detection.bbox[0], detection.bbox[1], detection.bbox[2], detection.bbox[3]);
                                 detection.detectionID = detectionIndex;
                                 noDetectionsIncluded = false;
 
+                                // Note: The ColumnTuple for floats (i.e., detection.conf) takes care of writing
+                                // floats in invariant culture format (so ',' decimal separators are avoided)
                                 List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>()
                                 {
                                     new ColumnTuple(Constant.DetectionColumns.DetectionID, detection.detectionID),
@@ -319,7 +322,7 @@ namespace Timelapse.Detection
                                     new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
                                     new ColumnTuple(Constant.ClassificationColumns.DetectionID, detection.detectionID),
                                     new ColumnTuple(Constant.ClassificationColumns.Category, (string)classification[0]),
-                                    new ColumnTuple(Constant.ClassificationColumns.Conf, (float)Double.Parse(classification[1].ToString())),
+                                    new ColumnTuple(Constant.ClassificationColumns.Conf, String.Format(CultureInfo.InvariantCulture, "{0}", (float)Double.Parse(classification[1].ToString()))),
                                 };
                                     classificationInsertionStatements.Add(classificationColumnsToUpdate);
                                     classificationIndex++;

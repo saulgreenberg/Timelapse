@@ -1566,7 +1566,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             // Uncommment this to see the actual complete query
-            // System.Diagnostics.Debug.Print("File Counts: " + query);
+            System.Diagnostics.Debug.Print("File Counts: " + query);
             return this.Database.ScalarGetCountFromSelect(query);
         }
 
