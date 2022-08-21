@@ -384,6 +384,9 @@ namespace DialogUpgradeFiles
                 return UpgradeResultsEnum.Cancelled;
             }
 
+            // Upgrade Detection.Conf and Detection.BoundingBox if a comma decimal separator was used instead of a . separator
+            fileDatabase.UpgradeDetectionConfFromCommasToDecimalsIfNeeded();
+
             // MARKER TABLE MANIPULATION
             // Upgrade the Marker table to make its Id a foreign-key to the DataTable, and to output the points list as a Json structure
             // This is so that we will only have rows that actually contain non-empty marker data

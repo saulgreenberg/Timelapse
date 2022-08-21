@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Timelapse.Enums;
 
 namespace Timelapse
@@ -355,7 +356,7 @@ namespace Timelapse
             return Sql.GroupBy + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID +
                 Sql.Having + Sql.Max +
                 Sql.OpenParenthesis + Constant.DBTables.Detections + "." + Constant.DetectionColumns.Conf + Sql.CloseParenthesis +
-                Sql.Between + lowerBound.ToString() + Sql.And + upperBound.ToString();
+                Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -369,7 +370,7 @@ namespace Timelapse
             return Sql.GroupBy + Constant.DBTables.Classifications + "." + Constant.ClassificationColumns.ClassificationID +
                 Sql.Having + Sql.Max +
                 Sql.OpenParenthesis + Constant.DBTables.Classifications + "." + Constant.DetectionColumns.Conf + Sql.CloseParenthesis +
-                Sql.Between + lowerBound.ToString() + Sql.And + upperBound.ToString();
+                Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>

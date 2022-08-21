@@ -66,6 +66,7 @@
         public const string LeftJoin = " LEFT JOIN ";
         public const string LessThanEqual = " <= ";
         public const string LessThan = " < ";
+        public const string Like = " LIKE ";
         public const string Limit = " LIMIT ";
         public const string LimitOne = Limit + " 1 ";
         public const string Max = " MAX ";

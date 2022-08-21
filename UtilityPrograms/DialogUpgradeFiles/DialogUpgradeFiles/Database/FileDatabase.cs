@@ -389,6 +389,73 @@ namespace DialogUpgradeFiles.Database
         }
         #endregion
 
+        #region Upgrade Detection Conf and bounding box and classification conf From Commas To Decimals  If Needed
+        public void UpgradeDetectionConfFromCommasToDecimalsIfNeeded()
+        {
+            // Replace commas as needed in detections.Conf
+            // Form: Update Detections Set Conf = CAST(replace(Conf, ',', '.') AS REAL) WHERE Conf LIKE '%,%'
+            string query = Sql.Update + Constant.DBTables.Detections + Sql.Set + Constant.DetectionColumns.Conf + Sql.Equal;
+            query += Sql.Cast + Sql.OpenParenthesis + Sql.Replace + Sql.OpenParenthesis + Constant.DetectionColumns.Conf + Sql.Comma;
+            query += Sql.Quote(",") + Sql.Comma + Sql.Quote(".") + Sql.CloseParenthesis + Sql.As + Sql.Real;
+            query += Sql.CloseParenthesis + Sql.Where + Constant.DetectionColumns.Conf + Sql.Like + Sql.Quote("%,%");
+            this.Database.ExecuteNonQuery(query);
+
+            // Replace coomas in the detection bounding box table as needed
+            DataTable datatable = this.Database.GetDataTableFromSelect(Sql.Select + Constant.DetectionColumns.DetectionID + Sql.Comma + Constant.DetectionColumns.BBox + Sql.From + Constant.DBTables.Detections);
+            char comma = ',';
+            char period = '.';
+            List<string> queries = new List<string>();
+            foreach (DataRow row in datatable.Rows)
+            {
+                string bboxString = (string)row[1];
+                if (string.IsNullOrEmpty(bboxString))
+                {
+                    continue;
+                }
+                int freq = bboxString.Count(f => (f == comma));
+                if (freq == 0 || freq == 3)
+                {
+                    continue;
+                }
+                string[] coords = bboxString.Split(' ');
+                if (coords.Length != 4)
+                {
+                    System.Diagnostics.Debug.Print("In UpgradeDetectionConfFromCommasToDecimalsIfNeeded - the bbox coordinates are wrong", coords.Length);
+                    continue;
+                }
+                // We must have a bounding box string with commas as decimal separators
+                // Reconstruct it with decimal separators and in the expected bounding box format 
+                string newBboxAsString = String.Empty;
+                long id = (long)row[0];
+                for (int i = 0; i < coords.Length; i++)
+                {
+                    string coord = coords[i].TrimEnd(comma);
+                    coord = coord.Replace(comma, period);
+                    newBboxAsString += coord;
+                    if (i < coords.Length - 1)
+                    {
+                        newBboxAsString += ", ";
+                    }
+                }
+                query = Sql.Update + Constant.DBTables.Detections + Sql.Set + Constant.DetectionColumns.BBox + Sql.Equal + Sql.Quote(newBboxAsString) + Sql.Where + Constant.DetectionColumns.DetectionID + Sql.Equal + id;
+                queries.Add(query);
+            }
+            if (queries.Count > 0)
+            {
+                this.Database.ExecuteNonQueryWrappedInBeginEnd(queries);
+            }
+
+            // Replace commas as needed in Classifications.Conf
+            // Form: Update Classifications Set Conf = CAST(replace(Conf, ',', '.') AS REAL) WHERE Conf LIKE '%,%'
+            query = Sql.Update + Constant.DBTables.Classifications + Sql.Set + Constant.DetectionColumns.Conf + Sql.Equal;
+            query += Sql.Cast + Sql.OpenParenthesis + Sql.Replace + Sql.OpenParenthesis + Constant.DetectionColumns.Conf + Sql.Comma;
+            query += Sql.Quote(",") + Sql.Comma + Sql.Quote(".") + Sql.CloseParenthesis + Sql.As + Sql.Real;
+            query += Sql.CloseParenthesis + Sql.Where + Constant.DetectionColumns.Conf + Sql.Like + Sql.Quote("%,%");
+            this.Database.ExecuteNonQuery(query);
+
+        }
+        #endregion
+
         #region Markers
         // Get all markers from the Markers table and load it into the data table
         public void MarkersLoadRowsFromDatabase()

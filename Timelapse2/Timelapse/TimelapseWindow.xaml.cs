@@ -84,9 +84,6 @@ namespace Timelapse
         #region Main
         public TimelapseWindow()
         {
-            // By default, everypthing should use the Invariant culture, although this 
-            // isn't tested to ensure it works
-            Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
             AppDomain.CurrentDomain.UnhandledException += this.OnUnhandledException;
             this.InitializeComponent();
@@ -189,6 +186,10 @@ namespace Timelapse
             {
                 this.HelpDocument.WarningRegionLanguage = displayname;
             }
+
+            // By default, we now set everything to use the Invariant culture, although this 
+            // isn't tested to ensure it works
+            Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
             // Add a context menu to the data controls that allows a user to restore default values to the current or selected file
             // I originally had this in the XAML, but for some reason it complains if put there.

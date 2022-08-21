@@ -38,7 +38,10 @@ namespace Timelapse.Images
             // Check the arguments for null 
             ThrowIf.IsNullArgument(coordinates, nameof(coordinates));
 
-            float[] coords = Array.ConvertAll(coordinates.Split(','), float.Parse);
+
+            // Data should always be using decimal places, so use invariant culture.
+            // float[] coords = Array.ConvertAll(coordinates.Split(','), float.Parse);  // This crashed before when the culture used a comma for the decimal
+            float[] coords = Array.ConvertAll(coordinates.Split(','), s => float.Parse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture));
             this.SetValues(coords[0], coords[1], coords[2], coords[3], confidence, detectionCategory, detectionLabel, classifications);
         }
         #endregion
