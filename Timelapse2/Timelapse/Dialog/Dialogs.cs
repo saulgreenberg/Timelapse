@@ -1100,7 +1100,7 @@ namespace Timelapse.Dialog
             messageBox.Message.Solution += "\u2022 click Cancel," + Environment.NewLine;
             messageBox.Message.Solution += "\u2022 select 'All Files' in the Selection menu, " + Environment.NewLine;
             messageBox.Message.Solution += "\u2022 retry exporting your data as a .csv file.";
-            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options |Show or hide... menu.";
+            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.";
             messageBox.Message.Icon = MessageBoxImage.Warning;
             messageBox.DontShowAgain.Visibility = Visibility.Visible;
 
@@ -1149,8 +1149,8 @@ namespace Timelapse.Dialog
             csvExportInformation.Message.Result = String.Format("This file is overwritten every time you export it (backups can be found in the {0} folder).", Constant.File.BackupFolder);
             csvExportInformation.Message.Hint = "\u2022 You can open this file with most spreadsheet programs, such as Excel." + Environment.NewLine;
             csvExportInformation.Message.Hint += "\u2022 If you make changes in the spreadsheet file, you will need to import it to see those changes." + Environment.NewLine;
-            csvExportInformation.Message.Hint += "\u2022 You can change the Date and Time formats by selecting the Options | Preferences menu." + Environment.NewLine;
-            csvExportInformation.Message.Hint += "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options |Show or hide... menu.";
+            csvExportInformation.Message.Hint += "\u2022 You can change the Date and Time formats by selecting the Options|Preferences menu." + Environment.NewLine;
+            csvExportInformation.Message.Hint += "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.";
             csvExportInformation.Message.Icon = MessageBoxImage.Information;
             csvExportInformation.DontShowAgain.Visibility = Visibility.Visible;
 
@@ -1183,7 +1183,7 @@ namespace Timelapse.Dialog
             messageBox.Message.Reason += "\u2022 'Folder' and 'ImageQuality' columns, if included, are skipped over.";
             messageBox.Message.Result = "Database values will be updated only for matching RelativePath/File entries. Non-matching entries are ignored.";
             messageBox.Message.Hint = "Warnings will be generated for non-matching CSV headers, which you can then fix." + Environment.NewLine;
-            messageBox.Message.Hint += "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options |Show or hide... menu.";
+            messageBox.Message.Hint += "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.";
             messageBox.Message.Icon = MessageBoxImage.Warning;
             messageBox.DontShowAgain.Visibility = Visibility.Visible;
 
@@ -1708,7 +1708,8 @@ namespace Timelapse.Dialog
             messageBox.Message.Solution += "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine; ;
             messageBox.Message.Solution += "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.";
             messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning. You can unhide it later via the 'Options |Show or hide...' menu.";
+            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning. " +Environment.NewLine;
+            messageBox.Message.Hint += "You can unhide it later via the 'Options|Show or hide...' menu.";
             messageBox.DontShowAgain.Visibility = Visibility.Visible;
             
             bool? result = messageBox.ShowDialog();
@@ -1720,6 +1721,7 @@ namespace Timelapse.Dialog
             return result;
         }
         #endregion
+
         #region DialogIsFileValid checks for valid database file and displays appropriate dialog if it isn't
         public static bool DialogIsFileValid(Window owner, string filePath)
         {
