@@ -79,6 +79,11 @@ namespace Timelapse.Database
         #region Indexes: Create or Drop (Public)
         // Creates or drops various indexes in table tableName named index name to the column names
 
+        public bool IndexExists(string indexName)
+        {
+            return 0 != this.ScalarGetCountFromSelect(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote(indexName));
+        }
+
         // Create a single index named indexName if it doesn't already exist
         public void IndexCreateIfNotExists(string indexName, string tableName, string columnNames)
         {

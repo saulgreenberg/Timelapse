@@ -63,6 +63,15 @@ namespace Timelapse.Util
                 // Template Test: TemplateInfo exists (and from prior tests at least one row with the type file)
                 if (db.TableExists(Constant.DBTables.TemplateInfo))
                 {
+                    // Check if its a template that was opened with a pre2.3 version of Timelapse, which would re-insert the UTCOffset type...
+                    // If so, this would have to be fixed.
+                    string typeQuery = Sql.Select + Constant.Control.Type + Sql.From + Constant.DBTables.Template + Sql.Where + Constant.Control.Type + Sql.Equal + Sql.Quote(Constant.ControlDeprecated.UtcOffsetLabel);
+                    DataTable table = db.GetDataTableFromSelect(typeQuery);
+                    if (table.Rows.Count > 0)
+                    {
+                        return DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion;
+                    }
+
                     // High probability that its a good db
                     return DatabaseFileErrorsEnum.Ok;
                 }
@@ -97,7 +106,22 @@ namespace Timelapse.Util
                     string thisVersion = (string)table.Rows[0][Constant.DatabaseColumn.VersionCompatabily];
                     if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(thisVersion, Constant.DatabaseValues.VersionNumberMinimum))
                     {
-                        return DatabaseFileErrorsEnum.Ok;
+                        // But - Special case as UTCOffset column could be added if the DB was opened with a pre2.3 version of Timelapse.
+                        if (db.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.ControlDeprecated.UtcOffsetLabel))
+                        {
+                            return DatabaseFileErrorsEnum.PreVersion2300;
+                        }
+                        
+                        // Now just check to see if we are opening the .ddb file with an older version of Timelapse that last opened it...
+                        string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+                        if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseCurrentVersionNumber, thisVersion))
+                        {
+                            return DatabaseFileErrorsEnum.Ok;
+                        }
+                        else
+                        {
+                            return DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
+                        }
                     }
                     else
                     {

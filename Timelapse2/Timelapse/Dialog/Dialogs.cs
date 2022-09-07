@@ -597,7 +597,7 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region: MessageBox: template includes a control of an unknown type
+        #region MessageBox: template includes a control of an unknown type
         public static void TemplateIncludesControlOfUnknownType(Window owner, string unknownTypes)
         {
             Util.ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -691,6 +691,7 @@ namespace Timelapse.Dialog
             messageBox.ShowDialog();
         }
         #endregion
+
         #region MessageBox: Not a template
         public static void TemplateFileNotATDB(Window owner, string templateDatabasePath)
         {
@@ -1099,7 +1100,7 @@ namespace Timelapse.Dialog
             messageBox.Message.Solution += "\u2022 click Cancel," + Environment.NewLine;
             messageBox.Message.Solution += "\u2022 select 'All Files' in the Selection menu, " + Environment.NewLine;
             messageBox.Message.Solution += "\u2022 retry exporting your data as a .csv file.";
-            messageBox.Message.Hint = "If you select 'Don't show this message this dialog can be turned back on via the Options |Show or hide... menu.";
+            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options |Show or hide... menu.";
             messageBox.Message.Icon = MessageBoxImage.Warning;
             messageBox.DontShowAgain.Visibility = Visibility.Visible;
 
@@ -1149,7 +1150,7 @@ namespace Timelapse.Dialog
             csvExportInformation.Message.Hint = "\u2022 You can open this file with most spreadsheet programs, such as Excel." + Environment.NewLine;
             csvExportInformation.Message.Hint += "\u2022 If you make changes in the spreadsheet file, you will need to import it to see those changes." + Environment.NewLine;
             csvExportInformation.Message.Hint += "\u2022 You can change the Date and Time formats by selecting the Options | Preferences menu." + Environment.NewLine;
-            csvExportInformation.Message.Hint += "\u2022 If you select 'Don't show this message again', this dialog can be turned back on through the Options | Show or hide... menu.";
+            csvExportInformation.Message.Hint += "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options |Show or hide... menu.";
             csvExportInformation.Message.Icon = MessageBoxImage.Information;
             csvExportInformation.DontShowAgain.Visibility = Visibility.Visible;
 
@@ -1182,7 +1183,7 @@ namespace Timelapse.Dialog
             messageBox.Message.Reason += "\u2022 'Folder' and 'ImageQuality' columns, if included, are skipped over.";
             messageBox.Message.Result = "Database values will be updated only for matching RelativePath/File entries. Non-matching entries are ignored.";
             messageBox.Message.Hint = "Warnings will be generated for non-matching CSV headers, which you can then fix." + Environment.NewLine;
-            messageBox.Message.Hint += "If you select 'Don't show this message again', this dialog can be turned back on through the Options | Show or hide... menu.";
+            messageBox.Message.Hint += "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options |Show or hide... menu.";
             messageBox.Message.Icon = MessageBoxImage.Warning;
             messageBox.DontShowAgain.Visibility = Visibility.Visible;
 
@@ -1691,6 +1692,34 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region MessageBox: ddb file opened with an older version of Timelapse than recorded in it
+        public static bool? DatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner)
+        {
+            Cursor cursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = null;
+            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            // notify the user the template couldn't be loaded rather than silently doing nothing
+            MessageBox messageBox = new MessageBox("You are opening your image set with an older Timelapse version ", owner, MessageBoxButton.OKCancel);
+            messageBox.Message.What = "You are opening your image set with an older version of Timelapse." + Environment.NewLine;
+            messageBox.Message.What = "You previously used a later version of Timelapse to open this image set." + Environment.NewLine;
+            messageBox.Message.What += "This is just a warning, as its rarely a problem.";
+            messageBox.Message.Reason = "Its best to use the latest Timelapse version to minimize any incompatabilities with older versions.";
+            messageBox.Message.Solution = "Click:" + Environment.NewLine; ;
+            messageBox.Message.Solution += "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine; ;
+            messageBox.Message.Solution += "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.";
+            messageBox.Message.Icon = MessageBoxImage.Warning;
+            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning. You can unhide it later via the 'Options |Show or hide...' menu.";
+            messageBox.DontShowAgain.Visibility = Visibility.Visible;
+            
+            bool? result = messageBox.ShowDialog();
+            if (messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                Util.GlobalReferences.TimelapseState.SuppressOpeningWithOlderTimelapseVersionDialog = messageBox.DontShowAgain.IsChecked.Value;
+            }
+            Mouse.OverrideCursor = cursor;
+            return result;
+        }
+        #endregion
         #region DialogIsFileValid checks for valid database file and displays appropriate dialog if it isn't
         public static bool DialogIsFileValid(Window owner, string filePath)
         {
@@ -1698,7 +1727,14 @@ namespace Timelapse.Dialog
             {
                 case DatabaseFileErrorsEnum.Ok:
                     return true;
+                case DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion:
+                    if (Util.GlobalReferences.MainWindow.State.SuppressOpeningWithOlderTimelapseVersionDialog == false)
+                    {
+                        return true == Dialogs.DatabaseFileOpenedWithOlderVersionOfTimelapse(owner);
+                    }
+                    return true;
                 case DatabaseFileErrorsEnum.PreVersion2300:
+                case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
                     Mouse.OverrideCursor = null;
                     DialogUpgradeFiles.DialogUpgradeFilesAndFolders dialogUpdateFiles =
                         new DialogUpgradeFiles.DialogUpgradeFilesAndFolders(owner, Path.GetDirectoryName(filePath), VersionChecks.GetTimelapseCurrentVersionNumber().ToString());

@@ -27,8 +27,12 @@ namespace Timelapse.Database
         // Set/Get the raw datetime value
         public DateTime DateTime
         {
-            get { return this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime); }
-            private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
+            // There was still a UTCOffset conversionissues, so this kinda fixes it.
+            // Orignal code is in commentss
+            //get { return (this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime)); }
+            //private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
+            get { return DateTime.SpecifyKind(this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime), DateTimeKind.Unspecified); }
+            private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, DateTime.SpecifyKind(value, DateTimeKind.Unspecified)); }
         }
 
         // Get a version of the date/time suitable to display to the user 
@@ -221,7 +225,9 @@ namespace Timelapse.Database
 
         public void SetDateTime(DateTime dateTime)
         {
-            this.DateTime = dateTime;
+            // There was still a UTCOffset conversionissues, so this kinda fixes it.
+            //this.DateTime = dateTime;
+            this.DateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
         }
 
         public void SetDateTimeFromFileInfo(string folderPath)
@@ -236,6 +242,7 @@ namespace Timelapse.Database
             DateTime earliestTime = fileInfo.CreationTime < fileInfo.LastWriteTime
                 ? fileInfo.CreationTime
                 : fileInfo.LastWriteTime;
+            earliestTime = earliestTime.ToLocalTime();
             this.SetDateTime(earliestTime);
         }
         #endregion

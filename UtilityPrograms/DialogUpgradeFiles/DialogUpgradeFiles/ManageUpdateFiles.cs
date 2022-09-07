@@ -1,6 +1,7 @@
 ﻿using DialogUpgradeFiles.Enums;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -183,10 +184,17 @@ namespace DialogUpgradeFiles
                     if (Path.GetExtension(foundFile) == ".tdb")
                     {
                         // Check to see if this file needs upgrading by seeing if the TemplateInfo table is presence (introduced in 2.3.0.0)
+                        // However, we also need to check if the UtcOffsetLabel exists in it too, as this is a special case
+                        // where an updated template was opened with a pre2.3 timelapse version, it could be corrupted by the addition of a UtcOffsetLabel
                         if (SQLiteWrapper.TableExists(Constant.DBTables.TemplateInfo))
                         {
-
-                            continue;
+                            string typeQuery = Sql.Select + Constant.Control.Type + Sql.From + Constant.DBTables.Template + Sql.Where + Constant.Control.Type + Sql.Equal + Sql.Quote(Constant.DatabaseColumn.UtcOffset);
+                            DataTable table = SQLiteWrapper.GetDataTableFromSelect(typeQuery);
+                            if (table.Rows.Count == 0)
+                            {
+                                // There is no UtcOffset in this table, so this is a valid 2.3+ file
+                                continue;
+                            }
                         }
                     }
                     else if (Path.GetExtension(foundFile) == ".ddb")
@@ -199,7 +207,11 @@ namespace DialogUpgradeFiles
                         List<object> version = SQLiteWrapper.GetDistinctValuesInColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.VersionCompatabily);
                         if (version.Count == 1 && Util.VersionChecks.IsVersion1GreaterOrEqualToVersion2((string)version[0], "2.3.0.0"))
                         {
-                            continue;
+                            // Special case: Upgraded file, but with a UTCOffset Column
+                            if (false == SQLiteWrapper.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset))
+                            {
+                                continue;
+                            }
                         }
                     }
                     foundNonUpdatedFiles.Add(foundFile);

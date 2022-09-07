@@ -493,6 +493,36 @@ namespace DialogUpgradeFiles.Database
         }
         #endregion
 
+        #region Index creation and dropping
+        public void IndexCreateForDetectionsAndClassificationsIfNotExists()
+        {
+            this.Database.IndexCreateIfNotExists(Constant.DatabaseValues.IndexID, Constant.DBTables.Detections, Constant.DatabaseColumn.ID);
+            this.Database.IndexCreateIfNotExists(Constant.DatabaseValues.IndexDetectionID, Constant.DBTables.Classifications, Constant.DetectionColumns.DetectionID);
+        }
+
+        public void IndexCreateForFileAndRelativePathIfNotExists()
+        {
+            // If even one of the indexes doesn't exist, they would all have to be created
+            if (0 == this.Database.ScalarGetCountFromSelect(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote("IndexFile")))
+            {
+                List<Tuple<string, string, string>> tuples = new List<Tuple<string, string, string>>
+                {
+                    new Tuple<string, string, string>(Constant.DatabaseValues.IndexRelativePath, Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath),
+                    new Tuple<string, string, string>(Constant.DatabaseValues.IndexFile, Constant.DBTables.FileData, Constant.DatabaseColumn.File),
+                    new Tuple<string, string, string>(Constant.DatabaseValues.IndexRelativePathFile, Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath + "," + Constant.DatabaseColumn.File)
+                };
+                this.Database.IndexCreateMultipleIfNotExists(tuples);
+            }
+        }
+
+        public void IndexDropForFileAndRelativePathIfExists()
+        {
+            this.Database.IndexDrop(Constant.DatabaseValues.IndexRelativePath);
+            this.Database.IndexDrop(Constant.DatabaseValues.IndexFile);
+            this.Database.IndexDrop("IndexRelativePathFile");
+        }
+        #endregion
+
         #region Disposing
         protected override void Dispose(bool disposing)
         {

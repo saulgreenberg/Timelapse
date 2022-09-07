@@ -499,6 +499,7 @@ namespace Timelapse.Constant
         public const string SuppressHowDuplicatesWorkDialog = "SuppressHowDuplicatesWorkDialog";
         public const string SuppressMergeDatabasesDialog = "SuppressMergeDatabasesDialog";
         public const string SuppressOpeningMessageDialog = "SuppressOpeningMessageDialog";
+        public const string SuppressOpeningWithOlderTimelapseVersionDialog = "SuppressOpeningWithOlderTimelapseVersionDialog";
         public const string SuppressSelectedAmbiguousDatesPrompt = "SuppressSelectedAmbiguousDatesPrompt";
         public const string SuppressSelectedCsvExportPrompt = "SuppressSelectedCsvExportPrompt";
         public const string SuppressSelectedDarkThresholdPrompt = "SuppressSelectedDarkThresholdPrompt";

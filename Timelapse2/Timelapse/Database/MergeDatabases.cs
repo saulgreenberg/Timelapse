@@ -94,7 +94,7 @@ namespace Timelapse.Database
                     // Check each database file to see if its ok, or determine its error type.
                     // First, lets do a quick check to catch common db errors.
                     databaseFileErrorsEnum = Util.FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
-                    if (databaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok)
+                    if (databaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok || databaseFileErrorsEnum == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
                     {
                         // Things look ok so far. So lets try the merge, which may (or may not) find other errors
                         databaseFileErrorsEnum = MergeDatabases.InsertSourceDataBaseTablesintoDestinationDatabase(destinationddb, sourceddbFilePaths[i], rootFolderPath, mergedddbDataLabels, infoDictionary, detectionCategories, classificationCategories);
@@ -131,6 +131,9 @@ namespace Timelapse.Database
                             break;
                         case DatabaseFileErrorsEnum.PreVersion2300:
                             message = "The file needs to be upgraded (see File|Upgrade Timelapse files (.tdb/.ddb) to latest version...)";
+                            break;
+                        case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
+                            message = "The file needs to be upgraded again as it was opened with an earlier Timelapse version (see File|Upgrade Timelapse files (.tdb/.ddb) to latest version...)";
                             break;
                         case DatabaseFileErrorsEnum.Ok:
                         default:

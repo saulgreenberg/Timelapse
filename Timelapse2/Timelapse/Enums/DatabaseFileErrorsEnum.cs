@@ -3,8 +3,10 @@
     public enum DatabaseFileErrorsEnum
     {
         Ok,
+        OkButOpenedWithAnOlderTimelapseVersion,
         InvalidDatabase,
         PreVersion2300,
+        UTCOffsetTypeExistsInUpgradedVersion,
         FileInSystemOrHiddenFolder,
 
         NotATimelapseFile,

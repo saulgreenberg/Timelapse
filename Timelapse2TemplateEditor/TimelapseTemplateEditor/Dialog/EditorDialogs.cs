@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Input;
+using Timelapse.Editor.Util;
 using MessageBox = Timelapse.Dialog.MessageBox;
 
 namespace Timelapse.Editor.Dialog
@@ -163,5 +165,34 @@ namespace Timelapse.Editor.Dialog
             messageBox.Message.Hint = "Change the default value if desired by copying an item from your 'Define List' and pasting it into your default value field as needed.";
             messageBox.ShowDialog();
         }
+
+        #region MessageBox: ddb file opened with an older version of Timelapse than recorded in it
+        public static bool? EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner, EditorUserRegistrySettings userSettings )
+        {
+            Cursor cursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = null;
+            // notify the user the template couldn't be loaded rather than silently doing nothing
+            MessageBox messageBox = new MessageBox("You are opening your template with an older Timelapse Editor version ", owner, MessageBoxButton.OKCancel);
+            messageBox.Message.What = "You are opening your template with an older version of the Timelapse Editor." + Environment.NewLine;
+            messageBox.Message.What = "You previously used a later version of the Timelapse Editor to open this template." + Environment.NewLine;
+            messageBox.Message.What += "This is just a warning, as its rarely a problem.";
+            messageBox.Message.Reason = "Its best to use the latest Timelapse versions to minimize possible incompatabilities with older versions.";
+            messageBox.Message.Solution = "Click:" + Environment.NewLine; ;
+            messageBox.Message.Solution += "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.";
+            messageBox.Message.Icon = MessageBoxImage.Warning;
+            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning." + Environment.NewLine;
+            messageBox.Message.Hint += "You can unhide it using 'Options|Show or hide...' in the main Timelapse  program.";
+            messageBox.DontShowAgain.Visibility = Visibility.Visible;
+
+            bool? result = messageBox.ShowDialog();
+            if (messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                userSettings.SuppressOpeningWithOlderTimelapseVersionDialog = messageBox.DontShowAgain.IsChecked.Value;
+            }
+            Mouse.OverrideCursor = cursor;
+            return result;
+        }
+        #endregion
     }
 }

@@ -303,7 +303,7 @@ namespace Timelapse.Controls
                 // Filename without the extention and Time in HH: MM
                 // This was on request from a user, who needed to scan for the first/last image in a timelapse capture sequence
                 this.FileNameTextBlock.Text = System.IO.Path.GetFileNameWithoutExtension(this.ImageRow.File);
-                string timeInHHMM = this.ImageRow.DateTime.ToString("hh:mm"); 
+                string timeInHHMM = this.ImageRow.DateTime.ToString("hh:mm");
                 //string timeInHHMM = (this.ImageRow.Time.Length > 3) ? this.ImageRow.Time.Remove(this.ImageRow.Time.Length - 3) : String.Empty;
                 this.TimeTextBlock.Text = " (" + timeInHHMM + ")";
             }

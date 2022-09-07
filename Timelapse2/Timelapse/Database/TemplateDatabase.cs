@@ -21,7 +21,7 @@ namespace Timelapse.Database
         /// <summary>Gets the file name of the image database on disk.</summary>
         public string FilePath { get; private set; }
 
-        protected SQLiteWrapper Database { get; set; }
+        public SQLiteWrapper Database { get; set; }
         #endregion
 
         #region Private Variables

@@ -222,11 +222,11 @@
                     
                     <Separator/>
 
-                    <MenuItem Name="MenuItemDialogsOnOrOff" Header="_Show or hide various informational dialogs" IsEnabled="True" Click="MenuItemDialogsOnOrOff_Click"/>
+                    <MenuItem Name="MenuItemAudioFeedback" IsCheckable="True" IsChecked="False" IsEnabled="False" Header="_Audio feedback" Click="MenuItemAudioFeedback_Click" ToolTip="Toggles the audio that speaks the count whenever you add a counting mark to the image"/>
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemAudioFeedback" IsCheckable="True" IsChecked="False" IsEnabled="False" Header="_Audio feedback" Click="MenuItemAudioFeedback_Click" ToolTip="Toggles the audio that speaks the count whenever you add a counting mark to the image"/>
+                    <MenuItem Name="MenuItemDialogsOnOrOff" Header="_Show or hide various informational dialogs" IsEnabled="True" Click="MenuItemDialogsOnOrOff_Click"/>
 
                     <Separator/>
 

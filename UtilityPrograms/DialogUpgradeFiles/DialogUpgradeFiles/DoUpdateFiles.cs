@@ -62,16 +62,36 @@ namespace DialogUpgradeFiles
             // Get the controls from the template table
             this.templateDatabase.GetControlsSortedByControlOrder();
 
-            // Modify these rows: Image Quality
-            DebugFeedback("Modifying various template rows in: " + newdatabasePath);
-            UDBTemplateModifyRows(this.templateDatabase, removeImageQualityColumn);
+            // Check if its an upgraded template that was opened with a pre2.3 version of Timelapse, which would re-insert the UTCOffset type...
+            // If so, this would have to be fixed. So create a flag for this. We do this by testing if there is no Folder or ImageQuality field (for redundancy) as
+            // those were deleted in 2.3 onwards, but that still includes a UtcOffset field
+            bool existsUTCInUpdatedTemplate = false;
+            if (null == this.templateDatabase.GetControlFromTemplateTable(Constant.DatabaseColumn.Folder)
+                && null == this.templateDatabase.GetControlFromTemplateTable(Constant.DatabaseColumn.ImageQuality)
+                && null != this.templateDatabase.GetControlFromTemplateTable(Constant.DatabaseColumn.UtcOffset))
+            {
+                existsUTCInUpdatedTemplate = true;
+            }
 
-            // Modify these rows: DefaultValue if needed
-            UDBTemplateEnsureDefaultsForChoices(this.templateDatabase);
+            // Do this as part of normal upgrade (i.e., without the special  UtcOffset case)
+            if (false == existsUTCInUpdatedTemplate)
+            {
+                // Modify these rows: Image Quality
+                DebugFeedback("Modifying various template rows in: " + newdatabasePath);
+                UDBTemplateModifyRows(this.templateDatabase, removeImageQualityColumn);
 
-            // Delete these rows: Image Quality
-            DebugFeedback("Deleting unneeded rows from: " + newdatabasePath);
-            UDBTemplateDeleteRows(this.templateDatabase, removeImageQualityColumn);
+
+                // Modify these rows: DefaultValue if needed
+                UDBTemplateEnsureDefaultsForChoices(this.templateDatabase);
+                // Delete these rows: Image Quality
+                DebugFeedback("Deleting unneeded rows from: " + newdatabasePath);
+                UDBTemplateDeleteRows(this.templateDatabase, removeImageQualityColumn);
+            }
+            else
+            {
+                DebugFeedback("Deleting UtcOffsetRows from: " + newdatabasePath);
+                UDBTemplateDeleteUtcOffsetRow(this.templateDatabase);
+            }
 
             DatabaseTypeEnum dbType = Path.GetExtension(newdatabasePath) == ".tdb"
                 ? DatabaseTypeEnum.Template
@@ -80,7 +100,10 @@ namespace DialogUpgradeFiles
             // Add a new table with the timelapse version if its the .tdb file
             if (dbType == DatabaseTypeEnum.Template)
             {
-                UDBTemplateAddTimelapseTemplateInfoTable(this.templateDatabase, timelapseVersion);
+                if (false == existsUTCInUpdatedTemplate)
+                {
+                    UDBTemplateAddTimelapseTemplateInfoTable(this.templateDatabase, timelapseVersion);
+                }
             }
 
             if (dbType == DatabaseTypeEnum.Template)
@@ -256,7 +279,24 @@ namespace DialogUpgradeFiles
                     continue;
                 }
                 templateDB.GetControlsSortedByControlOrder();
-                control = templateDB.Controls.First(x => x.DataLabel == dataLabelToRemove);
+                if (templateDB.Controls.Any(x => x.DataLabel == dataLabelToRemove))
+                {
+                    control = templateDB.Controls.First(x => x.DataLabel == dataLabelToRemove);
+                    if (null != control)
+                    {
+                        templateDB.UpgradeTemplateRemoveControl(control);
+                    }
+                }
+            }
+        }
+
+        public static void UDBTemplateDeleteUtcOffsetRow(TemplateDatabase templateDB)
+        {
+            ControlRow control;
+            templateDB.GetControlsSortedByControlOrder();
+            if (templateDB.Controls.Any(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset))
+            {
+                control = templateDB.Controls.First(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset);
                 if (null != control)
                 {
                     templateDB.UpgradeTemplateRemoveControl(control);
@@ -284,6 +324,68 @@ namespace DialogUpgradeFiles
             }
 
             fileDatabase.GetControlsSortedByControlOrder();
+
+            // Special case: This is an upgraded file, but as it was opened with a pre 2.3 version.
+            // Because of that, the upgraded file now contains these columns that has to be removed:
+            // UtcOffset
+            // WhiteSpaceTrimmed
+            // QuickPasteXML
+            // TimeZone
+            if (fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset)
+                && fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.RootFolder))
+            {
+                // Special case: This is an upgraded file, but as it was opened with a pre 2.3 version it now contains a  UtcOffset column that has to be removed
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset);
+
+                // Recreate the indexes
+                fileDatabase.IndexDropForFileAndRelativePathIfExists();
+                fileDatabase.IndexCreateForFileAndRelativePathIfNotExists();
+                timelapse.DebugFeedback(success, "Data Table: UtcOffset schema and data deleted and indexes recreated: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+                // Remove Timezone from ImageSetTable
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.TimeZone);
+                timelapse.DebugFeedback(success, "Data Table: Timezone schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    timelapse.DebugFeedback(success, "Data Table: Timezone schema and data not in table: " + filePath);
+                }
+                else
+                {
+                    timelapse.DebugFeedback(success, "Data Table: Timezone schema and data deleted " + filePath);
+                }
+                await Task.Delay(Constant.BusyState.SleepTime);
+
+                // Remove WhiteSpaceTrimmed from ImageSetTable
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.WhiteSpaceTrimmed);
+                if (!success)
+                {
+                    timelapse.DebugFeedback(success, "Data Table: WhiteSpaceTrimmed schema and data not in table: " + filePath);
+                }
+                else
+                {
+                    timelapse.DebugFeedback(success, "Data Table: WhiteSpaceTrimmed schema and data deleted " + filePath);
+                }
+                await Task.Delay(Constant.BusyState.SleepTime);
+
+                // Remove QuickPasteXML from ImageSetTable
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.QuickPasteXML);
+                if (!success)
+                {
+                    timelapse.DebugFeedback(success, "Data Table: QuickPasteXML schema and data not in table: " + filePath);
+                }
+                else
+                {
+                    timelapse.DebugFeedback(success, "Data Table: QuickPasteXML schema and data deleted " + filePath);
+                };
+                await Task.Delay(Constant.BusyState.SleepTime);
+                return UpgradeResultsEnum.Upgraded;
+            }
+
+            // General upgrade case
+            // We first upgrade the file to the pre2.3 standard.
             await fileDatabase.UDBUpgradeDatabasesForBackwardsCompatabilityAsync(timelapseVersion);
 
             // Because the control names may have changed with the above
@@ -542,6 +644,7 @@ namespace DialogUpgradeFiles
                 }
                 timelapse.DebugFeedback("Info Table: Quickpaste Updated: " + filePath);
             }
+
             return UpgradeResultsEnum.Upgraded;
         }
         #endregion

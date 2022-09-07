@@ -616,10 +616,14 @@ namespace Timelapse.Controls
         // Return true if there is a non-empty value available
         public bool IsCopyFromLastNonEmptyValuePossible(DataEntryControl control)
         {
-            int currentIndex = 0; // So we can print the value in the catch
             // Check the arguments for null 
-            ThrowIf.IsNullArgument(control, nameof(control));
+            if (null == control)
+            {
+                // Since we don't have a valid control, copying isn't possible
+                return false;
+            }
 
+            int currentIndex = 0; // So we can print the value in the catch
             bool checkCounter = control is DataEntryCounter;
             bool checkFlag = control is DataEntryFlag;
             int nearestRowWithCopyableValue = -1;

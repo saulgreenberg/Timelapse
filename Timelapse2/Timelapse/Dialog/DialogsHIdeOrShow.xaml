@@ -37,6 +37,7 @@
                 <CheckBox FontWeight="Normal" Content="Metadata selection" Name="SuppressSelectedPopulateFieldFromMetadataPrompt" Click="SuppressSelectedPopulateFieldFromMetadataPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when metadata is read from over selected files" />
                 <CheckBox FontWeight="Normal" Content="Reread dates selection" Name="SuppressSelectedRereadDatesFromFilesPrompt" Click="SuppressSelectedRereadDatesFromFilesPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when dates are reloaded from files over selected files" />
                 <CheckBox FontWeight="Normal" Content="Very important message concerning this update" Name="SuppressWarningToUpdateDBFilesToSQL" Click="SuppressWarningToUpdateDBFilesToSQL_Click" ToolTip="Turn on or off the informational dialog displayed about this update" />
+                <CheckBox FontWeight="Normal" Content="Warning about opening database with an older version of Timelapse" Name="SuppressOpeningWithOlderTimelapseVersionDialog" Click="SuppressOpeningWithOlderTimelapseVersionDialogL_Click" ToolTip="Turn on or off the warning dialog that appears when you try to open a database .ddb file with an older Timelapse version" />
             </StackPanel >
         </GroupBox>
         <Button x:Name="OkButton" Content="_Okay" Grid.Row="1" Grid.Column="1" IsDefault="True" Width="100" Height="Auto" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10" Click="OkButton_Click"/>

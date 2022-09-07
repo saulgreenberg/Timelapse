@@ -42,6 +42,7 @@ namespace Timelapse.Dialog
             this.SuppressSelectedPopulateFieldFromMetadataPrompt.IsChecked = this.state.SuppressSelectedPopulateFieldFromMetadataPrompt;
             this.SuppressSelectedRereadDatesFromFilesPrompt.IsChecked = this.state.SuppressSelectedRereadDatesFromFilesPrompt;
             this.SuppressWarningToUpdateDBFilesToSQL.IsChecked = this.state.SuppressWarningToUpdateDBFilesToSQLPrompt;
+            this.SuppressOpeningWithOlderTimelapseVersionDialog.IsChecked = this.state.SuppressOpeningWithOlderTimelapseVersionDialog;
         }
         #endregion
 
@@ -133,6 +134,12 @@ namespace Timelapse.Dialog
             CheckBox cb = (CheckBox)sender;
             this.state.SuppressWarningToUpdateDBFilesToSQLPrompt = cb.IsChecked == true;
         }
+
+        private void SuppressOpeningWithOlderTimelapseVersionDialogL_Click(object sender, RoutedEventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            this.state.SuppressOpeningWithOlderTimelapseVersionDialog = cb.IsChecked == true;
+        }
         #endregion
 
         #region Callback - Dialog Buttons
@@ -140,6 +147,7 @@ namespace Timelapse.Dialog
         {
             this.DialogResult = true;
         }
+
         #endregion
 
 

@@ -136,6 +136,14 @@ namespace Timelapse.Database
                 // This happens if there is an unrecognized Control type
                 return null;
             };
+
+            // Recreate the indexes if they don't exist
+            // This could happen as a result of upgrading to 2.3
+            if (false == fileDatabase.Database.IndexExists(Constant.DatabaseValues.IndexRelativePath))
+            {
+                fileDatabase.IndexDropForFileAndRelativePathIfExists();
+                fileDatabase.IndexCreateForFileAndRelativePathIfNotExists();
+            }
             return fileDatabase;
         }
 
@@ -1908,6 +1916,7 @@ namespace Timelapse.Database
         {
             this.Database.IndexDrop(Constant.DatabaseValues.IndexRelativePath);
             this.Database.IndexDrop(Constant.DatabaseValues.IndexFile);
+            this.Database.IndexDrop("IndexRelativePathFile");
         }
         #endregion
 

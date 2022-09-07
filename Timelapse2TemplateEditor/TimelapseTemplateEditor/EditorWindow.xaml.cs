@@ -109,7 +109,6 @@ namespace Timelapse.Editor
             dialogUpdateFiles.ShowDialog();
         }
 
-
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             // apply any pending edits
@@ -240,6 +239,25 @@ namespace Timelapse.Editor
                 {
                     return;
                 }
+                // But check to see if we are opening it up with an older version of TImelapse vs. the previous version that opened it
+                // If so, generate a warning
+                if (this.userSettings.SuppressOpeningWithOlderTimelapseVersionDialog == false)
+                {
+                    SQLiteWrapper db = new SQLiteWrapper(openFileDialog.FileName);
+                    if (db.TableExists(Constant.DBTables.TemplateInfo))
+                    {
+                        string thisVersion = GetVersionCompatabilityFromTemplateInfoIfExists(db);
+                        string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+                        if (VersionChecks.IsVersion1GreaterThanVersion2(thisVersion, timelapseCurrentVersionNumber))
+                        {
+                            if (true != Dialog.EditorDialogs.EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(this, this.userSettings))
+                            {
+                                // The user aborted loading the template
+                                return;
+                            }
+                        }
+                    }
+                }
                 await this.DoOpenTemplate(openFileDialog.FileName);
             }
         }
@@ -278,10 +296,14 @@ namespace Timelapse.Editor
                 return;
             }
 
-            // Update the verson number in the templateInfo table to the current version
+            // Update the verson number in the templateInfo table to the current version, but only if its a later version
             if (this.templateDatabase != null)
             {
-                this.templateDatabase.UpdateVersionNumber(VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+                string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+                if (VersionChecks.IsVersion1GreaterThanVersion2(timelapseCurrentVersionNumber, GetVersionCompatabilityFromTemplateInfoIfExists(this.templateDatabase.Database)))
+                {
+                    this.templateDatabase.UpdateVersionNumber(VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+                }
             }
             this.HelpMessageInitial.Visibility = Visibility.Collapsed;
             this.MenuFileClose.IsEnabled = true;
@@ -1294,6 +1316,21 @@ namespace Timelapse.Editor
         private void HelpDocument_PreviewDrag(object sender, DragEventArgs dragEvent)
         {
             DragDropFile.OnTemplateFilePreviewDrag(dragEvent);
+        }
+        #endregion
+
+        #region Helpers
+        private string GetVersionCompatabilityFromTemplateInfoIfExists(SQLiteWrapper db)
+        {
+            if (db.TableExists(Constant.DBTables.TemplateInfo))
+            {
+                DataTable table = db.GetDataTableFromSelect(Sql.Select + Constant.DatabaseColumn.VersionCompatabily + Sql.From + Constant.DBTables.TemplateInfo);
+                if (table.Rows.Count > 0)
+                {
+                    return (string)table.Rows[0][Constant.DatabaseColumn.VersionCompatabily];
+                }
+            }
+            return VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
         }
         #endregion
     }
