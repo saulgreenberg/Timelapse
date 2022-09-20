@@ -21,7 +21,7 @@ Dependencies/**
 !Dependencies/DialogUpgradeFiles.dll
 !Dependencies/DialogUpgradeFiles.pdb
 !Dependencies/exiftool(-k).exe
-!Dependencies/ffmpeg.exe
+#!Dependencies/ffmpeg.exe
 
 # NuGet Packages
 **/packages/*
