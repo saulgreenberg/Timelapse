@@ -23,6 +23,7 @@ Dependencies/**
 !Dependencies/exiftool(-k).exe
 #!Dependencies/ffmpeg.exe
 
+
 # NuGet Packages
 **/packages/*
 
