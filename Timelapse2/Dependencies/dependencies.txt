@@ -1,2 +1,0 @@
-exiftool(-k).exe retrieved from https://exiftool.org/
-  - version 12.27

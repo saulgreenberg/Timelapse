@@ -1,21 +1,27 @@
-# User-specific files 
+# Omit Visual Studio unneeded folders/files 
 *.suo
 *.user
-*.sln
+*.vsp
+*.vspx
+.vs/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+debug.log
 
-# dependent .exes (they should be downloaded from their official sites)
-*ffmpeg.exe
-*exiftool(-k).exe
-
-# But keep these dll as they are custom and not retrievable via NuGet
-!**/CustomAvalonDll3.4/*Xceed.Wpf.AvalonDock.dll
-!**/CustomAvalonDll3.4/*Xceed.Wpf.Toolkit.dll
-
-# Build results 
+# Omit Build results 
 bin/
 packages/
 obj/
 **/StyleCop.Cache
+
+# Keep: Only the required dependencies
+Dependencies/**
+!Dependencies/Xceed.Wpf.AvalonDock.dll
+!Dependencies/Xceed.Wpf.Toolkit.dll
+!Dependencies/DialogUpgradeFiles.dll
+!Dependencies/DialogUpgradeFiles.pdb
+!Dependencies/exiftool(-k).exe
+!Dependencies/ffmpeg.exe
 
 # NuGet Packages
 **/packages/*
@@ -24,26 +30,12 @@ obj/
 # and any custom dlls that aren't from NuGet
 !**/packages/build/
 
-# Profiling results
-*.vsp
-*.vspx
-
-# Visual Studio 2015 cache/options directory
-.vs/
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-
 # Timelapse output
 Backups/
-
-# Visual Studio 2015 cache/options directory 
-.vs/
 
 # Local Documents and backups
 ToDo.docx
 ~$ToDo.docx
 *.tmp
 
-debug.log
+
