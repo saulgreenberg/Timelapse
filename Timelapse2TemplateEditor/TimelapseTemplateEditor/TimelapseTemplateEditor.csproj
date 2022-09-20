@@ -143,6 +143,14 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Xceed.Wpf.AvalonDock, Version=4.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\Xceed.Wpf.AvalonDock.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.Toolkit, Version=4.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\Xceed.Wpf.Toolkit.dll</HintPath>
+    </Reference>
     <Reference Include="XmpCore, Version=6.1.10.1, Culture=neutral, PublicKeyToken=961f4f366277b80e, processorArchitecture=MSIL">
       <HintPath>..\..\packages\XmpCore.6.1.10.1\lib\net35\XmpCore.dll</HintPath>
     </Reference>
@@ -238,14 +246,6 @@
     <Resource Include="Icons\TemplateEditor.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\wpftoolkit-4.0.2-Modifed\ExtendedWPFToolkitSolution\Src\Xceed.Wpf.AvalonDock\Xceed.Wpf.AvalonDock.csproj">
-      <Project>{db81988f-e0f2-45a0-a1fd-8c37f3d35244}</Project>
-      <Name>Xceed.Wpf.AvalonDock</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\wpftoolkit-4.0.2-Modifed\ExtendedWPFToolkitSolution\Src\Xceed.Wpf.Toolkit\Xceed.Wpf.Toolkit.csproj">
-      <Project>{72e591d6-8f83-4d8c-8f67-9c325e623234}</Project>
-      <Name>Xceed.Wpf.Toolkit</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Timelapse2\Timelapse\Timelapse.csproj">
       <Project>{f223a2f9-f2c2-47a8-80f3-472349176579}</Project>
       <Name>Timelapse</Name>
