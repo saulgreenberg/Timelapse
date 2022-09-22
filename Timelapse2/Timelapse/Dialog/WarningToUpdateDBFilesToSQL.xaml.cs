@@ -30,13 +30,5 @@ namespace Timelapse.Dialog
         {
             this.DialogResult = true;
         }
-
-        private void OpenUpgraderButton_Click(object sender, RoutedEventArgs e)
-        {
-            string programPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TimelapseUpdateFiles.exe");
-            Util.ProcessExecution.TryProcessStart(programPath);
-            // System.Diagnostics.Debug.Print(programPath + ":" + result.ToString());
-            this.DialogResult = true;
-        }
     }
 }

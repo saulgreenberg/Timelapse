@@ -22,18 +22,14 @@
         <controls:StockMessageControl x:Name="Message" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Icon="Warning"
                             Title="Very Important Message Concerning this Update..." 
                             
-                            What="This update fixes long-standing internal issues in Timelapse, where fixes are NOT backwards compatable. 
-                            &#10;Critically, you will need to upgrade previously-created template (.tdb) and data (.ddb) files if you want to reuse them.
-                            &#10;&#10;Upgrading your .ddb and .tdb files is easy.
-                            &#10;1. Use the button below to open the UpgradeFiles.exe program  (or  select it in your Timelapse executables folder).
-                            &#10;2  A window will appear containing instructions directing you to 
-                                      &#10;    &#x2022; select and convert individual .tdb and .ddb files, or 
-                                      &#10;       search a folder and its sub-folders for those files and convert all of them.
-                                      &#10;    &#x2022; decide what to do with the ImageQuality field."
-                            Result="An upgraded version of each file (using a different suffix) is created in the same folder. 
-                            &#10;&#x2022; templates: A new .tdb template file will be created from your .tdb file
-                            &#10;&#x2022; data: A new .ddb data file will be created from your .ddb file
-                            &#10;&#x2022; your original .tdb and .ddb files are moved to its corresponding Backups folder."
+                            What="Version 2.3.0.0 onwards includes fixes to long-standing internal issues in Timelapse. Fixes are NOT backwards compatable. 
+                            &#10;An upgrade dialog is available that searches for and asks you to upgrade pre-version 2.3.0.0 template (.tdb) and data (.ddb).
+                            &#10;Raise this dialog in one of two ways.
+                            &#10;1. As you use Timelapse: the upgrade dialog appears whenever you try to open these older files. 
+                            &#10;2. By the Timelapse menu: 'File | Upgrade Timelapse files (.tdb/.ddb) to latest version...' raises the dialog, 
+                             &#10;    where you can choose the folder to search."
+                            Result="The folder and sub-folders are searched for all older .tdb/.ddb files, and each found file is upgraded. 
+                            &#10;&#x2022; Your original .tdb and .ddb files are moved to its corresponding Backups folder, and are renamed to include a 'Pre23'suffix."
                             Details="The following changes may affect you.
                                       &#10;&#x2022; 'ImageQuality' field (which is rarely used) is renamed to a 'Dark' flag field with true/false values, or optionally deleted;
                                       &#10;&#x2022; Exported CSV files will no longer have an 'ImageQuality' column, but may include a Dark column.
@@ -42,10 +38,10 @@
                                       &#10;&#x2022; 'Folder' field is optionally included in CSV exports as the renamed 'RootFolder' column (via Options|Preferences);
                                       &#10;&#x2022; Importing data from prevously generated CSV files may produce (easily repaired) warnings;
                                       &#10;&#x2022; Redesigned internal database tables. If details are needed, see the Timelapse Database Guide on the web site."     
+                            Hint="Don't open upgraded files with old Timelapse versions, as Timelapse will crash and you will have to upgrade the files again."     
                                       />
         <CheckBox Name="CheckBoxDontShowAgain" Grid.Row="1" Grid.Column="0" Content="_Don't show this message again." Margin="10,20,0,0"  />
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button Name="OpenUpgraderButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OpenUpgraderButton_Click">_Open the UpgradeFiles Program</Button>
             <Button Name="OkButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
         </StackPanel>
     </Grid>
