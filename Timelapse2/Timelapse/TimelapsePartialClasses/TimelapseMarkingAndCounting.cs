@@ -103,72 +103,79 @@ namespace Timelapse
         /// </summary>
         private void MarkableCanvas_AddMarker(DataEntryCounter counter, Marker marker)
         {
-            if (counter == null || marker == null)
+            try // Make this a noop to handle the rare bug 'Object reference not set to an instance of an object.' as not sure which object was the problematic one
             {
-                // This shouldn't happen, but a user reported a 'null' crash somewhere in this method, so just in case...
-                System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker. Counter or marker is null (and it shouldn't be");
-                return;
-            }
-
-            // Get the Counter Control's contents,  increment its value (as we have added a new marker) 
-            // Then update the control's content as well as the database
-            // If we can't convert it to an int, assume that someone set the default value to either a non-integer in the template, or that it's a space. In either case, revert it to zero.
-            // If we can't convert it to an int, assume that someone set the default value to either a non-integer in the template, or that it's a space. In either case, revert it to zero.
-            if (Int32.TryParse(counter.Content, out int count) == false)
-            {
-                count = 0;
-            }
-            ++count;
-
-            string counterContent = count.ToString();
-            this.DataHandler.IsProgrammaticControlUpdate = true;
-            this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, counter.DataLabel, counterContent);
-            counter.SetContentAndTooltip(counterContent);
-            this.DataHandler.IsProgrammaticControlUpdate = false;
-
-            // Find the MarkersForCounters associated with this particular control so we can add a marker to it
-            MarkersForCounter markersForCounter = null;
-
-            // Insert markers into the MarkersTable if all markers are empty,
-            // which should only occur if the current file has no markers associated with it.
-            if (0 == this.markersOnCurrentFile.Count(e => e.Markers.Count > 0))
-            {
-                // As there is no row in the marker table with that ID, an empty row (with [] values) will be added to the database
-                // The Markers list held by the database will be updated accordingly after this IF section
-                // PERFORMANCE: The call below is inefficient, as it re-reads the entire Markers table from the data table.
-                // This is necessary to update the markers table, as otherwise it will not contain a row with the current Id
-                // But given that the marker table should be relatively small, it shouldn't be too costly.
-                if (this.DataHandler.FileDatabase.MarkersTryInsertNewMarkerRow(this.DataHandler.ImageCache.Current.ID))
+                if (counter == null || marker == null)
                 {
-                    // We added a new marker row, so we need to update the various markers data structures to reflect the new marker
-                    // markersForCounter = new MarkersForCounter(counter.DataLabel);
-                    this.markersOnCurrentFile = this.DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(this.DataHandler.ImageCache.Current.ID);
+                    // This shouldn't happen, but a user reported a 'null' crash somewhere in this method, so just in case...
+                    System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker. Counter or marker is null (and it shouldn't be");
+                    return;
                 }
-            }
 
-            // Find the markers for this Counter
-            foreach (MarkersForCounter markers in this.markersOnCurrentFile)
-            {
-                if (markers.DataLabel == counter.DataLabel)
+                // Get the Counter Control's contents,  increment its value (as we have added a new marker) 
+                // Then update the control's content as well as the database
+                // If we can't convert it to an int, assume that someone set the default value to either a non-integer in the template, or that it's a space. In either case, revert it to zero.
+                // If we can't convert it to an int, assume that someone set the default value to either a non-integer in the template, or that it's a space. In either case, revert it to zero.
+                if (Int32.TryParse(counter.Content, out int count) == false)
                 {
-                    markersForCounter = markers;
-                    break;
+                    count = 0;
                 }
+                ++count;
+
+                string counterContent = count.ToString();
+                this.DataHandler.IsProgrammaticControlUpdate = true;
+                this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, counter.DataLabel, counterContent);
+                counter.SetContentAndTooltip(counterContent);
+                this.DataHandler.IsProgrammaticControlUpdate = false;
+
+                // Find the MarkersForCounters associated with this particular control so we can add a marker to it
+                MarkersForCounter markersForCounter = null;
+
+                // Insert markers into the MarkersTable if all markers are empty,
+                // which should only occur if the current file has no markers associated with it.
+                if (0 == this.markersOnCurrentFile.Count(e => e.Markers.Count > 0))
+                {
+                    // As there is no row in the marker table with that ID, an empty row (with [] values) will be added to the database
+                    // The Markers list held by the database will be updated accordingly after this IF section
+                    // PERFORMANCE: The call below is inefficient, as it re-reads the entire Markers table from the data table.
+                    // This is necessary to update the markers table, as otherwise it will not contain a row with the current Id
+                    // But given that the marker table should be relatively small, it shouldn't be too costly.
+                    if (this.DataHandler.FileDatabase.MarkersTryInsertNewMarkerRow(this.DataHandler.ImageCache.Current.ID))
+                    {
+                        // We added a new marker row, so we need to update the various markers data structures to reflect the new marker
+                        // markersForCounter = new MarkersForCounter(counter.DataLabel);
+                        this.markersOnCurrentFile = this.DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(this.DataHandler.ImageCache.Current.ID);
+                    }
+                }
+
+                // Find the markers for this Counter
+                foreach (MarkersForCounter markers in this.markersOnCurrentFile)
+                {
+                    if (markers.DataLabel == counter.DataLabel)
+                    {
+                        markersForCounter = markers;
+                        break;
+                    }
+                }
+
+                // fill in marker information
+                marker.ShowLabel = true; // Show the annotation as its created. We will clear it on the next refresh
+                marker.LabelShownPreviously = false;
+                marker.Brush = Brushes.Red;               // Make it Red (for now)
+                marker.DataLabel = counter.DataLabel;
+                marker.Tooltip = counter.Label;   // The tooltip will be the counter label plus its data label
+                marker.Tooltip += "\n" + counter.DataLabel;
+                markersForCounter.AddMarker(marker);
+
+                // update this counter's list of points in the database
+                this.DataHandler.FileDatabase.MarkersUpdateMarkerRow(this.DataHandler.ImageCache.Current.ID, markersForCounter);
+                this.MarkableCanvas.Markers = this.GetDisplayMarkers();
+                this.Speak(counter.Content + " " + counter.Label); // Speak the current count
             }
-
-            // fill in marker information
-            marker.ShowLabel = true; // Show the annotation as its created. We will clear it on the next refresh
-            marker.LabelShownPreviously = false;
-            marker.Brush = Brushes.Red;               // Make it Red (for now)
-            marker.DataLabel = counter.DataLabel;
-            marker.Tooltip = counter.Label;   // The tooltip will be the counter label plus its data label
-            marker.Tooltip += "\n" + counter.DataLabel;
-            markersForCounter.AddMarker(marker);
-
-            // update this counter's list of points in the database
-            this.DataHandler.FileDatabase.MarkersUpdateMarkerRow(this.DataHandler.ImageCache.Current.ID, markersForCounter);
-            this.MarkableCanvas.Markers = this.GetDisplayMarkers();
-            this.Speak(counter.Content + " " + counter.Label); // Speak the current count
+            catch
+            {
+                System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op");
+            }
         }
         #endregion
 

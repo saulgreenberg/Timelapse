@@ -635,23 +635,31 @@ namespace Timelapse.Images
         /// </summary>
         private void RefreshBoundingBoxes()
         {
+
             if (this.ImageToDisplay != null)
             {
-                // Remove all prior bounding boxes and then redraw them
-                this.bboxCanvas.Children.Clear();
-                if (this.Children.Contains(this.bboxCanvas))
+                try // Handle as a no-op for rare bug that occurs when the calling thread cannot access the  object
                 {
-                    this.Children.Remove(this.bboxCanvas);
-                }
-                this.bboxCanvas.Children.Clear();
+                    // Remove all prior bounding boxes and then redraw them
+                    this.bboxCanvas.Children.Clear();
+                    if (this.Children.Contains(this.bboxCanvas))
+                    {
+                        this.Children.Remove(this.bboxCanvas);
+                    }
+                    this.bboxCanvas.Children.Clear();
 
-                // Set the new heights
-                this.bboxCanvas.Width = this.ImageToDisplay.RenderSize.Width;
-                this.bboxCanvas.Height = this.ImageToDisplay.RenderSize.Height;
-                bool boundingBoxesDrawn = this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.ImageToDisplay.RenderSize.Width, this.ImageToDisplay.RenderSize.Height, 0, this.transformGroup);
-                if (boundingBoxesDrawn)
+                    // Set the new heights
+                    this.bboxCanvas.Width = this.ImageToDisplay.RenderSize.Width;
+                    this.bboxCanvas.Height = this.ImageToDisplay.RenderSize.Height;
+                    bool boundingBoxesDrawn = this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.ImageToDisplay.RenderSize.Width, this.ImageToDisplay.RenderSize.Height, 0, this.transformGroup);
+                    if (boundingBoxesDrawn)
+                    {
+                        this.Children.Add(this.bboxCanvas);
+                    }
+                }
+                catch
                 {
-                    this.Children.Add(this.bboxCanvas);
+                    return;
                 }
             }
         }
