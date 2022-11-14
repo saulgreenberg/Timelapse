@@ -259,6 +259,7 @@ namespace DialogUpgradeFiles.Util
             }
             if (path.EndsWith(Constant.File.AviFileExtension, StringComparison.OrdinalIgnoreCase) ||
                 path.EndsWith(Constant.File.Mp4FileExtension, StringComparison.OrdinalIgnoreCase) ||
+                path.EndsWith(Constant.File.MovFileExtension, StringComparison.OrdinalIgnoreCase) ||
                 path.EndsWith(Constant.File.ASFFileExtension, StringComparison.OrdinalIgnoreCase))
             {
                 return FileExtensionEnum.IsVideo;
@@ -280,7 +281,7 @@ namespace DialogUpgradeFiles.Util
                 return false;
             }
 
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension })
+            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 List<FileInfo> fileInfoList = new List<FileInfo>();
                 try
@@ -315,7 +316,8 @@ namespace DialogUpgradeFiles.Util
             fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
                                    || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
                                    || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) == true)
+                                   || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
+                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) == true)
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
         }
 
@@ -341,7 +343,7 @@ namespace DialogUpgradeFiles.Util
             {
                 return;
             }
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension })
+            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 // GetFiles has a 'bug', where it can match an extension even if there are more letters after the extension. 
                 // That is, if we are looking for *.jpg, it will not only return *.jpg files, but files such as *.jpgXXX

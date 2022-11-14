@@ -15,7 +15,6 @@ namespace Timelapse.Editor.Dialog
         private string FilePath;
         #endregion
 
-
         public InspectMetadata(Window owner)
         {
             this.InitializeComponent();
@@ -35,7 +34,7 @@ namespace Timelapse.Editor.Dialog
         // When the user opens the file, get its metadata and display it in the datagrid
         private void OpenFile_Click(object sender, RoutedEventArgs e)
         {
-            string filter = String.Format("Images and videos (*{0};*{1};*{2};*{3})|*{0};*{1};*{2};*{3}", Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension);
+            string filter = String.Format("Images and videos (*{0};*{1};*{2};*{3};*{4})|*{0};*{1};*{2};*{3};*{4}", Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension);
             if (Dialogs.TryGetFileFromUserUsingOpenFileDialog("Select a typical file to inspect", ".", filter, Constant.File.JpgFileExtension, out this.FilePath) == true)
             {
                 Mouse.OverrideCursor = Cursors.Wait;

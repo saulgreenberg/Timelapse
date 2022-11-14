@@ -29,7 +29,7 @@
                             Hint="As metadata can be camera-specific, inspect files produced by each camera model you have to see what metadata is available."
                             ShowExplanationVisibility="True"/>
 
-            <DockPanel LastChildFill="True">
+            <DockPanel LastChildFill="True"> 
                 <DockPanel DockPanel.Dock="Bottom"  HorizontalAlignment="Stretch" >
                     <Button x:Name="OkayButton" IsDefault="True"  DockPanel.Dock="Right" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10" Margin="10,10,10,10" Click="OkayButton_Click">_Okay</Button>
                     <Button Name="OpenFile" VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="10" Margin="10,10,5,10"  Click="OpenFile_Click">Open _File</Button>

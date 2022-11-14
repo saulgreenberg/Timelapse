@@ -216,6 +216,7 @@ namespace DialogUpgradeFiles.Constant
         public const string JpgFileExtension = ".jpg";
         public const string JsonFileExtension = ".json";
         public const string MergedFileName = DefaultFileDatabaseFileNameRoot + "_merged" + FileDatabaseFileExtension;
+        public const string MovFileExtension = ".mov";
         public const string Mp4FileExtension = ".mp4";
         public const string ASFFileExtension = ".asf";
         public const string MacOSXHiddenFilePrefix = "._";

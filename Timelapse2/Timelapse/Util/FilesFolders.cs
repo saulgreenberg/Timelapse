@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Windows.Shapes;
 using Timelapse.Database;
 using Timelapse.Enums;
 
@@ -26,12 +27,12 @@ namespace Timelapse.Util
 
             // Test: Check for invalid file locations
             // Disallowed are Drive letter roots and System/Hidden folders
-            string extension = Path.GetExtension(filePath);
-            if (FilesFolders.IsFolderPathADriveLetter(Path.GetDirectoryName(filePath)))
+            string extension = System.IO.Path.GetExtension(filePath);
+            if (FilesFolders.IsFolderPathADriveLetter(System.IO.Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInRootDriveFolder;
             }
-            if (FilesFolders.IsFolderSystemOrHidden(Path.GetDirectoryName(filePath)))
+            if (FilesFolders.IsFolderSystemOrHidden(System.IO.Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder;
             }
@@ -43,7 +44,7 @@ namespace Timelapse.Util
             }
 
             // Test: Is it a .ddb or .tdb file
-            if (Path.GetExtension(filePath) != Constant.File.FileDatabaseFileExtension && Path.GetExtension(filePath) != Constant.File.TemplateDatabaseFileExtension)
+            if (System.IO.Path.GetExtension(filePath) != Constant.File.FileDatabaseFileExtension && System.IO.Path.GetExtension(filePath) != Constant.File.TemplateDatabaseFileExtension)
             {
                 return DatabaseFileErrorsEnum.NotATimelapseFile;
             }
@@ -223,7 +224,7 @@ namespace Timelapse.Util
             }
             try
             {
-                string foldername = startFolder.Split(Path.DirectorySeparatorChar).Last();
+                string foldername = startFolder.Split(System.IO.Path.DirectorySeparatorChar).Last();
                 if ((ignoreBackupFolder && foldername == Constant.File.BackupFolder) || (ignoreDeletedFolder && foldername == Constant.File.DeletedFilesFolder))
                 {
 
@@ -261,11 +262,11 @@ namespace Timelapse.Util
             Dictionary<string, List<string>> matchingFolders = new Dictionary<string, List<string>>();
             foreach (string missingFolderPath in missingFolderPaths)
             {
-                string missingFolderName = Path.GetFileName(missingFolderPath);
+                string missingFolderName = System.IO.Path.GetFileName(missingFolderPath);
                 List<string> matches = new List<string>();
                 foreach (string oneFolderPath in allFolderPaths)
                 {
-                    string allRelativePathName = Path.GetFileName(oneFolderPath);
+                    string allRelativePathName = System.IO.Path.GetFileName(oneFolderPath);
                     if (String.Equals(missingFolderName, allRelativePathName))
                     {
                         matches.Add(oneFolderPath);
@@ -314,8 +315,8 @@ namespace Timelapse.Util
             {
                 return null;
             }
-            string fileName = Path.GetFileName(fullPath);
-            string directoryName = Path.GetDirectoryName(fullPath).TrimEnd('\\');
+            string fileName = System.IO.Path.GetFileName(fullPath);
+            string directoryName = System.IO.Path.GetDirectoryName(fullPath).TrimEnd('\\');
 
             //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
             string relativePath = rootPath.Equals(directoryName) ? String.Empty : directoryName.Substring(rootPath.Length + 1);
@@ -331,7 +332,7 @@ namespace Timelapse.Util
             {
                 return String.Empty;
             }
-            return Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
+            return System.IO.Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, ImageRow imageRow)
@@ -340,12 +341,12 @@ namespace Timelapse.Util
             {
                 return String.Empty;
             }
-            return Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
+            return System.IO.Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, string relativePath, string fileName)
         {
-            return Path.Combine(rootPath, relativePath, fileName);
+            return System.IO.Path.Combine(rootPath, relativePath, fileName);
         }
         #endregion
 
@@ -367,6 +368,7 @@ namespace Timelapse.Util
             }
             if (path.EndsWith(Constant.File.AviFileExtension, StringComparison.OrdinalIgnoreCase) ||
                 path.EndsWith(Constant.File.Mp4FileExtension, StringComparison.OrdinalIgnoreCase) ||
+                path.EndsWith(Constant.File.MovFileExtension, StringComparison.OrdinalIgnoreCase) ||
                 path.EndsWith(Constant.File.ASFFileExtension, StringComparison.OrdinalIgnoreCase))
             {
                 return FileExtensionEnum.IsVideo;
@@ -388,7 +390,7 @@ namespace Timelapse.Util
                 return false;
             }
 
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension })
+            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 List<FileInfo> fileInfoList = new List<FileInfo>();
                 try
@@ -424,7 +426,7 @@ namespace Timelapse.Util
                 return fileInfoList;
             }
 
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension })
+            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 try
                 {
@@ -453,6 +455,7 @@ namespace Timelapse.Util
             fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
                                    || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
                                    || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) == true
+                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
                                    || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) == true)
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
         }
@@ -481,7 +484,7 @@ namespace Timelapse.Util
             {
                 return;
             }
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension })
+            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension})
             {
                 // GetFiles has a 'bug', where it can match an extension even if there are more letters after the extension. 
                 // That is, if we are looking for *.jpg, it will not only return *.jpg files, but files such as *.jpgXXX
@@ -541,7 +544,7 @@ namespace Timelapse.Util
 
         public static bool IsFolderPathADriveLetter(string path)
         {
-            return Path.GetPathRoot(path) == path;
+            return System.IO.Path.GetPathRoot(path) == path;
         }
         #endregion
     }

@@ -174,7 +174,7 @@ namespace Timelapse
             }
             catch
             {
-                System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op");
+                System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
             }
         }
         #endregion
