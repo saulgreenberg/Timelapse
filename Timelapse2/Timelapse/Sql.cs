@@ -123,6 +123,7 @@ namespace Timelapse
 
         public const string Real = " REAL ";
         public const string Text = "TEXT";
+        public const string TimeFunction = " Time ";
         public const string Then = " THEN ";
         public const string Trim = " TRIM ";
         public const string True = " TRUE ";
@@ -318,11 +319,18 @@ namespace Timelapse
                 : dataLabel + mathOperator + Sql.Quote(value);
         }
 
-        /// <returns>DataLabel operator "value", e.g., Date(datetime)= Date('2016-08-19 19:08:22')</returns>
+        /// <returns>Match the Date portion only  by extracting the Date from the DateTime string value, e.g., DataLabel operator "value", e.g., Date(datetime)= Date('2016-08-19 19:08:22')</returns>
         public static string DataLabelDateTimeOperatorValue(string dataLabel, string mathOperator, string value)
         {
             value = value == null ? String.Empty : value.Trim();
             return Sql.DateFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.DateFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
+        }
+
+        /// <returns>Match the Time portion only  by extracting the Time from the DateTime string value, e.g., DataLabel operator "value", e.g., Time (datetime) = '19:08:22'</returns>
+        public static string DataLabelTimeOperatorValue(string dataLabel, string mathOperator, string value)
+        {
+            value = value == null ? String.Empty : value.Trim();
+            return Sql.TimeFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.TimeFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
         }
 
         /// <summary>

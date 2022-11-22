@@ -17,6 +17,9 @@ namespace Timelapse.Database
         public List<SearchTerm> SearchTerms { get; set; }
 
         public int RandomSample { get; set; }
+        
+        // Whether we should select by the time or the date in the DateTime field
+        public bool UseTimeInsteadOfDate { get; set; } = false;
 
         public CustomSelectionOperatorEnum TermCombiningOperator { get; set; }
         public bool ShowMissingDetections { get; set; }
@@ -85,11 +88,28 @@ namespace Timelapse.Database
                     searchTerm.DatabaseValue = "0";
                     searchTerm.Operator = Constant.SearchTermOperator.GreaterThan;  // Makes more sense that people will test for > as the default rather than counters
                 }
-                else if (controlType == Constant.DatabaseColumn.DateTime)
+                else if (controlType == Constant.DatabaseColumn.DateTime && false == this.UseTimeInsteadOfDate)
                 {
-                    // the first time the CustomSelection dialog is popped Timelapse calls SetDateTime() to changes the default date time to the date time 
+                    // Because UseTimeInsteadofDate is false, we use the Date portion of the DateTime
+                    // Note that the first time the CustomSelection dialog is popped Timelapse calls SetDateTime() to changes the default date time to the date time 
                     // of the current image
                     searchTerm.DatabaseValue = DateTimeHandler.ToStringDatabaseDateTime(Constant.ControlDefault.DateTimeDefaultValue);
+                    searchTerm.Operator = Constant.SearchTermOperator.GreaterThanOrEqual;
+
+                    // support querying on a range of datetimes by giving the user two search terms, one configured for the start of the interval and one
+                    // for the end
+                    SearchTerm dateTimeLessThanOrEqual = new SearchTerm(searchTerm)
+                    {
+                        Operator = Constant.SearchTermOperator.LessThanOrEqual
+                    };
+                    this.SearchTerms.Add(dateTimeLessThanOrEqual);
+                }
+                else if (controlType == Constant.DatabaseColumn.DateTime && this.UseTimeInsteadOfDate)
+                {
+                    // Because UseTimeInsteadofDate is true, we use the Time portion of the DateTime
+                    // the first time the CustomSelection dialog is popped Timelapse calls SetDateTime() to changes the default date time to the date time 
+                    // of the current image
+                    searchTerm.DatabaseValue = DateTimeHandler.ToStringDisplayTimePortion(Constant.ControlDefault.DateTimeDefaultValue);
                     searchTerm.Operator = Constant.SearchTermOperator.GreaterThanOrEqual;
 
                     // support querying on a range of datetimes by giving the user two search terms, one configured for the start of the interval and one
@@ -156,7 +176,7 @@ namespace Timelapse.Database
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
             IEnumerable<SearchTerm> nonStandardSearchTerms = SearchTerms.Except(unorderedStandardSearchTerms).ToList();
-            // FInally, concat the two lists together to collect all the correctly ordered search terms into a single list
+            // Finally, concat the two lists together to collect all the correctly ordered search terms into a single list
             SearchTerms = standardSearchTerms.Concat(nonStandardSearchTerms).ToList();
         }
         #endregion
@@ -365,10 +385,15 @@ namespace Timelapse.Database
                         string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", false);
                         whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
                     }
-                    else if (dataLabel == Constant.DatabaseColumn.DateTime)
+                    else if (dataLabel == Constant.DatabaseColumn.DateTime && false == this.UseTimeInsteadOfDate)
                     {
-                        // A special form for DateTime, as we only want to consider the Date portion of the DateTime
+                        // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
                         whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
+                    }
+                    else if (dataLabel == Constant.DatabaseColumn.DateTime && this.UseTimeInsteadOfDate)
+                    {
+                        // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
+                        whereForTerm = SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
                     }
                     else
                     {

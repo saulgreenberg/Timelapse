@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -47,6 +48,22 @@ namespace Timelapse.Dialog
         // Remember note fields that contain Episode data
         string NoteDataLabelContainingEpisodeData;
 
+        // UseTime Checkbox, funciton is to specify whether the select should use a pure time range instead of a pure date range
+        private readonly CheckBox CheckBoxUseTime = new CheckBox()
+        {
+            Content = "Use time (hh:mm:ss) instead of date",
+            FontWeight = FontWeights.Normal,
+            FontStyle = FontStyles.Italic,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsChecked = false,
+            Width = Double.NaN,
+            Margin = new Thickness
+            {
+                Left = 10
+            },
+            IsEnabled = true
+        };
+
         // And/Or RadioButtons use to combine non-standard terms
         private readonly RadioButton RadioButtonTermCombiningAnd = new RadioButton()
         {
@@ -66,6 +83,13 @@ namespace Timelapse.Dialog
             Width = Double.NaN,
             IsEnabled = false
         };
+
+        // References to the various dateTime labels and controls set when they are created later,
+        // so we can switch their attributes depending on the CheckBoxUseTime state
+        private TextBlock dateTimeLabel1;
+        private TextBlock dateTimeLabel2;
+        private DateTimePicker dateTimeControl1;
+        private DateTimePicker dateTimeControl2;
 
         // This timer is used to delay showing count information, which could be an expensive operation, as the user may be setting values quickly
         private readonly DispatcherTimer countTimer = new DispatcherTimer();
@@ -98,6 +122,13 @@ namespace Timelapse.Dialog
         // When the window is loaded, construct all the SearchTerm controls 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // Used to track whether we are on the 1st or 2nd dateTime control
+            bool firstDateTimeControlSeen = false;
+
+            // Adds the callback to this checkbox
+            this.CheckBoxUseTime.Checked += CheckBoxUseTime_CheckChanged;
+            this.CheckBoxUseTime.Unchecked += CheckBoxUseTime_CheckChanged;
+
             // Adjust this dialog window position 
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
@@ -274,6 +305,18 @@ namespace Timelapse.Dialog
                 {
                     // Change DateTime to Date
                     controlLabel.Text = Constant.ControlDeprecated.DateLabel;
+
+                    // Remember the DateTime labels so we can switch their values when the CheckboxUseTime is checked/unchecked
+                    if (dateTimeLabel1 == null)
+                    {
+                        // Must be the 1st one, as its unassigned
+                        dateTimeLabel1 = controlLabel;
+                    }
+                    else
+                    {
+                        // Must be the 2nd one as the first one is unassigned
+                        dateTimeLabel2 = controlLabel;
+                    }
                 }
                 else if (searchTerm.Label == Constant.DatabaseColumn.RelativePath)
                 {
@@ -380,6 +423,17 @@ namespace Timelapse.Dialog
                         Value = dateTime,
                         TimePickerVisibility = Visibility.Collapsed
                     };
+                    // Remember the DateTime controls so we can switch whether they show Date or Time when the CheckboxUseTime is checked/unchecked
+                    if (this.dateTimeControl1 == null)
+                    {
+                        // must be the first dateValue
+                        this.dateTimeControl1 = dateValue;
+                    }
+                    else
+                    {
+                        // must be the 2nd dateValue
+                        this.dateTimeControl2 = dateValue;
+                    }
                     dateValue.ValueChanged += this.DateTime_SelectedDateChanged;
                     Grid.SetRow(dateValue, gridRowIndex);
                     Grid.SetColumn(dateValue, CustomSelectionWithEpisodes.ValueColumn);
@@ -522,6 +576,16 @@ namespace Timelapse.Dialog
                     throw new NotSupportedException(String.Format("Unhandled control type '{0}'.", controlType));
                 }
 
+                if (searchTerm.DataLabel == Constant.DatabaseColumn.DateTime && firstDateTimeControlSeen == false)
+                {
+                    // Display the CheckBoxUseTime control next to the DateTime expression
+                    Grid.SetRow(CheckBoxUseTime, gridRowIndex);
+                    Grid.SetColumn(CheckBoxUseTime, CustomSelectionWithEpisodes.SearchCriteriaColumn);
+                    Grid.SetRowSpan(CheckBoxUseTime, 2);
+                    this.SearchTerms.Children.Add(CheckBoxUseTime);
+                    firstDateTimeControlSeen = true;
+                }
+
                 // Conditional And/Or column
                 // If we are  on the first term after the non-standard controls
                 // - create the and/or buttons in the last column, which lets a user determine how to combine the remaining terms
@@ -565,9 +629,51 @@ namespace Timelapse.Dialog
                 }
             }
 
+            // Set the UseTime state based on what was last recorded
+            this.CheckBoxUseTime.IsChecked = this.database.CustomSelection.UseTimeInsteadOfDate;
+
             // Set the selected item to the Note field with episode data in it.
             this.database.CustomSelection.EpisodeNoteField = this.NoteDataLabelContainingEpisodeData;
             this.database.CustomSelection.EpisodeShowAllIfAnyMatch = this.CheckboxShowAllEpisodeImages.IsChecked == true;
+        }
+        #endregion
+
+        #region CheckBoxUseTime Callbacks
+        // Toggle whether we are using dates or times
+        private void CheckBoxUseTime_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                // Remember the checkbox state
+                this.database.CustomSelection.UseTimeInsteadOfDate = cb.IsChecked == true;
+
+                // The DateTime label should reflect the state
+                if (this.dateTimeLabel1 != null)
+                {
+                    this.dateTimeLabel1.Text = cb.IsChecked == true ? "Time" : "Date";
+                }
+                if (this.dateTimeLabel2 != null)
+                {
+                    this.dateTimeLabel2.Text = cb.IsChecked == true ? "Time" : "Date";
+                }
+
+                // The DateTime control should reflect the state by displaying Time or Date only input
+                if (this.dateTimeControl1 != null)
+                {
+                    dateTimeControl1.TimePickerVisibility = cb.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                    dateTimeControl1.ShowDropDownButton = cb.IsChecked == false;
+                    dateTimeControl1.FormatString = cb.IsChecked == true ? Constant.Time.TimeInputFormat : Constant.Time.DateFormat;
+                }
+                if (this.dateTimeControl2 != null)
+                {
+                    dateTimeControl2.TimePickerVisibility = cb.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                    dateTimeControl2.ShowDropDownButton = cb.IsChecked == false;
+                    dateTimeControl2.FormatString = cb.IsChecked == true ? Constant.Time.TimeInputFormat : Constant.Time.DateFormat;
+                }
+                // Update the count. We could be a bit more efficient by checking to see if either of these controls have their 'Use'checkboxes unchecked,
+                // but its not worth the bother.
+                this.InitiateShowCountsOfMatchingFiles();
+            }
         }
         #endregion
 
@@ -585,7 +691,7 @@ namespace Timelapse.Dialog
             // Haader text
             TextBlock tbHeader = new TextBlock()
             {
-                Text = "These terms are combined using either",
+                Text = "Choose how terms are combined using either",
                 VerticalAlignment = VerticalAlignment.Center,
                 FontWeight = FontWeights.Normal,
             };
@@ -737,14 +843,11 @@ namespace Timelapse.Dialog
             if (datePicker.Value.HasValue)
             {
                 int row = Grid.GetRow(datePicker);
-                // Because of the bug in the DateTimePicker, we have to get the changed value from the string
-                // as DateTimePicker.Value.Value can have the old date rather than the new one.
-                // Note that the DateTimePicker is set to only show the Date, so we parse for the DateOnly
-                if (DateTimeHandler.TryParseDisplayDateOnlyString(datePicker.Text, out DateTime newDateTime))
-                {
-                    this.database.CustomSelection.SetDateTime(row - 1, newDateTime);
-                    this.UpdateSearchDialogFeedback();
-                }
+                // Set the DateTime from the updated value, regardless of whether the UseTime checkbox is checked.
+                // This stores both the date and the time.
+                // Later, the search itself will check whether the UseTime is true or false to determine whether it should parse out the date or time portion.
+                this.database.CustomSelection.SetDateTime(row - 1, datePicker.Value.Value);
+                this.UpdateSearchDialogFeedback();
             }
         }
 
@@ -906,7 +1009,6 @@ namespace Timelapse.Dialog
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
             this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
         }
-
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
@@ -1183,7 +1285,7 @@ namespace Timelapse.Dialog
         private void CountTimer_Tick(object sender, EventArgs e)
         {
             this.countTimer.Stop();
-            // This is set everytime a selectin is made
+            // This is set everytime a selection is made
             if (this.dontCount == true)
             {
                 return;

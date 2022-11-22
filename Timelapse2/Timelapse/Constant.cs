@@ -566,6 +566,7 @@ namespace Timelapse.Constant
     public static class Time
     {
         public const string DateFormat = "dd-MMM-yyyy";
+        public const string TimeInputFormat = "HH:mm:ss"; // format for Time in Select dialog
 
         // DateTimes as stored in the database. The 2nd form is so it can read in from the DB both the legacy (UTC) format and current simpler format 
         public const string DateTimeDatabaseLegacyUTCFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";  // legacy DatabaseFormat
