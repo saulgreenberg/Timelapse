@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -695,7 +696,21 @@ namespace DialogUpgradeFiles
             {
                 hasValues = false;
                 cellsInRow = new List<List<Point>>();
-                foreach (string dataLabel in row.DataLabels)
+                // Note that we have to handle the special case where the order of cells differs from the schema column order.
+                // When that happens,  marker data may be inserted in the wrong column
+                // This occurs when:
+                // - a pre-2.3 tdb and ddb contains multiple counters
+                // - the control order is changed from the original one (as recorded in the template)
+                // - the ddb is then updated. 
+                // To remedy this, we should use the counter order as indicated in columns (which is the new schema order)
+                // rather than in row.DataLabels (which is the old column order). As a safety check, we do compare the column names to make
+                // sure they both contain the same thing, albeit in perhaps different order.
+                // This test checks to see if both have the same datalabels, where order doesn't matter.
+                //if (Enumerable.SequenceEqual(columns.OrderBy(e => e), row.DataLabels.OrderBy(e => e)))
+                //{
+                //    System.Diagnostics.Debug.Print("Problem: Marker columns are not in the same place as Marker data");
+                //}
+                foreach (string dataLabel in columns)
                 {
                     // Collect the cell values (i.e., the points) corresponding to each data label
                     cellValue = row[dataLabel];

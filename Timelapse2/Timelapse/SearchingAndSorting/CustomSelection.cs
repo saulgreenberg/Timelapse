@@ -346,7 +346,6 @@ namespace Timelapse.Database
                 // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
                 where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(confidenceBounds.Item1, confidenceBounds.Item2);
             }
-            System.Diagnostics.Debug.Print(where);
             return where;
         }
 
