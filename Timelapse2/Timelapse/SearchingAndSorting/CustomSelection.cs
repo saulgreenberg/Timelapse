@@ -17,7 +17,7 @@ namespace Timelapse.Database
         public List<SearchTerm> SearchTerms { get; set; }
 
         public int RandomSample { get; set; }
-        
+
         // Whether we should select by the time or the date in the DateTime field
         public bool UseTimeInsteadOfDate { get; set; } = false;
 
@@ -346,6 +346,7 @@ namespace Timelapse.Database
                 // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
                 where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(confidenceBounds.Item1, confidenceBounds.Item2);
             }
+            System.Diagnostics.Debug.Print(where);
             return where;
         }
 
@@ -353,60 +354,84 @@ namespace Timelapse.Database
         private string CombineSearchTermsAndOperator(IEnumerable<SearchTerm> searchTerms, CustomSelectionOperatorEnum termCombiningOperator)
         {
             string where = String.Empty;
+
+            // Special case on Time.
+            // If there are two time terms and the select goes over midnight, we combine them with an OR instead of AND
+            // This allows a select between (say) 10pm and 7am
+            bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(this.UseTimeInsteadOfDate, searchTerms, this.DetectionSelections.Enabled, out string combinedTimeTerm);
+
+            bool timeHandled = false; // Allows us to track whether we are on the first or second time term
             foreach (SearchTerm searchTerm in searchTerms)
             {
                 // Basic Form after the ForEach iteration should be:
                 // "" if nothing in it
-                // a=b for the firt term
+                // a=b for the first term
                 // ... AND/OR c=d ... for subsequent terms (AND/OR defined in termCombiningOperator
                 // variations are special cases for relative path and datetime
                 string whereForTerm = String.Empty;
 
-                // If we are using detections, then we have to qualify the data label e.g., DataTable.X
-                string dataLabel = (this.DetectionSelections.Enabled == true) ? Constant.DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
-
-                // Check to see if the search term is querying for an empty string
-                if (String.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == Constant.SearchTermOperator.Equal)
+                if (areTimeTermsCombined)
                 {
-                    // It is, so we also need to expand the query to check for both nulls an empty string, as both are considered equivalent for query purposes
-                    // Form: ( dataLabel IS NULL OR  dataLabel = '' );
-                    whereForTerm = SqlPhrase.LabelIsNullOrDataLabelEqualsEmpty(dataLabel);
-                }
-                else
-                {
-                    // The search term is querying for a non-empty value.
-                    Debug.Assert(searchTerm.DatabaseValue.Contains("\"") == false, String.Format("Search term '{0}' contains quotation marks and could be used for SQL injection.", searchTerm.DatabaseValue));
-                    if (dataLabel == Constant.DatabaseColumn.RelativePath || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.RelativePath)
+                    // Handle the special case dealing with the combined Time terms
+                    if (timeHandled)
                     {
-                        // Special case for RelativePath and DataTable.RelativePath, 
-                        // as we want to return images not only in the relative path folder, but its subfolder as well.
-                        // Form: ( DataTable.RelativePath='relpathValue' OR DataTable.RelativePath GLOB 'relpathValue\*' )
-                        string term1 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Equal), searchTerm.DatabaseValue, false);
-                        string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", false);
-                        whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
-                    }
-                    else if (dataLabel == Constant.DatabaseColumn.DateTime && false == this.UseTimeInsteadOfDate)
-                    {
-                        // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
-                        whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
-                    }
-                    else if (dataLabel == Constant.DatabaseColumn.DateTime && this.UseTimeInsteadOfDate)
-                    {
-                        // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
-                        whereForTerm = SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
+                        // We are on the second time term, so we can skip it as its already handled in the combined expression.
+                        continue;
                     }
                     else
                     {
-                        // Standard search term
-                        // Form: dataLabel operator "value", e.g., DataLabel > "5"
-                        whereForTerm = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue, searchTerm.ControlType == Constant.Control.Counter);
+                        // We are on the first time term, so we use the combined Time expression
+                        whereForTerm = combinedTimeTerm;
+                        timeHandled = true;
                     }
+                }
+                else
+                {
+                    // If we are using detections, then we have to qualify the data label e.g., DataTable.X
+                    string dataLabel = (this.DetectionSelections.Enabled == true) ? Constant.DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
 
-
-                    if (searchTerm.ControlType == Constant.Control.Flag)
+                    // Check to see if the search term is querying for an empty string
+                    if (String.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == Constant.SearchTermOperator.Equal)
                     {
-                        // Because flags can have capitals or lower case, we need to make the search case insenstive
-                        whereForTerm += Sql.CollateNocase; // so that true and false comparisons are case-insensitive
+                        // It is, so we also need to expand the query to check for both nulls an empty string, as both are considered equivalent for query purposes
+                        // Form: ( dataLabel IS NULL OR  dataLabel = '' );
+                        whereForTerm = SqlPhrase.LabelIsNullOrDataLabelEqualsEmpty(dataLabel);
+                    }
+                    else
+                    {
+                        // The search term is querying for a non-empty value.
+                        Debug.Assert(searchTerm.DatabaseValue.Contains("\"") == false, String.Format("Search term '{0}' contains quotation marks and could be used for SQL injection.", searchTerm.DatabaseValue));
+                        if (dataLabel == Constant.DatabaseColumn.RelativePath || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.RelativePath)
+                        {
+                            // Special case for RelativePath and DataTable.RelativePath, 
+                            // as we want to return images not only in the relative path folder, but its subfolder as well.
+                            // Form: ( DataTable.RelativePath='relpathValue' OR DataTable.RelativePath GLOB 'relpathValue\*' )
+                            string term1 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Equal), searchTerm.DatabaseValue, false);
+                            string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", false);
+                            whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
+                        }
+                        else if ( (dataLabel == Constant.DatabaseColumn.DateTime || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && false == this.UseTimeInsteadOfDate)
+                        {
+                            // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
+                            whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
+                        }
+                        else if ( (dataLabel == Constant.DatabaseColumn.DateTime || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && this.UseTimeInsteadOfDate)
+                        {
+                            // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
+                            whereForTerm = SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
+                        }
+                        else
+                        {
+                            // Standard search term
+                            // Form: dataLabel operator "value", e.g., DataLabel > "5"
+                            whereForTerm = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue, searchTerm.ControlType == Constant.Control.Counter);
+                        }
+
+                        if (searchTerm.ControlType == Constant.Control.Flag)
+                        {
+                            // Because flags can have capitals or lower case, we need to make the search case insenstive
+                            whereForTerm += Sql.CollateNocase; // so that true and false comparisons are case-insensitive
+                        }
                     }
                 }
 
@@ -431,6 +456,80 @@ namespace Timelapse.Database
             }
             // Done. Return this portion of the where clause
             return where;
+        }
+
+        // Time expressions
+        // To go over midnight, we need to special case searches by creating a single combined expression when
+        // - two time ranges are selected
+        // - when using time > time1 and time < time2 and the times go over midnight (i.e. time1 > time2)
+        // - when using time < time1 and time > time2 and the times go over midnight (i.e. time1 < time2)
+        // The combined expression will be surrounded by brackets and combined with OR
+        private static bool CombineTimeSearchTermsIfNeeded(bool useTimeInsteadOfDate, IEnumerable<SearchTerm> searchTerms, bool useFullyQualifiedDataLabel, out string expression)
+        {
+            expression = String.Empty;
+            if (useTimeInsteadOfDate == false)
+            {
+                // We aren't using Time
+                return false;
+            }
+
+            IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime && term.UseForSearching == true);
+            if (timeTerms.Count() != 2)
+            {
+                // We don't have two Time terms to combine
+                return false;
+            }
+
+            SearchTerm st1 = timeTerms.ElementAt(0);
+            SearchTerm st2 = timeTerms.ElementAt(1);
+            TimeSpan ts1 = st1.GetDateTime().TimeOfDay;
+            TimeSpan ts2 = st2.GetDateTime().TimeOfDay;
+            switch (st1.Operator)
+            {
+                case Constant.SearchTermOperator.GreaterThanOrEqual:
+                case Constant.SearchTermOperator.GreaterThan:
+                    // Case 1: time > time1, time < time2,  and if time1 > time2, i.e., the range should span midnight so it should be combined
+                    if (st2.Operator == Constant.SearchTermOperator.LessThanOrEqual || st2.Operator == Constant.SearchTermOperator.LessThan)
+                    {
+                        if (ts1 > ts2)
+                        {
+                            expression = "Case 1";
+                            break;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    return false;
+                case Constant.SearchTermOperator.LessThanOrEqual:
+                case Constant.SearchTermOperator.LessThan:
+                    // Case 2: time < time1, time > time2,  and if time1 < time2, i.e., the range should span midnight so it should be combined
+                    if (st2.Operator == Constant.SearchTermOperator.GreaterThanOrEqual || st2.Operator == Constant.SearchTermOperator.GreaterThan)
+                    {
+                        if (ts1 < ts2)
+                        {
+                            expression = "Case 2";
+                            break;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    return false;
+                default:
+                    return false;
+            }
+            string dataLabel = useFullyQualifiedDataLabel ? Constant.DBTables.FileData + "." + st1.DataLabel : st1.DataLabel;
+            expression = Sql.OpenParenthesis
+                + SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(st1.Operator), st1.DatabaseValue)
+                + Sql.Or
+                + SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(st2.Operator), st2.DatabaseValue)
+                + Sql.CloseParenthesis;
+            //System.Diagnostics.Debug.Print("Time term 1: " + st1.Operator + "|" + ts1.ToString());
+            //System.Diagnostics.Debug.Print("Time term 2: " + st2.Operator + "|" + ts2.ToString());
+            return true;
         }
         #endregion
 
