@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Windows.Shapes;
 using Timelapse.Database;
 using Timelapse.Enums;
 
@@ -112,7 +111,7 @@ namespace Timelapse.Util
                         {
                             return DatabaseFileErrorsEnum.PreVersion2300;
                         }
-                        
+
                         // Now just check to see if we are opening the .ddb file with an older version of Timelapse that last opened it...
                         string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
                         if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseCurrentVersionNumber, thisVersion))
@@ -484,7 +483,7 @@ namespace Timelapse.Util
             {
                 return;
             }
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension})
+            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 // GetFiles has a 'bug', where it can match an extension even if there are more letters after the extension. 
                 // That is, if we are looking for *.jpg, it will not only return *.jpg files, but files such as *.jpgXXX

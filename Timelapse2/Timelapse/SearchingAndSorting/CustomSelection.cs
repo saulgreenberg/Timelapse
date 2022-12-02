@@ -409,12 +409,12 @@ namespace Timelapse.Database
                             string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", false);
                             whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
                         }
-                        else if ( (dataLabel == Constant.DatabaseColumn.DateTime || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && false == this.UseTimeInsteadOfDate)
+                        else if ((dataLabel == Constant.DatabaseColumn.DateTime || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && false == this.UseTimeInsteadOfDate)
                         {
                             // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
                         }
-                        else if ( (dataLabel == Constant.DatabaseColumn.DateTime || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && this.UseTimeInsteadOfDate)
+                        else if ((dataLabel == Constant.DatabaseColumn.DateTime || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && this.UseTimeInsteadOfDate)
                         {
                             // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);

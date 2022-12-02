@@ -12,11 +12,11 @@ namespace Timelapse.Editor.Util
         public RecencyOrderedList<string> MostRecentTemplates { get; private set; }
 
         public bool SuppressWarningToUpdateDBFilesToSQLPrompt { get; set; } // Redundant with the Timelapse variable, but lets it be set from the editor as well
-        
+
         // This redundantly read/writes the suppress value shared with Timelapse
         public bool SuppressOpeningWithOlderTimelapseVersionDialog { get; set; }
 
-        public EditorUserRegistrySettings(): this(Constant.WindowRegistryKeys.RootKey)
+        public EditorUserRegistrySettings() : this(Constant.WindowRegistryKeys.RootKey)
         {
         }
 

@@ -372,11 +372,11 @@ namespace Timelapse.Controls
         private void SetSpeed_Checked(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
-            
+
             // We use a tryparse as there was a rare bug when the tag could not be converted to a double
-            if (rb?.Tag != null && Double.TryParse((string) rb.Tag, out double newSpeed))
+            if (rb?.Tag != null && Double.TryParse((string)rb.Tag, out double newSpeed))
             {
-                this.Video.SpeedRatio = newSpeed; 
+                this.Video.SpeedRatio = newSpeed;
                 this.Play();
             }
         }

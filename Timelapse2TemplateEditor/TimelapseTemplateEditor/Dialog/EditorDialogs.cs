@@ -167,7 +167,7 @@ namespace Timelapse.Editor.Dialog
         }
 
         #region MessageBox: ddb file opened with an older version of Timelapse than recorded in it
-        public static bool? EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner, EditorUserRegistrySettings userSettings )
+        public static bool? EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner, EditorUserRegistrySettings userSettings)
         {
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;

@@ -1708,10 +1708,10 @@ namespace Timelapse.Dialog
             messageBox.Message.Solution += "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine; ;
             messageBox.Message.Solution += "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.";
             messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning. " +Environment.NewLine;
+            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning. " + Environment.NewLine;
             messageBox.Message.Hint += "You can unhide it later via the 'Options|Show or hide...' menu.";
             messageBox.DontShowAgain.Visibility = Visibility.Visible;
-            
+
             bool? result = messageBox.ShowDialog();
             if (messageBox.DontShowAgain.IsChecked.HasValue)
             {
