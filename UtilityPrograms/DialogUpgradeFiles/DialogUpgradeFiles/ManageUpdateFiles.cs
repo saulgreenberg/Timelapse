@@ -202,17 +202,21 @@ namespace DialogUpgradeFiles
                         // Check to see if it needs upgrading by the presence of the VersionCompatability column and examining the version number
                         if (false == SQLiteWrapper.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.VersionCompatabily))
                         {
+                            // Upgrade it as its missing a version compatability file
+                            foundNonUpdatedFiles.Add(foundFile);
                             continue;
                         }
                         List<object> version = SQLiteWrapper.GetDistinctValuesInColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.VersionCompatabily);
                         if (version.Count == 1 && Util.VersionChecks.IsVersion1GreaterOrEqualToVersion2((string)version[0], "2.3.0.0"))
                         {
-                            // Special case: Upgraded file, but with a UTCOffset Column
+                            // Special case: Upgraded file, but with a UTCOffset Column so we still have to upgrade it.
                             if (false == SQLiteWrapper.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset))
                             {
+                                foundNonUpdatedFiles.Add(foundFile);
                                 continue;
                             }
                         }
+                        // else will fall through, which means it will be upgraded since the version number is less than 2.3.0.0
                     }
                     foundNonUpdatedFiles.Add(foundFile);
                 }
