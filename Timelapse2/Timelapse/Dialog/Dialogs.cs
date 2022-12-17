@@ -522,13 +522,13 @@ namespace Timelapse.Dialog
             messageBox.Message.Problem = title + Environment.NewLine;
             messageBox.Message.Problem += "As a precaution, Timelapse normally moves deleted files into the " + Constant.File.DeletedFilesFolder + " folder." + Environment.NewLine;
             messageBox.Message.Problem += "However, the new file paths are too long for Windows to handle.";
-            messageBox.Message.Reason = "Windows cannot perform file operations if the file path is more than " + (Constant.File.MaxPathLength +8).ToString() + " characters.";
+            messageBox.Message.Reason = "Windows cannot perform file operations if the file path is more than " + (Constant.File.MaxPathLength + 8).ToString() + " characters.";
             messageBox.Message.Solution = "Click Okay to delete these files without backing them up, or Cancel to abort." + Environment.NewLine;
             messageBox.Message.Solution += "Alternately, shorten the path to your files, preferably well below the length limit:" + Environment.NewLine;
             messageBox.Message.Solution += "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine;
             messageBox.Message.Solution += "\u2022 use shorter folder or file names.";
 
-          return messageBox.ShowDialog() == true;
+            return messageBox.ShowDialog() == true;
         }
 
         // This version detects and displays warning messages.

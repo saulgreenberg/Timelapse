@@ -175,10 +175,10 @@
                                     </Paragraph>
 
                                     <Paragraph Margin="10,5,0,0">
-                                        <Bold>Backups are made:</Bold> the original
+                                        <Bold>Backups:</Bold> the original
                                         <Italic>.tdb</Italic> and
-                                        <Italic>.ddb</Italic> files are moved to the
-                                        <Italic>Backups</Italic> folder, where their filenames are appended with 'Pre2.3.timestamp'.
+                                        <Italic>.ddb</Italic> files are backed up in the
+                                        <Italic>Backups</Italic> folder, renamed to include 'Pre2.3' + timestamp. In rare cases, backups are made in the original folder and given a .tbk (template) or .dbk (data) suffix .
                                     </Paragraph>
 
                                 </TableCell>
@@ -298,10 +298,10 @@
                                     </Paragraph>
 
                                     <Paragraph Margin="10,5,0,0">
-                                        <Bold>Backups are made:</Bold> the original
+                                        <Bold>Backups:</Bold> the original
                                         <Italic>.tdb</Italic> and
-                                        <Italic>.ddb</Italic> files are moved to the
-                                        <Italic>Backups</Italic> folder, where their filenames are appended with 'Pre2.3.timestamp'.
+                                        <Italic>.ddb</Italic> files are backed up in the
+                                        <Italic>Backups</Italic> folder, renamed to include 'Pre2.3 + a timestamp. In rare cases, backups are made in the original folder and given a .tbk (template) or .dbk (data) suffix.
                                     </Paragraph>
 
                                 </TableCell>

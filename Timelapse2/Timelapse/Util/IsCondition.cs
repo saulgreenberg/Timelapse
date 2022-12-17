@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Timelapse.Enums;
 
@@ -75,7 +74,7 @@ namespace Timelapse.Util
         // Check length of a file
         public static bool IsPathLengthTooLong(string filePath, FilePathTypeEnum filePathType)
         {
-            
+
             switch (filePathType)
             {
                 case FilePathTypeEnum.DDB:
@@ -100,7 +99,7 @@ namespace Timelapse.Util
             }
             return IsPathLengthTooLong(filePath);
         }
- 
+
 
         private static bool IsPathLengthTooLong(string filePath)
         {

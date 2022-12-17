@@ -1,5 +1,4 @@
-﻿using DialogUpgradeFiles.Dialog;
-using DialogUpgradeFiles.Enums;
+﻿using DialogUpgradeFiles.Enums;
 using DialogUpgradeFiles.Util;
 using System;
 using System.Collections.Generic;
@@ -115,40 +114,40 @@ namespace DialogUpgradeFiles
                     switch (result)
                     {
                         case UpgradeResultsEnum.Upgraded:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Upgraded (with backup in the Backups folder)";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Upgraded";
                             upgraded++;
                             break;
                         case UpgradeResultsEnum.AlternateBackupMade:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Upgraded (with backup in the same folder)";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Upgraded";
                             upgraded++;
                             break;
                         case UpgradeResultsEnum.PathTooLong:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (file path longer than Window's allowed maximum)";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (path too long)";
                             failed++;
                             break;
                         case UpgradeResultsEnum.Failed:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed:             ";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed";
                             failed++;
                             break;
                         case UpgradeResultsEnum.NoBackupMade:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (could not make backup):";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (could not make backup)";
                             break;
                         case UpgradeResultsEnum.FileNotFound:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (file not found):";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (file not found)";
                             break;
                         case UpgradeResultsEnum.InvalidFile:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (invalid file):";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Failed (invalid file)";
                             break;
                         case UpgradeResultsEnum.Cancelled:
                         default:
-                            this.DictFileUpdateStatus[this.ShortFileName] = "Cancelled:      ";
+                            this.DictFileUpdateStatus[this.ShortFileName] = "Cancelled";
                             failed++;
                             break;
                     }
                 }
                 catch
                 {
-                    this.DictFileUpdateStatus[this.ShortFileName] = "Failed:             ";
+                    this.DictFileUpdateStatus[this.ShortFileName] = "Failed";
                     failed++;
                 }
 
@@ -172,7 +171,7 @@ namespace DialogUpgradeFiles
             if (pathTooLongFilesDetected)
             {
                 finishedMessage += Environment.NewLine + Environment.NewLine + "Some upgrades failed as their file path length are near Windows' allowed maximum." + Environment.NewLine;
-                finishedMessage += "\u2022 Shorten the path by moving your image folder higher up the folder hierarchy";
+                finishedMessage += "\u2022 shorten the path by moving your image folder higher up the folder hierarchy";
             }
             this.LineFeedback(finishedMessage);
             this.CancelUpgrade = false;
@@ -211,13 +210,11 @@ namespace DialogUpgradeFiles
                     catch (System.IO.PathTooLongException)
                     {
                         pathsTooLongList.Add(fileFolder);
-                        System.Diagnostics.Debug.Print("Path: " + fileFolder);
                         continue;
                     }
                     catch
                     {
                         pathsTooLongList.Add(fileFolder);
-                        System.Diagnostics.Debug.Print("Other: " + fileFolder);
                     }
                 }
 

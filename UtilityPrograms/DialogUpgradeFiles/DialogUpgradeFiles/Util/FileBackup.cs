@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 
 namespace DialogUpgradeFiles.Util
 {
@@ -98,12 +97,12 @@ namespace DialogUpgradeFiles.Util
             string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
             string sourceFileExtension = Path.GetExtension(sourceFileName);
             // If we couldn't create the backup folder, then use the alternate form
-            string destinationFileName = createAlternateBackup 
+            string destinationFileName = createAlternateBackup
                 ? String.Concat(sourceFileNameWithoutExtension, sourceFileExtension == Constant.File.FileDatabaseFileExtension ? ".dbk" : ".tbk")
                 : String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss"), sourceFileExtension);
-            string destinationFilePath = createAlternateBackup 
+            string destinationFilePath = createAlternateBackup
                 ? Path.Combine(folderPath, destinationFileName)
-                : Path.Combine(backupFolder.FullName, destinationFileName); 
+                : Path.Combine(backupFolder.FullName, destinationFileName);
 
             // if the path length is too long, use the alternate form
             if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))

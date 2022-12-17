@@ -1,5 +1,4 @@
 ﻿using DialogUpgradeFiles;
-using DialogUpgradeFiles.Util;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

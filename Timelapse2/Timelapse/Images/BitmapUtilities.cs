@@ -95,7 +95,7 @@ namespace Timelapse.Images
                 isCorruptOrMissing = true;
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
             }
- 
+
             // Our FFMPEG installation is the 64 bit version. In case someone is using a 32 bit machine, we use the MediaEncoder instead.
             if (Environment.Is64BitOperatingSystem == false)
             {

@@ -60,9 +60,6 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="Timelapse2">
-      <HintPath>..\..\..\Timelapse2\Timelapse\bin\Release\Timelapse2.exe</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />

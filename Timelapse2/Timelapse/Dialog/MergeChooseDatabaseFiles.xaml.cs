@@ -89,7 +89,7 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text = String.Format("The path to the merged database (.ddb) file is too long: {0}{1}{0}", Environment.NewLine, shortenedPath);
                 this.TextBlockFinalMessage.Text += "Windows cannot perform file operations if the file path is more than " + Constant.File.MaxPathLength.ToString() + " characters." + Environment.NewLine + Environment.NewLine;
                 this.TextBlockFinalMessage.Text += "Try again after shortening the file path:" + Environment.NewLine;
-                this.TextBlockFinalMessage.Text +=  "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.";
+                this.TextBlockFinalMessage.Text += "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.";
                 this.MergeButton.IsEnabled = false;
                 return;
             }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using Timelapse.Util;
 
 namespace DialogUpgradeFiles.Util
 {
@@ -21,8 +20,6 @@ namespace DialogUpgradeFiles.Util
             // Check the arguments for null 
             if (value == null)
             {
-                // this should not happen
-                TracePrint.PrintStackTrace(1);
                 // throw new ArgumentNullException(nameof(value));
                 return false;
             }
@@ -46,7 +43,6 @@ namespace DialogUpgradeFiles.Util
             if (str == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
                 return false;
             }
 
@@ -102,8 +98,6 @@ namespace DialogUpgradeFiles.Util
             // Check the arguments for null 
             if (String.IsNullOrWhiteSpace(filePath))
             {
-                // this should not happen
-                TracePrint.PrintStackTrace(1);
                 return false;
             }
             return IsPathEndingWithAShortFileName(filePath) || filePath.Length > Constant.File.MaxPathLength;
