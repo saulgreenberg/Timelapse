@@ -10,6 +10,9 @@
         Cancelled,
         Upgraded,
         Failed,
-        NoBackupMade
+        NoBackupMade,
+        AlternateBackupMade,
+        PathTooLong,
+        Pre23
     }
 }

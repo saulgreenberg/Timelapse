@@ -392,6 +392,11 @@ namespace DialogUpgradeFiles.Database
         #region Upgrade Detection Conf and bounding box and classification conf From Commas To Decimals  If Needed
         public void UpgradeDetectionConfFromCommasToDecimalsIfNeeded()
         {
+            // no detection table to upgrade to upgrade
+            if (false == this.Database.TableExistsAndNotEmpty(Constant.DBTables.Detections))
+            {
+                return;
+            }
             // Replace commas as needed in detections.Conf
             // Form: Update Detections Set Conf = CAST(replace(Conf, ',', '.') AS REAL) WHERE Conf LIKE '%,%'
             string query = Sql.Update + Constant.DBTables.Detections + Sql.Set + Constant.DetectionColumns.Conf + Sql.Equal;
@@ -400,7 +405,7 @@ namespace DialogUpgradeFiles.Database
             query += Sql.CloseParenthesis + Sql.Where + Constant.DetectionColumns.Conf + Sql.Like + Sql.Quote("%,%");
             this.Database.ExecuteNonQuery(query);
 
-            // Replace coomas in the detection bounding box table as needed
+            // Replace comas in the detection bounding box table as needed
             DataTable datatable = this.Database.GetDataTableFromSelect(Sql.Select + Constant.DetectionColumns.DetectionID + Sql.Comma + Constant.DetectionColumns.BBox + Sql.From + Constant.DBTables.Detections);
             char comma = ',';
             char period = '.';

@@ -371,12 +371,28 @@ namespace Timelapse.Database
         // Delete the file, where we also try to back it up by moving it into the Deleted folder
         // TODO File deletion backups is problematic as files in different relative paths could have the same file name (overwritting possible, ambiguity). Perhaps mirror the file structure as otherwise a previously deleted file could be overwritten
         // CODECLEANUP Should this method really be part of an image row? 
-        public bool TryMoveFileToDeletedFilesFolder(string folderPath)
+        public bool TryMoveFileToDeletedFilesFolder(string folderPath, bool backupDeletedFile)
         {
             string sourceFilePath = this.GetFilePath(folderPath);
             if (!System.IO.File.Exists(sourceFilePath))
             {
                 return false;  // If there is no source file, its a missing file so we can't back it up
+            }
+
+            if (false == backupDeletedFile)
+            {
+                // just delete the file, as we aren't backing it up.
+                try
+                {
+                    // delete the Destination file if it already exists.
+                    System.IO.File.Delete(sourceFilePath);
+                    return true;
+                }
+                catch (UnauthorizedAccessException exception)
+                {
+                    TracePrint.PrintMessage("Could not delete " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    return false;
+                }
             }
 
             // Create a new target folder, if necessary.
@@ -402,6 +418,7 @@ namespace Timelapse.Database
                     return false;
                 }
             }
+
             try
             {
                 System.IO.File.Move(sourceFilePath, destinationFilePath);

@@ -108,15 +108,15 @@ namespace Timelapse
             }
 
             // Check the file path length of the .ddb file and notify the user the ddb couldn't be loaded because its path is too long
-            if (IsCondition.IsPathLengthTooLong(fileDatabaseFilePath))
+            if (IsCondition.IsPathLengthTooLong(fileDatabaseFilePath, FilePathTypeEnum.DDB))
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.DatabasePathTooLongDialog(this, fileDatabaseFilePath);
-                return false;
+                //return false;
             }
 
             // Check the expected file path length of the backup files, and warn the user if backups may not be made because thier path is too long
-            if (IsCondition.IsBackupPathLengthTooLong(templateDatabasePath) || IsCondition.IsBackupPathLengthTooLong(fileDatabaseFilePath))
+            if (IsCondition.IsPathLengthTooLong(templateDatabasePath, FilePathTypeEnum.Backup) || IsCondition.IsPathLengthTooLong(fileDatabaseFilePath, FilePathTypeEnum.Backup))
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.BackupPathTooLongDialog(this);

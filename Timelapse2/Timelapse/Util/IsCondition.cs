@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using Timelapse.Enums;
 
 namespace Timelapse.Util
 {
@@ -56,36 +60,67 @@ namespace Timelapse.Util
             }
             return true;
         }
-        #endregion 
+        #endregion
 
         #region  Public Methods - Path lengths
         /// <summary>
-        /// Returns true when the path length exceeds the maximum allowed by Windows
+        /// Various forms returns true when the file path length (including the file name and suffix) approaches the maximum allowed by Windows
+        /// While that is 260 characters (inclusive a null at the string's end), we have to account for the way SQLITE 
+        /// creates a journal file when updating comprised of the file path + '-journal' (8 extra characters)
+        /// That is why MaxPathLength is set to 250
+        /// These methods also check for the rare case where it is passed a path that seems to be a short file name
+        /// (see https://en.wikipedia.org/wiki/8.3_filename)
         /// </summary>
-        public static bool IsPathLengthTooLong(string str)
+
+        // Check length of a file
+        public static bool IsPathLengthTooLong(string filePath, FilePathTypeEnum filePathType)
+        {
+            
+            switch (filePathType)
+            {
+                case FilePathTypeEnum.DDB:
+                case FilePathTypeEnum.TDB:
+                    // Database manipulation can create a -journal file, we need to account for that
+                    filePath += "-journal";
+                    break;
+                case FilePathTypeEnum.Backup:
+                    // Backup files created from a ddb or tdb file have a new folder and time stamp added to its length
+                    // Note that the file name is already accounted for in the file path
+                    filePath = Path.Combine(filePath, Constant.File.BackupFolder, ".2022-12-11.16-02-14");
+                    break;
+                case FilePathTypeEnum.Deleted:
+                    // Deleted files created from a ddb or tdb file are located in a new folder under the root folder.
+                    // A sample deleted file to testwas passed in, so we don't have to do anything
+                    break;
+                case FilePathTypeEnum.DisplayFile:
+                    // The image path to test was passed in so we don't have to do anything
+                    break;
+                default:
+                    break;
+            }
+            return IsPathLengthTooLong(filePath);
+        }
+ 
+
+        private static bool IsPathLengthTooLong(string filePath)
         {
             // Check the arguments for null 
-            if (str == null)
+            if (String.IsNullOrWhiteSpace(filePath))
             {
                 // this should not happen
                 TracePrint.PrintStackTrace(1);
                 return false;
             }
-
-            return str.Length > Constant.File.MaxPathLength;
+            return IsPathEndingWithAShortFileName(filePath) || filePath.Length > Constant.File.MaxPathLength;
         }
 
-        // Checks the length of the backup path
-        public static bool IsBackupPathLengthTooLong(string str)
+        // Checks if the path or file name (excluding extension) ends with a short file name,
+        // which is normally of the form xxxxxxx~d, where the first 6 chars are upper case letters, then a ~, then a number
+        // THis is not guaranteed to work. For example, a long file name could exactly match this (e.g., Templa~1.tdb),
+        // and sometimes short file names don't match this pattern (see https://en.wikipedia.org/wiki/8.3_filename)
+        private static bool IsPathEndingWithAShortFileName(string filePath)
         {
-            // Check the arguments for null 
-            if (str == null)
-            {
-                // this should not happen
-                TracePrint.PrintStackTrace(1);
-                return false;
-            }
-            return str.Length + Constant.File.MaxAdditionalLengthOfBackupFiles > Constant.File.MaxPathLength;
+            return new Regex(@"^[A-Z]{6}~\d$").IsMatch(Path.GetFileNameWithoutExtension(filePath));
         }
         #endregion
     }

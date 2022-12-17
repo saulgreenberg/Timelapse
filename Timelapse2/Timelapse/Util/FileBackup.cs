@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Timelapse.Enums;
 
 namespace Timelapse.Database
 {
@@ -57,7 +58,15 @@ namespace Timelapse.Database
 
         public static DirectoryInfo GetOrCreateBackupFolder(string sourceFilePath)
         {
+            if (Util.IsCondition.IsPathLengthTooLong(sourceFilePath, FilePathTypeEnum.Backup))
+            {
+                // Don't bother if we are approaching the critical file path max length 
+                // This also stops creation of a backup folder if it doesn't exist
+                return null;
+            }
+
             string sourceFolderPath = Path.GetDirectoryName(sourceFilePath);
+
             DirectoryInfo backupFolder = new DirectoryInfo(Path.Combine(sourceFolderPath, Constant.File.BackupFolder));   // The Backup Folder 
             if (backupFolder.Exists == false)
             {

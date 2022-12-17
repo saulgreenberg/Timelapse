@@ -228,7 +228,7 @@ namespace DialogUpgradeFiles.Constant
         public const string VideoThumbnailFolderName = ".vthumb";
         public const string XmlTemplateFileName = "CodeTemplate.xml";
         public const string XmlDataFileName = "ImageData.xml";
-        public const int MaxPathLength = 250;
+        public const int MaxPathLength = 259; // One less than the permissable length of 260, as I'm not sure how the null at the end of as string is counted;
         public const int MaxAdditionalLengthOfBackupFiles = 28;
 
         public static readonly TimeSpan BackupInterval = TimeSpan.FromMinutes(30);

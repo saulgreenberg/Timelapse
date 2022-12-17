@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace DialogUpgradeFiles.Util
 {
@@ -75,6 +76,7 @@ namespace DialogUpgradeFiles.Util
         // Full version: Copy to backup folder with augmented file name
         public static string TryCreateBackup(string folderPath, string sourceFileName)
         {
+            bool createAlternateBackup = false;
             string sourceFilePath = Path.Combine(folderPath, sourceFileName);
             if (File.Exists(sourceFilePath) == false)
             {
@@ -87,15 +89,28 @@ namespace DialogUpgradeFiles.Util
             if (backupFolder == null)
             {
                 // Something went wrong...
-                return String.Empty;
+                createAlternateBackup = true;
             }
+
             // create a timestamped copy of the file
             // file names can't contain colons so use non-standard format for timestamp with dashes for 24 hour-minute-second separation
             // If there is a specialBackup term, then we modify anadd it before the timestamp
             string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
             string sourceFileExtension = Path.GetExtension(sourceFileName);
-            string destinationFileName = String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss"), sourceFileExtension);
-            string destinationFilePath = Path.Combine(backupFolder.FullName, destinationFileName);
+            // If we couldn't create the backup folder, then use the alternate form
+            string destinationFileName = createAlternateBackup 
+                ? String.Concat(sourceFileNameWithoutExtension, sourceFileExtension == Constant.File.FileDatabaseFileExtension ? ".dbk" : ".tbk")
+                : String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss"), sourceFileExtension);
+            string destinationFilePath = createAlternateBackup 
+                ? Path.Combine(folderPath, destinationFileName)
+                : Path.Combine(backupFolder.FullName, destinationFileName); 
+
+            // if the path length is too long, use the alternate form
+            if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
+            {
+                destinationFileName = String.Concat(sourceFileNameWithoutExtension, sourceFileExtension == Constant.File.FileDatabaseFileExtension ? ".dbk" : ".tbk");
+                destinationFilePath = Path.Combine(folderPath, destinationFileName);
+            }
 
             try
             {

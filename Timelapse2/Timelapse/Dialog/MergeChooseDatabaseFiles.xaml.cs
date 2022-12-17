@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.Enums;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -71,6 +72,24 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text += String.Format(" \u2022 the folder containing the template ({0}),{1}", this.RootFolderPath, Environment.NewLine);
                 this.TextBlockFinalMessage.Text += String.Format(" \u2022 its sub-folders.{0}{0}", Environment.NewLine);
                 this.TextBlockFinalMessage.Text += String.Format("No database (.ddb) files were found, so there is nothing to merge.");
+                this.MergeButton.IsEnabled = false;
+                return;
+            }
+
+            if (IsCondition.IsPathLengthTooLong(this.DestinationddbFilePath, FilePathTypeEnum.DDB))
+            {
+                string dir = Path.GetDirectoryName(this.DestinationddbFilePath);
+                dir = Path.GetDirectoryName(this.DestinationddbFilePath).Length < 41
+                    ? dir
+                    : Path.GetDirectoryName(this.DestinationddbFilePath).Substring(0, 40);
+                string shortenedPath = "  - " + dir + "......." + Path.GetFileName(this.DestinationddbFilePath);
+                // The path of the TimelapseData-merged.ddb file is too long
+                this.ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
+                this.LabelBanner.Content = "Warning: Merging cannot be done.";
+                this.TextBlockFinalMessage.Text = String.Format("The path to the merged database (.ddb) file is too long: {0}{1}{0}", Environment.NewLine, shortenedPath);
+                this.TextBlockFinalMessage.Text += "Windows cannot perform file operations if the file path is more than " + Constant.File.MaxPathLength.ToString() + " characters." + Environment.NewLine + Environment.NewLine;
+                this.TextBlockFinalMessage.Text += "Try again after shortening the file path:" + Environment.NewLine;
+                this.TextBlockFinalMessage.Text +=  "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.";
                 this.MergeButton.IsEnabled = false;
                 return;
             }

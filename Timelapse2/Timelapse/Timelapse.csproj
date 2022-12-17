@@ -260,6 +260,7 @@
     <Compile Include="Enums\CSVDateTimeOptionsEnum.cs" />
     <Compile Include="Enums\DatabaseFileErrorsEnum.cs" />
     <Compile Include="Enums\FileExtensionEnum.cs" />
+    <Compile Include="Enums\FilePathTypeEnum.cs" />
     <Compile Include="Enums\FlashEnum.cs" />
     <Compile Include="Enums\ImageDimensionEnum.cs" />
     <Compile Include="Enums\ListComparisonEnum.cs" />
@@ -883,6 +884,7 @@
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Resources\FilePathTooLong.jpg" />
     <Resource Include="Icons\MediaControl-PlaySpeed1.png" />
     <Resource Include="Icons\MediaControl-PlayButton.png" />
     <Resource Include="Icons\ExternalVideoPlayer.png" />

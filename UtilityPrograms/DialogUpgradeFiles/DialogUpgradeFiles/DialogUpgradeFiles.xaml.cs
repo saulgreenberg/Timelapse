@@ -1,8 +1,11 @@
 ﻿using DialogUpgradeFiles.Database;
 using DialogUpgradeFiles.Dialog;
 using DialogUpgradeFiles.Enums;
+using DialogUpgradeFiles.Util;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -220,12 +223,28 @@ namespace DialogUpgradeFiles
             this.ButtonDone.Visibility = Visibility.Collapsed;
             this.ButtonDone.Content = "Done";
             this.ButtonCancelUpgrades.Visibility = Visibility.Visible;
-
-            List<string> filePathsRequiringUpdating = await CollectFiles(selectedPaths);
-
+            
+            List<string> pathsTooLong =new List<string>();
+            Dictionary<string, UpgradeResultsEnum> filePathsRequiringUpdating = await CollectFiles(selectedPaths);
+            
+            //List<string> pathsThatAreTooLong = CheckPathLengthsForBackups(filePathsRequiringUpdating);
+            //if (pathsThatAreTooLong.Count > 0)
+            //{
+            //    Dialogs.BackupPathsAreTooLong(this, pathsThatAreTooLong.Count);
+            //}
+            //if (pathsTooLong.Count > 0)
+            //{
+            //    this.ListBoxResultsStatus.Items.Add("The following file names are too long to process.");
+            //    this.ListBoxResultsStatus.Items.Add("Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.");
+            //    this.ListBoxResultsStatus.Items.Add("Shorten the path, for example, by moving your image folder higher up the folder hierarchy");
+            //    foreach (string p in pathsTooLong)
+            //    {
+            //        this.ListBoxResultsStatus.Items.Add("\u2022 ..." + p.Substring(Math.Max(0, p.Length - 80)));
+            //    }
+            //}
             if (filePathsRequiringUpdating.Count == 0)
             {
-                // No paths require updating
+                // No filepaths require updating, or appear to have issues 
                 if (this.IsInvokedAsGeneralUpdateFacility)
                 {
                     this.LineFeedback("No .ddb or .tdb files found");
@@ -290,6 +309,30 @@ namespace DialogUpgradeFiles
 
         #endregion
 
+        #region Utilities
+        static List<string> CheckPathLengthsForBackups(List<string> filepaths)
+        {
+            List<string> longPaths = new List<string>();
+            string sampleDateTime = DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss");
+            foreach (string p in filepaths)
+            {
+                string sourceFileName = Path.GetFileName(p);
+                string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
+                string sourceFileExtension = Path.GetExtension(sourceFileName);
+                string destinationFileName = String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", sampleDateTime, sourceFileExtension);
+                string backupFolder = Path.Combine(Path.GetDirectoryName(p), Constant.File.BackupFolder);
+                string destinationFilePath = Path.Combine(backupFolder, destinationFileName);
+                System.Diagnostics.Debug.Print(destinationFilePath);
+                if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
+                {
+                    longPaths.Add(destinationFilePath);
+                    System.Diagnostics.Debug.Print(destinationFilePath.Length.ToString() + "|" + destinationFilePath);
+                }
+            }
+            return longPaths;
+        }
+        #endregion
+
         #region AnimateProgressTimer feedback
         private void AnimateProgressTimer_Tick(object sender, EventArgs e)
         {
@@ -318,10 +361,14 @@ namespace DialogUpgradeFiles
         #region Provide Feedback about the updates
         private void RefreshFileUpdateStatusDisplay(Dictionary<string, string> dictFileUpdateStatus, int index)
         {
+            int shortLength = 40;
             this.ListBoxResultsStatus.Items.Clear();
             foreach (KeyValuePair<string, string> kvp in dictFileUpdateStatus)
             {
-                this.ListBoxResultsStatus.Items.Add(String.Format("{0,-15} {1}", kvp.Value, kvp.Key));
+                string shortenedKey = kvp.Key.Length <= shortLength
+                    ? kvp.Key
+                    : "..." + kvp.Key.Substring(Math.Max(0, kvp.Key.Length - shortLength));
+                this.ListBoxResultsStatus.Items.Add(String.Format("{0,-15} {1}", kvp.Value, shortenedKey));
             }
             if (index >= 0)
             {

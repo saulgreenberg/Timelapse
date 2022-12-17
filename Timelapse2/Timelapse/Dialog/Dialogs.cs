@@ -458,6 +458,20 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region MessageBox: File Exists
+        public static void FileExistsDialog(Window owner, string filePath)
+        {
+            string title = "The file already exists.";
+            MessageBox messageBox = new MessageBox(title, owner);
+            messageBox.Message.Icon = MessageBoxImage.Error;
+            messageBox.Message.Title = title;
+            messageBox.Message.Problem = "This file already exists, so nothing was done." + Environment.NewLine;
+            messageBox.Message.Problem += "\u2022 " + filePath;
+            messageBox.Message.Solution = "Use a different file name.";
+            messageBox.ShowDialog();
+        }
+        #endregion
+
         #region MessageBox: Missing dependencies
         public static void DependencyFilesMissingDialog(string applicationName)
         {
@@ -499,6 +513,24 @@ namespace Timelapse.Dialog
             messageBox.ShowDialog();
         }
 
+        public static bool FilePathDeletedFileTooLongDialog(Window owner)
+        {
+            string title = "The files you want to delete won't be backed up.";
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel);
+            messageBox.Message.Icon = MessageBoxImage.Warning;
+            messageBox.Message.Title = title;
+            messageBox.Message.Problem = title + Environment.NewLine;
+            messageBox.Message.Problem += "As a precaution, Timelapse normally moves deleted files into the " + Constant.File.DeletedFilesFolder + " folder." + Environment.NewLine;
+            messageBox.Message.Problem += "However, the new file paths are too long for Windows to handle.";
+            messageBox.Message.Reason = "Windows cannot perform file operations if the file path is more than " + (Constant.File.MaxPathLength +8).ToString() + " characters.";
+            messageBox.Message.Solution = "Click Okay to delete these files without backing them up, or Cancel to abort." + Environment.NewLine;
+            messageBox.Message.Solution += "Alternately, shorten the path to your files, preferably well below the length limit:" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 use shorter folder or file names.";
+
+          return messageBox.ShowDialog() == true;
+        }
+
         // This version detects and displays warning messages.
         public static void FilePathTooLongDialog(Window owner, List<string> folders)
         {
@@ -529,11 +561,13 @@ namespace Timelapse.Dialog
         public static void TemplatePathTooLongDialog(Window owner, string templateDatabasePath)
         {
             MessageBox messageBox = new MessageBox("Timelapse could not open the template ", owner);
-            messageBox.Message.Problem = "Timelapse could not open the Template File as its name is too long:" + Environment.NewLine;
+            messageBox.Message.Problem = "Timelapse could not open the template (.tdb) file as its name is too long:" + Environment.NewLine;
             messageBox.Message.Problem += "\u2022 " + templateDatabasePath;
-            messageBox.Message.Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength.ToString() + " characters.";
-            messageBox.Message.Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 Use shorter folder or file names.";
-            messageBox.Message.Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength.ToString() + " characters.";
+            messageBox.Message.Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.";
+            messageBox.Message.Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 use shorter folder or file names.";
+
             messageBox.Message.Icon = MessageBoxImage.Error;
             messageBox.ShowDialog();
         }
@@ -541,12 +575,14 @@ namespace Timelapse.Dialog
         // notify the user the template couldn't be loaded because its path is too long
         public static void DatabasePathTooLongDialog(Window owner, string databasePath)
         {
-            MessageBox messageBox = new MessageBox("Timelapse could not load the database ", owner);
-            messageBox.Message.Problem = "Timelapse could not load the Template File as its name is too long:" + Environment.NewLine;
+            MessageBox messageBox = new MessageBox("Timelapse could not load the database", owner);
+            messageBox.Message.Problem = "Timelapse could not load the database (.ddb) file as its name is too long:" + Environment.NewLine;
             messageBox.Message.Problem += "\u2022 " + databasePath;
-            messageBox.Message.Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength.ToString() + " characters.";
-            messageBox.Message.Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 Use shorter folder or file names.";
-            messageBox.Message.Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength.ToString() + " characters.";
+            messageBox.Message.Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.";
+
+            messageBox.Message.Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 use shorter folder or file names.";
             messageBox.Message.Icon = MessageBoxImage.Error;
             messageBox.ShowDialog();
         }
@@ -554,16 +590,35 @@ namespace Timelapse.Dialog
         // Warn the user if backups may not be made
         public static void BackupPathTooLongDialog(Window owner)
         {
-            MessageBox messageBox = new MessageBox("Timelapse may not be able to backup your files", owner);
-            messageBox.Message.Problem = "Timelapse may not be able to backup your files as your file names are very long.";
+            MessageBox messageBox = new MessageBox("Timelapse can't back up your files", owner);
+            messageBox.Message.Problem = "Timelapse will continue, but without backing up your files." + Environment.NewLine;
+            messageBox.Message.Problem += "The issue is that the backup file can't be created as its name is too long for Windows to handle.";
 
-            messageBox.Message.Reason = "Timelapse normally creates backups of your template, database, and csv files in the " + Constant.File.BackupFolder + " folder." + Environment.NewLine;
-            messageBox.Message.Reason += "However, Windows cannot create those files if the " + Constant.File.BackupFolder + " folder path combined with the file name is more than " + Constant.File.MaxPathLength.ToString() + " characters.";
+            messageBox.Message.Reason = "Timelapse normally creates time-stamped backup files of your template, database, and csv files within a " + Constant.File.BackupFolder + " folder." + Environment.NewLine;
+            messageBox.Message.Reason += "However, Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.";
 
-            messageBox.Message.Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine;
-            messageBox.Message.Solution += "\u2022 Use shorter folder or file names.";
-            messageBox.Message.Hint = "You can still use Timelapse, but backup files may not be created.";
+            messageBox.Message.Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 use shorter folder or file names.";
+
+            messageBox.Message.Hint = "You can still use Timelapse, but backup files will not be created.";
+
             messageBox.Message.Icon = MessageBoxImage.Warning;
+            messageBox.ShowDialog();
+        }
+
+        // notify the user the template couldn't be loaded because its path is too long
+        public static void DatabaseRenamedPathTooLongDialog(Window owner, string databasePath)
+        {
+            MessageBox messageBox = new MessageBox("Timelapse could not rename the database", owner);
+            messageBox.Message.Problem = "Timelapse could not rename the database (.ddb) file as its name would be too long:" + Environment.NewLine;
+            messageBox.Message.Problem += "\u2022 " + databasePath;
+            messageBox.Message.Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.";
+
+            messageBox.Message.Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 use shorter folder or file names.";
+            messageBox.Message.Icon = MessageBoxImage.Error;
             messageBox.ShowDialog();
         }
         #endregion

@@ -24,6 +24,11 @@ namespace Timelapse.Images
             // This means we cannot do any file operations on it (such as deleting the currently displayed image) as it will produce an access violation.
             // This is ok for TransientLoading, which just temporarily displays the image
             BitmapCacheOption bitmapCacheOption = (displayIntent == ImageDisplayIntentEnum.Ephemeral) ? BitmapCacheOption.None : BitmapCacheOption.OnLoad;
+            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
+            {
+                // We check this first as 'exists' will return false on a path too long error, and we want to display the correct bitmap
+                return Constant.ImageValues.FilePathTooLong.Value;
+            }
             if (!System.IO.File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
@@ -80,11 +85,17 @@ namespace Timelapse.Images
         // Note that displayIntent is ignored as it's specific to interaction with WCF's bitmap cache, which doesn't occur in rendering video preview frames
         public static BitmapSource GetBitmapFromVideoFile(string filePath, Nullable<int> desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
+            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
+            {
+                isCorruptOrMissing = true;
+                return Constant.ImageValues.FilePathTooLong.Value;
+            }
             if (!System.IO.File.Exists(filePath))
             {
                 isCorruptOrMissing = true;
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
             }
+ 
             // Our FFMPEG installation is the 64 bit version. In case someone is using a 32 bit machine, we use the MediaEncoder instead.
             if (Environment.Is64BitOperatingSystem == false)
             {
@@ -138,6 +149,12 @@ namespace Timelapse.Images
         {
             isCorruptOrMissing = true;
             // System.Diagnostics.Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
+
+            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
+            {
+                isCorruptOrMissing = true;
+                return Constant.ImageValues.FilePathTooLong.Value;
+            }
 
             if (!System.IO.File.Exists(filePath))
             {

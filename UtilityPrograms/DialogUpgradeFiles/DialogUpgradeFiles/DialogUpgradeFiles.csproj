@@ -60,6 +60,9 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="Timelapse2">
+      <HintPath>..\..\..\Timelapse2\Timelapse\bin\Release\Timelapse2.exe</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -96,6 +99,7 @@
     <Compile Include="Extensions\DataRowExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\DateTimeOffsetExtensions.cs" />
+    <Compile Include="FilePathTypeEnum.cs" />
     <Compile Include="Quickpaste\QuickPaste.cs" />
     <Compile Include="Quickpaste\QuickPasteEntry.cs" />
     <Compile Include="Quickpaste\QuickPasteItem.cs" />

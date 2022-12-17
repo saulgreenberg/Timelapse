@@ -121,7 +121,7 @@ namespace DialogUpgradeFiles
         #region File Helper: Check that the file exists and is a data or template file
         public static DatabaseTypeEnum UDBCheckFilePath(string filePath)
         {
-            if (IsCondition.IsPathLengthTooLong(filePath) || File.Exists(filePath) == false)
+            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DDB) || File.Exists(filePath) == false)
             {
                 return DatabaseTypeEnum.DoesNotExist;
             }
@@ -134,9 +134,7 @@ namespace DialogUpgradeFiles
             {
                 return DatabaseTypeEnum.Data;
             }
-            {
-                return DatabaseTypeEnum.InvalidExtension;
-            }
+            return DatabaseTypeEnum.InvalidExtension;
         }
         #endregion
 

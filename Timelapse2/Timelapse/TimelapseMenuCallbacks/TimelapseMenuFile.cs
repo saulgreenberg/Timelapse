@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -53,6 +54,11 @@ namespace Timelapse
                     this.RecentFileSets_Refresh();
                     return;
                 }
+
+                //if (IsCondition.IsBackupPathLengthTooLong(templateDatabasePath))
+                //{
+                //    Dialogs.BackupPathTooLongDialog(this);
+                //}
                 await this.DoLoadImages(templateDatabasePath);
             }
         }
@@ -484,13 +490,27 @@ namespace Timelapse
             };
             if (true == renameFileDatabase.ShowDialog())
             {
+                if (IsCondition.IsPathLengthTooLong(Path.Combine(this.FolderPath, renameFileDatabase.NewFilename), FilePathTypeEnum.DDB))
+                {
+                    Dialogs.DatabaseRenamedPathTooLongDialog(this, Path.Combine(this.FolderPath, renameFileDatabase.NewFilename));
+                    this.StatusBar.SetMessage("Database file not renamed");
+                    return;
+                }
+                if (File.Exists(Path.Combine(this.FolderPath, renameFileDatabase.NewFilename)))
+                {
+                    Dialogs.FileExistsDialog(this, renameFileDatabase.NewFilename);
+                    return;
+                }
                 this.DataHandler.FileDatabase.RenameFile(renameFileDatabase.NewFilename);
                 this.StatusBar.SetMessage("Database file renamed");
+                this.Title = String.Format("{0} ({1})", Constant.Defaults.MainWindowBaseTitle, renameFileDatabase.NewFilename);
+                if (IsCondition.IsPathLengthTooLong(Path.Combine(this.FolderPath, renameFileDatabase.NewFilename), FilePathTypeEnum.Backup))
+                {
+                    Dialogs.BackupPathTooLongDialog(this);
+                }
+                return;
             }
-            else
-            {
-                this.StatusBar.SetMessage("Database file could not berenamed");
-            }
+            this.StatusBar.SetMessage("Database file could not be renamed");
         }
         #endregion
 

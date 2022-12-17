@@ -1,4 +1,5 @@
 ﻿using DialogUpgradeFiles;
+using DialogUpgradeFiles.Util;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ using Timelapse.Dialog;
 using Timelapse.Editor.Dialog;
 using Timelapse.Editor.Util;
 using Timelapse.Util;
+using IsCondition = Timelapse.Util.IsCondition;
+using VersionChecks = Timelapse.Util.VersionChecks;
 
 namespace Timelapse.Editor
 {
@@ -164,6 +167,7 @@ namespace Timelapse.Editor
         /// </summary>
         private async void MenuFileNewTemplate_Click(object sender, RoutedEventArgs e)
         {
+            bool makeBackup = true;
             this.ApplyPendingEdits();
 
             // Configure save file dialog box
@@ -191,16 +195,21 @@ namespace Timelapse.Editor
                 // First, check the file path length and notify the user the template couldn't be loaded because its path is too long 
                 // Note: The SaveFileDialog doesn't do the right thing when the user specifies a really long file name / path (it just returns the DefaultTemplateDatabaseFileName without a path), 
                 // so we test for that too as it also indicates a too longpath name
-                if (IsCondition.IsPathLengthTooLong(templateFileName) || templateFileName.Equals(Path.GetFileNameWithoutExtension(Constant.File.DefaultTemplateDatabaseFileName)))
+                if (Timelapse.Util.IsCondition.IsPathLengthTooLong(templateFileName, Timelapse.Enums.FilePathTypeEnum.TDB) || templateFileName.Equals(Path.GetFileNameWithoutExtension(Constant.File.DefaultTemplateDatabaseFileName)))
                 {
                     Dialogs.TemplatePathTooLongDialog(this, templateFileName);
                     return;
                 }
+                if (IsCondition.IsPathLengthTooLong(templateFileName, Timelapse.Enums.FilePathTypeEnum.Backup))
+                {
+                    Timelapse.Dialog.Dialogs.BackupPathTooLongDialog(this);
+                    makeBackup = false;
+                }
 
                 // Overwrite the file if it exists
-                if (File.Exists(templateFileName))
+                if (File.Exists(templateFileName) && makeBackup)
                 {
-                    FileBackup.TryCreateBackup(templateFileName);
+                    Database.FileBackup.TryCreateBackup(templateFileName);
                     File.Delete(templateFileName);
                 }
 
@@ -239,6 +248,12 @@ namespace Timelapse.Editor
                 {
                     return;
                 }
+
+                if (IsCondition.IsPathLengthTooLong(openFileDialog.FileName, Timelapse.Enums.FilePathTypeEnum.Backup))
+                {
+                    Timelapse.Dialog.Dialogs.BackupPathTooLongDialog(this);
+                }
+
                 // But check to see if we are opening it up with an older version of TImelapse vs. the previous version that opened it
                 // If so, generate a warning
                 if (this.userSettings.SuppressOpeningWithOlderTimelapseVersionDialog == false)
@@ -283,7 +298,7 @@ namespace Timelapse.Editor
         private async Task DoOpenTemplate(string templateFilePath)
         {
             // This likely isn't needed as the OpenFileDialog won't let us do that anyways. But just in case...
-            if (IsCondition.IsPathLengthTooLong(templateFilePath))
+            if (IsCondition.IsPathLengthTooLong(templateFilePath, Timelapse.Enums.FilePathTypeEnum.TDB))
             {
                 Dialogs.TemplatePathTooLongDialog(this, templateFilePath);
                 return;
@@ -1168,10 +1183,7 @@ namespace Timelapse.Editor
             {
                 this.isMouseDown = false;
                 this.isMouseDragging = false;
-                if (!(this.realMouseDragSource == null))
-                {
-                    this.realMouseDragSource.ReleaseMouseCapture();
-                }
+                this.realMouseDragSource?.ReleaseMouseCapture();
             }
             catch
             {
@@ -1320,7 +1332,7 @@ namespace Timelapse.Editor
         #endregion
 
         #region Helpers
-        private string GetVersionCompatabilityFromTemplateInfoIfExists(SQLiteWrapper db)
+        private static string GetVersionCompatabilityFromTemplateInfoIfExists(SQLiteWrapper db)
         {
             if (db.TableExists(Constant.DBTables.TemplateInfo))
             {

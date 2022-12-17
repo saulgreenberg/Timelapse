@@ -306,8 +306,8 @@ namespace Timelapse.Constant
         public const string TemplateDatabaseFileExtension = ".tdb";
         public const string TemplateDatabaseFileExtensionPre2dot3 = ".tdb";
         public const string VideoThumbnailFolderName = ".vthumb";
-        public const int MaxPathLength = 250;
-        public const int MaxAdditionalLengthOfBackupFiles = 28;
+        public const int MaxPathLength = 259; // One less than the permissable length of 260, as I'm not sure how the null at the end of as string is counted
+        public const int MaxAdditionalLengthOfBackupFiles = 29;
 
         public static readonly TimeSpan BackupInterval = TimeSpan.FromMinutes(30);
 
@@ -362,6 +362,7 @@ namespace Timelapse.Constant
         public static readonly Lazy<BitmapImage> NoFilesAvailable = ImageValues.Load("NoFilesAvailable.jpg");
         public static readonly Lazy<BitmapImage> BlankVideo = ImageValues.Load("BlankVideo.jpg");
         public static readonly Lazy<BitmapImage> FileAlreadyLoaded = ImageValues.Load("FileAlreadyLoaded.jpg");
+        public static readonly Lazy<BitmapImage> FilePathTooLong = ImageValues.Load("FilePathTooLong.jpg");
 
         private static Lazy<BitmapImage> Load(string fileName)
         {

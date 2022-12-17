@@ -28,6 +28,7 @@ namespace Timelapse.Dialog
         private readonly bool deleteImage;
         private readonly bool deleteData;
         private readonly bool deleteCurrentImageOnly;
+        private readonly bool backupDeletedFiles;
 
         private bool IsAnyDataUpdated;
         private int maxPathLength = 60;
@@ -40,7 +41,7 @@ namespace Timelapse.Dialog
         /// -deleteData is true when the data associated with that image should be deleted.
         /// -useDeleteFlags is true when the user is trying to delete images with the deletion flag set, otherwise its the current image being deleted
         /// </summary>
-        public DeleteImages(Window owner, FileDatabase fileDatabase, ImageCache imageCache, List<ImageRow> filesToDelete, bool deleteImage, bool deleteData, bool deleteCurrentImageOnly) : base(owner)
+        public DeleteImages(Window owner, FileDatabase fileDatabase, ImageCache imageCache, List<ImageRow> filesToDelete, bool deleteImage, bool deleteData, bool deleteCurrentImageOnly, bool backupdDeletedFiles) : base(owner)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
@@ -52,6 +53,7 @@ namespace Timelapse.Dialog
             this.fileDatabase = fileDatabase;
             this.imageCache = imageCache;
             this.filesToDelete = filesToDelete;
+            this.backupDeletedFiles = backupdDeletedFiles;
 
             this.deleteImage = deleteImage;
             this.deleteData = deleteData;
@@ -265,7 +267,7 @@ namespace Timelapse.Dialog
                                       // SAULXXX Note that we should likely pop up a dialog box that displays non-missing files that we can't (for whatever reason) delete
                                       // SAULXXX If we can't delete it, we may want to abort changing the various DeleteFlag 
                                       // SAULXXX A good way is to put an 'image.ImageFileExists' field in, and then do various tests on that.
-                        if (image.TryMoveFileToDeletedFilesFolder(this.fileDatabase.FolderPath))
+                        if (image.TryMoveFileToDeletedFilesFolder(this.fileDatabase.FolderPath, this.backupDeletedFiles))
                         {
                             // keep track of the number of files actually delted
                             filesDeleted++;

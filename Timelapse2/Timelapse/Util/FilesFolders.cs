@@ -37,7 +37,7 @@ namespace Timelapse.Util
             }
 
             // Check the file path length and notify the user the template couldn't be loaded because its path is too long 
-            if (IsCondition.IsPathLengthTooLong(filePath))
+            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.TDB))
             {
                 return DatabaseFileErrorsEnum.PathTooLong;
             }

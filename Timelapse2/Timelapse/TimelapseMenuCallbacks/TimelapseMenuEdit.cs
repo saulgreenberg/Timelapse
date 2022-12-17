@@ -385,7 +385,35 @@ namespace Timelapse
             }
 
             // Delete the files
-            DeleteImages deleteImagesDialog = new DeleteImages(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache, filesToDelete, deleteFiles, deleteData, deleteCurrentImageOnly);
+            ImageRow longestFile = null;
+            int longestFilePathLength = 0;
+            bool backupDeletedFiles = true;
+            if (deleteFiles)
+            {
+                foreach (ImageRow fileToDelete in filesToDelete)
+                {
+                    int thisFileLength = fileToDelete.File.Length + fileToDelete.RelativePath.Length;
+                    if (thisFileLength > longestFilePathLength)
+                    {
+                        longestFile = fileToDelete;
+                        longestFilePathLength = thisFileLength;
+                    }
+                }
+            }
+            if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(this.DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
+            {
+                //SAULXXX DELETED FILE LENGTH
+                if (Dialogs.FilePathDeletedFileTooLongDialog(this) == false)
+                {
+                    // User cancelled
+                    return;
+                }
+                // User said delete anyways, so don't back up deleted files
+                backupDeletedFiles = false;
+            }
+            // Delete the files
+
+            DeleteImages deleteImagesDialog = new DeleteImages(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache, filesToDelete, deleteFiles, deleteData, deleteCurrentImageOnly, backupDeletedFiles);
             bool? result = deleteImagesDialog.ShowDialog();
             if (result == true)
             {
