@@ -18,6 +18,12 @@ namespace Timelapse.Util
         // Only invoke this on a .tdb or .ddb file
         public static DatabaseFileErrorsEnum QuickCheckDatabaseFile(string filePath)
         {
+            // Check the file path length and notify the user the template couldn't be loaded because its path is too long 
+            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.TDB))
+            {
+                return DatabaseFileErrorsEnum.PathTooLong;
+            }
+
             // Test: Does file exists
             if (false == File.Exists(filePath))
             {
@@ -34,12 +40,6 @@ namespace Timelapse.Util
             if (FilesFolders.IsFolderSystemOrHidden(System.IO.Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder;
-            }
-
-            // Check the file path length and notify the user the template couldn't be loaded because its path is too long 
-            if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.TDB))
-            {
-                return DatabaseFileErrorsEnum.PathTooLong;
             }
 
             // Test: Is it a .ddb or .tdb file

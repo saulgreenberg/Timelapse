@@ -53,11 +53,6 @@ namespace Timelapse
                     this.RecentFileSets_Refresh();
                     return;
                 }
-
-                //if (IsCondition.IsBackupPathLengthTooLong(templateDatabasePath))
-                //{
-                //    Dialogs.BackupPathTooLongDialog(this);
-                //}
                 await this.DoLoadImages(templateDatabasePath);
             }
         }

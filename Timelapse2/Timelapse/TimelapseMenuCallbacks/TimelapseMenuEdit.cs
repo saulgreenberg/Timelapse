@@ -402,7 +402,7 @@ namespace Timelapse
             }
             if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(this.DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
             {
-                //SAULXXX DELETED FILE LENGTH
+                // Path is too long to delete
                 if (Dialogs.FilePathDeletedFileTooLongDialog(this) == false)
                 {
                     // User cancelled
