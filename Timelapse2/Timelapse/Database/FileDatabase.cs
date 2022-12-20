@@ -1,15 +1,24 @@
-﻿using Newtonsoft.Json;
+﻿using MetadataExtractor;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media.TextFormatting;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.Detection;
@@ -392,10 +401,7 @@ namespace Timelapse.Database
             if (fileDatabase.Database.PragmaGetQuickCheck() == false || fileDatabase.TableExists(Constant.DBTables.FileData) == false)
             {
                 // The database file is likely corrupt, possibly due to missing a key table, is an empty file, or is otherwise unreadable
-                if (fileDatabase != null)
-                {
-                    fileDatabase.Dispose();
-                }
+                fileDatabase?.Dispose();
                 return null;
             }
             await fileDatabase.UpgradeDatabasesAndCompareTemplatesAsync(templateDatabase, templateSyncResults).ConfigureAwait(true);
@@ -754,7 +760,7 @@ namespace Timelapse.Database
         {
             string query = String.Empty;
 
-            // Random selection - Add prefix
+            // Random selection - Add folderPrefix
             //if (this.CustomSelection.RandomSample > 0)
             //{
             //    query += "Select * from DataTable WHERE id IN (SELECT id FROM(";
@@ -1094,7 +1100,7 @@ namespace Timelapse.Database
         {
             List<object> relativePathList = this.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
             List<string> allPaths = new List<string>();
-            foreach (string relativePath in relativePathList)
+            foreach (string relativePath in relativePathList.Cast<String>())
             {
                 allPaths.Add(relativePath);
                 string parent = String.IsNullOrEmpty(relativePath) ? String.Empty : System.IO.Path.GetDirectoryName(relativePath);
@@ -1663,7 +1669,7 @@ namespace Timelapse.Database
                     ? CustomSelection.RelativePathGlobToIncludeSubfolders(Constant.DatabaseColumn.RelativePath, GlobalReferences.MainWindow.Arguments.RelativePath)
                     : String.Empty;
             string selectionTerm;
-            // Common query prefix: SELECT EXISTS  ( SELECT 1  FROM DataTable WHERE 
+            // Common query folderPrefix: SELECT EXISTS  ( SELECT 1  FROM DataTable WHERE 
             string query = Sql.SelectExists + Sql.OpenParenthesis + Sql.SelectOne + Sql.From + Constant.DBTables.FileData + Sql.Where;
 
 
@@ -2071,10 +2077,7 @@ namespace Timelapse.Database
             string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID.ToString();
             DataTable imageSetTable = this.Database.GetDataTableFromSelect(imageSetQuery);
             this.ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
-            if (imageSetTable != null)
-            {
-                imageSetTable.Dispose();
-            }
+            imageSetTable?.Dispose();
         }
 
         // Try getting the version number as recorded in the ImageSet datatable.
@@ -2137,7 +2140,6 @@ namespace Timelapse.Database
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             }
         }
-
         static private void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
         {
             Application.Current.Dispatcher.Invoke(() =>
@@ -2170,8 +2172,9 @@ namespace Timelapse.Database
             this.Database.Insert(Constant.DBTables.Classifications, classificationInsertionStatements);
         }
 
-        public async Task<bool> PopulateDetectionTablesAsync(string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
+        public async Task<RecognitionImportResultEnum> PopulateDetectionTablesAsync(string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool mergeDetections)
         {
+
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
             {
@@ -2187,10 +2190,10 @@ namespace Timelapse.Database
 
             if (File.Exists(path) == false)
             {
-                return false;
+                return RecognitionImportResultEnum.JsonFileCouldNotBeRead;
             }
 
-            bool result;
+            RecognitionImportResultEnum result;
             using (ProgressStream ps = new ProgressStream(System.IO.File.OpenRead(path)))
             {
                 ps.BytesRead += new ProgressStreamReportDelegate(PStream_BytesRead);
@@ -2204,81 +2207,169 @@ namespace Timelapse.Database
                             using (JsonReader reader = new JsonTextReader(sr))
                             {
                                 JsonSerializer serializer = new JsonSerializer();
-                                Detector detector = serializer.Deserialize<Detector>(reader);
+                                Detector jsonDetector = serializer.Deserialize<Detector>(reader);
 
-                                // If there is no info field in the json file, create a new structure
-                                // which will eventually be filled in with various default values.
-                                if (detector.info == null)
-                                {
-                                    detector.info = new info();
-                                }
+                                // Fill in the detectorFromJson info structure as needed to ensure it is filled in with reasonable values
+                                PopulateDetectorInfoWithDefaultValuesAsNeeded(jsonDetector.info);
 
-                                // Set the detector to the MD version based upon the contents of the read-in
-                                // value for it (which is just the detector's file name). That file name value gives a 
-                                // reasonable hint as to what detector is currently in use.
-                                if (detector.info.detector == null)
-                                {
-                                    // just to insert a reasonable value into this, just in case
-                                    detector.info.detector = Constant.DetectionValues.MDVersionUnknown;
-                                }
-
-                                if (detector.info.detector_metadata == null)
-                                {
-                                    // If its not set, this will fill it with reasonable default values,
-                                    // e.g., its likely MD4 with the MD4 defaults, as later versions of MD
-                                    // should fill this field in.
-                                    detector.info.detector_metadata = new detector_metadata();
-                                }
-                                else
-                                {
-                                    // check for null fields or empty fields in this structure, setting them to defaults if needed
-                                    if (String.IsNullOrWhiteSpace(detector.info.detector_metadata.megadetector_version))
-                                    {
-                                        detector.info.detector_metadata.megadetector_version = Constant.DetectionValues.MDVersionUnknown;
-                                    }
-                                    if (detector.info.detector_metadata.typical_detection_threshold == null)
-                                    {
-                                        detector.info.detector_metadata.typical_detection_threshold = Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown;
-                                    }
-                                    if (detector.info.detector_metadata.conservative_detection_threshold == null)
-                                    {
-                                        detector.info.detector_metadata.conservative_detection_threshold = Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
-                                    }
-                                }
-
-                                if (detector.info.classifier_metadata == null)
-                                {
-                                    detector.info.classifier_metadata = new classifier_metadata();
-                                }
-                                else
-                                {
-                                    if (detector.info.classifier_metadata.typical_classification_threshold == null)
-                                    {
-                                        // If its not set, this will fill it with reasonable default values,
-                                        // e.g., its likely MD4 with the MD4 defaults, as later versions of MD
-                                        // should fill this field in.
-                                    }
-                                }
                                 // At this point, the detection fields should all be filled in with reasonable values.
 
-                                // If detection population was previously done in this session, resetting these tables to null 
-                                // will force reading the new values into them
+                                // flag indicating if the detections database already exists
+
+                                bool clearDBRecognitionData = true;
+
+                                // the starting index to be used for inserts using the DetectionID
+                                int dbStartingDetectionID = 1;
+                                int dbStartingClassificationID = 1;
+
+                                // Resetting these tables to null will force reading the new values into them
+                                // TODO: Put this somewhere else in case the user aborts the update!
+                                // TODO Update this comment: Resetting these tables to null will force reading the new values into them
                                 this.detectionDataTable = null; // to force repopulating the data structure if it already exists.
                                 this.detectionCategoriesDictionary = null;
                                 this.classificationCategoriesDictionary = null;
                                 this.classificationsDataTable = null;
 
-                                // Prepare the detection tables. If they already exist, clear them
-                                DetectionDatabases.CreateOrRecreateTablesAndColumns(this.Database);
+                                // Merge detections was chosen, so we have to do some error checking and possibly updates
+                                // afor the detection and classification categories and the info structure
+                                if (mergeDetections && this.DetectionsExists())
+                                {
+                                    // Generate several dictionaries reflecting the contents of several detection tables as currently held in the database
+                                    Dictionary<string, string> dbDetectionCategories = new Dictionary<string, string>();
+                                    Dictionary<string, string> dbClassificationCategories = new Dictionary<string, string>();
+                                    Dictionary<string, object> dbInfoDictionary = new Dictionary<string, object>();
+                                    DetectionUpdateDatabase.GenerateDetectionDictionariesFromDB(this.Database, dbInfoDictionary, dbDetectionCategories, dbClassificationCategories);
+
+                                    // Step 1. Generate a new info structure that is a best effort combination of the db and json info structure,
+                                    //         and then update the jsonDetector to match that. Note the we do it even if no update is really needed, as its lightweight
+                                    Dictionary<string, object> newInfoDict = DetectorUtilities.GenerateBestDetectorInfoFromTwoInfoDictionaries(dbInfoDictionary, jsonDetector.info);
+                                    jsonDetector.info.detector = (string)newInfoDict[Constant.InfoColumns.Detector];
+                                    jsonDetector.info.detector_metadata.megadetector_version = (string)newInfoDict[Constant.InfoColumns.DetectorVersion];
+                                    jsonDetector.info.detection_completion_time = (string)newInfoDict[Constant.InfoColumns.DetectionCompletionTime];
+                                    jsonDetector.info.classifier = (string)newInfoDict[Constant.InfoColumns.Classifier];
+                                    jsonDetector.info.classification_completion_time = (string)newInfoDict[Constant.InfoColumns.ClassificationCompletionTime];
+                                    jsonDetector.info.detector_metadata.typical_detection_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalDetectionThreshold];
+                                    jsonDetector.info.detector_metadata.conservative_detection_threshold = (float)newInfoDict[Constant.InfoColumns.ConservativeDetectionThreshold];
+                                    jsonDetector.info.classifier_metadata.typical_classification_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalClassificationThreshold];
+
+                                    // Step 2. Merge the DB and Json detection categories if they are compatable
+                                    if (dbDetectionCategories?.ContainsKey("0") == true)
+                                    {
+                                        // Remove the 0: Empty key/value pair, as that is artificially generated by timelapse and is not in the JSON
+                                        dbDetectionCategories.Remove("0");
+                                    }
+                                    if (Util.Dictionaries.MergeDictionaries(dbDetectionCategories, jsonDetector.detection_categories, out Dictionary<string, string> mergedDetectionCategories))
+                                    {
+                                        // System.Diagnostics.Debug.Print("merged succeeded for detection categories");
+                                        jsonDetector.detection_categories = new Dictionary<string,string>(mergedDetectionCategories);
+                                    }
+                                    else
+                                    {
+                                        // System.Diagnostics.Debug.Print("merged failed for detection categories");
+                                        return RecognitionImportResultEnum.IncompatableDetectionCategories;
+                                    }
+
+                                    // Step 3. Check if the new classfication categories are the same or at least a subset of the old ones.
+                                    // If they are, then we can just use the existing DB categories as they will apply to the new categories.
+                                    if (Util.Dictionaries.MergeDictionaries(dbClassificationCategories, jsonDetector.classification_categories, out Dictionary<string, string> mergedClassificationCategories))
+                                    {
+                                        // System.Diagnostics.Debug.Print("merged succeeded for classification categories");
+                                        jsonDetector.classification_categories = new Dictionary<string, string>(mergedClassificationCategories);
+                                    }
+                                    else
+                                    {
+                                        // System.Diagnostics.Debug.Print("merged failed for classification categories");
+                                        return RecognitionImportResultEnum.IncompatableClassificationCategories;
+                                    }
+                                    clearDBRecognitionData = mergeDetections == false;
+
+                                    //DataTable dbDetectionTable = this.Database.GetDataTableFromSelect(Sql.Select + " File, RelativePath, Detections.* from Detections Inner Join DataTable On DataTable.Id = Detections.Id");
+                                    DataTable dbDetectionTable = this.Database.GetDataTableFromSelect(
+                                        Sql.Select + Constant.DatabaseColumn.File + Sql.Comma
+                                        + Constant.DatabaseColumn.RelativePath + Sql.Comma 
+                                        + Constant.DBTables.Detections + ".*"
+                                        + Sql.From + Constant.DBTables.Detections
+                                        + Sql.InnerJoin + Constant.DBTables.FileData + Sql.On 
+                                        + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID 
+                                        + Sql.Equal
+                                        + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID);
+
+                                    // As we will be inserting records, get the max DetectionID, and add 1 to it. This will be the starting detectionID for insertions
+                                    foreach (DataRow dr in dbDetectionTable.Rows)
+                                    {
+                                        dbStartingDetectionID = Math.Max(Convert.ToInt32(dr["detectionID"]), dbStartingDetectionID);
+                                    }
+                                    dbStartingDetectionID++;
+                                    System.Diagnostics.Debug.Print("DBMaxProtectionID: " + dbStartingDetectionID.ToString());
+
+                                    // As we may be inserting classification records as well, get the max ClassificationID, and add 1 to it. This will be the starting classificationID for insertions
+                                    if (this.Database.TableExistsAndNotEmpty(Constant.DBTables.Classifications))
+                                    {
+                                        dbStartingClassificationID = this.Database.ScalarGetMaxIntValue(Constant.DBTables.Classifications, Constant.ClassificationColumns.ClassificationID);
+                                        dbStartingClassificationID++;
+                                    }
+
+                                    // Foreach  detection, check if it exists in the database detection table.
+                                    // If it does, delete all references to that file (via the ID) in the database
+                                    List<string> queries = new List<string>();
+                                    string folderPrefix = Path.GetDirectoryName(path.Replace(this.FolderPath, "")).TrimStart('\\');
+                                    if (false == String.IsNullOrEmpty(folderPrefix))
+                                    {
+                                        // TODO: SHOULD PROBABLY VERIFY WITH THE USER PERHAPS AFTER CHECKING FOR EXISTANCE
+                                        // OF THE IMAGE FILE (assuming at least one exists) IN THE UNMODIFIEDVS MODIFIED PATH
+                                        System.Diagnostics.Debug.Print("Appending " + folderPrefix + " to file paths in the json");
+                                    }
+                                    foreach (image image in jsonDetector.images)
+                                    {
+                                        if (false == String.IsNullOrEmpty(folderPrefix))
+                                        {
+                                            // TODO: SHOULD PROBABLY VERIFY WITH THE USER PERHAPS AFTER CHECKING FOR EXISTANCE
+                                            // OF THE IMAGE FILE IN THE UNMODIFIEDVS MODIFIED PATH
+                                            // modify the path by adding the folder folderPrefix to it
+                                            image.file = Path.Combine(folderPrefix, image.file);
+                                        }
+                                        // check whether the image file in the json exists in the detector table.
+                                        string file = Path.GetFileName(image.file);
+                                        string relativePath = Path.GetDirectoryName(image.file);
+
+                                        DataRow[] rows = dbDetectionTable.Select(String.Format("File = '{0}' AND RelativePath = '{1}'", file, relativePath));
+                                        if (rows.Length > 0)
+                                        {
+                                            // As the file exists in the detections database, delete all instances of its entry via its ID.
+                                            // We only need to retrieve the ID in the first row, as all others will be the same for that file. 
+                                            // Note that:
+                                            // - new entries for that file will be created later from the json
+                                            // - other existing entries in the DB will remain as is
+                                            DataRow row = rows[0];
+                                            // create an query where we delete detections with the file's ID from the database
+                                            // Form: Delete From Detections Where ID = 'the id of that file'
+                                            string query = Sql.DeleteFrom + Constant.DBTables.Detections + Sql.Where + Constant.DatabaseColumn.ID + Sql.Equal + row[Constant.DatabaseColumn.ID];
+                                            queries.Add(query);
+                                        }
+                                    }
+
+                                    if (queries.Count > 0)
+                                    {
+                                        this.Database.ExecuteNonQueryWrappedInBeginEnd(queries);
+                                    }
+                                    // At this point, we have deleted the detections and classifications from those images that are both in the
+                                    // db and the json, which means were are ready to replace them. 
+                                }
+
+                                // At this point the db no longer contains detections for images referenced in the json file
+                                #endregion
+
+                                // Prepare the various detection tables. 
+                                DetectionDatabases.PrepareRecognitionTablesAndColumns(this.Database, this.DetectionsExists(), clearDBRecognitionData);
 
                                 // PERFORMANCE This check is likely somewhat slow. Check it on large detection files / dbs 
-                                if (this.CompareDetectorAndDBFolders(detector, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth) == false)
+                                if (this.CompareDetectorAndDBFolders(jsonDetector, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth) == false)
                                 {
                                     // No folders in the detections match folders in the databases. Abort without doing anything.
-                                    return false;
+                                    return RecognitionImportResultEnum.Failure;
                                 }
                                 // PERFORMANCE This method does two things:
-                                // - it walks through the detector data structure to construct sql insertion statements
+                                // - it walks through the jsonDetector data structure to construct sql insertion statements
                                 // - it invokes the actual insertion in the database.
                                 // Both steps are very slow with a very large JSON of detections that matches folders of images.
                                 // (e.g., 225 seconds for 2,000,000 images and their detections). Note that I batch insert 50,000 statements at a time. 
@@ -2286,35 +2377,95 @@ namespace Timelapse.Database
                                 // Update the progress bar and populate the detection tables
                                 progress.Report(new ProgressBarArguments(0, "Updating database with detections. Please wait", false, true));
                                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
-                                DetectionDatabases.PopulateTables(detector, this, this.Database, String.Empty);
+                                DetectionDatabases.PopulateTables(jsonDetector, this, this.Database, String.Empty, dbStartingDetectionID, dbStartingClassificationID);
 
                                 // DetectionExists needs to be primed if it is to save its DetectionExists state
                                 this.DetectionsExists(true);
                             }
-                            return true;
+                            return RecognitionImportResultEnum.Success; ;
                         }
                         catch (Exception e)
                         {
                             System.Diagnostics.Debug.Print(e.Message + "Could not populate detection data");
-                            return false;
+                            return RecognitionImportResultEnum.Failure;
                         }
                     }).ConfigureAwait(true);
                 }
             }
             return result;
         }
+
+        #region Update Json with default values as needed
+        // Update the detectorFromJson info table as needed to ensure it is filled in with reasonable values
+        private static void PopulateDetectorInfoWithDefaultValuesAsNeeded(info info)
+        {
+            // If there is no info field in the json file, create a new structure
+            // which will eventually be filled in with various default values.
+            if (info == null)
+            {
+                info = new info();
+            }
+
+            // Set the jsonDetector to the MD version based upon the contents of the read-in
+            // value for it (which is just the jsonDetector's file name). That file name value gives a 
+            // reasonable hint as to what jsonDetector is currently in use.
+            if (info.detector == null)
+            {
+                // just to insert a reasonable value into this, just in case
+                info.detector = Constant.DetectionValues.MDVersionUnknown;
+            }
+
+            if (info.detector_metadata == null)
+            {
+                // If its not set, this will fill it with reasonable default values,
+                // e.g., its likely MD4 with the MD4 defaults, as later versions of MD
+                // should fill this field in.
+                info.detector_metadata = new detector_metadata();
+            }
+            else
+            {
+                // check for null fields or empty fields in this structure, setting them to defaults if needed
+                if (String.IsNullOrWhiteSpace(info.detector_metadata.megadetector_version))
+                {
+                    info.detector_metadata.megadetector_version = Constant.DetectionValues.MDVersionUnknown;
+                }
+                if (info.detector_metadata.typical_detection_threshold == null)
+                {
+                    info.detector_metadata.typical_detection_threshold = Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown;
+                }
+                if (info.detector_metadata.conservative_detection_threshold == null)
+                {
+                    info.detector_metadata.conservative_detection_threshold = Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
+                }
+            }
+
+            if (info.classifier_metadata == null)
+            {
+                info.classifier_metadata = new classifier_metadata();
+            }
+            else
+            {
+                if (info.classifier_metadata.typical_classification_threshold == null)
+                {
+                    // If its not set, this will fill it with reasonable default values,
+                    // e.g., its likely MD4 with the MD4 defaults, as later versions of MD
+                    // should fill this field in.
+                }
+            }
+
+        }
         #endregion
 
         #region Detections
-        // Return true if there is at least one match between a detector folder and a DB folder
-        // Return a list of folder paths missing in the DB but present in the detector file
+        // Return true if there is at least one match between a jsonDetector folder and a DB folder
+        // Return a list of folder paths missing in the DB but present in the jsonDetector file
         private bool CompareDetectorAndDBFolders(Detector detector, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
         {
             string folderpath;
 
             if (detector.images.Count <= 0)
             {
-                // No point continuing if there are no detector entries
+                // No point continuing if there are no jsonDetector entries
                 return false;
             }
 
@@ -2344,7 +2495,7 @@ namespace Timelapse.Database
                 }
             }
 
-            // Compare each folder in the DB against the folders in the detector );
+            // Compare each folder in the DB against the folders in the jsonDetector );
             foreach (string originalFolderDB in FoldersInDBList)
             {
                 // Add a closing slash to the folderDB for the same reasons described above
@@ -2356,7 +2507,7 @@ namespace Timelapse.Database
 
                 if (foldersInDetectorList.Contains(modifiedFolderDB))
                 {
-                    // this folder path is in both the detector file and the image set
+                    // this folder path is in both the jsonDetector file and the image set
                     foldersInBoth.Add(modifiedFolderDB);
                 }
                 else
@@ -2368,7 +2519,7 @@ namespace Timelapse.Database
                     }
                     else
                     {
-                        // This folder is in the image set but NOT in the detector
+                        // This folder is in the image set but NOT in the jsonDetector
                         foldersInDBListButNotInJSon.Add(originalFolderDB);
                     }
                 }
@@ -2856,22 +3007,10 @@ namespace Timelapse.Database
 
             if (disposing)
             {
-                if (this.FileTable != null)
-                {
-                    this.FileTable.Dispose();
-                }
-                if (this.Markers != null)
-                {
-                    this.Markers.Dispose();
-                }
-                if (this.detectionDataTable != null)
-                {
-                    detectionDataTable.Dispose();
-                }
-                if (this.classificationsDataTable != null)
-                {
-                    classificationsDataTable.Dispose();
-                }
+                this.FileTable?.Dispose();
+                this.Markers?.Dispose();
+                this.detectionDataTable?.Dispose();
+                this.classificationsDataTable?.Dispose();
             }
 
             base.Dispose(disposing);

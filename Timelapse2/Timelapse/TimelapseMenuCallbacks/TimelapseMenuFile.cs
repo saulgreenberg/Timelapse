@@ -338,12 +338,27 @@ namespace Timelapse
             List<string> foldersInJsonButNotInDB = new List<string>();
             List<string> foldersInBoth = new List<string>();
 
+
+            // flag indicating if the detections database already exists
+            bool mergeDetections = true == this.DataHandler?.FileDatabase?.DetectionsExists(); // If there are no detections, then merge will be false
+
+            if (mergeDetections == true)
+            {
+                // Since detections exist, ask the user if s/he wants to merge detections with the existing ones, or clear the old detections first
+                Dialog.DetectionsMergeOrRemoveOldData messageBox = new Dialog.DetectionsMergeOrRemoveOldData(this);
+                if (false == messageBox.ShowDialog())
+                {
+                    return; // Cancelled
+                }
+                mergeDetections = messageBox.IsMergeSelected;
+            }
+
             // Show the Busy indicator
             this.BusyCancelIndicator.IsBusy = true;
 
             // Load the detections
-            bool result = await this.DataHandler.FileDatabase.PopulateDetectionTablesAsync(jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth).ConfigureAwait(true);
-            if (result)
+            RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesAsync(jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, mergeDetections).ConfigureAwait(true);
+            if (result == RecognitionImportResultEnum.Success)
             {
                 // Only reset these if we actually imported some detections, as otherwise nothing has changed.
                 GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
@@ -359,21 +374,31 @@ namespace Timelapse
             // Hide the Busy indicator
             this.BusyCancelIndicator.IsBusy = false;
 
-            string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
-            if (result == false)
+
+            if (result == RecognitionImportResultEnum.IncompatableDetectionCategories
+                || result == RecognitionImportResultEnum.IncompatableClassificationCategories
+                || result == RecognitionImportResultEnum.JsonFileCouldNotBeRead)
             {
-                // No matching folders in the DB and the detector
-                Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
-            }
-            else if (foldersInDBListButNotInJSon.Count > 0)
-            {
-                // Some folders missing - show which folder paths in the DB are not in the detector
-                Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                Dialogs.MenuFileDetectionsFailedImportedDialog(this, result);
             }
             else
             {
-                // Detections successfully imported message
-                Dialogs.MenuFileDetectionsSuccessfulyImportedDialog(this, details);
+                string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
+                if (result != RecognitionImportResultEnum.Success)
+                {
+                    // No matching folders in the DB and the detector
+                    Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
+                }
+                else if (foldersInDBListButNotInJSon.Count > 0)
+                {
+                    // Some folders missing - show which folder paths in the DB are not in the detector
+                    Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                }
+                else
+                {
+                    // Detections successfully imported message
+                    Dialogs.MenuFileDetectionsSuccessfulyImportedDialog(this, details);
+                }
             }
         }
 

@@ -693,6 +693,11 @@ namespace Timelapse.Constant
         public const float BoundingBoxDisplayThresholdDefault = Constant.DetectionValues.Undefined;   // Appropriate for Megadetector v4
         public const string MDVersionUnknown = "vUnknown";
         public const float Undefined = -1F;
+
+        public const string DetectorUnknown = "megadetector_unknown_version";
+        public const string DetectionCompletionTimeUnknown = "unknown";
+        public const string ClassifierUnknown = "ecosystem1_unknown_version";
+        public const string ClassificationCompletionTimeUnknown = "unknown";
     }
 
     public static class ClassificationColumns

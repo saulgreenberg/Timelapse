@@ -91,7 +91,7 @@ namespace Timelapse.Detection
             }
         }
 
-        private double TypicalDetectionThreshold
+        static private double TypicalDetectionThreshold
         {
             get
             {
@@ -111,12 +111,12 @@ namespace Timelapse.Detection
             get
             {
                 return this._currentDetectionThreshold < 0
-                    ? this.TypicalDetectionThreshold
+                    ? TypicalDetectionThreshold
                     : this._currentDetectionThreshold;
             }
         }
 
-        private double TypicalClassificationThreshold
+        static private double TypicalClassificationThreshold
         {
             get
             {
@@ -136,12 +136,12 @@ namespace Timelapse.Detection
             get
             {
                 return this._currentClassificationThreshold < 0
-                    ? this.TypicalClassificationThreshold
+                    ? TypicalClassificationThreshold
                     : this._currentClassificationThreshold;
             }
         }
 
-        public double ConservativeDetectionThreshold
+        static public double ConservativeDetectionThreshold
         {
             get
             {
