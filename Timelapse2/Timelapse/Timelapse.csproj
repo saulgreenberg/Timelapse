@@ -216,6 +216,9 @@
     <Compile Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml.cs">
       <DependentUpon>DateTimeRereadFromSelectedMetadataField.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialog\DetectionsAddSubfolderToJsonFilePaths.xaml.cs">
+      <DependentUpon>DetectionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\DetectionsMergeOrRemoveOldData.xaml.cs">
       <DependentUpon>DetectionsMergeOrRemoveOldData.xaml</DependentUpon>
     </Compile>
@@ -485,6 +488,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DetectionsAddSubfolderToJsonFilePaths.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

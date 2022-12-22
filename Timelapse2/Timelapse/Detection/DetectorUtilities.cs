@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Timelapse.Detection
 {
     public static class DetectorUtilities
     {
+        #region Info-related utilities
         public static bool IsMegadetectorVersionHigherInDestination(string source, string destination)
         {
             if (source == destination)
@@ -171,17 +177,45 @@ namespace Timelapse.Detection
                 : Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
             updatedDict.Add(Constant.InfoColumns.ConservativeDetectionThreshold, Math.Min(i1ConservativeDetectionThreshold, i2TConservativeDetectionThreshold));
 
-            // x new ColumnTuple(Constant.InfoColumns.InfoID, 1),
-            // x new ColumnTuple(Constant.InfoColumns.Detector, detector.info.detector),
-            // x new ColumnTuple(Constant.InfoColumns.DetectionCompletionTime, detector.info.detection_completion_time),
-            // x new ColumnTuple(Constant.InfoColumns.Classifier, detector.info.classifier),
-            // x new ColumnTuple(Constant.InfoColumns.ClassificationCompletionTime, detector.info.classification_completion_time),
-            // x new ColumnTuple(Constant.InfoColumns.DetectorVersion, detector.info.detector_metadata.megadetector_version),
-            // x new ColumnTuple(Constant.InfoColumns.TypicalDetectionThreshold, (float)detector.info.detector_metadata.typical_detection_threshold),
-            // x new ColumnTuple(Constant.InfoColumns.ConservativeDetectionThreshold, (float)detector.info.detector_metadata.conservative_detection_threshold),
-            // x new ColumnTuple(Constant.InfoColumns.TypicalClassificationThreshold, (float)detector.info.classifier_metadata.typical_classification_threshold),
-
             return updatedDict;
+        }
+        #endregion
+
+        static public string JsonGetFirstFilePath(string jsonPath)
+        {
+            int limit = 100; // stop reading after 100 lines
+            const Int32 BufferSize = 128;
+            String line = String.Empty;
+            string fileTerm = "\"file\":";
+            string regExpTerm = "\"(.*?)\"";
+            using (var fileStream = File.OpenRead(jsonPath))
+            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, BufferSize))
+            {
+                while ((line = streamReader.ReadLine()) != null && limit-- != 0)
+                {
+                    if (line.Contains(fileTerm))
+                    {
+                        System.Diagnostics.Debug.Print(line);
+                        break;
+                    }
+                }
+            }
+            if (String.IsNullOrEmpty(line))
+            {
+                // No match
+                return String.Empty;
+            }
+
+            // Get the portion of the line after the file path
+            line = line.Substring(line.IndexOf(fileTerm) + fileTerm.Length - 1);
+            //Regex regex = new Regex("\"(.*?)\"");
+            Regex regex = new Regex(regExpTerm);
+            MatchCollection matches = regex.Matches(line);
+            if (matches.Count > 0)
+            {
+                line = matches[0].Groups[1].ToString();
+            }
+            return line;
         }
     }
 }

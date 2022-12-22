@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.TextFormatting;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.Detection;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -324,40 +327,104 @@ namespace Timelapse
         #region Import recognition data
         private async void MenuItemImportDetectionData_Click(object sender, RoutedEventArgs e)
         {
+            // Get the Json file from the user
             string jsonFileName = Constant.File.RecognitionJsonDataFileName;
-            if (Dialogs.TryGetFileFromUserUsingOpenFileDialog(
+            if (false == Dialogs.TryGetFileFromUserUsingOpenFileDialog(
                       "Select a .json file that contains the recognition data. It will be merged into the current image set",
                       Path.Combine(this.DataHandler.FileDatabase.FolderPath, jsonFileName),
                       String.Format("JSon files (*{0})|*{0}", Constant.File.JsonFileExtension),
                       Constant.File.JsonFileExtension,
-                      out string jsonFilePath) == false)
+                      out string jsonFilePath))
             {
                 return;
             }
+
             List<string> foldersInDBListButNotInJSon = new List<string>();
             List<string> foldersInJsonButNotInDB = new List<string>();
             List<string> foldersInBoth = new List<string>();
+            string addPrefixToPath = String.Empty;
 
-
-            // flag indicating if the detections database already exists
+            // mergeDetections, which indicates we should merge json data with existing data, is true if detections already exist
             bool mergeDetections = true == this.DataHandler?.FileDatabase?.DetectionsExists(); // If there are no detections, then merge will be false
+            bool addSubfolderPrefix = false;
 
-            if (mergeDetections == true)
+            // This could is commented out until we decide not to go this route. If so, strip out the decision code notonly here but n PopulateDetectionTablesAsync
+            // (just look for how mergeDetections is used)
+            // If detections exist, its asks the user if s/he wants to merge detections with the existing ones, or clear the old detections first
+            // mergeDetections is set according to the response.
+            //if (mergeDetections == true)
+            //{
+            //    // Since detections exist, ask the user if s/he wants to merge detections with the existing ones, or clear the old detections first
+            //    Dialog.DetectionsMergeOrRemoveOldData messageBox = new Dialog.DetectionsMergeOrRemoveOldData(this);
+            //    if (false == messageBox.ShowDialog())
+            //    {
+            //        return; // Cancelled
+            //    }
+            //    mergeDetections = messageBox.IsMergeSelected;
+            //}
+
+            // Determine whether the json is in a subfolder, the root folder, or outside of the root folder
+            // If in a subfolder, ask the user if s/he wants to add the subfolder prefix
+            Tuple<string, string, string> splitPath = Util.FilesFolders.SplitFullPath(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
+            if (splitPath == null)
             {
-                // Since detections exist, ask the user if s/he wants to merge detections with the existing ones, or clear the old detections first
-                Dialog.DetectionsMergeOrRemoveOldData messageBox = new Dialog.DetectionsMergeOrRemoveOldData(this);
-                if (false == messageBox.ShowDialog())
-                {
-                    return; // Cancelled
-                }
-                mergeDetections = messageBox.IsMergeSelected;
+                // Don't add prefix: file is outside of root folder and its subfolders
+                System.Diagnostics.Debug.Print("file is outside of root folder and its subfolders");
             }
+            else if (String.IsNullOrEmpty(splitPath.Item2))
+            {
+                // Don't add prefix: file is in the root folder
+                System.Diagnostics.Debug.Print("file is in root folder");
+            }
+            else
+            {
+                // file is in a sub-folder, check whether there is evidence to add a prefix
+                string sampleFilePath = DetectorUtilities.JsonGetFirstFilePath(jsonFilePath);
+                System.Diagnostics.Debug.Print("In sub folder" + splitPath.Item2);
+                System.Diagnostics.Debug.Print("Sample json file path is: " + sampleFilePath);
+                if (sampleFilePath.StartsWith(splitPath.Item2))
+                {
+                    // Don't add prefix: Highly like that json was started in the root folder, as the path begins with this subfolder's name
+                    // System.Diagnostics.Debug.Print("Highly like that json was started in the root folder, as the path begins with this subfolder's name");
+
+                }
+                else if (File.Exists(Path.Combine(this.DataHandler.FileDatabase.FolderPath, sampleFilePath)))
+                {
+                    // Don't add prefix: Highly likely that json was started in the root folder, as the file in the indicated path
+                    System.Diagnostics.Debug.Print("Highly likely that json was started in the root folder, as the file in the indicated path");
+                }
+                else if (File.Exists(Path.Combine(this.DataHandler.FileDatabase.FolderPath, splitPath.Item2, sampleFilePath)))
+                {
+                    // Add prefix: Highly likely that json was started in this subfolder. Sample path does not have the subfolder prefix. If prefix added, the file exists
+                    // Ask!!!
+                    System.Diagnostics.Debug.Print("Highly likely that json was started in this subfolder. Sample path does not have the subfolder prefix. If prefix added, the file exists");
+                    addPrefixToPath = splitPath.Item2;
+                }
+                else
+                {
+                    // Unclear if we should add the prefix. There is some evidence that json was started in this subfolder as sample path does not have the subfolder prefix
+                    // but the file in the json could not be found.
+                    // Ask?
+                    System.Diagnostics.Debug.Print("Some evidence that json was started in this subfolder as sample path does not have the subfolder prefix");
+                }
+
+                //Dialog.DetectionsAddSubfolderToJsonFilePaths message = new Dialog.DetectionsAddSubfolderToJsonFilePaths(this, splitPath.Item2, sampleFilePath);
+                //if (false == message.ShowDialog())
+                //{
+                //    return;
+                //}
+                //if (message.AddSubFolderPrefix)
+                //{
+                //    addSubfolderPrefix = message.AddSubFolderPrefix;
+                //}
+            }
+            System.Diagnostics.Debug.Print("Add the prefix is " + addSubfolderPrefix.ToString());
 
             // Show the Busy indicator
             this.BusyCancelIndicator.IsBusy = true;
 
             // Load the detections
-            RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesAsync(jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, mergeDetections).ConfigureAwait(true);
+            RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesAsync(jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, mergeDetections, addPrefixToPath).ConfigureAwait(true);
             if (result == RecognitionImportResultEnum.Success)
             {
                 // Only reset these if we actually imported some detections, as otherwise nothing has changed.

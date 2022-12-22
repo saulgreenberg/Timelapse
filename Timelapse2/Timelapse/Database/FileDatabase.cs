@@ -2172,7 +2172,7 @@ namespace Timelapse.Database
             this.Database.Insert(Constant.DBTables.Classifications, classificationInsertionStatements);
         }
 
-        public async Task<RecognitionImportResultEnum> PopulateDetectionTablesAsync(string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool mergeDetections)
+        public async Task<RecognitionImportResultEnum> PopulateDetectionTablesAsync(string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool mergeDetections, string folderPrefixToAddToPath)
         {
 
             // Set up a progress handler that will update the progress bar
@@ -2212,6 +2212,15 @@ namespace Timelapse.Database
                                 // Fill in the detectorFromJson info structure as needed to ensure it is filled in with reasonable values
                                 PopulateDetectorInfoWithDefaultValuesAsNeeded(jsonDetector.info);
 
+                                //// If we need to add a prefix to each file's path, do so here
+                                //if (false == String.IsNullOrWhiteSpace(folderPrefixToAddToPath))
+                                //{
+                                //    foreach (image img in jsonDetector.images)
+                                //    {
+                                //        img.file = Path.Combine(folderPrefixToAddToPath, img.file);
+                                //    }
+                                //}
+                                
                                 // At this point, the detection fields should all be filled in with reasonable values.
 
                                 // flag indicating if the detections database already exists
@@ -2321,13 +2330,20 @@ namespace Timelapse.Database
                                     }
                                     foreach (image image in jsonDetector.images)
                                     {
-                                        if (false == String.IsNullOrEmpty(folderPrefix))
-                                        {
-                                            // TODO: SHOULD PROBABLY VERIFY WITH THE USER PERHAPS AFTER CHECKING FOR EXISTANCE
-                                            // OF THE IMAGE FILE IN THE UNMODIFIEDVS MODIFIED PATH
-                                            // modify the path by adding the folder folderPrefix to it
-                                            image.file = Path.Combine(folderPrefix, image.file);
+                                        // If we need to add a prefix to each file's path, do so here
+                                        if (false == String.IsNullOrWhiteSpace(folderPrefixToAddToPath))
+                                        { 
+                                                image.file = Path.Combine(folderPrefixToAddToPath, image.file);
                                         }
+                                        //}
+                                        //if (false == String.IsNullOrEmpty(folderPrefix))
+                                        //{
+                                        //    // TODO: SHOULD PROBABLY VERIFY WITH THE USER PERHAPS AFTER CHECKING FOR EXISTANCE
+                                        //    // OF THE IMAGE FILE IN THE UNMODIFIEDVS MODIFIED PATH
+                                        //    // modify the path by adding the folder folderPrefix to it
+                                        //    image.file = Path.Combine(folderPrefix, image.file);
+                                        //}
+
                                         // check whether the image file in the json exists in the detector table.
                                         string file = Path.GetFileName(image.file);
                                         string relativePath = Path.GetDirectoryName(image.file);

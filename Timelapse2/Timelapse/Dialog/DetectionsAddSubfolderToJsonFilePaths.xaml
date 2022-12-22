@@ -1,0 +1,37 @@
+﻿<Window x:Class="Timelapse.Dialog.DetectionsAddSubfolderToJsonFilePaths"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Timelapse.Dialog" xmlns:controls="clr-namespace:Timelapse.Controls"
+        mc:Ignorable="d"
+    Title="Add subfolder to file paths in the Json?" Height="560" Width="680" MinHeight="560" MinWidth="680" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
+            Title="Add the subfolder name to file paths found in the recognition file?"
+            What="Depending on how you ran image recognition, you may want to add that subfolder name to the begining of each file's path."
+            Reason="Did you run the image recognizer within :
+                &#10;&#x2022; the root folder: if so, file paths are complete.
+                &#10;&#x2022; a subfolder? If so, the subfolder name would be missing from the beginning of each file's path. 
+                &#10;   Timelapse will not be able to find those files."
+           Result="Selecting 'Add the subfolder to the path...', will add the subfolder name to the beginning of each file path."
+           Hint="If you are unsure about the file paths in the recognition file, check them through these steps.
+                 &#10;1. open the JSON file in a text editor (EditPad Lite is a free editor that works well with very large files).
+                 &#10;2. Examine the file paths in the JSON (the text immediately after 'File:') 
+                 &#10;3. If paths are only to files in or under this sub-folder, check to see if they include the sub-folder name.
+                 &#10;     &#x2022; if they don't, then add them
+                 &#10;     &#x2022; if they do, things are fine as they are"/>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
+            <Button Name="CancelButton" IsCancel="True" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,40,10" Click="CancelButton_Click">_Cancel</Button>
+            <Button Name="RemoveButton" IsDefault="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Visible" Padding="10" Margin="10,10,10,10" Click="AddSubfolder_Click">_Add the subfolder to the path</Button>
+            <Button Name="MergeButton" IsDefault="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="LeaveThingsAsTheyAre_Click">_Continue without changing the path</Button>
+        </StackPanel>
+    </Grid>
+</Window>
