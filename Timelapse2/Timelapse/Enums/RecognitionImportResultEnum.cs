@@ -11,6 +11,7 @@ namespace Timelapse.Enums
         IncompatableDetectionCategories,
         IncompatableClassificationCategories,
         JsonFileCouldNotBeRead,
+        JsonFileCorrupt,
         Success,
         Failure
     }

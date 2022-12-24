@@ -1089,19 +1089,33 @@ namespace Timelapse.Dialog
         #endregion
 
         #region MessageBox: MenuFile
+        public static void MenuFileRecognizersDataCouldNotBeReadDialog(Window owner)
+        {
+            MessageBox messageBox = new MessageBox("Recognition data not imported.", owner);
+            messageBox.Message.Problem = "No recognition information was imported." + Environment.NewLine;
+            messageBox.Message.Problem += "There were problems reading the recognition data in the json file.";
+            messageBox.Message.Reason = "Possible causes are:" + Environment.NewLine; ;
+            messageBox.Message.Reason += "\u2022 the file could not be opened, or" + Environment.NewLine; ;
+            messageBox.Message.Reason += "\u2022 the recognition data in the file is somehow corrupted";
+            messageBox.Message.Solution = "You may have to re-create the json file.";
+            messageBox.Message.Result = "Recognition information was not imported.";
+            messageBox.ShowDialog();
+        }
+
         /// <summary>
         /// No matching folders in the DB and the detector
         /// </summary>
         public static void MenuFileRecognitionDataNotImportedDialog(Window owner, string details)
         {
             MessageBox messageBox = new MessageBox("Recognition data not imported.", owner);
-            messageBox.Message.Problem = "No recognition information was imported, as none of its image folder paths were found in your Database file." + Environment.NewLine;
-            messageBox.Message.Problem += "Thus no recognition information could be assigned to your images.";
-            messageBox.Message.Reason = "The recognizer may have been run on a folder containing various image sets, each in a sub-folder. " + Environment.NewLine;
+            messageBox.Message.Problem = "No recognition information was imported. The image file paths in the recognition file and the Timelapse" + Environment.NewLine;
+            messageBox.Message.Problem += "database are all completely different. Thus no recognition information could be assigned to your images.";
+            messageBox.Message.Reason = "When the recognizer originally processed a folder (and its subfolders) containing your images," + Environment.NewLine;
+            messageBox.Message.Reason += "it recorded each image's location relative to that folder. If the subfolder structure differs from " + Environment.NewLine;
+            messageBox.Message.Reason += "that found in the Timelapse root folder, then the paths won't match." + Environment.NewLine;
             messageBox.Message.Reason += "For example, if the recognizer was run on 'AllFolders/Camera1/' but your template and database is in 'Camera1/'," + Environment.NewLine;
             messageBox.Message.Reason += "the folder paths won't match, since AllFolders/Camera1/ \u2260 Camera1/.";
-            messageBox.Message.Solution = "Microsoft provides a program to extract a subset of recognitions in the Recognition file" + Environment.NewLine;
-            messageBox.Message.Solution += "that you can use to extract recognitions matching your sub-folder: " + Environment.NewLine;
+            messageBox.Message.Solution = "You may be able to repair the paths in the recognition file using a program provided by Microsoft:" + Environment.NewLine;
             messageBox.Message.Solution += "  http://aka.ms/cameratraps-detectormismatch";
             messageBox.Message.Result = "Recognition information was not imported.";
             messageBox.Message.Details = details;
@@ -1173,6 +1187,37 @@ namespace Timelapse.Dialog
             }
             messageBox.ShowDialog();
         }
+
+        /// <summary>
+        /// Warn the user that there no existing files match the recognition data
+        /// </summary>
+        /// <returns>The selected path, otherwise null </returns>
+        public static bool RecognizerNoMatchToExistingFiles(Window owner, string samplePath)
+        {
+            MessageBox messageBox = new MessageBox("None of the recognition file paths match your existing files", owner, MessageBoxButton.OKCancel);
+            messageBox.Message.What = "None of the recognition file paths match your existing files." + Environment.NewLine;
+            messageBox.Message.What += "Is this intensional?";
+            messageBox.Message.Reason = "It's likely that there is a mismatch between the recognizer paths and your actual file paths." + Environment.NewLine;
+            messageBox.Message.Reason += "Somewhat less likely is that you haven't yet moved your images over.";
+            messageBox.Message.Solution = "You may want to do one of the following." + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 'Okay' to import the recognitions anyways" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 'Cancel' to stop importing so you can check to see what is going on.";
+            if (String.IsNullOrWhiteSpace(samplePath))
+            {
+                messageBox.Message.Hint = "The problem is that the recognition file contains no files!" + Environment.NewLine;
+                messageBox.Message.Hint += "You probably want to Cancel";
+            }
+            else
+            {
+                messageBox.Message.Hint = "An example file path found in the recogntion file is: " + Environment.NewLine;
+                messageBox.Message.Hint += "\u2022 " + samplePath +  Environment.NewLine;
+                messageBox.Message.Hint += "Examine this to see if you think this file path should point to a different location.";
+            }
+            messageBox.Message.Icon = MessageBoxImage.Question;
+
+            return true == messageBox.ShowDialog();
+        }
+
 
         /// <summary>
         /// Export data for this image set as a.csv file, but confirm, as only a subset will be exported since a selection is active

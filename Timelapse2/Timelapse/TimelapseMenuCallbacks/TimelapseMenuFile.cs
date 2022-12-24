@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImageProcessor.Processors;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,13 +9,18 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.TextFormatting;
+using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Detection;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
+using ToastNotifications.Position;
+using Xceed.Wpf.AvalonDock.Themes;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using DialogResult = System.Windows.Forms.DialogResult;
+using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 
 // File Menu Callbacks
@@ -325,9 +331,11 @@ namespace Timelapse
         #endregion
 
         #region Import recognition data
-        private async void MenuItemImportDetectionData_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemImportRecognitionData_Click(object sender, RoutedEventArgs e)
         {
-            // Get the Json file from the user
+            //
+            // 1. Get the Json file from the user
+            //
             string jsonFileName = Constant.File.RecognitionJsonDataFileName;
             if (false == Dialogs.TryGetFileFromUserUsingOpenFileDialog(
                       "Select a .json file that contains the recognition data. It will be merged into the current image set",
@@ -339,135 +347,138 @@ namespace Timelapse
                 return;
             }
 
-            List<string> foldersInDBListButNotInJSon = new List<string>();
-            List<string> foldersInJsonButNotInDB = new List<string>();
-            List<string> foldersInBoth = new List<string>();
-            string addPrefixToPath = String.Empty;
+            // We now have a json file name
 
-            // mergeDetections, which indicates we should merge json data with existing data, is true if detections already exist
-            bool mergeDetections = true == this.DataHandler?.FileDatabase?.DetectionsExists(); // If there are no detections, then merge will be false
-            bool addSubfolderPrefix = false;
 
-            // This could is commented out until we decide not to go this route. If so, strip out the decision code notonly here but n PopulateDetectionTablesAsync
-            // (just look for how mergeDetections is used)
-            // If detections exist, its asks the user if s/he wants to merge detections with the existing ones, or clear the old detections first
-            // mergeDetections is set according to the response.
-            //if (mergeDetections == true)
-            //{
-            //    // Since detections exist, ask the user if s/he wants to merge detections with the existing ones, or clear the old detections first
-            //    Dialog.DetectionsMergeOrRemoveOldData messageBox = new Dialog.DetectionsMergeOrRemoveOldData(this);
-            //    if (false == messageBox.ShowDialog())
-            //    {
-            //        return; // Cancelled
-            //    }
-            //    mergeDetections = messageBox.IsMergeSelected;
-            //}
-
-            // Determine whether the json is in a subfolder, the root folder, or outside of the root folder
-            // If in a subfolder, ask the user if s/he wants to add the subfolder prefix
-            Tuple<string, string, string> splitPath = Util.FilesFolders.SplitFullPath(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
-            if (splitPath == null)
-            {
-                // Don't add prefix: file is outside of root folder and its subfolders
-                System.Diagnostics.Debug.Print("file is outside of root folder and its subfolders");
-            }
-            else if (String.IsNullOrEmpty(splitPath.Item2))
-            {
-                // Don't add prefix: file is in the root folder
-                System.Diagnostics.Debug.Print("file is in root folder");
-            }
-            else
-            {
-                // file is in a sub-folder, check whether there is evidence to add a prefix
-                string sampleFilePath = DetectorUtilities.JsonGetFirstFilePath(jsonFilePath);
-                System.Diagnostics.Debug.Print("In sub folder" + splitPath.Item2);
-                System.Diagnostics.Debug.Print("Sample json file path is: " + sampleFilePath);
-                if (sampleFilePath.StartsWith(splitPath.Item2))
-                {
-                    // Don't add prefix: Highly like that json was started in the root folder, as the path begins with this subfolder's name
-                    // System.Diagnostics.Debug.Print("Highly like that json was started in the root folder, as the path begins with this subfolder's name");
-
-                }
-                else if (File.Exists(Path.Combine(this.DataHandler.FileDatabase.FolderPath, sampleFilePath)))
-                {
-                    // Don't add prefix: Highly likely that json was started in the root folder, as the file in the indicated path
-                    System.Diagnostics.Debug.Print("Highly likely that json was started in the root folder, as the file in the indicated path");
-                }
-                else if (File.Exists(Path.Combine(this.DataHandler.FileDatabase.FolderPath, splitPath.Item2, sampleFilePath)))
-                {
-                    // Add prefix: Highly likely that json was started in this subfolder. Sample path does not have the subfolder prefix. If prefix added, the file exists
-                    // Ask!!!
-                    System.Diagnostics.Debug.Print("Highly likely that json was started in this subfolder. Sample path does not have the subfolder prefix. If prefix added, the file exists");
-                    addPrefixToPath = splitPath.Item2;
-                }
-                else
-                {
-                    // Unclear if we should add the prefix. There is some evidence that json was started in this subfolder as sample path does not have the subfolder prefix
-                    // but the file in the json could not be found.
-                    // Ask?
-                    System.Diagnostics.Debug.Print("Some evidence that json was started in this subfolder as sample path does not have the subfolder prefix");
-                }
-
-                //Dialog.DetectionsAddSubfolderToJsonFilePaths message = new Dialog.DetectionsAddSubfolderToJsonFilePaths(this, splitPath.Item2, sampleFilePath);
-                //if (false == message.ShowDialog())
-                //{
-                //    return;
-                //}
-                //if (message.AddSubFolderPrefix)
-                //{
-                //    addSubfolderPrefix = message.AddSubFolderPrefix;
-                //}
-            }
-            System.Diagnostics.Debug.Print("Add the prefix is " + addSubfolderPrefix.ToString());
-
-            // Show the Busy indicator
+            //
+            // 2. Read recognitions from the Json file
+            //
             this.BusyCancelIndicator.IsBusy = true;
-
-            // Load the detections
-            RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesAsync(jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, mergeDetections, addPrefixToPath).ConfigureAwait(true);
-            if (result == RecognitionImportResultEnum.Success)
+            using (Detector jsonRecognitions = await this.DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
             {
-                // Only reset these if we actually imported some detections, as otherwise nothing has changed.
-                GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
-                if (this.DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
+                if (jsonRecognitions == null)
                 {
-                    this.DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
+                    // Abort. The json file could not be read.
+                    Dialogs.MenuFileRecognizersDataCouldNotBeReadDialog(this);
+                    this.BusyCancelIndicator.IsBusy = false;
+                    return;
                 }
-                // Reset the BoundingBox threshold to its new values.
-                this.State.BoundingBoxDisplayThresholdResetToDefault();
-                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-            }
 
-            // Hide the Busy indicator
-            this.BusyCancelIndicator.IsBusy = false;
+                // The json file is now successfuly read into the jsonRecognitions structure
 
-
-            if (result == RecognitionImportResultEnum.IncompatableDetectionCategories
-                || result == RecognitionImportResultEnum.IncompatableClassificationCategories
-                || result == RecognitionImportResultEnum.JsonFileCouldNotBeRead)
-            {
-                Dialogs.MenuFileDetectionsFailedImportedDialog(this, result);
-            }
-            else
-            {
-                string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
-                if (result != RecognitionImportResultEnum.Success)
+                //
+                // 3. See if we need to adjust the folder path.
+                //    Conditions:
+                //    - json recognizer file was found in a sub-folder somewhere under the root folder
+                //    - json recognizer's image paths do not have the sub-folder prefix
+                //    - at least one file is found that matches a path comprising and added sub-folder prefix
+                string subFolderPrefix = DetectorUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
+                if (false == String.IsNullOrEmpty(subFolderPrefix))
                 {
-                    // No matching folders in the DB and the detector
-                    Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
-                }
-                else if (foldersInDBListButNotInJSon.Count > 0)
-                {
-                    // Some folders missing - show which folder paths in the DB are not in the detector
-                    Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix);
+                    if (resultRecognizerPathTest == RecognizerPathTestResults.PathsRelativeToSubFolder)
+                    {
+                        RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
+                        if (false == messageBox.ShowDialog())
+                        {
+                            this.BusyCancelIndicator.IsBusy = false;
+                            return;
+                        }
+                        if (messageBox.AddSubFolderPrefix)
+                        {
+                            // The user indicated we should add the prefix, so do so.
+                            await DetectorUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix);
+                        }
+                    }
+                    else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
+                    {
+                        string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
+                        if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
+                        {
+                            // The user decided to abort the operation 
+                            this.BusyCancelIndicator.IsBusy = false;
+                            return;
+                        }
+                    }
+                    // This is the only other thing it could be, so implicit. We do nothing as the paths are correct
+                    //else resultRecognizerPathTest == RecognizerPathTestResults.PathsRelativeToRootFolder
                 }
                 else
                 {
-                    // Detections successfully imported message
-                    Dialogs.MenuFileDetectionsSuccessfulyImportedDialog(this, details);
+                    // Likely outside the root folder. Different error message?
+                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix);
+                    if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
+                    {
+                        string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
+                        if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
+                        {
+                            // The user decided to abort the operation 
+                            this.BusyCancelIndicator.IsBusy = false;
+                            return;
+                        }
+                    }
+                    // else resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles
+                }
+                // The  recognition file is ready to go (and repaired if needed)
+
+                //
+                // 4. Populate the database with the new recognition data found in the jsonRecognitions
+                //
+                List<string> foldersInDBListButNotInJSon = new List<string>();
+                List<string> foldersInJsonButNotInDB = new List<string>();
+                List<string> foldersInBoth = new List<string>();
+                RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
+
+                // 
+                // 5. Rest various recognition settings as needed and refresh the display
+                //
+                if (result == RecognitionImportResultEnum.Success)
+                {
+                    // Only reset these if we actually imported some detections, as otherwise nothing has changed.
+                    GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
+                    if (this.DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
+                    {
+                        this.DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
+                    }
+                    // Reset the BoundingBox threshold to its new values.
+                    this.State.BoundingBoxDisplayThresholdResetToDefault();
+                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                }
+
+                // Hide the Busy indicator
+                this.BusyCancelIndicator.IsBusy = false;
+
+                //
+                // 6.Report the status as needed
+                //
+                if (result == RecognitionImportResultEnum.IncompatableDetectionCategories
+                    || result == RecognitionImportResultEnum.IncompatableClassificationCategories
+                    || result == RecognitionImportResultEnum.JsonFileCouldNotBeRead)
+                {
+                    Dialogs.MenuFileDetectionsFailedImportedDialog(this, result);
+                }
+                else
+                {
+                    string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
+                    if (result != RecognitionImportResultEnum.Success)
+                    {
+                        // No matching folders in the DB and the detector
+                        Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
+                    }
+                    else if (foldersInDBListButNotInJSon.Count > 0)
+                    {
+                        // Some folders missing - show which folder paths in the DB are not in the detector
+                        Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                    }
+                    else
+                    {
+                        // Detections successfully imported message
+                        Dialogs.MenuFileDetectionsSuccessfulyImportedDialog(this, details);
+                    }
                 }
             }
         }
+
 
         // Return a string that will be included in the message box invoked above that details the match (or mismatch) between the image set folder and recognition data folders
         private static string ComposeFolderDetails(List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)

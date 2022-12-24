@@ -1,12 +1,18 @@
-﻿using System;
+﻿using DialogUpgradeFiles.Database;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Timelapse.Controls;
+using Timelapse.Enums;
+using Timelapse.Util;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Timelapse.Detection
@@ -50,11 +56,11 @@ namespace Timelapse.Detection
                 {Constant.InfoColumns.DetectorVersion, info.detector_metadata.megadetector_version ?? Constant.DetectionValues.MDVersionUnknown},
                 {Constant.InfoColumns.TypicalDetectionThreshold, info.detector_metadata.typical_detection_threshold ?? Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown},
                 {Constant.InfoColumns.ConservativeDetectionThreshold, info.detector_metadata.conservative_detection_threshold ?? Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown},
-                {Constant.InfoColumns.Classifier, String.IsNullOrEmpty(info.classifier) 
-                    ? String.Empty 
+                {Constant.InfoColumns.Classifier, String.IsNullOrEmpty(info.classifier)
+                    ? String.Empty
                     : info.classifier},
-                {Constant.InfoColumns.ClassificationCompletionTime, 
-                    String.IsNullOrEmpty(info.classification_completion_time) 
+                {Constant.InfoColumns.ClassificationCompletionTime,
+                    String.IsNullOrEmpty(info.classification_completion_time)
                     ? String.Empty
                     : info.classification_completion_time},
                 {Constant.InfoColumns.TypicalClassificationThreshold, info.classifier_metadata.typical_classification_threshold ?? Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown},
@@ -93,7 +99,7 @@ namespace Timelapse.Detection
                     : i1d.ToString()
                 : Constant.DetectionValues.DetectorUnknown;
             string i2Detector = infoDict2.TryGetValue(Constant.InfoColumns.Detector, out object i2d)
-                 ? i2d == null 
+                 ? i2d == null
                     ? Constant.DetectionValues.DetectorUnknown
                     : i2d.ToString()
                  : Constant.DetectionValues.DetectorUnknown;
@@ -153,7 +159,7 @@ namespace Timelapse.Detection
 
             // Populate the dict with the smaller of the two typical classification thresholds
             float i1TypicalClassificationThreshold = infoDict1.TryGetValue(Constant.InfoColumns.TypicalClassificationThreshold, out object i1tct)
-                ? i1tct == null 
+                ? i1tct == null
                     ? Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown
                     : Convert.ToSingle(i1tct)
                 : Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown;
@@ -166,12 +172,12 @@ namespace Timelapse.Detection
 
             // Populate the dict with the smaller of the two conservative classification thresholds
             float i1ConservativeDetectionThreshold = infoDict1.TryGetValue(Constant.InfoColumns.ConservativeDetectionThreshold, out object i1cdt)
-                ? i1cdt == null 
+                ? i1cdt == null
                     ? Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown
                     : Convert.ToSingle(i1cdt)
-                : Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown; 
+                : Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
             float i2TConservativeDetectionThreshold = infoDict2.TryGetValue(Constant.InfoColumns.ConservativeDetectionThreshold, out object i2cdt)
-                ? i2cdt == null 
+                ? i2cdt == null
                     ? Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown
                     : Convert.ToSingle(i2cdt)
                 : Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
@@ -216,6 +222,127 @@ namespace Timelapse.Detection
                 line = matches[0].Groups[1].ToString();
             }
             return line;
+        }
+
+        static public string GetRecognizersFileSubfolderPathIfAny(string rootFolderPath, string jsonFilePath)
+        {
+            Tuple<string, string, string> splitPath = Util.FilesFolders.SplitFullPath(rootFolderPath, jsonFilePath);
+            if (splitPath == null)
+            {
+                // file is outside of root folder and its subfolders
+                return String.Empty;
+            }
+            else if (String.IsNullOrEmpty(splitPath.Item2))
+            {
+                // Don't add prefix: file is in the root folder
+                return String.Empty;
+            }
+            return splitPath.Item2;
+        }
+
+        // Try to read the recognition data from the Json file into the Detector structure
+        // A progress bar is displayed
+        // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
+        // Success: returns a filled in detector structure
+        // Failure: returns null
+        static public async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Detector jsonDetector, string rootFolderPath, string subFolderPrefix)
+        {
+            // Set up a progress handler that will update the progress bar
+            Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
+            {
+                // Update the progress bar
+                Database.FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+            });
+            IProgress<ProgressBarArguments> progress = progressHandler;
+            RecognizerPathTestResults results = RecognizerPathTestResults.NoMatchToExistingFiles;
+            await Task.Run(() =>
+            {
+                int totalImages = jsonDetector.images.Count;
+                string sTotalImages = String.Format("{0:N0}", jsonDetector.images.Count);
+                int i = 0;
+
+                // Skip certain conditions if the subFolder is empty
+                bool nonEmptySubfolder = false == String.IsNullOrWhiteSpace(subFolderPrefix);
+                foreach (image image in jsonDetector.images)
+                {
+                    if (i % 10000 == 0)
+                    {
+                        // Progress report generated after every 10,000 images
+                        int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
+                        progress.Report(new ProgressBarArguments(percentDone, "Checking detections for " + String.Format("{0:N0}", i) + "/" + sTotalImages + " images...", false, false));
+                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                    }
+
+                    if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
+                    {
+                        // Probable that Detector is relative to the root folder: At least one image path begins with the subfolderPrefix name
+                        System.Diagnostics.Debug.Print("Probable that Detector is relative to the root folder: At least one image path begins with the subfolderPrefix name.");
+                        results = RecognizerPathTestResults.PathsRelativeToRootFolder;
+                        break;
+                    }
+                    else if (File.Exists(Path.Combine(rootFolderPath, image.file)))
+                    {
+                        // Probable that Detector is relative to the root folder: At least one file is in the unaltered path.
+                        System.Diagnostics.Debug.Print("Probable that Detector is relative to the root folder: At least one file is in the unaltered path.");
+                        results = RecognizerPathTestResults.PathsRelativeToRootFolder;
+                        break;
+                    }
+                    else if (nonEmptySubfolder && File.Exists(Path.Combine(rootFolderPath, subFolderPrefix, image.file)))
+                    {
+                        // Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix
+                        System.Diagnostics.Debug.Print("Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix.");
+                        results = RecognizerPathTestResults.PathsRelativeToSubFolder;
+                        break;
+                    }
+                    else
+                    {
+                        // No hard evidence one way or another, so keep checking subsequent files
+                        // Still, there is weak evidence that json was started in this subfolder as sample path does not have the subfolder prefix.
+                        // Perhaps ask the user?
+                    }
+                    i++;
+                }
+            }).ConfigureAwait(true);
+
+            // If nothing was reset, then the initial value (no matches) is returned 
+            return results;
+        }
+
+        // Try to read the recognition data from the Json file into the Detector structure
+        // A progress bar is displayed
+        // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
+        // Success: returns a filled in detector structure
+        // Failure: returns null
+        static public async Task RecognitionsAddPrefixToFilePaths(Detector jsonDetector, string subFolderPrefix)
+        {
+            // Set up a progress handler that will update the progress bar
+            Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
+            {
+                // Update the progress bar
+                Database.FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+            });
+            IProgress<ProgressBarArguments> progress = progressHandler;
+            await Task.Run(() =>
+            {
+                int totalImages = jsonDetector.images.Count;
+                string sTotalImages = String.Format("{0:N0}", jsonDetector.images.Count);
+                int i = 0;
+
+                foreach (image image in jsonDetector.images)
+                {
+                    if (i % 10000 == 0)
+                    {
+                        // Progress report generated after every 10,000 images
+                        int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
+                        progress.Report(new ProgressBarArguments(percentDone, "Repairing recognition paths for " + String.Format("{0:N0}", i) + "/" + sTotalImages + " images...", false, false));
+                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                    }
+                    // Add the prefix to the path
+                    image.file = Path.Combine(subFolderPrefix, image.file);  
+                    i++;
+                }
+            }).ConfigureAwait(true);
+            return;
         }
     }
 }

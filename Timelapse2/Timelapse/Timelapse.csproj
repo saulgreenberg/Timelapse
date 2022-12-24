@@ -275,6 +275,7 @@
     <Compile Include="Enums\OffsetLensDirection.cs" />
     <Compile Include="Enums\RecognitionImportResultEnum.cs" />
     <Compile Include="Enums\RecognitionType.cs" />
+    <Compile Include="Enums\RecognizerPathTestResults.cs" />
     <Compile Include="Enums\SchemaAttributesEnum.cs" />
     <Compile Include="Enums\SelectTypesEnum.cs" />
     <Compile Include="Enums\ThumbnailGridRefreshStatus.cs" />
