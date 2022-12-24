@@ -5,6 +5,8 @@ using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using Timelapse.Controls;
 using Timelapse.Util;
 using TimelapseUpgradeFiles.Enums;
 
@@ -217,7 +219,11 @@ namespace Timelapse.Database
         //      ('value1', 'value2', ... 'valueN');
         public void Insert(string tableName, List<List<ColumnTuple>> insertionStatements)
         {
-            // Check the arguments for null 
+            Insert(tableName, insertionStatements, null, String.Empty);
+        }
+
+        public void Insert(string tableName, List<List<ColumnTuple>> insertionStatements, IProgress<ProgressBarArguments> progress, string progressString)
+        {     // Check the arguments for null 
             ThrowIf.IsNullArgument(insertionStatements, nameof(insertionStatements));
 
 
@@ -254,7 +260,7 @@ namespace Timelapse.Database
             }
 
             // Now try to invoke the batch queries
-            this.ExecuteNonQueryWrappedInBeginEnd(queries);
+            this.ExecuteNonQueryWrappedInBeginEnd(queries, progress, progressString);
         }
         #endregion
 
@@ -581,7 +587,13 @@ namespace Timelapse.Database
         //      queryn
         // END
         /// </summary>
+
         public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements)
+        {
+            ExecuteNonQueryWrappedInBeginEnd(statements, null, String.Empty);
+        }
+
+        public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(statements, nameof(statements));
@@ -599,6 +611,8 @@ namespace Timelapse.Database
                         // Invoke each query in the queries list
                         int rowsUpdated = 0;
                         int statementsInQuery = 0;
+                        int statementsCount = statements.Count;
+                        int i = 0;
                         foreach (string statement in statements)
                         {
                             // capture the most recent statement so it's available for debugging
@@ -624,7 +638,15 @@ namespace Timelapse.Database
                                 //System.Diagnostics.Debug.Print(command.CommandText);
                                 rowsUpdated += command.ExecuteNonQuery();
                                 statementsInQuery = 0;
+
+                                if (progress != null)
+                                {
+                                    int percent = Convert.ToInt32(i * 100.0 / statementsCount);
+                                    progress.Report(new ProgressBarArguments(percent, String.Format("{0} ({1:N0}/{2:N0})...", progressString, i, statementsCount), false, false));
+                                    Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                                }
                             }
+                            i++;
                         }
                         // END
                         if (statementsInQuery != 0)

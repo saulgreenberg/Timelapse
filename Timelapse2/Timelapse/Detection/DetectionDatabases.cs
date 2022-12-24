@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
+using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Util;
 
@@ -126,15 +128,15 @@ namespace Timelapse.Detection
         // Populate the various Detection Database Tables from the detection data structure.
         // The startDetectionID should be greater than any existing detection ID in the detection table. 
         // This is necessary to make sure we don't add duplicate keys if we are merging detections
-        public static void PopulateTables(Detector detector, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, int startDetectionID, int startClassificationID)
+        public static void PopulateTables(Detector detector, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, int startDetectionID, int startClassificationID, IProgress<ProgressBarArguments> progress)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(detector, nameof(detector));
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
             ThrowIf.IsNullArgument(detectionDB, nameof(detectionDB));
             ThrowIf.IsNullArgument(pathPrefixForTruncation, nameof(pathPrefixForTruncation));
-
-
+            
+            progress.Report(new ProgressBarArguments(0, "Adding new recognitions...", false, true));
             // Updating many rows is made hugely more efficient if we create an index for File and Relative Path
             // as otherwise each update is in linear time to the table rows vs log time. 
             // Because we will not need these indexes later, we will drop them after the updates are done
@@ -227,9 +229,17 @@ namespace Timelapse.Detection
                     dataTable.Columns[Constant.DatabaseColumn.RelativePath],
                 };
 
+                int j = 0;
                 int fileCount = 0;
+                int totalFiles = detector.images.Count;
                 foreach (image image in detector.images)
                 {
+                    if (j % 10000 == 0)
+                    { 
+                        progress.Report(new ProgressBarArguments(Convert.ToInt32(j * 100.0 / totalFiles), String.Format("Adding new recognitions ({0:N0}/{1:N0})...", j, totalFiles), false, false));
+                    }
+                    j++;
+
                     if (image.detections == null)
                     {
                         // The json file may actualy report some detections as null rather than an empty list, in which case we just skip it.
@@ -363,8 +373,8 @@ namespace Timelapse.Detection
                         fileCount++;
                     }
                 }
-                detectionDB.Insert(Constant.DBTables.Detections, detectionInsertionStatements);
-                detectionDB.Insert(Constant.DBTables.Classifications, classificationInsertionStatements);
+                detectionDB.Insert(Constant.DBTables.Detections, detectionInsertionStatements, progress, "Adding detections");
+                detectionDB.Insert(Constant.DBTables.Classifications, classificationInsertionStatements, progress, "Adding classifications");
                 fileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
                 // System.Diagnostics.Debug.Print("Files: " + fileCount + " Detections: " + detectionInsertionStatements.Count() + " Classifications: " + classificationInsertionStatements.Count());
                 dataTable?.Dispose();

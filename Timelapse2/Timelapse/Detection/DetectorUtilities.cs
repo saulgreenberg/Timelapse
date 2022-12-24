@@ -224,6 +224,9 @@ namespace Timelapse.Detection
             return line;
         }
 
+        // Compare the jsonFilePath to the rootFolderPath and return the difference
+        //(i.e., the subfolder to the jsonFilePath from the rootFolderPath if any
+        // If the JsonFilePath is the same as or outside of the rootFolderPath, return an empty string
         static public string GetRecognizersFileSubfolderPathIfAny(string rootFolderPath, string jsonFilePath)
         {
             Tuple<string, string, string> splitPath = Util.FilesFolders.SplitFullPath(rootFolderPath, jsonFilePath);
@@ -245,15 +248,8 @@ namespace Timelapse.Detection
         // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
         // Success: returns a filled in detector structure
         // Failure: returns null
-        static public async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Detector jsonDetector, string rootFolderPath, string subFolderPrefix)
+        static public async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Detector jsonDetector, string rootFolderPath, string subFolderPrefix, IProgress<ProgressBarArguments> progress)
         {
-            // Set up a progress handler that will update the progress bar
-            Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
-            {
-                // Update the progress bar
-                Database.FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
-            });
-            IProgress<ProgressBarArguments> progress = progressHandler;
             RecognizerPathTestResults results = RecognizerPathTestResults.NoMatchToExistingFiles;
             await Task.Run(() =>
             {
@@ -269,28 +265,28 @@ namespace Timelapse.Detection
                     {
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
-                        progress.Report(new ProgressBarArguments(percentDone, "Checking detections for " + String.Format("{0:N0}", i) + "/" + sTotalImages + " images...", false, false));
+                        progress.Report(new ProgressBarArguments(percentDone, String.Format("Checking image paths ({0:N0}/{1:N0}...)", i, sTotalImages), false, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
 
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
                     {
                         // Probable that Detector is relative to the root folder: At least one image path begins with the subfolderPrefix name
-                        System.Diagnostics.Debug.Print("Probable that Detector is relative to the root folder: At least one image path begins with the subfolderPrefix name.");
+                        // System.Diagnostics.Debug.Print("Probable that Detector is relative to the root folder: At least one image path begins with the subfolderPrefix name.");
                         results = RecognizerPathTestResults.PathsRelativeToRootFolder;
                         break;
                     }
                     else if (File.Exists(Path.Combine(rootFolderPath, image.file)))
                     {
                         // Probable that Detector is relative to the root folder: At least one file is in the unaltered path.
-                        System.Diagnostics.Debug.Print("Probable that Detector is relative to the root folder: At least one file is in the unaltered path.");
+                        // System.Diagnostics.Debug.Print("Probable that Detector is relative to the root folder: At least one file is in the unaltered path.");
                         results = RecognizerPathTestResults.PathsRelativeToRootFolder;
                         break;
                     }
                     else if (nonEmptySubfolder && File.Exists(Path.Combine(rootFolderPath, subFolderPrefix, image.file)))
                     {
                         // Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix
-                        System.Diagnostics.Debug.Print("Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix.");
+                        // System.Diagnostics.Debug.Print("Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix.");
                         results = RecognizerPathTestResults.PathsRelativeToSubFolder;
                         break;
                     }
@@ -313,15 +309,8 @@ namespace Timelapse.Detection
         // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
         // Success: returns a filled in detector structure
         // Failure: returns null
-        static public async Task RecognitionsAddPrefixToFilePaths(Detector jsonDetector, string subFolderPrefix)
-        {
-            // Set up a progress handler that will update the progress bar
-            Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
-            {
-                // Update the progress bar
-                Database.FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
-            });
-            IProgress<ProgressBarArguments> progress = progressHandler;
+        static public async Task RecognitionsAddPrefixToFilePaths(Detector jsonDetector, string subFolderPrefix, IProgress<ProgressBarArguments> progress)
+        { 
             await Task.Run(() =>
             {
                 int totalImages = jsonDetector.images.Count;
@@ -330,11 +319,11 @@ namespace Timelapse.Detection
 
                 foreach (image image in jsonDetector.images)
                 {
-                    if (i % 10000 == 0)
+                    if (i % 30000 == 0)
                     {
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
-                        progress.Report(new ProgressBarArguments(percentDone, "Repairing recognition paths for " + String.Format("{0:N0}", i) + "/" + sTotalImages + " images...", false, false));
+                        progress.Report(new ProgressBarArguments(percentDone, String.Format("Correcting image recognition paths ({0:N0}/{1:N0}...", i, sTotalImages), false, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Add the prefix to the path

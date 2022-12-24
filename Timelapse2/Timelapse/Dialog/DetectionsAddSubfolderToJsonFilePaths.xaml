@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Timelapse.Dialog" xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-    Title="Correct the recognition fle paths?" Height="400" Width="640" MinHeight="400" MinWidth="640" Loaded="Window_Loaded">
+    Title="Confirm image path corrections in the recognition file?" Height="400" Width="640" MinHeight="400" MinWidth="640" Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -15,13 +15,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
-            Title="Confirm file path corrections in the recognition file?"    
-            What="Confirm file path corrections in the recognition file?"
-            Reason="&#10;For Timelapse to find the matching files, the subfolder's name needs to be included in the file path. 
-                    &#10;&#x2022; 'Correct the path' does this (recommended)
-                    &#10;&#x2022; 'Don't correct paths' uses the original paths
-                    &#10;&#x2022; 'Cancel' aborts loading recognitions"
-           Hint="'Correct the paths' is likely what you want, as some of your files match the adjusted paths."/>
+            Title="Confirm image path corrections in the recognition file?"    
+            Reason="For Timelapse to find the matching images, these paths should be corrected to include the subfolder's name."
+            Solution="Selecting:                      
+                    &#10;&#x2022; 'Correct the path' does this (recommended),
+                    &#10;&#x2022; 'Don't correct paths' uses the original paths,
+                    &#10;&#x2022; 'Cancel' aborts loading recognitions."
+           Hint="'Correct the paths' is likely what you want, as some of your image paths match the adjusted paths."/>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
             <Button IsCancel="True" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,40,10" Click="CancelButton_Click">_Cancel</Button>
             <Button IsDefault="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="LeaveThingsAsTheyAre_Click">_Don't correct paths</Button>

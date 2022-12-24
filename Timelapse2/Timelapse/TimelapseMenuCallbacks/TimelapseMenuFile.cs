@@ -1,24 +1,17 @@
-﻿using ImageProcessor.Processors;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.TextFormatting;
-using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Detection;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
-using ToastNotifications.Position;
-using Xceed.Wpf.AvalonDock.Themes;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using DialogResult = System.Windows.Forms.DialogResult;
 using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
@@ -347,11 +340,9 @@ namespace Timelapse
                 return;
             }
 
-            // We now have a json file name
-
 
             //
-            // 2. Read recognitions from the Json file
+            // 2. Read recognitions from the Json file. Note that this has its own progress handler
             //
             this.BusyCancelIndicator.IsBusy = true;
             using (Detector jsonRecognitions = await this.DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
@@ -367,6 +358,17 @@ namespace Timelapse
                 // The json file is now successfuly read into the jsonRecognitions structure
 
                 //
+                // Set up a progress handler that will update the progress bar for the remainingoperations
+                //
+                Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
+                {
+                    // Update the progress bar
+                    FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+                });
+                IProgress<ProgressBarArguments> progress = progressHandler;
+
+
+                //
                 // 3. See if we need to adjust the folder path.
                 //    Conditions:
                 //    - json recognizer file was found in a sub-folder somewhere under the root folder
@@ -375,7 +377,7 @@ namespace Timelapse
                 string subFolderPrefix = DetectorUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
                 if (false == String.IsNullOrEmpty(subFolderPrefix))
                 {
-                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix);
+                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress);
                     if (resultRecognizerPathTest == RecognizerPathTestResults.PathsRelativeToSubFolder)
                     {
                         RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
@@ -387,7 +389,7 @@ namespace Timelapse
                         if (messageBox.AddSubFolderPrefix)
                         {
                             // The user indicated we should add the prefix, so do so.
-                            await DetectorUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix);
+                            await DetectorUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress);
                         }
                     }
                     else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
@@ -405,8 +407,8 @@ namespace Timelapse
                 }
                 else
                 {
-                    // Likely outside the root folder. Different error message?
-                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix);
+                    // Likely outside the root folder. Check the paths again, and generate an error message if needed
+                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress);
                     if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
                         string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
@@ -419,7 +421,7 @@ namespace Timelapse
                     }
                     // else resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles
                 }
-                // The  recognition file is ready to go (and repaired if needed)
+                // The  recognition file is ready to go (and paths repaired if required)
 
                 //
                 // 4. Populate the database with the new recognition data found in the jsonRecognitions
@@ -427,7 +429,7 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
-                RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
+                RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, progress);
 
                 // 
                 // 5. Rest various recognition settings as needed and refresh the display
