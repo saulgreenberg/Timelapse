@@ -216,11 +216,11 @@
     <Compile Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml.cs">
       <DependentUpon>DateTimeRereadFromSelectedMetadataField.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialog\DetectionsAddSubfolderToJsonFilePaths.xaml.cs">
-      <DependentUpon>DetectionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
+    <Compile Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml.cs">
+      <DependentUpon>RecognitionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialog\DetectionsMergeOrRemoveOldData.xaml.cs">
-      <DependentUpon>DetectionsMergeOrRemoveOldData.xaml</DependentUpon>
+    <Compile Include="Dialog\RecognitionsDeleteOldData.xaml.cs">
+      <DependentUpon>RecognitionsDeleteOldData.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\EpisodeOptions.xaml.cs">
       <DependentUpon>EpisodeOptions.xaml</DependentUpon>
@@ -492,11 +492,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialog\DetectionsAddSubfolderToJsonFilePaths.xaml">
+    <Page Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialog\DetectionsMergeOrRemoveOldData.xaml">
+    <Page Include="Dialog\RecognitionsDeleteOldData.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

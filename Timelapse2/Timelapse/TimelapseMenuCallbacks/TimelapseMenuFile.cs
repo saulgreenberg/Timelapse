@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImageProcessor.Processors;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,9 +13,11 @@ using Timelapse.Detection;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using DialogResult = System.Windows.Forms.DialogResult;
 using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
+using Task = System.Threading.Tasks.Task;
 
 // File Menu Callbacks
 namespace Timelapse
@@ -429,7 +432,7 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
-                RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, progress);
+                RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress);
 
                 // 
                 // 5. Rest various recognition settings as needed and refresh the display
@@ -451,32 +454,44 @@ namespace Timelapse
                 this.BusyCancelIndicator.IsBusy = false;
 
                 //
-                // 6.Report the status as needed
+                // 6. Check for imocmpatable detections (and delete old recognition data if needed) and/or Report the status.
                 //
                 if (result == RecognitionImportResultEnum.IncompatableDetectionCategories
-                    || result == RecognitionImportResultEnum.IncompatableClassificationCategories
-                    || result == RecognitionImportResultEnum.JsonFileCouldNotBeRead)
+                    || result == RecognitionImportResultEnum.IncompatableClassificationCategories)
                 {
-                    Dialogs.MenuFileDetectionsFailedImportedDialog(this, result);
-                }
-                else
-                {
-                    string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
-                    if (result != RecognitionImportResultEnum.Success)
+                    RecognitionsDeleteOldData messageBox = new RecognitionsDeleteOldData(this, result);
+                    if (true == messageBox.ShowDialog())
                     {
-                        // No matching folders in the DB and the detector
-                        Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
-                    }
-                    else if (foldersInDBListButNotInJSon.Count > 0)
-                    {
-                        // Some folders missing - show which folder paths in the DB are not in the detector
-                        Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                        // Try again by deleting the old recognition data 
+                        result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress);
                     }
                     else
                     {
-                        // Detections successfully imported message
-                        Dialogs.MenuFileDetectionsSuccessfulyImportedDialog(this, details);
+                        // Cancelled
+                        return;
                     }
+                }
+                else if (result == RecognitionImportResultEnum.JsonFileCouldNotBeRead)
+                {
+                    
+                    Dialogs.MenuFileRecognitionsFailedImportedDialog(this, result);
+                    return;
+                }
+                string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
+                if (result != RecognitionImportResultEnum.Success)
+                {
+                    // No matching folders in the DB and the detector
+                    Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
+                }
+                else if (foldersInDBListButNotInJSon.Count > 0)
+                {
+                    // Some folders missing - show which folder paths in the DB are not in the detector
+                    Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                }
+                else
+                {
+                    // Detections successfully imported message
+                    Dialogs.MenuFileRecognitionsSuccessfulyImportedDialog(this, details);
                 }
             }
         }
@@ -492,34 +507,36 @@ namespace Timelapse
                 return folderDetails;
             }
 
+            folderDetails += "For the folders listed in the Timelapse database, this is what happened." + Environment.NewLine;
+
             // At this point, there is a mismatch, so we should show something.
             if (foldersInBoth.Count > 0)
             {
-                folderDetails += foldersInBoth.Count.ToString() + " of your folders had matching recognition data:" + Environment.NewLine;
+                folderDetails += "- Recognitions were updated for some/all images in these folders:";
                 foreach (string folder in foldersInBoth)
                 {
-                    folderDetails += "\u2022 " + folder + Environment.NewLine;
+                    folderDetails += Environment.NewLine + "    \u2022 " + folder.TrimEnd('\\');
                 }
                 folderDetails += Environment.NewLine;
             }
 
             if (foldersInDBListButNotInJSon.Count > 0)
             {
-                folderDetails += foldersInDBListButNotInJSon.Count.ToString() + " of your folders had no matching recognition data:" + Environment.NewLine;
+                folderDetails += "- No recognitions were updated for images in these folders, as none are mentioned in the recognition file:";
                 foreach (string folder in foldersInDBListButNotInJSon)
                 {
-                    folderDetails += "\u2022 " + folder + Environment.NewLine;
+                    folderDetails += Environment.NewLine + "    \u2022 " + folder.TrimEnd('\\') ;
                 }
                 folderDetails += Environment.NewLine;
             }
+
             if (foldersInJsonButNotInDB.Count > 0)
             {
-                folderDetails += "The recognition file also included " + foldersInJsonButNotInDB.Count.ToString() + " other ";
-                folderDetails += (foldersInJsonButNotInDB.Count == 1) ? "folder" : "folders";
-                folderDetails += " not found in your folders:" + Environment.NewLine;
+                folderDetails += "- While the recognition file included images in these folders, they were skipped over " + Environment.NewLine; ;
+                folderDetails += "   as their folder paths did not match any Relative Paths in the Timelapse database.";
                 foreach (string folder in foldersInJsonButNotInDB)
                 {
-                    folderDetails += "\u2022 " + folder + Environment.NewLine;
+                    folderDetails += Environment.NewLine + "    \u2022 " + folder.TrimEnd('\\');
                 }
             }
             return folderDetails;

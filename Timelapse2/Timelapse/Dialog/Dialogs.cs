@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -1130,20 +1131,19 @@ namespace Timelapse.Dialog
             // Some folders missing - show which folder paths in the DB are not in the detector
             MessageBox messageBox = new MessageBox("Recognition data imported for only some of your folders.", owner);
             messageBox.Message.Icon = MessageBoxImage.Information;
-            messageBox.Message.Problem = "Some of the sub-folders in your image set's Database file have no corresponding entries in the Recognition file." + Environment.NewLine;
-            messageBox.Message.Problem += "While not an error, we just wanted to bring it to your attention.";
-            messageBox.Message.Reason = "This could happen if you have added, moved, or renamed the folders since supplying the originals to the recognizer:" + Environment.NewLine;
-            messageBox.Message.Result = "Recognition data will still be imported for the other folders.";
-            messageBox.Message.Hint = "You can also view which images are missing recognition data by choosing" + Environment.NewLine;
+            messageBox.Message.What = "The recognition file references images in only some of the sub-folders loaded in the Timelapse database file." + Environment.NewLine;
+            messageBox.Message.What += "We just want to bring it to your attention, in case this is not what you expected.";
+            messageBox.Message.Reason = "This normally happens if the imported file only includes data about a subset your folders.";
+            messageBox.Message.Hint = "You can check to see which images (if any) are missing recognition data by choosing" + Environment.NewLine;
             messageBox.Message.Hint += "'Select|Custom Selection...' and checking the box titled 'Show all files with no recognition data'";
             messageBox.Message.Details = details;
             messageBox.ShowDialog();
         }
 
         /// <summary>
-        /// Detections: successfully imported message
+        /// Recognitions: successfully imported message
         /// </summary>
-        public static void MenuFileDetectionsSuccessfulyImportedDialog(Window owner, string details)
+        public static void MenuFileRecognitionsSuccessfulyImportedDialog(Window owner, string details)
         {
             MessageBox messageBox = new MessageBox("Recognitions imported.", owner);
             messageBox.Message.Icon = MessageBoxImage.Information;
@@ -1155,36 +1155,17 @@ namespace Timelapse.Dialog
         }
 
         /// <summary>
-        /// Detections: failed import message
+        /// Recognitions: failed import message
         /// </summary>
-        public static void MenuFileDetectionsFailedImportedDialog(Window owner, RecognitionImportResultEnum importError)
+        public static void MenuFileRecognitionsFailedImportedDialog(Window owner, RecognitionImportResultEnum importError)
         {
             MessageBox messageBox = new MessageBox("Could not import the recognition data.", owner);
             messageBox.Message.Icon = MessageBoxImage.Information;
-            string reason = String.Empty;
-            string hint = String.Empty;
-            if (RecognitionImportResultEnum.IncompatableDetectionCategories == importError || RecognitionImportResultEnum.IncompatableClassificationCategories == importError)
-            {
-                string errorType = RecognitionImportResultEnum.IncompatableDetectionCategories == importError ? "detection" : "classification";
-                reason = "The " + errorType + " categories currently stored in the database are not compatable with the " + errorType + " categories supplied in the Json recognition file";
-                hint = "During import, you can choose to remove your old recognition data before adding the new data." + Environment.NewLine;
-                hint += "This replaces all your existing recognition data with whatever is in the Json file";
-            }
-            else if (RecognitionImportResultEnum.JsonFileCouldNotBeRead == importError)
-            {
-                reason = "The Json recognition file could not be read";
-            }
-            else if (RecognitionImportResultEnum.Failure == importError)
-            {
-                reason = "There were problems trying to import the recogntion data. We are not sure why this happened.";
-            }
 
+            messageBox.Message.Reason = (RecognitionImportResultEnum.JsonFileCouldNotBeRead == importError)
+                ? "The Json recognition file could not be read"
+                : "There were problems trying to import the recogntion data. We are not sure why this happened.";
             messageBox.Message.Result = "Recognition data was not imported";
-            messageBox.Message.Reason = reason;
-            if (false == String.IsNullOrEmpty(hint))
-            {
-                messageBox.Message.Hint = hint;
-            }
             messageBox.ShowDialog();
         }
 

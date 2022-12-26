@@ -2222,7 +2222,7 @@ namespace Timelapse.Database
             return jsonDetector;
         }
 
-        public async Task<RecognitionImportResultEnum> PopulateDetectionTablesFromDetectorAsync(Detector jsonDetector, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, IProgress<ProgressBarArguments> progress)
+        public async Task<RecognitionImportResultEnum> PopulateDetectionTablesFromDetectorAsync(Detector jsonDetector, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth,bool tryMerge, IProgress<ProgressBarArguments> progress)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(foldersInDBListButNotInJSon, nameof(foldersInDBListButNotInJSon));
@@ -2256,9 +2256,9 @@ namespace Timelapse.Database
                     this.classificationCategoriesDictionary = null;
                     this.classificationsDataTable = null;
 
-                    // If detections exist, we merge the json file detecctions with the db detections. If so, we also have to do some error checking and possibly updates
+                    // If we were told to tryMerge and detections exist, we merge the json file detecctions with the db detections. If so, we also have to do some error checking and possibly updates
                     // for the detection and classification categories and the info structure
-                    bool mergeDetections = this.DetectionsExists();
+                    bool mergeDetections = tryMerge && this.DetectionsExists();
                     if (mergeDetections)
                     {
                         // Generate several dictionaries reflecting the contents of several detection tables as currently held in the database
