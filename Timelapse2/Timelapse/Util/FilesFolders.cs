@@ -306,11 +306,16 @@ namespace Timelapse.Util
         #endregion
 
         #region Public Static Methods - Split Full Path
-        // Given a root path (e.g., C:/user/timelapseStuff) and a full path e.g., C:/user/timelapseStuff/Sites/Camera1/img1.jpg)
-        // return a tuple as the root path, the relativePath, and the filename. e.g.,  C:/user/timelapseStuff, Sites/Camera1, img1.jpg)
+        // Given a root path (e.g., C:/user/timelapseStuff) and a full path e.g., C:/user/timelapseStuff/Sites/Camera1/img1.jpg), return
+        // - a tuple as the root path, the relativePath, and the filename. e.g.,  C:/user/timelapseStuff, Sites/Camera1, img1.jpg)
+        // - null if the arguments are null, or if the full path is outside of the root path (i.e., where the full path does not start with the root Path)
         public static Tuple<string, string, string> SplitFullPath(string rootPath, string fullPath)
         {
             if (fullPath == null || rootPath == null)
+            {
+                return null;
+            }
+            if (false == fullPath.StartsWith(rootPath))
             {
                 return null;
             }

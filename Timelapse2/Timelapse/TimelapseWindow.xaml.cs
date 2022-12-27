@@ -117,10 +117,14 @@ namespace Timelapse
             this.MarkableCanvas.SetBookmark(this.State.BookmarkScale, this.State.BookmarkTranslation);
             this.MenuItemAudioFeedback.IsChecked = this.State.AudioFeedback;
 
+
+
+
             // Populate the global references so we can access these from other objects without going thorugh the hassle of passing arguments around
             // Yup, poor practice but...
             GlobalReferences.MainWindow = this; // So other classes can access methods here
             GlobalReferences.BusyCancelIndicator = this.BusyCancelIndicator; // So other classes can access methods here
+            GlobalReferences.CancelTokenSource = new CancellationTokenSource();     // Set the CancellationToken/Source. Only set globally
             GlobalReferences.TimelapseState = this.State;
 
             // Populate the most recent image set list

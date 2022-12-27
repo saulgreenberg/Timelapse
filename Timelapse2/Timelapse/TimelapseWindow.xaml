@@ -100,7 +100,7 @@
                     <Separator />
 
                     <!-- Import Detections -->
-                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set" IsEnabled="False" Click="MenuItemImportDetectionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
+                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set" IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
                         <MenuItem.Icon>
                             <Image Source="Icons/JSONImport_32x.png" />
                         </MenuItem.Icon>

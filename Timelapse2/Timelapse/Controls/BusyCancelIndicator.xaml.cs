@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
+using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
@@ -116,6 +118,7 @@ namespace Timelapse.Controls
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
+            GlobalReferences.CancelTokenSource.Cancel();
             CancelClick?.Invoke(this, new RoutedEventArgs());
         }
         #endregion
@@ -123,6 +126,12 @@ namespace Timelapse.Controls
         public BusyCancelIndicator()
         {
             InitializeComponent();
+        }
+
+        public void Reset()
+        {
+            this.IsBusy = false;
+            GlobalReferences.CancelTokenSource = new CancellationTokenSource();
         }
     }
 }

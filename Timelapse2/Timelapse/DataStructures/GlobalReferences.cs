@@ -1,4 +1,5 @@
-﻿using Timelapse.Controls;
+﻿using System.Threading;
+using Timelapse.Controls;
 
 namespace Timelapse.Util
 {
@@ -15,6 +16,10 @@ namespace Timelapse.Util
 
         // The top level Busy CancelIndicator
         public static BusyCancelIndicator BusyCancelIndicator { get; set; }
+
+        // The Cancelation token used by the top level BusyCancelIndicator
+        // Note that this is the only instance of this
+        public static CancellationTokenSource CancelTokenSource { get; set; }
 
         // TimelapseState instance
         public static TimelapseState TimelapseState { get; set; }

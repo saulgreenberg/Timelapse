@@ -205,14 +205,22 @@
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
     <Compile Include="Detection\DetectionDatabases.cs" />
+    <Compile Include="Detection\DetectionUpdateDatabase.cs" />
     <Compile Include="Detection\Detector.cs" />
     <Compile Include="Detection\DetectionSelections.cs" />
     <Compile Include="DataStructures\AmbiguousDateRange.cs" />
+    <Compile Include="Detection\DetectorUtilities.cs" />
     <Compile Include="Dialog\CustomSelectionWithEpisodes.xaml.cs">
       <DependentUpon>CustomSelectionWithEpisodes.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml.cs">
       <DependentUpon>DateTimeRereadFromSelectedMetadataField.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml.cs">
+      <DependentUpon>RecognitionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RecognitionsDeleteOldData.xaml.cs">
+      <DependentUpon>RecognitionsDeleteOldData.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\EpisodeOptions.xaml.cs">
       <DependentUpon>EpisodeOptions.xaml</DependentUpon>
@@ -256,7 +264,7 @@
     <Compile Include="Dialog\WarningToUpdateDBFilesToSQL.xaml.cs">
       <DependentUpon>WarningToUpdateDBFilesToSQL.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Enums\ComparisonEnum.cs" />
+    <Compile Include="Enums\CancelStatusEnum.cs" />
     <Compile Include="Enums\CSVDateTimeOptionsEnum.cs" />
     <Compile Include="Enums\DatabaseFileErrorsEnum.cs" />
     <Compile Include="Enums\FileExtensionEnum.cs" />
@@ -266,7 +274,9 @@
     <Compile Include="Enums\ListComparisonEnum.cs" />
     <Compile Include="Enums\MetadataToolEnum.cs" />
     <Compile Include="Enums\OffsetLensDirection.cs" />
+    <Compile Include="Enums\RecognizerImportResultEnum.cs" />
     <Compile Include="Enums\RecognitionType.cs" />
+    <Compile Include="Enums\RecognizerPathTestResults.cs" />
     <Compile Include="Enums\SchemaAttributesEnum.cs" />
     <Compile Include="Enums\SelectTypesEnum.cs" />
     <Compile Include="Enums\ThumbnailGridRefreshStatus.cs" />
@@ -371,6 +381,7 @@
     <Compile Include="TimelapsePartialClasses\TimelapseProgress.cs" />
     <Compile Include="Util\ColorsAndBrushes.cs" />
     <Compile Include="Util\Compare.cs" />
+    <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\DragDropFile.cs" />
     <Compile Include="Util\Episodes.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseFileShow.cs" />
@@ -481,6 +492,14 @@
     <Page Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionsDeleteOldData.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\EpisodeOptions.xaml">
       <SubType>Designer</SubType>

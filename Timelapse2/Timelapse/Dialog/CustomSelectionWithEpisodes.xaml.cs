@@ -217,10 +217,7 @@ namespace Timelapse.Dialog
             {
                 this.DetectionGroupBox.Visibility = Visibility.Collapsed;
                 this.Detections2Panel.Visibility = Visibility.Collapsed;
-                if (this.DetectionSelections != null)
-                {
-                    this.DetectionSelections.ClearAllDetectionsUses();
-                }
+                this.DetectionSelections?.ClearAllDetectionsUses();
             }
             this.dontInvoke = false;
             this.dontCount = false;
@@ -1056,7 +1053,7 @@ namespace Timelapse.Dialog
                     // Default is ConservativeDetection Threshold - 1.0, i.e.,to only show images where the recognizer has not found any detections.
                     // As the EmptyDetections is true, other code will special case this by actually doing a query on 1 - these values
                     this.DetectionRangeSlider.HigherValue = 1.0;
-                    this.DetectionRangeSlider.LowerValue = 1 - this.DetectionSelections.ConservativeDetectionThreshold;
+                    this.DetectionRangeSlider.LowerValue = 1 - DetectionSelections.ConservativeDetectionThreshold;
                 }
 
                 // Set the minium values for the slider and spinner, which is 0 fpr Empty detections

@@ -197,7 +197,7 @@ namespace Timelapse
         //    return phrase + Sql.From + Constant.DBTables.FileData +
         //        Sql.LeftJoin + Constant.DBTables.Detections +
         //        Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID +
-        //        Sql.Equal + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID +
+        //        Sql.IdenticalToSet2 + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID +
         //        Sql.Where + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID + Sql.IsNull;
         //}
 
@@ -237,7 +237,7 @@ namespace Timelapse
 
 
         //    return phrase + Sql.From + Constant.DBTables.Detections + Sql.InnerJoin + Constant.DBTables.FileData +
-        //            Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
+        //            Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.IdenticalToSet2 + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
         //}
 
         /// <summary>
@@ -285,10 +285,10 @@ namespace Timelapse
         //    //     : Sql.SelectDistinct + Constant.DBTables.Classifications + Sql.Dot + Constant.ClassificationColumns.Conf + Sql.Comma;
         //    phrase += Constant.DBTables.FileData + Sql.DotStar + Sql.From + Constant.DBTables.Classifications +
         //            Sql.InnerJoin + Constant.DBTables.FileData + Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID +
-        //            Sql.Equal + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
+        //            Sql.IdenticalToSet2 + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
         //    // and now append INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
         //    phrase += Sql.InnerJoin + Constant.DBTables.Detections + Sql.On +
-        //        Constant.DBTables.Detections + Sql.Dot + Constant.DetectionColumns.DetectionID + Sql.Equal +
+        //        Constant.DBTables.Detections + Sql.Dot + Constant.DetectionColumns.DetectionID + Sql.IdenticalToSet2 +
         //        Constant.DBTables.Classifications + "." + Constant.DetectionColumns.DetectionID;
         //    return phrase;
         //}

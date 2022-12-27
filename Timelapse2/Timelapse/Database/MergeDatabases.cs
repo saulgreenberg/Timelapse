@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -183,7 +182,7 @@ namespace Timelapse.Database
             List<string> destinationDataLabels = sourceddb.SchemaGetColumns(Constant.DBTables.FileData);
             ListComparisonEnum listComparisonEnum = Compare.CompareLists(sourceDataLabels, destinationDataLabels);
 
-            // Both Identical and different ordered lists are ok. If the order differs,
+            // Both IdenticalToSet2 and different ordered lists are ok. If the order differs,
             // it uses the order in the primary template. if (listComparisonEnum == ListComparisonEnum.ElementsDiffer)
             if (listComparisonEnum == ListComparisonEnum.ElementsDiffer)
             {
@@ -241,7 +240,7 @@ namespace Timelapse.Database
             // then we have to create the detection tables to the main database.
             if (destinationDetectionsExists == false && sourceDetectionsExists)
             {
-                DetectionDatabases.CreateOrRecreateTablesAndColumns(destinationddb);
+                DetectionDatabases.PrepareRecognitionTablesAndColumns(destinationddb);
 
                 // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
                 // This assumes (perhaps incorrectly) that all databases the merge in have the same detection/classification categories and info.
@@ -258,7 +257,7 @@ namespace Timelapse.Database
             Dictionary<string, string> currentDetectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> currentClassificationCategories = new Dictionary<string, string>();
             Dictionary<string, object> currentInfoDictionary = new Dictionary<string, object>();
-            GenerateDetectionDictionariesFromDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
+            DetectionUpdateDatabase.GenerateDetectionDictionariesFromOldDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
 
             // Take action if the  ddb to be merged does not have an MD version, or if it has a higher detector version than the merged database being created,
             bool triggerUpdateInfoValues = false;
@@ -269,7 +268,7 @@ namespace Timelapse.Database
                     // If we can't get a version from the info table, than just set it to unknown.
                     prev_megadetector_version = Constant.DetectionValues.MDVersionUnknown;
                 }
-                if (IsMegadetectorVersionHigher((string)prev_megadetector_version, (string)currentMegadetector_version))
+                if (DetectorUtilities.IsMegadetectorVersionHigherInDestination((string)prev_megadetector_version, (string)currentMegadetector_version))
                 {
                     // The ddb to be merged in has a higher detector version than the merged database being created
                     // Update the previous info dictionary to the current one (so it can be compared in the next iteration)
@@ -305,7 +304,7 @@ namespace Timelapse.Database
                         // Set a flag to trigger updating the categories in the merged database to the ones in this dictionary
                         MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(currentDetectionCategories, previousDetectionCategories);
                     }
-                    else if (false == MergeDatabases.CompareDictionaries(previousDetectionCategories, currentDetectionCategories))
+                    else if (false == Dictionaries.AreKeysAndTheirStringValuesTheSame(previousDetectionCategories, currentDetectionCategories))
                     {
                         // Both the merged database file and the database file to be merged has detection categories.
                         // However, they differ, so abort the merge and indicate the error
@@ -339,7 +338,7 @@ namespace Timelapse.Database
                         MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(currentClassificationCategories, previousClassificationCategories);
                         updateClassificationCategories = true;
                     }
-                    else if (false == MergeDatabases.CompareDictionaries(previousClassificationCategories, currentClassificationCategories))
+                    else if (false == Dictionaries.AreKeysAndTheirStringValuesTheSame(previousClassificationCategories, currentClassificationCategories))
                     {
                         // Both the merged database file and the database file to be merged has classification categories.
                         // However, they differ, so abort the merge and indicate the error
@@ -503,80 +502,7 @@ namespace Timelapse.Database
                 return Path.GetDirectoryName(path2).Replace(path1 + "\\", "");
             }
         }
-
-        private static void GenerateDetectionDictionariesFromDB(string ddbPath, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
-        {
-            SQLiteWrapper db = new SQLiteWrapper(ddbPath);
-            if (false == db.TableExists(Constant.DBTables.Info))
-            {
-                // There are no detection-based tables in this database
-                return;
-            }
-            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Info))
-            {
-                Dictionary<string, object> tmpDict = new Dictionary<string, object>();
-                if (dataTable.Rows.Count != 0)
-                {
-                    DataRow row = dataTable.Rows[0];
-                    tmpDict = row.Table.Columns
-                            .Cast<DataColumn>()
-                            .ToDictionary(c => c.ColumnName, c => row[c.ColumnName]);
-                }
-                foreach (KeyValuePair<string, object> item in tmpDict)
-                {
-                    infoDictionary.Add(item.Key, item.Value);
-                }
-            }
-
-            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.DetectionCategories))
-            {
-                int dataTableRowCount = dataTable.Rows.Count;
-                for (int i = 0; i < dataTableRowCount; i++)
-                {
-                    DataRow row = dataTable.Rows[i];
-                    detectionCategoriesDictionary.Add((string)row[Constant.DetectionCategoriesColumns.Category], (string)row[Constant.DetectionCategoriesColumns.Label]);
-                }
-            }
-            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.ClassificationCategories))
-            {
-                int dataTableRowCount = dataTable.Rows.Count;
-                for (int i = 0; i < dataTableRowCount; i++)
-                {
-                    DataRow row = dataTable.Rows[i];
-                    classificationCategoriesDictionary.Add((string)row[Constant.ClassificationCategoriesColumns.Category], (string)row[Constant.ClassificationCategoriesColumns.Label]);
-                }
-            }
-        }
-
         #endregion
-
-        private static bool CompareDictionaries(Dictionary<string, string> dict1, Dictionary<string, string> dict2)
-        {
-            bool equal = false;
-            if (dict1.Count == dict2.Count) // Require equal count.
-            {
-                equal = true;
-                foreach (var pair in dict1)
-                {
-                    if (dict2.TryGetValue(pair.Key, out string value))
-                    {
-                        // Require value be equal.
-                        if (value != pair.Value)
-                        {
-                            equal = false;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        // Require key be present.
-                        equal = false;
-                        break;
-                    }
-                }
-            }
-            return equal;
-        }
 
         private static string UpdateInfoTableWithValues(string detector, string megadetector_version, string detection_completion_time, string classifier, string classification_completion_time, double typical_detection_threshold, double conservative_detection_threshold, double typical_classification_threshold)
         {
@@ -596,19 +522,6 @@ namespace Timelapse.Database
         {
             return Sql.Update + Constant.DBTables.ImageSet + Sql.Set
                 + Constant.DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal + Constant.DetectionValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
-        }
-
-        private static bool IsMegadetectorVersionHigher(string source, string destination)
-        {
-            if (source == destination)
-            {
-                return false;
-            }
-            if (source == Constant.DetectionValues.MDVersionUnknown)
-            {
-                return true;
-            }
-            return string.Compare(source, destination) == -1;
         }
 
         private static void DictionaryReplaceSecondDictWithFirstDictElements(Dictionary<string, object> first, Dictionary<string, object> second)

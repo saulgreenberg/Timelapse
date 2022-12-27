@@ -104,10 +104,10 @@ namespace Timelapse.Detection
         // Defaults are just used when reading in current csv files, as that file does not include the detector information
         public void SetInfoDefaults()
         {
-            this.detector = "megadetector_unknown_version";
-            this.detection_completion_time = "unknown";
-            this.classifier = "ecosystem1_unknown_version";
-            this.classification_completion_time = "unknown";
+            this.detector = Constant.DetectionValues.DetectorUnknown;
+            this.detection_completion_time = Constant.DetectionValues.DetectionCompletionTimeUnknown;
+            this.classifier = Constant.DetectionValues.ClassifierUnknown;
+            this.classification_completion_time = Constant.DetectionValues.ClassificationCompletionTimeUnknown;
         }
         #endregion
     }

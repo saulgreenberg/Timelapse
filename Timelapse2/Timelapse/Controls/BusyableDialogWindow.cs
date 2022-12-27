@@ -45,7 +45,7 @@ namespace Timelapse.Controls
         public BusyableDialogWindow(Window owner)
         {
             this.Owner = owner;
-            // Initialize the cancellation token
+            // Initialize the cancellation CancelToken
             this.tokenSource = new CancellationTokenSource();
             this.Token = this.tokenSource.Token;
             this.Loaded += this.BusyableDialogWindow_Loaded;
