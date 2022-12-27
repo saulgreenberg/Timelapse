@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Documents;
-using System.Windows.Input;
-using Timelapse.Enums;
 
 namespace Timelapse.Util
 {
@@ -56,15 +53,15 @@ namespace Timelapse.Util
         public static bool MergeDictionaries(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> mergedDictionary)
         {
             mergedDictionary = new Dictionary<string, string>();
-            
-            if ( dict1 == null && dict2 == null)
+
+            if (dict1 == null && dict2 == null)
             {
                 // both null 
                 // so mergedDictionary has 0 items
                 return true;
             }
 
-            if ( dict1 == null)
+            if (dict1 == null)
             {
                 // Stuff in dict2 only (although count could be 0)
                 // mergedDictionary is dict2
@@ -81,7 +78,7 @@ namespace Timelapse.Util
             }
 
             // Check if the dictionaries are compatable, i.e., that the common keys have the same values       
-            foreach (KeyValuePair<string,string> pair in dict1)
+            foreach (KeyValuePair<string, string> pair in dict1)
             {
                 if (dict2.TryGetValue(pair.Key, out string value))
                 {

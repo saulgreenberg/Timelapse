@@ -1,25 +1,17 @@
-﻿using DialogUpgradeFiles.Database;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Enums;
-using Timelapse.Util;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Timelapse.Detection
 {
     public static class DetectorUtilities
     {
-        #region Info-related utilities
+        #region Info-related utilities: Compare megadetector strings
+        // Given two strings representing megadetector versions, return true if the destination appears to be the higher version number
         public static bool IsMegadetectorVersionHigherInDestination(string source, string destination)
         {
             if (source == destination)
@@ -33,6 +25,7 @@ namespace Timelapse.Detection
             return string.Compare(source, destination) == -1;
         }
 
+        // Given two strings representing megadetector versions, return true if the destination appears to be the same or the higher version number
         public static bool IsMegadetectorVersionSameHigherInDestination(string source, string destination)
         {
             if (source == destination)
@@ -45,8 +38,11 @@ namespace Timelapse.Detection
             }
             return string.Compare(source, destination) == -1;
         }
+        #endregion
 
-        public static Dictionary<string, object> GenerateBestDetectorInfoFromTwoInfoDictionaries(Dictionary<string, object> infoDict1, info info)
+        #region Generate info data structure from two sources
+        // Given a dictionary and a Detector info structure, merge them in a way that combines the best of both into one.
+        public static Dictionary<string, object> GenerateBestRecognitionInfoFromTwoInfos(Dictionary<string, object> infoDict1, info info)
         {
             Dictionary<string, object> infoDictFromJsonInfo = new Dictionary<string, object>
             {
@@ -65,13 +61,13 @@ namespace Timelapse.Detection
                     : info.classification_completion_time},
                 {Constant.InfoColumns.TypicalClassificationThreshold, info.classifier_metadata.typical_classification_threshold ?? Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown},
             };
-            return DetermineDetectorInfoToUse(infoDict1, infoDictFromJsonInfo);
+            return DetermineRecognitionInfoToUse(infoDict1, infoDictFromJsonInfo);
         }
 
         // When there are two detector info structures, return a new detector structure that 
         // - fills in defaults as needed
         // - tries to populate the values with ones that make the most sense in terms of versions and confidence values to use
-        public static Dictionary<string, object> DetermineDetectorInfoToUse(Dictionary<string, object> infoDict1, Dictionary<string, object> infoDict2)
+        public static Dictionary<string, object> DetermineRecognitionInfoToUse(Dictionary<string, object> infoDict1, Dictionary<string, object> infoDict2)
         {
             Dictionary<string, object> updatedDict = new Dictionary<string, object>
             {
@@ -187,43 +183,7 @@ namespace Timelapse.Detection
         }
         #endregion
 
-        static public string JsonGetFirstFilePath(string jsonPath)
-        {
-            int limit = 100; // stop reading after 100 lines
-            const Int32 BufferSize = 128;
-            String line = String.Empty;
-            string fileTerm = "\"file\":";
-            string regExpTerm = "\"(.*?)\"";
-            using (var fileStream = File.OpenRead(jsonPath))
-            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, BufferSize))
-            {
-                while ((line = streamReader.ReadLine()) != null && limit-- != 0)
-                {
-                    if (line.Contains(fileTerm))
-                    {
-                        System.Diagnostics.Debug.Print(line);
-                        break;
-                    }
-                }
-            }
-            if (String.IsNullOrEmpty(line))
-            {
-                // No match
-                return String.Empty;
-            }
-
-            // Get the portion of the line after the file path
-            line = line.Substring(line.IndexOf(fileTerm) + fileTerm.Length - 1);
-            //Regex regex = new Regex("\"(.*?)\"");
-            Regex regex = new Regex(regExpTerm);
-            MatchCollection matches = regex.Matches(line);
-            if (matches.Count > 0)
-            {
-                line = matches[0].Groups[1].ToString();
-            }
-            return line;
-        }
-
+        #region Compare the root folder vs json file paths and return the difference between the two
         // Compare the jsonFilePath to the rootFolderPath and return the difference
         //(i.e., the subfolder to the jsonFilePath from the rootFolderPath if any
         // If the JsonFilePath is the same as or outside of the rootFolderPath, return an empty string
@@ -242,13 +202,13 @@ namespace Timelapse.Detection
             }
             return splitPath.Item2;
         }
+        #endregion
 
+        #region Check/repair recognizer image paths if relative to root folder or subfolder
         // Try to read the recognition data from the Json file into the Detector structure
         // A progress bar is displayed
-        // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
         // Success: returns a filled in detector structure
-        // Failure: returns null
-        static public async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Detector jsonDetector, string rootFolderPath, string subFolderPrefix, IProgress<ProgressBarArguments> progress)
+        static public async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Detector jsonDetector, string rootFolderPath, string subFolderPrefix, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelToken)
         {
             RecognizerPathTestResults results = RecognizerPathTestResults.NoMatchToExistingFiles;
             await Task.Run(() =>
@@ -263,12 +223,16 @@ namespace Timelapse.Detection
                 {
                     if (i % 10000 == 0)
                     {
+                        if (cancelToken.Token.IsCancellationRequested)
+                        {
+                            results = RecognizerPathTestResults.Cancelled;
+                            break;
+                        }
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
-                        progress.Report(new ProgressBarArguments(percentDone, String.Format("Checking image paths ({0:N0}/{1:N0}...)", i, sTotalImages), false, false));
+                        progress.Report(new ProgressBarArguments(percentDone, String.Format("Checking image paths ({0:N0}/{1:N0}...)", i, sTotalImages), true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
-
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
                     {
                         // Probable that Detector is relative to the root folder: At least one image path begins with the subfolderPrefix name
@@ -304,13 +268,11 @@ namespace Timelapse.Detection
             return results;
         }
 
-        // Try to read the recognition data from the Json file into the Detector structure
+        // For each image in the Detector structure, add the provided subFolderPrefix to the beginning of its File path
         // A progress bar is displayed
-        // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
-        // Success: returns a filled in detector structure
-        // Failure: returns null
-        static public async Task RecognitionsAddPrefixToFilePaths(Detector jsonDetector, string subFolderPrefix, IProgress<ProgressBarArguments> progress)
-        { 
+        static public async Task<CancelStatusEnum> RecognitionsAddPrefixToFilePaths(Detector jsonDetector, string subFolderPrefix, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelToken)
+        {
+            CancelStatusEnum results = CancelStatusEnum.NotCancelled;
             await Task.Run(() =>
             {
                 int totalImages = jsonDetector.images.Count;
@@ -321,17 +283,23 @@ namespace Timelapse.Detection
                 {
                     if (i % 30000 == 0)
                     {
+                        if (cancelToken.Token.IsCancellationRequested)
+                        {
+                            results = CancelStatusEnum.Cancelled;
+                            break;
+                        }
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new ProgressBarArguments(percentDone, String.Format("Correcting image recognition paths ({0:N0}/{1:N0}...", i, sTotalImages), false, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Add the prefix to the path
-                    image.file = Path.Combine(subFolderPrefix, image.file);  
+                    image.file = Path.Combine(subFolderPrefix, image.file);
                     i++;
                 }
             }).ConfigureAwait(true);
-            return;
+            return results;
         }
+        #endregion
     }
 }

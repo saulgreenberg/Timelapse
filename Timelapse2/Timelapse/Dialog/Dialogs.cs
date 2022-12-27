@@ -1,7 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -1157,12 +1156,12 @@ namespace Timelapse.Dialog
         /// <summary>
         /// Recognitions: failed import message
         /// </summary>
-        public static void MenuFileRecognitionsFailedImportedDialog(Window owner, RecognitionImportResultEnum importError)
+        public static void MenuFileRecognitionsFailedImportedDialog(Window owner, RecognizerImportResultEnum importError)
         {
             MessageBox messageBox = new MessageBox("Could not import the recognition data.", owner);
             messageBox.Message.Icon = MessageBoxImage.Information;
 
-            messageBox.Message.Reason = (RecognitionImportResultEnum.JsonFileCouldNotBeRead == importError)
+            messageBox.Message.Reason = (RecognizerImportResultEnum.JsonFileCouldNotBeRead == importError)
                 ? "The Json recognition file could not be read"
                 : "There were problems trying to import the recogntion data. We are not sure why this happened.";
             messageBox.Message.Result = "Recognition data was not imported";
@@ -1191,7 +1190,7 @@ namespace Timelapse.Dialog
             else
             {
                 messageBox.Message.Hint = "An example file path found in the recogntion file is: " + Environment.NewLine;
-                messageBox.Message.Hint += "\u2022 " + samplePath +  Environment.NewLine;
+                messageBox.Message.Hint += "\u2022 " + samplePath + Environment.NewLine;
                 messageBox.Message.Hint += "Examine this to see if you think this file path should point to a different location.";
             }
             messageBox.Message.Icon = MessageBoxImage.Question;

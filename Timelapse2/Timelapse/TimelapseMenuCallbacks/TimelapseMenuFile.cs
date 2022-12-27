@@ -1,9 +1,7 @@
-﻿using ImageProcessor.Processors;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +11,6 @@ using Timelapse.Detection;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using DialogResult = System.Windows.Forms.DialogResult;
 using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
@@ -343,9 +340,9 @@ namespace Timelapse
                 return;
             }
 
-
             //
-            // 2. Read recognitions from the Json file. Note that this has its own progress handler
+            // 2. Read recognitions from the Json file.
+            //    Note that this has its own progress handler
             //
             this.BusyCancelIndicator.IsBusy = true;
             using (Detector jsonRecognitions = await this.DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
@@ -354,14 +351,21 @@ namespace Timelapse
                 {
                     // Abort. The json file could not be read.
                     Dialogs.MenuFileRecognizersDataCouldNotBeReadDialog(this);
-                    this.BusyCancelIndicator.IsBusy = false;
+                    this.BusyCancelIndicator.Reset();
+                    return;
+                }
+
+                if (jsonRecognitions.info == null)
+                {
+                    // A null info signals that the operation was cancelled. 
+                    this.BusyCancelIndicator.Reset();
                     return;
                 }
 
                 // The json file is now successfuly read into the jsonRecognitions structure
 
                 //
-                // Set up a progress handler that will update the progress bar for the remainingoperations
+                // Set up a progress handler that will update the progress bar for the remaining operations
                 //
                 Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
                 {
@@ -380,19 +384,31 @@ namespace Timelapse
                 string subFolderPrefix = DetectorUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
                 if (false == String.IsNullOrEmpty(subFolderPrefix))
                 {
-                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress);
+                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+
+                    // If the operation was cancelled, abort.
+                    if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
+                    {
+                        this.BusyCancelIndicator.Reset();
+                        return;
+                    }
+
                     if (resultRecognizerPathTest == RecognizerPathTestResults.PathsRelativeToSubFolder)
                     {
                         RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
                         if (false == messageBox.ShowDialog())
                         {
-                            this.BusyCancelIndicator.IsBusy = false;
+                            this.BusyCancelIndicator.Reset();
                             return;
                         }
                         if (messageBox.AddSubFolderPrefix)
                         {
                             // The user indicated we should add the prefix, so do so.
-                            await DetectorUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress);
+                            if (CancelStatusEnum.Cancelled == await DetectorUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
+                            {
+                                this.BusyCancelIndicator.Reset();
+                                return;
+                            }
                         }
                     }
                     else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
@@ -401,7 +417,7 @@ namespace Timelapse
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
-                            this.BusyCancelIndicator.IsBusy = false;
+                            this.BusyCancelIndicator.Reset();
                             return;
                         }
                     }
@@ -411,14 +427,22 @@ namespace Timelapse
                 else
                 {
                     // Likely outside the root folder. Check the paths again, and generate an error message if needed
-                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress);
+                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+
+                    // If the operation was cancelled, abort.
+                    if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
+                    {
+                        this.BusyCancelIndicator.Reset();
+                        return;
+                    }
+
                     if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
                         string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
-                            this.BusyCancelIndicator.IsBusy = false;
+                            this.BusyCancelIndicator.Reset();
                             return;
                         }
                     }
@@ -432,12 +456,17 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
-                RecognitionImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress);
+                RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
+                if (result == RecognizerImportResultEnum.Cancelled)
+                {
+                    this.BusyCancelIndicator.Reset();
+                    return;
+                }
 
                 // 
-                // 5. Rest various recognition settings as needed and refresh the display
+                // 5. Reset various recognition settings as needed and refresh the display
                 //
-                if (result == RecognitionImportResultEnum.Success)
+                if (result == RecognizerImportResultEnum.Success)
                 {
                     // Only reset these if we actually imported some detections, as otherwise nothing has changed.
                     GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
@@ -451,19 +480,23 @@ namespace Timelapse
                 }
 
                 // Hide the Busy indicator
-                this.BusyCancelIndicator.IsBusy = false;
+                this.BusyCancelIndicator.Reset();
 
                 //
-                // 6. Check for imocmpatable detections (and delete old recognition data if needed) and/or Report the status.
+                // 6. Check for incompatable detections (and delete old recognition data if needed) and/or Report the status.
                 //
-                if (result == RecognitionImportResultEnum.IncompatableDetectionCategories
-                    || result == RecognitionImportResultEnum.IncompatableClassificationCategories)
+                if (result == RecognizerImportResultEnum.IncompatableDetectionCategories
+                    || result == RecognizerImportResultEnum.IncompatableClassificationCategories)
                 {
                     RecognitionsDeleteOldData messageBox = new RecognitionsDeleteOldData(this, result);
                     if (true == messageBox.ShowDialog())
                     {
                         // Try again by deleting the old recognition data 
-                        result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress);
+                        result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
+                        if (result == RecognizerImportResultEnum.Cancelled)
+                        {
+                            this.BusyCancelIndicator.Reset();
+                        }
                     }
                     else
                     {
@@ -471,14 +504,14 @@ namespace Timelapse
                         return;
                     }
                 }
-                else if (result == RecognitionImportResultEnum.JsonFileCouldNotBeRead)
+                else if (result == RecognizerImportResultEnum.JsonFileCouldNotBeRead)
                 {
-                    
                     Dialogs.MenuFileRecognitionsFailedImportedDialog(this, result);
                     return;
                 }
+
                 string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
-                if (result != RecognitionImportResultEnum.Success)
+                if (result != RecognizerImportResultEnum.Success)
                 {
                     // No matching folders in the DB and the detector
                     Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
@@ -525,7 +558,7 @@ namespace Timelapse
                 folderDetails += "- No recognitions were updated for images in these folders, as none are mentioned in the recognition file:";
                 foreach (string folder in foldersInDBListButNotInJSon)
                 {
-                    folderDetails += Environment.NewLine + "    \u2022 " + folder.TrimEnd('\\') ;
+                    folderDetails += Environment.NewLine + "    \u2022 " + folder.TrimEnd('\\');
                 }
                 folderDetails += Environment.NewLine;
             }

@@ -406,7 +406,7 @@ namespace Timelapse.Database
                         }
 
                         // Write current batch of updates to database. Note that we Update the database every number of rows as specified in bulkFilesToHandle.
-                        // We should probably put in a cancellation token somewhere around here...
+                        // We should probably put in a cancellation CancelToken somewhere around here...
                         if (imagesToUpdate.Count >= bulkFilesToHandle)
                         {
                             processedFilesCount += bulkFilesToHandle;

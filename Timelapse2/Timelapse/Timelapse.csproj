@@ -264,6 +264,7 @@
     <Compile Include="Dialog\WarningToUpdateDBFilesToSQL.xaml.cs">
       <DependentUpon>WarningToUpdateDBFilesToSQL.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Enums\CancelStatusEnum.cs" />
     <Compile Include="Enums\CSVDateTimeOptionsEnum.cs" />
     <Compile Include="Enums\DatabaseFileErrorsEnum.cs" />
     <Compile Include="Enums\FileExtensionEnum.cs" />
@@ -273,7 +274,7 @@
     <Compile Include="Enums\ListComparisonEnum.cs" />
     <Compile Include="Enums\MetadataToolEnum.cs" />
     <Compile Include="Enums\OffsetLensDirection.cs" />
-    <Compile Include="Enums\RecognitionImportResultEnum.cs" />
+    <Compile Include="Enums\RecognizerImportResultEnum.cs" />
     <Compile Include="Enums\RecognitionType.cs" />
     <Compile Include="Enums\RecognizerPathTestResults.cs" />
     <Compile Include="Enums\SchemaAttributesEnum.cs" />

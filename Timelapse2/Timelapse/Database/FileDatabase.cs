@@ -1,25 +1,15 @@
-﻿using MetadataExtractor;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media.TextFormatting;
-using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.Detection;
@@ -2136,9 +2126,8 @@ namespace Timelapse.Database
             double p = current / ((double)total);
             if (this.ReadyToRefresh())
             {
-                // SaulXXX This should really be cancellable, but not sure how to do it from here.
                 // Update the progress bar
-                progress.Report(new ProgressBarArguments((int)(100 * p), "Reading the recognition file...", false, false));
+                progress.Report(new ProgressBarArguments((int)(100 * p), "Reading the recognition file...", true, false));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             }
         }
@@ -2161,7 +2150,7 @@ namespace Timelapse.Database
 
                 // Update the cancel button to reflect the cancelEnabled argument
                 busyCancelIndicator.CancelButtonIsEnabled = isCancelEnabled;
-                busyCancelIndicator.CancelButtonText = isCancelEnabled ? "Cancel" : "Processing detections...";
+                busyCancelIndicator.CancelButtonText = isCancelEnabled ? "Cancel" : "Updating the database ...";
             });
         }
         public void InsertDetection(List<List<ColumnTuple>> detectionInsertionStatements)
@@ -2181,21 +2170,13 @@ namespace Timelapse.Database
         // Failure: returns null
         public async Task<Detector> JsonDeserializeRecognizerFileAsync(string path)
         {
-            //// Set up a progress handler that will update the progress bar
-            //Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
-            //{
-            //    // Update the progress bar
-            //    FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
-            //});
-            //IProgress<ProgressBarArguments> progress = progressHandler;
-
             if (File.Exists(path) == false)
             {
                 return null;
             }
 
             Detector jsonDetector = null;
-            using (ProgressStream ps = new ProgressStream(System.IO.File.OpenRead(path)))
+            using (ProgressStream ps = new ProgressStream(System.IO.File.OpenRead(path), GlobalReferences.CancelTokenSource))
             {
                 ps.BytesRead += new ProgressStreamReportDelegate(PStream_BytesRead);
 
@@ -2211,10 +2192,18 @@ namespace Timelapse.Database
                                 jsonDetector = serializer.Deserialize<Detector>(reader);
                             }
                         }
+
                         catch (Exception e)
                         {
-                            System.Diagnostics.Debug.Print(e.Message + "Could not populate detection data");
-                            jsonDetector = null;
+                            if (e is TaskCanceledException)
+                            {
+                                GlobalReferences.CancelTokenSource = new CancellationTokenSource();
+                                jsonDetector = new Detector(); // signal cancel by returning a non-null detector where info is null
+                            }
+                            else
+                            {
+                                jsonDetector = null;
+                            }
                         }
                     }).ConfigureAwait(true);
                 }
@@ -2222,23 +2211,24 @@ namespace Timelapse.Database
             return jsonDetector;
         }
 
-        public async Task<RecognitionImportResultEnum> PopulateDetectionTablesFromDetectorAsync(Detector jsonDetector, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth,bool tryMerge, IProgress<ProgressBarArguments> progress)
+        public async Task<RecognizerImportResultEnum> PopulateDetectionTablesFromDetectorAsync(Detector jsonDetector, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(foldersInDBListButNotInJSon, nameof(foldersInDBListButNotInJSon));
             ThrowIf.IsNullArgument(foldersInJsonButNotInDB, nameof(foldersInJsonButNotInDB));
             ThrowIf.IsNullArgument(foldersInBoth, nameof(foldersInBoth));
- 
-            RecognitionImportResultEnum result;
+
+            RecognizerImportResultEnum result;
             result = await Task.Run(() =>
             {
                 try
                 {
-                    progress.Report(new ProgressBarArguments(0, "Examining database recognitions...", false, true));
+                    progress.Report(new ProgressBarArguments(0, "Examining database recognitions...", true, true));
                     Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
 
                     // Fill in the detectorFromJson info structure as needed to ensure it is filled in with reasonable values
                     PopulateDetectorInfoWithDefaultValuesAsNeeded(jsonDetector.info);
+
 
                     // flag indicating if the detections database already exists
 
@@ -2269,7 +2259,7 @@ namespace Timelapse.Database
 
                         // Step 1. Generate a new info structure that is a best effort combination of the db and json info structure,
                         //         and then update the jsonDetector to match that. Note the we do it even if no update is really needed, as its lightweight
-                        Dictionary<string, object> newInfoDict = DetectorUtilities.GenerateBestDetectorInfoFromTwoInfoDictionaries(dbInfoDictionary, jsonDetector.info);
+                        Dictionary<string, object> newInfoDict = DetectorUtilities.GenerateBestRecognitionInfoFromTwoInfos(dbInfoDictionary, jsonDetector.info);
                         jsonDetector.info.detector = (string)newInfoDict[Constant.InfoColumns.Detector];
                         jsonDetector.info.detector_metadata.megadetector_version = (string)newInfoDict[Constant.InfoColumns.DetectorVersion];
                         jsonDetector.info.detection_completion_time = (string)newInfoDict[Constant.InfoColumns.DetectionCompletionTime];
@@ -2278,6 +2268,12 @@ namespace Timelapse.Database
                         jsonDetector.info.detector_metadata.typical_detection_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalDetectionThreshold];
                         jsonDetector.info.detector_metadata.conservative_detection_threshold = (float)newInfoDict[Constant.InfoColumns.ConservativeDetectionThreshold];
                         jsonDetector.info.classifier_metadata.typical_classification_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalClassificationThreshold];
+
+
+                        if (cancelTokenSource.Token.IsCancellationRequested)
+                        {
+                            return RecognizerImportResultEnum.Cancelled;
+                        }
 
                         // Step 2. Merge the DB and Json detection categories if they are compatable
                         if (dbDetectionCategories?.ContainsKey("0") == true)
@@ -2293,7 +2289,7 @@ namespace Timelapse.Database
                         else
                         {
                             // System.Diagnostics.Debug.Print("merged failed for detection categories");
-                            return RecognitionImportResultEnum.IncompatableDetectionCategories;
+                            return RecognizerImportResultEnum.IncompatableDetectionCategories;
                         }
 
                         // Step 3. Check if the new classfication categories are the same or at least a subset of the old ones.
@@ -2306,11 +2302,15 @@ namespace Timelapse.Database
                         else
                         {
                             // System.Diagnostics.Debug.Print("merged failed for classification categories");
-                            return RecognitionImportResultEnum.IncompatableClassificationCategories;
+                            return RecognizerImportResultEnum.IncompatableClassificationCategories;
                         }
                         clearDBRecognitionData = mergeDetections == false; // just to make it more readable
 
-                        progress.Report(new ProgressBarArguments(0, "Examining database recognitions (retrieving them)...", false, false));
+                        progress.Report(new ProgressBarArguments(0, "Examining database recognitions (retrieving them)...", true, false));
+                        if (cancelTokenSource.Token.IsCancellationRequested)
+                        {
+                            return RecognizerImportResultEnum.Cancelled;
+                        }
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                         DataTable dbDetectionTable = this.Database.GetDataTableFromSelect(
                                     Sql.Select + Constant.DatabaseColumn.File + Sql.Comma
@@ -2321,6 +2321,10 @@ namespace Timelapse.Database
                                     + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID
                                     + Sql.Equal
                                     + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID);
+                        if (cancelTokenSource.Token.IsCancellationRequested)
+                        {
+                            return RecognizerImportResultEnum.Cancelled;
+                        }
 
                         // As we will be inserting records, get the max DetectionID, and add 1 to it. This will be the starting detectionID for insertions
 
@@ -2331,8 +2335,12 @@ namespace Timelapse.Database
                             dbStartingDetectionID = Math.Max(Convert.ToInt32(dr["detectionID"]), dbStartingDetectionID);
                             if (i % 10000 == 0)
                             {
+                                if (cancelTokenSource.Token.IsCancellationRequested)
+                                {
+                                    return RecognizerImportResultEnum.Cancelled;
+                                }
                                 int percent = Convert.ToInt32(i * 100.0 / count);
-                                progress.Report(new ProgressBarArguments(percent, String.Format("Examining databae recognitions ({0:N2}/{1:N2})...", i, count), false, false));
+                                progress.Report(new ProgressBarArguments(percent, String.Format("Examining database recognitions ({0:N2}/{1:N2})...", i, count), true, false));
                                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                             }
                             i++;
@@ -2349,7 +2357,7 @@ namespace Timelapse.Database
                         // Foreach  detection, check if it exists in the database detection table.
                         // If it does, delete all references to that file (via the ID) in the database
                         List<string> queries = new List<string>();
- 
+
                         i = 0;
                         count = jsonDetector.images.Count;
                         foreach (image image in jsonDetector.images)
@@ -2360,13 +2368,16 @@ namespace Timelapse.Database
 
                             if (i % 10000 == 0)
                             {
+                                if (cancelTokenSource.Token.IsCancellationRequested)
+                                {
+                                    return RecognizerImportResultEnum.Cancelled;
+                                }
                                 int percent = Convert.ToInt32(i * 100.0 / count);
-                                progress.Report(new ProgressBarArguments(percent, String.Format("Comparing recognitions ({0:N0}/{1:N0})...", i, count), false, false));
+                                progress.Report(new ProgressBarArguments(percent, String.Format("Comparing recognitions ({0:N0}/{1:N0})...", i, count), true, false));
                                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                             }
                             i++;
 
-                           //  DataRow[] rows = dbDetectionTable.Select(String.Format("File = '{0}' AND RelativePath = '{1}'", file, relativePath));
                             DataRow[] rows = dbDetectionTable.Select(Constant.DatabaseColumn.File + Sql.Equal + Sql.Quote(file) + Sql.And + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath));
                             if (rows.Length > 0)
                             {
@@ -2399,12 +2410,12 @@ namespace Timelapse.Database
                     if (this.CompareDetectorAndDBFolders(jsonDetector, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth) == false)
                     {
                         // No folders in the detections match folders in the databases. Abort without doing anything.
-                        return RecognitionImportResultEnum.Failure;
+                        return RecognizerImportResultEnum.Failure;
                     }
 
                     // Prepare the various detection tables. 
                     DetectionDatabases.PrepareRecognitionTablesAndColumns(this.Database, this.DetectionsExists(), clearDBRecognitionData);
-                    
+
                     // PERFORMANCE This method does two things:
                     // - it walks through the jsonDetector data structure to construct sql insertion statements
                     // - it invokes the actual insertion in the database.
@@ -2418,11 +2429,11 @@ namespace Timelapse.Database
 
                     // DetectionExists needs to be primed if it is to save its DetectionExists state
                     this.DetectionsExists(true);
-                    return RecognitionImportResultEnum.Success; ;
+                    return RecognizerImportResultEnum.Success; ;
                 }
-                catch 
+                catch
                 {
-                    return RecognitionImportResultEnum.Failure;
+                    return RecognizerImportResultEnum.Failure;
                 }
             }).ConfigureAwait(true);
             return result;

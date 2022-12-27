@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Timelapse.Util
 {
@@ -20,6 +22,7 @@ namespace Timelapse.Util
     {
         #region Private Data Members
         private readonly Stream innerStream;
+        private readonly CancellationTokenSource cancelTokenSource;
         #endregion
 
         #region Constructor
@@ -27,11 +30,12 @@ namespace Timelapse.Util
         /// Creates a new ProgressStream supplying the stream for it to report on.
         /// </summary>
         /// <param name="streamToReportOn">The underlying stream that will be reported on when bytes are read or written.</param>
-        public ProgressStream(Stream streamToReportOn)
+        public ProgressStream(Stream streamToReportOn, CancellationTokenSource cancelTokenSource)
         {
             if (streamToReportOn != null)
             {
                 this.innerStream = streamToReportOn;
+                this.cancelTokenSource = cancelTokenSource;
             }
             else
             {
@@ -58,6 +62,11 @@ namespace Timelapse.Util
 
         protected virtual void OnBytesRead(int bytesMoved)
         {
+            if (this.cancelTokenSource.IsCancellationRequested)
+            {
+                this.Close();
+                throw new TaskCanceledException("Cancelled");
+            }
             if (BytesRead != null)
             {
                 var args = new ProgressStreamReportEventArgs(bytesMoved, innerStream.Length, innerStream.Position, true);
@@ -126,10 +135,7 @@ namespace Timelapse.Util
         public override int Read(byte[] buffer, int offset, int count)
         {
             var bytesRead = innerStream.Read(buffer, offset, count);
-
             OnBytesRead(bytesRead);
-            OnBytesMoved(bytesRead, true);
-
             return bytesRead;
         }
 

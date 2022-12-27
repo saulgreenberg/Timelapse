@@ -1,6 +1,4 @@
-﻿using ImageProcessor.Processors;
-using System.Drawing;
-using System;
+﻿using System;
 using System.Windows;
 using Timelapse.Enums;
 
@@ -12,8 +10,8 @@ namespace Timelapse.Dialog
     public partial class RecognitionsDeleteOldData : Window
     {
         public bool IsDeleteAllSelected = false;
-        private RecognitionImportResultEnum ImportError;
-        public RecognitionsDeleteOldData(Window owner, RecognitionImportResultEnum importError)
+        private RecognizerImportResultEnum ImportError;
+        public RecognitionsDeleteOldData(Window owner, RecognizerImportResultEnum importError)
         {
             InitializeComponent();
             this.Owner = owner;
@@ -22,8 +20,8 @@ namespace Timelapse.Dialog
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            string errorType = RecognitionImportResultEnum.IncompatableDetectionCategories == ImportError ? "detection" : "classification";
-            
+            string errorType = RecognizerImportResultEnum.IncompatableDetectionCategories == ImportError ? "detection" : "classification";
+
             this.Message.Reason = "Conflicts exist between the old versus new " + errorType + " categories." + Environment.NewLine;
             this.Message.Reason += "Consequently, Timelapse can't merge the new recognition data into the existing recognition data.";
             this.Message.Solution = "To solve this, completely replace the old recognition data with the new recognition data." + Environment.NewLine;

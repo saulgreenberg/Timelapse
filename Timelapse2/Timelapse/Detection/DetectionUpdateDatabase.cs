@@ -17,7 +17,7 @@ namespace Timelapse.Detection
             SQLiteWrapper db = new SQLiteWrapper(ddbPath);
             DetectionUpdateDatabase.GenerateDetectionDictionariesFromDB(db, infoDictionary, detectionCategoriesDictionary, classificationCategoriesDictionary);
         }
-  
+
         public static void GenerateDetectionDictionariesFromDB(SQLiteWrapper db, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
         {
             if (false == db.TableExists(Constant.DBTables.Info))

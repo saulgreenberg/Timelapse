@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Util;
@@ -135,7 +134,7 @@ namespace Timelapse.Detection
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
             ThrowIf.IsNullArgument(detectionDB, nameof(detectionDB));
             ThrowIf.IsNullArgument(pathPrefixForTruncation, nameof(pathPrefixForTruncation));
-            
+
             progress.Report(new ProgressBarArguments(0, "Adding new recognitions...", false, true));
             // Updating many rows is made hugely more efficient if we create an index for File and Relative Path
             // as otherwise each update is in linear time to the table rows vs log time. 
@@ -235,7 +234,7 @@ namespace Timelapse.Detection
                 foreach (image image in detector.images)
                 {
                     if (j % 10000 == 0)
-                    { 
+                    {
                         progress.Report(new ProgressBarArguments(Convert.ToInt32(j * 100.0 / totalFiles), String.Format("Adding new recognitions ({0:N0}/{1:N0})...", j, totalFiles), false, false));
                     }
                     j++;
