@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 #pragma warning disable IDE1006 // Naming Style - we are using lower case names to match the json structure, we  mute the warning
-namespace Timelapse.Detection
+namespace Timelapse.Recognition
 {
     //    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Reviewed.")]
     //#pragma warning disable SA1300 // ElementMustBeginWithUpperCaseLetter
-    // This file contains four classes, which will hold image recognition information read in from the Microsoft Megadetector JSON file
-    // - Detector
+    // This file contains four classes, which will hold image recognition information read in from the JSON file that follows the Microsoft Megadetector specification
+    // - Recognizer
     // - info
     // - image
     // - detection
 
     /// <summary>
-    /// The Detector class holds data produced by Microsoft's Megadetector
+    /// The Recognizer class holds data produced by Microsoft's Megadetector
     /// Property names and structures follow the Microsoft Megadetetor JSON attribut names
-    /// in order to allow the JSON data to be deserialized into the Detector data structure
+    /// in order to allow the JSON data to be deserialized into the Recognizer data structure
     /// </summary>    
-    public class Detector : IDisposable
+    public class Recognizer : IDisposable
     {
         #region Public Properties
         public info info { get; set; }
@@ -27,7 +27,7 @@ namespace Timelapse.Detection
         #endregion
 
         #region Constructor 
-        public Detector()
+        public Recognizer()
         {
             this.images = new List<image>();
         }
@@ -40,7 +40,7 @@ namespace Timelapse.Detection
         {
             this.detection_categories = new Dictionary<string, string>
             {
-                { Constant.DetectionValues.NoDetectionCategory, Constant.DetectionValues.NoDetectionLabel },
+                { Constant.RecognizerValues.NoDetectionCategory, Constant.RecognizerValues.NoDetectionLabel },
                 { "2", "person" },
                 { "4", "vehicle" }
             };
@@ -51,7 +51,7 @@ namespace Timelapse.Detection
         {
             this.classification_categories = new Dictionary<string, string>
             {
-                { Constant.DetectionValues.NoDetectionCategory, Constant.DetectionValues.NoDetectionLabel },
+                { Constant.RecognizerValues.NoDetectionCategory, Constant.RecognizerValues.NoDetectionLabel },
             };
         }
         #endregion
@@ -90,6 +90,7 @@ namespace Timelapse.Detection
         public string detection_completion_time { get; set; }
         public string classifier { get; set; }
         public string classification_completion_time { get; set; }
+        public string format_version { get; set; }
         public detector_metadata detector_metadata { get; set; }
         public classifier_metadata classifier_metadata { get; set; }
         #endregion
@@ -101,13 +102,14 @@ namespace Timelapse.Detection
         #endregion
 
         #region Public Set Defaults
-        // Defaults are just used when reading in current csv files, as that file does not include the detector information
+        // Defaults are just used as needed
         public void SetInfoDefaults()
         {
-            this.detector = Constant.DetectionValues.DetectorUnknown;
-            this.detection_completion_time = Constant.DetectionValues.DetectionCompletionTimeUnknown;
-            this.classifier = Constant.DetectionValues.ClassifierUnknown;
-            this.classification_completion_time = Constant.DetectionValues.ClassificationCompletionTimeUnknown;
+            this.detector = Constant.RecognizerValues.DetectorUnknown;
+            this.detection_completion_time = Constant.RecognizerValues.DetectionCompletionTimeUnknown;
+            this.classifier = Constant.RecognizerValues.ClassifierUnknown;
+            this.classification_completion_time = Constant.RecognizerValues.ClassificationCompletionTimeUnknown;
+            this.format_version = Constant.RecognizerValues.FormatVersionUnknown;
         }
         #endregion
     }
@@ -117,9 +119,9 @@ namespace Timelapse.Detection
         // if its null, load it with some defaults
         public detector_metadata()
         {
-            megadetector_version = Constant.DetectionValues.MDVersionUnknown;
-            typical_detection_threshold = Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown;
-            conservative_detection_threshold = Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
+            megadetector_version = Constant.RecognizerValues.MDVersionUnknown;
+            typical_detection_threshold = Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+            conservative_detection_threshold = Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
         }
         // The megadetector_version is a string that provides detector version in the form md_v*
         // for example md_v5 is megadetector version 5
@@ -141,7 +143,7 @@ namespace Timelapse.Detection
     {
         public classifier_metadata()
         {
-            typical_classification_threshold = Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown; // CHECK THIS
+            typical_classification_threshold = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown; // CHECK THIS
         }
         // typical_classification_threshold describes the typical bound of the classification probability
         // that normally produces a mostly correct result. For example, if it is .75, then the 

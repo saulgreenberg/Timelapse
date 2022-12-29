@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
-using Timelapse.Detection;
+using Timelapse.Recognition;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -182,7 +182,7 @@ namespace Timelapse.Database
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.SearchTerms, Sql.Text, Constant.DatabaseValues.DefaultSearchTerms));        // A JSON description of the search terms
             //schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.SelectedFolder, Sql.Text));
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.QuickPasteTerms, Sql.Text));        // A comma-separated list of 4 sort terms
-            schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.BoundingBoxDisplayThreshold, Sql.Real, Constant.DetectionValues.BoundingBoxDisplayThresholdDefault));        // A comma-separated list of 4 sort terms
+            schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.BoundingBoxDisplayThreshold, Sql.Real, Constant.RecognizerValues.BoundingBoxDisplayThresholdDefault));        // A comma-separated list of 4 sort terms
 
 
             this.Database.CreateTable(Constant.DBTables.ImageSet, schemaColumnDefinitions);
@@ -2163,19 +2163,19 @@ namespace Timelapse.Database
             this.Database.Insert(Constant.DBTables.Classifications, classificationInsertionStatements);
         }
 
-        // Try to read the recognition data from the Json file into the Detector structure
+        // Try to read the recognition data from the Json file into the Recognizer structure
         // A progress bar is displayed
         // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
-        // Success: returns a filled in detector structure
+        // Success: returns a filled in Recognizer structure
         // Failure: returns null
-        public async Task<Detector> JsonDeserializeRecognizerFileAsync(string path)
+        public async Task<Recognizer> JsonDeserializeRecognizerFileAsync(string path)
         {
             if (File.Exists(path) == false)
             {
                 return null;
             }
 
-            Detector jsonDetector = null;
+            Recognizer jsonRecognizer = null;
             using (ProgressStream ps = new ProgressStream(System.IO.File.OpenRead(path), GlobalReferences.CancelTokenSource))
             {
                 ps.BytesRead += new ProgressStreamReportDelegate(PStream_BytesRead);
@@ -2189,7 +2189,7 @@ namespace Timelapse.Database
                             using (JsonReader reader = new JsonTextReader(sr))
                             {
                                 JsonSerializer serializer = new JsonSerializer();
-                                jsonDetector = serializer.Deserialize<Detector>(reader);
+                                jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
                             }
                         }
 
@@ -2198,20 +2198,20 @@ namespace Timelapse.Database
                             if (e is TaskCanceledException)
                             {
                                 GlobalReferences.CancelTokenSource = new CancellationTokenSource();
-                                jsonDetector = new Detector(); // signal cancel by returning a non-null detector where info is null
+                                jsonRecognizer = new Recognizer(); // signal cancel by returning a non-null recognizer where info is null
                             }
                             else
                             {
-                                jsonDetector = null;
+                                jsonRecognizer = null;
                             }
                         }
                     }).ConfigureAwait(true);
                 }
             }
-            return jsonDetector;
+            return jsonRecognizer;
         }
 
-        public async Task<RecognizerImportResultEnum> PopulateDetectionTablesFromDetectorAsync(Detector jsonDetector, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
+        public async Task<RecognizerImportResultEnum> PopulateRecognitionTablesFromRecognizerAsync(Recognizer jsonRecognizer, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(foldersInDBListButNotInJSon, nameof(foldersInDBListButNotInJSon));
@@ -2226,8 +2226,8 @@ namespace Timelapse.Database
                     progress.Report(new ProgressBarArguments(0, "Examining database recognitions...", true, true));
                     Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
 
-                    // Fill in the detectorFromJson info structure as needed to ensure it is filled in with reasonable values
-                    PopulateDetectorInfoWithDefaultValuesAsNeeded(jsonDetector.info);
+                    // Fill in the jsonRecognizer info structure as needed to ensure it is filled in with reasonable values
+                    PopulateRecognizerInfoWithDefaultValuesAsNeeded(jsonRecognizer.info);
 
 
                     // flag indicating if the detections database already exists
@@ -2255,19 +2255,19 @@ namespace Timelapse.Database
                         Dictionary<string, string> dbDetectionCategories = new Dictionary<string, string>();
                         Dictionary<string, string> dbClassificationCategories = new Dictionary<string, string>();
                         Dictionary<string, object> dbInfoDictionary = new Dictionary<string, object>();
-                        DetectionUpdateDatabase.GenerateDetectionDictionariesFromDB(this.Database, dbInfoDictionary, dbDetectionCategories, dbClassificationCategories);
+                        RecognitionUpdateDatabase.GenerateDetectionDictionariesFromDB(this.Database, dbInfoDictionary, dbDetectionCategories, dbClassificationCategories);
 
                         // Step 1. Generate a new info structure that is a best effort combination of the db and json info structure,
-                        //         and then update the jsonDetector to match that. Note the we do it even if no update is really needed, as its lightweight
-                        Dictionary<string, object> newInfoDict = DetectorUtilities.GenerateBestRecognitionInfoFromTwoInfos(dbInfoDictionary, jsonDetector.info);
-                        jsonDetector.info.detector = (string)newInfoDict[Constant.InfoColumns.Detector];
-                        jsonDetector.info.detector_metadata.megadetector_version = (string)newInfoDict[Constant.InfoColumns.DetectorVersion];
-                        jsonDetector.info.detection_completion_time = (string)newInfoDict[Constant.InfoColumns.DetectionCompletionTime];
-                        jsonDetector.info.classifier = (string)newInfoDict[Constant.InfoColumns.Classifier];
-                        jsonDetector.info.classification_completion_time = (string)newInfoDict[Constant.InfoColumns.ClassificationCompletionTime];
-                        jsonDetector.info.detector_metadata.typical_detection_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalDetectionThreshold];
-                        jsonDetector.info.detector_metadata.conservative_detection_threshold = (float)newInfoDict[Constant.InfoColumns.ConservativeDetectionThreshold];
-                        jsonDetector.info.classifier_metadata.typical_classification_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalClassificationThreshold];
+                        //         and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight
+                        Dictionary<string, object> newInfoDict = RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(dbInfoDictionary, jsonRecognizer.info);
+                        jsonRecognizer.info.detector = (string)newInfoDict[Constant.InfoColumns.Detector];
+                        jsonRecognizer.info.detector_metadata.megadetector_version = (string)newInfoDict[Constant.InfoColumns.DetectorVersion];
+                        jsonRecognizer.info.detection_completion_time = (string)newInfoDict[Constant.InfoColumns.DetectionCompletionTime];
+                        jsonRecognizer.info.classifier = (string)newInfoDict[Constant.InfoColumns.Classifier];
+                        jsonRecognizer.info.classification_completion_time = (string)newInfoDict[Constant.InfoColumns.ClassificationCompletionTime];
+                        jsonRecognizer.info.detector_metadata.typical_detection_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalDetectionThreshold];
+                        jsonRecognizer.info.detector_metadata.conservative_detection_threshold = (float)newInfoDict[Constant.InfoColumns.ConservativeDetectionThreshold];
+                        jsonRecognizer.info.classifier_metadata.typical_classification_threshold = (float)newInfoDict[Constant.InfoColumns.TypicalClassificationThreshold];
 
 
                         if (cancelTokenSource.Token.IsCancellationRequested)
@@ -2281,10 +2281,10 @@ namespace Timelapse.Database
                             // Remove the 0: Empty key/value pair, as that is artificially generated by timelapse and is not in the JSON
                             dbDetectionCategories.Remove("0");
                         }
-                        if (Util.Dictionaries.MergeDictionaries(dbDetectionCategories, jsonDetector.detection_categories, out Dictionary<string, string> mergedDetectionCategories))
+                        if (Util.Dictionaries.MergeDictionaries(dbDetectionCategories, jsonRecognizer.detection_categories, out Dictionary<string, string> mergedDetectionCategories))
                         {
                             // System.Diagnostics.Debug.Print("merged succeeded for detection categories");
-                            jsonDetector.detection_categories = new Dictionary<string, string>(mergedDetectionCategories);
+                            jsonRecognizer.detection_categories = new Dictionary<string, string>(mergedDetectionCategories);
                         }
                         else
                         {
@@ -2294,10 +2294,10 @@ namespace Timelapse.Database
 
                         // Step 3. Check if the new classfication categories are the same or at least a subset of the old ones.
                         // If they are, then we can just use the existing DB categories as they will apply to the new categories.
-                        if (Util.Dictionaries.MergeDictionaries(dbClassificationCategories, jsonDetector.classification_categories, out Dictionary<string, string> mergedClassificationCategories))
+                        if (Util.Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories))
                         {
                             // System.Diagnostics.Debug.Print("merged succeeded for classification categories");
-                            jsonDetector.classification_categories = new Dictionary<string, string>(mergedClassificationCategories);
+                            jsonRecognizer.classification_categories = new Dictionary<string, string>(mergedClassificationCategories);
                         }
                         else
                         {
@@ -2359,10 +2359,10 @@ namespace Timelapse.Database
                         List<string> queries = new List<string>();
 
                         i = 0;
-                        count = jsonDetector.images.Count;
-                        foreach (image image in jsonDetector.images)
+                        count = jsonRecognizer.images.Count;
+                        foreach (image image in jsonRecognizer.images)
                         {
-                            // check whether the image file in the json exists in the detector table.
+                            // check whether the image file in the json exists in the recognizer table.
                             string file = Path.GetFileName(image.file);
                             string relativePath = Path.GetDirectoryName(image.file);
 
@@ -2407,17 +2407,17 @@ namespace Timelapse.Database
 
 
                     // PERFORMANCE This check is likely somewhat slow. Check it on large detection files / dbs 
-                    if (this.CompareDetectorAndDBFolders(jsonDetector, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth) == false)
+                    if (this.CompareRecognizerAndDBFolders(jsonRecognizer, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth) == false)
                     {
                         // No folders in the detections match folders in the databases. Abort without doing anything.
                         return RecognizerImportResultEnum.Failure;
                     }
 
                     // Prepare the various detection tables. 
-                    DetectionDatabases.PrepareRecognitionTablesAndColumns(this.Database, this.DetectionsExists(), clearDBRecognitionData);
+                    RecognitionDatabases.PrepareRecognitionTablesAndColumns(this.Database, this.DetectionsExists(), clearDBRecognitionData);
 
                     // PERFORMANCE This method does two things:
-                    // - it walks through the jsonDetector data structure to construct sql insertion statements
+                    // - it walks through the jsonRecognizer data structure to construct sql insertion statements
                     // - it invokes the actual insertion in the database.
                     // Both steps are very slow with a very large JSON of detections that matches folders of images.
                     // (e.g., 225 seconds for 2,000,000 images and their detections). Note that I batch insert 50,000 statements at a time. 
@@ -2425,7 +2425,7 @@ namespace Timelapse.Database
                     // Update the progress bar and populate the detection tables
                     progress.Report(new ProgressBarArguments(0, "Adding new recognitions...", false, true));
                     Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
-                    DetectionDatabases.PopulateTables(jsonDetector, this, this.Database, String.Empty, dbStartingDetectionID, dbStartingClassificationID, progress);
+                    RecognitionDatabases.PopulateTables(jsonRecognizer, this, this.Database, String.Empty, dbStartingDetectionID, dbStartingClassificationID, progress);
 
                     // DetectionExists needs to be primed if it is to save its DetectionExists state
                     this.DetectionsExists(true);
@@ -2440,8 +2440,8 @@ namespace Timelapse.Database
         }
 
         #region Update Json with default values as needed
-        // Update the detectorFromJson info table as needed to ensure it is filled in with reasonable values
-        private static void PopulateDetectorInfoWithDefaultValuesAsNeeded(info info)
+        // Update the jsonRecognizer info table as needed to ensure it is filled in with reasonable values
+        private static void PopulateRecognizerInfoWithDefaultValuesAsNeeded(info info)
         {
             // If there is no info field in the json file, create a new structure
             // which will eventually be filled in with various default values.
@@ -2450,13 +2450,13 @@ namespace Timelapse.Database
                 info = new info();
             }
 
-            // Set the jsonDetector to the MD version based upon the contents of the read-in
-            // value for it (which is just the jsonDetector's file name). That file name value gives a 
-            // reasonable hint as to what jsonDetector is currently in use.
+            // Set the jsonRecognizer to the MD version based upon the contents of the read-in
+            // value for it (which is just the jsonRecognizer's file name). That file name value gives a 
+            // reasonable hint as to what jsonRecognizer is currently in use.
             if (info.detector == null)
             {
                 // just to insert a reasonable value into this, just in case
-                info.detector = Constant.DetectionValues.MDVersionUnknown;
+                info.detector = Constant.RecognizerValues.MDVersionUnknown;
             }
 
             if (info.detector_metadata == null)
@@ -2471,15 +2471,15 @@ namespace Timelapse.Database
                 // check for null fields or empty fields in this structure, setting them to defaults if needed
                 if (String.IsNullOrWhiteSpace(info.detector_metadata.megadetector_version))
                 {
-                    info.detector_metadata.megadetector_version = Constant.DetectionValues.MDVersionUnknown;
+                    info.detector_metadata.megadetector_version = Constant.RecognizerValues.MDVersionUnknown;
                 }
                 if (info.detector_metadata.typical_detection_threshold == null)
                 {
-                    info.detector_metadata.typical_detection_threshold = Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown;
+                    info.detector_metadata.typical_detection_threshold = Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
                 }
                 if (info.detector_metadata.conservative_detection_threshold == null)
                 {
-                    info.detector_metadata.conservative_detection_threshold = Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
+                    info.detector_metadata.conservative_detection_threshold = Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
                 }
             }
 
@@ -2501,15 +2501,15 @@ namespace Timelapse.Database
         #endregion
 
         #region Detections
-        // Return true if there is at least one match between a jsonDetector folder and a DB folder
-        // Return a list of folder paths missing in the DB but present in the jsonDetector file
-        private bool CompareDetectorAndDBFolders(Detector detector, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
+        // Return true if there is at least one match between a jsonRecognizer folder and a DB folder
+        // Return a list of folder paths missing in the DB but present in the jsonRecognizer file
+        private bool CompareRecognizerAndDBFolders(Recognizer recognizer, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
         {
             string folderpath;
 
-            if (detector.images.Count <= 0)
+            if (recognizer.images.Count <= 0)
             {
-                // No point continuing if there are no jsonDetector entries
+                // No point continuing if there are no jsonRecognizer entries
                 return false;
             }
 
@@ -2522,24 +2522,24 @@ namespace Timelapse.Database
                 return false;
             }
 
-            // Get all distinct folders in the Detector 
+            // Get all distinct folders in the Recognizer 
             // We add a closing slash onto the imageFilePath to terminate any matches
             // e.g., A/B  would also match A/Buzz, which we don't want. But A/B/ won't match that.
-            SortedSet<string> foldersInDetectorList = new SortedSet<string>();
-            foreach (image image in detector.images)
+            SortedSet<string> foldersInRecognizerList = new SortedSet<string>();
+            foreach (image image in recognizer.images)
             {
                 folderpath = Path.GetDirectoryName(image.file);
                 if (!string.IsNullOrEmpty(folderpath))
                 {
                     folderpath += "\\";
                 }
-                if (foldersInDetectorList.Contains(folderpath) == false)
+                if (foldersInRecognizerList.Contains(folderpath) == false)
                 {
-                    foldersInDetectorList.Add(folderpath);
+                    foldersInRecognizerList.Add(folderpath);
                 }
             }
 
-            // Compare each folder in the DB against the folders in the jsonDetector );
+            // Compare each folder in the DB against the folders in the jsonRecognizer );
             foreach (string originalFolderDB in FoldersInDBList)
             {
                 // Add a closing slash to the folderDB for the same reasons described above
@@ -2549,9 +2549,9 @@ namespace Timelapse.Database
                     modifiedFolderDB = originalFolderDB + "\\";
                 }
 
-                if (foldersInDetectorList.Contains(modifiedFolderDB))
+                if (foldersInRecognizerList.Contains(modifiedFolderDB))
                 {
-                    // this folder path is in both the jsonDetector file and the image set
+                    // this folder path is in both the jsonRecognizer file and the image set
                     foldersInBoth.Add(modifiedFolderDB);
                 }
                 else
@@ -2563,12 +2563,12 @@ namespace Timelapse.Database
                     }
                     else
                     {
-                        // This folder is in the image set but NOT in the jsonDetector
+                        // This folder is in the image set but NOT in the jsonRecognizer
                         foldersInDBListButNotInJSon.Add(originalFolderDB);
                     }
                 }
             }
-            List<string> tempList = foldersInDetectorList.Except(foldersInBoth).ToList();
+            List<string> tempList = foldersInRecognizerList.Except(foldersInBoth).ToList();
             foreach (string s in tempList)
             {
                 foldersInJsonButNotInDB.Add(s);
@@ -2638,12 +2638,12 @@ namespace Timelapse.Database
                     x = this.Database.ScalarGetFloatValue(Constant.DBTables.Info, Constant.InfoColumns.TypicalDetectionThreshold);
                 }
                 return (x == null)
-                    ? Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown
+                    ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
                     : (float)x;
             }
             catch
             {
-                return Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown;
+                return Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
             }
         }
 
@@ -2659,12 +2659,12 @@ namespace Timelapse.Database
                     x = this.Database.ScalarGetFloatValue(Constant.DBTables.Info, Constant.InfoColumns.TypicalClassificationThreshold);
                 }
                 return (x == null)
-                    ? Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown
+                    ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
                     : (float)x;
             }
             catch
             {
-                return Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown;
+                return Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
             }
         }
 
@@ -2680,12 +2680,12 @@ namespace Timelapse.Database
                     x = this.Database.ScalarGetFloatValue(Constant.DBTables.Info, Constant.InfoColumns.ConservativeDetectionThreshold);
                 }
                 return (x == null)
-                    ? Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown
+                    ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
                     : (float)x;
             }
             catch
             {
-                return Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown;
+                return Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
             }
         }
 
@@ -2845,7 +2845,7 @@ namespace Timelapse.Database
 
         public bool TryGetBoundingBoxDisplayThreshold(out float threshold)
         {
-            threshold = Constant.DetectionValues.Undefined;
+            threshold = Constant.RecognizerValues.Undefined;
             if (false == this.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BoundingBoxDisplayThreshold))
             {
                 return false;

@@ -1103,7 +1103,7 @@ namespace Timelapse.Dialog
         }
 
         /// <summary>
-        /// No matching folders in the DB and the detector
+        /// No matching folders in the DB and the recognizer file
         /// </summary>
         public static void MenuFileRecognitionDataNotImportedDialog(Window owner, string details)
         {
@@ -1123,7 +1123,7 @@ namespace Timelapse.Dialog
         }
 
         /// <summary>
-        ///  Some folders missing - show which folder paths in the DB are not in the detector
+        ///  Some folders missing - show which folder paths in the DB are not in the recognizer file
         /// </summary>
         public static void MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(Window owner, string details)
         {

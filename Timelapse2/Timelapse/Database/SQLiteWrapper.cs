@@ -45,6 +45,7 @@ namespace Timelapse.Database
         }
         #endregion
 
+
         #region Create Table
         /// <summary>
         /// A simplified table creation routine. It expects the column definitions to be supplied
@@ -130,6 +131,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Select
+
         public DataTable GetDataTableFromSelect(string query)
         {
             // System.Diagnostics.Debug.Print("GetDataTableFromSelect: " + query);
@@ -140,6 +142,7 @@ namespace Timelapse.Database
                 using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
                 {
                     connection.Open();
+
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
                         command.CommandText = query;
@@ -159,6 +162,62 @@ namespace Timelapse.Database
                 return dataTable;
             }
         }
+
+        // TEST CODE: Interruptable GetDataTableFromSelect
+        //public DataTable GetDataTableFromSelect(string query, bool interruptable)
+        //{
+        //    // System.Diagnostics.Debug.Print("GetDataTableFromSelect: " + query);
+        //    DataTable dataTable = new DataTable();
+        //    try
+        //    {
+        //        // Open the connection
+        //        using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+        //        {
+        //            i = 0;
+        //            if (interruptable) { 
+        //                connection.ProgressOps =  10;
+        //                connection.Progress += Connection_Progress;
+        //                System.Diagnostics.Debug.Print("Enabled");
+        //            }
+        //            else 
+        //            {
+        //                connection.ProgressOps = 0;
+        //                connection.Progress += null;
+        //                System.Diagnostics.Debug.Print("Disabled");
+
+        //            }
+        //            connection.Open();
+
+        //            using (SQLiteCommand command = new SQLiteCommand(connection))
+        //            {
+        //                command.CommandText = query;
+        //                //System.Diagnostics.Debug.Print(query);
+        //                using (SQLiteDataReader reader = command.ExecuteReader())
+        //                {
+        //                    dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
+        //                    dataTable.Load(reader);
+        //                    return dataTable;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception exception)
+        //    {
+        //        TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception.ToString()));
+        //        return dataTable;
+        //    }
+        //}
+
+        //static public int i = 0;
+        //private void Connection_Progress(object sender, ProgressEventArgs e)
+        //{
+        //    if (i++ == 10)
+        //    {
+        //        e.ReturnCode = SQLiteProgressReturnCode.Interrupt;
+        //        System.Diagnostics.Debug.Print("Interrupted: " + i.ToString());
+        //    }
+        //    else System.Diagnostics.Debug.Print ("Going: " + i.ToString());
+        //}
 
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {

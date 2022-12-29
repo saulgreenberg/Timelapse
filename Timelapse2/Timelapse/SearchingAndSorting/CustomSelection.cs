@@ -23,7 +23,7 @@ namespace Timelapse.Database
 
         public CustomSelectionOperatorEnum TermCombiningOperator { get; set; }
         public bool ShowMissingDetections { get; set; }
-        public Detection.DetectionSelections DetectionSelections { get; set; }
+        public Recognition.RecognitionSelections DetectionSelections { get; set; }
 
         // Episode-specific data
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
@@ -52,7 +52,7 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(templateTable, nameof(templateTable));
 
-            this.DetectionSelections = new Detection.DetectionSelections();
+            this.DetectionSelections = new Recognition.RecognitionSelections();
             this.SearchTerms = new List<SearchTerm>();
             this.TermCombiningOperator = termCombiningOperator;
 

@@ -2,12 +2,12 @@
 using Timelapse.Enums;
 using Timelapse.Util;
 
-namespace Timelapse.Detection
+namespace Timelapse.Recognition
 {
     /// <summary>
     /// A class used by Custom Selection (and the Custom Selection Dialog) to set the selection criteria on detections
     /// </summary>
-    public class DetectionSelections
+    public class RecognitionSelections
     {
         #region Public Properties
         public bool Enabled
@@ -96,7 +96,7 @@ namespace Timelapse.Detection
             get
             {
                 return GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                    ? Constant.DetectionValues.DefaultTypicalDetectionThresholdIfUnknown
+                    ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
                     : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalDetectionThreshold();
             }
         }
@@ -121,7 +121,7 @@ namespace Timelapse.Detection
             get
             {
                 return GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                    ? Constant.DetectionValues.DefaultTypicalClassificationThresholdIfUnknown
+                    ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
                     : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalClassificationThreshold();
             }
         }
@@ -146,7 +146,7 @@ namespace Timelapse.Detection
             get
             {
                 return GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                    ? Constant.DetectionValues.DefaultConservativeDetectionThresholdIfUnknown
+                    ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
                     : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetConservativeDetectionThreshold();
             }
         }
@@ -154,7 +154,7 @@ namespace Timelapse.Detection
         #endregion
 
         #region Constructor - Initializes various defaults
-        public DetectionSelections()
+        public RecognitionSelections()
         {
             this.ClearAllDetectionsUses();
 

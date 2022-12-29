@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
-using Timelapse.Detection;
+using Timelapse.Recognition;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -345,7 +345,7 @@ namespace Timelapse
             //    Note that this has its own progress handler
             //
             this.BusyCancelIndicator.IsBusy = true;
-            using (Detector jsonRecognitions = await this.DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
+            using (Recognizer jsonRecognitions = await this.DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
             {
                 if (jsonRecognitions == null)
                 {
@@ -381,10 +381,10 @@ namespace Timelapse
                 //    - json recognizer file was found in a sub-folder somewhere under the root folder
                 //    - json recognizer's image paths do not have the sub-folder prefix
                 //    - at least one file is found that matches a path comprising and added sub-folder prefix
-                string subFolderPrefix = DetectorUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
+                string subFolderPrefix = RecognitionUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
                 if (false == String.IsNullOrEmpty(subFolderPrefix))
                 {
-                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
@@ -404,7 +404,7 @@ namespace Timelapse
                         if (messageBox.AddSubFolderPrefix)
                         {
                             // The user indicated we should add the prefix, so do so.
-                            if (CancelStatusEnum.Cancelled == await DetectorUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
+                            if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
                             {
                                 this.BusyCancelIndicator.Reset();
                                 return;
@@ -427,7 +427,7 @@ namespace Timelapse
                 else
                 {
                     // Likely outside the root folder. Check the paths again, and generate an error message if needed
-                    RecognizerPathTestResults resultRecognizerPathTest = await DetectorUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
@@ -456,7 +456,7 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
-                RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
+                RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
                 if (result == RecognizerImportResultEnum.Cancelled)
                 {
                     this.BusyCancelIndicator.Reset();
@@ -492,7 +492,7 @@ namespace Timelapse
                     if (true == messageBox.ShowDialog())
                     {
                         // Try again by deleting the old recognition data 
-                        result = await this.DataHandler.FileDatabase.PopulateDetectionTablesFromDetectorAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
+                        result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
                         if (result == RecognizerImportResultEnum.Cancelled)
                         {
                             this.BusyCancelIndicator.Reset();
@@ -513,12 +513,12 @@ namespace Timelapse
                 string details = ComposeFolderDetails(foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth);
                 if (result != RecognizerImportResultEnum.Success)
                 {
-                    // No matching folders in the DB and the detector
+                    // No matching folders in the DB and the recognizer file
                     Dialogs.MenuFileRecognitionDataNotImportedDialog(this, details);
                 }
                 else if (foldersInDBListButNotInJSon.Count > 0)
                 {
-                    // Some folders missing - show which folder paths in the DB are not in the detector
+                    // Some folders missing - show which folder paths in the DB are not in the recognizer file
                     Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
                 }
                 else

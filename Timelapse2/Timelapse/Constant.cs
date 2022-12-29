@@ -672,7 +672,7 @@ namespace Timelapse.Constant
         public const string BBox = "bbox";
     }
 
-    public static class DetectionValues
+    public static class RecognizerValues
     {
         public const string NoDetectionCategory = "0";
         public const string NoDetectionLabel = "Empty";
@@ -684,13 +684,13 @@ namespace Timelapse.Constant
         public const float MinimumDetectionValue = 0.00001F;
         public const float MinimumRecognitionValue = 0.00001F;
 
-        // Detector defaults. Different versions of Megadetector produce different confidence values.
+        // Recognizer defaults. Different versions of Megadetector produce different confidence values.
         // The values below reflect  Megadetector v4, which is the likely detector if no overrides 
         // were set  in the Detection json file
         public const float DefaultTypicalDetectionThresholdIfUnknown = 0.8f;        // Appropriate for Megadetector v4
         public const float DefaultConservativeDetectionThresholdIfUnknown = 0.3f;   // Appropriate for Megadetector v4
         public const float DefaultTypicalClassificationThresholdIfUnknown = 0.75f;  // Appropriate for Megadetector v4
-        public const float BoundingBoxDisplayThresholdDefault = Constant.DetectionValues.Undefined;   // Appropriate for Megadetector v4
+        public const float BoundingBoxDisplayThresholdDefault = Constant.RecognizerValues.Undefined;   // Appropriate for Megadetector v4
         public const string MDVersionUnknown = "vUnknown";
         public const float Undefined = -1F;
 
@@ -698,6 +698,7 @@ namespace Timelapse.Constant
         public const string DetectionCompletionTimeUnknown = "unknown";
         public const string ClassifierUnknown = "ecosystem1_unknown_version";
         public const string ClassificationCompletionTimeUnknown = "unknown";
+        public const string FormatVersionUnknown = "";
     }
 
     public static class ClassificationColumns

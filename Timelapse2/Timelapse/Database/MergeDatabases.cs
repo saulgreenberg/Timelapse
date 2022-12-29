@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
-using Timelapse.Detection;
+using Timelapse.Recognition;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -240,7 +240,7 @@ namespace Timelapse.Database
             // then we have to create the detection tables to the main database.
             if (destinationDetectionsExists == false && sourceDetectionsExists)
             {
-                DetectionDatabases.PrepareRecognitionTablesAndColumns(destinationddb);
+                RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationddb);
 
                 // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
                 // This assumes (perhaps incorrectly) that all databases the merge in have the same detection/classification categories and info.
@@ -257,7 +257,7 @@ namespace Timelapse.Database
             Dictionary<string, string> currentDetectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> currentClassificationCategories = new Dictionary<string, string>();
             Dictionary<string, object> currentInfoDictionary = new Dictionary<string, object>();
-            DetectionUpdateDatabase.GenerateDetectionDictionariesFromOldDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
+            RecognitionUpdateDatabase.GenerateDetectionDictionariesFromOldDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
 
             // Take action if the  ddb to be merged does not have an MD version, or if it has a higher detector version than the merged database being created,
             bool triggerUpdateInfoValues = false;
@@ -266,9 +266,9 @@ namespace Timelapse.Database
                 if (false == previousInfoDictionary.TryGetValue("megadetector_version", out object prev_megadetector_version))
                 {
                     // If we can't get a version from the info table, than just set it to unknown.
-                    prev_megadetector_version = Constant.DetectionValues.MDVersionUnknown;
+                    prev_megadetector_version = Constant.RecognizerValues.MDVersionUnknown;
                 }
-                if (DetectorUtilities.IsMegadetectorVersionHigherInDestination((string)prev_megadetector_version, (string)currentMegadetector_version))
+                if (RecognitionUtilities.IsMegadetectorVersionHigherInDestination((string)prev_megadetector_version, (string)currentMegadetector_version))
                 {
                     // The ddb to be merged in has a higher detector version than the merged database being created
                     // Update the previous info dictionary to the current one (so it can be compared in the next iteration)
@@ -521,7 +521,7 @@ namespace Timelapse.Database
         private static string UpdateImageSetTableWithUndefinedBoundingBox()
         {
             return Sql.Update + Constant.DBTables.ImageSet + Sql.Set
-                + Constant.DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal + Constant.DetectionValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
+                + Constant.DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal + Constant.RecognizerValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
         }
 
         private static void DictionaryReplaceSecondDictWithFirstDictElements(Dictionary<string, object> first, Dictionary<string, object> second)

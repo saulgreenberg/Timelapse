@@ -95,7 +95,7 @@ namespace Timelapse.Util
             if (Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null
                 && Util.GlobalReferences.MainWindow.DataHandler.FileDatabase.DetectionsExists()
                 && true == Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase.TryGetBoundingBoxDisplayThreshold(out float threshold)
-                && threshold != Constant.DetectionValues.Undefined)
+                && threshold != Constant.RecognizerValues.Undefined)
             {
                 this.BoundingBoxDisplayThreshold = threshold;
             }

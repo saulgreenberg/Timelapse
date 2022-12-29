@@ -204,12 +204,12 @@
     <Compile Include="Database\MergeDatabases.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
-    <Compile Include="Detection\DetectionDatabases.cs" />
-    <Compile Include="Detection\DetectionUpdateDatabase.cs" />
-    <Compile Include="Detection\Detector.cs" />
-    <Compile Include="Detection\DetectionSelections.cs" />
+    <Compile Include="Recognition\RecognitionDatabases.cs" />
+    <Compile Include="Recognition\RecognitionUpdateDatabase.cs" />
+    <Compile Include="Recognition\Recognizer.cs" />
+    <Compile Include="Recognition\RecognitionSelections.cs" />
     <Compile Include="DataStructures\AmbiguousDateRange.cs" />
-    <Compile Include="Detection\DetectorUtilities.cs" />
+    <Compile Include="Recognition\RecognitionUtilities.cs" />
     <Compile Include="Dialog\CustomSelectionWithEpisodes.xaml.cs">
       <DependentUpon>CustomSelectionWithEpisodes.xaml</DependentUpon>
     </Compile>
