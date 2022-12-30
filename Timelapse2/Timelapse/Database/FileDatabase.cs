@@ -2255,7 +2255,7 @@ namespace Timelapse.Database
                         Dictionary<string, string> dbDetectionCategories = new Dictionary<string, string>();
                         Dictionary<string, string> dbClassificationCategories = new Dictionary<string, string>();
                         Dictionary<string, object> dbInfoDictionary = new Dictionary<string, object>();
-                        RecognitionUpdateDatabase.GenerateDetectionDictionariesFromDB(this.Database, dbInfoDictionary, dbDetectionCategories, dbClassificationCategories);
+                        RecognitionUtilities.GenerateRecognitionDictionariesFromDB(this.Database, dbInfoDictionary, dbDetectionCategories, dbClassificationCategories);
 
                         // Step 1. Generate a new info structure that is a best effort combination of the db and json info structure,
                         //         and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight

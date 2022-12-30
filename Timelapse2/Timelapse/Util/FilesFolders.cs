@@ -329,6 +329,26 @@ namespace Timelapse.Util
         }
         #endregion
 
+        #region Find the difference between two paths
+        // Find the difference between two paths (ignoring the file name, if any) and return it
+        // For example, given:
+        // path1 =    "C:\\Users\\Owner\\Desktop\\Test sets\\MergeLarge\\foo\\TimelapseData.ddb"
+        // path2 =    "C:\\Users\\Owner\\Desktop\\Test sets\\MergeLarge" 
+        // return     "foo"
+        public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
+        {
+            if (path1.Length > path2.Length)
+            {
+                return Path.GetDirectoryName(path1).Replace(path2 + "\\", "");
+            }
+            else
+            {
+                return Path.GetDirectoryName(path2).Replace(path1 + "\\", "");
+            }
+        }
+        #endregion
+
+
         #region Public Static Methods - Various forms to get the full path of a file
         public static string GetFullPath(FileDatabase fileDatabase, ImageRow imageRow)
         {

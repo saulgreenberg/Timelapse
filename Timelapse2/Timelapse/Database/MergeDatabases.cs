@@ -196,7 +196,7 @@ namespace Timelapse.Database
             string tempClassificationsTable = "tempClassificationsTable";
 
             // Determine the path prefix to add to the Relative Path i.e., the difference between the .tdb root folder and the path to the ddb file
-            string pathPrefixToAdd = GetDifferenceBetweenPathAndSubPath(SourceddbPath, rootFolderPath);
+            string pathPrefixToAdd = FilesFolders.GetDifferenceBetweenPathAndSubPath(SourceddbPath, rootFolderPath);
 
             // Calculate an ID offset (the current max Id), where we will be adding that to all Ids in the ddbFile to merge. 
             // This will guarantee that there are no duplicate primary keys 
@@ -243,7 +243,9 @@ namespace Timelapse.Database
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationddb);
 
                 // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
-                // This assumes (perhaps incorrectly) that all databases the merge in have the same detection/classification categories and info.
+                // This becomes the base comparison against which all other databases will be compared to,
+                // in terms of generating best fit info, and whether detection/classification categories conflict or can be merged together.
+                // 
                 // FORM: INSERT INTO DetectionCategories SELECT * FROM attachedDB.DetectionCategories;
                 //              INSERT INTO ClassificationCategories SELECT * FROM attachedDB.ClassifciationCategories;
                 //              INSERT INTO Info SELECT * FROM attachedDB.Info;
@@ -257,7 +259,13 @@ namespace Timelapse.Database
             Dictionary<string, string> currentDetectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> currentClassificationCategories = new Dictionary<string, string>();
             Dictionary<string, object> currentInfoDictionary = new Dictionary<string, object>();
-            RecognitionUpdateDatabase.GenerateDetectionDictionariesFromOldDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
+            RecognitionUtilities.GenerateRecognitionDictionariesFromOldDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
+
+            // Step 1. Generate a new info structure that is a best effort combination of the db and json info structure,
+            //         and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight
+            // SAULXXX TO DO
+  //          Dictionary<string, object> newInfoDict = RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(previousInfoDictionary, currentInfoDictionary);
+            // SAULXXX Done
 
             // Take action if the  ddb to be merged does not have an MD version, or if it has a higher detector version than the merged database being created,
             bool triggerUpdateInfoValues = false;
@@ -482,25 +490,6 @@ namespace Timelapse.Database
         private static string QueryInsertTableDataFromAnotherDatabase(string table, string fromDatabase)
         {
             return Sql.InsertInto + table + Sql.SelectStarFrom + fromDatabase + Sql.Dot + table + Sql.Semicolon;
-        }
-        #endregion
-
-        #region Private methods
-        // Find the difference between two paths (ignoring the file name, if any) and return it
-        // For example, given:
-        // path1 =    "C:\\Users\\Owner\\Desktop\\Test sets\\MergeLarge\\1\\TimelapseData.ddb"
-        // path2 =    "C:\\Users\\Owner\\Desktop\\Test sets\\MergeLarge" 
-        // return     "1"
-        private static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
-        {
-            if (path1.Length > path2.Length)
-            {
-                return Path.GetDirectoryName(path1).Replace(path2 + "\\", "");
-            }
-            else
-            {
-                return Path.GetDirectoryName(path2).Replace(path1 + "\\", "");
-            }
         }
         #endregion
 

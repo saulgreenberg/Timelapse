@@ -110,6 +110,8 @@ namespace Timelapse.Recognition
             this.classifier = Constant.RecognizerValues.ClassifierUnknown;
             this.classification_completion_time = Constant.RecognizerValues.ClassificationCompletionTimeUnknown;
             this.format_version = Constant.RecognizerValues.FormatVersionUnknown;
+            this.detector_metadata = new detector_metadata();
+            this.classifier_metadata = new classifier_metadata();
         }
         #endregion
     }
@@ -148,7 +150,7 @@ namespace Timelapse.Recognition
         // typical_classification_threshold describes the typical bound of the classification probability
         // that normally produces a mostly correct result. For example, if it is .75, then the 
         // a classification probability of .75 or higher is likely correct
-        public float? typical_classification_threshold { get; set; }
+        public float? typical_classification_threshold { get; set; } = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
     }
 
     /// <summary>

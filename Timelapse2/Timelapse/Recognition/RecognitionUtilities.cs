@@ -1,15 +1,69 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
+using Timelapse.Database;
 using Timelapse.Enums;
 
 namespace Timelapse.Recognition
 {
     public static class RecognitionUtilities
     {
+        #region Get detection info and various category tables from DB as dictionaries
+        public static void GenerateRecognitionDictionariesFromOldDB(string ddbPath, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
+        {
+            SQLiteWrapper db = new SQLiteWrapper(ddbPath);
+            RecognitionUtilities.GenerateRecognitionDictionariesFromDB(db, infoDictionary, detectionCategoriesDictionary, classificationCategoriesDictionary);
+        }
+
+        public static void GenerateRecognitionDictionariesFromDB(SQLiteWrapper db, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
+        {
+            if (false == db.TableExists(Constant.DBTables.Info))
+            {
+                // There are no detection-based tables in this database
+                return;
+            }
+            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Info))
+            {
+                Dictionary<string, object> tmpDict = new Dictionary<string, object>();
+                if (dataTable.Rows.Count != 0)
+                {
+                    DataRow row = dataTable.Rows[0];
+                    tmpDict = row.Table.Columns
+                            .Cast<DataColumn>()
+                            .ToDictionary(c => c.ColumnName, c => row[c.ColumnName]);
+                }
+                foreach (KeyValuePair<string, object> item in tmpDict)
+                {
+                    infoDictionary.Add(item.Key, item.Value);
+                }
+            }
+
+            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.DetectionCategories))
+            {
+                int dataTableRowCount = dataTable.Rows.Count;
+                for (int i = 0; i < dataTableRowCount; i++)
+                {
+                    DataRow row = dataTable.Rows[i];
+                    detectionCategoriesDictionary.Add((string)row[Constant.DetectionCategoriesColumns.Category], (string)row[Constant.DetectionCategoriesColumns.Label]);
+                }
+            }
+            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.ClassificationCategories))
+            {
+                int dataTableRowCount = dataTable.Rows.Count;
+                for (int i = 0; i < dataTableRowCount; i++)
+                {
+                    DataRow row = dataTable.Rows[i];
+                    classificationCategoriesDictionary.Add((string)row[Constant.ClassificationCategoriesColumns.Category], (string)row[Constant.ClassificationCategoriesColumns.Label]);
+                }
+            }
+        }
+        #endregion
+        
         #region Info-related utilities: Compare megadetector strings
         // Given two strings representing megadetector versions, return true if the destination appears to be the higher version number
         public static bool IsMegadetectorVersionHigherInDestination(string source, string destination)
@@ -41,6 +95,30 @@ namespace Timelapse.Recognition
         #endregion
 
         #region Generate info data structure from two sources
+        // Given two dictionaries that contain info values, merge them in a way that combines the best of both into one.
+        // Note: this form converts from a dictionary to an info structure and then invokes the 2nd form which actually generates the best recognition structure
+        public static Dictionary<string, object> GenerateBestRecognitionInfoFromTwoInfos(Dictionary<string, object> infoDict1, Dictionary<string, object> infoDict2)
+        {
+            if (infoDict1 == null || infoDict1.Count == 0)
+            {
+                // As the first dictionary doesn't exist, return the second dictionary
+                return infoDict2;
+            }
+            info info = new info();
+            info.SetInfoDefaults();
+            info.detector = (string) infoDict2[Constant.InfoColumns.Detector];
+            info.detection_completion_time = (string)infoDict2[Constant.InfoColumns.DetectionCompletionTime];
+            info.detector_metadata.megadetector_version = (string)infoDict2[Constant.InfoColumns.DetectorVersion];
+            info.detector_metadata.typical_detection_threshold = (float) Convert.ToDouble(infoDict2[Constant.InfoColumns.TypicalDetectionThreshold]);
+            info.detector_metadata.conservative_detection_threshold = (float)Convert.ToDouble(infoDict2[Constant.InfoColumns.ConservativeDetectionThreshold]);
+            info.classifier = (string)infoDict2[Constant.InfoColumns.Classifier];
+            info.classification_completion_time = (string)infoDict2[Constant.InfoColumns.ClassificationCompletionTime];
+            info.classifier_metadata.typical_classification_threshold = Double.TryParse((string)infoDict2[Constant.InfoColumns.ClassificationCompletionTime], out double typical_lassification_threshold)
+                ? (float)typical_lassification_threshold
+                : Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+            return RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(infoDict1, info);
+        }
+
         // Given a dictionary and a Recognizer info structure, merge them in a way that combines the best of both into one.
         public static Dictionary<string, object> GenerateBestRecognitionInfoFromTwoInfos(Dictionary<string, object> infoDict1, info info)
         {
@@ -64,10 +142,10 @@ namespace Timelapse.Recognition
             return DetermineRecognitionInfoToUse(infoDict1, infoDictFromJsonInfo);
         }
 
-        // When there are two recognizer info structures, return a new detector structure that 
+        // This utility actually does the work. When there are two recognizer info structures, return a new detector structure that 
         // - fills in defaults as needed
         // - tries to populate the values with ones that make the most sense in terms of versions and confidence values to use
-        public static Dictionary<string, object> DetermineRecognitionInfoToUse(Dictionary<string, object> infoDict1, Dictionary<string, object> infoDict2)
+        private static Dictionary<string, object> DetermineRecognitionInfoToUse(Dictionary<string, object> infoDict1, Dictionary<string, object> infoDict2)
         {
             Dictionary<string, object> updatedDict = new Dictionary<string, object>
             {
