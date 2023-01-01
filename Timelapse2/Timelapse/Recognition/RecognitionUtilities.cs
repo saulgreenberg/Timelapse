@@ -63,7 +63,7 @@ namespace Timelapse.Recognition
             }
         }
         #endregion
-        
+
         #region Info-related utilities: Compare megadetector strings
         // Given two strings representing megadetector versions, return true if the destination appears to be the higher version number
         public static bool IsMegadetectorVersionHigherInDestination(string source, string destination)
@@ -90,7 +90,7 @@ namespace Timelapse.Recognition
             {
                 return true;
             }
-            
+
             if (destination == Constant.RecognizerValues.MDVersionUnknown || String.IsNullOrWhiteSpace(destination))
             {
                 return false;
@@ -111,10 +111,10 @@ namespace Timelapse.Recognition
             }
             info info = new info();
             info.SetInfoDefaults();
-            info.detector = (string) infoDict2[Constant.InfoColumns.Detector];
+            info.detector = (string)infoDict2[Constant.InfoColumns.Detector];
             info.detection_completion_time = (string)infoDict2[Constant.InfoColumns.DetectionCompletionTime];
             info.detector_metadata.megadetector_version = (string)infoDict2[Constant.InfoColumns.DetectorVersion];
-            info.detector_metadata.typical_detection_threshold = (float) Convert.ToDouble(infoDict2[Constant.InfoColumns.TypicalDetectionThreshold]);
+            info.detector_metadata.typical_detection_threshold = (float)Convert.ToDouble(infoDict2[Constant.InfoColumns.TypicalDetectionThreshold]);
             info.detector_metadata.conservative_detection_threshold = (float)Convert.ToDouble(infoDict2[Constant.InfoColumns.ConservativeDetectionThreshold]);
             info.classifier = (string)infoDict2[Constant.InfoColumns.Classifier];
             info.classification_completion_time = (string)infoDict2[Constant.InfoColumns.ClassificationCompletionTime];

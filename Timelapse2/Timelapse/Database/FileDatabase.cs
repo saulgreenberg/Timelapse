@@ -12,9 +12,9 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
-using Timelapse.Recognition;
 using Timelapse.Enums;
 using Timelapse.Images;
+using Timelapse.Recognition;
 using Timelapse.Util;
 using Path = System.IO.Path;
 

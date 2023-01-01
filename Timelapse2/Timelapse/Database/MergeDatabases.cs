@@ -5,11 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
-using Timelapse.Recognition;
 using Timelapse.Enums;
+using Timelapse.Recognition;
 using Timelapse.Util;
-using ToastNotifications.Utilities;
-using System.Runtime.CompilerServices;
 
 namespace Timelapse.Database
 {
@@ -377,7 +375,7 @@ namespace Timelapse.Database
                     {
                         // Clear the ClassificationCategories table as we will be completely replacing it
                         query += Sql.DeleteFrom + Constant.DBTables.ClassificationCategories + Sql.Semicolon;
-                        
+
                         // update the classification categories in the table.
                         query += Sql.InsertInto + Constant.DBTables.ClassificationCategories
                             + Sql.OpenParenthesis + Constant.ClassificationCategoriesColumns.Category + Sql.Comma + Constant.ClassificationCategoriesColumns.Label + Sql.CloseParenthesis + Sql.Values;
@@ -409,7 +407,7 @@ namespace Timelapse.Database
                 int offsetDetectionId = currentDetectionsExists
                 ? currentDDB.ScalarGetCountFromSelect(QueryGetMax(Constant.DetectionColumns.DetectionID, Constant.DBTables.Detections))
                 : 0;
-                
+
                 query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedDB, Constant.DBTables.Detections);
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DatabaseColumn.ID, offsetId);
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DetectionColumns.DetectionID, offsetDetectionId);
