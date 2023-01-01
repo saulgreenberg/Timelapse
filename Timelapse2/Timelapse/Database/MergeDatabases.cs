@@ -8,6 +8,8 @@ using Timelapse.Controls;
 using Timelapse.Recognition;
 using Timelapse.Enums;
 using Timelapse.Util;
+using ToastNotifications.Utilities;
+using System.Runtime.CompilerServices;
 
 namespace Timelapse.Database
 {
@@ -168,60 +170,86 @@ namespace Timelapse.Database
 
         #region Private internal methods
 
-        // Merge a .ddb file specified in the sourceddbPath path into the destinationddb database.
-        // Also update the Relative path to reflect the new location of the sourceddb paths as defined in the rootFolderPath
-        private static DatabaseFileErrorsEnum InsertSourceDataBaseTablesintoDestinationDatabase(SQLiteWrapper destinationddb, string SourceddbPath, string rootFolderPath, List<string> sourceDataLabels, Dictionary<string, object> previousInfoDictionary, Dictionary<string, string> previousDetectionCategories, Dictionary<string, string> previousClassificationCategories)
+        // Merge a .ddb file specified in the toBeMergedDDBPath path into the currentDDB database.
+        // - current: the current database / data structures that contains all the information merged so far
+        // - to be merged: the database / data structures to be merged into the current database
+        // Also update the Relative path to reflect the new location of the toBeMergedDDB paths as defined in the rootFolderPath
+        private static DatabaseFileErrorsEnum InsertSourceDataBaseTablesintoDestinationDatabase(SQLiteWrapper currentDDB, string toBeMergedDDBPath, string rootFolderPath, List<string> currentDataLabels, Dictionary<string, object> currentInfoDictionary, Dictionary<string, string> currentDetectionCategories, Dictionary<string, string> currentClassificationCategories)
 
         {
             // Check the arguments for null 
-            ThrowIf.IsNullArgument(destinationddb, nameof(destinationddb));
+            ThrowIf.IsNullArgument(currentDDB, nameof(currentDDB));
 
-            // Check to see if the datalabels in the sourceddb matches those in the destinationDataLabels.
+
+            bool updateDetections = false;
+            bool updateClassifications = false;
+            //
+            // Part 1. Verify if templates are compatable
+            //
+
+            // Check to see if the datalabels in the toBeMergedDDBPath matches those in the currentDataLabels.
             // If not, generate a warning and abort the merge
-            SQLiteWrapper sourceddb = new SQLiteWrapper(SourceddbPath);
-            List<string> destinationDataLabels = sourceddb.SchemaGetColumns(Constant.DBTables.FileData);
-            ListComparisonEnum listComparisonEnum = Compare.CompareLists(sourceDataLabels, destinationDataLabels);
+            SQLiteWrapper toBeMergedDDB = new SQLiteWrapper(toBeMergedDDBPath);
+            List<string> toBeMergedDataLabels = toBeMergedDDB.SchemaGetColumns(Constant.DBTables.FileData);
+            ListComparisonEnum listComparisonEnum = Compare.CompareLists(currentDataLabels, toBeMergedDataLabels);
 
-            // Both IdenticalToSet2 and different ordered lists are ok. If the order differs,
-            // it uses the order in the primary template. if (listComparisonEnum == ListComparisonEnum.ElementsDiffer)
+            // Both IdenticalToSet2 and different ordered lists are ok. 
+            // If the order differs, it uses the order in the primary template. 
+            // We could, perhaps, make this more robust by creating a union of elements if they don't have name/value conflicts. However, this would introduce other issues 
             if (listComparisonEnum == ListComparisonEnum.ElementsDiffer)
             {
                 return DatabaseFileErrorsEnum.TemplateElementsDiffer;
             }
 
+            //
+            // Part 2. Preparation
+            //
+
+            // a. We need several temporary tables 
             string attachedDB = "attachedDB";
             string tempDataTable = "tempDataTable";
             string tempMarkersTable = "tempMarkersTable";
             string tempDetectionsTable = "tempDetectionsTable";
+            string tempInfoTable = "tempInfoTable";
             string tempClassificationsTable = "tempClassificationsTable";
+            string tempDetectionCategoriesTable = "tempDetectionCategoriesTable";
+            string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
 
-            // Determine the path prefix to add to the Relative Path i.e., the difference between the .tdb root folder and the path to the ddb file
-            string pathPrefixToAdd = FilesFolders.GetDifferenceBetweenPathAndSubPath(SourceddbPath, rootFolderPath);
+            // b. Determine the path prefix to add to the Relative Path i.e., the difference between the .tdb root folder and the path to the ddb file
+            string pathPrefixToAdd = FilesFolders.GetDifferenceBetweenPathAndSubPath(toBeMergedDDBPath, rootFolderPath);
 
-            // Calculate an ID offset (the current max Id), where we will be adding that to all Ids in the ddbFile to merge. 
-            // This will guarantee that there are no duplicate primary keys 
-            int offsetId = destinationddb.ScalarGetCountFromSelect(QueryGetMax(Constant.DatabaseColumn.ID, Constant.DBTables.FileData));
+            // c. Calculate an ID offset (the current max Id), where we will be adding that to all Ids in the ddbFile to merge. 
+            //    This will guarantee that there are no duplicate primary keys 
+            int offsetId = currentDDB.ScalarGetCountFromSelect(QueryGetMax(Constant.DatabaseColumn.ID, Constant.DBTables.FileData));
+
+            //
+            // Part 3. DataTable create merge query
+            //
 
             // Create the first part of the query to:
             // - Attach the ddbFile
-            // - Create a temporary DataTable mirroring the one in the sourceddb (so updates to that don't affect the original ddb)
+            // - Create a temporary DataTable mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
             // - Update the DataTable with the modified Ids
             // - Update the DataTable with the path prefix
             // - Insert the DataTable  into the main db's DataTable
-            // Form: ATTACH DATABASE 'sourceddb' AS attachedDB; 
+            // Form: ATTACH DATABASE 'toBeMergedDDB' AS attachedDB; 
             //       CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM attachedDB.DataTable;
             //       UPDATE tempDataTable SET Id = (offsetID + tempDataTable.Id);
             //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) EMD
             //       INSERT INTO DataTable SELECT * FROM tempDataTable;
             string query = Sql.BeginTransactionSemiColon;
-            query += QueryAttachDatabaseAs(SourceddbPath, attachedDB);
+            query += QueryAttachDatabaseAs(toBeMergedDDBPath, attachedDB);
             query += QueryCreateTemporaryTableFromExistingTable(tempDataTable, attachedDB, Constant.DBTables.FileData);
             query += QueryAddOffsetToIDInTable(tempDataTable, Constant.DatabaseColumn.ID, offsetId);
             query += QueryAddPrefixToRelativePathInTable(tempDataTable, pathPrefixToAdd);
-            query += QueryInsertTable2DataIntoTable1(Constant.DBTables.FileData, tempDataTable, sourceDataLabels);
+            query += QueryInsertTable2DataIntoTable1(Constant.DBTables.FileData, tempDataTable, currentDataLabels);
+
+            //
+            // Part 4.Markers Table create merge query
+            //
 
             // Create the second part of the query to:
-            // - Create a temporary Markers Table mirroring the one in the sourceddb (so updates to that don't affect the original ddb)
+            // - Create a temporary Markers Table mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
             // - Update the Markers Table with the modified Ids
             // - Insert the Markers Table  into the main db's Markers Table
             // Form: CREATE TEMPORARY TABLE tempMarkers AS SELECT * FROM attachedDB.Markers;
@@ -231,203 +259,173 @@ namespace Timelapse.Database
             query += QueryAddOffsetToIDInTable(tempMarkersTable, Constant.DatabaseColumn.ID, offsetId);
             query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable);
 
-            // Now we need to see if we have to handle detection table updates.
-            // Check to see if the destinationddb file and the sourceddb file each have a Detections table.
-            bool sourceDetectionsExists = FileDatabase.TableExists(Constant.DBTables.Detections, SourceddbPath);
-            bool destinationDetectionsExists = destinationddb.TableExists(Constant.DBTables.Detections);
+            //
+            // Part 5. Detection Table merge query
+            //
 
-            // If the main database doesn't have detections, but the database to merge into it does,
-            // then we have to create the detection tables to the main database.
-            if (destinationDetectionsExists == false && sourceDetectionsExists)
+            // Now we need to see if we have to handle detection table updates.
+            // Check to see if the currentDDB file and the toBeMergedDDB file each have a Detections table.
+            bool toBeMergedDetectionsExists = FileDatabase.TableExists(Constant.DBTables.Detections, toBeMergedDDBPath);
+            bool currentDetectionsExists = currentDDB.TableExists(Constant.DBTables.Detections);
+
+            // A. Generate several dictionaries reflecting the contents of the info and category tables as held in the to be merged database
+            Dictionary<string, string> toBeMergedDetectionCategories = new Dictionary<string, string>();
+            Dictionary<string, string> toBeMergedClassificationCategories = new Dictionary<string, string>();
+            Dictionary<string, object> toBeMergedInfoDictionary = new Dictionary<string, object>();
+            RecognitionUtilities.GenerateRecognitionDictionariesFromDB(toBeMergedDDBPath, toBeMergedInfoDictionary, toBeMergedDetectionCategories, toBeMergedClassificationCategories);
+
+            if ((false == currentDetectionsExists && false == toBeMergedDetectionsExists)
+                || (currentDetectionsExists && false == toBeMergedDetectionsExists))
             {
-                RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationddb);
+                // Don't need to do anything with the varous recognition tables as
+                // either neither have them, or the one to be merged in doesn't have them
+                // triggerUpdate remains false
+            }
+            else if (false == currentDetectionsExists && toBeMergedDetectionsExists)
+            {
+                updateDetections = true;
+                updateClassifications = true;
+                // Since the current DB doesn't 
+                // The current database doesn't have detections, but the database to merged does,
+                // Thus we need to create the detection tables in the current database.
+                RecognitionDatabases.PrepareRecognitionTablesAndColumns(currentDDB, false);
 
                 // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
-                // This becomes the base comparison against which all other databases will be compared to,
+                // This becomes the base comparison against which future databases will be compared to,
                 // in terms of generating best fit info, and whether detection/classification categories conflict or can be merged together.
-                // 
-                // FORM: INSERT INTO DetectionCategories SELECT * FROM attachedDB.DetectionCategories;
-                //              INSERT INTO ClassificationCategories SELECT * FROM attachedDB.ClassifciationCategories;
-                //              INSERT INTO Info SELECT * FROM attachedDB.Info;
+
+                // To do this, we first create temporary tables from the toBeMerged db 
+                query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedDB, Constant.DBTables.Info);
+                query += QueryCreateTemporaryTableFromExistingTable(tempDetectionCategoriesTable, attachedDB, Constant.DBTables.DetectionCategories);
+                query += QueryCreateTemporaryTableFromExistingTable(tempClassificationCategoriesTable, attachedDB, Constant.DBTables.ClassificationCategories);
+
+                // Now we insert those tables into the current database
                 query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.DetectionCategories, attachedDB);
                 query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.ClassificationCategories, attachedDB);
                 query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.Info, attachedDB);
-                destinationDetectionsExists = true;
+
+                // Update the various dictionaries to reflect their current values
+                MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(toBeMergedInfoDictionary, currentInfoDictionary);
+                MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(toBeMergedDetectionCategories, currentDetectionCategories);
+                MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(toBeMergedClassificationCategories, currentClassificationCategories);
+
+                // At this point, we have all the recognition database tables created, 
+                // with filled in info and category tables
             }
-
-            // Generate several dictionaries reflecting the contents of several detection tables as held in the source (to be merged in) database
-            Dictionary<string, string> currentDetectionCategories = new Dictionary<string, string>();
-            Dictionary<string, string> currentClassificationCategories = new Dictionary<string, string>();
-            Dictionary<string, object> currentInfoDictionary = new Dictionary<string, object>();
-            RecognitionUtilities.GenerateRecognitionDictionariesFromOldDB(SourceddbPath, currentInfoDictionary, currentDetectionCategories, currentClassificationCategories);
-
-            // Step 1. Generate a new info structure that is a best effort combination of the db and json info structure,
-            //         and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight
-            // SAULXXX TO DO
-  //          Dictionary<string, object> newInfoDict = RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(previousInfoDictionary, currentInfoDictionary);
-            // SAULXXX Done
-
-            // Take action if the  ddb to be merged does not have an MD version, or if it has a higher detector version than the merged database being created,
-            bool triggerUpdateInfoValues = false;
-            if (destinationDetectionsExists && currentInfoDictionary.TryGetValue("megadetector_version", out object currentMegadetector_version))
+            else // if (currentDetectionsExists && toBeMergedDetectionsExists)
             {
-                if (false == previousInfoDictionary.TryGetValue("megadetector_version", out object prev_megadetector_version))
-                {
-                    // If we can't get a version from the info table, than just set it to unknown.
-                    prev_megadetector_version = Constant.RecognizerValues.MDVersionUnknown;
-                }
-                if (RecognitionUtilities.IsMegadetectorVersionHigherInDestination((string)prev_megadetector_version, (string)currentMegadetector_version))
-                {
-                    // The ddb to be merged in has a higher detector version than the merged database being created
-                    // Update the previous info dictionary to the current one (so it can be compared in the next iteration)
-                    // and set a flag to trigger updating the values in the merged database to the ones in this dictionary
-                    // Note that we don't bother if the current dictionary is empty
-                    if (currentInfoDictionary.Count > 0)
-                    {
-                        MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(currentInfoDictionary, previousInfoDictionary);
-                    }
-                    triggerUpdateInfoValues = true;
-                }
-            }
+                updateDetections = true;
+                updateClassifications = true;
 
-            // Abort if the  ddb to be merged has difference detection categories than the merged database being created
-            if (destinationDetectionsExists)
-            {
-                if (previousDetectionCategories.Count == 0 && currentDetectionCategories.Count == 0)
+                // Both the current database and the database to merged have recognition tables
+
+                // A. Generate a new info structure that is a best effort combination of the db and json info structure,
+                //    and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight
+
+                Dictionary<string, object> mergedInfoDictionary = RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(currentInfoDictionary, toBeMergedInfoDictionary);
+
+                // Clear the info table as we will be completely replacing it
+                // query += Sql.DeleteFrom + Constant.DBTables.Info + Sql.Semicolon;
+
+                // Update the info table completely with these new values, and reset the ImageSetTable bounding box threshold
+                query += MergeDatabases.UpdateInfoTableWithValues(
+                    (string)mergedInfoDictionary[Constant.InfoColumns.Detector],
+                    (string)mergedInfoDictionary[Constant.InfoColumns.DetectorVersion],
+                    (string)mergedInfoDictionary[Constant.InfoColumns.DetectionCompletionTime],
+                    (string)mergedInfoDictionary[Constant.InfoColumns.Classifier],
+                    (string)mergedInfoDictionary[Constant.InfoColumns.ClassificationCompletionTime],
+                    (float)mergedInfoDictionary[Constant.InfoColumns.TypicalDetectionThreshold],
+                    (float)mergedInfoDictionary[Constant.InfoColumns.ConservativeDetectionThreshold],
+                    (float)mergedInfoDictionary[Constant.InfoColumns.TypicalClassificationThreshold]);
+                query += UpdateImageSetTableWithUndefinedBoundingBox();
+
+                // Update the various dictionaries to reflect their current values
+                MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(mergedInfoDictionary, currentInfoDictionary);
+
+                // B: Generate a new detection category db if the categories in the current and to be merged dictionary can be merged together. 
+                if (toBeMergedDetectionCategories.Count > 0 || currentDetectionCategories.Count > 0)
                 {
-                    // Do nothing, as so far we have not seen any files with detection categories 
-                }
-                else if (previousDetectionCategories.Count > 0 && currentDetectionCategories.Count == 0)
-                {
-                    // Do nothing. While the merged database file has detection categories , the database file
-                    // to be merged in has none
-                }
-                else
-                {
-                    if (previousDetectionCategories.Count == 0 && currentDetectionCategories.Count > 0)
+                    // There is something to add
+                    if (Util.Dictionaries.MergeDictionaries(toBeMergedDetectionCategories, currentDetectionCategories, out Dictionary<string, string> mergedDetectionCategories))
                     {
-                        // The merged database file has no detection categories, but the database file to be merged has some.
-                        // So we need to add them. Note that any future databases containing detection categories will be
-                        // compared to this one for differences. 
-                        // Set a flag to trigger updating the categories in the merged database to the ones in this dictionary
-                        MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(currentDetectionCategories, previousDetectionCategories);
+                        // Clear the DetectionCategories table as we will be completely replacing it
+                        query += Sql.DeleteFrom + Constant.DBTables.DetectionCategories + Sql.Semicolon;
+
+                        // update the classification categories in the table.
+                        query += Sql.InsertInto + Constant.DBTables.DetectionCategories
+                            + Sql.OpenParenthesis + Constant.DetectionCategoriesColumns.Category + Sql.Comma + Constant.DetectionCategoriesColumns.Label + Sql.CloseParenthesis + Sql.Values;
+                        foreach (KeyValuePair<string, string> kvp in mergedDetectionCategories)
+                        {
+                            query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
+                        }
+                        query = query.Substring(0, query.LastIndexOf(Sql.Comma));
+                        query += Sql.Semicolon;
+                        // Update the various dictionaries to reflect their current values
+                        MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(mergedDetectionCategories, currentDetectionCategories);
                     }
-                    else if (false == Dictionaries.AreKeysAndTheirStringValuesTheSame(previousDetectionCategories, currentDetectionCategories))
+                    else
                     {
-                        // Both the merged database file and the database file to be merged has detection categories.
-                        // However, they differ, so abort the merge and indicate the error
+                        // System.Diagnostics.Debug.Print("merged failed for detection categories");
                         return DatabaseFileErrorsEnum.DetectionCategoriesDiffers;
                     }
                 }
-            }
+                // D: Generate a new classification category db if the categories in the current and to be merged dictionary can be merged together. 
+                if (toBeMergedClassificationCategories.Count > 0 || currentClassificationCategories.Count > 0)
+                {
+                    // There is something to add
+                    if (Util.Dictionaries.MergeDictionaries(toBeMergedClassificationCategories, currentClassificationCategories, out Dictionary<string, string> mergedClassificationCategories))
+                    {
+                        // Clear the ClassificationCategories table as we will be completely replacing it
+                        query += Sql.DeleteFrom + Constant.DBTables.ClassificationCategories + Sql.Semicolon;
+                        
+                        // update the classification categories in the table.
+                        query += Sql.InsertInto + Constant.DBTables.ClassificationCategories
+                            + Sql.OpenParenthesis + Constant.ClassificationCategoriesColumns.Category + Sql.Comma + Constant.ClassificationCategoriesColumns.Label + Sql.CloseParenthesis + Sql.Values;
+                        foreach (KeyValuePair<string, string> kvp in mergedClassificationCategories)
+                        {
+                            query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
+                        }
+                        query = query.Substring(0, query.LastIndexOf(Sql.Comma));
+                        query += Sql.Semicolon;
 
-            // Take action if the  ddb to be merged has difference classification categories than the merged database being created
-            bool updateClassificationCategories = false;
-            if (destinationDetectionsExists)
-            {
-                if (previousClassificationCategories.Count == 0 && currentClassificationCategories.Count == 0)
-                {
-                    // Do nothing, as so far we have not seen any files with classification categories 
-                }
-                else if (previousClassificationCategories.Count > 0 && currentClassificationCategories.Count == 0)
-                {
-                    // Do nothing. While the merged database file has classification categories , the database file
-                    // to be merged in has none
-                }
-                else
-                {
-                    if (previousClassificationCategories.Count == 0 && currentClassificationCategories.Count > 0)
-                    {
-                        // The merged database file has no classification categories, but the database file to be merged has some.
-                        // So we need to add them. Note that any future databases containing classification categories will be
-                        // compared to this one for differences. 
-                        // Update the previous info dictionary to the current one (so it can be compared in the next iteration)
-                        // Set a flag to trigger updating the categories in the merged database to the ones in this dictionary
-                        MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(currentClassificationCategories, previousClassificationCategories);
-                        updateClassificationCategories = true;
+                        // Update the various dictionaries to reflect their current values
+                        MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(mergedClassificationCategories, currentClassificationCategories);
                     }
-                    else if (false == Dictionaries.AreKeysAndTheirStringValuesTheSame(previousClassificationCategories, currentClassificationCategories))
+                    else
                     {
-                        // Both the merged database file and the database file to be merged has classification categories.
-                        // However, they differ, so abort the merge and indicate the error
+                        // System.Diagnostics.Debug.Print("merged failed for classification categories");
                         return DatabaseFileErrorsEnum.ClassificationDictionaryDiffers;
                     }
                 }
             }
 
-            // Create the third part of the query only if the toMergeddb contains a detections table
-            // (as otherwise we don't have to update the detection table in the main ddb.
-            // - Create a temporary Detections table mirroring the one in the toMergeddb (so updates to that don't affect the original ddb)
-            // - Update the Detections Table with both the modified Ids and detectionIDs
-            // - Insert the Detections Table into the main db's Detections Table
-            // Form: CREATE TEMPORARY TABLE tempDetectionsTable AS SELECT * FROM attachedDB.Detections;
-            //       UPDATE TempDetectionsTable SET Id = (offsetId + TempDetectionsTable.Id);
-            //       UPDATE TempDetectionsTable SET DetectionID = (offsetDetectionId + TempDetectionsTable.DetectionId);
-            //       INSERT INTO Detections SELECT * FROM TempDetectionsTable;"
-            // The Classifications form is similar, except it used the classification-specific tables, ids, offsets, etc.
-            if (sourceDetectionsExists)
+
+            // E. The database to merge in has detections, so the SQL query also updates the Detections table.
+
+            if (updateClassifications && updateDetections)
             {
-                // The database to merge in has detections, so the SQL query also updates the Detections table.
                 // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
-                // However, the offeset should be 0 if there are no detections in the main DB, so we can just reusue this as is.
-                // as we will be creating the detection table and then just adding to it.
-                int offsetDetectionId = (destinationDetectionsExists)
-                    ? destinationddb.ScalarGetCountFromSelect(QueryGetMax(Constant.DetectionColumns.DetectionID, Constant.DBTables.Detections))
-                    : 0;
+                // The offeset should be 0 if there are no detections in the main DB, as we will be creating the detection table and then just adding to it.
+                int offsetDetectionId = currentDetectionsExists
+                ? currentDDB.ScalarGetCountFromSelect(QueryGetMax(Constant.DetectionColumns.DetectionID, Constant.DBTables.Detections))
+                : 0;
+                
                 query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedDB, Constant.DBTables.Detections);
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DatabaseColumn.ID, offsetId);
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DetectionColumns.DetectionID, offsetDetectionId);
                 query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Detections, tempDetectionsTable);
 
                 // Similar to the above, we also update the classifications
-                int offsetClassificationId = (destinationDetectionsExists)
-                    ? destinationddb.ScalarGetCountFromSelect(QueryGetMax(Constant.ClassificationColumns.ClassificationID, Constant.DBTables.Classifications))
+                int offsetClassificationId = (currentDetectionsExists)
+                    ? currentDDB.ScalarGetCountFromSelect(QueryGetMax(Constant.ClassificationColumns.ClassificationID, Constant.DBTables.Classifications))
                     : 0;
                 query += QueryCreateTemporaryTableFromExistingTable(tempClassificationsTable, attachedDB, Constant.DBTables.Classifications);
                 query += QueryAddOffsetToIDInTable(tempClassificationsTable, Constant.ClassificationColumns.ClassificationID, offsetClassificationId);
                 query += QueryAddOffsetToIDInTable(tempClassificationsTable, Constant.ClassificationColumns.DetectionID, offsetDetectionId);
                 query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Classifications, tempClassificationsTable);
-
-                if (triggerUpdateInfoValues)
-                {
-                    // This is triggered whenever a higher Megadetector version was found in the database file to be merged in 
-                    // when compared to the merged database file. 
-                    // This means that the merged database file will always have info values from the database with the highest Megadetector version
-                    // Update the info table completely with these new values, and reset the ImageSetTable bounding box threshold
-                    // This is triggered only when the to-be-merged database info table has an MD version higher than what is currently there. 
-                    query += MergeDatabases.UpdateInfoTableWithValues(
-                        (string)currentInfoDictionary[Constant.InfoColumns.Detector],
-                        (string)currentInfoDictionary[Constant.InfoColumns.DetectorVersion],
-                        (string)currentInfoDictionary[Constant.InfoColumns.DetectionCompletionTime],
-                        (string)currentInfoDictionary[Constant.InfoColumns.Classifier],
-                        (string)currentInfoDictionary[Constant.InfoColumns.ClassificationCompletionTime],
-                        (double)currentInfoDictionary[Constant.InfoColumns.TypicalDetectionThreshold],
-                        (double)currentInfoDictionary[Constant.InfoColumns.ConservativeDetectionThreshold],
-                        (double)currentInfoDictionary[Constant.InfoColumns.TypicalClassificationThreshold]);
-                    query += UpdateImageSetTableWithUndefinedBoundingBox();
-                }
-                if (updateClassificationCategories)
-                {
-                    // This is triggered whenever we have to update the classification categories in the table.
-                    // Triggering normally occurs when the merged database has no classification categories, but the database to be merged in does have classification categories.
-                    // Because we always check to see if subsequent classification categories are different (and abort if that is the case),
-                    // this is usually only done once if at least one database has classifcation categories.
-
-                    // Clear the table
-                    query += Sql.DeleteFrom + Constant.DBTables.ClassificationCategories + Sql.Semicolon;
-                    // Add the new values
-                    query += Sql.InsertInto + Constant.DBTables.ClassificationCategories
-                        + Sql.OpenParenthesis + Constant.ClassificationCategoriesColumns.Category + Sql.Comma + Constant.ClassificationCategoriesColumns.Label + Sql.CloseParenthesis + Sql.Values;
-                    foreach (KeyValuePair<string, string> kvp in currentClassificationCategories)
-                    {
-                        query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
-                    }
-                    query = query.Substring(0, query.LastIndexOf(Sql.Comma));
-                    query += Sql.Semicolon;
-                }
             }
             query += Sql.EndTransactionSemiColon;
-            destinationddb.ExecuteNonQuery(query);
+            currentDDB.ExecuteNonQuery(query);
 
             return DatabaseFileErrorsEnum.Ok;
         }
@@ -501,9 +499,9 @@ namespace Timelapse.Database
                 + Constant.InfoColumns.DetectionCompletionTime + Sql.Equal + Sql.Quote(detection_completion_time) + Sql.Comma
                 + Constant.InfoColumns.Classifier + Sql.Equal + Sql.Quote(classifier) + Sql.Comma
                 + Constant.InfoColumns.ClassificationCompletionTime + Sql.Equal + Sql.Quote(classification_completion_time) + Sql.Comma
-                + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal + typical_detection_threshold.ToString() + Sql.Comma
-                + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal + conservative_detection_threshold.ToString() + Sql.Comma
-                + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal + typical_classification_threshold.ToString()
+                + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal + (Math.Round(typical_detection_threshold * 100) / 100).ToString() + Sql.Comma
+                + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal + (Math.Round(conservative_detection_threshold * 100) / 100).ToString() + Sql.Comma
+                + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal + (Math.Round(typical_classification_threshold * 100) / 100).ToString()
                 + Sql.Semicolon;
         }
 

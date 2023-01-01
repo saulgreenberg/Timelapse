@@ -13,45 +13,37 @@ namespace Timelapse.Recognition
     {
         #region Public: Prepare  all recognition-related Database Tables
         // Prepare all recognition-related database tables by creating them, or updating them as needed.
-        public static void PrepareRecognitionTablesAndColumns(SQLiteWrapper database)
+        public static void PrepareRecognitionTablesAndColumns(SQLiteWrapper database, bool existsDBRecognitionTables)
         {
-            PrepareRecognitionTablesAndColumns(database, true, false);
+            PrepareRecognitionTablesAndColumns(database, existsDBRecognitionTables, false);
         }
         public static void PrepareRecognitionTablesAndColumns(SQLiteWrapper database, bool existsDBRecognitionTables, bool clearDBRecognitionData)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
 
-            List<SchemaColumnDefinition> columnDefinitions;
-            // Create the various tables used to hold detection data
-
-            // If these tables already exist, clear their contents as needed.
             if (existsDBRecognitionTables)
             {
-                // All the data tables were previously created. 
-                // So just clear their contents - except for detections - as there is no need to create them
-                List<string> tableList = new List<string>
-                {
-                   Constant.DBTables.Info,
-                   Constant.DBTables.DetectionCategories,
-                   Constant.DBTables.ClassificationCategories,
-                };
-
-                if (clearDBRecognitionData)
-                {
-                    // As directed, start afresh by clearing all detections and classifications as well
-                    tableList.Add(Constant.DBTables.Detections);
-                    tableList.Add(Constant.DBTables.Classifications);
-                }
-
-                // Now clear all the entries in those tables
-                database.DeleteAllRowsInTables(tableList);
-                return;
+                // Case 1. Tables already exist, so clear their contents as indicated.
+                // Always clear info and category tables, but
+                // Only clear detections and recognitions as indicated by the clearDBRecognitionData argument
+                RecognitionDatabases.ClearDetectionTables(database, true, true, true, clearDBRecognitionData, clearDBRecognitionData);
             }
+            else
+            {
+                // Case 2. No recognition tables are present, so create them
+                RecognitionDatabases.CreateRecognitionTables(database);
+            }
+        }
+        #endregion
 
-            // Alternate case. No recognition tables are present, so we need to create them
-            // Info: Create or clear table
-            columnDefinitions = new List<SchemaColumnDefinition>
+        #region Public: Create the various recognition tables
+        // Create the various recognition tables in the database provided.
+        // Assumes that the database exists and that the tables aren't already in them.
+        static public void CreateRecognitionTables(SQLiteWrapper database)
+        {
+            // Info table
+            List<SchemaColumnDefinition> columnDefinitions = new List<SchemaColumnDefinition>
             {
                 new SchemaColumnDefinition(Constant.InfoColumns.InfoID, Timelapse.Sql.IntegerType + Timelapse.Sql.PrimaryKey), // Primary Key
                 new SchemaColumnDefinition(Constant.InfoColumns.Detector,  Sql.StringType),
@@ -65,7 +57,7 @@ namespace Timelapse.Recognition
             };
             database.CreateTable(Constant.DBTables.Info, columnDefinitions);
 
-            // DetectionCategories: create or clear table 
+            // DetectionCategories
             columnDefinitions = new List<SchemaColumnDefinition>
             {
                 new SchemaColumnDefinition(Constant.DetectionCategoriesColumns.Category,  Sql.StringType + Timelapse.Sql.PrimaryKey), // Primary Key
@@ -81,7 +73,7 @@ namespace Timelapse.Recognition
             };
             database.CreateTable(Constant.DBTables.ClassificationCategories, columnDefinitions);
 
-            // Detections: create or clear table 
+            // Detections 
             columnDefinitions = new List<SchemaColumnDefinition>
             {
                 new SchemaColumnDefinition(Constant.DetectionColumns.DetectionID, Timelapse.Sql.IntegerType + Timelapse.Sql.PrimaryKey),
@@ -93,7 +85,7 @@ namespace Timelapse.Recognition
             };
             database.CreateTable(Constant.DBTables.Detections, columnDefinitions);
 
-            // Classifications: create or clear table 
+            // Classifications 
             columnDefinitions = new List<SchemaColumnDefinition>
             {
                 new SchemaColumnDefinition(Constant.ClassificationColumns.ClassificationID, Timelapse.Sql.IntegerType + Timelapse.Sql.PrimaryKey),
@@ -107,19 +99,23 @@ namespace Timelapse.Recognition
         #endregion
 
         #region Public: Clear Detection Tables
-        public static void ClearDetectionTables(SQLiteWrapper database)
+        public static void ClearDetectionTables(SQLiteWrapper database, bool clearInfo, bool clearDetectionCategories, bool clearClassificationCategories, bool clearDetections, bool clearClassifications)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
 
-            List<string> detectionTables = new List<string>
+            // Create a list of tables to clear
+            List<string> detectionTables = new List<string>();
+            if (clearInfo) detectionTables.Add(Constant.DBTables.Info);
+            if (clearDetectionCategories) detectionTables.Add(Constant.DBTables.DetectionCategories);
+            if (clearClassificationCategories) detectionTables.Add(Constant.DBTables.ClassificationCategories);
+            if (clearDetections) detectionTables.Add(Constant.DBTables.Detections);
+            if (clearClassifications) detectionTables.Add(Constant.DBTables.Classifications);
+
+            if (detectionTables.Count > 0)
             {
-                Constant.DBTables.ClassificationCategories,
-                Constant.DBTables.Classifications,
-                Constant.DBTables.DetectionCategories,
-                Constant.DBTables.Detections
-            };
-            database.DeleteAllRowsInTables(detectionTables);
+                database.DeleteAllRowsInTables(detectionTables);
+            }
         }
         #endregion
 

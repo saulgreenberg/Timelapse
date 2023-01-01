@@ -14,7 +14,7 @@ namespace Timelapse.Recognition
     public static class RecognitionUtilities
     {
         #region Get detection info and various category tables from DB as dictionaries
-        public static void GenerateRecognitionDictionariesFromOldDB(string ddbPath, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
+        public static void GenerateRecognitionDictionariesFromDB(string ddbPath, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
         {
             SQLiteWrapper db = new SQLiteWrapper(ddbPath);
             RecognitionUtilities.GenerateRecognitionDictionariesFromDB(db, infoDictionary, detectionCategoriesDictionary, classificationCategoriesDictionary);
@@ -90,6 +90,11 @@ namespace Timelapse.Recognition
             {
                 return true;
             }
+            
+            if (destination == Constant.RecognizerValues.MDVersionUnknown || String.IsNullOrWhiteSpace(destination))
+            {
+                return false;
+            }
             return string.Compare(source, destination) == -1;
         }
         #endregion
@@ -113,9 +118,7 @@ namespace Timelapse.Recognition
             info.detector_metadata.conservative_detection_threshold = (float)Convert.ToDouble(infoDict2[Constant.InfoColumns.ConservativeDetectionThreshold]);
             info.classifier = (string)infoDict2[Constant.InfoColumns.Classifier];
             info.classification_completion_time = (string)infoDict2[Constant.InfoColumns.ClassificationCompletionTime];
-            info.classifier_metadata.typical_classification_threshold = Double.TryParse((string)infoDict2[Constant.InfoColumns.ClassificationCompletionTime], out double typical_lassification_threshold)
-                ? (float)typical_lassification_threshold
-                : Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+            info.classifier_metadata.typical_classification_threshold = (float)Convert.ToDouble(infoDict2[Constant.InfoColumns.TypicalClassificationThreshold]);
             return RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(infoDict1, info);
         }
 
