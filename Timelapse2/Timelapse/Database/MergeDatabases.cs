@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Timelapse.Controls;
 using Timelapse.Enums;
 using Timelapse.Recognition;
@@ -32,8 +34,7 @@ namespace Timelapse.Database
            string rootFolderName,
            string destinationddbFilePath,
            string destinationddbFileName,
-           IProgress<ProgressBarArguments> progress)
-        //string templateddbFilePath, List<string> sourceddbFilePaths, IProgress<ProgressBarArguments> progress)
+           IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             ErrorsAndWarnings errorMessages = new ErrorsAndWarnings();
 
@@ -77,14 +78,19 @@ namespace Timelapse.Database
             Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
             for (int i = 0; i < sourceddbFilePathsCount; i++)
             {
+
                 // Try to merge each database into the merged database
                 await Task.Run(() =>
                 {
+                    if (cancelTokenSource.IsCancellationRequested)
+                    {
+                       return;
+                    }
                     // Report progress, introducing a delay to allow the UI thread to update and to make the progress bar linger on the display
                     progress.Report(new ProgressBarArguments((int)((i + 1) / (double)sourceddbFilePathsCount * 100.0),
                         String.Format("Merging {0}/{1} databases. Please wait...", i + 1, sourceddbFilePathsCount),
                         "Merging...",
-                        false, false));
+                        true, false));
                     Thread.Sleep(250);
                     string message = String.Empty;
                     string trimmedPath = sourceddbFilePaths[i].Substring(rootFolderPath.Length + 1);
@@ -143,8 +149,22 @@ namespace Timelapse.Database
                     {
                         errorMessages.Warnings.Add(String.Format("{0}: {1}        - {2}", trimmedPath, Environment.NewLine, message));
                     }
+
                 }).ConfigureAwait(true);
             }
+            if (cancelTokenSource.IsCancellationRequested)
+            {
+                errorMessages.MergedFiles.Clear();
+                errorMessages.Errors.Clear();
+                errorMessages.Warnings.Clear();
+                errorMessages.Warnings.Add("Merge cancelled.");
+                if (File.Exists(destinationddbFilePath))
+                {
+                    File.Delete(destinationddbFilePath);
+                }
+                return errorMessages;
+            }
+
             // After the merged database is constructed, set the Folder column to the current root folder
             if (!String.IsNullOrEmpty(rootFolderName))
             {

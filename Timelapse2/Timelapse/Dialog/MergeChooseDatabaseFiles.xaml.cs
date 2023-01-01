@@ -45,19 +45,6 @@ namespace Timelapse.Dialog
             // If the merged database file name is included in the source list (e.g., if it was previously created),
             // remove it from the list as a possible source file. Note that, if we can do any merging, we will be over-writing that file.
             this.SourceddbFilePaths.RemoveAll(Item => Item == this.DestinationddbFilePath);
-            // XXX Check to see if the ddbfiles to be merged are valid
-            // Note: This is commented out, as a later part of the merge code does a similar check
-            //foreach (string ddbFile in this.SourceddbFilePaths)
-            //
-            //    // If its not a valid ddbFile, display a dialog and abort
-            //   if (false == Dialogs.DialogIsFileValid(owner, ddbFile))
-            //    {
-            //        // FoundInvalidFiles should be checked after invoking the constructor.
-            //        this.FoundInvalidFiles = true;
-            //        return;
-            //    }
-            //}
-
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -150,16 +137,23 @@ namespace Timelapse.Dialog
                 this.RootFolderName,
                 this.DestinationddbFilePath,
                 this.DestinationddbFileName,
-                this.Progress).ConfigureAwait(true);
+                this.Progress, GlobalReferences.CancelTokenSource).ConfigureAwait(true);
 
             // Turn off progress indicators
             this.BusyCancelIndicator.EnableForSelection(false);
+            this.BusyCancelIndicator.Reset();
             Mouse.OverrideCursor = null;
 
             this.ListboxFileDatabases.Visibility = Visibility.Collapsed;
             this.ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
             bool merged = false;
-            if (errorMessages.Errors.Count != 0)
+
+            if (errorMessages.Warnings.Count == 1 && errorMessages.Warnings[0] == "Merge cancelled.")
+            {
+                this.LabelBanner.Content = "Merge Cancelled.";
+                this.TextBlockFinalMessage.Text = "The merge operation was cancelled";
+            }
+            else if (errorMessages.Errors.Count != 0)
             {
                 this.LabelBanner.Content = "Merge Databases Failed.";
                 this.TextBlockFinalMessage.Text = "The merged database could not be created for the following reasons:";
