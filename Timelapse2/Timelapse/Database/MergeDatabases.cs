@@ -196,9 +196,9 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(currentDDB, nameof(currentDDB));
 
-
             bool updateDetections = false;
             bool updateClassifications = false;
+
             //
             // Part 1. Verify if templates are compatable
             //
@@ -251,7 +251,7 @@ namespace Timelapse.Database
             // Form: ATTACH DATABASE 'toBeMergedDDB' AS attachedDB; 
             //       CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM attachedDB.DataTable;
             //       UPDATE tempDataTable SET Id = (offsetID + tempDataTable.Id);
-            //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) EMD
+            //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) END
             //       INSERT INTO DataTable SELECT * FROM tempDataTable;
             string query = Sql.BeginTransactionSemiColon;
             query += QueryAttachDatabaseAs(toBeMergedDDBPath, attachedDB);

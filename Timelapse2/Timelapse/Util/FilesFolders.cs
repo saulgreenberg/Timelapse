@@ -337,6 +337,12 @@ namespace Timelapse.Util
         // return     "foo"
         public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
         {
+            if (String.Compare(Path.GetDirectoryName(path1), path2) == 0
+                || String.Compare(Path.GetDirectoryName(path1), path2) == 0)
+            {
+                // both paths are identical, but one path contains a file 
+                return String.Empty;
+            }
             if (path1.Length > path2.Length)
             {
                 return Path.GetDirectoryName(path1).Replace(path2 + "\\", "");
