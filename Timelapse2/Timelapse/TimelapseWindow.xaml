@@ -99,14 +99,6 @@
 
                     <Separator />
 
-                    <!-- Import Detections -->
-                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set" IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
-                        <MenuItem.Icon>
-                            <Image Source="Icons/JSONImport_32x.png" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-
-                    <Separator />
 
                     <!-- Export the current image or video file...-->
                     <MenuItem Name="MenuItemExportThisImage" Header="Export (copy) the current image or video _file..." Click="MenuItemExportThisImage_Click" IsEnabled="false" ToolTip="Exports (copies) the displayed image or video file into a location of your choosing">
@@ -289,6 +281,26 @@
                     <Separator/>
 
                     <MenuItem Name="MenuItemSortResort" Header="Refresh the sort" Click="MenuItemSortResort_Click" ToolTip="Refresh the display based on the current  selection and sorting criteria." />
+                </MenuItem>
+
+                <!-- Recognition Menu -->
+                <MenuItem Name="MenuItemRecognitions" Header="_Recognitions" IsEnabled="False" IsTabStop="false" SubmenuOpened="MenuItemRecognitions_SubmenuOpening">
+                    
+                    <MenuItem Name="MenuBoundingBoxSetOptions" Header="Set bounding box options..." Visibility="Visible"
+                              Click="MenuBoundingBoxSetOptions_Click" ToolTip="Set various options for displaying image recognition bounding boxes" />
+                    
+                    <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="Populate a data field with detection counts..." Visibility="Visible"
+                              Click="MenuItemPopulateDataFieldWithDetectionCounts_Click" ToolTip="Populates a data field in your currently selected files with detection counts over a given confidence values" />
+
+                    <Separator />
+                    
+                    <!-- Import Detections -->
+                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set..." IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/JSONImport_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    
                 </MenuItem>
 
 

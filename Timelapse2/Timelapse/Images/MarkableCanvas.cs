@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -321,6 +322,11 @@ namespace Timelapse.Images
         // Hide the magnifiers initially, as the mouse pointer may not be atop the canvas
         private void MarkableCanvas_Loaded(object sender, RoutedEventArgs e)
         {
+            if (DesignerProperties.GetIsInDesignMode(this))
+            {
+                // Prevents a Xaml design mode error 
+                return;
+            }
             MagnifierManager.SetMagnifier(VideoPlayer.Video, OffsetLens);
             this.magnifyingGlass.ZoomFactor = Util.GlobalReferences.TimelapseState.MagnifyingGlassZoomFactor;
             this.magnifyingGlassZoomStep = Constant.MarkableCanvas.MagnifyingGlassZoomIncrement;

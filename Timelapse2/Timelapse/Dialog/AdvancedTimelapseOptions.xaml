@@ -14,7 +14,7 @@
                 <controls:StockMessageControl x:Name="Message" Margin="15,0,15,0" Icon="Question"
                             Title="Preferences (applied every time you run Timelapse on this machine)"/>
                 <!--Automated Image Recognition-->
-                <GroupBox Name="AutomatedImageRecognitionPanel" Header="Automated Image Recognition"  VerticalAlignment="Top" FontWeight="Bold" FontSize="12"  Margin="15,0,15,5" Padding="10,0,10,0" Width="776" Height="Auto" IsEnabled="False">
+                <!--<GroupBox Name="AutomatedImageRecognitionPanel" Header="Automated Image Recognition"  VerticalAlignment="Top" FontWeight="Bold" FontSize="12"  Margin="15,0,15,5" Padding="10,0,10,0" Width="776" Height="Auto" IsEnabled="False">
                     <DockPanel Width="751">
                         <StackPanel Orientation="Vertical" >
                             <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" FontWeight="Normal" FontStyle="Normal" FontSize="12" Width="656"> 
@@ -37,7 +37,7 @@
                         </StackPanel>
                         <Button Name="ResetDetections" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDetections_Click"></Button>
                     </DockPanel>
-                </GroupBox>
+                </GroupBox>-->
 
                 <!--Exporting Data to a CSV File -->
                 <GroupBox Header="Exporting data to a CSV File " FontWeight="Bold" FontSize="12"  Margin="15,0,15,5" Padding="10,0,10,0"  Width="776" Height="Auto">

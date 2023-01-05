@@ -71,6 +71,7 @@ namespace Timelapse.Dialog
         }
 
         #endregion
+
         #region Button callbacks
         private async void Start_Click(object sender, RoutedEventArgs e)
         {

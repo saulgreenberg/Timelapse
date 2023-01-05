@@ -82,7 +82,7 @@ namespace Timelapse.Database
                 {
                     if (cancelTokenSource.IsCancellationRequested)
                     {
-                       return;
+                        return;
                     }
                     // Report progress, introducing a delay to allow the UI thread to update and to make the progress bar linger on the display
                     progress.Report(new ProgressBarArguments((int)((i + 1) / (double)sourceddbFilePathsCount * 100.0),

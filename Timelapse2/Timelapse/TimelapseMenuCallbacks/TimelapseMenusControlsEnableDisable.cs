@@ -20,7 +20,6 @@ namespace Timelapse
             this.MenuItemAddFilesToImageSet.IsEnabled = imageSetAvailable;
             this.MenuItemLoadFiles.IsEnabled = !imageSetAvailable;
             this.MenuItemRecentImageSets.IsEnabled = !imageSetAvailable;
-            this.MenuItemImportDetectionData.IsEnabled = filesSelected;
             this.MenuItemExportThisImage.IsEnabled = filesSelected;
             this.MenuItemExportSelectedImages.IsEnabled = filesSelected;
             this.MenuItemExportAsCsvAndPreview.IsEnabled = filesSelected;
@@ -59,6 +58,10 @@ namespace Timelapse
 
             // Sort menu
             this.MenuItemSort.IsEnabled = filesSelected;
+
+            // Recognitions menu
+            this.MenuItemRecognitions.IsEnabled = filesSelected;
+            this.MenuItemImportDetectionData.IsEnabled = filesSelected;
 
             // Windows menu is always enabled
 

@@ -1892,7 +1892,7 @@ namespace Timelapse.Database
         public void IndexCreateForDetectionsAndClassificationsIfNotExists()
         {
             this.Database.IndexCreateIfNotExists(Constant.DatabaseValues.IndexID, Constant.DBTables.Detections, Constant.DatabaseColumn.ID);
-            this.Database.IndexCreateIfNotExists(Constant.DatabaseValues.IndexDetectionID, Constant.DBTables.Classifications, Constant.DetectionColumns.DetectionID);
+            this.Database.IndexCreateIfNotExists(Constant.DatabaseValues.IndexClassificationID, Constant.DBTables.Classifications, Constant.DetectionColumns.DetectionID);
         }
 
         public void IndexCreateForFileAndRelativePathIfNotExists()
@@ -2366,7 +2366,7 @@ namespace Timelapse.Database
                             string file = Path.GetFileName(image.file);
                             string relativePath = Path.GetDirectoryName(image.file);
 
-                            if (i % 10000 == 0)
+                            if (i % 1000 == 0)
                             {
                                 if (cancelTokenSource.Token.IsCancellationRequested)
                                 {
@@ -2396,15 +2396,16 @@ namespace Timelapse.Database
 
                         if (queries.Count > 0)
                         {
-                            this.Database.ExecuteNonQueryWrappedInBeginEnd(queries, progress, "Removing unneeded recognitions");
+                            // If the index wasn't created previously, make sure its there as otherwise its painfully slow.
+                            this.IndexCreateForDetectionsAndClassificationsIfNotExists();
+                            // Delete these detections and classifications
+                            this.Database.ExecuteNonQueryWrappedInBeginEnd(queries, progress, "Removing unneeded recognitions", 1000);
                         }
                         // At this point, we have deleted the detections and classifications from those images that are both in the
                         // db and the json, which means were are ready to replace them. 
                     }
 
                     // At this point the db no longer contains detections for images referenced in the json file
-                    #endregion
-
 
                     // PERFORMANCE This check is likely somewhat slow. Check it on large detection files / dbs 
                     if (this.CompareRecognizerAndDBFolders(jsonRecognizer, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth) == false)
@@ -2438,6 +2439,7 @@ namespace Timelapse.Database
             }).ConfigureAwait(true);
             return result;
         }
+        #endregion
 
         #region Update Json with default values as needed
         // Update the jsonRecognizer info table as needed to ensure it is filled in with reasonable values
@@ -2828,6 +2830,60 @@ namespace Timelapse.Database
                 this.detectionExists = this.Database.TableExistsAndNotEmpty(Constant.DBTables.Detections);
             }
             return this.detectionExists == true;
+        }
+        #endregion
+
+        #region Detections: Counting
+        // Given a Counter DataLabel, count the number of detections associated with each image, and set that image's counter to that count
+        public bool DetectionsAddCountToCounter(string counterDataLabel, double confidenceValue, IProgress<ProgressBarArguments> progress)
+        {
+            if (this?.Database == null || false == this.DetectionsExists())
+            {
+                return false;
+            }
+            progress.Report(new ProgressBarArguments(0, "Counting detections...", false, true));
+            Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+
+            Dictionary<long, int> dict = new Dictionary<long, int>();
+            foreach (ImageRow image in this.FileTable)
+            {
+                int count = 0;
+                BoundingBoxes bboxes = Util.GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(image.ID);
+                foreach (BoundingBox bbox in bboxes.Boxes)
+                {
+                    if (bbox.Confidence >= confidenceValue)
+                    {
+                        count++;
+                    }
+                }
+                dict.Add(image.ID, count);
+                image.SetValueFromDatabaseString(counterDataLabel, count.ToString());
+            }
+
+            ColumnTuplesWithWhere columnTuplesWithWhere;
+            List<ColumnTuplesWithWhere> columnTuplesWithWhereList = new List<ColumnTuplesWithWhere>();
+            foreach (KeyValuePair<long, int> kvp in dict)
+            {
+                // Update the imageRow in the file table with the new value
+                //this.UpdateFile(kvp.Key, counterDataLabel, kvp.Value.ToString());
+
+                // Add a query to update the row in the database
+                columnTuplesWithWhere = new ColumnTuplesWithWhere();
+                columnTuplesWithWhere.Columns.Add(new ColumnTuple(counterDataLabel, kvp.Value.ToString()));
+                columnTuplesWithWhere.SetWhere(kvp.Key);
+                columnTuplesWithWhereList.Add(columnTuplesWithWhere);
+            }
+
+            progress.Report(new ProgressBarArguments(0, "Updating database...", false, true));
+            Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+            if (columnTuplesWithWhereList.Count > 0)
+            {
+                // Update the Database
+                this.UpdateFiles(columnTuplesWithWhereList);
+                // Force an update of the current image in case the current values have changed
+
+            }
+            return true;
         }
         #endregion
 

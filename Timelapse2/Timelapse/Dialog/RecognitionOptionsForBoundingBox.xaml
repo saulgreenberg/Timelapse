@@ -1,0 +1,62 @@
+﻿<Window x:Class="Timelapse.Dialog.RecognitionOptionsForBoundingBox"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:Timelapse.Dialog"
+        mc:Ignorable="d"
+        Title="Set bounding box options" Height="530" MinHeight="530" Width="800" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+            <controls:StockMessageControl x:Name="Message" Grid.Row="0" 
+                            Icon="Question"
+                            Title="Set bounding box options for image recognition"
+                            What="Control when and how bounding boxes are displayed over detected entities."                                                             
+                            Result="Timelapse can import, show and let you filter images using image recognition files produced by a 3rd parth (see manual). 
+                                  &#10;When the image recognizer detects an entity in an image, it can draw a bounding box around it. "
+                            Solution="&#x2022; Annotate bounding box:  Title each bounding box with the type of entity detected. 
+                                     &#10;&#x2022; Use color-blind friendly colors: The bounding box colors, which reflect the type of entity detected, are made more perceptable
+                                     &#10;&#x2022; Display bounding box slider: Bounding boxes are displayed only if their confidence value is above the chosen threshold  
+                                     &#10;&#x2022; Reset: Restore default values "         
+                            Hint="While the default confidence value is a good starting point, you may want to adjust it to better fit your images.
+                                  &#10;&#x2022; too low confidence values may result in spurious bounding boxes.
+                                  &#10;&#x2022; too high confidence values may hide bounding boxes that would have been useful."
+                            ShowExplanationVisibility="False" />
+        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1"></Rectangle>
+        <!--Automated Image Recognition-->
+        <GroupBox Name="AutomatedImageRecognitionPanel" Header="Bounding box options"  Grid.Row="2" VerticalAlignment="Top" FontWeight="Bold" FontSize="12"  Margin="15,20,15,5" Padding="10,0,10,0" Width="776" Height="Auto" IsEnabled="True">
+            <DockPanel Width="751">
+                <StackPanel Orientation="Vertical" >
+                    <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" FontWeight="Normal" FontStyle="Normal" FontSize="12" Width="656" Margin="0,10,0,0"> 
+                                       <Italic><Bold>Note:</Bold> An image set with recognitions must be loaded to activate this panel.</Italic>
+                    </TextBlock>
+                    <StackPanel Orientation="Vertical" DockPanel.Dock="Top" Margin="0,10,0,0" >
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,0" >
+                            <CheckBox Name="CheckBoxBoundingBoxAnnotate" Content="Annotate bounding box" Margin="27,0,0,0" FontWeight="Normal"  IsChecked ="True" ToolTip="Annotate each bounding box with a label or menu containing the recognizer's classification.&#x0a;This adds information at the expense of some clutter." Click="CheckBoxBounidngBoxAnnotate_Click"/>
+                            <CheckBox Name="CheckBoxBoundingBoxColorBlindFriendlyColors" Content="Use color-blind friendly colors" Margin="15,0,0,0" ToolTip="Apply a bounding box color without transparency that is somewhat better for color-blind people" FontWeight="Normal" Click="CheckBoxBounidngBoxColorBlindRinedlyColors_Click"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top"  Margin="30,10,0,0">
+                            <Slider Name="BoundingBoxDisplayThresholdSlider" Width="200" ValueChanged="BoundingBoxDisplayThreshold_ValueChanged" VerticalAlignment="Top" IsSnapToTickEnabled="True" TickFrequency="0.05" Minimum="0" Maximum="1" LargeChange="0.05"/>
+                            <TextBlock Name="BoundingBoxThresholdDisplayValue"  FontWeight="Normal" Text="0.00" MinWidth="40"/>
+                            <TextBlock Name="BoundingBoxThresholdDisplayText" Text="Display bounding boxes at or above this confidence threshold" FontWeight="Normal"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </StackPanel>
+                <Button Name="ResetDetections" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDetections_Click"></Button>
+            </DockPanel>
+        </GroupBox>
+        <Button Name="OkButton" Content="Okay" FontWeight="Normal" Height="30" Width="60" Margin="0,0,20,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"  Grid.Row="4" Click="OkButton_Click"></Button>
+    </Grid>
+</Window>

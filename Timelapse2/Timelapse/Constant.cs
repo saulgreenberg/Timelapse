@@ -193,7 +193,7 @@ namespace Timelapse.Constant
         public const string IndexRelativePathFile = "IndexRelativePathFile";
         public const string IndexFile = "IndexFile";
         public const string IndexID = "IndexDetectionID";
-        public const string IndexDetectionID = "IndexDetectionID";
+        public const string IndexClassificationID = "IndexClassificationID";
 
         // Marker values
         public const string DefaultMarkerValue = "[]";    // Default is the empty Json value 

@@ -204,6 +204,12 @@
     <Compile Include="Database\MergeDatabases.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
+    <Compile Include="Dialog\PopulateFieldWithDetectionCounts.xaml.cs">
+      <DependentUpon>PopulateFieldWithDetectionCounts.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RecognitionOptionsForBoundingBox.xaml.cs">
+      <DependentUpon>RecognitionOptionsForBoundingBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Recognition\RecognitionDatabases.cs" />
     <Compile Include="Recognition\Recognizer.cs" />
     <Compile Include="Recognition\RecognitionSelections.cs" />
@@ -372,6 +378,7 @@
     <Compile Include="Images\ZoomBookmark.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="DataStructures\MetadataOnLoad.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuRecognitions.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseDuplicates.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseCheckAndCorrectFolders.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseDetections.cs" />
@@ -489,6 +496,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\PopulateFieldWithDetectionCounts.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionOptionsForBoundingBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

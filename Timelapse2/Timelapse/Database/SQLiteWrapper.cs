@@ -319,7 +319,7 @@ namespace Timelapse.Database
             }
 
             // Now try to invoke the batch queries
-            this.ExecuteNonQueryWrappedInBeginEnd(queries, progress, progressString);
+            this.ExecuteNonQueryWrappedInBeginEnd(queries, progress, progressString, 10000);
         }
         #endregion
 
@@ -649,10 +649,10 @@ namespace Timelapse.Database
 
         public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements)
         {
-            ExecuteNonQueryWrappedInBeginEnd(statements, null, String.Empty);
+            ExecuteNonQueryWrappedInBeginEnd(statements, null, String.Empty, 0);
         }
 
-        public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString)
+        public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(statements, nameof(statements));
@@ -664,6 +664,11 @@ namespace Timelapse.Database
                 using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
                 {
                     connection.Open();
+                    if (progress != null)
+                    {
+                        progress.Report(new ProgressBarArguments(0, progressString, false, true));
+                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                    }
 
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
@@ -674,6 +679,13 @@ namespace Timelapse.Database
                         int i = 0;
                         foreach (string statement in statements)
                         {
+                            if (progress != null && i % progressFrequency == 0)
+                            {
+                                int percent = Convert.ToInt32(i * 100.0 / statementsCount);
+                                progress.Report(new ProgressBarArguments(percent, String.Format("{0} ({1:N0}/{2:N0})...", progressString, i, statementsCount), false, false));
+                                Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+
+                            }
                             // capture the most recent statement so it's available for debugging
                             mostRecentStatement = statement;
                             statementsInQuery++;
@@ -688,6 +700,8 @@ namespace Timelapse.Database
 
                             command.CommandText = statement;
                             //System.Diagnostics.Debug.Print(command.CommandText);
+                            // Note: Its more efficient to do it this way than to send
+                            // a bunch of semicolon-separated statements as a single query
                             rowsUpdated += command.ExecuteNonQuery();
 
                             // END
