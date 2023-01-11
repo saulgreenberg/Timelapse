@@ -830,7 +830,11 @@ namespace Timelapse
                 // If its a valid template, load the images. Otherwise, just display the appropriate error dialog
                 if (Dialogs.DialogIsFileValid(this, templateDatabasePath))
                 {
-                    await this.DoLoadImages(templateDatabasePath);
+                    if (false == await this.DoLoadImages(templateDatabasePath))
+                    {
+                        this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                    }
+                    Mouse.OverrideCursor = null;
                 }
                 dropEvent.Handled = true;
             }

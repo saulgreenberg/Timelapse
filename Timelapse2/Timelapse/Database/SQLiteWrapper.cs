@@ -856,8 +856,12 @@ namespace Timelapse.Database
         private static void CopyAllValuesFromTable(SQLiteConnection connection, string schemaFromTable, string dataSourceTable, string dataDestinationTable)
         {
             string commaSeparatedColumns = GetSchemaColumnNamesAsString(connection, schemaFromTable);
+            if (String.IsNullOrEmpty(commaSeparatedColumns))
+            {
+                System.Diagnostics.Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
+                return;
+            }
             string sql = Sql.InsertInto + dataDestinationTable + Sql.OpenParenthesis + commaSeparatedColumns + Sql.CloseParenthesis + Sql.Select + commaSeparatedColumns + Sql.From + dataSourceTable;
-
             using (SQLiteCommand command = new SQLiteCommand(sql, connection))
             {
                 command.ExecuteNonQuery();

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -47,23 +48,34 @@ namespace Timelapse
                 // If its not a valid template, display a dialog and abort
                 if (false == Dialogs.DialogIsFileValid(this, templateDatabasePath))
                 {
-                    // Add it to the list,as its originally invalid, but the user was asked to update it
+                    // Add it to the list, as its originally invalid, but the user was asked to update it
                     // So its likely ok now.
                     this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
                     this.RecentFileSets_Refresh();
                     return;
                 }
-                await this.DoLoadImages(templateDatabasePath);
+                if (false == await this.DoLoadImages(templateDatabasePath))
+                {
+                    this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                }
+                Mouse.OverrideCursor = null;
             }
         }
 
-        private async Task DoLoadImages(string templateDatabasePath)
+        private async Task<bool> DoLoadImages(string templateDatabasePath)
         {
             Mouse.OverrideCursor = Cursors.Wait;
             this.StatusBar.SetMessage("Loading images, please wait...");
-            await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
-            this.StatusBar.SetMessage("Image set is now loaded.");
-            Mouse.OverrideCursor = null;
+            if (false == await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true))
+            {
+                this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                return false;
+            }
+            else
+            {
+                Mouse.OverrideCursor = null;
+                return true;
+            }
         }
 
         // Load a recently used image set
@@ -77,15 +89,10 @@ namespace Timelapse
                 return;
             }
 
-            Mouse.OverrideCursor = Cursors.Wait;
-            this.StatusBar.SetMessage("Loading images, please wait...");
-            bool result = await this.TryOpenTemplateAndBeginLoadFoldersAsync(recentTemplatePath).ConfigureAwait(true);
-            if (result == false)
+            if (false == await this.DoLoadImages(recentTemplatePath))
             {
-                this.State.MostRecentImageSets.TryRemove(recentTemplatePath);
-                this.RecentFileSets_Refresh();
+                this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
             }
-            this.StatusBar.SetMessage("Image set is now loaded.");
             Mouse.OverrideCursor = null;
         }
 
@@ -96,11 +103,14 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 this.StatusBar.SetMessage("Adding images, please wait...");
-                if (false == this.TryBeginImageFolderLoad(this.FolderPath, folderPath))
+                if (false == this.TryBeginImageFolderLoad(this.FolderPath, folderPath, false))
                 {
                     this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
                 }
-                this.StatusBar.SetMessage("Images added to the image set.");
+                else
+                {
+                    this.StatusBar.SetMessage("Images added to the image set.");
+                }
                 Mouse.OverrideCursor = null;
             }
         }
