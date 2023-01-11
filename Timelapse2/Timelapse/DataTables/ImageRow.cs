@@ -385,7 +385,7 @@ namespace Timelapse.Database
                 try
                 {
                     // delete the Destination file if it already exists.
-                    System.IO.File.Delete(sourceFilePath);
+                    Util.FilesFolders.TryDeleteFileIfExists(sourceFilePath);
                     return true;
                 }
                 catch (UnauthorizedAccessException exception)
@@ -404,33 +404,15 @@ namespace Timelapse.Database
 
             // Move the file to the backup location.           
             string destinationFilePath = Path.Combine(deletedFilesFolderPath, this.File);
+           
             if (System.IO.File.Exists(destinationFilePath))
             {
-                try
-                {
-                    // Because move doesn't allow overwriting, delete the destination file if it already exists.
-                    System.IO.File.Delete(sourceFilePath);
-                    return true;
-                }
-                catch (UnauthorizedAccessException exception)
-                {
-                    TracePrint.PrintMessage("Could not delete " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
-                    return false;
-                }
+                return Util.FilesFolders.TryDeleteFileIfExists(destinationFilePath);
             }
 
-            try
-            {
-                System.IO.File.Move(sourceFilePath, destinationFilePath);
-                return true;
-            }
-            catch (Exception exception)
-            {
-                // This may occur if for some reason we could not move the file, for example, if we have loaded the image in a way that it locks the file.
-                // I've changed image loading to avoid this, but its something to watch out for.
-                TracePrint.PrintMessage("Could not move " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
-                return false;
-            }
+            // A failure may occur if for some reason we could not move the file, for example, if we have loaded the image in a way that it locks the file.
+            // I've changed image loading to avoid this, but its something to watch out for.
+            return Util.FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
         }
         #endregion
 

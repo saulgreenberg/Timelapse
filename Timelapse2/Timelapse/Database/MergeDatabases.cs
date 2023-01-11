@@ -56,7 +56,7 @@ namespace Timelapse.Database
                 // Backup the old merge file by moving it to the backup folder 
                 // Note that we do the move instead of copy as we will be overwriting the file anyways
                 backupMade = FileBackup.TryCreateBackup(destinationddbFilePath, true);
-                File.Delete(destinationddbFilePath);
+                Util.FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
             }
 
             FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationddbFilePath, templateDatabase).ConfigureAwait(true);
@@ -156,10 +156,7 @@ namespace Timelapse.Database
                 errorMessages.Errors.Clear();
                 errorMessages.Warnings.Clear();
                 errorMessages.Warnings.Add("Merge cancelled.");
-                if (File.Exists(destinationddbFilePath))
-                {
-                    File.Delete(destinationddbFilePath);
-                }
+                Util.FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
                 return errorMessages;
             }
 

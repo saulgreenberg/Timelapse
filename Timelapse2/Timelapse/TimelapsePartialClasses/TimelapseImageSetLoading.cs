@@ -53,8 +53,9 @@ namespace Timelapse
         #region TryOpenTemplateAndBeginLoadFoldersAsync
         // Load the specified database template and then the associated images. 
         // templateDatabasePath is the Fully qualified path to the template database file.
-        // Returns true only if both the template and image database file are loaded (regardless of whether any images were loaded) , false otherwise
-        private async Task<bool> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
+        // Returns the first tuple of true only if both the template and image database file are loaded (regardless of whether any images were loaded) , false otherwise
+        // Returns the second tuple of the ddb file if it has to be deleted on failure
+        private async Task<Tuple<bool,string>> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
         {
             this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
             this.RecentFileSets_Refresh();
@@ -68,7 +69,7 @@ namespace Timelapse
                 // Notify the user the template couldn't be loaded rather than silently doing nothing
                 Mouse.OverrideCursor = null;
                 Dialogs.TemplateFileNotLoadedAsCorruptDialog(this, templateDatabasePath);
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             string unknownTypes = this.templateDatabase.AreControlsOfKnownTypes();
@@ -78,7 +79,7 @@ namespace Timelapse
                 // This could be because we are trying to open a template with an old version of Timelapse
                 // that doesn't know about newer types.
                 Dialogs.TemplateIncludesControlOfUnknownType(this, unknownTypes);
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // The .tdb templateDatabase should now be loaded
@@ -87,7 +88,7 @@ namespace Timelapse
             if (this.TrySelectDatabaseFile(templateDatabasePath, out string fileDatabaseFilePath, out bool importImages) == false)
             {
                 // No image database file was selected
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
             else
             {   // XXXX THIS IS WHERE WE SHOULD CHECK THE DATAFILE. CAN WE DO IT BEFORE OPENING THE TEMPLATE?
@@ -95,7 +96,8 @@ namespace Timelapse
                 if (false == Dialogs.DialogIsFileValid(this, fileDatabaseFilePath))
                 {
                     // System.Diagnostics.Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
-                    return false;
+                    // If we are trying to import images for the first time, return the newly created ddb file
+                    return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
                 }
             }
 
@@ -104,7 +106,7 @@ namespace Timelapse
                 // There are no .ddb files in this folder, which means Timelapse would normally try to create one.
                 // But if Timelapse was started in a ReadOnly state, that is not allowed. Tell the user, and abort.
                 Dialogs.ViewOnlySoDatabaseCannotBeCreated(this);
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // Check the file path length of the .ddb file and notify the user the ddb couldn't be loaded because its path is too long
@@ -112,6 +114,7 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.DatabasePathTooLongDialog(this, fileDatabaseFilePath);
+                return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
                 //return false;
             }
 
@@ -120,6 +123,7 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.BackupPathTooLongDialog(this);
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // Before fully loading an existing image database, 
@@ -145,7 +149,7 @@ namespace Timelapse
                         {
                             // user indicates exiting rather than continuing.
                             Application.Current.Shutdown();
-                            return false;
+                            return new Tuple<bool, string>(false, String.Empty);
                         }
                         else
                         {
@@ -179,8 +183,8 @@ namespace Timelapse
                     bool isEmpty = File.Exists(fileDatabaseFilePath) && new FileInfo(fileDatabaseFilePath).Length == 0;
                     Mouse.OverrideCursor = null;
                     Dialogs.DatabaseFileNotLoadedAsCorruptDialog(this, fileDatabaseFilePath, isEmpty);
-                    return false;
-                };
+                    return new Tuple<bool, string>(false, String.Empty);
+                }
             }
 
             // At this point:
@@ -193,7 +197,7 @@ namespace Timelapse
             {
                 // This happens if there is an unrecognized control
                 Dialogs.TemplateIncludesControlOfUnknownType(this, "unknown control in the Timelapse .ddb data file.");
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // The next test is to test and syncronize (if needed) the default values stored in the fileDB table schema to those stored in the template
@@ -247,23 +251,27 @@ namespace Timelapse
             // If this is a new image database, try to load images (if any) from the folder...  
             if (importImages)
             {
-                this.TryBeginImageFolderLoad(this.FolderPath, this.FolderPath);
+                if (false == this.TryBeginImageFolderLoad(this.FolderPath, this.FolderPath, true))
+                {
+                    return new Tuple<bool, string>(false, fileDatabaseFilePath);
+                }
             }
             else
             {
                 await this.OnFolderLoadingCompleteAsync(false).ConfigureAwait(true);
             }
-            return true;
+            return  new Tuple<bool, string>(true, String.Empty);
         }
         #endregion
 
         #region TryBeginImageFolderLoad
         [HandleProcessCorruptedStateExceptions]
         // out parameters can't be used in anonymous methods, so a separate pointer to backgroundWorker is required for return to the caller
-        private bool TryBeginImageFolderLoad(string imageSetFolderPath, string selectedFolderPath)
+        private bool TryBeginImageFolderLoad(string imageSetFolderPath, string selectedFolderPath, bool isFirstTimeLoad)
         {
             List<FileInfo> filesToAdd = new List<FileInfo>();
             List<string> filesSkipped = new List<string>();
+            bool isCancelled = false;
 
             // Generate FileInfo list for every single image / video file in the folder path (including subfolders). These become the files to add to the database
             // PERFORMANCE - takes modest but noticable time to do if there are a huge number of files. 
@@ -307,6 +315,9 @@ namespace Timelapse
                 CurrentPass = 1
             };
 
+            //
+            // Do work
+            //
             backgroundWorker.DoWork += (ow, ea) =>
             {
                 ImageSetLoader loader = new ImageSetLoader(imageSetFolderPath, filesToAdd, this.DataHandler);
@@ -319,6 +330,9 @@ namespace Timelapse
                 backgroundWorker.ReportProgress(0, folderLoadProgress);
             };
 
+            //
+            // ProgressChanged
+            //
             backgroundWorker.ProgressChanged += (o, ea) =>
             {
                 // this gets called on the UI thread
@@ -328,29 +342,43 @@ namespace Timelapse
                 {
                     Dialogs.FilePathTooLongDialog(this, filesSkipped);
                 }
-                if (folderLoadProgress.CurrentPass == 1 && folderLoadProgress.CurrentFile == 0)
+                string message = String.Empty;
+                if (isCancelled)
                 {
-                    // skip the 0th file of the 1st pass, as there is not really much of interest to show
-                    return;
-                }
-                string message = (folderLoadProgress.TotalPasses > 1) ? String.Format("Pass {0}/{1}{2}", folderLoadProgress.CurrentPass, folderLoadProgress.TotalPasses, Environment.NewLine) : String.Empty;
-                if (folderLoadProgress.CurrentPass == 1 && folderLoadProgress.CurrentFile == folderLoadProgress.TotalFiles)
-                {
-                    message = String.Format("{0}Finalizing analysis of {1} files - could take several minutes ", message, folderLoadProgress.TotalFiles);
+                    // The user has cancelled the load
+                    // I suspect this never gets displayed as progress changed should be surpressed after a cancel, but just in case.
+                    message = "Cancelling...";
                 }
                 else
                 {
-                    string what = (folderLoadProgress.CurrentPass == 1) ? "Analyzing file" : "Adding files to database";
-                    message = (folderLoadProgress.CurrentPass == 2 && folderLoadProgress.CurrentFile == 0)
-                        ? String.Format("{0}{1} ...", message, what)
-                        : String.Format("{0}{1} {2} of {3} ({4})", message, what, folderLoadProgress.CurrentFile, folderLoadProgress.TotalFiles, folderLoadProgress.CurrentFileName);
+                    message = (folderLoadProgress.TotalPasses > 1) ? String.Format("Pass {0}/{1}{2}", folderLoadProgress.CurrentPass, folderLoadProgress.TotalPasses, Environment.NewLine) : String.Empty;
+                    if (folderLoadProgress.CurrentPass == 1 && folderLoadProgress.CurrentFile == folderLoadProgress.TotalFiles)
+                    {
+                        // I suspect this never gets displayed, but just in case.
+                        message = String.Format("{0}Finalizing analysis of {1} files - could take several minutes ", message, folderLoadProgress.TotalFiles);
+                    }
+                    else
+                    {
+                        string what = (folderLoadProgress.CurrentPass == 1) ? "Analyzing file" : "Adding files to database";
+                        message = (folderLoadProgress.CurrentPass == 2 && folderLoadProgress.CurrentFile == 0)
+                            ? String.Format("{0}{1} ...", message, what)
+                            : String.Format("{0}{1} {2} of {3}", message, what, folderLoadProgress.CurrentFile, folderLoadProgress.TotalFiles);
+                    }
                 }
 
-                this.UpdateFolderLoadProgress(this.BusyCancelIndicator, folderLoadProgress.BitmapSource, ea.ProgressPercentage, message, false, false);
+                // Enable the cancel button only on Pass 1.
+                // SAULXXX I suppose we could do it on Pass 2 as well,
+                //         but since the database is already being updated (and because its relatively fast), we may as well keep on going.
+                //         If I do decide to do so, we will have to somehow have to act on the cancellation token in the database update code.
+                bool enableCancelButton = folderLoadProgress.CurrentPass <= 1;
+                this.UpdateFolderLoadProgress(this.BusyCancelIndicator, folderLoadProgress.BitmapSource, ea.ProgressPercentage, message, enableCancelButton, false);
                 this.StatusBar.SetCurrentFile(folderLoadProgress.CurrentFile);
                 this.StatusBar.SetCount(folderLoadProgress.TotalFiles);
             };
 
+            //
+            // RunWorkerCompleted
+            //
             backgroundWorker.RunWorkerCompleted += async (o, ea) =>
             {
                 // BackgroundWorker aborts execution on an exception and transfers it to completion for handling
@@ -361,6 +389,36 @@ namespace Timelapse
                 if (ea.Error != null)
                 {
                     throw new FileLoadException("Folder loading failed unexpectedly.  See inner exception for details.", ea.Error);
+                }
+
+                if (GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                {
+                    // System.Diagnostics.Debug.Print("Cancelled: In BackgroundWorkerCompleted");
+                    isCancelled = true;
+                    // Stop the ExifToolManager if it was invoked while loading files, which can occurs when populating metadata to a file via the EXIFTool on load.
+                    //this.State.ExifToolManager.Stop();
+
+                    if (isFirstTimeLoad)
+                    {
+                        // If the cancel occured when loading images for the first time, we need to do some minimal cleanup
+                        // Reset everything to the Timelapse initial state with no image set loaded. This includes:
+                        // - closing the image set
+                        // - deleting the .ddb file (as its initial load was never completed)
+
+                        // Get the .ddb file path as we will be deleting it.
+                        string filePathToDelete = isFirstTimeLoad && this.DataHandler?.FileDatabase != null && File.Exists(this.DataHandler.FileDatabase.FilePath)
+                        ? this.DataHandler.FileDatabase.FilePath
+                        : String.Empty;
+                    
+                        this.CloseImageSet();
+                        this.State.ExifToolManager.Stop();
+                        this.BusyCancelIndicator.Reset();
+                        this.FileNavigatorSlider.Visibility = Visibility.Visible;
+                        this.StatusBar.SetMessage("Cancelled loading of image set");
+                        Mouse.OverrideCursor = null;
+                        Util.FilesFolders.TryDeleteFileIfExists(filePathToDelete);
+                        return;
+                    }
                 }
 
                 // Create an index on RelativePath, File,and RelativePath/File if it doesn't already exist
@@ -375,22 +433,32 @@ namespace Timelapse
                 // Note that if the magnifier is enabled, we temporarily hide so it doesn't appear in the background 
                 bool saveMagnifierState = this.MarkableCanvas.MagnifiersEnabled;
                 this.MarkableCanvas.MagnifiersEnabled = false;
-                this.StatusBar.SetMessage(folderLoadProgress.TotalFiles + " files are now loaded");
                 this.MarkableCanvas.MagnifiersEnabled = saveMagnifierState;
 
                 // Stop the ExifToolManager if it was invoked while loading files, which can occurs when populating metadata to a file via the EXIFTool on load.
                 this.State.ExifToolManager.Stop();
 
-                this.BusyCancelIndicator.IsBusy = false; // Hide the busy indicator
+                this.BusyCancelIndicator.Reset(); // Hide the busy indicator and reset the cancel token
+
+                if (isCancelled)
+                {
+                    this.StatusBar.SetMessage("Cancelled adding files to image set ");
+                }
+                else
+                {
+                    this.StatusBar.SetMessage("Loading completed");
+                }
+                Mouse.OverrideCursor = null;
             };
 
+            // Background worker initialization
             // Set up the user interface to show feedback
-            this.BusyCancelIndicator.IsBusy = true; // Display the busy indicator
-
             this.FileNavigatorSlider.Visibility = Visibility.Collapsed;
-            // First feedback message
-            this.UpdateFolderLoadProgress(GlobalReferences.BusyCancelIndicator, null, 0, String.Format("Initializing...{0}Analyzing and loading {1} files ", Environment.NewLine, filesToAdd.Count), false, false);
-            this.StatusBar.SetMessage("Loading folders...");
+            this.BusyCancelIndicator.IsBusy = true; // Display the busy indicator
+            this.StatusBar.SetMessage("Loading image set. Please wait...");
+
+            // Do the work. 
+            // Any cleanup is done in the BackgroundWorkerCompleted, including displaying the various final messages.
             backgroundWorker.RunWorkerAsync();
             return true;
         }

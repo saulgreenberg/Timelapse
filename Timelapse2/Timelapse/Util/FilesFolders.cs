@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Xaml;
 using Timelapse.Database;
 using Timelapse.Enums;
 
@@ -13,7 +14,51 @@ namespace Timelapse.Util
     /// </summary>
     public static class FilesFolders
     {
+        #region Try versions for file utilities
 
+        // Try to delete the indicated file
+        public static bool TryDeleteFileIfExists(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    File.Delete(filePath);
+                }
+                catch (Exception exception)
+                {
+                    TracePrint.PrintMessage("Could not delete " + filePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static bool TryMoveFileIfExists(string sourceFilePath, string destinationFilePath)
+        {
+            if (File.Exists(sourceFilePath))
+            {
+                try
+                {
+                    File.Move(sourceFilePath, destinationFilePath);
+                }
+                catch (Exception exception)
+                {
+                    TracePrint.PrintMessage("Could not move " + sourceFilePath + " to " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        #endregion
         #region Public static methods - Check if the database is valid, and return error status reports if it isn't
         // Only invoke this on a .tdb or .ddb file
         public static DatabaseFileErrorsEnum QuickCheckDatabaseFile(string filePath)
@@ -354,7 +399,6 @@ namespace Timelapse.Util
         }
         #endregion
 
-
         #region Public Static Methods - Various forms to get the full path of a file
         public static string GetFullPath(FileDatabase fileDatabase, ImageRow imageRow)
         {
@@ -474,6 +518,25 @@ namespace Timelapse.Util
 
         #endregion
 
+        #region Identify System folders, including the recycle bin
+        public static bool IsFolderSystemOrHidden(string folderPath)
+        {
+            return IsFolderSystemOrHidden(new DirectoryInfo(folderPath).Attributes);
+        }
+
+        public static bool IsFolderSystemOrHidden(FileAttributes attributes)
+        {
+
+            return ((attributes & FileAttributes.System) == FileAttributes.System) ||
+                   ((attributes & FileAttributes.Hidden) == FileAttributes.Hidden);
+        }
+
+        public static bool IsFolderPathADriveLetter(string path)
+        {
+            return System.IO.Path.GetPathRoot(path) == path;
+        }
+        #endregion
+
         #region Private (internal) methods
         // Remove, any files that 
         // - don't exactly match the desired image or video extension, 
@@ -556,25 +619,6 @@ namespace Timelapse.Util
                     fileInfoList = fileInfoList.OrderBy(file => file.FullName).ToList();
                 }
             }
-        }
-        #endregion
-
-        #region Identify System folders, including the recycle bin
-        public static bool IsFolderSystemOrHidden(string folderPath)
-        {
-            return IsFolderSystemOrHidden(new DirectoryInfo(folderPath).Attributes);
-        }
-
-        public static bool IsFolderSystemOrHidden(FileAttributes attributes)
-        {
-
-            return ((attributes & FileAttributes.System) == FileAttributes.System) ||
-                   ((attributes & FileAttributes.Hidden) == FileAttributes.Hidden);
-        }
-
-        public static bool IsFolderPathADriveLetter(string path)
-        {
-            return System.IO.Path.GetPathRoot(path) == path;
         }
         #endregion
     }

@@ -160,7 +160,7 @@ namespace Timelapse.Dialog
                 return;
             }
 
-            // We have a valide new time that differs by at least one second.
+            // We have a valid new time that differs by at least one second.
             // Configure the UI's initial state
             this.CancelButton.IsEnabled = false;
             this.CancelButton.Visibility = Visibility.Hidden;

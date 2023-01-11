@@ -3,10 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Speech.Synthesis.TtsEngine;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
 
@@ -98,6 +100,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             // Pass 1
             this.pass1 = new Task(() =>
             {
+
                 List<Task> loadTasks = new List<Task>();
 
                 // Fan out the loader tasks
@@ -105,6 +108,16 @@ namespace Timelapse.ImageSetLoadingPipeline
                 {
                     // Parse the relative path from the full name. 
                     // As GetDirectoryName does not end with a \ on a file name, we add the' '\' as needed
+
+                    if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                    {
+                        // User requested we cancel the task. So stop going through files and adding any further tasks.
+                        // Although I am unsure about this, clearing the task lisk may help inhibit additional tasks being added
+                        // The caller will check the cancelation token again, and will stop further actions and clean up as needed.
+                        // System.Diagnostics.Debug.Print("Cancelled from ImageSetLoader: this.pass1");
+                        loadTasks = new List<Task>();
+                        return;
+                    }
 
                     string directoryName = String.Empty;
                     try
@@ -138,7 +151,13 @@ namespace Timelapse.ImageSetLoadingPipeline
                         // time may not coorespond.
                         Interlocked.Increment(ref this.imagesLoaded);
                         this.LastLoadComplete = loader;
-
+                        if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                        {
+                            // User requested we cancel the task. So stop going through files.
+                            // The caller will check the cancelation token again, and will stop further actions and clean up as needed.
+                            // System.Diagnostics.Debug.Print("Cancelled from Loader.Task");
+                            return;
+                        }
                         if (loader.RequiresDatabaseInsert)
                         {
                             // This requires database insertion. Enqueue for pass 2
@@ -151,11 +170,31 @@ namespace Timelapse.ImageSetLoadingPipeline
                     });
                     loadTasks.Add(loaderTask);
                 }
-                Task.WaitAll(loadTasks.ToArray());
+
+                try
+                {
+                    Task.WaitAll(loadTasks.ToArray(), Util.GlobalReferences.CancelTokenSource.Token);
+                }
+                catch //(OperationCanceledException e)
+                {
+                    // If one of the tasks is cancelled, it raises an OperationCanceled Exception.
+                    // We catch it to make it silent.
+                    // System.Diagnostics.Debug.Print("Caught Cancellation in ImageSetLoader: Task.WaitAll");
+                    return;
+                }
             });
             // End Pass 1
 
+
             // Pass 2
+            if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+            {
+                // Don't start the second pass if things have been cancelled.
+                // Not sure if we really need to clear the queue, but it ;ikelydoesn't hurt.
+                System.Diagnostics.Debug.Print("Cancellation in ImageSetLoader: Just before pass 2");
+                databaseInsertionQueue = new ConcurrentQueue<ImageRow> ();
+                return;
+            }
             this.pass2 = new Task(() =>
             {
                 // This pass2 starts after pass1 is fully complete
@@ -178,6 +217,12 @@ namespace Timelapse.ImageSetLoadingPipeline
 
             Timer t = new Timer((state) =>
             {
+                if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                {
+                    // If we received a cancellation notice in Step 1, don't bother reporting any progress.
+                    // System.Diagnostics.Debug.Print("Cancellation at beginning of Timer t");
+                    return;
+                }
                 if (this.LastLoadComplete != null)
                 {
                     if (this.LastLoadComplete.File.IsVideo)
@@ -193,11 +238,21 @@ namespace Timelapse.ImageSetLoadingPipeline
                 {
                     folderLoadProgress.BitmapSource = null;
                 }
-
+                
                 folderLoadProgress.CurrentFile = this.ImagesLoaded;
                 folderLoadProgress.CurrentFileName = this.LastLoadComplete?.File.File;
                 int percentProgress = (int)(100.0 * this.ImagesLoaded / this.ImagesToLoad);
-                reportProgress(percentProgress, folderLoadProgress);
+                try
+                {
+                    reportProgress(percentProgress, folderLoadProgress);
+                }
+                catch 
+                {
+                    // If you cancel, it may still try to invoke reportProgress even thought the operation is marked as completed. 
+                    // This catch at least stops it from generating an error message
+                    // System.Diagnostics.Debug.Print("Caught when trying ReportProgress");
+                }
+
             }, null, 0, progressIntervalMilliseconds);
 
             await this.pass1.ConfigureAwait(false);
@@ -206,6 +261,13 @@ namespace Timelapse.ImageSetLoadingPipeline
             t.Dispose();
 
             folderLoadProgress.CurrentPass = 2;
+
+            if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+            {
+                // If we received a cancellation notice in Step 1, don't proceed to Step 2
+                // System.Diagnostics.Debug.Print("Cancellation in ImageSetLoader: Before invoking this.pass2.Start");
+                return;
+            }
 
             this.pass2.Start();
 

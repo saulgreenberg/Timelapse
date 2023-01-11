@@ -229,7 +229,11 @@ namespace Timelapse
                 {
                     Mouse.OverrideCursor = Cursors.Wait;
                     this.StatusBar.SetMessage("Loading images, please wait...");
-                    await this.TryOpenTemplateAndBeginLoadFoldersAsync(this.Arguments.Template).ConfigureAwait(true);
+                    Tuple<bool,string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(this.Arguments.Template).ConfigureAwait(true);
+                    if (results.Item1 == false)
+                    { 
+                       ///SAULXXX SHOULD BAIL HERE AS IT FAILED OPENING THE TEMPLATE AND/OR DATABASE
+                    }
                     if (false == String.IsNullOrEmpty(this.Arguments.RelativePath))
                     {
                         // Set and only use the relative path as a search term
@@ -830,7 +834,11 @@ namespace Timelapse
                 // If its a valid template, load the images. Otherwise, just display the appropriate error dialog
                 if (Dialogs.DialogIsFileValid(this, templateDatabasePath))
                 {
-                    await this.DoLoadImages(templateDatabasePath);
+                    if (false == await this.DoLoadImages(templateDatabasePath))
+                    {
+                        this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                    }
+                    Mouse.OverrideCursor = null;
                 }
                 dropEvent.Handled = true;
             }
