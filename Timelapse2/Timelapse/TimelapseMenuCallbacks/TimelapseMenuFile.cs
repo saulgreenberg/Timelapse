@@ -66,9 +66,16 @@ namespace Timelapse
         {
             Mouse.OverrideCursor = Cursors.Wait;
             this.StatusBar.SetMessage("Loading images, please wait...");
-            if (false == await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true))
+            Tuple<bool, string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
+            if (results.Item1 == false)
             {
                 this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                if (false == String.IsNullOrWhiteSpace(results.Item2))
+                {
+                    // This is a first time load of a ddb, as indicated by the non-empty returned result of the ddb file path to delete.
+                    // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
+                    Util.FilesFolders.TryDeleteFileIfExists(results.Item2);
+                }
                 return false;
             }
             else
@@ -103,18 +110,9 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 this.StatusBar.SetMessage("Adding images, please wait...");
-                if (false == this.TryBeginImageFolderLoad(this.FolderPath, folderPath, false))
-                {
-                    this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
-                }
-                else
-                {
-                    this.StatusBar.SetMessage("Images added to the image set.");
-                }
-                Mouse.OverrideCursor = null;
+                this.TryBeginImageFolderLoad(this.FolderPath, folderPath, false);
             }
         }
-
         #endregion
 
         #region Updating Timelapse files
@@ -160,7 +158,11 @@ namespace Timelapse
                 {
                     Mouse.OverrideCursor = Cursors.Wait;
                     this.StatusBar.SetMessage("Loading images, please wait...");
-                    await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
+                    Tuple<bool,string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
+                    if (false == results.Item1)
+                    {
+                        // SAULXXX: SHOULD BAIL HERE AS THERE WAS A PROBLEM OPENING THE TEMPLATE OR DATABASE
+                    }
                     this.StatusBar.SetMessage("Image set is now loaded.");
 
                     Mouse.OverrideCursor = null;

@@ -148,7 +148,7 @@ namespace Timelapse.Database
                 if (moveInsteadOfCopy)
                 {
 
-                    File.Move(sourceFilePath, destinationFilePath);
+                    Util.FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
                 }
                 else
                 {
@@ -172,7 +172,7 @@ namespace Timelapse.Database
             }
             foreach (FileInfo file in backupFiles.Skip(Constant.File.NumberOfBackupFilesToKeep))
             {
-                File.Delete(file.FullName);
+                Util.FilesFolders.TryDeleteFileIfExists(file.FullName);
             }
             return true;
         }

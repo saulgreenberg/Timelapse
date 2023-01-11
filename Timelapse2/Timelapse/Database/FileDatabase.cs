@@ -89,10 +89,8 @@ namespace Timelapse.Database
 
         public static async Task<FileDatabase> CreateEmptyDatabase(string filePath, TemplateDatabase templateDatabase)
         {
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
+            Util.FilesFolders.TryDeleteFileIfExists(filePath);
+
             // initialize the database if it's newly created
             FileDatabase fileDatabase = new FileDatabase(filePath);
             await fileDatabase.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
@@ -1923,8 +1921,10 @@ namespace Timelapse.Database
         {
             if (File.Exists(Path.Combine(this.FolderPath, this.FileName)))
             {
-                File.Move(Path.Combine(this.FolderPath, this.FileName),
-                          Path.Combine(this.FolderPath, newFileName));  // Change the file name to the new file name
+                // SAULXXX Should really check for failure, as TryMove will return true/false
+                Util.FilesFolders.TryMoveFileIfExists(
+                    Path.Combine(this.FolderPath, this.FileName),
+                    Path.Combine(this.FolderPath, newFileName));  // Change the file name to the new file name
                 this.FileName = newFileName; // Store the file name
                 this.Database = new SQLiteWrapper(Path.Combine(this.FolderPath, newFileName));          // Recreate the database connecction
             }

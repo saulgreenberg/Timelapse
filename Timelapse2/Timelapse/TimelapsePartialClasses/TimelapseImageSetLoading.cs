@@ -53,8 +53,9 @@ namespace Timelapse
         #region TryOpenTemplateAndBeginLoadFoldersAsync
         // Load the specified database template and then the associated images. 
         // templateDatabasePath is the Fully qualified path to the template database file.
-        // Returns true only if both the template and image database file are loaded (regardless of whether any images were loaded) , false otherwise
-        private async Task<bool> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
+        // Returns the first tuple of true only if both the template and image database file are loaded (regardless of whether any images were loaded) , false otherwise
+        // Returns the second tuple of the ddb file if it has to be deleted on failure
+        private async Task<Tuple<bool,string>> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
         {
             this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
             this.RecentFileSets_Refresh();
@@ -68,7 +69,7 @@ namespace Timelapse
                 // Notify the user the template couldn't be loaded rather than silently doing nothing
                 Mouse.OverrideCursor = null;
                 Dialogs.TemplateFileNotLoadedAsCorruptDialog(this, templateDatabasePath);
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             string unknownTypes = this.templateDatabase.AreControlsOfKnownTypes();
@@ -78,7 +79,7 @@ namespace Timelapse
                 // This could be because we are trying to open a template with an old version of Timelapse
                 // that doesn't know about newer types.
                 Dialogs.TemplateIncludesControlOfUnknownType(this, unknownTypes);
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // The .tdb templateDatabase should now be loaded
@@ -87,7 +88,7 @@ namespace Timelapse
             if (this.TrySelectDatabaseFile(templateDatabasePath, out string fileDatabaseFilePath, out bool importImages) == false)
             {
                 // No image database file was selected
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
             else
             {   // XXXX THIS IS WHERE WE SHOULD CHECK THE DATAFILE. CAN WE DO IT BEFORE OPENING THE TEMPLATE?
@@ -95,7 +96,8 @@ namespace Timelapse
                 if (false == Dialogs.DialogIsFileValid(this, fileDatabaseFilePath))
                 {
                     // System.Diagnostics.Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
-                    return false;
+                    // If we are trying to import images for the first time, return the newly created ddb file
+                    return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
                 }
             }
 
@@ -104,7 +106,7 @@ namespace Timelapse
                 // There are no .ddb files in this folder, which means Timelapse would normally try to create one.
                 // But if Timelapse was started in a ReadOnly state, that is not allowed. Tell the user, and abort.
                 Dialogs.ViewOnlySoDatabaseCannotBeCreated(this);
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // Check the file path length of the .ddb file and notify the user the ddb couldn't be loaded because its path is too long
@@ -112,6 +114,7 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.DatabasePathTooLongDialog(this, fileDatabaseFilePath);
+                return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
                 //return false;
             }
 
@@ -120,6 +123,7 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.BackupPathTooLongDialog(this);
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // Before fully loading an existing image database, 
@@ -145,7 +149,7 @@ namespace Timelapse
                         {
                             // user indicates exiting rather than continuing.
                             Application.Current.Shutdown();
-                            return false;
+                            return new Tuple<bool, string>(false, String.Empty);
                         }
                         else
                         {
@@ -179,8 +183,8 @@ namespace Timelapse
                     bool isEmpty = File.Exists(fileDatabaseFilePath) && new FileInfo(fileDatabaseFilePath).Length == 0;
                     Mouse.OverrideCursor = null;
                     Dialogs.DatabaseFileNotLoadedAsCorruptDialog(this, fileDatabaseFilePath, isEmpty);
-                    return false;
-                };
+                    return new Tuple<bool, string>(false, String.Empty);
+                }
             }
 
             // At this point:
@@ -193,7 +197,7 @@ namespace Timelapse
             {
                 // This happens if there is an unrecognized control
                 Dialogs.TemplateIncludesControlOfUnknownType(this, "unknown control in the Timelapse .ddb data file.");
-                return false;
+                return new Tuple<bool, string>(false, String.Empty);
             }
 
             // The next test is to test and syncronize (if needed) the default values stored in the fileDB table schema to those stored in the template
@@ -249,14 +253,14 @@ namespace Timelapse
             {
                 if (false == this.TryBeginImageFolderLoad(this.FolderPath, this.FolderPath, true))
                 {
-                    return false;
+                    return new Tuple<bool, string>(false, fileDatabaseFilePath);
                 }
             }
             else
             {
                 await this.OnFolderLoadingCompleteAsync(false).ConfigureAwait(true);
             }
-            return true;
+            return  new Tuple<bool, string>(true, String.Empty);
         }
         #endregion
 
@@ -396,8 +400,8 @@ namespace Timelapse
 
                     if (isFirstTimeLoad)
                     {
-                        // If the cancel occured when loading images for the first time, we need to do some cleanup
-                        // reset to  the Timelapse initial state with no image set loaded. This includes:
+                        // If the cancel occured when loading images for the first time, we need to do some minimal cleanup
+                        // Reset everything to the Timelapse initial state with no image set loaded. This includes:
                         // - closing the image set
                         // - deleting the .ddb file (as its initial load was never completed)
 
@@ -412,22 +416,9 @@ namespace Timelapse
                         this.FileNavigatorSlider.Visibility = Visibility.Visible;
                         this.StatusBar.SetMessage("Cancelled loading of image set");
                         Mouse.OverrideCursor = null;
-                        try
-                        {
-                            File.Delete(filePathToDelete);
-                        }
-                        catch
-                        { }
+                        Util.FilesFolders.TryDeleteFileIfExists(filePathToDelete);
                         return;
                     }
-
-                    // This is done only when files are added
-                    // Note that it falls through to do the final cleanup
-                    // this.FileNavigatorSlider.Visibility = Visibility.Visible;
-                    //bool aSaveMagnifierState = this.MarkableCanvas.MagnifiersEnabled;
-                    //this.MarkableCanvas.MagnifiersEnabled = false;
-                    //this.MarkableCanvas.MagnifiersEnabled = aSaveMagnifierState;
-                    // this.StatusBar.SetMessage("Cancelled adding files to image set ");
                 }
 
                 // Create an index on RelativePath, File,and RelativePath/File if it doesn't already exist
