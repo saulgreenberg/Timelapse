@@ -228,7 +228,14 @@ namespace Timelapse.Util
         /// </summary>
         public static void Write(this RegistryKey registryKey, string subKeyPath, bool value)
         {
-            registryKey.Write(subKeyPath, value.ToString().ToLowerInvariant());
+            try
+            {
+                registryKey.Write(subKeyPath, value.ToString().ToLowerInvariant());
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -237,7 +244,14 @@ namespace Timelapse.Util
         public static void Write(this RegistryKey registryKey, string subKeyPath, DateTime value)
         {
             // For backwards compatability, we use the UTC format as otherwise older versions of Timelapse will not open
-            registryKey.Write(subKeyPath, value.ToString(Constant.Time.DateTimeDatabaseFormat));
+            try
+            {
+                registryKey.Write(subKeyPath, value.ToString(Constant.Time.DateTimeDatabaseFormat));
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -245,7 +259,14 @@ namespace Timelapse.Util
         /// </summary>
         public static void Write(this RegistryKey registryKey, string subKeyPath, double value)
         {
-            registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            try
+            {
+                registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -253,32 +274,39 @@ namespace Timelapse.Util
         /// </summary>
         public static void Write(this RegistryKey registryKey, string subKeyPath, RecencyOrderedList<string> values)
         {
+
             // Check the arguments for null 
             ThrowIf.IsNullArgument(registryKey, nameof(registryKey));
-
-            if (values != null)
+            try
             {
-                // create the key whose values represent elements of the list
-                RegistryKey subKey = registryKey.OpenSubKey(subKeyPath, true);
-                if (subKey == null)
+                if (values != null)
                 {
-                    subKey = registryKey.CreateSubKey(subKeyPath);
-                }
+                    // create the key whose values represent elements of the list
+                    RegistryKey subKey = registryKey.OpenSubKey(subKeyPath, true);
+                    if (subKey == null)
+                    {
+                        subKey = registryKey.CreateSubKey(subKeyPath);
+                    }
 
-                // write the values
-                int index = 0;
-                foreach (string value in values)
-                {
-                    subKey.SetValue(index.ToString(), value);
-                    ++index;
-                }
+                    // write the values
+                    int index = 0;
+                    foreach (string value in values)
+                    {
+                        subKey.SetValue(index.ToString(), value);
+                        ++index;
+                    }
 
-                // remove any additional values when the new list is shorter than the old one
-                int maximumValueName = subKey.ValueCount;
-                for (; index < maximumValueName; ++index)
-                {
-                    subKey.DeleteValue(index.ToString());
+                    // remove any additional values when the new list is shorter than the old one
+                    int maximumValueName = subKey.ValueCount;
+                    for (; index < maximumValueName; ++index)
+                    {
+                        subKey.DeleteValue(index.ToString());
+                    }
                 }
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -289,8 +317,14 @@ namespace Timelapse.Util
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(registryKey, nameof(registryKey));
-
-            registryKey.SetValue(subKeyPath, value, RegistryValueKind.DWord);
+            try
+            {
+                registryKey.SetValue(subKeyPath, value, RegistryValueKind.DWord);
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -298,7 +332,14 @@ namespace Timelapse.Util
         /// </summary>
         public static void Write(this RegistryKey registryKey, string subKeyPath, Rect value)
         {
-            registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            try
+            {
+                registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -306,7 +347,14 @@ namespace Timelapse.Util
         /// </summary>
         public static void Write(this RegistryKey registryKey, string subKeyPath, Size value)
         {
-            registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            try
+            {
+                registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -316,7 +364,14 @@ namespace Timelapse.Util
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(registryKey, nameof(registryKey));
-            registryKey.SetValue(subKeyPath, value, RegistryValueKind.String);
+            try
+            {
+                registryKey.SetValue(subKeyPath, value, RegistryValueKind.String);
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
         }
 
         /// <summary>
@@ -326,7 +381,15 @@ namespace Timelapse.Util
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(registryKey, nameof(registryKey));
-            registryKey.SetValue(subKeyPath, value.TotalSeconds.ToString(), RegistryValueKind.String);
+            try
+            {
+                registryKey.SetValue(subKeyPath, value.TotalSeconds.ToString(), RegistryValueKind.String);
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+            }
+
         }
         #endregion
     }
