@@ -37,7 +37,7 @@ namespace Timelapse.Controls
         private bool disposed;
         #endregion
 
-        #region Loading, Disposing
+        #region Loadin
         public DataEntryHandler(FileDatabase fileDatabase)
         {
             this.disposed = false;
@@ -46,28 +46,6 @@ namespace Timelapse.Controls
             this.IsProgrammaticControlUpdate = false;
         }
 
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                if (this.FileDatabase != null)
-                {
-                    this.FileDatabase.Dispose();
-                }
-            }
-            this.disposed = true;
-        }
         #endregion
 
         #region Configuration, including Callback Configuration
@@ -920,6 +898,46 @@ namespace Timelapse.Controls
                 return File.Exists(path) ? path : null;
             }
             return null;
+        }
+        #endregion
+
+        #region Disposing
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                if (this.FileDatabase != null)
+                {
+                    this.FileDatabase.Dispose();
+                }
+            }
+            this.disposed = true;
+        }
+        
+        public void DisposeAsNeeded()
+        {
+            try
+            {
+                this.Dispose(); 
+                this.ImageCache = null;
+                this.FileDatabase = null;   
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Failed in DataEntryHandler-DisposeAsNeeded");
+            }
         }
         #endregion
     }

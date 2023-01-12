@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
+using System.Reflection;
 using System.Windows.Controls;
 using Timelapse.Util;
 
@@ -177,6 +179,25 @@ namespace Timelapse.Database
                 this.DataTable.Dispose();
             }
             this.disposed = true;
+        }
+
+        public void DisposeAsNeeded(DataRowChangeEventHandler eventHandler)
+        {
+            try
+            {
+                // Release the DataTable
+                this.DataTable.Rows.Clear();
+                if (eventHandler != null)
+                {
+                    this.DataTable.RowChanged -= eventHandler;
+                }
+                this.Dispose();
+                this.DataTable = null;
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Failed in DataTableBackedList - DisposeAsNeeded");
+            }
         }
         #endregion
     }

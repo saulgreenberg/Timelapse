@@ -168,8 +168,24 @@ namespace Timelapse
             // Note that this gets called whenever we close an image set, and again when we exit Timelapse
             this.State.WriteSettingsToRegistry();
 
-            // Clear the arguments, as we are starting a new session.
-            this.Arguments = new DataStructures.Arguments(null);
+            if (false == isCompleteShutdown)
+            {
+                // This is just a close of the image set, so lets clean up some data structures
+
+                // Clear the arguments, as we are starting a new session.
+                this.Arguments = new DataStructures.Arguments(null);
+
+                // SAULXXX
+                // There was a memory leak somewhere. It was most evident when you open/close a large data set repeatedly, where
+                // the amount of memory used went up every time. It seemed to be related to DataTables
+                // The code below appeared to take care of a subset of the memory leak issues, but not everything.
+                // FOr example, the memory profiler (dotMemory by JetBrains) suggests that far too many strings are allocated
+                // e.g., the many RelativePaths are repeatedly allocated when opening a database
+                // Needs to be investigated further
+                this.DataHandler.FileDatabase.DisposeAsNeeded();
+                this.DataHandler.DisposeAsNeeded();
+                this.DataEntryControls.DisposeAsNeeded();
+            }
         }
         #endregion
     }

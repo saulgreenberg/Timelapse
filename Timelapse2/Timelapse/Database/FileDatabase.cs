@@ -3116,6 +3116,41 @@ namespace Timelapse.Database
             base.Dispose(disposing);
             this.disposed = true;
         }
+
+        public void DisposeAsNeeded()
+        {
+            try
+            {
+                // Release the file table
+                this.FileTable?.DisposeAsNeeded(this.onFileDataTableRowChanged);
+                this.FileTable = null;
+                this.Markers?.DisposeAsNeeded(null);
+                this.Markers = null;
+                this.Controls?.DisposeAsNeeded(null);
+
+                // Release various data tables
+                this.detectionDataTable?.Clear();
+                this.detectionDataTable = null;
+                this.classificationsDataTable?.Clear();
+                this.classificationsDataTable = null;
+
+                // Release the bound grid
+                if (this.boundGrid != null)
+                {
+                    this.boundGrid.DataContext = null;
+                    this.boundGrid.ItemsSource = null;
+                    this.boundGrid = null;
+                }
+
+                // Release various dictionaries
+                this.classificationCategoriesDictionary = null;
+                this.detectionCategoriesDictionary = null;
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Failed in FileDatabase:DisposeAsNeeded");
+            }
+        }
         #endregion
     }
 }

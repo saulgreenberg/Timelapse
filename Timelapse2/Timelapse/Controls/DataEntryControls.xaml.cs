@@ -302,5 +302,19 @@ namespace Timelapse.Controls
             this.dataEntryHandler.IsProgrammaticControlUpdate = false;
         }
         #endregion
+
+        public void DisposeAsNeeded()
+        {
+            try
+            {
+                this.dataEntryHandler?.Dispose();
+                this.dataEntryHandler = null;
+
+            }
+            catch
+            {
+                System.Diagnostics.Debug.Print("Failed in DataEntryControls-DisposeAsNeeded");
+            }
+        }
     }
 }
