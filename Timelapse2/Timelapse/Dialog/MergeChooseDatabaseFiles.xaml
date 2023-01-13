@@ -45,7 +45,7 @@
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
             <Button Name="MergeButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="MergeButton_Click">_Merge</Button>
             <Button Name="DoneButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
-            <Button Name="DoneWithLoadButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneWithLoadButton_Click">_Done and Load the Merged database</Button>
+            <Button Name="DoneWithLoadButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneWithLoadButton_Click">_Load the merged database</Button>
         </StackPanel>
 
         <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->
