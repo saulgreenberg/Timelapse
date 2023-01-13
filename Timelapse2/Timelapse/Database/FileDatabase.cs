@@ -345,7 +345,15 @@ namespace Timelapse.Database
         {
             if (control.DataLabel == Constant.DatabaseColumn.DateTime)
             {
-                return new SchemaColumnDefinition(control.DataLabel, "DATETIME", DateTimeHandler.ToStringDatabaseDateTime(Constant.ControlDefault.DateTimeDefaultValue));
+                if (DateTimeHandler.TryParseDatabaseDateTime(control.DefaultValue, out DateTime dateTime))
+                {
+                    return new SchemaColumnDefinition(control.DataLabel, "DATETIME", control.DefaultValue);
+                }
+                else
+                {
+                    // The date/time is malformed, so just use the default. Not optimal, but...
+                   return new SchemaColumnDefinition(control.DataLabel, "DATETIME", DateTimeHandler.ToStringDatabaseDateTime(Constant.ControlDefault.DateTimeDefaultValue));
+                }
             }
 
             if (String.IsNullOrWhiteSpace(control.DefaultValue))

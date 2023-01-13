@@ -55,7 +55,7 @@ namespace Timelapse
         // templateDatabasePath is the Fully qualified path to the template database file.
         // Returns the first tuple of true only if both the template and image database file are loaded (regardless of whether any images were loaded) , false otherwise
         // Returns the second tuple of the ddb file if it has to be deleted on failure
-        private async Task<Tuple<bool,string>> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
+        private async Task<Tuple<bool, string>> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
         {
             this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
             this.RecentFileSets_Refresh();
@@ -208,7 +208,6 @@ namespace Timelapse
                 ControlRow row = this.templateDatabase.GetControlFromTemplateTable(pair.Key);
                 if (row != null && pair.Value.Trim(quote) != row.DefaultValue)
                 {
-                    // If even one default is different between the schema default and the template default, update the entire file table.
                     fileDatabase.UpgradeFileDBSchemaDefaultsFromTemplate();
                     break;
                 }
@@ -260,7 +259,7 @@ namespace Timelapse
             {
                 await this.OnFolderLoadingCompleteAsync(false).ConfigureAwait(true);
             }
-            return  new Tuple<bool, string>(true, String.Empty);
+            return new Tuple<bool, string>(true, String.Empty);
         }
         #endregion
 
@@ -409,7 +408,7 @@ namespace Timelapse
                         string filePathToDelete = isFirstTimeLoad && this.DataHandler?.FileDatabase != null && File.Exists(this.DataHandler.FileDatabase.FilePath)
                         ? this.DataHandler.FileDatabase.FilePath
                         : String.Empty;
-                    
+
                         this.CloseImageSet();
                         this.State.ExifToolManager.Stop();
                         this.BusyCancelIndicator.Reset();

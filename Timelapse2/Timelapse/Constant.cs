@@ -153,7 +153,7 @@ namespace Timelapse.Constant
         public const string DeleteFlagLabel = "Delete?";    // a flag data type for marking deletion
         public const string DeleteFlagTooltip = "Mark a file as one to be deleted. You can then confirm deletion through the Edit Menu";
 
-        public static readonly DateTime DateTimeDefaultValue = DateTime.MinValue;
+        public static readonly DateTime DateTimeDefaultValue = new DateTime(1900, 1,1,12,0,0);
         public static readonly TimeSpan OffsetDefaultValue = TimeSpan.Zero;
     }
 
