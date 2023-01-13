@@ -262,7 +262,7 @@ namespace Timelapse
 
                 // Enable the delete current file option only if we are not on the thumbnail grid 
                 this.MenuItemDeleteCurrentFileAndData.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false; // Only show this option if the thumbnail grid is visible
-                this.MenuItemDeleteCurrentFile.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath);
+                this.MenuItemDeleteCurrentFile.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false && this.DataHandler?.ImageCache?.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath);
                 this.MenuItemDeleteCurrentData.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false;
 
             }
@@ -350,6 +350,7 @@ namespace Timelapse
                 // To resolve this, we get the closest non-deleted file ID before we do the deletion.
                 int fileIndex = this.DataHandler.ImageCache.CurrentRow;
                 bool allDone = false;
+                Mouse.OverrideCursor = Cursors.Wait;
                 for (int nextFileIndex = fileIndex; nextFileIndex < this.DataHandler.FileDatabase.FileTable.Count(); nextFileIndex++)
                 {
                     // Check if is a deleted file. 
@@ -365,6 +366,7 @@ namespace Timelapse
                         }
                     }
                 }
+                Mouse.OverrideCursor = null;
                 if (allDone == false)
                 {
                     for (int prevFileIndex = fileIndex; prevFileIndex >= 0; prevFileIndex--)

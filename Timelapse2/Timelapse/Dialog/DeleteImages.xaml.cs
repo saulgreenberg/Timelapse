@@ -254,6 +254,8 @@ namespace Timelapse.Dialog
                     if (Token.IsCancellationRequested)
                     {
                         isCancelled = true;
+                        //  Since some file or its data may have been deleted, we want to set this to true in order to tell the calling method refresh everything.
+                        this.IsAnyDataUpdated = true;
                         return;
                         //return new Tuple<bool,int>(true, filesDeleted);
                     }
