@@ -9,7 +9,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for the mismatched templates dialog.
     /// </summary>
-    public partial class TemplateSynchronization : Window
+    public partial class TemplateSynchronization
     {
         #region Public Properties
         public bool UseNewTemplate { get; private set; }

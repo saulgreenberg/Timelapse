@@ -13,7 +13,7 @@ namespace Timelapse
     /// Methods to check for various missing folders and to ask the user to correct them if they are missing.
     /// These checks are requested during image set loading (see TimelapseImageSetLoading)
     /// </summary>
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Private Methods - CheckAndCorrectRootFolder
         // Get the root folder name from the database, and check to see if its the same as the actual root folder.
@@ -39,8 +39,7 @@ namespace Timelapse
             {
                 // There is a mismatch between the actual root folder and the stored root folder
                 // Consequently, ask the user if he/she wants to update the db entry 
-                Dialog.UpdateRootFolder renameRootFolderDialog;
-                renameRootFolderDialog = new Dialog.UpdateRootFolder(this, rootFolder, actualRootFolderName);
+                Dialog.UpdateRootFolder renameRootFolderDialog = new Dialog.UpdateRootFolder(this, rootFolder, actualRootFolderName);
                 bool? result = renameRootFolderDialog.ShowDialog();
                 if (result == true)
                 {

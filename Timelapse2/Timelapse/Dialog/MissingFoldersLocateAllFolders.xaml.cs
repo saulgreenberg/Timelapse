@@ -22,7 +22,7 @@ namespace Timelapse.Dialog
     /// - return true: the new locations with the 'Use' checkbox checked will be returned
     /// - return false: cancel all attempts to find the locaton of missing folders.
     /// </summary>
-    public partial class MissingFoldersLocateAllFolders : Window
+    public partial class MissingFoldersLocateAllFolders
     {
         #region Public properties
         public Dictionary<string, string> FinalFolderLocations
@@ -38,7 +38,7 @@ namespace Timelapse.Dialog
                     ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (comboBox == null) continue;
 
-                    if (row.Use == true && false == String.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                    if (row.Use && false == String.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
                     {
                         finalFolderLocations.Add(row.ExpectedOldLocation, (string)comboBox.SelectedItem);
                     }
@@ -127,9 +127,8 @@ namespace Timelapse.Dialog
             string missingFolderName = this.GetFolderNameFromSelection();
 
             // We need to update the datagrid with the new value. 
-            MissingFolderRow rowValues;
             int rowIndex = 0;
-            rowValues = (MissingFolderRow)this.selectedRowValues[0].Item;
+            MissingFolderRow rowValues = (MissingFolderRow)this.selectedRowValues[0].Item;
             string newLocation = Dialogs.LocateRelativePathUsingOpenFileDialog(this.RootPath, missingFolderName);
             if (String.IsNullOrWhiteSpace(newLocation)) return;
 
@@ -234,7 +233,7 @@ namespace Timelapse.Dialog
                 if (null == checkBox) continue;
                 comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 if (null == comboBox) continue;
-                if (String.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText) || comboBox.Items.Count > 1)
+                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText) || comboBox.Items.Count > 1)
                 {
                     checkBox.IsChecked = false;
                 }
@@ -260,7 +259,7 @@ namespace Timelapse.Dialog
                 if (null == checkBox) continue;
                 comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 if (null == comboBox) continue;
-                if (String.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
                 {
                     checkBox.IsChecked = false;
                 }
@@ -285,7 +284,7 @@ namespace Timelapse.Dialog
         //        if (Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox") == checkBox)
         //        {
         //            comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
-        //            if (String.IsNullOrEmpty((string)comboBox.SelectedItem))
+        //            if (string.IsNullOrEmpty((string)comboBox.SelectedItem))
         //            {
         //                checkBox.IsChecked = false;
         //            }
@@ -323,7 +322,7 @@ namespace Timelapse.Dialog
                 }
                 rowIndex++;
             }
-            return String.IsNullOrEmpty(location) ? String.Empty : location;
+            return string.IsNullOrEmpty(location) ? String.Empty : location;
         }
         #endregion
 

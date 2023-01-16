@@ -48,12 +48,12 @@ namespace DialogUpgradeFiles.Database
         /// <summary>
         /// A simplified table creation routine. It expects the column definitions to be supplied
         /// as a column_name, data type key value pair. 
-        // The table creation syntax supported is:
-        // CREATE TABLE table_name (
-        //     column1name datatype,       e.g.,   Id INT PRIMARY KEY OT NULL,
-        //     column2name datatype,               NAME TEXT NOT NULL,
-        //     ...                                 ...
-        //     columnNname datatype);              SALARY REAL);
+        /// The table creation syntax supported is:
+        /// CREATE TABLE table_name (
+        ///     column1name datatype,       e.g.,   Id INT PRIMARY KEY OT NULL,
+        ///     column2name datatype,               NAME TEXT NOT NULL,
+        ///     ...                                 ...
+        ///     columnNname datatype);              SALARY REAL);
         /// </summary>
         public void CreateTable(string tableName, List<SchemaColumnDefinition> columnDefinitions)
         {
@@ -69,7 +69,7 @@ namespace DialogUpgradeFiles.Database
             string query = Sql.CreateTable + tableName + Sql.OpenParenthesis + Environment.NewLine;               // CREATE TABLE <tablename> (
             foreach (SchemaColumnDefinition column in columnDefinitions)
             {
-                query += column.ToString() + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
+                query += column + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
             }
             query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);         // remove last comma / new line and replace with );
             query += Sql.CloseParenthesis + Sql.Semicolon;
@@ -239,11 +239,11 @@ namespace DialogUpgradeFiles.Database
                 // Construct the query. The newlines are to format it for pretty printing
                 string query = Sql.InsertInto + tableName;               // INSERT INTO table_name
                 query += Environment.NewLine;
-                query += String.Format("({0}) ", columns);                         // (col1, col2, ... coln)
+                query += $"({columns}) ";                         // (col1, col2, ... coln)
                 query += Environment.NewLine;
                 query += Sql.Values;                                     // VALUES
                 query += Environment.NewLine;
-                query += String.Format("({0}); ", values);                         // ('value1', 'value2', ... 'valueN');
+                query += $"({values}); ";                         // ('value1', 'value2', ... 'valueN');
                 queries.Add(query);
             }
 
@@ -327,7 +327,7 @@ namespace DialogUpgradeFiles.Database
             foreach (ColumnTuplesWithWhere updateQuery in updateQueryList)
             {
                 string query = CreateUpgradeQuery(tableName, updateQuery);
-                if (String.IsNullOrEmpty(query))
+                if (string.IsNullOrEmpty(query))
                 {
                     continue; // skip non-queries
                 }
@@ -365,7 +365,7 @@ namespace DialogUpgradeFiles.Database
             ThrowIf.IsNullArgument(columnToUpgrade, nameof(columnToUpgrade));
 
             string query = Sql.Update + tableName + Sql.Set;
-            query += String.Format(" {0} = {1}", columnToUpgrade.Name, Sql.Quote(columnToUpgrade.Value));
+            query += $" {columnToUpgrade.Name} = {Sql.Quote(columnToUpgrade.Value)}";
             this.ExecuteNonQuery(query);
         }
 
@@ -395,11 +395,11 @@ namespace DialogUpgradeFiles.Database
                 // we have to cater to different formats for integers, NULLS and strings...
                 if (column.Value == null)
                 {
-                    query += String.Format(" {0} = {1}{2}", column.Name.ToString(), Sql.Null, Sql.Comma);
+                    query += $" {column.Name} = {Sql.Null}{Sql.Comma}";
                 }
                 else
                 {
-                    query += String.Format(" {0} = {1}{2}", column.Name, Sql.Quote(column.Value), Sql.Comma);
+                    query += $" {column.Name} = {Sql.Quote(column.Value)}{Sql.Comma}";
                 }
             }
             query = query.Substring(0, query.Length - Sql.Comma.Length); // Remove the last comma
@@ -447,7 +447,7 @@ namespace DialogUpgradeFiles.Database
             foreach (string whereClause in whereClauses)
             {
                 // Add the WHERE clause only when uts is not empty
-                if (!String.IsNullOrEmpty(whereClause.Trim()))
+                if (!string.IsNullOrEmpty(whereClause.Trim()))
                 {                                                            // Construct each query statement
                     string query = Sql.DeleteFrom + tableName;     // DELETE FROM tablename
                     query += Sql.Where;                            // DELETE FROM tablename WHERE
@@ -668,7 +668,7 @@ namespace DialogUpgradeFiles.Database
                                 break;
                             case 1:  // name (Column Name)
                             case 2:  // type (Column type)
-                                existingColumnDefinition += reader[field].ToString() + " ";
+                                existingColumnDefinition += reader[field] + " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (reader[field].ToString() != "0")
@@ -678,9 +678,9 @@ namespace DialogUpgradeFiles.Database
                                 break;
                             case 4:  // dflt_value (Column has a default value)
                                 string s = reader[field].ToString();
-                                if (!String.IsNullOrEmpty(s))
+                                if (!string.IsNullOrEmpty(s))
                                 {
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 break;
                             case 5:  // pk (Column is part of the primary key)
@@ -692,7 +692,7 @@ namespace DialogUpgradeFiles.Database
                             default:
                                 // This should never happen
                                 // But if it does, we just ignore it
-                                System.Diagnostics.Debug.Print("Unknown Field: " + field.ToString());
+                                Debug.Print("Unknown Field: " + field.ToString());
                                 break;
                         }
                     }
@@ -778,7 +778,7 @@ namespace DialogUpgradeFiles.Database
             }
             catch
             {
-                throw;
+                Debug.Print("Catch: SQLiteWrapper.SchemaRenameTable");
             }
         }
 
@@ -803,7 +803,7 @@ namespace DialogUpgradeFiles.Database
             }
             catch
             {
-                throw;
+               Debug.Print("Catch: SQLiteWrapper.SchemAlterTableWithNewColumnDefinition");
             }
         }
 
@@ -883,7 +883,7 @@ namespace DialogUpgradeFiles.Database
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnDefinition, nameof(columnDefinition));
-            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition.ToString());
+            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
         }
 
         /// <summary>
@@ -907,7 +907,8 @@ namespace DialogUpgradeFiles.Database
                     // Check if a column named Name already exists in the source Table. If so, abort as we cannot add duplicate column names
                     if (columnNames.Contains(columnDefinition.Name))
                     {
-                        throw new ArgumentException(String.Format("Column '{0}' is already present in table '{1}'.", columnDefinition.Name, tableName), nameof(columnDefinition));
+                        throw new ArgumentException(
+                            $"Column '{columnDefinition.Name}' is already present in table '{tableName}'.", nameof(columnDefinition));
                     }
 
                     // If columnNumber would result in the column being inserted at the end of the table, then use the more efficient method to do so.
@@ -948,7 +949,6 @@ namespace DialogUpgradeFiles.Database
             catch
             {
                 return false;
-                throw;
             }
         }
 
@@ -963,7 +963,7 @@ namespace DialogUpgradeFiles.Database
                 {
                     connection.Open();
                     // Some basic error checking to make sure we can do the operation
-                    if (String.IsNullOrEmpty(columnName.Trim()))
+                    if (string.IsNullOrEmpty(columnName.Trim()))
                     {
                         return false;  // The provided column names= is an empty string
                     }
@@ -998,7 +998,7 @@ namespace DialogUpgradeFiles.Database
             }
             catch
             {
-                throw;
+                return false;
             }
         }
 
@@ -1095,7 +1095,7 @@ namespace DialogUpgradeFiles.Database
                         //throw new ArgumentException(String.Format("No column named '{0}' exists to rename.", currentColumnName), nameof(currentColumnName));
                         return false;
                     }
-                    if (false == String.IsNullOrEmpty(newColumnName) && currentColumnNames.Contains(newColumnName))
+                    if (false == string.IsNullOrEmpty(newColumnName) && currentColumnNames.Contains(newColumnName))
                     {
                         // If its a name change, we have to ensure that name is valid and that it doesn't already exit
                         //throw new ArgumentException(String.Format("Column '{0}' is already in use.", newColumnName), nameof(newColumnName));
@@ -1125,7 +1125,6 @@ namespace DialogUpgradeFiles.Database
             catch
             {
                 return false;
-                throw;
             }
         }
 
@@ -1168,7 +1167,7 @@ namespace DialogUpgradeFiles.Database
             }
             if (columnToRemove == -1)
             {
-                throw new ArgumentOutOfRangeException(String.Format("Column '{0}' not found in table '{1}'.", columnName, tableName));
+                throw new ArgumentOutOfRangeException($"Column '{columnName}' not found in table '{tableName}'.");
             }
 
             columnDefinitions.RemoveAt(columnToRemove);
@@ -1180,7 +1179,7 @@ namespace DialogUpgradeFiles.Database
         /// </summary>
         private static string SchemaCloneButRenameColumn(SQLiteConnection connection, string tableName, string existingColumnName, string newColumnName)
         {
-            System.Diagnostics.Debug.Print(SchemaAttributesEnum.Default.ToString());
+            Debug.Print(SchemaAttributesEnum.Default.ToString());
             string newSchema = String.Empty;
             using (SQLiteDataReader reader = GetSchema(connection, tableName))
             {
@@ -1201,7 +1200,7 @@ namespace DialogUpgradeFiles.Database
                                 existingColumnDefinition += " ";
                                 break;
                             case 2:  // type (Column type)
-                                existingColumnDefinition += reader[field].ToString() + " ";
+                                existingColumnDefinition += reader[field] + " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (reader[field].ToString() != "0")
@@ -1210,10 +1209,10 @@ namespace DialogUpgradeFiles.Database
                                 }
                                 break;
                             case 4:  // dflt_value (Column has a default value)
-                                if (false == String.IsNullOrEmpty(reader[field].ToString()))
+                                if (false == string.IsNullOrEmpty(reader[field].ToString()))
                                 {
                                     // Note that the default is already quoted, so we should not quote it again
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 break;
                             case 5:  // pk (Column is part of the primary key)
@@ -1256,20 +1255,20 @@ namespace DialogUpgradeFiles.Database
                                      // Rename the column if needed
                                 currentColumnName = reader[field].ToString();
                                 existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Name))
-                                    ? attributes[SchemaAttributesEnum.Name].ToString()
+                                    ? attributes[SchemaAttributesEnum.Name]
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 2:  // type (Column type)
                                 existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Type))
-                                    ? attributes[SchemaAttributesEnum.Type].ToString()
+                                    ? attributes[SchemaAttributesEnum.Type]
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.NotNull))
                                 {
-                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull].ToString();
+                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull];
                                 }
                                 else if (reader[field].ToString() != "0")
                                 {
@@ -1280,12 +1279,12 @@ namespace DialogUpgradeFiles.Database
                             case 4:  // dflt_value (Column has a default value)
                                 if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Default))
                                 {
-                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default].ToString());
+                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default]);
                                 }
-                                else if (false == String.IsNullOrEmpty(reader[field].ToString()))
+                                else if (false == string.IsNullOrEmpty(reader[field].ToString()))
                                 {
                                     // Note that the default is already quoted, so we should not quote it again
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 existingColumnDefinition += " ";
                                 break;
@@ -1296,7 +1295,7 @@ namespace DialogUpgradeFiles.Database
                                 }
                                 break;
                             default:
-                                System.Diagnostics.Debug.Print(field.ToString());
+                                Debug.Print(field.ToString());
                                 break;
                         }
                     }
@@ -1385,7 +1384,7 @@ namespace DialogUpgradeFiles.Database
                 {
                     return false;
                 }
-                query = String.Format("SELECT COUNT(*)_ FROM {0}", tableName);
+                query = $"SELECT COUNT(*)_ FROM {tableName}";
                 return this.ScalarGetCountFromSelect(query) != 0;
             }
         }
@@ -1495,7 +1494,7 @@ namespace DialogUpgradeFiles.Database
         private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
         {
             string columnDefinition = name + " " + type;
-            if (String.IsNullOrEmpty(otherOptions))
+            if (string.IsNullOrEmpty(otherOptions))
             {
                 columnDefinition += " " + otherOptions;
             }

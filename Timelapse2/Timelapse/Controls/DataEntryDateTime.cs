@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
@@ -12,32 +13,22 @@ namespace Timelapse.Controls
     {
         #region Public Properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft
-        {
-            get { return this.ContentControl.PointToScreen(new Point(0, 0)); }
-        }
-        public override UIElement GetContentControl
-        {
+        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+
+        public override UIElement GetContentControl =>
             // We return the textbox part of the content control, as otherwise focus does not work properly when we try to set it on the content control
-            get { return (UIElement)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl); }
-        }
+            (UIElement)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
 
-        public override bool IsContentControlEnabled
-        {
-            get { return this.ContentControl.IsEnabled; }
-        }
+        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
 
-        public override string Content
-        {
-            get { return this.ContentControl.Text; }
-        }
+        public override string Content => this.ContentControl.Text;
 
         public override bool ContentReadOnly
         {
-            get { return this.ContentControl.IsReadOnly; }
+            get => this.ContentControl.IsReadOnly;
             set
             {
-                if (Util.GlobalReferences.TimelapseState.IsViewOnly)
+                if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
                     this.ContentControl.IsReadOnly = true;
                     this.ContentControl.IsHitTestVisible = false;

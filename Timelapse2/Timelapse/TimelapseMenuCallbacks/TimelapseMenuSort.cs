@@ -8,7 +8,7 @@ using Timelapse.Database;
 namespace Timelapse
 {
     // Sort Menu Callbacks
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Sort sub-menu opening
         private void Sort_SubmenuOpening(object sender, RoutedEventArgs e)

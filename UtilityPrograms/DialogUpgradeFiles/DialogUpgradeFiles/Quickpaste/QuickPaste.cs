@@ -46,11 +46,7 @@ namespace DialogUpgradeFiles.QuickPaste
             };
             foreach (ControlRow row in fileDatabase.Controls)
             {
-                string value = fileDatabase.FileTable[rowIndex].GetValueDisplayString(row.DataLabel);
-                if (value == null)
-                {
-                    value = String.Empty;
-                }
+                string value = fileDatabase.FileTable[rowIndex].GetValueDisplayString(row.DataLabel) ?? String.Empty;
                 switch (row.Type)
                 {
                     // User defined control types are the potential items to paste

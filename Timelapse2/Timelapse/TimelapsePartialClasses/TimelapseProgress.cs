@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using Timelapse.Controls;
+using Timelapse.DataStructures;
 using Timelapse.Util;
 
 namespace Timelapse
@@ -8,7 +9,7 @@ namespace Timelapse
     /// <summary> 
     /// Progess handler / Progress bar updates; used by most calls to update the busy indicator
     /// </summary>
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         /// <summary>
         /// Set up a progress handler that will update the progress bar
@@ -28,7 +29,7 @@ namespace Timelapse
         /// <param name="cancelMessage">the message to show in the cancel button</param>
         /// <param name="isCancelEnabled">whether the Cancel button should be enabled</param>
         /// <param name="isIndeterminate">whether the displayed bar is indeterminatne (just going back and forth) or showing the actual %progress</param>
-        static private void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, string cancelMessage, bool isCancelEnabled, bool isIndeterminate)
+        private static void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, string cancelMessage, bool isCancelEnabled, bool isIndeterminate)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {

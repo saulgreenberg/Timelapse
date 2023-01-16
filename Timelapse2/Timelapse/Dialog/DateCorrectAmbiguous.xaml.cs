@@ -13,7 +13,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Detects and displays ambiguous dates, and allows the user to select which ones (if any) should be swapped.
     /// </summary>
-    public partial class DateCorrectAmbiguous : BusyableDialogWindow
+    public partial class DateCorrectAmbiguous
     {
         #region Private Varaibles
         // Remember passed in arguments
@@ -47,7 +47,7 @@ namespace Timelapse.Dialog
 
             // Find and display the ambiguous dates in the current selected set
             // This is a fast operation, so we don't bother to show a progress bar here
-            if (this.FindAllAmbiguousDatesInSelectedImageSet() == true)
+            if (this.FindAllAmbiguousDatesInSelectedImageSet())
             {
                 this.PopulateDateChangeFeedback();
                 this.StartDoneButton.IsEnabled = this.DateChangeFeedback.AreAnySelected();
@@ -71,11 +71,9 @@ namespace Timelapse.Dialog
             this.FeedbackPanel.Visibility = Visibility.Visible;
             foreach (AmbiguousDateRange ambiguousDateRange in this.ambiguousDatesList)
             {
-                ImageRow image;
-                image = this.fileDatabase.FileTable[ambiguousDateRange.StartIndex];
-                string newDate;
+                ImageRow image = this.fileDatabase.FileTable[ambiguousDateRange.StartIndex];
                 DateTimeHandler.TrySwapDayMonth(image.DateTime, out DateTime swappedDate);
-                newDate = DateTimeHandler.ToStringDisplayDatePortion(swappedDate.Date);
+                string newDate = DateTimeHandler.ToStringDisplayDatePortion(swappedDate.Date);
                 string numFilesWithThatDate = ambiguousDateRange.Count.ToString();
                 this.DateChangeFeedback.AddFeedbackRow(image.File, DateTimeHandler.ToStringDisplayDatePortion(image.DateTimeIncorporatingOffsetPLAINVERSION.Date), newDate, numFilesWithThatDate, image, ambiguousDateRange);
             }
@@ -120,7 +118,6 @@ namespace Timelapse.Dialog
         private int GetLastImageOnSameDay(int startIndex, out int count)
         {
             count = 1; // We start at 1 as we have at least one image (the starting image) with this date
-            int lastMatchingDate;
 
             // Check if index is in range
             if (startIndex >= this.fileDatabase.CountAllCurrentlySelectedFiles || startIndex < 0)
@@ -132,7 +129,7 @@ namespace Timelapse.Dialog
             ImageRow image = this.fileDatabase.FileTable[startIndex];
             DateTime desiredDateTime = image.DateTime;
 
-            lastMatchingDate = startIndex;
+            int lastMatchingDate = startIndex;
             for (int index = startIndex + 1; index < this.fileDatabase.CountAllCurrentlySelectedFiles; index++)
             {
                 // Parse the date for the given row.

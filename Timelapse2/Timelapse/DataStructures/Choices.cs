@@ -18,14 +18,14 @@ namespace Timelapse.DataStructures
         #region Public properties
         public bool IncludeEmptyChoice
         {
-            get { return this.ChoicesInternal.IncludeEmptyChoice; }
-            set { this.ChoicesInternal.IncludeEmptyChoice = value; }
+            get => this.ChoicesInternal.IncludeEmptyChoice;
+            set => this.ChoicesInternal.IncludeEmptyChoice = value;
         }
 
         public List<string> ChoiceList
         {
-            get { return this.ChoicesInternal.ChoiceListNonEmpty; }
-            set { this.ChoicesInternal.ChoiceListNonEmpty = value; }
+            get => this.ChoicesInternal.ChoiceListNonEmpty;
+            set => this.ChoicesInternal.ChoiceListNonEmpty = value;
         }
 
         // the list, including the optional empty item
@@ -36,11 +36,7 @@ namespace Timelapse.DataStructures
                 if (this.IncludeEmptyChoice == false)
                 {
                     // No empty item
-                    if (this.ChoiceList == null)
-                    {
-                        this.ChoiceList = new List<string>();
-                    }
-                    return this.ChoiceList;
+                    return this.ChoiceList ?? (this.ChoiceList = new List<string>());
                 }
                 // Build and return the choice list with an empty item at the beginning
                 List<string> choiceListWithEmpty = new List<string>(this.ChoiceList);
@@ -49,23 +45,13 @@ namespace Timelapse.DataStructures
             }
         }
 
-        public string GetAsJson
-        {
-            get
-            {
-                return this.ChoiceList.Count == 0
+        public string GetAsJson =>
+            this.ChoiceList.Count == 0
                 ? String.Empty
                 : JsonConvert.SerializeObject(ChoicesInternal);
-            }
-        }
 
-        public string GetAsTextboxList
-        {
-            get
-            {
-                return String.Join(Environment.NewLine, this.ChoiceList);
-            }
-        }
+        public string GetAsTextboxList => String.Join(Environment.NewLine, this.ChoiceList);
+
         #endregion
 
         #region Constructors
@@ -101,7 +87,7 @@ namespace Timelapse.DataStructures
         #region Static Json Converters
         public static Choices ChoicesFromJson(string json)
         {
-            if (String.IsNullOrEmpty(json))
+            if (string.IsNullOrEmpty(json))
             {
                 return new Choices();
             }
@@ -153,7 +139,7 @@ namespace Timelapse.DataStructures
 
         public bool Contains(string itemToCheck)
         {
-            if (String.IsNullOrEmpty(itemToCheck) && this.IncludeEmptyChoice)
+            if (string.IsNullOrEmpty(itemToCheck) && this.IncludeEmptyChoice)
             {
                 return true;
             }

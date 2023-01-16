@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
     /// This dialog lets the user specify a corrected date and time of an file. All other dates and times are then corrected by the same amount.
     /// This is useful if (say) the camera was not initialized to the correct date and time.
     /// </summary>
-    public partial class DateTimeFixedCorrection : BusyableDialogWindow
+    public partial class DateTimeFixedCorrection
     {
         #region Private Variables
         // Remember passed in arguments
@@ -93,7 +93,7 @@ namespace Timelapse.Dialog
                 this.DatabaseUpdateFileDates(this.Progress, adjustment, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update
-                if (Token.IsCancellationRequested == true)
+                if (Token.IsCancellationRequested)
                 {
                     feedbackRows.Clear();
                     feedbackRows.Add(new DateTimeFeedbackTuple("Cancelled", "No changes were made"));

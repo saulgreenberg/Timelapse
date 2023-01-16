@@ -39,7 +39,7 @@ namespace DialogUpgradeFiles.Database
         public static TEnum GetEnumField<TEnum>(this DataRow row, string column) where TEnum : struct, IComparable, IFormattable, IConvertible
         {
             string fieldAsString = row.GetStringField(column);
-            if (String.IsNullOrEmpty(fieldAsString))
+            if (string.IsNullOrEmpty(fieldAsString))
             {
                 // This should not happen
                 return default;
@@ -136,7 +136,7 @@ namespace DialogUpgradeFiles.Database
             // Check the arguments for null 
             Util.ThrowIf.IsNullArgument(row, nameof(row));
 
-            row[column] = String.Format("{0}", value).ToLowerInvariant();
+            row[column] = $"{value}".ToLowerInvariant();
         }
 
         public static void SetField(this DataRow row, string column, DateTime value)

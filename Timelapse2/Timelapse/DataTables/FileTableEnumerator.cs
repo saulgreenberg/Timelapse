@@ -23,10 +23,7 @@ namespace Timelapse.Database
             GC.SuppressFinalize(this);
         }
 
-        object IEnumerator.Current
-        {
-            get { return this.Current; }
-        }
+        object IEnumerator.Current => this.Current;
 
         /// <summary>
         /// Go to the next image, returning false if we can't (e.g., if we are at the end) 

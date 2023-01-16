@@ -15,52 +15,52 @@ namespace DialogUpgradeFiles.Database
         #region Public Properties to set / get the various row values
         public FileSelectionEnum FileSelection
         {
-            get { return (FileSelectionEnum)this.Row.GetIntegerField(Constant.DatabaseColumn.Selection); }
-            set { this.Row.SetField(Constant.DatabaseColumn.Selection, (int)value); }
+            get => (FileSelectionEnum)this.Row.GetIntegerField(Constant.DatabaseColumn.Selection);
+            set => this.Row.SetField(Constant.DatabaseColumn.Selection, (int)value);
         }
 
         // The last folder selected via the Select - Folder menu
         public string SelectedFolder
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.SelectedFolder); }
-            set { this.Row.SetField(Constant.DatabaseColumn.SelectedFolder, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.SelectedFolder);
+            set => this.Row.SetField(Constant.DatabaseColumn.SelectedFolder, value);
         }
 
         public long MostRecentFileID
         {
-            get { return this.Row.GetLongStringField(Constant.DatabaseColumn.MostRecentFileID); }
-            set { this.Row.SetField(Constant.DatabaseColumn.MostRecentFileID, value); }
+            get => this.Row.GetLongStringField(Constant.DatabaseColumn.MostRecentFileID);
+            set => this.Row.SetField(Constant.DatabaseColumn.MostRecentFileID, value);
         }
 
         public string Log
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.Log); }
-            set { this.Row.SetField(Constant.DatabaseColumn.Log, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.Log);
+            set => this.Row.SetField(Constant.DatabaseColumn.Log, value);
         }
 
         // This is depracated, but we have to leave it in as the database requires this field
         public bool MagnifyingGlassEnabled
         {
-            get { return this.Row.GetBooleanField(Constant.DatabaseColumn.MagnifyingGlass); }
-            set { this.Row.SetField(Constant.DatabaseColumn.MagnifyingGlass, value); }
+            get => this.Row.GetBooleanField(Constant.DatabaseColumn.MagnifyingGlass);
+            set => this.Row.SetField(Constant.DatabaseColumn.MagnifyingGlass, value);
         }
 
         public string TimeZone
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.TimeZone); }
-            set { this.Row.SetField(Constant.DatabaseColumn.TimeZone, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.TimeZone);
+            set => this.Row.SetField(Constant.DatabaseColumn.TimeZone, value);
         }
 
         public bool WhitespaceTrimmed
         {
-            get { return this.Row.GetBooleanField(Constant.DatabaseColumn.WhiteSpaceTrimmed); }
-            set { this.Row.SetField(Constant.DatabaseColumn.WhiteSpaceTrimmed, value); }
+            get => this.Row.GetBooleanField(Constant.DatabaseColumn.WhiteSpaceTrimmed);
+            set => this.Row.SetField(Constant.DatabaseColumn.WhiteSpaceTrimmed, value);
         }
 
         public string VersionCompatability
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.VersionCompatabily); }
-            set { this.Row.SetField(Constant.DatabaseColumn.VersionCompatabily, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.VersionCompatabily);
+            set => this.Row.SetField(Constant.DatabaseColumn.VersionCompatabily, value);
         }
 
         // The SortTerms comprises a comma-separated list of terms e.g., "RelativePath, File,,"
@@ -71,17 +71,19 @@ namespace DialogUpgradeFiles.Database
         // will actually comprise Date,Time. Similarly File is 'RelativePath,File'.
         public string SortTerms
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.SortTerms); }
-            set { this.Row.SetField(Constant.DatabaseColumn.SortTerms, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.SortTerms);
+            set => this.Row.SetField(Constant.DatabaseColumn.SortTerms, value);
         }
 
         public string SortTermsAsJson
         {
             get
             {
-                List<SortTerm> sortTerms = new List<SortTerm>();
-                sortTerms.Add(this.GetSortTerm(0));
-                sortTerms.Add(this.GetSortTerm(1));
+                List<SortTerm> sortTerms = new List<SortTerm>
+                {
+                    this.GetSortTerm(0),
+                    this.GetSortTerm(1)
+                };
                 return JsonConvert.SerializeObject(sortTerms);
             }
         }
@@ -90,8 +92,8 @@ namespace DialogUpgradeFiles.Database
         // which means its state is saved.
         public string QuickPasteXML
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.QuickPasteXML); }
-            set { this.Row.SetField(Constant.DatabaseColumn.QuickPasteXML, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.QuickPasteXML);
+            set => this.Row.SetField(Constant.DatabaseColumn.QuickPasteXML, value);
         }
         #endregion
 

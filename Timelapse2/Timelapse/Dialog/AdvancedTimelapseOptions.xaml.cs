@@ -7,7 +7,7 @@ using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
-    public partial class AdvancedTimelapseOptions : Window
+    public partial class AdvancedTimelapseOptions
     {
         #region Private Variables
         private readonly MarkableCanvas markableCanvas;
@@ -55,8 +55,8 @@ namespace Timelapse.Dialog
                 this.RadioButtonCSVLocalDateTimeColumnWithoutT.IsChecked = true;
             }
 
-            this.CheckBoxCSVInsertSpaceBeforeDates.IsChecked = this.timelapseState.CSVInsertSpaceBeforeDates == true;
-            this.CheckBoxCSVIncludeFolderColumn.IsChecked = this.timelapseState.CSVIncludeFolderColumn == true;
+            this.CheckBoxCSVInsertSpaceBeforeDates.IsChecked = this.timelapseState.CSVInsertSpaceBeforeDates;
+            this.CheckBoxCSVIncludeFolderColumn.IsChecked = this.timelapseState.CSVIncludeFolderColumn;
 
             // Throttles
             this.ImageRendersPerSecond.Minimum = Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondLowerBound;

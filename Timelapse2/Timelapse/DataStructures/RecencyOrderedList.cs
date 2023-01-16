@@ -13,10 +13,8 @@ namespace Timelapse.Util
         /// <summary>
         /// Number of items in the collection
         /// </summary>
-        public int Count
-        {
-            get { return this.list.Count; }
-        }
+        public int Count => this.list.Count;
+
         #endregion
 
         #region Private variables
@@ -88,7 +86,7 @@ namespace Timelapse.Util
         /// <summary>
         /// Get the oldest item and put it in mostRecent
         /// </summary>
-        /// <param name="mostRecent"></param>
+        /// <param name="leastRecent"></param>
         /// <returns>false if the list is empty</returns>
         public bool TryGetLeastRecent(out TElement leastRecent)
         {
@@ -102,9 +100,9 @@ namespace Timelapse.Util
         }
 
         /// <summary>
-        /// Remove the itme indicated by value
+        /// Remove the item indicated by value
         /// </summary>
-        /// <param name="mostRecent"></param>
+        /// <param name="value"></param>
         /// <returns>false if the collecton does not contain that item </returns>
         public bool TryRemove(TElement value)
         {

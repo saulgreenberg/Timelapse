@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for PopulateFieldWithEpisodeData.xaml
     /// </summary>
-    public partial class PopulateFieldWithEpisodeData : BusyableDialogWindow
+    public partial class PopulateFieldWithEpisodeData
     {
         #region Private Variables
         private readonly FileDatabase fileDatabase;
@@ -122,7 +122,7 @@ namespace Timelapse.Dialog
                     Episodes.EpisodeGetEpisodesInRange(this.fileDatabase.FileTable, imageIndex, Int32.MaxValue);
 
                     // Provide feedback if the operation was cancelled during the database update
-                    if (Token.IsCancellationRequested == true)
+                    if (Token.IsCancellationRequested)
                     {
                         keyValueList.Clear();
                         keyValueList.Add(new KeyValuePair<string, string>("Cancelled", "No changes were made"));
@@ -204,7 +204,7 @@ namespace Timelapse.Dialog
             if (sender is ComboBox cb)
             {
                 this.dataFieldLabel = ((string)cb.SelectedValue).Trim();
-                this.StartDoneButton.IsEnabled = !String.IsNullOrEmpty(this.dataFieldLabel);
+                this.StartDoneButton.IsEnabled = !string.IsNullOrEmpty(this.dataFieldLabel);
             }
         }
 

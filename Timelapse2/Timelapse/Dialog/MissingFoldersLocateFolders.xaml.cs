@@ -23,7 +23,7 @@ namespace Timelapse.Dialog
     /// - return true: the new locations with the 'Use' checkbox checked will be returned
     /// - return false: cancel all attempts to find the locaton of missing folders.
     /// </summary>
-    public partial class MissingFoldersLocateFolders : Window
+    public partial class MissingFoldersLocateFolders
     {
         #region Public Properties
         public Dictionary<string, string> FinalFolderLocations
@@ -33,7 +33,7 @@ namespace Timelapse.Dialog
                 Dictionary<string, string> finalFolderLocations = new Dictionary<string, string>();
                 foreach (Tuple<string, string, string, bool> tuple in observableCollection)
                 {
-                    if (tuple.Item4 == true)
+                    if (tuple.Item4)
                     {
                         finalFolderLocations.Add(tuple.Item2, tuple.Item3);
                     }

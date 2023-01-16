@@ -17,13 +17,7 @@ namespace Timelapse.Util
         /// <summary>
         /// Key in the record Directory.Name Value, where Key is Directory.Name
         /// </summary>
-        public string Key
-        {
-            get
-            {
-                return this.Directory + "." + this.Name;
-            }
-        }
+        public string Key => this.Directory + "." + this.Name;
 
         /// <summary>
         /// Name in the record Directory.Name Value

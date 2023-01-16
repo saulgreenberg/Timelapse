@@ -47,16 +47,14 @@ namespace Timelapse.Database
 
 
         #region Create Table
-        /// <summary>
-        /// A simplified table creation routine. It expects the column definitions to be supplied
-        /// as a column_name, data type key value pair. 
+        // A simplified table creation routine. It expects the column definitions to be supplied
+        // as a column_name, data type key value pair. 
         // The table creation syntax supported is:
         // CREATE TABLE table_name (
         //     column1name datatype,       e.g.,   Id INT PRIMARY KEY OT NULL,
         //     column2name datatype,               NAME TEXT NOT NULL,
         //     ...                                 ...
         //     columnNname datatype);              SALARY REAL);
-        /// </summary>
         public void CreateTable(string tableName, List<SchemaColumnDefinition> columnDefinitions)
         {
             // Check the arguments for null 
@@ -396,7 +394,7 @@ namespace Timelapse.Database
             foreach (ColumnTuplesWithWhere updateQuery in updateQueryList)
             {
                 string query = CreateUpdateQuery(tableName, updateQuery);
-                if (String.IsNullOrEmpty(query))
+                if (string.IsNullOrEmpty(query))
                 {
                     continue; // skip non-queries
                 }
@@ -516,7 +514,7 @@ namespace Timelapse.Database
             foreach (string whereClause in whereClauses)
             {
                 // Add the WHERE clause only when uts is not empty
-                if (!String.IsNullOrEmpty(whereClause.Trim()))
+                if (!string.IsNullOrEmpty(whereClause.Trim()))
                 {                                                            // Construct each query statement
                     string query = Sql.DeleteFrom + tableName;     // DELETE FROM tablename
                     query += Sql.Where;                            // DELETE FROM tablename WHERE
@@ -638,14 +636,14 @@ namespace Timelapse.Database
 
         /// <summary>
         /// Given a list of complete queries, wrap up to 500 of them in a BEGIN/END statement so they are all executed in one go for efficiency
-        /// Continue for the next up to 500, and so on.
-        // BEGIN
-        //      query1
-        //      query2
-        //      ...
-        //      queryn
-        // END
+        /// BEGIN
+        ///      query1
+        ///      query2
+        ///      ...
+        ///      queryn
+        /// END
         /// </summary>
+        /// <param name="statements"></param>
 
         public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements)
         {
@@ -793,7 +791,7 @@ namespace Timelapse.Database
                                 break;
                             case 4:  // dflt_value (Column has a default value)
                                 string s = reader[field].ToString();
-                                if (!String.IsNullOrEmpty(s))
+                                if (!string.IsNullOrEmpty(s))
                                 {
                                     existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
                                 }
@@ -856,7 +854,7 @@ namespace Timelapse.Database
         private static void CopyAllValuesFromTable(SQLiteConnection connection, string schemaFromTable, string dataSourceTable, string dataDestinationTable)
         {
             string commaSeparatedColumns = GetSchemaColumnNamesAsString(connection, schemaFromTable);
-            if (String.IsNullOrEmpty(commaSeparatedColumns))
+            if (string.IsNullOrEmpty(commaSeparatedColumns))
             {
                 System.Diagnostics.Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
                 return;
@@ -1070,7 +1068,7 @@ namespace Timelapse.Database
                 {
                     connection.Open();
                     // Some basic error checking to make sure we can do the operation
-                    if (String.IsNullOrEmpty(columnName.Trim()))
+                    if (string.IsNullOrEmpty(columnName.Trim()))
                     {
                         return false;  // The provided column names= is an empty string
                     }
@@ -1150,7 +1148,7 @@ namespace Timelapse.Database
                     {
                         throw new ArgumentException(String.Format("No column named '{0}' exists to rename.", currentColumnName), nameof(currentColumnName));
                     }
-                    if (false == String.IsNullOrEmpty(newColumnName) && currentColumnNames.Contains(newColumnName))
+                    if (false == string.IsNullOrEmpty(newColumnName) && currentColumnNames.Contains(newColumnName))
                     {
                         // If its a name change, we have to ensure that name is valid and that it doesn't already exit
                         throw new ArgumentException(String.Format("Column '{0}' is already in use.", newColumnName));
@@ -1232,7 +1230,7 @@ namespace Timelapse.Database
                                 {
                                     existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default].ToString());
                                 }
-                                else if (false == String.IsNullOrEmpty(reader[field].ToString()))
+                                else if (false == string.IsNullOrEmpty(reader[field].ToString()))
                                 {
                                     // Note that the default is already quoted, so we should not quote it again
                                     existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
@@ -1488,7 +1486,7 @@ namespace Timelapse.Database
         private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
         {
             string columnDefinition = name + " " + type;
-            if (String.IsNullOrEmpty(otherOptions))
+            if (string.IsNullOrEmpty(otherOptions))
             {
                 columnDefinition += " " + otherOptions;
             }

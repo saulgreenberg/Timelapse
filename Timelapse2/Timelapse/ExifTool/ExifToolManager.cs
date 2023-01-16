@@ -41,12 +41,6 @@ namespace Timelapse.ExifTool
         }
         #endregion
 
-        #region Initialization
-        public ExifToolManager()
-        {
-        }
-        #endregion Initialization
-
         #region Start ExifTool
         public void StartIfNotAlreadyStarted()
         {

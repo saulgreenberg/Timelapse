@@ -11,7 +11,7 @@ namespace Timelapse.Controls
     /// This user control generates and displays controls based upon the information passed into it from the templateTable
     /// It is used by and displayed within the Data Entry pane.
     /// </summary>
-    public partial class DataEntryControls : UserControl
+    public partial class DataEntryControls
     {
         #region Public properties and Private Variables
         public List<DataEntryControl> Controls { get; private set; }
@@ -116,7 +116,7 @@ namespace Timelapse.Controls
             foreach (DataEntryControl control in this.Controls)
             {
                 // no point in autocompleting if its read-only
-                if (control.ContentReadOnly == true)
+                if (control.ContentReadOnly)
                 {
                     continue;
                 }
@@ -135,7 +135,7 @@ namespace Timelapse.Controls
             foreach (DataEntryControl control in this.Controls)
             {
                 // no point in updating autocompletion if its read-only
-                if (control.ContentReadOnly == true)
+                if (control.ContentReadOnly)
                 {
                     continue;
                 }

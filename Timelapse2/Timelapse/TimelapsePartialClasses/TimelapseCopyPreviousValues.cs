@@ -9,7 +9,7 @@ using Timelapse.Controls;
 
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         // The methods below all relate to the CopyPreviousValues button
         #region Callbacks
@@ -84,7 +84,7 @@ namespace Timelapse
             if (this.IsDisplayingSingleImage() &&
                 this.CopyPreviousValuesButton != null &&
                 this.CopyPreviousValuesButton.IsFocused &&
-                this.CopyPreviousValuesButton.IsEnabled == true &&
+                this.CopyPreviousValuesButton.IsEnabled &&
                 this.CopyPreviousValuesButton.IsMouseOver == false &&
                 previousRow >= 0)
             {
@@ -123,7 +123,7 @@ namespace Timelapse
         {
             if (this.IsDisplayingSingleImage() &&
                 this.CopyPreviousValuesButton != null &&
-                this.CopyPreviousValuesButton.IsEnabled == true &&
+                this.CopyPreviousValuesButton.IsEnabled &&
                 this.CopyPreviousValuesButton.IsMouseOver &&
                 previousRow >= 0)
             {

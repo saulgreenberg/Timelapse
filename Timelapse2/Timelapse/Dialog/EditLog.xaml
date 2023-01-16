@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:local="clr-namespace:Timelapse"
         Title="Edit notes for this image set" 
         MinHeight="480" MinWidth="768"
 		Height="600" Width="768"

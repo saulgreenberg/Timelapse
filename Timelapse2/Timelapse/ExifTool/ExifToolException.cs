@@ -1,7 +1,7 @@
 ﻿using System;
-/// <summary>
-/// This code was imported and slightly modified from a Github project see  http://brain2cpu.com/devtools.html
-/// </summary>
+//
+// This code was imported and slightly modified from a Github project see  http://brain2cpu.com/devtools.html
+//
 namespace Timelapse.ExifTool
 {
     [Serializable]

@@ -134,7 +134,7 @@ namespace Timelapse.Database
             {
                 // This happens if there is an unrecognized Control type
                 return null;
-            };
+            }
 
             // Recreate the indexes if they don't exist
             // This could happen as a result of upgrading to 2.3
@@ -151,7 +151,7 @@ namespace Timelapse.Database
         /// Assumes that the database has already been opened and that the Template Table is loaded, where the DataLabel always has a valid value.
         /// Then create both the ImageSet table and the Markers table
         /// </summary>
-        protected async override Task OnDatabaseCreatedAsync(TemplateDatabase templateDatabase)
+        protected override async Task OnDatabaseCreatedAsync(TemplateDatabase templateDatabase)
         {
             // copy the template's TemplateTable
             await base.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
@@ -388,7 +388,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Upgrade Databases and Templates
-        public async static Task<FileDatabase> UpgradeDatabasesAndCompareTemplates(string filePath, TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        public static async Task<FileDatabase> UpgradeDatabasesAndCompareTemplates(string filePath, TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
             // If the file doesn't exist, then no immediate action is needed
             if (!File.Exists(filePath))
@@ -406,7 +406,7 @@ namespace Timelapse.Database
             return fileDatabase;
         }
 
-        protected async override Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        protected override async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
 
             // Check the arguments for null 
@@ -609,8 +609,6 @@ namespace Timelapse.Database
             int fileCount = (files == null) ? 0 : files.Count;
             for (int image = 0; image < fileCount; image += Constant.DatabaseValues.RowsPerInsert)
             {
-                string command;
-
                 StringBuilder queryValues = new StringBuilder();
 
                 // This loop creates a dataline containing this image's property values, e.g., ( 'IMG_1.JPG', 'relpath', 'folderfoo', ...) ,  
@@ -655,7 +653,7 @@ namespace Timelapse.Database
                                 // If a note already has a value in it (e.g., because it was optionally set via its metadata property on load), use that.
                                 // Otherwise populate it with its default value.
                                 string value = imageProperties.GetValueDisplayString(columnName);
-                                if (false == String.IsNullOrEmpty(value) && value != defaultValueLookup[columnName])
+                                if (false == string.IsNullOrEmpty(value) && value != defaultValueLookup[columnName])
                                 {
                                     // There is already a value in the note, so use that
                                     queryValues.Append($"{Sql.Quote(imageProperties.GetValueDisplayString(columnName))}{Sql.Comma}");
@@ -693,7 +691,7 @@ namespace Timelapse.Database
                 queryValues.Remove(queryValues.Length - 2, 2); // Remove ", "
 
                 // Create the entire SQL command (limited to RowsPerInsert datalines)
-                command = queryColumns.ToString() + queryValues.ToString();
+                string command = queryColumns.ToString() + queryValues.ToString();
 
                 this.CreateBackupIfNeeded();
                 this.Database.ExecuteNonQuery(command);
@@ -793,14 +791,14 @@ namespace Timelapse.Database
                     // Form: SELECT DataTable.* FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL
                     query += SqlPhrase.SelectMissingDetections(SelectTypesEnum.Star);
                 }
-                else if (GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
+                else if (GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
                 {
                     // DETECTIONS
                     // Create a partial query that returns detections matching some conditions
                     // Form: SELECT DataTable.* FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                     query += SqlPhrase.SelectDetections(SelectTypesEnum.Star);
                 }
-                else if (GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+                else if (GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
                 {
                     // CLASSIFICATIONS 
                     // Create a partial query that returns classifications matching some conditions
@@ -817,7 +815,7 @@ namespace Timelapse.Database
             if (this.CustomSelection != null && (GlobalReferences.DetectionsExists == false || this.CustomSelection.ShowMissingDetections == false))
             {
                 string conditionalExpression = this.CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(selection);
-                if (String.IsNullOrEmpty(conditionalExpression) == false)
+                if (string.IsNullOrEmpty(conditionalExpression) == false)
                 {
                     query += conditionalExpression;
                 }
@@ -911,18 +909,18 @@ namespace Timelapse.Database
 
                 }
 
-                if (!String.IsNullOrEmpty(term[0]))
+                if (!string.IsNullOrEmpty(term[0]))
                 {
                     query += Sql.OrderBy + term[0];
 
                     // If there is a second sort key, add it here
-                    if (!String.IsNullOrEmpty(term[1]))
+                    if (!string.IsNullOrEmpty(term[1]))
                     {
                         query += Sql.Comma + term[1];
                     }
                     // If there is a third sort key (which would only ever be 'File') add it here.
                     // NOTE: I am not sure if this will always work on every occassion, but my limited test says its ok.
-                    if (!String.IsNullOrEmpty(term[2]))
+                    if (!string.IsNullOrEmpty(term[2]))
                     {
                         query += Sql.Comma + term[2];
                     }
@@ -940,15 +938,12 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
 
-            DataTable filesTable = await Task.Run(() =>
-            {
-                // System.Diagnostics.Debug.Print("Select Query: " + query);
-                // PERFORMANCE  This seems to be the main performance bottleneck. Running a query on a large database that returns
-                // a large datatable (e.g., all files) is very slow. There is likely a better way to do this, but I am not sure what
-                // as I am not that savvy in database optimizations.
-                // System.Diagnostics.Debug.Print(query);
-                return this.Database.GetDataTableFromSelect(query);
-            }).ConfigureAwait(true);
+            // System.Diagnostics.Debug.Print("Select Query: " + query);
+            // PERFORMANCE  This seems to be the main performance bottleneck. Running a query on a large database that returns
+            // a large datatable (e.g., all files) is very slow. There is likely a better way to do this, but I am not sure what
+            // as I am not that savvy in database optimizations.
+            // System.Diagnostics.Debug.Print(query);
+            DataTable filesTable = await Task.Run(() => this.Database.GetDataTableFromSelect(query)).ConfigureAwait(true);
             this.FileTable = new FileTable(filesTable);
         }
 
@@ -1101,7 +1096,7 @@ namespace Timelapse.Database
             foreach (string relativePath in relativePathList.Cast<String>())
             {
                 allPaths.Add(relativePath);
-                string parent = String.IsNullOrEmpty(relativePath) ? String.Empty : System.IO.Path.GetDirectoryName(relativePath);
+                string parent = string.IsNullOrEmpty(relativePath) ? String.Empty : System.IO.Path.GetDirectoryName(relativePath);
                 while (!String.IsNullOrWhiteSpace(parent))
                 {
                     if (!allPaths.Contains(parent))
@@ -1235,7 +1230,8 @@ namespace Timelapse.Database
                 ImageRow image = this.FileTable[index];
                 if (null == image)
                 {
-                    System.Diagnostics.Debug.Print(String.Format("in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {0}", index));
+                    System.Diagnostics.Debug.Print(
+                        $"in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {index}");
                     continue;
                 }
                 image.SetValueFromDatabaseString(dataLabel, value);
@@ -1270,7 +1266,8 @@ namespace Timelapse.Database
                 ImageRow image = this.FileTable[fileIndex];
                 if (null == image)
                 {
-                    System.Diagnostics.Debug.Print(String.Format("in FileDatabase.UpdateFiles v2: FileTable returned null as there is no index: {0}", fileIndex));
+                    System.Diagnostics.Debug.Print(
+                        $"in FileDatabase.UpdateFiles v2: FileTable returned null as there is no index: {fileIndex}");
                     continue;
                 }
                 image.SetValueFromDatabaseString(dataLabel, value);
@@ -1331,7 +1328,7 @@ namespace Timelapse.Database
             {
                 throw new ArgumentOutOfRangeException(nameof(adjustment), "The current format of the time column does not support milliseconds.");
             }
-            this.UpdateAdjustedFileTimes((string fileName, int fileIndex, int count, DateTime imageTime) => { return imageTime + adjustment; }, startRow, endRow, CancellationToken.None);
+            this.UpdateAdjustedFileTimes((string fileName, int fileIndex, int count, DateTime imageTime) => imageTime + adjustment, startRow, endRow, CancellationToken.None);
         }
 
         // Given a time difference in ticks, update all the date/time field in the database
@@ -1500,10 +1497,7 @@ namespace Timelapse.Database
 
         #region Counts or Exists 1 of matching files
         // Return a total count of the currently selected files in the file table.
-        public int CountAllCurrentlySelectedFiles
-        {
-            get { return (this.FileTable == null) ? 0 : this.FileTable.RowCount; }
-        }
+        public int CountAllCurrentlySelectedFiles => this.FileTable?.RowCount ?? 0;
 
         // Return the count of the files matching the fileSelection condition in the entire database
         // Form examples
@@ -1524,14 +1518,14 @@ namespace Timelapse.Database
                 query = SqlPhrase.SelectMissingDetections(SelectTypesEnum.Count);
                 skipWhere = true;
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
             {
                 // DETECTIONS
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
                 // Create a partial query that returns a count of classifications matching some conditions
@@ -1553,11 +1547,11 @@ namespace Timelapse.Database
                 if ((GlobalReferences.DetectionsExists && this.CustomSelection.ShowMissingDetections == false) || skipWhere == false)
                 {
                     string where = this.CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(fileSelection);
-                    if (!String.IsNullOrEmpty(where))
+                    if (!string.IsNullOrEmpty(where))
                     {
                         query += where;
                     }
-                    if (fileSelection == FileSelectionEnum.Custom && this.CustomSelection.DetectionSelections.Enabled == true)
+                    if (fileSelection == FileSelectionEnum.Custom && this.CustomSelection.DetectionSelections.Enabled)
                     {
                         // Add a close parenthesis if we are querying for detections
                         query += Sql.CloseParenthesis;
@@ -1569,7 +1563,7 @@ namespace Timelapse.Database
             // If the Detectionsand Episodes  is turned on, then the Episode Note field contains values in the Episode format (e.g.) 25:1/8.
             // We construct a wrapper for counting  files where all files in an episode have at least one file matching the surrounded search condition 
             if (this.CustomSelection.EpisodeShowAllIfAnyMatch && this.CustomSelection.EpisodeNoteField != String.Empty
-                && fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true)
+                && fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled)
             {
                 // Remove from the front of the string
                 query = query.Replace(Sql.SelectCountStarFrom, String.Empty);
@@ -1592,9 +1586,8 @@ namespace Timelapse.Database
         //                    WHERE  ( DataTable.DeleteFlag='true' )  AND Classifications.category = 1 GROUP BY Classifications.classificationID HAVING  MAX  ( Classifications.conf )  BETWEEN 0.8 AND 1 )  ) :1
         public bool ExistsFilesMatchingSelectionCondition(FileSelectionEnum fileSelection)
         {
-            string query;
             bool skipWhere = false;
-            query = " SELECT EXISTS ( ";
+            string query = " SELECT EXISTS ( ";
 
             // PART 1 of Query
             if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.ShowMissingDetections)
@@ -1605,14 +1598,14 @@ namespace Timelapse.Database
                 query += SqlPhrase.SelectMissingDetections(SelectTypesEnum.One);
                 skipWhere = true;
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
             {
                 // DETECTIONS
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query += SqlPhrase.SelectDetections(SelectTypesEnum.One);
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
                 // Create a partial query that returns a count of classifications matching some conditions
@@ -1631,11 +1624,11 @@ namespace Timelapse.Database
             if ((GlobalReferences.DetectionsExists && this.CustomSelection.ShowMissingDetections == false) || skipWhere == false)
             {
                 string where = this.CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(fileSelection);
-                if (!String.IsNullOrEmpty(where))
+                if (!string.IsNullOrEmpty(where))
                 {
                     query += where;
                 }
-                if (fileSelection == FileSelectionEnum.Custom && this.CustomSelection.DetectionSelections.Enabled == true && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+                if (fileSelection == FileSelectionEnum.Custom && this.CustomSelection.DetectionSelections.Enabled && this.CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
                 {
                     // Add a close parenthesis if we are querying for detections. Not sure where the unbalanced parenthesis is coming from! Needs some checking.
                     query += Sql.CloseParenthesis;
@@ -1988,7 +1981,7 @@ namespace Timelapse.Database
         private void MarkersLoadRowsFromDatabase()
         {
             string markersQuery = Sql.SelectStarFrom + Constant.DBTables.Markers;
-            this.Markers = new DataTableBackedList<MarkerRow>(this.Database.GetDataTableFromSelect(markersQuery), (DataRow row) => { return new MarkerRow(row); });
+            this.Markers = new DataTableBackedList<MarkerRow>(this.Database.GetDataTableFromSelect(markersQuery), (DataRow row) => new MarkerRow(row));
         }
 
         // Add an empty new row to the marker list if it isnt there. Return true if we added it, otherwise false 
@@ -2099,7 +2092,7 @@ namespace Timelapse.Database
             {
                 // As there is no version column, this must be a really early version.
                 // Return some very low number, which should trigger most checks and updates
-                versionNumber = Constant.DatabaseValues.VersionNumberMinimum; ;
+                versionNumber = Constant.DatabaseValues.VersionNumberMinimum;
                 return true;
             }
             versionNumber = this.ImageSet.VersionCompatability;
@@ -2139,7 +2132,7 @@ namespace Timelapse.Database
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             }
         }
-        static public void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
+        public static void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -2226,8 +2219,7 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(foldersInJsonButNotInDB, nameof(foldersInJsonButNotInDB));
             ThrowIf.IsNullArgument(foldersInBoth, nameof(foldersInBoth));
 
-            RecognizerImportResultEnum result;
-            result = await Task.Run(() =>
+            RecognizerImportResultEnum result = await Task.Run(() =>
             {
                 try
                 {
@@ -2438,7 +2430,7 @@ namespace Timelapse.Database
 
                     // DetectionExists needs to be primed if it is to save its DetectionExists state
                     this.DetectionsExists(true);
-                    return RecognizerImportResultEnum.Success; ;
+                    return RecognizerImportResultEnum.Success;
                 }
                 catch
                 {
@@ -2566,16 +2558,9 @@ namespace Timelapse.Database
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(originalFolderDB))
-                    {
-                        // An empty strng is the root folder, so make sure we add it
-                        foldersInDBListButNotInJSon.Add("<root folder>");
-                    }
-                    else
-                    {
-                        // This folder is in the image set but NOT in the jsonRecognizer
-                        foldersInDBListButNotInJSon.Add(originalFolderDB);
-                    }
+                    foldersInDBListButNotInJSon.Add(string.IsNullOrEmpty(originalFolderDB)
+                        ? "<root folder>"       // An empty strng is the root folder, so make sure we add it
+                        : originalFolderDB);    // This folder is in the image set but NOT in the jsonRecognizer
                 }
             }
             List<string> tempList = foldersInRecognizerList.Except(foldersInBoth).ToList();
@@ -2647,9 +2632,7 @@ namespace Timelapse.Database
                 {
                     x = this.Database.ScalarGetFloatValue(Constant.DBTables.Info, Constant.InfoColumns.TypicalDetectionThreshold);
                 }
-                return (x == null)
-                    ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
-                    : (float)x;
+                return x ?? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
             }
             catch
             {
@@ -2668,9 +2651,7 @@ namespace Timelapse.Database
                 {
                     x = this.Database.ScalarGetFloatValue(Constant.DBTables.Info, Constant.InfoColumns.TypicalClassificationThreshold);
                 }
-                return (x == null)
-                    ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
-                    : (float)x;
+                return x ?? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
             }
             catch
             {
@@ -2689,9 +2670,7 @@ namespace Timelapse.Database
                 {
                     x = this.Database.ScalarGetFloatValue(Constant.DBTables.Info, Constant.InfoColumns.ConservativeDetectionThreshold);
                 }
-                return (x == null)
-                    ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
-                    : (float)x;
+                return x ?? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
             }
             catch
             {
@@ -2833,7 +2812,7 @@ namespace Timelapse.Database
         }
         public bool DetectionsExists(bool forceQuery)
         {
-            if (forceQuery == true || this.detectionExists == null)
+            if (forceQuery || this.detectionExists == null)
             {
                 this.detectionExists = this.Database.TableExistsAndNotEmpty(Constant.DBTables.Detections);
             }
@@ -2856,7 +2835,7 @@ namespace Timelapse.Database
             foreach (ImageRow image in this.FileTable)
             {
                 int count = 0;
-                BoundingBoxes bboxes = Util.GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(image.ID);
+                BoundingBoxes bboxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(image.ID);
                 foreach (BoundingBox bbox in bboxes.Boxes)
                 {
                     if (bbox.Confidence >= confidenceValue)
@@ -2958,8 +2937,8 @@ namespace Timelapse.Database
                     customSelectionFromJson.SearchTerms == null ||
                     customSelectionFromJson.SearchTerms.Count == 0 ||
                     customSelectionFromJson.RandomSample != 0 ||
-                    customSelectionFromJson.ShowMissingDetections == true ||
-                    customSelectionFromJson.EpisodeShowAllIfAnyMatch == true)
+                    customSelectionFromJson.ShowMissingDetections ||
+                    customSelectionFromJson.EpisodeShowAllIfAnyMatch)
                 {
                     // Didn't pass the test. Use the default
                     this.CustomSelection = new CustomSelection(this.Controls);
@@ -2973,8 +2952,8 @@ namespace Timelapse.Database
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us
                 bool parseResultDetectionCategory = Int32.TryParse(customSelectionFromJson.DetectionSelections.DetectionCategory, out int detectionCategoryAsInt);
                 bool parseResultClassificaitonCategory = Int32.TryParse(customSelectionFromJson.DetectionSelections.ClassificationCategory, out int classificationCategoryAsInt);
-                if (customSelectionFromJson.DetectionSelections.Enabled == true &&
-                      customSelectionFromJson.DetectionSelections.UseRecognition == true &&
+                if (customSelectionFromJson.DetectionSelections.Enabled &&
+                      customSelectionFromJson.DetectionSelections.UseRecognition &&
                       false == this.DetectionsExists() ||
                       parseResultDetectionCategory == false ||
                       detectionCategoryAsInt >= this.detectionCategoriesDictionary?.Count ||
@@ -2983,7 +2962,7 @@ namespace Timelapse.Database
                     )
                 {
                     // Didn't pass the test. Use the default
-                    this.CustomSelection = new CustomSelection(this.Controls); ;
+                    this.CustomSelection = new CustomSelection(this.Controls);
                     return FileSelectionEnum.All;
                 }
 
@@ -3007,7 +2986,7 @@ namespace Timelapse.Database
                 if (firstNotSecond.Count != 0 || secondNotFirst.Count != 0)
                 {
                     // Didn't pass the test as that data label is not present. Use the default
-                    this.CustomSelection = new CustomSelection(this.Controls); ;
+                    this.CustomSelection = new CustomSelection(this.Controls);
                     return FileSelectionEnum.All;
                 }
 
@@ -3057,7 +3036,7 @@ namespace Timelapse.Database
                            )
                         {
                             // Didn't pass the test as some list items or its defaults don't match whats in the template.  Use the default
-                            this.CustomSelection = new CustomSelection(this.Controls); ;
+                            this.CustomSelection = new CustomSelection(this.Controls);
                             return FileSelectionEnum.All;
                         }
                     }

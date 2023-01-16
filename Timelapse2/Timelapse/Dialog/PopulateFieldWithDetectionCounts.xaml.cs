@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -12,13 +13,13 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for PopulateFieldWithDetectionCounts.xaml
     /// </summary>
-    public partial class PopulateFieldWithDetectionCounts : BusyableDialogWindow
+    public partial class PopulateFieldWithDetectionCounts
     {
         #region Private Variables
         private readonly FileDatabase fileDatabase;
         private readonly Dictionary<string, string> dataLabelByLabel;
         private string dataFieldLabel = String.Empty;
-        private double confidenceValue = 0;
+        private double confidenceValue;
         #endregion
 
         public PopulateFieldWithDetectionCounts(Window owner, FileDatabase fileDatabase) : base(owner)
@@ -85,7 +86,7 @@ namespace Timelapse.Dialog
             if (sender is ComboBox cb)
             {
                 this.dataFieldLabel = ((string)cb.SelectedValue).Trim();
-                this.StartDoneButton.IsEnabled = !String.IsNullOrEmpty(this.dataFieldLabel);
+                this.StartDoneButton.IsEnabled = !string.IsNullOrEmpty(this.dataFieldLabel);
             }
         }
 

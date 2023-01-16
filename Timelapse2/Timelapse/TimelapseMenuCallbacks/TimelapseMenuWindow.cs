@@ -6,7 +6,7 @@ using Timelapse.Util;
 namespace Timelapse
 {
     // Window Menu Callbacks
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         // Each menu item has a tag in it (defined in the XAML) that corresponds to a Registry Key name. 
         // That tag is then used to save or restore a particular layout.

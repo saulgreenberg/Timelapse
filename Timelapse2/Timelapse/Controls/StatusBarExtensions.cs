@@ -56,7 +56,7 @@ namespace Timelapse.Controls
 
             // If there is no primary sort string, then we don't know what the sorting criteria is.
             // Note that this should not happen
-            if (String.IsNullOrEmpty(primarySortTerm))
+            if (string.IsNullOrEmpty(primarySortTerm))
             {
                 item.Content = "Unknown";
                 return "Unknown";
@@ -66,7 +66,7 @@ namespace Timelapse.Controls
             message.Text += SetSortAlterTextAsNeeded(primarySortTerm, primarySortTermIsAscending);
 
             // Add the secomdary first key if it exists
-            if (!String.IsNullOrEmpty(secondarySortTerm))
+            if (!string.IsNullOrEmpty(secondarySortTerm))
             {
                 message.Text += " then by ";
                 message.Text += SetSortAlterTextAsNeeded(secondarySortTerm, secondarySortTermIsAscending);
@@ -84,7 +84,7 @@ namespace Timelapse.Controls
         private static string SetSortAlterTextAsNeeded(string sortTerm, bool isAscending)
         {
             // Add an up or down arrow to indicate sorting direction
-            string specialCharacter = (isAscending == true) ? Constant.Unicode.UpArrow : Constant.Unicode.DownArrow;
+            string specialCharacter = isAscending ? Constant.Unicode.UpArrow : Constant.Unicode.DownArrow;
 
             switch (sortTerm)
             {

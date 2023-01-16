@@ -44,7 +44,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Public / Protected Async Tasks - TryCreateOrOpen, OnDatabaseCreated, UpgradeDatabasesAndCompareTemplates, OnExistingDatabaseOpened
-        public async static Task<TemplateDatabase> CreateOrOpenAsync(string filePath)
+        public static async Task<TemplateDatabase> CreateOrOpenAsync(string filePath)
         {
             // check for an existing database before instantiating the databse as SQL wrapper instantiation creates the database file
             bool populateDatabase = !File.Exists(filePath);
@@ -74,7 +74,7 @@ namespace Timelapse.Database
             return templateDatabase;
         }
 
-        public async static Task<Tuple<bool, TemplateDatabase>> TryCreateOrOpenAsync(string filePath)
+        public static async Task<Tuple<bool, TemplateDatabase>> TryCreateOrOpenAsync(string filePath)
         {
             // Follow the MSDN design pattern for returning an IDisposable: https://www.codeproject.com/Questions/385273/Returning-a-Disposable-Object-from-a-Method
             TemplateDatabase disposableTemplateDB = null;
@@ -100,7 +100,7 @@ namespace Timelapse.Database
             }
         }
 
-        protected async virtual Task OnDatabaseCreatedAsync(TemplateDatabase other)
+        protected virtual async Task OnDatabaseCreatedAsync(TemplateDatabase other)
         {
             // create the template table
             await Task.Run(() =>
@@ -195,7 +195,7 @@ namespace Timelapse.Database
             }).ConfigureAwait(true);
         }
 
-        protected async virtual Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
+        protected virtual async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
         {
             await Task.Run(() =>
             {
@@ -205,12 +205,9 @@ namespace Timelapse.Database
             }).ConfigureAwait(true);
         }
 
-        protected async virtual Task OnExistingDatabaseOpenedAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
+        protected virtual async Task OnExistingDatabaseOpenedAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
         {
-            await Task.Run(() =>
-            {
-                this.GetControlsSortedByControlOrder();
-            }).ConfigureAwait(true);
+            await Task.Run(this.GetControlsSortedByControlOrder).ConfigureAwait(true);
         }
         #endregion
 
@@ -289,7 +286,7 @@ namespace Timelapse.Database
                         break;
                 }
             }
-            return string.Join(", ", unknownTypes); ;
+            return string.Join(", ", unknownTypes);
         }
         #endregion
 
@@ -380,7 +377,7 @@ namespace Timelapse.Database
             foreach (ControlRow control in controlsInSpreadsheetOrder)
             {
                 string dataLabel = control.DataLabel;
-                if (String.IsNullOrEmpty(dataLabel))
+                if (string.IsNullOrEmpty(dataLabel))
                 {
                     dataLabel = control.DataLabel;
                 }
@@ -403,7 +400,7 @@ namespace Timelapse.Database
             foreach (ControlRow control in controlsInSpreadsheetOrder)
             {
                 string dataLabel = control.DataLabel;
-                if (String.IsNullOrEmpty(dataLabel))
+                if (string.IsNullOrEmpty(dataLabel))
                 {
                     dataLabel = control.Label;
                 }
@@ -427,20 +424,14 @@ namespace Timelapse.Database
 
             this.CreateBackupIfNeeded();
 
-            string controlType;
             // For backwards compatability: MarkForDeletion DataLabel is of the type DeleteFlag,
             // which is a standard control. So we coerce it into thinking its a different type.
-            if (controlToRemove.DataLabel == Constant.ControlDeprecated.MarkForDeletion)
-            {
-                controlType = Constant.ControlDeprecated.MarkForDeletion;
-            }
-            else
-            {
-                controlType = controlToRemove.Type;
-            }
+            string controlType = controlToRemove.DataLabel == Constant.ControlDeprecated.MarkForDeletion 
+                ? Constant.ControlDeprecated.MarkForDeletion 
+                : controlToRemove.Type;
             if (Constant.Control.StandardTypes.Contains(controlType))
             {
-                throw new NotSupportedException(String.Format("Standard control of type {0} cannot be removed.", controlType));
+                throw new NotSupportedException($"Standard control of type {controlType} cannot be removed.");
             }
 
             // capture state
@@ -787,7 +778,7 @@ namespace Timelapse.Database
         {
             // Utilities.PrintMethodName();
             DataTable templateTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Template + Sql.OrderBy + Constant.Control.ControlOrder);
-            this.Controls = new DataTableBackedList<ControlRow>(templateTable, (DataRow row) => { return new ControlRow(row); });
+            this.Controls = new DataTableBackedList<ControlRow>(templateTable, (DataRow row) => new ControlRow(row));
             this.Controls.BindDataGrid(this.editorDataGrid, this.onTemplateTableRowChanged);
         }
         #endregion

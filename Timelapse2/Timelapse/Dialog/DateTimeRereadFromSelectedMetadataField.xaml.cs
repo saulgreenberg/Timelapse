@@ -18,7 +18,7 @@ namespace Timelapse.Dialog
     /// The user can then update the datetime field with the corresponding metadata value from that image for all images. 
     /// Files that do not have that metadata field are skipped.
     /// </summary>
-    public partial class DateTimeRereadFromSelectedMetadataField : BusyableDialogWindow, IDisposable
+    public partial class DateTimeRereadFromSelectedMetadataField : IDisposable
     {
         #region Private Variables
         private readonly FileDatabase fileDatabase;
@@ -103,10 +103,7 @@ namespace Timelapse.Dialog
             if (disposing)
             {
                 // dispose managed resources
-                if (this.exifTool != null)
-                {
-                    this.exifTool.Dispose();
-                }
+                this.exifTool?.Dispose();
             }
             // free native resources
         }
@@ -224,7 +221,7 @@ namespace Timelapse.Dialog
                 for (int imageIndex = 0; imageIndex < totalFiles; ++imageIndex)
                 {
                     // Provide feedback if the operation was cancelled during the database update
-                    if (Token.IsCancellationRequested == true)
+                    if (Token.IsCancellationRequested)
                     {
                         keyValueList.Clear();
                         keyValueList.Add(new KeyValuePair<string, string>("Cancelled", "No changes were made"));
@@ -385,10 +382,8 @@ namespace Timelapse.Dialog
             {
                 this.PopulatingMessage.Text = "Updated 'DateTime' from each file's '" + this.MetadataDisplayText.Content + "' metadata as follows.";
             }
-            if (this.exifTool != null)
-            {
-                this.exifTool.Stop();
-            }
+
+            this.exifTool?.Stop();
 
         }
         private void Done_Click(object sender, RoutedEventArgs e)

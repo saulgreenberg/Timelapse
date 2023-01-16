@@ -14,9 +14,14 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorTemplateFileNoLongerExistsDialog(Window owner, string templateFileName)
         {
-            MessageBox messageBox = new MessageBox("The template file no longer exist", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = String.Format("The template file '{0}' no longer exists.", templateFileName);
+            MessageBox messageBox = new MessageBox("The template file no longer exist", owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    Problem = $"The template file '{templateFileName}' no longer exists."
+                }
+            };
             messageBox.ShowDialog();
         }
 
@@ -25,16 +30,23 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDataLabelsProblematicDialog(Window owner, List<string> conversionErrors)
         {
-            MessageBox messageBox = new MessageBox("One or more data labels were problematic", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
+            MessageBox messageBox = new MessageBox("One or more data labels were problematic", owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    Problem = conversionErrors == null 
+                            ? "Some" 
+                            : conversionErrors.Count
+                        + " of your Data Labels were problematic." + Environment.NewLine + Environment.NewLine
+                        + "Data Labels:" + Environment.NewLine
+                        + "\u2022 must be unique," + Environment.NewLine
+                        + "\u2022 can only contain alphanumeric characters and '_'," + Environment.NewLine
+                        + "\u2022 cannot match particular reserved words.",
+                    Result = "We will automatically repair these Data Labels:"
+                }
+            };
 
-            messageBox.Message.Problem = (conversionErrors == null) ? "Some" : conversionErrors.Count.ToString();
-            messageBox.Message.Problem += " of your Data Labels were problematic." + Environment.NewLine + Environment.NewLine;
-            messageBox.Message.Problem += "Data Labels:" + Environment.NewLine;
-            messageBox.Message.Problem += "\u2022 must be unique," + Environment.NewLine;
-            messageBox.Message.Problem += "\u2022 can only contain alphanumeric characters and '_'," + Environment.NewLine;
-            messageBox.Message.Problem += "\u2022 cannot match particular reserved words.";
-            messageBox.Message.Result = "We will automatically repair these Data Labels:";
             if ((conversionErrors != null))
             {
                 foreach (string erroneousDatalabel in conversionErrors)
@@ -49,11 +61,16 @@ namespace Timelapse.Editor.Dialog
 
         public static void EditorDataLabelIsAReservedWordDialog(Window owner, string data_label)
         {
-            MessageBox messageBox = new MessageBox("'" + data_label + "' is not a valid data label.", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "Data labels cannot match the reserved words.";
-            messageBox.Message.Result = "We will add an '_' suffix to this Data Label to make it differ from the reserved word";
-            messageBox.Message.Hint = "Avoid the reserved words listed below. Start your label with a letter. Then use any combination of letters, numbers, and '_'." + Environment.NewLine;
+            MessageBox messageBox = new MessageBox("'" + data_label + "' is not a valid data label.", owner)
+            {
+                Message =
+                 {
+                     Icon = MessageBoxImage.Warning,
+                     Problem = "Data labels cannot match the reserved words.",
+                     Result = "We will add an '_' suffix to this Data Label to make it differ from the reserved word",
+                     Hint = "Avoid the reserved words listed below. Start your label with a letter. Then use any combination of letters, numbers, and '_'." + Environment.NewLine
+                 }
+            };
             foreach (string keyword in EditorConstant.ReservedSqlKeywords)
             {
                 messageBox.Message.Hint += keyword + " ";
@@ -66,11 +83,16 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDataLabelsCannotBeEmptyDialog(Window owner)
         {
-            MessageBox messageBox = new MessageBox("Data Labels cannot be empty", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "Data Labels cannot be empty. They must begin with a letter, followed only by letters, numbers, and '_'.";
-            messageBox.Message.Result = "We will automatically create a uniquely named Data Label for you.";
-            messageBox.Message.Hint = "You can create your own name for this Data Label. Start your label with a letter. Then use any combination of letters, numbers, and '_'.";
+            MessageBox messageBox = new MessageBox("Data Labels cannot be empty", owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    Problem = "Data Labels cannot be empty. They must begin with a letter, followed only by letters, numbers, and '_'.",
+                    Result = "We will automatically create a uniquely named Data Label for you.",
+                    Hint = "You can create your own name for this Data Label. Start your label with a letter. Then use any combination of letters, numbers, and '_'."
+                }
+            };
             messageBox.ShowDialog();
         }
 
@@ -79,11 +101,16 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDataLabelIsInvalidDialog(Window owner, string old_data_label, string new_data_label)
         {
-            MessageBox messageBox = new MessageBox("'" + old_data_label + "' is not a valid data label.", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "Data labels must begin with a letter, followed only by letters, numbers, and '_'.";
-            messageBox.Message.Result = "We replaced all dissallowed characters with an 'X': " + new_data_label;
-            messageBox.Message.Hint = "Start your label with a letter. Then use any combination of letters, numbers, and '_'.";
+            MessageBox messageBox = new MessageBox("'" + old_data_label + "' is not a valid data label.", owner)
+            {
+                Message =
+                    {
+                        Icon = MessageBoxImage.Warning,
+                        Problem = "Data labels must begin with a letter, followed only by letters, numbers, and '_'.",
+                        Result = "We replaced all dissallowed characters with an 'X': " + new_data_label,
+                        Hint = "Start your label with a letter. Then use any combination of letters, numbers, and '_'."
+                    }
+            };
             messageBox.ShowDialog();
         }
 
@@ -92,11 +119,16 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDataLabelsMustBeUniqueDialog(Window owner, string data_label)
         {
-            MessageBox messageBox = new MessageBox("Data Labels must be unique.", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "'" + data_label + "' is not a valid Data Label, as you have already used it in another row.";
-            messageBox.Message.Result = "We will automatically create a unique Data Label for you by adding a number to its end.";
-            messageBox.Message.Hint = "You can create your own unique name for this Data Label. Start your label with a letter. Then use any combination of letters, numbers, and '_'.";
+            MessageBox messageBox = new MessageBox("Data Labels must be unique.", owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    Problem = "'" + data_label + "' is not a valid Data Label, as you have already used it in another row.",
+                    Result = "We will automatically create a unique Data Label for you by adding a number to its end.",
+                    Hint = "You can create your own unique name for this Data Label. Start your label with a letter. Then use any combination of letters, numbers, and '_'."
+                }
+            };
             messageBox.ShowDialog();
         }
 
@@ -105,11 +137,16 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDataLabelRequirementsDialog(Window owner)
         {
-            MessageBox messageBox = new MessageBox("Data Labels can only contain letters, numbers and '_'.", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "Data labels must begin with a letter, followed only by letters, numbers, and '_'.";
-            messageBox.Message.Result = "We will automatically ignore other characters, including spaces";
-            messageBox.Message.Hint = "Start your label with a letter. Then use any combination of letters, numbers, and '_'.";
+            MessageBox messageBox = new MessageBox("Data Labels can only contain letters, numbers and '_'.", owner)
+            {
+                Message =
+                    {
+                        Icon = MessageBoxImage.Warning,
+                        Problem = "Data labels must begin with a letter, followed only by letters, numbers, and '_'.",
+                        Result = "We will automatically ignore other characters, including spaces",
+                        Hint = "Start your label with a letter. Then use any combination of letters, numbers, and '_'."
+                    }
+            };
             messageBox.ShowDialog();
         }
 
@@ -118,11 +155,16 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorLabelsMustBeUniqueDialog(Window owner, string label)
         {
-            MessageBox messageBox = new MessageBox("Labels must be unique.", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "'" + label + "' is not a valid Label, as you have already used it in another row.";
-            messageBox.Message.Result = "We will automatically create a unique Label for you by adding a number to its end.";
-            messageBox.Message.Hint = "You can overwrite this label with your own choice of a unique label name.";
+            MessageBox messageBox = new MessageBox("Labels must be unique.", owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    Problem = "'" + label + "' is not a valid Label, as you have already used it in another row.",
+                    Result = "We will automatically create a unique Label for you by adding a number to its end.",
+                    Hint = "You can overwrite this label with your own choice of a unique label name."
+                }
+            };
             messageBox.ShowDialog();
         }
 
@@ -131,11 +173,16 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorLabelsCannotBeEmptyDialog(Window owner)
         {
-            MessageBox messageBox = new MessageBox("Labels cannot be empty", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = "Labels cannot be empty. They identify what each data field represents to the Timelapse user.";
-            messageBox.Message.Result = "We will automatically create a uniquely named label for you.";
-            messageBox.Message.Hint = "Rename this to something meaningful. It only has to be different from the other labels.";
+            MessageBox messageBox = new MessageBox("Labels cannot be empty", owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    Problem = "Labels cannot be empty. They identify what each data field represents to the Timelapse user.",
+                    Result = "We will automatically create a uniquely named label for you.",
+                    Hint = "Rename this to something meaningful. It only has to be different from the other labels."
+                }
+            };
             messageBox.ShowDialog();
         }
         /// <summary>
@@ -143,11 +190,17 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDefaultChoiceValuesMustMatchChoiceListsDialog(Window owner, string invalidDefaultValue)
         {
-            MessageBox messageBox = new MessageBox("Choice default values must match an item in the Choice menu", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = String.Format("'{0}' is not allowed as a default value, as it is not one of your 'Define List' items.{1}Choice default values must be either empty or must match one of those items.", invalidDefaultValue, Environment.NewLine);
-            messageBox.Message.Result = "The default value will be cleared.";
-            messageBox.Message.Hint = "Copy an item from your 'Define List' and paste it into your default value field as needed.";
+            MessageBox messageBox = new MessageBox("Choice default values must match an item in the Choice menu", owner)
+            {
+                Message =
+                    {
+                        Icon = MessageBoxImage.Warning,
+                        Problem =
+                            $"'{invalidDefaultValue}' is not allowed as a default value, as it is not one of your 'Define List' items.{Environment.NewLine}Choice default values must be either empty or must match one of those items.",
+                        Result = "The default value will be cleared.",
+                        Hint = "Copy an item from your 'Define List' and paste it into your default value field as needed."
+                    }
+            };
             messageBox.ShowDialog();
         }
 
@@ -156,13 +209,18 @@ namespace Timelapse.Editor.Dialog
         /// </summary>
         public static void EditorDefaultChoiceValuesMustMatchNonEmptyChoiceListsDialog(Window owner, string invalidDefaultValue)
         {
-            MessageBox messageBox = new MessageBox("Choice default values must match an item in the Choice menu", owner);
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Problem = String.IsNullOrEmpty(invalidDefaultValue)
-                ? String.Format("An empty value is not allowed as a default value, as you have 'Include an empty item' unselected in your 'Define List' dialog.{0}Choice default values must match one of your allowed items.", Environment.NewLine)
-                : String.Format("'{0}' is not allowed as a default value, as it is not one of your 'Define List' items.{1}Choice default values must match one of those items.{1}An empty value is not allowed as a default value, as you have 'Include an empty item' unselected in your 'Define List' dialog.", invalidDefaultValue, Environment.NewLine);
-            messageBox.Message.Result = "The default value was set to the first item on your 'Define List' items.";
-            messageBox.Message.Hint = "Change the default value if desired by copying an item from your 'Define List' and pasting it into your default value field as needed.";
+            MessageBox messageBox = new MessageBox("Choice default values must match an item in the Choice menu", owner)
+            {
+                Message =
+                    {
+                        Icon = MessageBoxImage.Warning,
+                        Problem = string.IsNullOrEmpty(invalidDefaultValue)
+                            ? $"An empty value is not allowed as a default value, as you have 'Include an empty item' unselected in your 'Define List' dialog.{Environment.NewLine}Choice default values must match one of your allowed items."
+                            : $"'{invalidDefaultValue}' is not allowed as a default value, as it is not one of your 'Define List' items.{Environment.NewLine}Choice default values must match one of those items.{Environment.NewLine}An empty value is not allowed as a default value, as you have 'Include an empty item' unselected in your 'Define List' dialog.",
+                        Result = "The default value was set to the first item on your 'Define List' items.",
+                        Hint = "Change the default value if desired by copying an item from your 'Define List' and pasting it into your default value field as needed."
+                    }
+            };
             messageBox.ShowDialog();
         }
 
@@ -172,19 +230,26 @@ namespace Timelapse.Editor.Dialog
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
             // notify the user the template couldn't be loaded rather than silently doing nothing
-            MessageBox messageBox = new MessageBox("You are opening your template with an older Timelapse Editor version ", owner, MessageBoxButton.OKCancel);
-            messageBox.Message.What = "You are opening your template with an older version of the Timelapse Editor." + Environment.NewLine;
-            messageBox.Message.What = "You previously used a later version of the Timelapse Editor to open this template." + Environment.NewLine;
-            messageBox.Message.What += "This is just a warning, as its rarely a problem.";
-            messageBox.Message.Reason = "Its best to use the latest Timelapse versions to minimize possible incompatabilities with older versions.";
-            messageBox.Message.Solution = "Click:" + Environment.NewLine; ;
-            messageBox.Message.Solution += "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine;
-            messageBox.Message.Solution += "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.";
-            messageBox.Message.Icon = MessageBoxImage.Warning;
-            messageBox.Message.Hint = "Select 'Don't show this message again' to hide this warning." + Environment.NewLine;
-            messageBox.Message.Hint += "You can unhide it using 'Options|Show or hide...' in the main Timelapse  program.";
-            messageBox.DontShowAgain.Visibility = Visibility.Visible;
-
+            MessageBox messageBox = new MessageBox("You are opening your template with an older Timelapse Editor version ", owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                    {
+                        What = "You are opening your template with an older version of the Timelapse Editor." + Environment.NewLine
+                            + "You previously used a later version of the Timelapse Editor to open this template." + Environment.NewLine
+                            + "This is just a warning, as its rarely a problem.",
+                        Reason = "Its best to use the latest Timelapse versions to minimize possible incompatabilities with older versions.",
+                        Solution = "Click:" + Environment.NewLine
+                                            + "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine
+                                            + "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.",
+                        Icon = MessageBoxImage.Warning,
+                        Hint = "Select 'Don't show this message again' to hide this warning." + Environment.NewLine
+                            + "You can unhide it using 'Options|Show or hide...' in the main Timelapse  program."
+                    },
+                DontShowAgain =
+                    {
+                        Visibility = Visibility.Visible
+                    }
+            };
             bool? result = messageBox.ShowDialog();
             if (messageBox.DontShowAgain.IsChecked.HasValue)
             {

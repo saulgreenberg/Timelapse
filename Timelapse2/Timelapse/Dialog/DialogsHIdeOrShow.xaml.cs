@@ -7,7 +7,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Lets the user Hide or Show various informational dialog boxes.
     /// </summary>
-    public partial class DialogsHideOrShow : Window
+    public partial class DialogsHideOrShow
     {
         #region Private Variabes
         private readonly TimelapseState state;

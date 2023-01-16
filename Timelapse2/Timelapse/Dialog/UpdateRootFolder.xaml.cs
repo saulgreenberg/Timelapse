@@ -4,7 +4,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Ask the user if he/she wants to update the root folder names in the database to match the name of the actual root folder where the template, data and images currently reside
     /// </summary>
-    public partial class UpdateRootFolder : Window
+    public partial class UpdateRootFolder
     {
         #region Private Variables
         private readonly string dbfoldername;

@@ -13,43 +13,43 @@ namespace Timelapse.Database
         // Name of the root folder containing the template
         public string RootFolder
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.RootFolder); }
-            set { this.Row.SetField(Constant.DatabaseColumn.RootFolder, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.RootFolder);
+            set => this.Row.SetField(Constant.DatabaseColumn.RootFolder, value);
         }
 
         // Most recently selected File by its ID
         public long MostRecentFileID
         {
-            get { return this.Row.GetLongStringField(Constant.DatabaseColumn.MostRecentFileID); }
-            set { this.Row.SetField(Constant.DatabaseColumn.MostRecentFileID, value); }
+            get => this.Row.GetLongStringField(Constant.DatabaseColumn.MostRecentFileID);
+            set => this.Row.SetField(Constant.DatabaseColumn.MostRecentFileID, value);
         }
 
         // The log contains text that the user can set, which can serve as notes
         public string Log
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.Log); }
-            set { this.Row.SetField(Constant.DatabaseColumn.Log, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.Log);
+            set => this.Row.SetField(Constant.DatabaseColumn.Log, value);
         }
 
         // The most recent timelapse version used to open the files
         public string VersionCompatability
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.VersionCompatabily); }
-            set { this.Row.SetField(Constant.DatabaseColumn.VersionCompatabily, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.VersionCompatabily);
+            set => this.Row.SetField(Constant.DatabaseColumn.VersionCompatabily, value);
         }
 
         // JSON description of the QuickPasteEntries.
         public string QuickPasteAsJSON
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.QuickPasteTerms); }
-            set { this.Row.SetField(Constant.DatabaseColumn.QuickPasteTerms, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.QuickPasteTerms);
+            set => this.Row.SetField(Constant.DatabaseColumn.QuickPasteTerms, value);
         }
 
         // JSON description of the SearchTerms
         public string SearchTermsAsJSON
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.SearchTerms); }
-            set { this.Row.SetField(Constant.DatabaseColumn.SearchTerms, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.SearchTerms);
+            set => this.Row.SetField(Constant.DatabaseColumn.SearchTerms, value);
         }
         #endregion
 
@@ -70,8 +70,8 @@ namespace Timelapse.Database
         // This is not accessed directly, but rather by the Get/SetSortTerm functions
         private string SortTermsAsJsonString
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.SortTerms); }
-            set { this.Row.SetField(Constant.DatabaseColumn.SortTerms, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.SortTerms);
+            set => this.Row.SetField(Constant.DatabaseColumn.SortTerms, value);
         }
         #endregion
 

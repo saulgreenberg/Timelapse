@@ -17,7 +17,7 @@ namespace Timelapse.Editor
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string valString = value as string;
-            if (!String.IsNullOrEmpty(valString))
+            if (!string.IsNullOrEmpty(valString))
             {
                 return valString.Trim();
             }

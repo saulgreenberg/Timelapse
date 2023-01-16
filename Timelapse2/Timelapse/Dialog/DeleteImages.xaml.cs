@@ -18,7 +18,7 @@ namespace Timelapse.Dialog
     /// What actually happens is that the image is replaced by a 'dummy' placeholder image,
     /// and the original image is copied into a subfolder called Deleted.
     /// </summary>
-    public partial class DeleteImages : BusyableDialogWindow
+    public partial class DeleteImages
     {
         #region Private Variables
         // these variables will hold the values of the passed in parameters
@@ -120,40 +120,46 @@ namespace Timelapse.Dialog
             // Populate the information pane
             string imageOrVideo = this.filesToDelete[0].IsVideo ? "video" : "image";
 
-            if (this.deleteImage == true)
+            if (this.deleteImage)
             {
-                this.Message.Title = String.Format("Delete the current {0}", imageOrVideo);
-                this.Message.What = String.Format("Deletes the current {0} if it exists", imageOrVideo);
-                this.Message.Result = String.Format("\u2022 The deleted {0} will be backed up in a sub-folder named {1}.{2}", imageOrVideo, Constant.File.DeletedFilesFolder, Environment.NewLine);
-                this.Message.Hint = String.Format("\u2022 Restore the deleted {0} by manually moving it ", imageOrVideo);
-                if (this.deleteImage == true && this.deleteData == false)
+                this.Message.Title = $"Delete the current {imageOrVideo}";
+                this.Message.What = $"Deletes the current {imageOrVideo} if it exists";
+                this.Message.Result =
+                    $"\u2022 The deleted {imageOrVideo} will be backed up in a sub-folder named {Constant.File.DeletedFilesFolder}.{Environment.NewLine}";
+                this.Message.Hint = $"\u2022 Restore the deleted {imageOrVideo} by manually moving it ";
+                if (this.deleteImage && this.deleteData == false)
                 {
                     // Case 1: Delete the current image, but not its data.
 
                     this.Message.Title += " but not its data.";
-                    this.Message.What += String.Format("{0}The data entered for the {1} IS NOT deleted.", Environment.NewLine, imageOrVideo);
+                    this.Message.What +=
+                        $"{Environment.NewLine}The data entered for the {imageOrVideo} IS NOT deleted.";
                     this.Message.Result += String.Format("\u2022 A placeholder {0} will be shown when you try to view a deleted {0}.", imageOrVideo);
                     this.Message.Hint += "back to its original location." + Environment.NewLine;
                 }
-                else if (this.deleteImage == true && this.deleteData == true)
+                else if (this.deleteImage && this.deleteData)
                 {
                     // Case 2: Delete the current image and its data
                     this.Message.Title += " and its data";
-                    this.Message.What += String.Format("{0}The data entered for the {1} IS deleted as well.", Environment.NewLine, imageOrVideo);
-                    this.Message.Result += String.Format("\u2022 However, the data associated with that {0} will be permanently deleted.", imageOrVideo);
+                    this.Message.What +=
+                        $"{Environment.NewLine}The data entered for the {imageOrVideo} IS deleted as well.";
+                    this.Message.Result +=
+                        $"\u2022 However, the data associated with that {imageOrVideo} will be permanently deleted.";
                     this.Message.Hint += "to a new sub-folder." + Environment.NewLine + "  Then add that sub-folder back to the image set." + Environment.NewLine;
                 }
-                this.Message.Hint += String.Format("\u2022 See Options|Preferences to manage how files in {0} are permanently deleted.", Constant.File.DeletedFilesFolder);
+                this.Message.Hint +=
+                    $"\u2022 See Options|Preferences to manage how files in {Constant.File.DeletedFilesFolder} are permanently deleted.";
             }
             else
             {
                 // Case: Delete the data only, leaving the image intact
                 this.FileLabel.Text = "Affected file:";
                 this.ConfirmCheckBoxText.Text = "Click to confirm deletion of data for the selected file";
-                this.Message.Title = String.Format("Delete only the current {0}'s data", imageOrVideo);
+                this.Message.Title = $"Delete only the current {imageOrVideo}'s data";
                 this.Message.What = String.Format("Deletes the data associated with the current {0}, but leaves the {0} intact", imageOrVideo);
-                this.Message.Result = String.Format("\u2022 This data record will be removed.{0}", Environment.NewLine);
-                this.Message.Result += String.Format("\u2022 The {0} is still intact, but it will not be displayed in Timelapse {1}", imageOrVideo, Environment.NewLine);
+                this.Message.Result = $"\u2022 This data record will be removed.{Environment.NewLine}";
+                this.Message.Result +=
+                    $"\u2022 The {imageOrVideo} is still intact, but it will not be displayed in Timelapse {Environment.NewLine}";
                 this.Message.Result += String.Format("   unless a duplicate record exists.");
                 this.Message.Hint = "Deleting only the data is useful for removing a previously-created duplicate record of a file.";
             }
@@ -189,13 +195,15 @@ namespace Timelapse.Dialog
             }
 
             // Populate the information pane
-            if (this.deleteImage == true)
+            if (this.deleteImage)
             {
-                this.Message.Title = String.Format("Delete {0} files(s) ", numberOfImagesToDelete.ToString());
-                this.Message.What = String.Format("Delete {0} image and/or video(s) - if they exist - marked for deletion.", numberOfImagesToDelete.ToString());
+                this.Message.Title = $"Delete {numberOfImagesToDelete.ToString()} files(s) ";
+                this.Message.What =
+                    $"Delete {numberOfImagesToDelete.ToString()} image and/or video(s) - if they exist - marked for deletion.";
                 this.Message.Result = String.Empty;
                 this.Message.Hint = "\u2022 Restore deleted files by manually moving them ";
-                this.Message.Result += String.Format("\u2022 The deleted file will be backed up in a sub-folder named {0}.{1}", Constant.File.DeletedFilesFolder, Environment.NewLine);
+                this.Message.Result +=
+                    $"\u2022 The deleted file will be backed up in a sub-folder named {Constant.File.DeletedFilesFolder}.{Environment.NewLine}";
                 if (deleteData == false)
                 {
                     // Case : Delete the images that have the delete flag set, but not their data
@@ -214,20 +222,26 @@ namespace Timelapse.Dialog
                 }
                 if (numberOfImagesToDelete > Constant.ImageValues.LargeNumberOfDeletedImages)
                 {
-                    this.Message.Result += String.Format("{0}\u2022 Deleting {1} files takes time. Please be patient.", Environment.NewLine, numberOfImagesToDelete.ToString());
+                    this.Message.Result +=
+                        $"{Environment.NewLine}\u2022 Deleting {numberOfImagesToDelete.ToString()} files takes time. Please be patient.";
                 }
-                this.Message.Hint += String.Format("\u2022 See Options|Preferences to manage how files in {0} are permanently deleted.", Constant.File.DeletedFilesFolder);
+                this.Message.Hint +=
+                    $"\u2022 See Options|Preferences to manage how files in {Constant.File.DeletedFilesFolder} are permanently deleted.";
             }
             else
             {
                 // Case: Delete the data only, leaving the image intact
                 //this.FileLabel.Text = "Affected file:";
-                this.ConfirmCheckBoxText.Text = String.Format("Click to confirm deletion of data for the {0} selected files", numberOfImagesToDelete);
-                this.Message.Title = String.Format("Delete only the data for {0} files(s) ", numberOfImagesToDelete);
-                this.Message.What = String.Format("Deletes the data associated with {0} file(s), but leaves the files intact", numberOfImagesToDelete);
-                this.Message.Result = String.Format("\u2022 These {0} data records will be permanently removed.{1}", numberOfImagesToDelete, Environment.NewLine);
-                this.Message.Result += String.Format("\u2022 The {0} file(s) are still intact, but will not be displayed in Timelapse {1}", numberOfImagesToDelete, Environment.NewLine);
-                this.Message.Result += String.Format("   unless a duplicate record exists.");
+                this.ConfirmCheckBoxText.Text =
+                    $"Click to confirm deletion of data for the {numberOfImagesToDelete} selected files";
+                this.Message.Title = $"Delete only the data for {numberOfImagesToDelete} files(s) ";
+                this.Message.What =
+                    $"Deletes the data associated with {numberOfImagesToDelete} file(s), but leaves the files intact";
+                this.Message.Result =
+                    $"\u2022 These {numberOfImagesToDelete} data records will be permanently removed.{Environment.NewLine}";
+                this.Message.Result +=
+                    $"\u2022 The {numberOfImagesToDelete} file(s) are still intact, but will not be displayed in Timelapse {Environment.NewLine}";
+                this.Message.Result += "   unless a duplicate record exists.";
                 this.Message.Hint = "Deleting only the data  is useful for removing a previously-created duplicate record of a file.";
             }
         }
@@ -294,11 +308,12 @@ namespace Timelapse.Dialog
                     if (this.ReadyToRefresh())
                     {
                         int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("Pass 1: Deleting {0} / {1} files", fileIndex, count), true, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"Pass 1: Deleting {fileIndex} / {count} files", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
                     }
                 }
-                this.Progress.Report(new ProgressBarArguments(100, String.Format("Pass 2: Updating {0} files. Please wait...", count), false, true));
+                this.Progress.Report(new ProgressBarArguments(100, $"Pass 2: Updating {count} files. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
 
                 if (deleteData)
@@ -386,7 +401,8 @@ namespace Timelapse.Dialog
 
             if (this.deleteData && this.deleteImage == false)
             {
-                this.DoneMessagePanel.Content = String.Format("Data deleted for {0} files.{1}Otherwise, those files were left intact in their folders", this.filesToDelete.Count, Environment.NewLine);
+                this.DoneMessagePanel.Content =
+                    $"Data deleted for {this.filesToDelete.Count} files.{Environment.NewLine}Otherwise, those files were left intact in their folders";
             }
             else if (isCancelledAndDeletedImagesCount.Item1 == false)
             {

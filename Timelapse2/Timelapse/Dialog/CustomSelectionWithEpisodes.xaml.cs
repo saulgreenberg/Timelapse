@@ -23,7 +23,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// A dialog allowing a user to create a custom selection by setting conditions on data fields.
     /// </summary>
-    public partial class CustomSelectionWithEpisodes : Window
+    public partial class CustomSelectionWithEpisodes
     {
         #region Private Variables
         private const int DefaultControlWidth = 200;
@@ -161,7 +161,7 @@ namespace Timelapse.Dialog
                     this.DetectionCategoryComboBox.Items.Add(label);
                 }
 
-                if (Util.GlobalReferences.UseClassifications)
+                if (GlobalReferences.UseClassifications)
                 {
                     // Now add classifications
                     labels = this.database.GetClassificationLabels();
@@ -226,7 +226,7 @@ namespace Timelapse.Dialog
                 this.SetDetectionCriteria();
                 this.ShowMissingDetectionsCheckbox.IsChecked = this.database.CustomSelection.ShowMissingDetections;
                 this.NoteDataLabelContainingEpisodeData = this.database.CustomSelection.EpisodeNoteField;
-                if (true == this.database.CustomSelection.EpisodeShowAllIfAnyMatch && EpisodeFieldCheckFormat(this.currentImageRow, this.NoteDataLabelContainingEpisodeData))
+                if (this.database.CustomSelection.EpisodeShowAllIfAnyMatch && EpisodeFieldCheckFormat(this.currentImageRow, this.NoteDataLabelContainingEpisodeData))
                 {
                     // Only check the checkbox if it was previously checked and the data field still contains valid Episode data
                     this.CheckboxShowAllEpisodeImages.IsChecked = this.database.CustomSelection.EpisodeShowAllIfAnyMatch;
@@ -279,7 +279,7 @@ namespace Timelapse.Dialog
                     HorizontalAlignment = HorizontalAlignment.Center,
                     IsChecked = searchTerm.UseForSearching
                 };
-                if (searchTerm.Label == Constant.DatabaseColumn.RelativePath && Util.GlobalReferences.MainWindow.Arguments.ConstrainToRelativePath)
+                if (searchTerm.Label == Constant.DatabaseColumn.RelativePath && GlobalReferences.MainWindow.Arguments.ConstrainToRelativePath)
                 {
                     useCurrentRow.IsChecked = true;
                     useCurrentRow.IsEnabled = false;
@@ -449,7 +449,7 @@ namespace Timelapse.Dialog
 
                     };
                     // Create the dropdown menu containing only folders with images in it
-                    Arguments arguments = Util.GlobalReferences.MainWindow.Arguments;
+                    Arguments arguments = GlobalReferences.MainWindow.Arguments;
                     List<string> newFolderList;
                     if (false == arguments.ConstrainToRelativePath)
                     {
@@ -999,10 +999,10 @@ namespace Timelapse.Dialog
             // determined in this select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
             // show bounding boxes when the confidence is .4 or more. 
             Tuple<double, double> confidenceBounds = this.DetectionSelections.ConfidenceThresholdForSelect;
-            Util.GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = this.DetectionSelections.UseRecognition // && this.DetectionSelections.RecognitionType != RecognitionType.Classification
+            GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = this.DetectionSelections.UseRecognition // && this.DetectionSelections.RecognitionType != RecognitionType.Classification
                 ? confidenceBounds.Item1
                 : 1;
-            // System.Diagnostics.Debug.Print(Util.GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
+            // System.Diagnostics.Debug.Print(GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
             this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
         }
@@ -1151,7 +1151,7 @@ namespace Timelapse.Dialog
 
             if (this.dontUpdateRangeSlider == false)
             {
-                this.DetectionRangeSlider.LowerValue = this.DetectionConfidenceSpinnerLower.Value == null ? 0 : (double)this.DetectionConfidenceSpinnerLower.Value;
+                this.DetectionRangeSlider.LowerValue = this.DetectionConfidenceSpinnerLower.Value ?? 0;
             }
             else
             {
@@ -1190,7 +1190,7 @@ namespace Timelapse.Dialog
 
             if (this.dontUpdateRangeSlider == false)
             {
-                this.DetectionRangeSlider.HigherValue = this.DetectionConfidenceSpinnerHigher.Value == null ? 0 : (double)this.DetectionConfidenceSpinnerHigher.Value;
+                this.DetectionRangeSlider.HigherValue = this.DetectionConfidenceSpinnerHigher.Value ?? 0;
                 this.dontUpdateRangeSlider = false;
             }
             else
@@ -1283,7 +1283,7 @@ namespace Timelapse.Dialog
         {
             this.countTimer.Stop();
             // This is set everytime a selection is made
-            if (this.dontCount == true)
+            if (this.dontCount)
             {
                 return;
             }
@@ -1365,7 +1365,7 @@ namespace Timelapse.Dialog
 
             if (true == this.CheckboxShowAllEpisodeImages.IsChecked)
             {
-                if (String.IsNullOrEmpty(this.NoteDataLabelContainingEpisodeData))
+                if (string.IsNullOrEmpty(this.NoteDataLabelContainingEpisodeData))
                 {
                     // No note fields contain the expected Episode data. Disable this operation and get the heck out of here.
                     Dialogs.CustomSelectEpisodeDataLabelProblem(this.Owner);

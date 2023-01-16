@@ -337,7 +337,7 @@ namespace Timelapse.Util
                 {
                     serializer.Serialize(xmlWriter);
                 }
-                if (!String.IsNullOrEmpty(xmlText.ToString().Trim()))
+                if (!string.IsNullOrEmpty(xmlText.ToString().Trim()))
                 {
                     // Write the string to the registry under the given key name
                     timelapse.State.WriteToRegistry(registryKey, xmlText.ToString());

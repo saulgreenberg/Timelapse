@@ -5,15 +5,10 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for WarningToUpdateDBFilesToSQL.xaml
     /// </summary>
-    public partial class WarningToUpdateDBFilesToSQL : Window
+    public partial class WarningToUpdateDBFilesToSQL
     {
-        public bool DontShowAgain
-        {
-            get
-            {
-                return this.CheckBoxDontShowAgain.IsChecked == true;
-            }
-        }
+        public bool DontShowAgain => this.CheckBoxDontShowAgain.IsChecked == true;
+
         public WarningToUpdateDBFilesToSQL(Window owner)
         {
             this.InitializeComponent();

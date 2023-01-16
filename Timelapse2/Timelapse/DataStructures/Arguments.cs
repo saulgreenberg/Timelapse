@@ -17,14 +17,9 @@ namespace Timelapse.DataStructures
 
         // Constrain all database actions to the relative path and its subfolders
         // if ConstrainToRelativePath is true, the user is contrained to select folders that are either the relative path or subfolders of it.
-        public bool ConstrainToRelativePath
-        {
-            get
-            {
-                // if relativePath is empty, we shouldn't constrain to it
-                return !String.IsNullOrWhiteSpace(this.RelativePath);
-            }
-        }
+        public bool ConstrainToRelativePath =>
+            // if relativePath is empty, we shouldn't constrain to it
+            !String.IsNullOrWhiteSpace(this.RelativePath);
 
         public Arguments(string[] arguments)
         {
@@ -58,7 +53,7 @@ namespace Timelapse.DataStructures
                     default:
                         break;
                 }
-            };
+            }
         }
     }
 }

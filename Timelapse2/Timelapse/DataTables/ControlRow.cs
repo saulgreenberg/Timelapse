@@ -14,66 +14,66 @@ namespace Timelapse.Database
         #region Public Properties
         public long ControlOrder
         {
-            get { return this.Row.GetLongField(Constant.Control.ControlOrder); }
-            set { this.Row.SetField(Constant.Control.ControlOrder, value); }
+            get => this.Row.GetLongField(Constant.Control.ControlOrder);
+            set => this.Row.SetField(Constant.Control.ControlOrder, value);
         }
 
         public bool Copyable
         {
-            get { return this.Row.GetBooleanField(Constant.Control.Copyable); }
-            set { this.Row.SetField(Constant.Control.Copyable, value); }
+            get => this.Row.GetBooleanField(Constant.Control.Copyable);
+            set => this.Row.SetField(Constant.Control.Copyable, value);
         }
 
         public string DataLabel
         {
-            get { return this.Row.GetStringField(Constant.Control.DataLabel); }
-            set { this.Row.SetField(Constant.Control.DataLabel, value); }
+            get => this.Row.GetStringField(Constant.Control.DataLabel);
+            set => this.Row.SetField(Constant.Control.DataLabel, value);
         }
 
         public string DefaultValue
         {
-            get { return this.Row.GetStringField(Constant.Control.DefaultValue); }
-            set { this.Row.SetField(Constant.Control.DefaultValue, value); }
+            get => this.Row.GetStringField(Constant.Control.DefaultValue);
+            set => this.Row.SetField(Constant.Control.DefaultValue, value);
         }
 
         public string Label
         {
-            get { return this.Row.GetStringField(Constant.Control.Label); }
-            set { this.Row.SetField(Constant.Control.Label, value); }
+            get => this.Row.GetStringField(Constant.Control.Label);
+            set => this.Row.SetField(Constant.Control.Label, value);
         }
         public string List
         {
-            get { return this.Row.GetStringField(Constant.Control.List); }
-            set { this.Row.SetField(Constant.Control.List, value); }
+            get => this.Row.GetStringField(Constant.Control.List);
+            set => this.Row.SetField(Constant.Control.List, value);
         }
 
         public long SpreadsheetOrder
         {
-            get { return this.Row.GetLongField(Constant.Control.SpreadsheetOrder); }
-            set { this.Row.SetField(Constant.Control.SpreadsheetOrder, value); }
+            get => this.Row.GetLongField(Constant.Control.SpreadsheetOrder);
+            set => this.Row.SetField(Constant.Control.SpreadsheetOrder, value);
         }
 
         public string Tooltip
         {
-            get { return this.Row.GetStringField(Constant.Control.Tooltip); }
-            set { this.Row.SetField(Constant.Control.Tooltip, value); }
+            get => this.Row.GetStringField(Constant.Control.Tooltip);
+            set => this.Row.SetField(Constant.Control.Tooltip, value);
         }
 
         public string Type
         {
-            get { return this.Row.GetStringField(Constant.Control.Type); }
-            set { this.Row.SetField(Constant.Control.Type, value); }
+            get => this.Row.GetStringField(Constant.Control.Type);
+            set => this.Row.SetField(Constant.Control.Type, value);
         }
 
         public bool Visible
         {
-            get { return this.Row.GetBooleanField(Constant.Control.Visible); }
-            set { this.Row.SetField(Constant.Control.Visible, value); }
+            get => this.Row.GetBooleanField(Constant.Control.Visible);
+            set => this.Row.SetField(Constant.Control.Visible, value);
         }
         public int Width
         {
-            get { return this.Row.GetIntegerField(Constant.Control.TextBoxWidth); }
-            set { this.Row.SetField(Constant.Control.TextBoxWidth, value); }
+            get => this.Row.GetIntegerField(Constant.Control.TextBoxWidth);
+            set => this.Row.SetField(Constant.Control.TextBoxWidth, value);
         }
         #endregion
 

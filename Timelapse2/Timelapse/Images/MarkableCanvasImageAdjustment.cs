@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Timelapse.Controls;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
@@ -15,7 +16,7 @@ namespace Timelapse.Images
     // This portion of the Markable Canvas 
     // - handles image procesing adjustments as requested by events sent via the ImageAdjuster.
     // - generates events indicating image state to be consumed by the Image Adjuster to adjust its own state (e.g., disabled, reset, etc).
-    public partial class MarkableCanvas : Canvas
+    public partial class MarkableCanvas
     {
         #region EventHandler definitions
         // Whenever an image state is changed, raise an event (to be consumed by ImageAdjuster)
@@ -66,7 +67,7 @@ namespace Timelapse.Images
             }
 
             string path = DataEntryHandler.TryGetFilePathFromGlobalDataHandler();
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
                 // The file cannot be opened or is not displayable. 
                 // Signal change in image state, which essentially says there is no displayable image to adjust (consumed by ImageAdjuster)
@@ -81,7 +82,7 @@ namespace Timelapse.Images
                 if (ProcessExecution.TryProcessStart(path) == false)
                 {
                     // Can't open the image file with an external view. Note that file must exist at this point as we checked for that above.
-                    Dialogs.MarkableCanvasCantOpenExternalPhotoViewerDialog(Util.GlobalReferences.MainWindow, Path.GetExtension(path));
+                    Dialogs.MarkableCanvasCantOpenExternalPhotoViewerDialog(GlobalReferences.MainWindow, Path.GetExtension(path));
                 }
                 return;
             }
@@ -128,8 +129,8 @@ namespace Timelapse.Images
             }
             try
             {
-                string path = DataEntryHandler.TryGetFilePathFromGlobalDataHandler(); ;
-                if (String.IsNullOrEmpty(path))
+                string path = DataEntryHandler.TryGetFilePathFromGlobalDataHandler();
+                if (string.IsNullOrEmpty(path))
                 {
                     // If we cannot get a valid file, there is no image to manipulate. 
                     // So abort and signal a change in image state that says there is no displayable image to adjust (consumed by ImageAdjuster)
@@ -175,7 +176,7 @@ namespace Timelapse.Images
                 this.GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuser)
                 return;
             }
-            ImageCache imageCache = Util.GlobalReferences.MainWindow?.DataHandler?.ImageCache;
+            ImageCache imageCache = GlobalReferences.MainWindow?.DataHandler?.ImageCache;
             if (imageCache != null)
             {
                 if (imageCache.Current?.IsVideo == true)

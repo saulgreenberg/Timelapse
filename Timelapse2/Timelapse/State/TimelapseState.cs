@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Input;
+using Timelapse.DataStructures;
 using Timelapse.ExifTool;
 
 namespace Timelapse.Util
@@ -32,16 +33,13 @@ namespace Timelapse.Util
         private double _boundingBoxDisplayThreshold;
         public double BoundingBoxDisplayThreshold
         {
-            get
-            {
-                return _boundingBoxDisplayThreshold;
-            }
+            get => _boundingBoxDisplayThreshold;
             set
             {
                 _boundingBoxDisplayThreshold = value;
-                if (Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null)
+                if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null)
                 {
-                    Util.GlobalReferences.MainWindow.DataHandler?.FileDatabase.TrySetBoundingBoxDisplayThreshold((float)value);
+                    GlobalReferences.MainWindow.DataHandler?.FileDatabase.TrySetBoundingBoxDisplayThreshold((float)value);
                 }
             }
         }
@@ -92,9 +90,9 @@ namespace Timelapse.Util
         {
             //  Set the default bounding box display threshold value, if needed
             // This guarantees that there is something there, at the very least.
-            if (Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null
-                && Util.GlobalReferences.MainWindow.DataHandler.FileDatabase.DetectionsExists()
-                && true == Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase.TryGetBoundingBoxDisplayThreshold(out float threshold)
+            if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null
+                && GlobalReferences.MainWindow.DataHandler.FileDatabase.DetectionsExists()
+                && true == GlobalReferences.MainWindow?.DataHandler?.FileDatabase.TryGetBoundingBoxDisplayThreshold(out float threshold)
                 && threshold != Constant.RecognizerValues.Undefined)
             {
                 this.BoundingBoxDisplayThreshold = threshold;
@@ -109,8 +107,8 @@ namespace Timelapse.Util
         {
             //  Set the default bounding box display threshold value, if needed
             // This guarantees that there is something there, at the very least.
-            if (Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                || false == Util.GlobalReferences.MainWindow.DataHandler?.FileDatabase.DetectionsExists())
+            if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
+                || false == GlobalReferences.MainWindow.DataHandler?.FileDatabase.DetectionsExists())
             {
                 // We don't have a way to calculate the bounding box threshold, so just use this default for now
                 this.BoundingBoxDisplayThreshold = 0.5;
@@ -118,8 +116,8 @@ namespace Timelapse.Util
             else
             {
                 // Calculate the bounding box threshold from the typical and conservative values as specified in the  recognition file
-                float typicalThreshold = Util.GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
-                float conservativeThreshold = Util.GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
+                float typicalThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
+                float conservativeThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
                 this.BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
             }
         }

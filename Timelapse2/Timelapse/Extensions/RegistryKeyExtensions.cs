@@ -282,11 +282,8 @@ namespace Timelapse.Util
                 if (values != null)
                 {
                     // create the key whose values represent elements of the list
-                    RegistryKey subKey = registryKey.OpenSubKey(subKeyPath, true);
-                    if (subKey == null)
-                    {
-                        subKey = registryKey.CreateSubKey(subKeyPath);
-                    }
+                    RegistryKey subKey = registryKey.OpenSubKey(subKeyPath, true) 
+                                         ?? registryKey.CreateSubKey(subKeyPath);
 
                     // write the values
                     int index = 0;

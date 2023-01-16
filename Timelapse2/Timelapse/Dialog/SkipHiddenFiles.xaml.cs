@@ -5,7 +5,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for SkipHiddenFiles.xaml
     /// </summary>
-    public partial class SkipHiddenFiles : Window
+    public partial class SkipHiddenFiles
     {
         #region Constructor, Loaded
         public SkipHiddenFiles(Window owner)

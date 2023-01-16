@@ -95,12 +95,6 @@ namespace Timelapse.Recognition
         public classifier_metadata classifier_metadata { get; set; }
         #endregion
 
-        #region Constructor
-        public info()
-        {
-        }
-        #endregion
-
         #region Public Set Defaults
         // Defaults are just used as needed
         public void SetInfoDefaults()

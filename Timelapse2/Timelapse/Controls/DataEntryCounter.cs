@@ -4,7 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
+using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.Controls
@@ -16,33 +18,21 @@ namespace Timelapse.Controls
     {
         #region Public Properties and Private variables
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft
-        {
-            get { return this.ContentControl.PointToScreen(new Point(0, 0)); }
-        }
+        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl
-        {
-            get { return this.ContentControl; }
-        }
+        public override UIElement GetContentControl => this.ContentControl;
 
-        public override bool IsContentControlEnabled
-        {
-            get { return this.ContentControl.IsEnabled; }
-        }
+        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the content of the counter.</summary>
-        public override string Content
-        {
-            get { return this.ContentControl.Text; }
-        }
+        public override string Content => this.ContentControl.Text;
 
         public override bool ContentReadOnly
         {
-            get { return this.ContentControl.IsReadOnly; }
+            get => this.ContentControl.IsReadOnly;
             set
             {
-                if (Util.GlobalReferences.TimelapseState.IsViewOnly)
+                if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
                     this.ContentControl.IsReadOnly = true;
                     this.ContentControl.IsHitTestVisible = false;
@@ -54,10 +44,7 @@ namespace Timelapse.Controls
             }
         }
 
-        public bool IsSelected
-        {
-            get { return this.LabelControl.IsChecked.HasValue && (bool)this.LabelControl.IsChecked; }
-        }
+        public bool IsSelected => this.LabelControl.IsChecked.HasValue && (bool)this.LabelControl.IsChecked;
 
         // Holds the DataLabel of the previously clicked counter control across all counters
         private static string previousControlDataLabel = String.Empty;
@@ -89,7 +76,7 @@ namespace Timelapse.Controls
             if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is Xceed.Wpf.Toolkit.WatermarkTextBox textBox)
             {
                 // If we are in viewonly state, this ensures that the number textbox can't be edited.
-                textBox.IsReadOnly = Util.GlobalReferences.TimelapseState.IsViewOnly;
+                textBox.IsReadOnly = GlobalReferences.TimelapseState.IsViewOnly;
             }
         }
 

@@ -10,7 +10,7 @@ using Timelapse.Util;
 namespace Timelapse
 {
     // File Selection which includes showing the current file
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Partial Methods - FilesSelectAndShow, various invokingforms
         private async Task FilesSelectAndShowAsync()
@@ -42,7 +42,7 @@ namespace Timelapse
             // if the data grid is bound the file database automatically updates its contents on SelectFiles()
             if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
             {
-                TracePrint.PrintMessage("FilesSelectAndShow() should not be reachable with a null data handler.  Is a menu item wrongly enabled?"); ;
+                TracePrint.PrintMessage("FilesSelectAndShow() should not be reachable with a null data handler.  Is a menu item wrongly enabled?");
             }
 
             // Select the files according to the given selection

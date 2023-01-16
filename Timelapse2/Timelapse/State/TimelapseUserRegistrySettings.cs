@@ -139,7 +139,7 @@ namespace Timelapse.Util
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())
             {
-                return !String.IsNullOrEmpty(registryKey.GetString(key, String.Empty));
+                return !string.IsNullOrEmpty(registryKey.GetString(key, String.Empty));
             }
         }
 

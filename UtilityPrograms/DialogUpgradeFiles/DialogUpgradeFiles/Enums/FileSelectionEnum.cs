@@ -1,6 +1,6 @@
 ﻿namespace DialogUpgradeFiles.Enums
 {
-    public enum FileSelectionEnum : int
+    public enum FileSelectionEnum
     {
         // file selections also used as image qualities
         Ok = 0,

@@ -28,7 +28,8 @@ namespace DialogUpgradeFiles.Database
                 case FileExtensionEnum.IsNotImageOrVideo:
                 default:
                     // This should never be reached
-                    throw new NotSupportedException(String.Format("Unhandled extension for file '{0}'.", row.GetStringField(Constant.DatabaseColumn.File)));
+                    throw new NotSupportedException(
+                        $"Unhandled extension for file '{row.GetStringField(Constant.DatabaseColumn.File)}'.");
             }
         }
 

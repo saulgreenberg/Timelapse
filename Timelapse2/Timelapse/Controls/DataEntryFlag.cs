@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -18,34 +19,23 @@ namespace Timelapse.Controls
     {
         #region Public Properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft
-        {
-            get { return this.ContentControl.PointToScreen(new Point(0, 0)); }
-        }
-        public override UIElement GetContentControl
-        {
-            get { return this.ContentControl; }
-        }
+        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
 
-        public override bool IsContentControlEnabled
-        {
-            get { return this.ContentControl.IsEnabled; }
-        }
+        public override UIElement GetContentControl => this.ContentControl;
+
+        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the Content of the Flag</summary>
-        public override string Content
-        {
-            get { return (this.ContentControl.IsChecked != null && (bool)this.ContentControl.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False; }
-        }
+        public override string Content => (this.ContentControl.IsChecked != null && (bool)this.ContentControl.IsChecked) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
 
         // This override has slightly different code compared to the other DataEntry types.. 
         private bool contentReadOnly;
         public override bool ContentReadOnly
         {
-            get { return this.contentReadOnly; }
+            get => this.contentReadOnly;
             set
             {
-                if (Util.GlobalReferences.TimelapseState.IsViewOnly)
+                if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
                     this.contentReadOnly = true;
                     this.ContentControl.IsHitTestVisible = false;
@@ -132,7 +122,7 @@ namespace Timelapse.Controls
             CheckBox popupText = new CheckBox
             {
                 Width = width < 20 ? 20 : width,
-                Height = (control == null) ? Double.NaN : control.Height,
+                Height = control?.Height ?? Double.NaN,
                 Padding = padding,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -155,7 +145,7 @@ namespace Timelapse.Controls
             Popup popup = new Popup
             {
                 Width = width,
-                Height = (control == null) ? Double.NaN : control.Height,
+                Height = control?.Height ?? Double.NaN,
                 VerticalAlignment = VerticalAlignment.Bottom,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Placement = PlacementMode.Center,
@@ -237,8 +227,7 @@ namespace Timelapse.Controls
             CheckBox popupText = (CheckBox)border.Child;
 
             // Animate the color from white back to its current color
-            ColorAnimation animation;
-            animation = new ColorAnimation()
+            ColorAnimation animation = new ColorAnimation()
             {
                 From = Colors.White,
                 AutoReverse = false,

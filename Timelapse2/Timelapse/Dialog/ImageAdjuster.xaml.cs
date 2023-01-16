@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Timelapse.DataStructures;
 using Timelapse.EventArguments;
 using Timelapse.Util;
 
@@ -11,7 +12,7 @@ namespace Timelapse.Dialog
     ///// <summary>
     ///// Interaction logic for ImageAdjuster.xaml
     /// </summary>
-    public partial class ImageAdjuster : Window
+    public partial class ImageAdjuster
     {
         #region Private variables
         // Store the various parameters that indicate how the image should be adjusted
@@ -73,7 +74,7 @@ namespace Timelapse.Dialog
         public new void Show()
         {
             // Receipt of this event from the Markable Canvase provides information used to decide how this control should appear e.g., reset, activated, etc.
-            Util.GlobalReferences.MainWindow.MarkableCanvas.ImageStateChanged += this.ConfigureWindowState;
+            GlobalReferences.MainWindow.MarkableCanvas.ImageStateChanged += this.ConfigureWindowState;
             base.Show();
         }
 
@@ -82,7 +83,7 @@ namespace Timelapse.Dialog
         {
             this.ResetControlsToNeutralValues();
             this.UpdateImageParametersAndGenerateEvent();
-            Util.GlobalReferences.MainWindow.MarkableCanvas.ImageStateChanged -= this.ConfigureWindowState;
+            GlobalReferences.MainWindow.MarkableCanvas.ImageStateChanged -= this.ConfigureWindowState;
             base.Hide();
         }
         #endregion

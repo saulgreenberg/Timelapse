@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -19,7 +20,7 @@ using Task = System.Threading.Tasks.Task;
 // File Menu Callbacks
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region File Submenu Opening 
         private void File_SubmenuOpening(object sender, RoutedEventArgs e)
@@ -145,7 +146,7 @@ namespace Timelapse
 
                 // If an invalid file is found when trying to merge, it will raise a dialog box as well.
                 Dialog.MergeChooseDatabaseFiles mergeChooseDatabaseFiles = new Dialog.MergeChooseDatabaseFiles(this, templateDatabasePath);
-                if (mergeChooseDatabaseFiles.FoundInvalidFiles == true)
+                if (mergeChooseDatabaseFiles.FoundInvalidFiles)
                 {
                     // some of the found ddb files are invalid, so abort.
                     return;
@@ -211,14 +212,9 @@ namespace Timelapse
             }
 
             // Backup the csv file if it exists, as the export will overwrite it. 
-            if (FileBackup.TryCreateBackup(this.FolderPath, selectedCSVFilePath))
-            {
-                this.StatusBar.SetMessage("Backup of csv file made.");
-            }
-            else
-            {
-                this.StatusBar.SetMessage("No csv file backup was made.");
-            }
+            this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, selectedCSVFilePath)
+                ? "Backup of csv file made."
+                : "No csv file backup was made.");
 
             try
             {
@@ -289,22 +285,17 @@ namespace Timelapse
             }
 
             // Create a backup database file
-            if (FileBackup.TryCreateBackup(this.FolderPath, this.DataHandler.FileDatabase.FileName))
-            {
-                this.StatusBar.SetMessage("Backup of data file made.");
-            }
-            else
-            {
-                this.StatusBar.SetMessage("No data file backup was made.");
-            }
+            this.StatusBar.SetMessage(
+                FileBackup.TryCreateBackup(this.FolderPath, this.DataHandler.FileDatabase.FileName)
+                    ? "Backup of data file made."
+                    : "No data file backup was made.");
 
             try
             {
                 // Show the Busy indicator
                 this.BusyCancelIndicator.IsBusy = true;
 
-                Tuple<bool, List<string>> resultAndImportErrors;
-                resultAndImportErrors = await CsvReaderWriter.TryImportFromCsv(csvFilePath, this.DataHandler.FileDatabase).ConfigureAwait(true);
+                Tuple<bool, List<string>> resultAndImportErrors = await CsvReaderWriter.TryImportFromCsv(csvFilePath, this.DataHandler.FileDatabase).ConfigureAwait(true);
 
                 this.BusyCancelIndicator.IsBusy = false;
 

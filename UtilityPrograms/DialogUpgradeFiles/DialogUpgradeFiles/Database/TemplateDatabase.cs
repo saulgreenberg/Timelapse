@@ -39,7 +39,7 @@ namespace DialogUpgradeFiles.Database
         }
         #endregion
 
-        public async static Task<Tuple<bool, TemplateDatabase>> TryCreateOrOpenAsync(string filePath)
+        public static async Task<Tuple<bool, TemplateDatabase>> TryCreateOrOpenAsync(string filePath)
         {
             // Follow the MSDN design pattern for returning an IDisposable: https://www.codeproject.com/Questions/385273/Returning-a-Disposable-Object-from-a-Method
             TemplateDatabase disposableTemplateDB = null;
@@ -64,7 +64,7 @@ namespace DialogUpgradeFiles.Database
             }
         }
 
-        public async static Task<TemplateDatabase> CreateOrOpenAsync(string filePath)
+        public static async Task<TemplateDatabase> CreateOrOpenAsync(string filePath)
         {
             // check for an existing database before instantiating the database as SQL wrapper instantiation creates the database file
             bool populateDatabase = !File.Exists(filePath);
@@ -94,7 +94,7 @@ namespace DialogUpgradeFiles.Database
         }
 
         // Note the extra call in here, where we try to guarantee that the DateTime Defaults are in the new format.
-        protected async virtual Task OnExistingDatabaseOpenedAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
+        protected virtual async Task OnExistingDatabaseOpenedAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
         {
             await Task.Run(() =>
             {
@@ -428,7 +428,7 @@ namespace DialogUpgradeFiles.Database
             // The database file exists. However, we still need to check if its valid. 
             using (TemplateDatabase database = new TemplateDatabase(filePath))
             {
-                if (database?.Database == null)
+                if (database.Database == null)
                 {
                     return false;
                 }
@@ -520,7 +520,8 @@ namespace DialogUpgradeFiles.Database
                         maximumID = control.ID;
                     }
                 }
-                Debug.Assert((maximumID > 0) && (maximumID <= Int64.MaxValue), String.Format("Maximum ID found is {0}, which is out of range.", maximumID));
+                Debug.Assert((maximumID > 0) && (maximumID <= Int64.MaxValue),
+                    $"Maximum ID found is {maximumID}, which is out of range.");
                 string jumpAmount = maximumID.ToString();
 
                 string increaseIDs = Sql.Update + Constant.DBTables.Template;
@@ -648,7 +649,7 @@ namespace DialogUpgradeFiles.Database
         {
             // Utilities.PrintMethodName();
             DataTable templateTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Template + Sql.OrderBy + Constant.Control.ControlOrder);
-            this.Controls = new DataTableBackedList<ControlRow>(templateTable, (DataRow row) => { return new ControlRow(row); });
+            this.Controls = new DataTableBackedList<ControlRow>(templateTable, row => new ControlRow(row));
             this.Controls.BindDataGrid(null, null);
         }
         #endregion
@@ -753,13 +754,15 @@ namespace DialogUpgradeFiles.Database
             // argument validation. Only ControlOrder and SpreadsheetOrder are orderable columns
             if (orderColumnName != Constant.Control.ControlOrder && orderColumnName != Constant.Control.SpreadsheetOrder)
             {
-                throw new ArgumentOutOfRangeException(nameof(orderColumnName), String.Format("column '{0}' is not a control order column.  Only '{1}' and '{2}' are order columns.", orderColumnName, Constant.Control.ControlOrder, Constant.Control.SpreadsheetOrder));
+                throw new ArgumentOutOfRangeException(nameof(orderColumnName),
+                    $"column '{orderColumnName}' is not a control order column.  Only '{Constant.Control.ControlOrder}' and '{Constant.Control.SpreadsheetOrder}' are order columns.");
             }
 
             List<long> uniqueOrderValues = newOrderByDataLabel.Values.Distinct().ToList();
             if (uniqueOrderValues.Count != newOrderByDataLabel.Count)
             {
-                throw new ArgumentException(String.Format("newOrderByDataLabel: Each control must have a unique value for its order.  {0} duplicate values were passed for '{1}'.", newOrderByDataLabel.Count - uniqueOrderValues.Count, orderColumnName), nameof(newOrderByDataLabel));
+                throw new ArgumentException(
+                    $"newOrderByDataLabel: Each control must have a unique value for its order.  {newOrderByDataLabel.Count - uniqueOrderValues.Count} duplicate values were passed for '{orderColumnName}'.", nameof(newOrderByDataLabel));
             }
 
             uniqueOrderValues.Sort();
@@ -769,7 +772,8 @@ namespace DialogUpgradeFiles.Database
                 int expectedOrder = control + 1;
                 if (uniqueOrderValues[control] != expectedOrder)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(newOrderByDataLabel), String.Format("Control order must be a one's based count.  An order of {0} was passed instead of the expected order {1} for '{2}'.", uniqueOrderValues[0], expectedOrder, orderColumnName));
+                    throw new ArgumentOutOfRangeException(nameof(newOrderByDataLabel),
+                        $"Control order must be a one's based count.  An order of {uniqueOrderValues[0]} was passed instead of the expected order {expectedOrder} for '{orderColumnName}'.");
                 }
             }
 

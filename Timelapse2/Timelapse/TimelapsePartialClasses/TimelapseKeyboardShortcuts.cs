@@ -7,7 +7,7 @@ using Timelapse.Util;
 namespace Timelapse
 {
     // Keyboard shortcuts
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Callbacks - PreviewKeyDown and PreviewKeyUp
         // If its an arrow key and the textbox doesn't have the focus,
@@ -138,7 +138,7 @@ namespace Timelapse
                             // At this point, the episodes should be showing and the increment amount should be reset (see the out parameter above)
                         }
                     }
-                    if (currentKey.IsRepeat == false || (currentKey.IsRepeat == true && keyRepeatCount % this.State.Throttles.RepeatedKeyAcceptanceInterval == 0))
+                    if (currentKey.IsRepeat == false || (currentKey.IsRepeat && keyRepeatCount % this.State.Throttles.RepeatedKeyAcceptanceInterval == 0))
                     {
                         this.TryFileShowWithoutSliderCallback(direction, increment);
                     }
@@ -207,7 +207,7 @@ namespace Timelapse
                     else
                     {
                         this.FilePlayer_Stop();      // In case the FilePlayer is going
-                        if (currentKey.IsRepeat == false || (currentKey.IsRepeat == true && keyRepeatCount % this.State.Throttles.RepeatedKeyAcceptanceInterval == 0))
+                        if (currentKey.IsRepeat == false || (currentKey.IsRepeat && keyRepeatCount % this.State.Throttles.RepeatedKeyAcceptanceInterval == 0))
                         {
                             this.TryFileShowWithoutSliderCallback(direction);
                         }

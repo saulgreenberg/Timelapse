@@ -40,12 +40,12 @@ namespace Timelapse.Recognition
         #region Public: Create the various recognition tables
         // Create the various recognition tables in the database provided.
         // Assumes that the database exists and that the tables aren't already in them.
-        static public void CreateRecognitionTables(SQLiteWrapper database)
+        public static void CreateRecognitionTables(SQLiteWrapper database)
         {
             // Info table
             List<SchemaColumnDefinition> columnDefinitions = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(Constant.InfoColumns.InfoID, Timelapse.Sql.IntegerType + Timelapse.Sql.PrimaryKey), // Primary Key
+                new SchemaColumnDefinition(Constant.InfoColumns.InfoID, Sql.IntegerType + Sql.PrimaryKey), // Primary Key
                 new SchemaColumnDefinition(Constant.InfoColumns.Detector,  Sql.StringType),
                 new SchemaColumnDefinition(Constant.InfoColumns.DetectorVersion,  Sql.StringType, Constant.RecognizerValues.MDVersionUnknown),
                 new SchemaColumnDefinition(Constant.InfoColumns.DetectionCompletionTime,  Sql.StringType),
@@ -60,7 +60,7 @@ namespace Timelapse.Recognition
             // DetectionCategories
             columnDefinitions = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(Constant.DetectionCategoriesColumns.Category,  Sql.StringType + Timelapse.Sql.PrimaryKey), // Primary Key
+                new SchemaColumnDefinition(Constant.DetectionCategoriesColumns.Category,  Sql.StringType + Sql.PrimaryKey), // Primary Key
                 new SchemaColumnDefinition(Constant.DetectionCategoriesColumns.Label,  Sql.StringType),
             };
             database.CreateTable(Constant.DBTables.DetectionCategories, columnDefinitions);
@@ -68,7 +68,7 @@ namespace Timelapse.Recognition
             // ClassificationCategories: create or clear table 
             columnDefinitions = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(Constant.ClassificationCategoriesColumns.Category,  Sql.StringType + Timelapse.Sql.PrimaryKey), // Primary Key
+                new SchemaColumnDefinition(Constant.ClassificationCategoriesColumns.Category,  Sql.StringType + Sql.PrimaryKey), // Primary Key
                 new SchemaColumnDefinition(Constant.ClassificationCategoriesColumns.Label,  Sql.StringType),
             };
             database.CreateTable(Constant.DBTables.ClassificationCategories, columnDefinitions);
@@ -76,11 +76,11 @@ namespace Timelapse.Recognition
             // Detections 
             columnDefinitions = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(Constant.DetectionColumns.DetectionID, Timelapse.Sql.IntegerType + Timelapse.Sql.PrimaryKey),
+                new SchemaColumnDefinition(Constant.DetectionColumns.DetectionID, Sql.IntegerType + Sql.PrimaryKey),
                 new SchemaColumnDefinition(Constant.DetectionColumns.Category,  Sql.StringType),
                 new SchemaColumnDefinition(Constant.DetectionColumns.Conf,  Sql.Real),
                 new SchemaColumnDefinition(Constant.DetectionColumns.BBox,  Sql.StringType), // Will need to parse it into new new double[4]
-                new SchemaColumnDefinition(Constant.DetectionColumns.ImageID, Timelapse.Sql.IntegerType), // Foreign key: ImageID
+                new SchemaColumnDefinition(Constant.DetectionColumns.ImageID, Sql.IntegerType), // Foreign key: ImageID
                 new SchemaColumnDefinition("FOREIGN KEY ( " + Constant.DetectionColumns.ImageID + " )", "REFERENCES " + Constant.DBTables.FileData + " ( " + Constant.DetectionColumns.ImageID + " ) " + " ON DELETE CASCADE "),
             };
             database.CreateTable(Constant.DBTables.Detections, columnDefinitions);
@@ -88,10 +88,10 @@ namespace Timelapse.Recognition
             // Classifications 
             columnDefinitions = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(Constant.ClassificationColumns.ClassificationID, Timelapse.Sql.IntegerType + Timelapse.Sql.PrimaryKey),
+                new SchemaColumnDefinition(Constant.ClassificationColumns.ClassificationID, Sql.IntegerType + Sql.PrimaryKey),
                 new SchemaColumnDefinition(Constant.ClassificationColumns.Category, Sql.StringType),
                 new SchemaColumnDefinition(Constant.ClassificationColumns.Conf,  Sql.Real),
-                new SchemaColumnDefinition(Constant.ClassificationColumns.DetectionID, Timelapse.Sql.IntegerType), // Foreign key: ImageID
+                new SchemaColumnDefinition(Constant.ClassificationColumns.DetectionID, Sql.IntegerType), // Foreign key: ImageID
                 new SchemaColumnDefinition("FOREIGN KEY ( " + Constant.ClassificationColumns.DetectionID + " )", "REFERENCES " + Constant.DBTables.Detections + " ( " + Constant.ClassificationColumns.DetectionID + " ) " + " ON DELETE CASCADE "),
             };
             database.CreateTable(Constant.DBTables.Classifications, columnDefinitions);
@@ -244,7 +244,7 @@ namespace Timelapse.Recognition
                     // As well, detections whose path is in the prefix should not be read in, as they are outside of this sub-folder
                     // It occurs when the actual images were in a subfolder, where that subfolder was read in separately as a datafile
                     // That is, the .tdb file was located in an image subfolder, rather than in the root folder where the detections were done
-                    string imageFile = String.Empty;
+                    string imageFile;
                     if (string.IsNullOrEmpty(pathPrefixForTruncation))
                     {
                         imageFile = image.file;
@@ -257,12 +257,9 @@ namespace Timelapse.Recognition
                             // System.Diagnostics.Debug.Print("Skipping: " + image.file);
                             continue;
                         }
-                        else
-                        {
-                            // Remove the trunctation prefex from the file path 
-                            imageFile = image.file.Substring(pathPrefixForTruncation.Length);
-                            // System.Diagnostics.Debug.Print("Using: " + image.file + " as " + imageFile);
-                        }
+                        // Remove the trunctation prefex from the file path 
+                        imageFile = image.file.Substring(pathPrefixForTruncation.Length);
+                        // System.Diagnostics.Debug.Print("Using: " + image.file + " as " + imageFile);
                     }
 
                     // Form: FILE = Filename AND RELATIVEPATH = RelativePath
@@ -279,11 +276,11 @@ namespace Timelapse.Recognition
                         // System.Diagnostics.Debug.Print("Could not find: " + image.file);
                         continue;
                     }
-                    for (int i = 0; i < rows.Length; i++)
+                    foreach (DataRow t in rows)
                     {
                         // Get the image id from the image
                         // If we can't, just skip it (this should not happen)
-                        if (Int32.TryParse(rows[i][0].ToString(), out int id))
+                        if (Int32.TryParse(t[0].ToString(), out int id))
                         {
                             image.imageID = id;
                         }
@@ -339,12 +336,12 @@ namespace Timelapse.Recognition
                                     }
                                     // System.Diagnostics.Debug.Print(String.Format("{0} {1} {2}", detection.detectionID, category, conf));
                                     List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>()
-                                {
-                                    new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
-                                    new ColumnTuple(Constant.ClassificationColumns.DetectionID, detection.detectionID),
-                                    new ColumnTuple(Constant.ClassificationColumns.Category, (string)classification[0]),
-                                    new ColumnTuple(Constant.ClassificationColumns.Conf, String.Format(CultureInfo.InvariantCulture, "{0}", (float)Double.Parse(classification[1].ToString()))),
-                                };
+                                    {
+                                        new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
+                                        new ColumnTuple(Constant.ClassificationColumns.DetectionID, detection.detectionID),
+                                        new ColumnTuple(Constant.ClassificationColumns.Category, (string)classification[0]),
+                                        new ColumnTuple(Constant.ClassificationColumns.Conf, String.Format(CultureInfo.InvariantCulture, "{0}", (float)Double.Parse(classification[1].ToString()))),
+                                    };
                                     classificationInsertionStatements.Add(classificationColumnsToUpdate);
                                     classificationIndex++;
                                 }
@@ -356,13 +353,13 @@ namespace Timelapse.Recognition
                         {
                             string bboxAsString = String.Empty;
                             List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>()
-                        {
+                            {
                                 new ColumnTuple(Constant.DetectionColumns.DetectionID, detectionIndex++),
                                 new ColumnTuple(Constant.DetectionColumns.ImageID, image.imageID),
                                 new ColumnTuple(Constant.DetectionColumns.Category, Constant.RecognizerValues.NoDetectionCategory),
                                 new ColumnTuple(Constant.DetectionColumns.Conf, 0),
                                 new ColumnTuple(Constant.DetectionColumns.BBox, bboxAsString),
-                        };
+                            };
                             detectionInsertionStatements.Add(detectionColumnsToUpdate);
                         }
                         fileCount++;
@@ -526,11 +523,11 @@ namespace Timelapse.Recognition
                         // System.Diagnostics.Debug.Print("Could not find: " + image.file);
                         continue;
                     }
-                    for (int i = 0; i < rows.Length; i++)
+                    foreach (DataRow t in rows)
                     {
                         // Get the image id from the image
                         // If we can't, just skip it (this should not happen)
-                        if (Int32.TryParse(rows[i][0].ToString(), out int id))
+                        if (Int32.TryParse(t[0].ToString(), out int id))
                         {
                             image.imageID = id;
                         }
@@ -586,12 +583,12 @@ namespace Timelapse.Recognition
                                     }
                                     // System.Diagnostics.Debug.Print(String.Format("{0} {1} {2}", detection.detectionID, category, conf));
                                     List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>()
-                                {
-                                    new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
-                                    new ColumnTuple(Constant.ClassificationColumns.DetectionID, detection.detectionID),
-                                    new ColumnTuple(Constant.ClassificationColumns.Category, (string)classification[0]),
-                                    new ColumnTuple(Constant.ClassificationColumns.Conf, String.Format(CultureInfo.InvariantCulture, "{0}", (float)Double.Parse(classification[1].ToString()))),
-                                };
+                                    {
+                                        new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
+                                        new ColumnTuple(Constant.ClassificationColumns.DetectionID, detection.detectionID),
+                                        new ColumnTuple(Constant.ClassificationColumns.Category, (string)classification[0]),
+                                        new ColumnTuple(Constant.ClassificationColumns.Conf, String.Format(CultureInfo.InvariantCulture, "{0}", (float)Double.Parse(classification[1].ToString()))),
+                                    };
                                     classificationInsertionStatements.Add(classificationColumnsToUpdate);
                                     classificationIndex++;
                                 }
@@ -603,13 +600,13 @@ namespace Timelapse.Recognition
                         {
                             string bboxAsString = String.Empty;
                             List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>()
-                        {
+                            {
                                 new ColumnTuple(Constant.DetectionColumns.DetectionID, detectionIndex++),
                                 new ColumnTuple(Constant.DetectionColumns.ImageID, image.imageID),
                                 new ColumnTuple(Constant.DetectionColumns.Category, Constant.RecognizerValues.NoDetectionCategory),
                                 new ColumnTuple(Constant.DetectionColumns.Conf, 0),
                                 new ColumnTuple(Constant.DetectionColumns.BBox, bboxAsString),
-                        };
+                            };
                             detectionInsertionStatements.Add(detectionColumnsToUpdate);
                         }
                         fileCount++;

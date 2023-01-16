@@ -17,13 +17,8 @@ namespace Timelapse.Images
         #region Public Properties
         public ImageDifferenceEnum CurrentDifferenceState { get; private set; }
 
-        public BitmapSource GetCurrentImage
-        {
-            get
-            {
-                return this.differenceBitmapCache[this.CurrentDifferenceState];
-            }
-        }
+        public BitmapSource GetCurrentImage => this.differenceBitmapCache[this.CurrentDifferenceState];
+
         #endregion
 
         #region Private Variables
@@ -209,7 +204,7 @@ namespace Timelapse.Images
                 return false;
             }
 
-            if (this.Current.ID != oldFileID || forceUpdate == true)
+            if (this.Current.ID != oldFileID || forceUpdate)
             {
                 // if this is an image load it from cache or disk
                 BitmapSource unalteredImage = null;
@@ -278,11 +273,7 @@ namespace Timelapse.Images
                         // indicate to add the bitmap
                         return bitmap;
                     },
-                    (long existingID, BitmapSource newBitmap) =>
-                    {
-                        // indicate to update the bitmap
-                        return newBitmap;
-                    });
+                    (long existingID, BitmapSource newBitmap) => newBitmap);
                 this.mostRecentlyUsedIDs.SetMostRecent(id);
             }
         }
@@ -324,7 +315,7 @@ namespace Timelapse.Images
                     this.CacheBitmap(fileRow.ID, bitmap);
                     // System.Diagnostics.Debug.Print("Loaded as forceUpdate " + fileRow.FileName);
                 }
-                else if (this.unalteredBitmapsByID.TryGetValue(fileRow.ID, out bitmap) == true)
+                else if (this.unalteredBitmapsByID.TryGetValue(fileRow.ID, out bitmap))
                 {
                     // There is a cached bitmap, so we are now using it (in out bitmap)
                     // System.Diagnostics.Debug.Print("Prefetched immediate " + fileRow.FileName);
@@ -439,7 +430,7 @@ namespace Timelapse.Images
                 this.CacheBitmap(nextFile.ID, nextBitmap);
                 this.prefetechesByID.TryRemove(nextFile.ID, out Task ignored);
             });
-            this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (long id, Task newPrefetch) => { return newPrefetch; });
+            this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (long id, Task newPrefetch) => newPrefetch);
             return true;
         }
         #endregion

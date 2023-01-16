@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Private Methods - Episodes - Display Episode Information
         /// <summary>

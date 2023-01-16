@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
     /// NewVersionNotification.xaml
     /// Displays a dialog box with pretty-printed version change information retrieved from the web.
     /// </summary>
-    public partial class NewVersionNotification : Window
+    public partial class NewVersionNotification
     {
         #region Private Variables
         private readonly string applicationName;

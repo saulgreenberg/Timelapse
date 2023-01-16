@@ -6,7 +6,7 @@ using Timelapse.EventArguments;
 namespace Timelapse
 {
     // FilePlayer and FilePlayerTimer
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Callbacks
         // FilePlayerChange: The user has clicked on the file player. Take action on what was requested

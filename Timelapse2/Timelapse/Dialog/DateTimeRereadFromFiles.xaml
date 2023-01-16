@@ -2,8 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:local="clr-namespace:Timelapse"
-        xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Reread dates and times from files" MinHeight="600" MinWidth="768"
 		Height="500" Width="768"
 		ResizeMode="CanResizeWithGrip"

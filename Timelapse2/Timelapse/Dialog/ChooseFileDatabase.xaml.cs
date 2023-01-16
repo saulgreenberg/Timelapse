@@ -8,7 +8,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// When there is more than one .ddb file in the folder containing the template, this dialog asks the user to choose the one they want.
     /// </summary>
-    public partial class ChooseFileDatabaseFile : Window
+    public partial class ChooseFileDatabaseFile
     {
         #region Public Properties
         // This will contain the file selected by the user

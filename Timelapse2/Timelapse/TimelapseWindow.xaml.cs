@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
@@ -30,7 +31,7 @@ namespace Timelapse
     /// <summary>
     /// main window for Timelapse
     /// </summary>
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Public Properties 
         public DataEntryHandler DataHandler { get; set; }
@@ -218,7 +219,7 @@ namespace Timelapse
                 this.EnableOrDisableMenusAndControls();
             }
 
-            if (false == String.IsNullOrEmpty(this.Arguments.Template))
+            if (false == string.IsNullOrEmpty(this.Arguments.Template))
             {
                 // If its not a valid template, display a dialog and abort
                 if (false == Dialogs.DialogIsFileValid(this, this.Arguments.Template))
@@ -232,9 +233,9 @@ namespace Timelapse
                     Tuple<bool,string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(this.Arguments.Template).ConfigureAwait(true);
                     if (results.Item1 == false)
                     { 
-                       ///SAULXXX SHOULD BAIL HERE AS IT FAILED OPENING THE TEMPLATE AND/OR DATABASE
+                       // SAULXXX SHOULD BAIL HERE AS IT FAILED OPENING THE TEMPLATE AND/OR DATABASE
                     }
-                    if (false == String.IsNullOrEmpty(this.Arguments.RelativePath))
+                    if (false == string.IsNullOrEmpty(this.Arguments.RelativePath))
                     {
                         // Set and only use the relative path as a search term
                         this.DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
@@ -280,7 +281,7 @@ namespace Timelapse
                 bool? result = warning.ShowDialog();
                 if (result.HasValue && result.Value && warning.CheckBoxDontShowAgain.IsChecked.HasValue)
                 {
-                    Util.GlobalReferences.TimelapseState.SuppressWarningToUpdateDBFilesToSQLPrompt = warning.CheckBoxDontShowAgain.IsChecked == true;
+                    GlobalReferences.TimelapseState.SuppressWarningToUpdateDBFilesToSQLPrompt = warning.CheckBoxDontShowAgain.IsChecked == true;
                 }
             }
 
@@ -336,7 +337,7 @@ namespace Timelapse
                 };
                 deleteTheDeletedFolder = deleteDeletedFolders.ShowDialog() == true;
             }
-            if (deleteTheDeletedFolder == true)
+            if (deleteTheDeletedFolder)
             {
                 Directory.Delete(deletedFolderPath, true);
             }
@@ -653,7 +654,7 @@ namespace Timelapse
         private bool IsDisplayingSingleImage()
         {
             // Always false If we are in the overiew
-            if (this.MarkableCanvas.IsThumbnailGridVisible == true) return false;
+            if (this.MarkableCanvas.IsThumbnailGridVisible) return false;
 
             // True only if we are displaying at least one file in an image set
             return this.IsFileDatabaseAvailable() &&
@@ -793,7 +794,7 @@ namespace Timelapse
         private void DataGridSelectionsTimer_Reset()
         {
             this.DataGridSelectionsTimer.Stop();
-            if (this.DataGridPane.IsActive == true || this.DataGridPane.IsFloating == true)
+            if (this.DataGridPane.IsActive || this.DataGridPane.IsFloating)
             {
                 this.DataGridSelectionsTimer.Start();
             }

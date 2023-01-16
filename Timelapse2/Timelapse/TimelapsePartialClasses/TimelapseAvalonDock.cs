@@ -7,7 +7,7 @@ using Xceed.Wpf.AvalonDock.Layout;
 namespace Timelapse
 {
     // AvalonDock callbacks and methods
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Callback - Property changing 
         public void LayoutAnchorable_PropertyChanging(object sender, System.ComponentModel.PropertyChangingEventArgs e)

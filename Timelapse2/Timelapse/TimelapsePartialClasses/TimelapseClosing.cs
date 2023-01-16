@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Windows;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 namespace Timelapse
@@ -8,7 +9,7 @@ namespace Timelapse
     /// <summary>
     /// Persists and (if needed) resets the UI and various states when the image set and/or Timelapse is closing or is shutting down
     /// </summary>
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Private Methods - CloseImageSet
         /// <summary>
@@ -133,7 +134,7 @@ namespace Timelapse
 
             // Save the layout only if we are really closing Timelapse and the DataEntryControlPanel is visible, as otherwise it would be hidden
             // the next time Timelapse is started
-            if (isCompleteShutdown && this.DataEntryControlPanel.IsVisible == true)
+            if (isCompleteShutdown && this.DataEntryControlPanel.IsVisible)
             {
                 this.AvalonLayout_TrySave(Constant.AvalonLayoutTags.LastUsed);
             }

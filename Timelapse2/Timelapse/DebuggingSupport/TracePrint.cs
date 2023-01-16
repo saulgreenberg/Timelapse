@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Timelapse.DataStructures;
 
 namespace Timelapse.Util
 {
@@ -18,7 +19,7 @@ namespace Timelapse.Util
         /// <param name="message"></param>
         public static void PrintStackTraceToFile(string message)
         {
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(Util.GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
             {
                 file.WriteLine(GetMethodNameStack(message, 5));
                 file.WriteLine("----");

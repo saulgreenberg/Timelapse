@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -49,7 +50,7 @@ namespace Timelapse.Controls
         #endregion
 
         #region Configuration, including Callback Configuration
-        public static void Configure(DateTimePicker dateTimePicker, Nullable<DateTime> defaultValue)
+        public static void Configure(DateTimePicker dateTimePicker, DateTime? defaultValue)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(dateTimePicker, nameof(dateTimePicker));
@@ -149,7 +150,7 @@ namespace Timelapse.Controls
         // Create the Context menu, incluidng settings its callbakcs
         private void SetContextMenuCallbacks(DataEntryControl control)
         {
-            if (Util.GlobalReferences.TimelapseState.IsViewOnly)
+            if (GlobalReferences.TimelapseState.IsViewOnly)
             {
                 // In view-only mode, we don't create these menus as they allow editing
                 return;
@@ -501,7 +502,7 @@ namespace Timelapse.Controls
                 clipboardText = String.Empty;
                 System.Diagnostics.Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
             }
-            if (String.IsNullOrEmpty(clipboardText))
+            if (string.IsNullOrEmpty(clipboardText))
             {
                 menuItemPasteFromClipboard.IsEnabled = false;
             }
@@ -527,10 +528,10 @@ namespace Timelapse.Controls
                     // Only a value present as a menu choice is valid 
                     menuItemPasteFromClipboard.IsEnabled = false;
                     ComboBox comboBox = choiceControl.ContentControl;
-                    for (int i = 0; i < comboBox.Items.Count; i++)
+                    foreach (Object t in comboBox.Items)
                     {
                         // This check skips over the Separator
-                        if (comboBox.Items[i] is ComboBoxItem cbi)
+                        if (t is ComboBoxItem cbi)
                         {
                             if (clipboardText == ((string)cbi.Content).Trim())
                             {
@@ -633,7 +634,8 @@ namespace Timelapse.Controls
             catch (IndexOutOfRangeException e)
             {
                 // I don't know why we get this occassional error, so this is an attempt to print out the result so we can debug it
-                System.Diagnostics.Debug.Print(String.Format("IsCopyFromLastNonEmptyValuePossible: IndexOutOfRange Exception, where index is: {0}{1}{2}", currentIndex, Environment.NewLine, e.Message));
+                System.Diagnostics.Debug.Print(
+                    $"IsCopyFromLastNonEmptyValuePossible: IndexOutOfRange Exception, where index is: {currentIndex}{Environment.NewLine}{e.Message}");
                 return (nearestRowWithCopyableValue >= 0);
             }
             return (nearestRowWithCopyableValue >= 0);
@@ -888,13 +890,12 @@ namespace Timelapse.Controls
         // If we can't, or if it does not exist, return String.Empty
         public static string TryGetFilePathFromGlobalDataHandler()
         {
-            string path;
             // If anything is null, we defer resetting anything. Note that we may get an update later (e.g., via the timer)
-            DataEntryHandler handler = Util.GlobalReferences.MainWindow?.DataHandler;
+            DataEntryHandler handler = GlobalReferences.MainWindow?.DataHandler;
             if (handler?.ImageCache?.CurrentDifferenceState != null && handler?.FileDatabase != null)
             {
                 // Get the path
-                path = handler.ImageCache.Current.GetFilePath(handler.FileDatabase.FolderPath);
+                string path = handler.ImageCache.Current.GetFilePath(handler.FileDatabase.FolderPath);
                 return File.Exists(path) ? path : null;
             }
             return null;
@@ -918,10 +919,7 @@ namespace Timelapse.Controls
 
             if (disposing)
             {
-                if (this.FileDatabase != null)
-                {
-                    this.FileDatabase.Dispose();
-                }
+                this.FileDatabase?.Dispose();
             }
             this.disposed = true;
         }

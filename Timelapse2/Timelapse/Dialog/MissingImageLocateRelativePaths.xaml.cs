@@ -13,7 +13,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for FindMissingImageFolder.xaml
     /// </summary>
-    public partial class MissingImageLocateRelativePaths : Window
+    public partial class MissingImageLocateRelativePaths
     {
         #region Public Properties
         public Tuple<string, string> LocatedMissingFile
@@ -22,7 +22,7 @@ namespace Timelapse.Dialog
             {
                 foreach (Tuple<string, string, bool> tuple in observableCollection)
                 {
-                    if (tuple.Item3 == true)
+                    if (tuple.Item3)
                     {
                         return new Tuple<string, string>(Path.GetDirectoryName(tuple.Item1), Path.GetFileName(tuple.Item1));
                     }
@@ -180,16 +180,12 @@ namespace Timelapse.Dialog
                     obsCollection = new ObservableCollection<Tuple<string, string, bool>>();
                     foreach (Tuple<string, string, bool> row in this.observableCollection)
                     {
-                        if (row != rowValues)
-                        {
+                       
+                        obsCollection.Add(row != rowValues
                             // To make it work as a radio butotn, toggle all other rows to be what the selected row is not
-                            obsCollection.Add(new Tuple<string, string, bool>(row.Item1, row.Item2, rowValues.Item3));
-                        }
-                        else
-                        {
+                            ? new Tuple<string, string, bool>(row.Item1, row.Item2, rowValues.Item3)
                             // Toggle the selected row
-                            obsCollection.Add(new Tuple<string, string, bool>(rowValues.Item1, rowValues.Item2, !rowValues.Item3));
-                        }
+                            : new Tuple<string, string, bool>(rowValues.Item1, rowValues.Item2, !rowValues.Item3));
                     }
                     this.observableCollection = obsCollection;
                     this.DataGrid.ItemsSource = this.observableCollection;

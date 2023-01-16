@@ -13,7 +13,7 @@ namespace Timelapse.Controls
     /// - playing forwards and backwards through files at two different speeds
     /// It does not actually do anything except raise events signifying the user's intentions.
     /// </summary>
-    public partial class FilePlayer : UserControl
+    public partial class FilePlayer
     {
         #region Public Properties
         public DirectionEnum Direction { get; set; }

@@ -6,7 +6,7 @@ using System.Windows.Media;
 namespace Timelapse
 {
     // File Navigation Slider (including Timer) callbacks and related
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Callbacks
         // Drag Started callback
@@ -37,7 +37,7 @@ namespace Timelapse
 
             // Stop the timer, but restart it if we are dragging
             this.timerFileNavigator.Stop();
-            if (this.State.FileNavigatorSliderDragging == true)
+            if (this.State.FileNavigatorSliderDragging)
             {
                 this.timerFileNavigator.Interval = this.State.Throttles.DesiredIntervalBetweenRenders; // Throttle values may have changed, so we reset it just in case.
                 this.timerFileNavigator.Start();

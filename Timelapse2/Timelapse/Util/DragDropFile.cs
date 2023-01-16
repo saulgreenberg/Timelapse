@@ -34,14 +34,9 @@ namespace Timelapse.Util
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(dragEvent, nameof(dragEvent));
-            if (DragDropFile.IsTemplateFileDragging(dragEvent, out _))
-            {
-                dragEvent.Effects = DragDropEffects.All;
-            }
-            else
-            {
-                dragEvent.Effects = DragDropEffects.None;
-            }
+            dragEvent.Effects = DragDropFile.IsTemplateFileDragging(dragEvent, out _) 
+                ? DragDropEffects.All 
+                : DragDropEffects.None;
             dragEvent.Handled = true;
         }
         #endregion

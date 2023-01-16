@@ -10,7 +10,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for PopulateFieldsWithMetadataOnLoad.xaml
     /// </summary>
-    public partial class PopulateFieldsWithMetadataOnLoad : Window
+    public partial class PopulateFieldsWithMetadataOnLoad
     {
         #region Private variables
         // Passed in parameters
@@ -75,7 +75,7 @@ namespace Timelapse.Dialog
         private void OpenFile_Click(object sender, RoutedEventArgs e)
         {
             string filter = String.Format("Images and videos (*{0};*{1};*{2};*{3};*{4})|*{0};*{1};*{2};*{3};*{4}", Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension);
-            if (Dialogs.TryGetFileFromUserUsingOpenFileDialog("Select a typical file to inspect", ".", filter, Constant.File.JpgFileExtension, out string filePath) == true)
+            if (Dialogs.TryGetFileFromUserUsingOpenFileDialog("Select a typical file to inspect", ".", filter, Constant.File.JpgFileExtension, out string filePath))
             {
                 this.FilePath = filePath;
                 this.MetadataGrid.viewModel.FilePath = this.FilePath;

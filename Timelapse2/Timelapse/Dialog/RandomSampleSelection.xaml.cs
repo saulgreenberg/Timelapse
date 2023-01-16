@@ -8,7 +8,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for RandomSampleSelection.xaml
     /// </summary>
-    public partial class RandomSampleSelection : Window
+    public partial class RandomSampleSelection
     {
         public int SampleSize { get; set; }
 

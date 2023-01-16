@@ -99,7 +99,7 @@ namespace Timelapse.Editor
                 bool? result = warning.ShowDialog();
                 if (result.HasValue && result.Value)
                 {
-                    this.userSettings.SuppressWarningToUpdateDBFilesToSQLPrompt = warning.DontShowAgain == true;
+                    this.userSettings.SuppressWarningToUpdateDBFilesToSQLPrompt = warning.DontShowAgain;
                 }
             }
         }
@@ -180,7 +180,7 @@ namespace Timelapse.Editor
             };
 
             // Show save file dialog box
-            Nullable<bool> result = newTemplateFilePathDialog.ShowDialog();
+            bool? result = newTemplateFilePathDialog.ShowDialog();
 
             // Process save file dialog box results 
             if (result == true)
@@ -237,7 +237,7 @@ namespace Timelapse.Editor
             };
 
             // Show open file dialog box
-            Nullable<bool> result = openFileDialog.ShowDialog();
+            bool? result = openFileDialog.ShowDialog();
 
             // Process open file dialog box results 
             if (result == true)
@@ -740,7 +740,7 @@ namespace Timelapse.Editor
         private void TemplateDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
             // Stop re-entering, which can occur after we manually perform a CommitEdit (see below) 
-            if (this.manualCommitEdit == true)
+            if (this.manualCommitEdit)
             {
                 this.manualCommitEdit = false;
                 return;
@@ -1137,7 +1137,7 @@ namespace Timelapse.Editor
             {
                 DataGridTextColumn column = new DataGridTextColumn();
                 string dataLabel = control.DataLabel;
-                if (String.IsNullOrEmpty(dataLabel))
+                if (string.IsNullOrEmpty(dataLabel))
                 {
                     TracePrint.PrintMessage("GenerateSpreadsheet: Database constructors should guarantee data labels are not null.");
                 }
@@ -1154,10 +1154,10 @@ namespace Timelapse.Editor
         {
             DataGrid dataGrid = (DataGrid)sender;
             Dictionary<string, long> spreadsheetOrderByDataLabel = new Dictionary<string, long>();
-            for (int control = 0; control < dataGrid.Columns.Count; control++)
+            foreach (DataGridColumn column in dataGrid.Columns)
             {
-                string dataLabelFromColumnHeader = dataGrid.Columns[control].Header.ToString();
-                long newSpreadsheetOrder = dataGrid.Columns[control].DisplayIndex + 1;
+                string dataLabelFromColumnHeader = column.Header.ToString();
+                long newSpreadsheetOrder = column.DisplayIndex + 1;
                 spreadsheetOrderByDataLabel.Add(dataLabelFromColumnHeader, newSpreadsheetOrder);
             }
             this.dataGridBeingUpdatedByCode = true;

@@ -6,7 +6,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for EpisodeOptions.xaml
     /// </summary>
-    public partial class EpisodeOptions : Window
+    public partial class EpisodeOptions
     {
         #region Public Properties
         public TimeSpan EpisodeTimeThreshold { get; set; }

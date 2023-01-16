@@ -6,28 +6,25 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Images;
+using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
     /// <summary>
     /// ThumbnailInCell User Control, which is used to fill each cell in the ThumbnailGrid
     /// </summary>
-    public partial class ThumbnailInCell : UserControl
+    public partial class ThumbnailInCell
     {
         #region Public Properties
         // ImageHeight is calculated from the width * the image's aspect ratio, but checks for nulls, etc. 
         // Note: while the image width should always be the cell width, the height depends on the aspect ratio
-        public double ImageHeight
-        {
-            get
-            {
-                return (this.Image == null || this.Image.Source == null || this.Image.Source.Width == 0)
-                        ? 0
-                        : this.Image.Width * this.Image.Source.Height / this.Image.Source.Width;
-            }
-        }
+        public double ImageHeight =>
+            (this.Image == null || this.Image.Source == null || this.Image.Source.Width == 0)
+                ? 0
+                : this.Image.Width * this.Image.Source.Height / this.Image.Source.Width;
 
         public int Row { get; set; }
         public int Column { get; set; }
@@ -44,10 +41,7 @@ namespace Timelapse.Controls
         // Bounding boxes for detection. Whenever one is set, it is redrawn
         public BoundingBoxes BoundingBoxes
         {
-            get
-            {
-                return this.boundingBoxes;
-            }
+            get => this.boundingBoxes;
             set
             {
                 // update and render bounding boxes
@@ -60,10 +54,7 @@ namespace Timelapse.Controls
         private bool isSelected;
         public bool IsSelected
         {
-            get
-            {
-                return this.isSelected;
-            }
+            get => this.isSelected;
             set
             {
                 this.isSelected = value;
@@ -84,13 +75,7 @@ namespace Timelapse.Controls
         }
 
         // Path is the RelativePath/FileName of the image file
-        public string Path
-        {
-            get
-            {
-                return (this.ImageRow == null) ? String.Empty : System.IO.Path.Combine(this.ImageRow.RelativePath, this.ImageRow.File);
-            }
-        }
+        public string Path => (this.ImageRow == null) ? String.Empty : System.IO.Path.Combine(this.ImageRow.RelativePath, this.ImageRow.File);
 
         public string RootFolder { get; set; }
         #endregion
@@ -285,7 +270,7 @@ namespace Timelapse.Controls
                     Episodes.EpisodeGetEpisodesInRange(fileTable, fileIndex);
                 }
 
-                Tuple<int, int> episode = Episodes.EpisodesDictionary.ContainsKey(fileIndex) == true
+                Tuple<int, int> episode = Episodes.EpisodesDictionary.ContainsKey(fileIndex)
                 ? Episodes.EpisodesDictionary[fileIndex]
                 : new Tuple<int, int>(1, 1); // This is the (rare) error case that happened once ot a user - if for some reason the fileIndex is not in range. Could probably indicate this in the UI (which currently just marks it as single) but not sure why this error happens, so what to put there is unclear
 
@@ -298,7 +283,7 @@ namespace Timelapse.Controls
                     this.EpisodeTextBlock.Text = (episode.Item2 == 1) ? "Single" : String.Format("{0}/{1}", episode.Item1, episode.Item2);
                 }
                 this.EpisodeTextBlock.Foreground = (episode.Item1 == 1) ? Brushes.Red : Brushes.Black;
-                this.EpisodeTextBlock.FontWeight = (episode.Item1 == 1 && episode.Item2 != 1) ? FontWeights.Bold : FontWeights.Normal; ;
+                this.EpisodeTextBlock.FontWeight = (episode.Item1 == 1 && episode.Item2 != 1) ? FontWeights.Bold : FontWeights.Normal;
 
                 // Filename without the extention and Time in HH: MM
                 // This was on request from a user, who needed to scan for the first/last image in a timelapse capture sequence
@@ -328,7 +313,7 @@ namespace Timelapse.Controls
             }
 
             ImageRow imageRow = fileTable[fileIndex];
-            Point duplicateSequence = Util.GlobalReferences.MainWindow.DuplicatesCheckIfDuplicateAndGetSequenceNumberIfAny(imageRow, fileIndex);
+            Point duplicateSequence = GlobalReferences.MainWindow.DuplicatesCheckIfDuplicateAndGetSequenceNumberIfAny(imageRow, fileIndex);
             if (duplicateSequence.Y > 1)
             {
                 this.DuplicateIndicatorInOverview.Visibility = Visibility.Visible;

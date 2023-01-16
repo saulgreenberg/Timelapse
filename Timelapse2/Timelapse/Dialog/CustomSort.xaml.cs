@@ -9,7 +9,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// A dialog allowing a user to create a custom sort by choosing primary and secondary data fields.
     /// </summary>
-    public partial class CustomSort : Window
+    public partial class CustomSort
     {
         #region Public Properties
         public SortTerm SortTerm1 { get; set; }

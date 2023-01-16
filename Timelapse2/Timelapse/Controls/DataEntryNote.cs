@@ -4,7 +4,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
+using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
@@ -15,34 +17,23 @@ namespace Timelapse.Controls
     {
         #region Public Properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft
-        {
-            get { return this.ContentControl.PointToScreen(new Point(0, 0)); }
-        }
-        public override UIElement GetContentControl
-        {
-            get { return this.ContentControl; }
-        }
+        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
 
-        public override bool IsContentControlEnabled
-        {
-            get { return this.ContentControl.IsEnabled; }
-        }
+        public override UIElement GetContentControl => this.ContentControl;
+
+        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
 
         /// <summary>Gets  the content of the note</summary>
-        public override string Content
-        {
-            get { return this.ContentControl.Text; }
-        }
+        public override string Content => this.ContentControl.Text;
 
         public bool ContentChanged { get; set; }
 
         public override bool ContentReadOnly
         {
-            get { return this.ContentControl.IsReadOnly; }
+            get => this.ContentControl.IsReadOnly;
             set
             {
-                if (Util.GlobalReferences.TimelapseState.IsViewOnly)
+                if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
                     this.ContentControl.IsReadOnly = true;
                     this.ContentControl.IsHitTestVisible = false;
@@ -84,7 +75,7 @@ namespace Timelapse.Controls
             // If the value to be empty, we just make it the same as the tooltip so something meaningful is displayed..
             this.ContentChanged = this.ContentControl.Text != value;
             this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = String.IsNullOrEmpty(value) ? this.LabelControl.ToolTip : value;
+            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? this.LabelControl.ToolTip : value;
         }
         #endregion
 

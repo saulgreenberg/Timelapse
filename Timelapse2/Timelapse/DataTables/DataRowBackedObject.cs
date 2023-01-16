@@ -19,10 +19,7 @@ namespace Timelapse.Database
     {
         #region Public / Protected Properties
         // Get the Database ID associated with this row
-        public long ID
-        {
-            get { return this.Row.GetID(); }
-        }
+        public long ID => this.Row.GetID();
 
         protected DataRow Row { get; private set; }
         #endregion

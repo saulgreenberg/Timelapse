@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Images;
@@ -23,7 +24,7 @@ namespace Timelapse
     /// <summary>
     /// Image Set Loaing - Primary Methods to do it
     /// </summary>
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region TryGetTemplatePath
         // Prompt user to select a template.
@@ -42,7 +43,7 @@ namespace Timelapse
             }
 
             string templateDatabaseDirectoryPath = Path.GetDirectoryName(templateDatabasePath);
-            if (String.IsNullOrEmpty(templateDatabaseDirectoryPath))
+            if (string.IsNullOrEmpty(templateDatabaseDirectoryPath))
             {
                 return false;
             }
@@ -101,7 +102,7 @@ namespace Timelapse
                 }
             }
 
-            if (this.State.IsViewOnly && importImages == true)
+            if (this.State.IsViewOnly && importImages)
             {
                 // There are no .ddb files in this folder, which means Timelapse would normally try to create one.
                 // But if Timelapse was started in a ReadOnly state, that is not allowed. Tell the user, and abort.
@@ -141,9 +142,7 @@ namespace Timelapse
                         // There are unresolvable syncronization issues. Report them now as we cannot use this template.
                         // Depending on the user response, we either abort Timelapse or use the template found in the ddb file
                         Mouse.OverrideCursor = null;
-                        Dialog.TemplateSynchronization templatesNotCompatibleDialog;
-
-                        templatesNotCompatibleDialog = new Dialog.TemplateSynchronization(templateSyncResults.ControlSynchronizationErrors, templateSyncResults.ControlSynchronizationWarnings, this);
+                        Dialog.TemplateSynchronization templatesNotCompatibleDialog = new Dialog.TemplateSynchronization(templateSyncResults.ControlSynchronizationErrors, templateSyncResults.ControlSynchronizationWarnings, this);
                         bool? result = templatesNotCompatibleDialog.ShowDialog();
                         if (result == false)
                         {
@@ -175,7 +174,7 @@ namespace Timelapse
                     }
                     backUpJustMade = fileDB.mostRecentBackup != DateTime.MinValue;
                 }
-                else if (File.Exists(fileDatabaseFilePath) == true)
+                else if (File.Exists(fileDatabaseFilePath))
                 {
                     // The .ddb file (which exists) is for some reason unreadable.
                     // It is likely due to an empty or corrupt or otherwise unreadable database in the file.
@@ -390,7 +389,7 @@ namespace Timelapse
                     throw new FileLoadException("Folder loading failed unexpectedly.  See inner exception for details.", ea.Error);
                 }
 
-                if (GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                 {
                     // System.Diagnostics.Debug.Print("Cancelled: In BackgroundWorkerCompleted");
                     isCancelled = true;
@@ -439,14 +438,9 @@ namespace Timelapse
 
                 this.BusyCancelIndicator.Reset(); // Hide the busy indicator and reset the cancel token
 
-                if (isCancelled)
-                {
-                    this.StatusBar.SetMessage("Cancelled adding files to image set ");
-                }
-                else
-                {
-                    this.StatusBar.SetMessage("Loading completed");
-                }
+                this.StatusBar.SetMessage(isCancelled 
+                    ? "Cancelled adding files to image set " 
+                    : "Loading completed");
                 Mouse.OverrideCursor = null;
             };
 
@@ -583,7 +577,7 @@ namespace Timelapse
                 FreezeOnMouseEnter = true, // set the option to prevent notification dissapear automatically if user move cursor on it
             };
 
-            if (false == String.IsNullOrEmpty(sortMessage))
+            if (false == string.IsNullOrEmpty(sortMessage))
             {
                 sortMessage = "Sort menu:  files sorted by" + Environment.NewLine + "- " + sortMessage;
                 this.ToastNotifier.ShowInformation(sortMessage, toastOptions);

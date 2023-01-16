@@ -7,15 +7,12 @@ using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
-    public partial class StockMessageControl : UserControl
+    public partial class StockMessageControl
     {
         #region Public Properties
         public MessageBoxImage Icon
         {
-            get
-            {
-                return this.iconType;
-            }
+            get => this.iconType;
             set
             {
                 // the MessageBoxImage enum contains duplicate values:
@@ -59,10 +56,7 @@ namespace Timelapse.Controls
 
         public string Title
         {
-            get
-            {
-                return this.TitleText.Text;
-            }
+            get => this.TitleText.Text;
             set
             {
                 this.TitleText.Text = value;
@@ -72,10 +66,7 @@ namespace Timelapse.Controls
 
         public string What
         {
-            get
-            {
-                return this.WhatText.Text;
-            }
+            get => this.WhatText.Text;
             set
             {
                 this.WhatText.Text = value;
@@ -85,10 +76,7 @@ namespace Timelapse.Controls
 
         public string Problem
         {
-            get
-            {
-                return this.ProblemText.Text;
-            }
+            get => this.ProblemText.Text;
             set
             {
                 this.ProblemText.Text = value;
@@ -98,10 +86,7 @@ namespace Timelapse.Controls
 
         public string Reason
         {
-            get
-            {
-                return this.ReasonText.Text;
-            }
+            get => this.ReasonText.Text;
             set
             {
                 this.ReasonText.Text = value;
@@ -111,10 +96,7 @@ namespace Timelapse.Controls
 
         public string Solution
         {
-            get
-            {
-                return this.SolutionText.Text;
-            }
+            get => this.SolutionText.Text;
             set
             {
                 this.SolutionText.Text = value;
@@ -124,10 +106,7 @@ namespace Timelapse.Controls
 
         public string Result
         {
-            get
-            {
-                return this.ResultText.Text;
-            }
+            get => this.ResultText.Text;
             set
             {
                 this.ResultText.Text = value;
@@ -137,10 +116,7 @@ namespace Timelapse.Controls
 
         public string Hint
         {
-            get
-            {
-                return this.HintText.Text;
-            }
+            get => this.HintText.Text;
             set
             {
                 this.HintText.Text = value;
@@ -150,10 +126,7 @@ namespace Timelapse.Controls
 
         public string Details
         {
-            get
-            {
-                return this.DetailsText.Text;
-            }
+            get => this.DetailsText.Text;
             set
             {
                 this.DetailsText.Text = value;
@@ -163,13 +136,12 @@ namespace Timelapse.Controls
 
         public bool ShowExplanationVisibility
         {
-            get
-            {
-                return this.HideText.Visibility == Visibility.Visible;
-            }
+            get => this.HideText.Visibility == Visibility.Visible;
             set
             {
-                this.HideText.Visibility = (value == true) ? Visibility.Visible : Visibility.Collapsed;
+                this.HideText.Visibility = value 
+                    ? Visibility.Visible 
+                    : Visibility.Collapsed;
                 this.SetExplanationVisibility();
             }
         }
@@ -204,13 +176,13 @@ namespace Timelapse.Controls
             }
 
             GridLength autoHeight = new GridLength(1.0, GridUnitType.Auto);
-            this.MessageGrid.RowDefinitions[1].Height = String.IsNullOrEmpty(this.Problem) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[2].Height = String.IsNullOrEmpty(this.What) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[3].Height = String.IsNullOrEmpty(this.Reason) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[4].Height = String.IsNullOrEmpty(this.Solution) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[5].Height = String.IsNullOrEmpty(this.Result) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[6].Height = String.IsNullOrEmpty(this.Hint) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[7].Height = String.IsNullOrEmpty(this.Details) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[1].Height = string.IsNullOrEmpty(this.Problem) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[2].Height = string.IsNullOrEmpty(this.What) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[3].Height = string.IsNullOrEmpty(this.Reason) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[4].Height = string.IsNullOrEmpty(this.Solution) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[5].Height = string.IsNullOrEmpty(this.Result) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[6].Height = string.IsNullOrEmpty(this.Hint) ? zeroHeight : autoHeight;
+            this.MessageGrid.RowDefinitions[7].Height = string.IsNullOrEmpty(this.Details) ? zeroHeight : autoHeight;
         }
 
         // This will toggle the visibility of the explanation panel

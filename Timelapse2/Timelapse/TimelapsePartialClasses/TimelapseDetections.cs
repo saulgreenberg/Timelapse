@@ -7,7 +7,7 @@ using BoundingBoxes = Timelapse.Images.BoundingBoxes;
 
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         // for each image, get a list of detections and fill in the bounding box information for it. 
         public BoundingBoxes GetBoundingBoxesForCurrentFile(long fileID)

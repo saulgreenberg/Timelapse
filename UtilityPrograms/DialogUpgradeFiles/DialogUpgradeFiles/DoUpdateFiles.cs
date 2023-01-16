@@ -10,10 +10,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using DialogUpgradeFiles.Constant;
+using File = System.IO.File;
 
 namespace DialogUpgradeFiles
 {
-    public partial class DialogUpgradeFilesAndFolders : Window
+    public partial class DialogUpgradeFilesAndFolders
     {
         #region Tdb Template: Upgrade it
         // Load the specified database template and then the associated images. 
@@ -65,13 +67,9 @@ namespace DialogUpgradeFiles
             // Check if its an upgraded template that was opened with a pre2.3 version of Timelapse, which would re-insert the UTCOffset type...
             // If so, this would have to be fixed. So create a flag for this. We do this by testing if there is no Folder or ImageQuality field (for redundancy) as
             // those were deleted in 2.3 onwards, but that still includes a UtcOffset field
-            bool existsUTCInUpdatedTemplate = false;
-            if (null == this.templateDatabase.GetControlFromTemplateTable(Constant.DatabaseColumn.Folder)
-                && null == this.templateDatabase.GetControlFromTemplateTable(Constant.DatabaseColumn.ImageQuality)
-                && null != this.templateDatabase.GetControlFromTemplateTable(Constant.DatabaseColumn.UtcOffset))
-            {
-                existsUTCInUpdatedTemplate = true;
-            }
+            bool existsUTCInUpdatedTemplate = null == this.templateDatabase.GetControlFromTemplateTable(DatabaseColumn.Folder)
+                                              && null == this.templateDatabase.GetControlFromTemplateTable(DatabaseColumn.ImageQuality)
+                                              && null != this.templateDatabase.GetControlFromTemplateTable(DatabaseColumn.UtcOffset);
 
             // Do this as part of normal upgrade (i.e., without the special  UtcOffset case)
             if (false == existsUTCInUpdatedTemplate)
@@ -169,7 +167,7 @@ namespace DialogUpgradeFiles
                     // We need to check the default value to make sure it matches what is allowed
                     if (false == includesEmptyChoice)
                     {
-                        if (String.IsNullOrEmpty(control.DefaultValue))
+                        if (string.IsNullOrEmpty(control.DefaultValue))
                         {
                             // when we don't allow an empty choice, we can't have an empty default
                             // So allow empty defaults in the choice list
@@ -208,7 +206,7 @@ namespace DialogUpgradeFiles
                     {
                         // We are only interested in choice controls
                         List<string> choices = control.GetChoices(out bool includesEmptyChoice);
-                        if (false == includesEmptyChoice && (String.IsNullOrEmpty(control.DefaultValue) || false == choices.Contains(control.DefaultValue)))
+                        if (false == includesEmptyChoice && (string.IsNullOrEmpty(control.DefaultValue) || false == choices.Contains(control.DefaultValue)))
                         {
                             // when we don't allow an empty choice, Cant have an empty default or a non-matching default value
                             if (choices.Count > 0)
@@ -217,7 +215,7 @@ namespace DialogUpgradeFiles
                             }
                             // undefined if  choice list is empty!
                         }
-                        else if (includesEmptyChoice && (false == String.IsNullOrEmpty(control.DefaultValue) || false == choices.Contains(control.DefaultValue)))
+                        else if (includesEmptyChoice && (false == string.IsNullOrEmpty(control.DefaultValue) || false == choices.Contains(control.DefaultValue)))
                         {
                             // when we allow an empty choice, we can only have an empty default or a non-matching default value
                             defaultToUse = String.Empty;
@@ -268,7 +266,6 @@ namespace DialogUpgradeFiles
                 Constant.DatabaseColumn.ImageQuality,
                 Constant.DatabaseColumn.Folder
             };
-            ControlRow control;
 
             foreach (string dataLabelToRemove in DataLabelsToRemove)
             {
@@ -279,7 +276,7 @@ namespace DialogUpgradeFiles
                 templateDB.GetControlsSortedByControlOrder();
                 if (templateDB.Controls.Any(x => x.DataLabel == dataLabelToRemove))
                 {
-                    control = templateDB.Controls.First(x => x.DataLabel == dataLabelToRemove);
+                    ControlRow control = templateDB.Controls.First(x => x.DataLabel == dataLabelToRemove);
                     if (null != control)
                     {
                         templateDB.UpgradeTemplateRemoveControl(control);
@@ -290,11 +287,10 @@ namespace DialogUpgradeFiles
 
         public static void UDBTemplateDeleteUtcOffsetRow(TemplateDatabase templateDB)
         {
-            ControlRow control;
             templateDB.GetControlsSortedByControlOrder();
             if (templateDB.Controls.Any(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset))
             {
-                control = templateDB.Controls.First(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset);
+                ControlRow control = templateDB.Controls.First(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset);
                 if (null != control)
                 {
                     templateDB.UpgradeTemplateRemoveControl(control);
@@ -316,7 +312,7 @@ namespace DialogUpgradeFiles
 
             // Feedback in UI lop
             await Task.Delay(Constant.BusyState.SleepTime);
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
@@ -377,7 +373,7 @@ namespace DialogUpgradeFiles
                 else
                 {
                     timelapse.DebugFeedback(success, "Data Table: QuickPasteXML schema and data deleted " + filePath);
-                };
+                }
                 await Task.Delay(Constant.BusyState.SleepTime);
                 return UpgradeResultsEnum.Upgraded;
             }
@@ -430,7 +426,7 @@ namespace DialogUpgradeFiles
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
@@ -479,7 +475,7 @@ namespace DialogUpgradeFiles
             }
 
             // Check if a cancel has occured
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
@@ -512,7 +508,7 @@ namespace DialogUpgradeFiles
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
@@ -530,7 +526,7 @@ namespace DialogUpgradeFiles
             // Calculate the current root folder. This should be better than just getting it from the database, as it is more recent???
             string absolutePathPart = fileDatabase.FolderPath.TrimEnd(Path.DirectorySeparatorChar) + @"\";
             string rootFolder = Path.GetDirectoryName(absolutePathPart);
-            rootFolder = String.IsNullOrEmpty(rootFolder)
+            rootFolder = string.IsNullOrEmpty(rootFolder)
                 ? String.Empty
                 : Path.GetFileName(rootFolder);
             SchemaColumnDefinition scd = new SchemaColumnDefinition("RootFolder", "Text", String.Empty);
@@ -540,13 +536,13 @@ namespace DialogUpgradeFiles
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
 
             // Delete the Filter and SelectedFOlder columns from the ImageSetTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.SelectedFolder); ;
+            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.SelectedFolder);
             timelapse.DebugFeedback(success, "ImageSet Table: SelectedFolder column and data deleted: " + filePath);
             success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.Selection);
             timelapse.DebugFeedback(success, "ImageSet Table: Selection column schema and data deleted: " + filePath);
@@ -564,7 +560,7 @@ namespace DialogUpgradeFiles
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
@@ -616,7 +612,7 @@ namespace DialogUpgradeFiles
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
-            if (timelapse.CancelUpgrade == true)
+            if (timelapse.CancelUpgrade)
             {
                 return UpgradeResultsEnum.Cancelled;
             }
@@ -682,17 +678,14 @@ namespace DialogUpgradeFiles
 
             // 3. Load the existing data from the original Markers table into the new table as a Json structure
             //    Rows whose columns all have empty values are skipped, i.e., not added to the table
-            List<List<Point>> cellsInRow;                      // A list of all cells, with each cell listing the point entries
-            List<Point> pointsInCell;                           // Each entry represents a cell
             List<string> sqlCommands = new List<string>();      // A list of sql commands
-            bool hasValues;
-            string cellValue;
+
             // Load the markers table from the database
             fileDatabase.MarkersLoadRowsFromDatabase();
             foreach (MarkerRow row in fileDatabase.Markers)
             {
-                hasValues = false;
-                cellsInRow = new List<List<Point>>();
+                bool hasValues = false;
+                List<List<Point>>  cellsInRow = new List<List<Point>>(); // A list of all cells, with each cell listing the point entries
                 // Note that we have to handle the special case where the order of cells differs from the schema column order.
                 // When that happens,  marker data may be inserted in the wrong column
                 // This occurs when:
@@ -710,9 +703,9 @@ namespace DialogUpgradeFiles
                 foreach (string dataLabel in columns)
                 {
                     // Collect the cell values (i.e., the points) corresponding to each data label
-                    cellValue = row[dataLabel];
-                    pointsInCell = new List<Point>();
-                    if (false == String.IsNullOrEmpty(cellValue))
+                    string cellValue = row[dataLabel];
+                    List<Point>  pointsInCell = new List<Point>();  // Each entry represents a cell
+                    if (false == string.IsNullOrEmpty(cellValue))
                     {
                         // We have at least one value, so we will want to create a row for it.
                         hasValues = true;
@@ -736,7 +729,8 @@ namespace DialogUpgradeFiles
                     {
                         rowPointListAsJson.Add(Sql.Quote(JsonConvert.SerializeObject(markerCellAsList)));
                     }
-                    sqlCommands.Add(String.Format(" Insert into {0} ( {1}, Id ) VALUES ({2},{3})", tmpMarkerTableName, string.Join(",", columns), string.Join(",", rowPointListAsJson), row.ID));
+                    sqlCommands.Add(
+                        $" Insert into {tmpMarkerTableName} ( {string.Join(",", columns)}, Id ) VALUES ({string.Join(",", rowPointListAsJson)},{row.ID})");
                 }
             }
             // We should now have all the commands populating the new Notes table. 

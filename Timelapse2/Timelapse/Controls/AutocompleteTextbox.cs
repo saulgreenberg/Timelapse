@@ -69,7 +69,7 @@ namespace Timelapse.Controls
             // Don't attempt autocompletion on pure removals, such as backspace or delete, but do try when both add and remove changes are present as this
             // usually indicates the user's typing over the autocomplete suggestion.
             // Also, if the caret is at the beginning(i.e., either editing an empty cell or just a cell update by navigating), then don't autocomplete 
-            if ((String.IsNullOrEmpty(this.Text) == false) && (this.CaretIndex > 0) &&
+            if ((string.IsNullOrEmpty(this.Text) == false) && (this.CaretIndex > 0) &&
                 eventArgs.Changes.Any(change => change.AddedLength > 0))
             {
                 int textLength = this.Text.Length;
@@ -83,10 +83,10 @@ namespace Timelapse.Controls
                 }
                 else if (this.Autocompletions != null)
                 {
-                    autocompletion = this.Autocompletions.Keys.FirstOrDefault(value => this.UseCompletion(value));
+                    autocompletion = this.Autocompletions.Keys.FirstOrDefault(this.UseCompletion);
                 }
 
-                if (String.IsNullOrEmpty(autocompletion) == false)
+                if (string.IsNullOrEmpty(autocompletion) == false)
                 {
                     this.Text = autocompletion;
                     this.CaretIndex = textLength;

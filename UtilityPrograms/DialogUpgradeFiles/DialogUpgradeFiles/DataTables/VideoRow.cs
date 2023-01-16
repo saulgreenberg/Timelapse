@@ -22,10 +22,8 @@ namespace DialogUpgradeFiles.Database
         //}
 
         // This will be invoked only on a video file, so always returns true
-        public override bool IsVideo
-        {
-            get { return true; }
-        }
+        public override bool IsVideo => true;
+
         #endregion
 
         #region Public Methods - LoadBitmap from Video File

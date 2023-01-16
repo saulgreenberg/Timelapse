@@ -7,7 +7,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for ExceptionShutdownDialog.xaml
     /// </summary>
-    public partial class ExceptionShutdownDialog : Window
+    public partial class ExceptionShutdownDialog
     {
         #region Private Variables
         private readonly string ProgramName;

@@ -6,9 +6,9 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for RecognitionsAddSubfolderToFilePaths.xaml
     /// </summary>
-    public partial class RecognitionsAddSubfolderToFilePaths : Window
+    public partial class RecognitionsAddSubfolderToFilePaths
     {
-        public bool AddSubFolderPrefix = false;
+        public bool AddSubFolderPrefix;
         private string Prefix;
 
         public RecognitionsAddSubfolderToFilePaths(Window owner, string prefix)

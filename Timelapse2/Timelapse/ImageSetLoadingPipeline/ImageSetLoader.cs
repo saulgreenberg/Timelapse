@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -38,13 +39,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             private set;
         }
 
-        public int ImagesLoaded
-        {
-            get
-            {
-                return this.imagesLoaded;
-            }
-        }
+        public int ImagesLoaded => this.imagesLoaded;
 
         public int ImagesToLoad
         {
@@ -109,7 +104,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                     // Parse the relative path from the full name. 
                     // As GetDirectoryName does not end with a \ on a file name, we add the' '\' as needed
 
-                    if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                    if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                     {
                         // User requested we cancel the task. So stop going through files and adding any further tasks.
                         // Although I am unsure about this, clearing the task lisk may help inhibit additional tasks being added
@@ -151,7 +146,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                         // time may not coorespond.
                         Interlocked.Increment(ref this.imagesLoaded);
                         this.LastLoadComplete = loader;
-                        if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                        if (GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
                         {
                             // User requested we cancel the task. So stop going through files.
                             // The caller will check the cancelation token again, and will stop further actions and clean up as needed.
@@ -173,7 +168,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
                 try
                 {
-                    Task.WaitAll(loadTasks.ToArray(), Util.GlobalReferences.CancelTokenSource.Token);
+                    Task.WaitAll(loadTasks.ToArray(), GlobalReferences.CancelTokenSource.Token);
                 }
                 catch //(OperationCanceledException e)
                 {
@@ -187,7 +182,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
 
             // Pass 2
-            if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+            if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
             {
                 // Don't start the second pass if things have been cancelled.
                 // Not sure if we really need to clear the queue, but it ;ikelydoesn't hurt.
@@ -217,7 +212,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
             Timer t = new Timer((state) =>
             {
-                if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+                if (GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
                 {
                     // If we received a cancellation notice in Step 1, don't bother reporting any progress.
                     // System.Diagnostics.Debug.Print("Cancellation at beginning of Timer t");
@@ -225,14 +220,9 @@ namespace Timelapse.ImageSetLoadingPipeline
                 }
                 if (this.LastLoadComplete != null)
                 {
-                    if (this.LastLoadComplete.File.IsVideo)
-                    {
-                        folderLoadProgress.BitmapSource = Constant.ImageValues.BlankVideo.Value;
-                    }
-                    else
-                    {
-                        folderLoadProgress.BitmapSource = this.LastLoadComplete.BitmapSource;
-                    }
+                    folderLoadProgress.BitmapSource = this.LastLoadComplete.File.IsVideo 
+                        ? Constant.ImageValues.BlankVideo.Value 
+                        : this.LastLoadComplete.BitmapSource;
                 }
                 else
                 {
@@ -262,7 +252,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
             folderLoadProgress.CurrentPass = 2;
 
-            if (Util.GlobalReferences.CancelTokenSource.IsCancellationRequested == true)
+            if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
             {
                 // If we received a cancellation notice in Step 1, don't proceed to Step 2
                 // System.Diagnostics.Debug.Print("Cancellation in ImageSetLoader: Before invoking this.pass2.Start");

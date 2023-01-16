@@ -7,7 +7,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for RecognitionOptionsForBoundingBox.xaml
     /// </summary>
-    public partial class RecognitionOptionsForBoundingBox : Window
+    public partial class RecognitionOptionsForBoundingBox
     {
         private readonly TimelapseState timelapseState;
         public RecognitionOptionsForBoundingBox(Window owner, TimelapseState timelapseState)
@@ -46,18 +46,9 @@ namespace Timelapse.Dialog
                 return;
             }
             this.BoundingBoxThresholdDisplayValue.Text = slider.Value.ToString("0.00");
-            if (slider.Value == 0)
-            {
-                this.BoundingBoxThresholdDisplayText.Text = "This setting will display all bounding boxes";
-            }
-            //else if (slider.Value == 1)
-            //{
-            //    this.BoundingBoxThresholdDisplayText.Text = "This setting will never display bounding boxes";
-            //}
-            else
-            {
-                this.BoundingBoxThresholdDisplayText.Text = "Always display bounding boxes at or above this confidence threshold";
-            }
+            this.BoundingBoxThresholdDisplayText.Text = slider.Value == 0 
+                ? "This setting will display all bounding boxes"
+                : "Always display bounding boxes at or above this confidence threshold";
             this.timelapseState.BoundingBoxDisplayThreshold = slider.Value;
         }
 

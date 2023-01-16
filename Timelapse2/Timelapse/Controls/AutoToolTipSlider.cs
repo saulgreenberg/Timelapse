@@ -15,10 +15,7 @@ namespace Timelapse.Controls
         private string autoToolTipContent = string.Empty;
         public string AutoToolTipContent
         {
-            get
-            {
-                return this.autoToolTipContent;
-            }
+            get => this.autoToolTipContent;
             set
             {
                 this.autoToolTipContent = value;

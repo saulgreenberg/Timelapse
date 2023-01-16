@@ -148,7 +148,7 @@ namespace DialogUpgradeFiles.Util
         /// </summary>
         public static bool TryParseDisplayDateTimeString(string dateTimeAsString, out DateTime dateTime)
         {
-            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateTimeDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime) == true)
+            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateTimeDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 return true;
             }
@@ -156,7 +156,7 @@ namespace DialogUpgradeFiles.Util
             {
                 dateTime = DateTime.MinValue;
                 return false;
-            };
+            }
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace DialogUpgradeFiles.Util
         /// </summary>
         public static bool TryParseDisplayDateOnlyString(string dateTimeAsString, out DateTime dateTime)
         {
-            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime) == true)
+            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 return true;
             }
@@ -172,7 +172,7 @@ namespace DialogUpgradeFiles.Util
             {
                 dateTime = DateTime.MinValue;
                 return false;
-            };
+            }
         }
         #endregion
 
@@ -187,23 +187,26 @@ namespace DialogUpgradeFiles.Util
             // TimeSpan utcOffset = TimeSpan.FromHours(double.Parse(utcOffsetAsString, CultureInfo.InvariantCulture));
             TimeSpan utcOffset;
             NumberStyles style = NumberStyles.Number | NumberStyles.AllowDecimalPoint;
-            if (true == Double.TryParse(utcOffsetAsString, style, CultureInfo.InvariantCulture, out double utcOffsetDouble))
+            if (Double.TryParse(utcOffsetAsString, style, CultureInfo.InvariantCulture, out double utcOffsetDouble))
             {
                 utcOffset = TimeSpan.FromHours(utcOffsetDouble);
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(utcOffsetAsString), String.Format("UTC offset could not be parsed from {0}.", utcOffsetAsString));
+                throw new ArgumentOutOfRangeException(nameof(utcOffsetAsString),
+                    $"UTC offset could not be parsed from {utcOffsetAsString}.");
             }
             //TimeSpan utcOffset = TimeSpan.FromHours();
             if ((utcOffset < Constant.Time.MinimumUtcOffset) ||
                 (utcOffset > Constant.Time.MaximumUtcOffset))
             {
-                throw new ArgumentOutOfRangeException(nameof(utcOffsetAsString), String.Format("UTC offset must be between {0} and {1}, inclusive.", DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset), DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset)));
+                throw new ArgumentOutOfRangeException(nameof(utcOffsetAsString),
+                    $"UTC offset must be between {DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset)} and {DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset)}, inclusive.");
             }
             if (utcOffset.Ticks % Constant.Time.UtcOffsetGranularity.Ticks != 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(utcOffsetAsString), String.Format("UTC offset must be an exact multiple of {0} ({1}).", DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.UtcOffsetGranularity), DateTimeHandler.ToStringDisplayUtcOffset(Constant.Time.UtcOffsetGranularity)));
+                throw new ArgumentOutOfRangeException(nameof(utcOffsetAsString),
+                    $"UTC offset must be an exact multiple of {DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.UtcOffsetGranularity)} ({DateTimeHandler.ToStringDisplayUtcOffset(Constant.Time.UtcOffsetGranularity)}).");
             }
             return utcOffset;
         }
@@ -335,10 +338,9 @@ namespace DialogUpgradeFiles.Util
         /// </summary>
         public static string ToStringCSVUtcWithOffset(DateTimeOffset dateTime, TimeSpan offset)
         {
-            string offsetAsString = String.Format("{0:+00;-00}:{1:00}", offset.Hours, offset.Minutes);
-            return String.Format("{0}Z{1}",
-                dateTime.UtcDateTime.ToString(Constant.Time.DateTimeCSVWithTSeparator, CultureInfo.CreateSpecificCulture("en-US")),
-                offsetAsString);
+            string offsetAsString = $"{offset.Hours:+00;-00}:{offset.Minutes:00}";
+            return
+                $"{dateTime.UtcDateTime.ToString(Constant.Time.DateTimeCSVWithTSeparator, CultureInfo.CreateSpecificCulture("en-US"))}Z{offsetAsString}";
         }
 
         /// <summary>

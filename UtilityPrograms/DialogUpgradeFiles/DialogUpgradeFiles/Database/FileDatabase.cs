@@ -24,10 +24,8 @@ namespace DialogUpgradeFiles.Database
         public ImageSetRow ImageSet { get; private set; }
         public DataTableBackedList<MarkerRow> Markers { get; private set; }
 
-        public int CountAllCurrentlySelectedFiles
-        {
-            get { return (this.FileTable == null) ? 0 : this.FileTable.RowCount; }
-        }
+        public int CountAllCurrentlySelectedFiles => this.FileTable?.RowCount ?? 0;
+
         #endregion
 
         #region Create or Open the Database
@@ -119,17 +117,12 @@ namespace DialogUpgradeFiles.Database
                 long utcOffsetID = this.GetControlIDFromTemplateTable(Constant.DatabaseColumn.UtcOffset);
                 ControlRow utcOffsetControl = this.Controls.Find(utcOffsetID);
                 // ZZZ If utcOffsetControl isn't there, what to do!
-                SchemaColumnDefinition columnDefinition;
-                if (utcOffsetControl == null)
-                {
-                    // There is no existing utcOffset controls in old database that had only Date and Time columns
-                    // So we have to create it from scratch.
-                    columnDefinition = new SchemaColumnDefinition(Constant.DatabaseColumn.UtcOffset, Sql.Text, "0.00");
-                }
-                else
-                {
-                    columnDefinition = CreateFileDataColumnDefinition(utcOffsetControl);
-                }
+
+                // There is no existing utcOffset controls in old database that had only Date and Time columns
+                // So we have to create it from scratch.
+                SchemaColumnDefinition columnDefinition = utcOffsetControl == null 
+                    ? new SchemaColumnDefinition(Constant.DatabaseColumn.UtcOffset, Sql.Text, "0.00") 
+                    : CreateFileDataColumnDefinition(utcOffsetControl);
                 this.Database.SchemaAddColumnToTable(Constant.DBTables.FileData, Constant.DatabaseValues.UtcOffsetPosition, columnDefinition);
                 await Task.Delay(Constant.BusyState.SleepTime);
             }
@@ -361,11 +354,12 @@ namespace DialogUpgradeFiles.Database
             foreach (ControlRow control in controlsInSpreadsheetOrder)
             {
                 string dataLabel = control.DataLabel;
-                if (String.IsNullOrEmpty(dataLabel))
+                if (string.IsNullOrEmpty(dataLabel))
                 {
                     dataLabel = control.DataLabel;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false, String.Format("Encountered empty data label and label at ID {0} in template table.", control.ID));
+                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                    $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
                 if (Constant.DatabaseColumn.ID != dataLabel)
@@ -425,7 +419,7 @@ namespace DialogUpgradeFiles.Database
                 string[] coords = bboxString.Split(' ');
                 if (coords.Length != 4)
                 {
-                    System.Diagnostics.Debug.Print("In UpgradeDetectionConfFromCommasToDecimalsIfNeeded - the bbox coordinates are wrong", coords.Length);
+                    Debug.Print("In UpgradeDetectionConfFromCommasToDecimalsIfNeeded - the bbox coordinates are wrong", coords.Length);
                     continue;
                 }
                 // We must have a bounding box string with commas as decimal separators
@@ -466,7 +460,7 @@ namespace DialogUpgradeFiles.Database
         public void MarkersLoadRowsFromDatabase()
         {
             string markersQuery = Sql.SelectStarFrom + Constant.DBTables.Markers;
-            this.Markers = new DataTableBackedList<MarkerRow>(this.Database.GetDataTableFromSelect(markersQuery), (DataRow row) => { return new MarkerRow(row); });
+            this.Markers = new DataTableBackedList<MarkerRow>(this.Database.GetDataTableFromSelect(markersQuery), row => new MarkerRow(row));
         }
         #endregion
 

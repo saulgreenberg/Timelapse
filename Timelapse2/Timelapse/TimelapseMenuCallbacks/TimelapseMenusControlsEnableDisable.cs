@@ -5,7 +5,7 @@ using Timelapse.Controls;
 namespace Timelapse
 {
     // Enabling or Disabling Menus and Controls
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Enable Or disable menus and controls
         private void EnableOrDisableMenusAndControls()

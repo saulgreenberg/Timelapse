@@ -6,11 +6,12 @@ using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
+using MessageBox = Timelapse.Dialog.MessageBox;
 
 namespace Timelapse
 {
     // Select Menu Callbacks - runs database queries that creates a subset of images to display
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         # region Select sub-menu opening
         private void MenuItemSelect_SubmenuOpening(object sender, RoutedEventArgs e)
@@ -176,30 +177,35 @@ namespace Timelapse
             }
 
             // If its select all folders, then 
-            if (mi == this.MenuItemSelectAllFolders)
+            if (mi == MenuItemSelectAllFolders)
             {
                 // its all folders, so just select all folders
-                await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.All).ConfigureAwait(true);
+                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.All).ConfigureAwait(true);
                 return;
             }
 
             // Set and only use the relative path as a search term
-            this.DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
-            this.DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm((string)mi.Header);
+            DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
+            DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm((string)mi.Header);
 
-            int count = this.DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
+            int count = DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             if (count <= 0)
             {
-                Timelapse.Dialog.MessageBox messageBox = new Timelapse.Dialog.MessageBox("No files in this folder", Application.Current.MainWindow);
-                messageBox.Message.Icon = MessageBoxImage.Exclamation;
-                messageBox.Message.Reason = String.Format("While the folder {0} exists, no image data is associated with any files in it.", mi.Header);
-                messageBox.Message.Hint = String.Format("Perhaps you removed these files and its data during this session?");
+                MessageBox messageBox = new MessageBox("No files in this folder", Application.Current.MainWindow)
+                {
+                    Message =
+                    {
+                         Icon = MessageBoxImage.Exclamation,
+                         Reason = $"While the folder {mi.Header} exists, no image data is associated with any files in it.",
+                         Hint = "Perhaps you removed these files and its data during this session?"
+                    }
+                };
                 messageBox.ShowDialog();
             }
-            this.MenuItemSelectByRelativePath_ClearAllCheckmarks();
-            this.MenuItemSelectByRelativePath.IsChecked = true;
+            MenuItemSelectByRelativePath_ClearAllCheckmarks();
+            MenuItemSelectByRelativePath.IsChecked = true;
             mi.IsChecked = true;
-            await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
+            await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
             //await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
         }
 

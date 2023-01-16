@@ -7,9 +7,9 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for RecognitionsDeleteOldData.xaml
     /// </summary>
-    public partial class RecognitionsDeleteOldData : Window
+    public partial class RecognitionsDeleteOldData
     {
-        public bool IsDeleteAllSelected = false;
+        public bool IsDeleteAllSelected;
         private RecognizerImportResultEnum ImportError;
         public RecognitionsDeleteOldData(Window owner, RecognizerImportResultEnum importError)
         {

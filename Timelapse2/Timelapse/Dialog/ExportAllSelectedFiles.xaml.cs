@@ -12,7 +12,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for ExportAllSelectedFiles.xaml
     /// </summary>
-    public partial class ExportAllSelectedFiles : BusyableDialogWindow
+    public partial class ExportAllSelectedFiles
     {
         #region Private Variables
         private readonly FileDatabase FileDatabase;
@@ -124,7 +124,7 @@ namespace Timelapse.Dialog
                 if (Dialogs.OverwriteExistingFiles(this, existingFiles) != true)
                 {
                     copiedFiles = -2; // indicates the duplicate file condition
-                    return String.Format("Export aborted to avoid overwriting files.");
+                    return "Export aborted to avoid overwriting files.";
                 }
             }
 

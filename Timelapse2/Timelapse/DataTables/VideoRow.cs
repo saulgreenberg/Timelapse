@@ -26,15 +26,13 @@ namespace Timelapse.Database
         }
 
         // This will be invoked only on a video file, so always returns true
-        public override bool IsVideo
-        {
-            get { return true; }
-        }
+        public override bool IsVideo => true;
+
         #endregion
 
         #region Public Methods - LoadBitmap from Video File
         // Get the bitmap representing a video file
-        public override BitmapSource LoadBitmap(string imageFolderPath, Nullable<int> desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
+        public override BitmapSource LoadBitmap(string imageFolderPath, int? desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
             // Invoke the static version. The only change is that we get the full file path and pass that as a parameter
             return BitmapUtilities.GetBitmapFromVideoFile(this.GetFilePath(imageFolderPath), desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);

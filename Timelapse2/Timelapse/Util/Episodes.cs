@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
+using Timelapse.Util;
 
 namespace Timelapse
 {
-    /// <summary>
-    /// Episodes is a static class that calculates and saves state information in various static data structures. Notabley, 
+    //
+    // Episodes is a static class that calculates and saves state information in various static data structures. Notabley, 
     // - ShowEpisodes is a boolean that detemines whether Episode information should be displayed
     // - EpisodeDictionary caches episode information by FileTable index, where that information is created on demand 
-    /// </summary>
-
+    // 
     public static class Episodes
     {
         #region Public Static Properties
@@ -53,7 +54,7 @@ namespace Timelapse
         /// <param name="fileTableIndex"></param>
         public static void EpisodeGetEpisodesInRange(FileTable fileTable, int fileTableIndex)
         {
-            EpisodeGetEpisodesInRange(fileTable, fileTableIndex, Util.GlobalReferences.TimelapseState.EpisodeMaxRangeToSearch);
+            EpisodeGetEpisodesInRange(fileTable, fileTableIndex, GlobalReferences.TimelapseState.EpisodeMaxRangeToSearch);
         }
 
         public static void EpisodeGetEpisodesInRange(FileTable fileTable, int fileTableIndex, int maxRangeToSearch)
@@ -98,9 +99,8 @@ namespace Timelapse
             {
                 return false;
             }
-            DateTime date1;
+
             DateTime date2;
-            ImageRow file;
             int fileCount = files.RowCount;
 
             // Default in case there is only one file in this episode
@@ -109,20 +109,16 @@ namespace Timelapse
             int last = index;
             int current = index;
             // Note that numberOfFiles should never return zero if the provided index is valid
-            if (files == null)
-            {
-                return false;
-            }
 
-            file = files[index];
-            date1 = file.DateTime;
+            ImageRow file = files[index];
+            DateTime date1 = file.DateTime;
 
             // We want the next Episode in the forward direction
             if (direction == DirectionEnum.Next)
             {
                 // go forwards in the filetable until we find the last file in the episode, or we fail
                 // as we have gone forwards maxSearch times
-                int maxSearch = Util.GlobalReferences.TimelapseState.EpisodeMaxRangeToSearch;
+                int maxSearch = GlobalReferences.TimelapseState.EpisodeMaxRangeToSearch;
                 while (current < fileCount && maxSearch != 0)
                 {
                     file = files[current];
@@ -145,7 +141,7 @@ namespace Timelapse
             // What is left is direction == DirectionEnum.Previous
             // If we are on the first image in the episode, we want the previous Episode in the backwards direction
             // Otherwise we want the first image in the episode (maybe??)
-            int minSearch = Util.GlobalReferences.TimelapseState.EpisodeMaxRangeToSearch;
+            int minSearch = GlobalReferences.TimelapseState.EpisodeMaxRangeToSearch;
             current = index - 1;
             // Go backwards in the filetable until we find the first file in the episode, or we fail
             // as we have gone back minSearch times
@@ -179,9 +175,8 @@ namespace Timelapse
         /// </summary>
         private static bool EpisodeGetAroundIndex(FileTable files, int index, int maxRangeToSearch, out int first, out int count)
         {
-            DateTime date1;
             DateTime date2;
-            ImageRow file;
+
             int fileCount = files.RowCount;
             // Default in case there is only one file in this episode
             first = index;
@@ -194,8 +189,8 @@ namespace Timelapse
                 return false;
             }
 
-            file = files[index];
-            date1 = file.DateTime;
+            ImageRow file = files[index];
+            DateTime date1 = file.DateTime;
 
             int current = index - 1;
             int minSearch = maxRangeToSearch;

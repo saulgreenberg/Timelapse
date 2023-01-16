@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
     /// This dialog lets a user enter a time change correction of +/-1 hour, which is propagated backwards/forwards.
     /// The current image as set by the user in the radio buttons.
     /// </summary>
-    public partial class DateDaylightSavingsTimeCorrection : BusyableDialogWindow
+    public partial class DateDaylightSavingsTimeCorrection
     {
         #region Private Variables
         private readonly int currentImageRow;
@@ -88,7 +88,7 @@ namespace Timelapse.Dialog
                 this.DatabaseUpdateFileDates(this.Progress, adjustment, startRow, endRow, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update
-                if (Token.IsCancellationRequested == true)
+                if (Token.IsCancellationRequested)
                 {
                     feedbackRows.Clear();
                     feedbackRows.Add(new DateTimeFeedbackTuple("Cancelled", "No changes were made"));

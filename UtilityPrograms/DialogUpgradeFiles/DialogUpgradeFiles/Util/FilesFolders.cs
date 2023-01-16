@@ -44,9 +44,9 @@ namespace DialogUpgradeFiles.Util
                 return;
             }
             // Add a folder only if it contains one of the desired extensions
-            if (CheckFolderForAtLeastOneImageOrVideoFiles(folderRoot) == true)
+            if (CheckFolderForAtLeastOneImageOrVideoFiles(folderRoot))
             {
-                if (String.IsNullOrEmpty(prefixPath) == false)
+                if (string.IsNullOrEmpty(prefixPath) == false)
                 {
                     int index = folderRoot.Length > prefixPath.Length + 1 ? prefixPath.Length + 1 : prefixPath.Length;
                     folderPaths.Add(folderRoot.Substring(index));
@@ -131,7 +131,7 @@ namespace DialogUpgradeFiles.Util
                 foundFiles = new List<string>();
             }
 
-            if (String.IsNullOrEmpty(startFolder))
+            if (string.IsNullOrEmpty(startFolder))
             {
                 // This should not happen, but just in case
                 return foundFiles;
@@ -249,7 +249,7 @@ namespace DialogUpgradeFiles.Util
         /// <returns></returns>
         public static FileExtensionEnum GetFileTypeByItsExtension(string path)
         {
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
                 return FileExtensionEnum.IsNotImageOrVideo;
             }
@@ -294,7 +294,7 @@ namespace DialogUpgradeFiles.Util
                     continue;
                 }
                 FilesRemoveAllButImagesAndVideos(fileInfoList);
-                if (fileInfoList.Any(x => x.Name.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase) == true))
+                if (fileInfoList.Any(x => x.Name.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     return true;
                 }
@@ -313,11 +313,11 @@ namespace DialogUpgradeFiles.Util
         // These are prefixed by '._' and are not actually a valid image or video
         private static void FilesRemoveAllButImagesAndVideos(List<FileInfo> fileInfoList)
         {
-            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) == true)
+            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase))
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
         }
 

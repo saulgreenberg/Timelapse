@@ -7,7 +7,7 @@ using Timelapse.Util;
 namespace Timelapse
 {
     // Help Menu Callbacks
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Help sub-menu opening
         private void Help_SubmenuOpening(object sender, RoutedEventArgs e)

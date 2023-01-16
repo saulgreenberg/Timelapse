@@ -18,33 +18,21 @@ namespace Timelapse.Controls
     {
         #region Public properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft
-        {
-            get { return this.ContentControl.PointToScreen(new Point(0, 0)); }
-        }
+        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl
-        {
-            get { return this.ContentControl; }
-        }
+        public override UIElement GetContentControl => this.ContentControl;
 
-        public override bool IsContentControlEnabled
-        {
-            get { return this.ContentControl.IsEnabled; }
-        }
+        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the content of the choice.</summary>
-        public override string Content
-        {
-            get { return this.ContentControl.Text; }
-        }
+        public override string Content => this.ContentControl.Text;
 
         public override bool ContentReadOnly
         {
-            get { return this.ContentControl.IsReadOnly; }
+            get => this.ContentControl.IsReadOnly;
             set
             {
-                if (Util.GlobalReferences.TimelapseState.IsViewOnly)
+                if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
                     this.ContentControl.IsReadOnly = true;
                     this.ContentControl.IsHitTestVisible = false;
@@ -195,7 +183,7 @@ namespace Timelapse.Controls
             }
 
             this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = String.IsNullOrEmpty(value) ? "Blank entry" : value;
+            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
         }
         #endregion
 

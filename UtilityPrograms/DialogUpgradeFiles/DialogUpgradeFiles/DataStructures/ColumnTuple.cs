@@ -75,11 +75,13 @@ namespace DialogUpgradeFiles.Database
             if ((utcOffset < Constant.Time.MinimumUtcOffset) ||
                 (utcOffset > Constant.Time.MaximumUtcOffset))
             {
-                throw new ArgumentOutOfRangeException(nameof(utcOffset), String.Format("UTC offset must be between {0} and {1}, inclusive.", DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset), DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset)));
+                throw new ArgumentOutOfRangeException(nameof(utcOffset),
+                    $"UTC offset must be between {DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset)} and {DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.MinimumUtcOffset)}, inclusive.");
             }
             if (utcOffset.Ticks % Constant.Time.UtcOffsetGranularity.Ticks != 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(utcOffset), String.Format("UTC offset must be an exact multiple of {0} ({1}).", DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.UtcOffsetGranularity), DateTimeHandler.ToStringDisplayUtcOffset(Constant.Time.UtcOffsetGranularity)));
+                throw new ArgumentOutOfRangeException(nameof(utcOffset),
+                    $"UTC offset must be an exact multiple of {DateTimeHandler.ToStringDatabaseUtcOffset(Constant.Time.UtcOffsetGranularity)} ({DateTimeHandler.ToStringDisplayUtcOffset(Constant.Time.UtcOffsetGranularity)}).");
             }
 
             this.Name = column;

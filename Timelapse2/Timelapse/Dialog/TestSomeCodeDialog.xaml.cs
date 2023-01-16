@@ -5,7 +5,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for TestingDialog.xaml
     /// </summary>
-    public partial class TestSomeCodeDialog : Window
+    public partial class TestSomeCodeDialog
     {
         public TestSomeCodeDialog(Window owner)
         {

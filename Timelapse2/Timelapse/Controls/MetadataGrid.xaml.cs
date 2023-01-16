@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.ExifTool;
 using Timelapse.Util;
@@ -17,7 +18,7 @@ namespace Timelapse.Controls
     /// <summary>
     /// Interaction logic for MetadataGrid.xaml
     /// </summary>
-    public partial class MetadataGrid : UserControl
+    public partial class MetadataGrid
     {
         #region Private Variables
         // Collects the various metadata attributes from the file. The Key is the complete metadata name 
@@ -25,35 +26,22 @@ namespace Timelapse.Controls
 
         private bool HideMetadataKindColumn
         {
-            set
-            {
-                this.AvailableMetadataDataGrid.Columns[1].Visibility = (value == true)
+            set =>
+                this.AvailableMetadataDataGrid.Columns[1].Visibility = value
                     ? Visibility.Collapsed
                     : Visibility.Visible;
-            }
         }
         #endregion
 
         #region Public properties
         // Whether the metadataExtractor tool is selected (false means the ExifTool)
-        public MetadataToolEnum MetadataToolSelected
-        {
-            get
-            {
-                return this.MetadataExtractorRB.IsChecked == true
-                    ? MetadataToolEnum.MetadataExtractor
-                    : MetadataToolEnum.ExifTool;
-            }
-        }
+        public MetadataToolEnum MetadataToolSelected =>
+            this.MetadataExtractorRB.IsChecked == true
+                ? MetadataToolEnum.MetadataExtractor
+                : MetadataToolEnum.ExifTool;
 
         // A handle to the ExifTool Manager
-        public ExifToolManager ExifToolManager
-        {
-            get
-            {
-                return Util.GlobalReferences.TimelapseState.ExifToolManager;
-            }
-        }
+        public ExifToolManager ExifToolManager => GlobalReferences.TimelapseState.ExifToolManager;
 
         // A dictionary derived from the Note fields, where the key is a data field's DataLabel and its value is the Label
         // And empty slot is included
@@ -73,12 +61,10 @@ namespace Timelapse.Controls
         // Show or hide the DataLabel Column. If we are just inspecting the metadata, we don't need to show that column
         public bool HideDataLabelColumn
         {
-            set
-            {
-                this.AvailableMetadataDataGrid.Columns[4].Visibility = (value == true)
+            set =>
+                this.AvailableMetadataDataGrid.Columns[4].Visibility = value
                     ? Visibility.Collapsed
                     : Visibility.Visible;
-            }
         }
 
 
@@ -358,11 +344,7 @@ namespace Timelapse.Controls
             public ObservableCollection<DataContents> MetadataList
             {
                 get => _metadataList;
-                set
-                {
-                    SetProperty(ref _metadataList, value);
-
-                }
+                set => SetProperty(ref _metadataList, value);
             }
         }
         #endregion

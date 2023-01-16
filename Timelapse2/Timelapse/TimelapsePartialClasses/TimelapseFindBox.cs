@@ -8,7 +8,7 @@ using Timelapse.Database;
 namespace Timelapse
 {
     // Find Box event handlers and helpers
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Callbacks
         // KeyDown: find forward on enter

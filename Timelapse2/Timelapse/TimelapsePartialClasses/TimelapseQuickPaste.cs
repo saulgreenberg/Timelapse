@@ -11,7 +11,7 @@ using Timelapse.Util;
 // A Partial class collecting the QuickPaste methods. 
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Method - Show / Hide / Terminate the QuickPaste window
         private void QuickPasteWindowShow()

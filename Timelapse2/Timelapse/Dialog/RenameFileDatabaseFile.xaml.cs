@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace Timelapse.Dialog
 {
-    public partial class RenameFileDatabaseFile : Window
+    public partial class RenameFileDatabaseFile
     {
         #region Public Properties and Private Variables
         public string NewFilename { get; private set; }

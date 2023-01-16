@@ -7,6 +7,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -75,13 +76,12 @@ namespace Timelapse.Controls
 
 
             double width = 0;  // Used to calculate the placement offset of the popup relative to the placement target
-            double height;
 
             // Add a visual marker to show the position of the label in the image list
             Label label = EpisodePopup.CreateLabel("^", this.ImageHeight);
             label.VerticalAlignment = VerticalAlignment.Top;
             width += label.Width;
-            height = this.ImageHeight;
+            double height = this.ImageHeight;
             sp.Children.Add(label);
 
             int margin = 2;
@@ -220,7 +220,7 @@ namespace Timelapse.Controls
             Canvas.SetTop(image, 0);
             canvas.Children.Add(image);
 
-            BoundingBoxes boundingBoxes = Util.GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(fileTableID);
+            BoundingBoxes boundingBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(fileTableID);
             boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, margin);
 
             return (canvas);

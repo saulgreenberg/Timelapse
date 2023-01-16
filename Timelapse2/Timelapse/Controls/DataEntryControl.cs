@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
@@ -106,27 +107,21 @@ namespace Timelapse.Controls
         public TContent ContentControl { get; private set; }
 
         /// <summary>Gets the control label's value</summary>
-        public string Label
-        {
-            get { return (string)this.LabelControl.Content; }
-        }
+        public string Label => (string)this.LabelControl.Content;
 
         public TLabel LabelControl { get; private set; }
 
         /// <summary>Gets or sets the width of the content control</summary>
         public int Width
         {
-            get { return (int)this.ContentControl.Width; }
-            set { this.ContentControl.Width = value; }
+            get => (int)this.ContentControl.Width;
+            set => this.ContentControl.Width = value;
         }
 
         // Sets or gets whether this control is enabled or disabled</summary>
         public bool IsEnabled
         {
-            get
-            {
-                return this.Container.IsEnabled;
-            }
+            get => this.Container.IsEnabled;
             set
             {
                 this.ContentControl.IsEnabled = value;
@@ -138,7 +133,7 @@ namespace Timelapse.Controls
         #endregion
 
         #region Base constructor for a DataEntryControl<,>
-        protected DataEntryControl(ControlRow control, DataEntryControls styleProvider, Nullable<ControlContentStyleEnum> contentStyleName, ControlLabelStyleEnum labelStyleName) :
+        protected DataEntryControl(ControlRow control, DataEntryControls styleProvider, ControlContentStyleEnum? contentStyleName, ControlLabelStyleEnum labelStyleName) :
             base(control, styleProvider)
         {
             // Check the arguments for null 
@@ -198,7 +193,7 @@ namespace Timelapse.Controls
                 if ((this.ContentReadOnly || Keyboard.Modifiers == ModifierKeys.Shift) && (keyEvent.Key == Key.Right || keyEvent.Key == Key.Left || keyEvent.Key == Key.PageUp || keyEvent.Key == Key.PageDown))
                 {
                     keyEvent.Handled = true;
-                    Util.GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
+                    GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
                 }
             }
         }
@@ -223,7 +218,7 @@ namespace Timelapse.Controls
             {
                 Text = String.Empty,
                 Width = width < 20 ? 80 : width,
-                Height = (control == null) ? Double.NaN : control.Height,
+                Height = control?.Height ?? Double.NaN,
                 Padding = padding,
                 VerticalAlignment = VerticalAlignment.Bottom,
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -242,7 +237,7 @@ namespace Timelapse.Controls
             Popup popup = new Popup
             {
                 Width = width,
-                Height = (control == null) ? Double.NaN : control.Height,
+                Height = control?.Height ?? Double.NaN,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Placement = PlacementMode.Center,
@@ -300,8 +295,7 @@ namespace Timelapse.Controls
             timer.Tick += this.FlashFontTimer_Tick;
 
             // Animate the color from white back to its current color
-            ColorAnimation animation;
-            animation = new ColorAnimation()
+            ColorAnimation animation = new ColorAnimation()
             {
                 From = Colors.White,
                 AutoReverse = false,

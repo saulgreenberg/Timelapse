@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Timelapse.DataStructures;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 
@@ -57,7 +58,7 @@ namespace Timelapse.Images
             // So we just use it as a short cut, i.e., if none of the bounding boxes are above the threshold, we can abort.
             // Also, we add a slight correction value to the MaxConfidence, so confidences near the threshold will still appear.
             double correction = 0.005;
-            if (this.MaxConfidence + correction < Util.GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && this.MaxConfidence + correction < Util.GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+            if (this.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && this.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
             {
                 // Ignore any bounding box that is below the desired confidence threshold for displaying it.
                 // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
@@ -68,7 +69,7 @@ namespace Timelapse.Images
 
             foreach (BoundingBox bbox in this.Boxes)
             {
-                if (bbox.Confidence + correction < Util.GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && bbox.Confidence + correction < Util.GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+                if (bbox.Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && bbox.Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
                 {
                     // Ignore any bounding box that is below the desired confidence threshold for displaying it.
                     // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
@@ -80,7 +81,7 @@ namespace Timelapse.Images
                 // Create a bounding box 
                 Rectangle rect = new Rectangle();
                 SolidColorBrush brush;
-                bool colorblind = Util.GlobalReferences.TimelapseState.BoundingBoxColorBlindFriendlyColors;
+                bool colorblind = GlobalReferences.TimelapseState.BoundingBoxColorBlindFriendlyColors;
                 byte opacity;
                 if (colorblind)
                 {
@@ -173,7 +174,7 @@ namespace Timelapse.Images
                 }
 
                 // Add information to each bounding box using a tooltip or a splitbutton
-                if (Util.GlobalReferences.TimelapseState.BoundingBoxAnnotate == false)
+                if (GlobalReferences.TimelapseState.BoundingBoxAnnotate == false)
                 {
                     // Use a tooltip
                     rect.ToolTip = (bbox.Classifications.Count == 0) ? bboxLabel : bboxTextBlock;

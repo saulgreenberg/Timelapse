@@ -14,18 +14,18 @@ namespace Timelapse.Controls
     /// <summary>
     /// Create a control - a grid - that contains a flow document with all the help information
     /// </summary>
-    public partial class HelpUserControl : UserControl
+    public partial class HelpUserControl
     {
         #region Public properties and Private variables
         // Substitute for parameter passing: 
         // The HelpFileProperty/ HelpFile lets us specify the location of the helpfile resource in the XAML
         // The Xaml using this user control should contain something like HelpFile="pack://application:,,/Resources/TimelapseHelp.rtf"
         public static readonly DependencyProperty HelpFileProperty =
-            DependencyProperty.Register("HelpFile", typeof(string), typeof(HelpUserControl));
+            DependencyProperty.Register(nameof(HelpFile), typeof(string), typeof(HelpUserControl));
         public string HelpFile
         {
-            get { return this.GetValue(HelpFileProperty) as string; }
-            set { this.SetValue(HelpFileProperty, value); }
+            get => this.GetValue(HelpFileProperty) as string;
+            set => this.SetValue(HelpFileProperty, value);
         }
 
         // Set this (before the control is loaded) to a non-English (US or CAD) language, which will be used to add a warning about regions to the document.
@@ -45,7 +45,7 @@ namespace Timelapse.Controls
             this.CreateFlowDocument();
 
             // Check to see if a language has been set. If so, warn the user that they may be better off setting en-US or en-CAN as the region
-            if (!String.IsNullOrEmpty(this.WarningRegionLanguage))
+            if (!string.IsNullOrEmpty(this.WarningRegionLanguage))
             {
                 this.InsertCultureWarning();
             }

@@ -64,7 +64,7 @@ namespace Timelapse.Images
 
         public void ParsePointList(string pointList)
         {
-            if (String.IsNullOrEmpty(pointList))
+            if (string.IsNullOrEmpty(pointList))
             {
                 return;
             }

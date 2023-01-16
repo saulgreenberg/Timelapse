@@ -5,10 +5,10 @@ using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
-    public partial class AboutTimelapse : Window
+    public partial class AboutTimelapse
     {
         #region Public Properties
-        public Nullable<DateTime> MostRecentCheckForUpdate { get; private set; }
+        public DateTime? MostRecentCheckForUpdate { get; private set; }
         #endregion
 
         #region Constructor and Loaded

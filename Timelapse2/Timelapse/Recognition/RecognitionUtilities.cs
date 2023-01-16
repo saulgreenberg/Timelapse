@@ -133,11 +133,11 @@ namespace Timelapse.Recognition
                 {Constant.InfoColumns.DetectorVersion, info.detector_metadata.megadetector_version ?? Constant.RecognizerValues.MDVersionUnknown},
                 {Constant.InfoColumns.TypicalDetectionThreshold, info.detector_metadata.typical_detection_threshold ?? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown},
                 {Constant.InfoColumns.ConservativeDetectionThreshold, info.detector_metadata.conservative_detection_threshold ?? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown},
-                {Constant.InfoColumns.Classifier, String.IsNullOrEmpty(info.classifier)
+                {Constant.InfoColumns.Classifier, string.IsNullOrEmpty(info.classifier)
                     ? String.Empty
                     : info.classifier},
                 {Constant.InfoColumns.ClassificationCompletionTime,
-                    String.IsNullOrEmpty(info.classification_completion_time)
+                    string.IsNullOrEmpty(info.classification_completion_time)
                     ? String.Empty
                     : info.classification_completion_time},
                 {Constant.InfoColumns.TypicalClassificationThreshold, info.classifier_metadata.typical_classification_threshold ?? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown},
@@ -268,7 +268,7 @@ namespace Timelapse.Recognition
         // Compare the jsonFilePath to the rootFolderPath and return the difference
         //(i.e., the subfolder to the jsonFilePath from the rootFolderPath if any
         // If the JsonFilePath is the same as or outside of the rootFolderPath, return an empty string
-        static public string GetRecognizersFileSubfolderPathIfAny(string rootFolderPath, string jsonFilePath)
+        public static string GetRecognizersFileSubfolderPathIfAny(string rootFolderPath, string jsonFilePath)
         {
             Tuple<string, string, string> splitPath = Util.FilesFolders.SplitFullPath(rootFolderPath, jsonFilePath);
             if (splitPath == null)
@@ -276,7 +276,7 @@ namespace Timelapse.Recognition
                 // file is outside of root folder and its subfolders
                 return String.Empty;
             }
-            else if (String.IsNullOrEmpty(splitPath.Item2))
+            else if (string.IsNullOrEmpty(splitPath.Item2))
             {
                 // Don't add prefix: file is in the root folder
                 return String.Empty;
@@ -289,7 +289,7 @@ namespace Timelapse.Recognition
         // Try to read the recognition data from the Json file into the Recognizer structure
         // A progress bar is displayed
         // Success: returns a filled in Recognizer structure
-        static public async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Recognizer jsonRecognizer, string rootFolderPath, string subFolderPrefix, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelToken)
+        public static async Task<RecognizerPathTestResults> IsRecognizersFilePathsLikelyRelativeToTheSubfolder(Recognizer jsonRecognizer, string rootFolderPath, string subFolderPrefix, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelToken)
         {
             RecognizerPathTestResults results = RecognizerPathTestResults.NoMatchToExistingFiles;
             await Task.Run(() =>
@@ -351,7 +351,7 @@ namespace Timelapse.Recognition
 
         // For each image in the Recognizer structure, add the provided subFolderPrefix to the beginning of its File path
         // A progress bar is displayed
-        static public async Task<CancelStatusEnum> RecognitionsAddPrefixToFilePaths(Recognizer jsonRecognizer, string subFolderPrefix, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelToken)
+        public static async Task<CancelStatusEnum> RecognitionsAddPrefixToFilePaths(Recognizer jsonRecognizer, string subFolderPrefix, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelToken)
         {
             CancelStatusEnum results = CancelStatusEnum.NotCancelled;
             await Task.Run(() =>

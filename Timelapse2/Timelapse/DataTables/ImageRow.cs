@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -31,43 +32,34 @@ namespace Timelapse.Database
             // Orignal code is in commentss
             //get { return (this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime)); }
             //private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
-            get { return DateTime.SpecifyKind(this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime), DateTimeKind.Unspecified); }
-            private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, DateTime.SpecifyKind(value, DateTimeKind.Unspecified)); }
+            get => DateTime.SpecifyKind(this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime), DateTimeKind.Unspecified);
+            private set => this.Row.SetField(Constant.DatabaseColumn.DateTime, DateTime.SpecifyKind(value, DateTimeKind.Unspecified));
         }
 
         // Get a version of the date/time suitable to display to the user 
-        public string DateTimeAsDisplayable
-        {
-            get { return DateTimeHandler.ToStringDisplayDateTime(this.DateTime); }
-        }
+        public string DateTimeAsDisplayable => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
 
-        public string DateTimeAsDisplayableDate
-        {
-            get { return DateTimeHandler.ToStringDisplayDateTime(this.DateTime); }
-        }
+        public string DateTimeAsDisplayableDate => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
 
         // Get the date/time  - This version is a null op!
-        public DateTime DateTimeIncorporatingOffsetPLAINVERSION
-        {
-            get { return this.DateTime; }
-        }
+        public DateTime DateTimeIncorporatingOffsetPLAINVERSION => this.DateTime;
 
         public bool DeleteFlag
         {
-            get { return this.Row.GetBooleanField(Constant.DatabaseColumn.DeleteFlag); }
-            set { this.Row.SetField(Constant.DatabaseColumn.DeleteFlag, value); }
+            get => this.Row.GetBooleanField(Constant.DatabaseColumn.DeleteFlag);
+            set => this.Row.SetField(Constant.DatabaseColumn.DeleteFlag, value);
         }
 
         public string File
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.File); }
-            set { this.Row.SetField(Constant.DatabaseColumn.File, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.File);
+            set => this.Row.SetField(Constant.DatabaseColumn.File, value);
         }
 
         public string RelativePath
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.RelativePath); }
-            set { this.Row.SetField(Constant.DatabaseColumn.RelativePath, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.RelativePath);
+            set => this.Row.SetField(Constant.DatabaseColumn.RelativePath, value);
         }
         #endregion
 
@@ -91,10 +83,7 @@ namespace Timelapse.Database
 
         // This will be invoked only on an image file, so always returns false
         // That is, if its a video, an VideoRow would have been created and the IsVideo test method in that would have been invoked
-        public virtual bool IsVideo
-        {
-            get { return false; }
-        }
+        public virtual bool IsVideo => false;
 
         // Check if a datalabel is present in the ImageRow
         public bool Contains(string dataLabel)
@@ -116,7 +105,7 @@ namespace Timelapse.Database
         public string GetFilePath(string rootFolderPath)
         {
             // see RelativePath remarks in constructor
-            return String.IsNullOrEmpty(this.RelativePath)
+            return string.IsNullOrEmpty(this.RelativePath)
                 ? Path.Combine(rootFolderPath, this.File)
                 : Path.Combine(rootFolderPath, this.RelativePath, this.File);
         }
@@ -265,7 +254,7 @@ namespace Timelapse.Database
                 {
                     // ExifTool specific code - we transform the ExifTool results into the same dictionary structure used by the MetadataExtractor
                     metadata.Clear();
-                    Dictionary<string, string> exifData = Util.GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(this.GetFilePath(folderPath), metadataOnLoad.Tags);
+                    Dictionary<string, string> exifData = GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(this.GetFilePath(folderPath), metadataOnLoad.Tags);
 
                     foreach (KeyValuePair<string, string> kvp in exifData)
                     {
@@ -425,7 +414,7 @@ namespace Timelapse.Database
         }
 
         // LoadBitmap Wrapper: defaults to Persistent, Decode to the given width
-        public virtual BitmapSource LoadBitmap(string baseFolderPath, Nullable<int> desiredWidth, out bool isCorruptOrMissing)
+        public virtual BitmapSource LoadBitmap(string baseFolderPath, int? desiredWidth, out bool isCorruptOrMissing)
         {
             return this.LoadBitmap(baseFolderPath, desiredWidth, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out isCorruptOrMissing);
         }
@@ -457,12 +446,10 @@ namespace Timelapse.Database
             });
         }
 
-        /// <summary>
-        //// Load: Full form
-        /// Get a bitmap of the desired width. If its not there or something is wrong it will return a placeholder bitmap displaying the 'error'.
-        /// Also sets a flag (isCorruptOrMissing) indicating if the bitmap wasn't retrieved (signalling a placeholder bitmap was returned)
-        /// </summary>
-        public virtual BitmapSource LoadBitmap(string rootFolderPath, Nullable<int> desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
+        // Load: Full form
+        // Get a bitmap of the desired width. If its not there or something is wrong it will return a placeholder bitmap displaying the 'error'.
+        // Also sets a flag (isCorruptOrMissing) indicating if the bitmap wasn't retrieved (signalling a placeholder bitmap was returned)
+        public virtual BitmapSource LoadBitmap(string rootFolderPath, int? desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
             // Invoke the static version. The only change is that we get the full file path and pass that as a parameter
             return BitmapUtilities.GetBitmapFromImageFile(this.GetFilePath(rootFolderPath), desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);

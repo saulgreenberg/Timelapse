@@ -1,7 +1,9 @@
 ﻿using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
+using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.Controls
@@ -36,10 +38,7 @@ namespace Timelapse.Controls
         /// </summary>
         public bool Show
         {
-            get
-            {
-                return this.Visibility == Visibility.Visible;
-            }
+            get => this.Visibility == Visibility.Visible;
             set
             {
                 this.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -56,14 +55,11 @@ namespace Timelapse.Controls
         // best to keep it part of the offset lens object for clarity
         public new double ZoomFactor
         {
-            get
-            {
-                return base.ZoomFactor;
-            }
+            get => base.ZoomFactor;
             set
             {
                 base.ZoomFactor = value;
-                Util.GlobalReferences.TimelapseState.OffsetLensZoomFactor = value;
+                GlobalReferences.TimelapseState.OffsetLensZoomFactor = value;
             }
         }
 
@@ -116,11 +112,6 @@ namespace Timelapse.Controls
             double x;
             double y;
             double angle;
-
-            if (this == null)
-            {
-                return;
-            }
 
             // Set lens transformation
             switch (direction)
@@ -189,10 +180,6 @@ namespace Timelapse.Controls
         // method, which is called by the layout system as part of a rendering pass.
         protected override void OnRender(DrawingContext drawingContext)
         {
-            if (drawingContext == null)
-            {
-                System.Diagnostics.Debug.Print(nameof(drawingContext) + " null");
-            }
             Rect adornedElementRect = new Rect(this.AdornedElement.DesiredSize);
             int centerOffset = 75;
             Point handleStartOffset = new Point(0, 0);

@@ -60,10 +60,8 @@ namespace DialogUpgradeFiles.Database
         /// <summary>
         /// Return a count of the number of rows in the DataTable
         /// </summary>
-        public int RowCount
-        {
-            get { return this.DataTable.Rows.Count; }
-        }
+        public int RowCount => this.DataTable.Rows.Count;
+
         #endregion
 
         #region Public Methods - Finding a Row: DataTable[index], Find, IndexOf
@@ -73,7 +71,7 @@ namespace DialogUpgradeFiles.Database
         /// <param name="index">An index into a row in the DataTable</param>
         public TRow this[int index]
         {
-            /// SAULXXXBUG THIS CAN CRASH: NO ROW AT POSITION...
+            // SAULXXXBUG THIS CAN CRASH: NO ROW AT POSITION...
             //get { return this.createRow(this.DataTable.Rows[index]); }
             get
             {
@@ -83,7 +81,8 @@ namespace DialogUpgradeFiles.Database
                 }
                 else
                 {
-                    System.Diagnostics.Debug.Print(String.Format("in DataTableBackedList:this. Datatable count is {0}, but index is out of bounds at: {1}", this.DataTable.Rows.Count, index));
+                    System.Diagnostics.Debug.Print(
+                        $"in DataTableBackedList:this. Datatable count is {this.DataTable.Rows.Count}, but index is out of bounds at: {index}");
                     return null;
                 }
             }

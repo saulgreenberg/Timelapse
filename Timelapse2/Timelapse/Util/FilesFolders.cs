@@ -214,9 +214,9 @@ namespace Timelapse.Util
                 return;
             }
             // Add a folder only if it contains one of the desired extensions
-            if (CheckFolderForAtLeastOneImageOrVideoFiles(folderRoot) == true)
+            if (CheckFolderForAtLeastOneImageOrVideoFiles(folderRoot))
             {
-                if (String.IsNullOrEmpty(prefixPath) == false)
+                if (string.IsNullOrEmpty(prefixPath) == false)
                 {
                     int index = folderRoot.Length > prefixPath.Length + 1 ? prefixPath.Length + 1 : prefixPath.Length;
                     folderPaths.Add(folderRoot.Substring(index));
@@ -329,7 +329,7 @@ namespace Timelapse.Util
         /// </summary>
         /// <param name="rootFolder">the path to the root folder containing the template</param>
         /// <param name="fileName">the name of the file</param>
-        /// <returns>List<Tuple<string,string>>a list of tuples, each tuple comprising the RelativePath as Item1, and the File's name as Item2</returns>
+        /// <returns>List-Tuple-string,string- a list of tuples, each tuple comprising the RelativePath as Item1, and the File's name as Item2</returns>
         public static List<Tuple<string, string>> SearchForFoldersContainingFileName(string rootFolder, string fileName)
         {
             List<string> foundFiles = new List<string>();
@@ -432,7 +432,7 @@ namespace Timelapse.Util
         /// <returns></returns>
         public static FileExtensionEnum GetFileTypeByItsExtension(string path)
         {
-            if (String.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(path))
             {
                 return FileExtensionEnum.IsNotImageOrVideo;
             }
@@ -477,7 +477,7 @@ namespace Timelapse.Util
                     continue;
                 }
                 FilesRemoveAllButImagesAndVideos(fileInfoList);
-                if (fileInfoList.Any(x => x.Name.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase) == true))
+                if (fileInfoList.Any(x => x.Name.EndsWith(extension, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     return true;
                 }
@@ -545,11 +545,11 @@ namespace Timelapse.Util
         // These are prefixed by '._' and are not actually a valid image or video
         private static void FilesRemoveAllButImagesAndVideos(List<FileInfo> fileInfoList)
         {
-            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) == true
-                                   || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) == true)
+            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+                                   || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase))
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
         }
 

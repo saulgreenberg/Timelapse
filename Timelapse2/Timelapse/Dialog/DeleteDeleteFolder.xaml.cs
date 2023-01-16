@@ -6,7 +6,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for DeleteDeleteFolder.xaml
     /// </summary>
-    public partial class DeleteDeleteFolder : Window
+    public partial class DeleteDeleteFolder
     {
         #region Private Variables
         private readonly int howManyDeleteFiles;

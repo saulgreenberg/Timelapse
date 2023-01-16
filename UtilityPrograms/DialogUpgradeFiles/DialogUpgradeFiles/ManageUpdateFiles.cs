@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DialogUpgradeFiles
 {
-    public partial class DialogUpgradeFilesAndFolders : Window
+    public partial class DialogUpgradeFilesAndFolders
     {
 
         #region Upgrade the files
@@ -56,7 +56,7 @@ namespace DialogUpgradeFiles
                 string backupFilePath = String.Empty;
 
                 // Feedback
-                this.LineFeedback(String.Format("Processing {0} of {1} files", i + 1, filesDictionary.Count));
+                this.LineFeedback($"Processing {i + 1} of {filesDictionary.Count} files");
                 await Task.Delay(Constant.BusyState.SleepTime);
 
                 // Extract the short file name
@@ -163,7 +163,7 @@ namespace DialogUpgradeFiles
                 //    Util.FileBackup.TryRestoreBackup(file, backupFilePath);
                 //}
                 this.RefreshFileUpdateStatusDisplay(DictFileUpdateStatus, i++);
-                this.TitleMessage.Text = String.Format("Upgrading {0} files", filesDictionary.Count - i);
+                this.TitleMessage.Text = $"Upgrading {filesDictionary.Count - i} files";
             }
 
             // Done!

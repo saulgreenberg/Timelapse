@@ -11,6 +11,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
 using Timelapse.Util;
@@ -35,10 +36,7 @@ namespace Timelapse.Images
         /// </summary>
         public BoundingBoxes BoundingBoxes
         {
-            get
-            {
-                return this.boundingBoxes;
-            }
+            get => this.boundingBoxes;
             set
             {
                 // update bounding boxes
@@ -59,10 +57,7 @@ namespace Timelapse.Images
         private DataEntryControls dataEntryControls;
         public DataEntryControls DataEntryControls
         {
-            get
-            {
-                return this.dataEntryControls;
-            }
+            get => this.dataEntryControls;
             set
             {
                 this.ThumbnailGrid.DataEntryControls = value;
@@ -88,24 +83,16 @@ namespace Timelapse.Images
         /// <summary>
         /// Whether the thumbnail grid is visible or not
         /// </summary>
-        public bool IsThumbnailGridVisible
-        {
-            get
-            {
-                return this.ThumbnailGrid.Visibility == Visibility.Visible;
-            }
-        }
+        public bool IsThumbnailGridVisible => this.ThumbnailGrid.Visibility == Visibility.Visible;
 
         /// <summary>
         /// Gets or sets a value indicating whether the magnifying glass is generally visible or hidden, and returns its state
         /// </summary>
         public bool MagnifiersEnabled
         {
-            get
-            {
+            get =>
                 // both the Offset Lens and the Magnifying Lens share the same enable state
-                return this.magnifyingGlass.IsEnabled;
-            }
+                this.magnifyingGlass.IsEnabled;
             set
             {
                 this.magnifyingGlass.IsEnabled = value;
@@ -119,10 +106,7 @@ namespace Timelapse.Images
         /// </summary>
         public List<Marker> Markers
         {
-            get
-            {
-                return this.markers;
-            }
+            get => this.markers;
             set
             {
                 // update markers
@@ -234,8 +218,10 @@ namespace Timelapse.Images
             this.MouseWheel += this.ImageOrCanvas_MouseWheel;
 
             // set up display image
-            this.ImageToDisplay = new Image();
-            this.ImageToDisplay.HorizontalAlignment = HorizontalAlignment.Left;
+            this.ImageToDisplay = new Image
+            {
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
 
             this.ImageToDisplay.MouseDown += this.ImageVideoOrCanvas_MouseDown;
             this.ImageToDisplay.MouseLeftButtonUp += this.ImageVideoOrCanvas_MouseUp;
@@ -247,10 +233,12 @@ namespace Timelapse.Images
             this.Children.Add(this.ImageToDisplay);
 
             // set up display video
-            this.VideoPlayer = new VideoPlayer();
-            this.VideoPlayer.HorizontalAlignment = HorizontalAlignment.Left;
+            this.VideoPlayer = new VideoPlayer
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top
+            };
             this.VideoPlayer.SizeChanged += this.VideoToDisplay_SizeChanged;
-            this.VideoPlayer.VerticalAlignment = VerticalAlignment.Top;
             this.VideoPlayer.MouseWheel += this.ImageOrCanvas_MouseWheel;
             this.VideoPlayer.MouseDown += this.ImageVideoOrCanvas_MouseDown;
             this.VideoPlayer.MouseLeftButtonUp += this.ImageVideoOrCanvas_MouseUp;
@@ -259,8 +247,10 @@ namespace Timelapse.Images
             this.Children.Add(this.VideoPlayer);
 
             // Set up zoomed out grid showing multitude of images
-            this.ThumbnailGrid = new ThumbnailGrid();
-            this.ThumbnailGrid.Visibility = Visibility.Collapsed;
+            this.ThumbnailGrid = new ThumbnailGrid
+            {
+                Visibility = Visibility.Collapsed
+            };
 
             Canvas.SetZIndex(this.ThumbnailGrid, 1000); // High Z-index so that it appears above other objects and magnifier
             Canvas.SetLeft(this.ThumbnailGrid, 0);
@@ -268,10 +258,12 @@ namespace Timelapse.Images
             this.Children.Add(this.ThumbnailGrid);
 
             // set up image to magnify
-            this.ImageToMagnify = new Image();
-            this.ImageToMagnify.HorizontalAlignment = HorizontalAlignment.Left;
+            this.ImageToMagnify = new Image
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top
+            };
             this.ImageToMagnify.SizeChanged += this.ImageToMagnify_SizeChanged;
-            this.ImageToMagnify.VerticalAlignment = VerticalAlignment.Top;
             Canvas.SetLeft(this.ImageToMagnify, 0);
             Canvas.SetTop(this.ImageToMagnify, 0);
 
@@ -328,9 +320,9 @@ namespace Timelapse.Images
                 return;
             }
             MagnifierManager.SetMagnifier(VideoPlayer.Video, OffsetLens);
-            this.magnifyingGlass.ZoomFactor = Util.GlobalReferences.TimelapseState.MagnifyingGlassZoomFactor;
+            this.magnifyingGlass.ZoomFactor = GlobalReferences.TimelapseState.MagnifyingGlassZoomFactor;
             this.magnifyingGlassZoomStep = Constant.MarkableCanvas.MagnifyingGlassZoomIncrement;
-            this.OffsetLens.ZoomFactor = Util.GlobalReferences.TimelapseState.OffsetLensZoomFactor;
+            this.OffsetLens.ZoomFactor = GlobalReferences.TimelapseState.OffsetLensZoomFactor;
 
             // Hide the magnifiers initially:
             // the mouse pointer may not be atop the canvas and it would appear in an odd place
@@ -346,7 +338,7 @@ namespace Timelapse.Images
         public void SetDisplayImage(BitmapSource bitmapSource)
         {
             // If its a differenced image, generate an event saying so.
-            ImageCache imageCache = Util.GlobalReferences.MainWindow?.DataHandler?.ImageCache;
+            ImageCache imageCache = GlobalReferences.MainWindow?.DataHandler?.ImageCache;
             if (imageCache != null)
             {
                 bool isImageView = imageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered;
@@ -587,7 +579,7 @@ namespace Timelapse.Images
             this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
 
             // Show the DuplicateIndicator for the main window, if needed
-            Util.GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
+            GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
         }
         public void SwitchToVideoView()
         {
@@ -609,13 +601,13 @@ namespace Timelapse.Images
             this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
 
             // Show the DuplicateIndicator for the main window, if needed
-            Util.GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
+            GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
         }
 
         public void SwitchToThumbnailGridView()
         {
             // No need to switch as we are already in it
-            if (this.IsThumbnailGridVisible == true)
+            if (this.IsThumbnailGridVisible)
             {
                 return;
             }
@@ -630,7 +622,7 @@ namespace Timelapse.Images
             this.VideoPlayer.Pause();
 
             // Hide the DuplicateIndicator for the main window
-            Util.GlobalReferences.MainWindow.DuplicateIndicatorInMainWindow.Visibility = Visibility.Collapsed;
+            GlobalReferences.MainWindow.DuplicateIndicatorInMainWindow.Visibility = Visibility.Collapsed;
         }
         #endregion
 
@@ -721,7 +713,7 @@ namespace Timelapse.Images
                 value = Constant.MarkableCanvas.MagnifyingGlassMinimumZoom;
             }
             this.magnifyingGlass.ZoomFactor = value;
-            Util.GlobalReferences.TimelapseState.MagnifyingGlassZoomFactor = value;
+            GlobalReferences.TimelapseState.MagnifyingGlassZoomFactor = value;
 
             // update magnifier content if there is something to magnify
             if (this.ImageToMagnify.Source != null && this.ImageToDisplay.ActualWidth > 0)
@@ -824,8 +816,7 @@ namespace Timelapse.Images
                         this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.MultipleImageView, this.ThumbnailGrid.SelectedCount());
                     }
                 }
-                //else if (this.IsThumbnailGridVisible == true && this.ThumbnailGridState > 1)
-                else if (this.IsThumbnailGridVisible == true)
+                else if (this.IsThumbnailGridVisible)
                 {
                     // State: currently zoomed in on ThumbnailGrid, but not at the minimum step
                     // Zoom in another step
@@ -855,7 +846,7 @@ namespace Timelapse.Images
                         }
                     }
                 }
-                else if (this.IsThumbnailGridVisible == true)
+                else if (this.IsThumbnailGridVisible)
                 {
                     // State: zoomed in on ThumbnailGrid, but at the minimum step
                     // Switch to the image or video, depending on what was last displayed
@@ -898,7 +889,7 @@ namespace Timelapse.Images
         // If the ThumbnailGrid is displayed, refresh it. Use a timer if the we are navigating via a slider (to avoid excessive refreshes)
         public void RefreshIfMultipleImagesAreDisplayed(bool isInSliderNavigation)
         {
-            if (this.IsThumbnailGridVisible == true)
+            if (this.IsThumbnailGridVisible)
             {
                 // State: zoomed in on ThumbnailGrid.
                 // Updating it ensures that the correct image is shown as the first cell
@@ -1060,7 +1051,7 @@ namespace Timelapse.Images
                 this.isPanning == false &&
                 this.isDoubleClick == false)
             {
-                if (this.displayingImage && Util.GlobalReferences.TimelapseState.IsViewOnly == false)
+                if (this.displayingImage && GlobalReferences.TimelapseState.IsViewOnly == false)
                 {
                     // Note that the test above is to ensure that we don't create markers in view-only mode.
                     // Get the current point, and create a marker on it.
@@ -1094,7 +1085,7 @@ namespace Timelapse.Images
         // Remove a marker on a right mouse button up event
         private void Marker_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (Util.GlobalReferences.TimelapseState.IsViewOnly == true)
+            if (GlobalReferences.TimelapseState.IsViewOnly)
             {
                 // We don't delete markers in view-only mode.
                 return;
@@ -1124,7 +1115,7 @@ namespace Timelapse.Images
             {
                 if (zoomIn == true &&
                     ((this.ImageToDisplay.Visibility == Visibility.Visible && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
-                     || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled == true)))
+                     || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled)))
                 {
                     // Pause on the transition from unzoomed image/video to zoomed image/video
                     return;
@@ -1132,7 +1123,7 @@ namespace Timelapse.Images
 
                 if (zoomIn == false &&
                     ((this.ImageToDisplay.Visibility == Visibility.Visible && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
-                      || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled == true)))
+                      || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled)))
                 {
                     // Pause on the transition from unscaled image/video to thumbnail Grid
                     return;
@@ -1243,7 +1234,7 @@ namespace Timelapse.Images
                     // '<' : zoom out
                     Point imageMousePosition2 = Mouse.GetPosition(this.ImageToDisplay);
                     Point videoMousePosition2 = Mouse.GetPosition(this.VideoPlayer.Video);
-                    this.TryZoomInOrOut(false, imageMousePosition2, videoMousePosition2); ;
+                    this.TryZoomInOrOut(false, imageMousePosition2, videoMousePosition2);
                     break;
                 // if the current file's a video allow the user to hit the space bar to start or stop playing the video
                 case Key.Space:
@@ -1261,7 +1252,7 @@ namespace Timelapse.Images
                         if (IsThumbnailGridVisible == false)
                         {
                             this.RefreshBoundingBoxes();
-                            Util.GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
+                            GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
                         }
                         else
                         {
@@ -1313,7 +1304,7 @@ namespace Timelapse.Images
                         if (IsThumbnailGridVisible == false)
                         {
                             this.RefreshBoundingBoxes();
-                            Util.GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
+                            GlobalReferences.MainWindow.DuplicateDisplayIndicatorInImageIfWarranted();
                         }
                         else
                         {
@@ -1383,7 +1374,7 @@ namespace Timelapse.Images
         // Display or hide the episode popup
         private void EpisodePopupIsVisible(bool isVisible)
         {
-            FileDatabase fileDatabase = Util.GlobalReferences.MainWindow?.DataHandler?.FileDatabase;
+            FileDatabase fileDatabase = GlobalReferences.MainWindow?.DataHandler?.FileDatabase;
             if (fileDatabase == null)
             {
                 return;
@@ -1409,39 +1400,40 @@ namespace Timelapse.Images
             markerCanvas.MouseRightButtonUp += new MouseButtonEventHandler(this.Marker_MouseRightButtonUp);
             markerCanvas.MouseWheel += new MouseWheelEventHandler(this.ImageOrCanvas_MouseWheel); // Make the mouse wheel work over marks as well as the image
 
-            if (String.IsNullOrEmpty(marker.Tooltip.Trim()))
-            {
-                markerCanvas.ToolTip = null;
-            }
-            else
-            {
-                markerCanvas.ToolTip = marker.Tooltip;
-            }
+            markerCanvas.ToolTip = string.IsNullOrEmpty(marker.Tooltip.Trim()) 
+                ? null 
+                : marker.Tooltip;
             markerCanvas.Tag = marker;
 
             // Create a marker
-            Ellipse mark = new Ellipse();
-            mark.Width = Constant.MarkableCanvas.MarkerDiameter;
-            mark.Height = Constant.MarkableCanvas.MarkerDiameter;
-            mark.Stroke = marker.Brush;
-            mark.StrokeThickness = Constant.MarkableCanvas.MarkerStrokeThickness;
-            mark.Fill = MarkableCanvas.MarkerFillBrush;
+            Ellipse mark = new Ellipse
+            {
+                Width = Constant.MarkableCanvas.MarkerDiameter,
+                Height = Constant.MarkableCanvas.MarkerDiameter,
+                Stroke = marker.Brush,
+                StrokeThickness = Constant.MarkableCanvas.MarkerStrokeThickness,
+                Fill = MarkableCanvas.MarkerFillBrush
+            };
             markerCanvas.Children.Add(mark);
 
             // Draw another Ellipse as a black outline around it
-            Ellipse blackOutline = new Ellipse();
-            blackOutline.Stroke = Brushes.Black;
-            blackOutline.Width = mark.Width + 1;
-            blackOutline.Height = mark.Height + 1;
-            blackOutline.StrokeThickness = 1;
+            Ellipse blackOutline = new Ellipse
+            {
+                Stroke = Brushes.Black,
+                Width = mark.Width + 1,
+                Height = mark.Height + 1,
+                StrokeThickness = 1
+            };
             markerCanvas.Children.Add(blackOutline);
 
             // And another Ellipse as a white outline around it
-            Ellipse whiteOutline = new Ellipse();
-            whiteOutline.Stroke = Brushes.White;
-            whiteOutline.Width = blackOutline.Width + 1;
-            whiteOutline.Height = blackOutline.Height + 1;
-            whiteOutline.StrokeThickness = 1;
+            Ellipse whiteOutline = new Ellipse
+            {
+                Stroke = Brushes.White,
+                Width = blackOutline.Width + 1,
+                Height = blackOutline.Height + 1,
+                StrokeThickness = 1
+            };
             markerCanvas.Children.Add(whiteOutline);
 
             // maybe add emphasis
@@ -1449,12 +1441,14 @@ namespace Timelapse.Images
             Ellipse glow = null;
             if (marker.Emphasise)
             {
-                glow = new Ellipse();
-                glow.Width = whiteOutline.Width + Constant.MarkableCanvas.MarkerGlowDiameterIncrease;
-                glow.Height = whiteOutline.Height + Constant.MarkableCanvas.MarkerGlowDiameterIncrease;
-                glow.StrokeThickness = Constant.MarkableCanvas.MarkerGlowStrokeThickness;
-                glow.Stroke = mark.Stroke;
-                glow.Opacity = Constant.MarkableCanvas.MarkerGlowOpacity;
+                glow = new Ellipse
+                {
+                    Width = whiteOutline.Width + Constant.MarkableCanvas.MarkerGlowDiameterIncrease,
+                    Height = whiteOutline.Height + Constant.MarkableCanvas.MarkerGlowDiameterIncrease,
+                    StrokeThickness = Constant.MarkableCanvas.MarkerGlowStrokeThickness,
+                    Stroke = mark.Stroke,
+                    Opacity = Constant.MarkableCanvas.MarkerGlowOpacity
+                };
                 markerCanvas.Children.Add(glow);
 
                 outerDiameter = glow.Width;

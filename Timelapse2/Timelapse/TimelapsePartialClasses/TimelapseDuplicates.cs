@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
 
         #region Duplicate the current record

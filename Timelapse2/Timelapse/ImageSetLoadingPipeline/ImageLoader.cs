@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -15,10 +16,7 @@ namespace Timelapse.ImageSetLoadingPipeline
     public class ImageLoader
     {
         #region Public Properties
-        public string FolderPath
-        {
-            get { return this.dataHandler.FileDatabase.FolderPath; }
-        }
+        public string FolderPath => this.dataHandler.FileDatabase.FolderPath;
 
         public bool RequiresDatabaseInsert
         {
@@ -49,10 +47,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
                 return this.bitmapSource;
             }
-            private set
-            {
-                this.bitmapSource = value;
-            }
+            private set => this.bitmapSource = value;
         }
         #endregion
 

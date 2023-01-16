@@ -15,7 +15,7 @@ using Timelapse.Util;
 // Edit Menu Callbacks
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Edit Submenu Opening 
         private void Edit_SubmenuOpening(object sender, RoutedEventArgs e)
@@ -76,7 +76,7 @@ namespace Timelapse
                                              Path.Combine(this.DataHandler.FileDatabase.FolderPath, Constant.File.DefaultFileDatabaseFileName),
                                              String.Format("Database files (*{0})|*{0}", Constant.File.FileDatabaseFileExtension),
                                              Constant.File.FileDatabaseFileExtension,
-                                             out string ddbFile) == true)
+                                             out string ddbFile))
             {
                 List<QuickPasteEntry> qpe = QuickPasteOperations.QuickPasteImportFromDB(this.DataHandler.FileDatabase, ddbFile);
                 if (qpe.Count == 0)
@@ -205,7 +205,7 @@ namespace Timelapse
                     if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
                     {
                         await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-                    };
+                    }
                 }
             }
 
@@ -340,7 +340,7 @@ namespace Timelapse
             // if we delete data records, we can sometimes get in the situation (particularly if we delete a duplicate) where the next fileID displayed is not the closest to the existing position.
             // To resolve this, we get the closest non-deleted file ID before we do the deletion and then try to display that file.
             long currentFileID = this.DataHandler.ImageCache.Current.ID;
-            if (deleteData == true)
+            if (deleteData)
             {
                 //foreach (ImageRow ir in filesToDelete)
                 //{
@@ -470,7 +470,7 @@ namespace Timelapse
                 if (this.ShowDialogAndCheckIfChangesWereMade(rereadDates))
                 {
                     await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-                };
+                }
             }
         }
 
@@ -490,7 +490,7 @@ namespace Timelapse
                 if (this.ShowDialogAndCheckIfChangesWereMade(dateTimeChange))
                 {
                     await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-                };
+                }
             }
         }
 
@@ -663,7 +663,7 @@ namespace Timelapse
             if (result == true)
             {
                 Tuple<string, string> locatedMissingFile = dialog.LocatedMissingFile;
-                if (String.IsNullOrEmpty(locatedMissingFile.Item2))
+                if (string.IsNullOrEmpty(locatedMissingFile.Item2))
                 {
                     return;
                 }
@@ -763,7 +763,7 @@ namespace Timelapse
                     menuItem.Header = "Restore default values for the checkmarked files";
                     menuItem.ToolTip = "For all checkmarked files, revert their fields to their default values (excepting file paths and dates/times)";
                 }
-            };
+            }
         }
 
         // Need to 

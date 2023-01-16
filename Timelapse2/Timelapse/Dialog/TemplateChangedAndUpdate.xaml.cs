@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for TemplateChangedAndUpdate.xaml
     /// </summary>
-    public partial class TemplateChangedAndUpdate : Window
+    public partial class TemplateChangedAndUpdate
     {
         #region Private Variables
         private readonly string actionAdd = "Add";
@@ -124,7 +124,7 @@ namespace Timelapse.Dialog
         // Because the buttons automatically close the dialog, we need to cancel it if there is a warning instead.
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (this.dontClose == true)
+            if (this.dontClose)
             {
                 e.Cancel = true;
             }
@@ -262,7 +262,7 @@ namespace Timelapse.Dialog
                 UIElement uiComboBox = this.GetUIElement(row, 4);
                 if (uiComboBox != null)
                 {
-                    if (uiComboBox is ComboBox cb && cb.IsEnabled == true)
+                    if (uiComboBox is ComboBox cb && cb.IsEnabled)
                     {
                         ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
                         if (cb.SelectedItem != null)
@@ -299,7 +299,7 @@ namespace Timelapse.Dialog
                 UIElement uiComboBox = this.GetUIElement(row, 4);
                 if (uiComboBox != null)
                 {
-                    if (uiComboBox is ComboBox cb && cb.IsEnabled == true)
+                    if (uiComboBox is ComboBox cb && cb.IsEnabled)
                     {
                         // The combobox is enabled, thus it's a renume
                         if (cb.SelectedItem == null || cb.SelectedItem.ToString() == String.Empty)
@@ -313,20 +313,18 @@ namespace Timelapse.Dialog
                     }
                 }
             }
-            if (problemDataLabels.Count > 0)
-            {
-                // notify the user concerning the problem data labels
-                MessageBox messageBox = new MessageBox("Select the new name for your 'Renamed' fields ", this);
-                messageBox.Message.Icon = MessageBoxImage.Error;
-                messageBox.Message.Problem = "You indicated that the following fields should be renamed, but did not provide the new name" + Environment.NewLine;
-                messageBox.Message.Problem += "\u2022 " + string.Join<string>(", ", problemDataLabels);
-                messageBox.Message.Solution = "For each Rename action, either" + Environment.NewLine;
-                messageBox.Message.Solution += "\u2022 use the drop down menu to provide the new name, or" + Environment.NewLine;
-                messageBox.Message.Solution += "\u2022 set the Update Action back to Delete.";
-                messageBox.ShowDialog();
-                return false;
-            }
-            return true;
+
+            if (problemDataLabels.Count <= 0) return true;
+            // notify the user concerning the problem data labels
+            MessageBox messageBox = new MessageBox("Select the new name for your 'Renamed' fields ", this);
+            messageBox.Message.Icon = MessageBoxImage.Error;
+            messageBox.Message.Problem = "You indicated that the following fields should be renamed, but did not provide the new name" + Environment.NewLine;
+            messageBox.Message.Problem += "\u2022 " + string.Join<string>(", ", problemDataLabels);
+            messageBox.Message.Solution = "For each Rename action, either" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 use the drop down menu to provide the new name, or" + Environment.NewLine;
+            messageBox.Message.Solution += "\u2022 set the Update Action back to Delete.";
+            messageBox.ShowDialog();
+            return false;
         }
 
         private void CollectItems()
@@ -360,7 +358,7 @@ namespace Timelapse.Dialog
                 UIElement uiComboBox = this.GetUIElement(row, 4);
                 if (uiComboBox != null)
                 {
-                    if (uiComboBox is ComboBox cb && cb.IsEnabled == true)
+                    if (uiComboBox is ComboBox cb && cb.IsEnabled)
                     {
                         ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
                         if (cb.SelectedItem != null)

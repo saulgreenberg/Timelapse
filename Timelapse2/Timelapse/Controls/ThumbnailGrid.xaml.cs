@@ -8,8 +8,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
+using Timelapse.Util;
 using RowColumn = System.Drawing.Point;
 
 namespace Timelapse.Controls
@@ -24,7 +26,7 @@ namespace Timelapse.Controls
     // While not yet done, this could  be extended to  use infinite scroll, but that could introduce some issues  in how user selections are done, 
     // where mis-selections are possible as some images will be out of site.
 
-    public partial class ThumbnailGrid : UserControl
+    public partial class ThumbnailGrid
     {
         #region Public properties
 
@@ -42,31 +44,13 @@ namespace Timelapse.Controls
         public string FolderPath { get; set; }
 
         // The number of columns that exist in the grid
-        public int AvailableColumns
-        {
-            get
-            {
-                return this.Grid.ColumnDefinitions.Count;
-            }
-        }
+        public int AvailableColumns => this.Grid.ColumnDefinitions.Count;
 
         // The number of rows that currently exist in the ThumbnailGrid
-        public int AvailableRows
-        {
-            get
-            {
-                return this.Grid.RowDefinitions.Count;
-            }
-        }
+        public int AvailableRows => this.Grid.RowDefinitions.Count;
 
         // Whether the Grid is activated (i..e, with a zoom level), 
-        public bool IsGridActive
-        {
-            get
-            {
-                return Level > 0;
-            }
-        }
+        public bool IsGridActive => Level > 0;
         public bool IsAtMinimum { get; private set; }
         #endregion
 
@@ -447,11 +431,11 @@ namespace Timelapse.Controls
         private void SelectExtendSelectionFrom(RowColumn currentCell)
         {
             // If there is no previous cell, then we are at the end.
-            if (this.GridGetPreviousSelectedCell(currentCell, out RowColumn previousCell) == true)
+            if (this.GridGetPreviousSelectedCell(currentCell, out RowColumn previousCell))
             {
                 this.SelectFromTo(previousCell, currentCell);
             }
-            else if (this.GridGetNextSelectedCell(currentCell, out RowColumn nextCell) == true)
+            else if (this.GridGetNextSelectedCell(currentCell, out RowColumn nextCell))
             {
                 this.SelectFromTo(currentCell, nextCell);
             }
@@ -517,7 +501,7 @@ namespace Timelapse.Controls
                             {
                                 fileTableIndex++;
                                 continue;
-                            };
+                            }
 
                             BitmapSource bm = thumbnailInCell.GetThumbnail(cellWidth, cellHeight);
                             thumbnailInCell.DateTimeLastBitmapWasSet = DateTime.Now;
@@ -531,7 +515,7 @@ namespace Timelapse.Controls
                                 DateTimeLipInvoked = thumbnailInCell.DateTimeLastBitmapWasSet
                             };
 
-                            if (this.BackgroundWorker.CancellationPending == true)
+                            if (this.BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 return;
@@ -551,8 +535,8 @@ namespace Timelapse.Controls
                             {
                                 fileTableIndex++;
                                 continue;
-                            };
-                            if (this.BackgroundWorker.CancellationPending == true)
+                            }
+                            if (this.BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 return;
@@ -568,7 +552,7 @@ namespace Timelapse.Controls
                                 FileTableIndex = fileTableIndex,
                                 DateTimeLipInvoked = thumbnailInCell.DateTimeLastBitmapWasSet
                             };
-                            if (this.BackgroundWorker.CancellationPending == true)
+                            if (this.BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 return;
@@ -913,7 +897,7 @@ namespace Timelapse.Controls
                 RootFolder = this.FolderPath,
                 ImageRow = this.FileTable[fileTableIndex],
                 FileTableIndex = fileTableIndex,
-                BoundingBoxes = Util.GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(this.FileTable[fileTableIndex].ID)
+                BoundingBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(this.FileTable[fileTableIndex].ID)
             };
             return thumbnailInCell;
         }
@@ -1124,7 +1108,6 @@ namespace Timelapse.Controls
         public double CellWidth { get; set; }
         public int FileTableIndex { get; set; }
         public DateTime DateTimeLipInvoked { get; set; }
-        public LoadImageProgressStatus() { }
     }
     #endregion
 }

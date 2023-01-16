@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
+using Timelapse.Util;
 
 namespace Timelapse.QuickPaste
 {
     // A set of buttons including context menus that lets the user create and use quick paste controls
-    public partial class QuickPasteWindow : Window
+    public partial class QuickPasteWindow
     {
         #region Events
         public event EventHandler<QuickPasteEventArgs> QuickPasteEvent;
@@ -263,7 +265,7 @@ namespace Timelapse.QuickPaste
             if (keyEvent.Key == Key.Right || keyEvent.Key == Key.Left || keyEvent.Key == Key.PageUp || keyEvent.Key == Key.PageDown)
             {
                 keyEvent.Handled = true;
-                Util.GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
+                GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
             }
         }
         #endregion

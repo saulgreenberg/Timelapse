@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for TestPopulate.xaml
     /// </summary>
-    public partial class PopulateFieldsWithMetadata : BusyableDialogWindow
+    public partial class PopulateFieldsWithMetadata
     {
         #region Private variables
         // Passed in parameters
@@ -63,7 +63,7 @@ namespace Timelapse.Dialog
             Dictionary<string, string> collectLabels = new Dictionary<string, string>();
             foreach (ControlRow control in this.FileDatabase.Controls)
             {
-                if (true == this.useDateMetadataOnly && control.Type == Constant.DatabaseColumn.DateTime)
+                if (this.useDateMetadataOnly && control.Type == Constant.DatabaseColumn.DateTime)
                 {
                     // Only include the DateTime control
                     collectLabels.Add(control.DataLabel, control.Label);
@@ -189,7 +189,7 @@ namespace Timelapse.Dialog
                 for (int imageIndex = 0; imageIndex < totalImages; ++imageIndex)
                 {
                     // Provide feedback if the operation was cancelled during the database update
-                    if (Token.IsCancellationRequested == true)
+                    if (Token.IsCancellationRequested)
                     {
                         feedbackData.Clear();
                         feedbackData.Add(new Tuple<string, string, string>("Cancelled", "", "No changes were made"));

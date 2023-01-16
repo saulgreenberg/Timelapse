@@ -15,7 +15,7 @@ namespace Timelapse.Database
     /// ...
     /// colnameN = valueN
     /// WHERE
-    /// <condition> e.g., ID=1;
+    /// condition e.g., ID=1;
     /// </summary>
     public class ColumnTuplesWithWhere
     {

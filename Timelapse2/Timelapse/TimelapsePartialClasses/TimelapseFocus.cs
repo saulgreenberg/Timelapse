@@ -8,7 +8,7 @@ using Timelapse.Controls;
 namespace Timelapse
 {
     // Setting the focus, including tabs
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         // Because of shortcut keys, we want to reset the focus when appropriate to the 
         // image control. This is done from various places.
@@ -49,7 +49,7 @@ namespace Timelapse
 
         private void FocusRestoreOn_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled == true)
+            if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
             {
                 if (this.lastControlWithFocus == this.MarkableCanvas)
                 {
@@ -107,7 +107,7 @@ namespace Timelapse
                 // then try to restore the focus to the last control that had the focus.
                 if (Constant.Control.KeyboardInputTypes.Contains(type) == false && focusedElement != this.CopyPreviousValuesButton)
                 {
-                    if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled == true)
+                    if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
                     {
                         Keyboard.Focus(this.lastControlWithFocus);
                         this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
@@ -139,11 +139,11 @@ namespace Timelapse
             Func<int, int> incrementOrDecrement;
             if (moveToPreviousControl)
             {
-                incrementOrDecrement = (int index) => { return --index; };
+                incrementOrDecrement = (int index) => --index;
             }
             else
             {
-                incrementOrDecrement = (int index) => { return ++index; };
+                incrementOrDecrement = (int index) => ++index;
             }
 
             for (currentControl = incrementOrDecrement(currentControl);
@@ -151,7 +151,7 @@ namespace Timelapse
                  currentControl = incrementOrDecrement(currentControl))
             {
                 DataEntryControl control = this.DataEntryControls.Controls[currentControl];
-                if (control.ContentReadOnly == false && control.IsContentControlEnabled == true && this.IsControlIncludedInTabOrder(control))
+                if (control.ContentReadOnly == false && control.IsContentControlEnabled && this.IsControlIncludedInTabOrder(control))
                 {
                     this.lastControlWithFocus = control.Focus(this);
                     // There is a bug with Avalon: when the data control pane is floating the focus does not go to it via the above call

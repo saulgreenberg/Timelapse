@@ -47,7 +47,7 @@ namespace Timelapse.Util
         /// </summary>
         public static bool TryParseDisplayDateOnlyString(string dateTimeAsString, out DateTime dateTime)
         {
-            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime) == true)
+            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 return true;
             }
@@ -55,7 +55,7 @@ namespace Timelapse.Util
             {
                 dateTime = DateTime.MinValue;
                 return false;
-            };
+            }
         }
 
         public static bool TryParseMetadataDateTaken(string dateTimeAsString, out DateTime dateTime)

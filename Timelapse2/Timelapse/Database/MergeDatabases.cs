@@ -25,7 +25,7 @@ namespace Timelapse.Database
         // If fatal errors occur in the merge, abort 
         // Return the relevant error messages in the ErrorsAndWarnings object.
         // Note: if a merged .ddb File already exists in that root folder, it will be backed up and then over-written
-        public async static Task<ErrorsAndWarnings> TryMergeDatabasesAsync(
+        public static async Task<ErrorsAndWarnings> TryMergeDatabasesAsync(
            string templateddbFilePath,
            List<string> sourceddbFilePaths,
            string rootFolderPath,
@@ -92,11 +92,10 @@ namespace Timelapse.Database
                     Thread.Sleep(250);
                     string message = String.Empty;
                     string trimmedPath = sourceddbFilePaths[i].Substring(rootFolderPath.Length + 1);
-                    DatabaseFileErrorsEnum databaseFileErrorsEnum;
 
                     // Check each database file to see if its ok, or determine its error type.
                     // First, lets do a quick check to catch common db errors.
-                    databaseFileErrorsEnum = Util.FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
+                    DatabaseFileErrorsEnum databaseFileErrorsEnum = Util.FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
                     if (databaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok || databaseFileErrorsEnum == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
                     {
                         // Things look ok so far. So lets try the merge, which may (or may not) find other errors
@@ -161,13 +160,13 @@ namespace Timelapse.Database
             }
 
             // After the merged database is constructed, set the Folder column to the current root folder
-            if (!String.IsNullOrEmpty(rootFolderName))
+            if (!string.IsNullOrEmpty(rootFolderName))
             {
                 destinationddb.ExecuteNonQuery(Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.RootFolder + Sql.Equal + Sql.Quote(rootFolderName));
             }
 
             // After the merged database is constructed, reset fields in the ImageSetTable to the defaults i.e., first row, selection all, 
-            if (!String.IsNullOrEmpty(rootFolderName))
+            if (!string.IsNullOrEmpty(rootFolderName))
             {
                 destinationddb.ExecuteNonQuery(Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.MostRecentFileID + Sql.Equal + "1");
                 destinationddb.ExecuteNonQuery(Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.SearchTerms + Sql.Equal + Sql.Quote(Constant.DatabaseValues.DefaultSearchTerms));

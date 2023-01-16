@@ -6,7 +6,7 @@ using Timelapse.Enums;
 namespace Timelapse
 {
     // Image Differencing 
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Try View Previous or Next Difference
         // Cycle through the image differences in the order: current, then previous and next differenced images.
@@ -26,7 +26,7 @@ namespace Timelapse
                 this.DataHandler.ImageCache.Current == null ||
                 this.DataHandler.ImageCache.Current.IsVideo)
             {
-                this.StatusBar.SetMessage(String.Format("Differences can't be shown for videos, missing, or corrupt files"));
+                this.StatusBar.SetMessage("Differences can't be shown for videos, missing, or corrupt files");
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace Timelapse
                 if (!this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
                 {
                     // TO DO AS WE MAY HAVE TO GET THE INDEX OF THE NEXT IN CYCLE IMAGE???
-                    this.StatusBar.SetMessage(String.Format("Difference can't be shown: the current file is likely missing or corrupted"));
+                    this.StatusBar.SetMessage("Difference can't be shown: the current file is likely missing or corrupted");
                 }
                 else
                 {
@@ -95,7 +95,7 @@ namespace Timelapse
                 this.DataHandler.ImageCache.Current == null ||
                 this.DataHandler.ImageCache.Current.IsVideo)
             {
-                this.StatusBar.SetMessage(String.Format("Combined differences can't be shown for videos, missing, or corrupt files"));
+                this.StatusBar.SetMessage("Combined differences can't be shown for videos, missing, or corrupt files");
                 return;
             }
 
@@ -120,13 +120,13 @@ namespace Timelapse
                     case ImageDifferenceResultEnum.NextImageNotAvailable:
                     case ImageDifferenceResultEnum.NotCalculable:
                     case ImageDifferenceResultEnum.PreviousImageNotAvailable:
-                        this.StatusBar.SetMessage(String.Format("Combined differences can't be shown: surrounding files include a video, missing, corrupt, or a different size file"));
+                        this.StatusBar.SetMessage("Combined differences can't be shown: surrounding files include a video, missing, corrupt, or a different size file");
                         return;
                     case ImageDifferenceResultEnum.Success:
                         this.StatusBar.SetMessage("Viewing differences from both the next and previous files");
                         break;
                     default:
-                        throw new NotSupportedException(String.Format("Unhandled combined difference result {0}.", result));
+                        throw new NotSupportedException($"Unhandled combined difference result {result}.");
                 }
             }
 

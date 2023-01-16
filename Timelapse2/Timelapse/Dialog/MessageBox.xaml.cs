@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace Timelapse.Dialog
 {
-    public partial class MessageBox : Window
+    public partial class MessageBox
     {
         #region Constructor, Loaded
         public bool IsNoSelected { get; set; }

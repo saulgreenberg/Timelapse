@@ -12,7 +12,7 @@ namespace Timelapse.Controls
     /// and that allows the user to select which of those dates to change.
     /// Populated by the caller via AddFeedbackRow (...), which will add a row to the grid whose contents reflect the contents of the various parameters.
     /// </summary>
-    public partial class DateChangesFeedbackControl : UserControl
+    public partial class DateChangesFeedbackControl
     {
         #region Public Properties and Private variables
         public bool ShowDifferenceColumn { get; set; }
@@ -79,7 +79,7 @@ namespace Timelapse.Controls
         {
             foreach (FeedbackRowTuple tuple in this.feedbackRows)
             {
-                if (tuple.Select == true)
+                if (tuple.Select)
                 {
                     return true;
                 }

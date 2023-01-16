@@ -7,7 +7,7 @@ namespace Timelapse.Dialog
     /// This dialog lets the user edit text notes attached to this image set, ideally to keep a log of what is going on, if needed.
     /// The log is persisted.
     /// </summary>
-    public partial class EditLog : Window
+    public partial class EditLog
     {
         #region Constructor, Loaded
         /// <summary>

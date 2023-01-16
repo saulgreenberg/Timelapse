@@ -19,7 +19,7 @@ using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
-    public partial class DarkImagesThreshold : BusyableDialogWindow, IDisposable
+    public partial class DarkImagesThreshold : IDisposable
     {
         #region Private Variables
         private readonly FileDatabase fileDatabase;
@@ -237,7 +237,7 @@ namespace Timelapse.Dialog
             this.FileName.Content = this.imageEnumerator.Current.File;
             this.FileName.ToolTip = this.imageEnumerator.Current.File;
 
-            if (String.IsNullOrEmpty(this.ChosenFlagLabel) ||
+            if (string.IsNullOrEmpty(this.ChosenFlagLabel) ||
                 String.IsNullOrWhiteSpace(this.imageEnumerator?.Current?.GetValueDatabaseString(this.FlagLabelsDataLabels[this.ChosenFlagLabel])))
             {
                 this.OriginalClassification.Content = String.Empty;
@@ -273,7 +273,7 @@ namespace Timelapse.Dialog
                 List<ColumnTuplesWithWhere> filesToUpdate = new List<ColumnTuplesWithWhere>();
                 int fileIndex = 0;
                 int selectedFilesCount = (selectedFiles == null) ? 0 : selectedFiles.Count;
-                string dataLabel = String.IsNullOrEmpty(this.ChosenFlagLabel)
+                string dataLabel = string.IsNullOrEmpty(this.ChosenFlagLabel)
                                     ? String.Empty
                                     : this.FlagLabelsDataLabels[this.ChosenFlagLabel];
                 foreach (ImageRow file in selectedFiles)
@@ -300,9 +300,7 @@ namespace Timelapse.Dialog
                         else
                         {
                             // Set the image quality. Note that videos are always classified as false.
-                            imageQuality.NewDarkClassification = file.IsVideo
-                                ? false
-                                : imageQuality.Bitmap.IsDark(this.darkPixelThreshold, this.darkPixelRatio, out this.darkPixelRatioFound, out this.isColor);
+                            imageQuality.NewDarkClassification = !file.IsVideo && imageQuality.Bitmap.IsDark(this.darkPixelThreshold, this.darkPixelRatio, out this.darkPixelRatioFound, out this.isColor);
                         }
                         imageQuality.IsColor = this.isColor;
                         imageQuality.DarkPixelRatioFound = this.darkPixelRatioFound;
@@ -358,7 +356,7 @@ namespace Timelapse.Dialog
                         this.ChosenFlagLabel = control.Label;
                     }
                 }
-                bool success = false == String.IsNullOrEmpty(this.ChosenFlagLabel);
+                bool success = false == string.IsNullOrEmpty(this.ChosenFlagLabel);
                 this.StartDoneButton.IsEnabled = success;
                 if (success)
                 {
@@ -523,7 +521,7 @@ namespace Timelapse.Dialog
                 // We are at the end, so stop playback and disable the play button
                 this.PlayButtonSetState(false, false);
             }
-            else if (this.displatcherTimerIsPlaying == false && NextFile.IsEnabled == true)
+            else if (this.displatcherTimerIsPlaying == false && NextFile.IsEnabled)
             {
                 // We are at the end, so stop playback and disable the play button
                 this.PlayButtonSetState(false, true);
@@ -636,7 +634,7 @@ namespace Timelapse.Dialog
                 this.DarkPixelRatioFound = 0;
                 this.FileName = image.File;
                 this.IsColor = false;
-                this.OldDarkClassification = String.IsNullOrEmpty(dataLabel)
+                this.OldDarkClassification = string.IsNullOrEmpty(dataLabel)
                     ? false
                     : image.GetValueDatabaseString(dataLabel) == Constant.BooleanValue.True;
                 this.NewDarkClassification = false;

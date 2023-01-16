@@ -10,7 +10,7 @@ using Timelapse.Images;
 namespace Timelapse
 {
     // Marking and Counting
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Event Handler
         // Event handler: A marker, as defined in e.Marker, has been either added (if e.IsNew is true) or deleted (if it is false)
@@ -40,7 +40,7 @@ namespace Timelapse
             // Part 1. Decrement the counter only if there is a number in it
             string oldCounterData = counter.Content;
             string newCounterData;
-            if (!String.IsNullOrEmpty(oldCounterData))
+            if (!string.IsNullOrEmpty(oldCounterData))
             {
                 int count = Convert.ToInt32(oldCounterData);
                 count = (count == 0) ? 0 : count - 1;           // Make sure its never negative, which could happen if a person manually enters the count 

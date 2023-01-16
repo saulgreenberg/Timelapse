@@ -1,6 +1,6 @@
 ﻿namespace Timelapse.Enums
 {
-    public enum FileSelectionEnum : int
+    public enum FileSelectionEnum
     {
         All,
         Folders,

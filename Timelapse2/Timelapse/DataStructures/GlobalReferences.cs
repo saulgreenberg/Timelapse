@@ -1,7 +1,8 @@
 ﻿using System.Threading;
 using Timelapse.Controls;
+using Timelapse.Util;
 
-namespace Timelapse.Util
+namespace Timelapse.DataStructures
 {
     public static class GlobalReferences
     {

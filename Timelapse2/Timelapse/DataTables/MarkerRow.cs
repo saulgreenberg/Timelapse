@@ -15,8 +15,8 @@ namespace Timelapse.Database
         // Given a datalabel of the counter column, return its value (0 or more points separated with a '|')
         public string this[string dataLabel]
         {
-            get { return this.Row.GetStringField(dataLabel); }
-            set { this.Row.SetField(dataLabel, value); }
+            get => this.Row.GetStringField(dataLabel);
+            set => this.Row.SetField(dataLabel, value);
         }
 
         // Get as an IEnumerable a list of datalabels (the column names excepting the ID columnname) held in the Markers Table

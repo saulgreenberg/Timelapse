@@ -219,7 +219,7 @@ namespace Timelapse.Database
                             if (nextRowIndex >= sortedRowDictionaryListCount)
                             {
                                 string error = UpdateDuplicatesInDatabase(fileDatabase, duplicatesDictionaryList, Path.GetDirectoryName(duplicatePath), Path.GetFileName(duplicatePath));
-                                if (false == String.IsNullOrEmpty(error))
+                                if (false == string.IsNullOrEmpty(error))
                                 {
                                     importErrors.Add(error);
                                 }
@@ -234,7 +234,7 @@ namespace Timelapse.Database
                             {
                                 // This entry marks the end of a sequence as the paths aren't equal but we have duplicates. Process the prior sequence
                                 string error = UpdateDuplicatesInDatabase(fileDatabase, duplicatesDictionaryList, Path.GetDirectoryName(duplicatePath), Path.GetFileName(duplicatePath));
-                                if (false == String.IsNullOrEmpty(error))
+                                if (false == string.IsNullOrEmpty(error))
                                 {
                                     importErrors.Add(error);
                                 }
@@ -266,7 +266,7 @@ namespace Timelapse.Database
                                         // database duplicates with the same value (if we let it fall thorugh)
                                         duplicatesDictionaryList.Add(rowDict);
                                         string error = UpdateDuplicatesInDatabase(fileDatabase, duplicatesDictionaryList, Path.GetDirectoryName(currentPath), Path.GetFileName(currentPath));
-                                        if (false == String.IsNullOrEmpty(error))
+                                        if (false == string.IsNullOrEmpty(error))
                                         {
                                             importErrors.Add(error);
                                         }
@@ -436,7 +436,7 @@ namespace Timelapse.Database
 
         #region Helpers for TryImportFromCsv. These just reduce the size of the method to make it easier to debug.
         // Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
-        static private bool TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors)
+        private static bool TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors)
         {
             parsedFile = ReadAndParseCSVFile(filePath);
 
@@ -465,7 +465,7 @@ namespace Timelapse.Database
         }
 
         // Return false if required CSV column are missing or there is a problem matching the CSV file headers against the DB headers.
-        static private bool VerifyCSVHeaders(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<string> importErrors)
+        private static bool VerifyCSVHeaders(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<string> importErrors)
         {
             bool abort = false;
             // Get the dataLabels from the database and from the headers in the CSV files (and remove any empty trailing headers from the CSV file list)
@@ -520,7 +520,7 @@ namespace Timelapse.Database
         }
 
         // Get all the data rows from the CSV file. Each dictionary entry is a row with a list of matching  CSV column Headers and column value 
-        static private List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile)
+        private static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile)
         {
             List<Dictionary<string, string>> rowDictionaryList = new List<Dictionary<string, string>>();
 
@@ -550,7 +550,7 @@ namespace Timelapse.Database
         }
 
         // Validate Data columns against data type. Return false if any of the types don't match
-        static private bool VerifyDataInColumns(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<Dictionary<string, string>> rowDictionaryList, List<string> importErrors)
+        private static bool VerifyDataInColumns(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<Dictionary<string, string>> rowDictionaryList, List<string> importErrors)
         {
             bool abort = false;
             // For each column in the CSV file,
@@ -586,9 +586,8 @@ namespace Timelapse.Database
                         // Date/Time/DateTime checking is handled elsewhere, while Folder, RootFolder and ImageQuality are skipped
                         continue;
                     }
-                    string controlRowType;
                     ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(csvHeader);
-                    controlRowType = controlRow.Type;
+                    string controlRowType = controlRow.Type;
 
                     if (IsStandardColumn(controlRowType))
                     {
@@ -644,7 +643,7 @@ namespace Timelapse.Database
             return !abort;
         }
 
-        static private bool IsStandardColumn(string controlRowType)
+        private static bool IsStandardColumn(string controlRowType)
         {
             return controlRowType == Constant.DatabaseColumn.DeleteFlag ||
                     controlRowType == Constant.Control.Note ||
@@ -793,7 +792,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Private Method - Update Progress Bar
-        static private void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
+        private static void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {

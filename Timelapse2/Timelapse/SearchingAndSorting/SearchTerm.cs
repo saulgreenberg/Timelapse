@@ -40,14 +40,9 @@ namespace Timelapse.Database
             this.DatabaseValue = other.DatabaseValue;
             this.DataLabel = other.DataLabel;
             this.Label = other.Label;
-            if (other.List == null)
-            {
-                this.List = null;
-            }
-            else
-            {
-                this.List = new List<string>(other.List);
-            }
+            this.List = other.List == null 
+                ? null 
+                : new List<string>(other.List);
             this.Operator = other.Operator;
             this.UseForSearching = other.UseForSearching;
         }

@@ -12,7 +12,7 @@ using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
-    public partial class DateTimeRereadFromFiles : BusyableDialogWindow
+    public partial class DateTimeRereadFromFiles
     {
         #region Private Variables
         private readonly FileDatabase fileDatabase;
@@ -202,15 +202,15 @@ namespace Timelapse.Dialog
                 if (missingFiles > 0)
                 {
                     message = (missingFiles == 1)
-                    ? String.Format("{0} file is missing, and was not examined.", missingFiles)
-                    : String.Format("{0} files are missing, and were not examined.", missingFiles);
+                    ? $"{missingFiles} file is missing, and was not examined."
+                    : $"{missingFiles} files are missing, and were not examined.";
                     feedbackRows.Add(new DateTimeFeedbackTuple("---", message));
                 }
                 return true;
             }
 
             // Abort (with feedback) the operation was cancelled
-            if (Token.IsCancellationRequested == true)
+            if (Token.IsCancellationRequested)
             {
                 feedbackRows.Clear();
                 message = "No changes were made";

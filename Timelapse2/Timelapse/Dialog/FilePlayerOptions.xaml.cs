@@ -6,7 +6,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for FilePlayerOptions.xaml
     /// </summary>
-    public partial class FilePlayerOptions : Window
+    public partial class FilePlayerOptions
     {
         #region Private Variables
         private readonly double playSlowMinimum = Constant.FilePlayerValues.PlaySlowMinimum.TotalSeconds;

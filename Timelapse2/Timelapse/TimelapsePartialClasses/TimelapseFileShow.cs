@@ -9,7 +9,7 @@ using Timelapse.Images;
 namespace Timelapse
 {
     // Showing Files
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region File Show - invoking versions
         // FileShow is invoked here from a 1-based slider, so we need to correct it to the 0-base index
@@ -75,7 +75,8 @@ namespace Timelapse
                 // We used to throw a new exception, but lets see what happens if we just return instead.
                 // i.e., lets just abort.
                 // throw new Exception(String.Format("in FileShow: possible problem with fileIndex value is {0}, where its not a valid row index in the image table.", fileIndex));
-                System.Diagnostics.Debug.Print(String.Format("in FileShow: possible problem with fileIndex (value is {0}, where its not a valid row index in the image table.", fileIndex));
+                System.Diagnostics.Debug.Print(
+                    $"in FileShow: possible problem with fileIndex (value is {fileIndex}, where its not a valid row index in the image table.");
                 return;
             }
 
@@ -154,23 +155,9 @@ namespace Timelapse
             this.DataGridSelectionsTimer_Reset();
 
             // Set the file player status
-            if (this.DataHandler.ImageCache.CurrentRow == 0)
-            {
-                this.FilePlayer.BackwardsControlsEnabled(false);
-            }
-            else
-            {
-                this.FilePlayer.BackwardsControlsEnabled(true);
-            }
+            this.FilePlayer.BackwardsControlsEnabled(this.DataHandler.ImageCache.CurrentRow != 0);
 
-            if (this.DataHandler.ImageCache.CurrentRow == this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles - 1)
-            {
-                this.FilePlayer.ForwardsControlsEnabled(false);
-            }
-            else
-            {
-                this.FilePlayer.ForwardsControlsEnabled(true);
-            }
+            this.FilePlayer.ForwardsControlsEnabled(this.DataHandler.ImageCache.CurrentRow != this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles - 1);
 
             // Refresh the Magnifier if needed
             if (this.IsDisplayingSingleImage())

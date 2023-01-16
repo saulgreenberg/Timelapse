@@ -49,21 +49,19 @@ namespace Timelapse.Database
                 else if (searchTerm.DataLabel == Constant.DatabaseColumn.DateTime)
                 {
                     // Skip the second DateTime
-                    if (firstDateTimeSeen == true)
+                    if (firstDateTimeSeen)
                     {
                         continue;
                     }
                     firstDateTimeSeen = true;
                     sortTerms.Add(new SortTerm(searchTerm.DataLabel, Constant.SortTermValues.DateDisplayLabel, searchTerm.ControlType, Constant.BooleanValue.True));
                 }
-                if (searchTerm.DataLabel == Constant.DatabaseColumn.RelativePath)
-                {
-                    sortTerms.Add(new SortTerm(searchTerm.DataLabel, Constant.SortTermValues.RelativePathDisplayLabel, searchTerm.ControlType, Constant.BooleanValue.True));
-                }
-                else
-                {
-                    sortTerms.Add(new SortTerm(searchTerm.DataLabel, searchTerm.Label, searchTerm.ControlType, Constant.BooleanValue.True));
-                }
+
+                sortTerms.Add(searchTerm.DataLabel == Constant.DatabaseColumn.RelativePath
+                    ? new SortTerm(searchTerm.DataLabel, Constant.SortTermValues.RelativePathDisplayLabel,
+                        searchTerm.ControlType, Constant.BooleanValue.True)
+                    : new SortTerm(searchTerm.DataLabel, searchTerm.Label, searchTerm.ControlType,
+                        Constant.BooleanValue.True));
             }
             return sortTerms;
         }

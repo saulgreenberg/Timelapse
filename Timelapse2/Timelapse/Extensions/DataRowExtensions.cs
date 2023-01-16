@@ -39,7 +39,7 @@ namespace Timelapse.Database
         public static TEnum GetEnumField<TEnum>(this DataRow row, string column) where TEnum : struct, IComparable, IFormattable, IConvertible
         {
             string fieldAsString = row.GetStringField(column);
-            if (String.IsNullOrEmpty(fieldAsString))
+            if (string.IsNullOrEmpty(fieldAsString))
             {
                 // This should not happen
                 return default;

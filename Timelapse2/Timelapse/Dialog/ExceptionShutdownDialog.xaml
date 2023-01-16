@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:local="clr-namespace:Timelapse.Dialog"
         mc:Ignorable="d"
               Title="Skip bogus image or video files?" Width="650" MinWidth="650" Height="550" Loaded="Window_Loaded">
     <Grid  VerticalAlignment="Top">

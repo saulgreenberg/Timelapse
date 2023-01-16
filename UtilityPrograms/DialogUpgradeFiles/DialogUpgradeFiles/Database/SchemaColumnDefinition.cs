@@ -55,7 +55,7 @@ namespace DialogUpgradeFiles.Database
         /// <returns></returns>
         public override string ToString()
         {
-            string columnDefinition = String.Format("{0} {1}", this.Name, this.Type);
+            string columnDefinition = $"{this.Name} {this.Type}";
             if (this.DefaultValue != null)
             {
                 columnDefinition += " DEFAULT " + Sql.Quote(this.DefaultValue);

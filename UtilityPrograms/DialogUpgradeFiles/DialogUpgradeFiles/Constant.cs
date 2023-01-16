@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+
 //using Timelapse.Controls;
 
 namespace DialogUpgradeFiles.Constant
@@ -41,17 +42,17 @@ namespace DialogUpgradeFiles.Constant
         // default data labels
         public const string Choice = "Choice";         // Label for a fixed choice
 
-        public static readonly ReadOnlyCollection<string> StandardTypes = new List<string>()
+        public static readonly ReadOnlyCollection<string> StandardTypes = new List<string>
         {
-                Constant.DatabaseColumn.Date,
-                Constant.DatabaseColumn.DateTime,
-                Constant.DatabaseColumn.DeleteFlag,
-                Constant.DatabaseColumn.File,
-                Constant.DatabaseColumn.Folder,
-                Constant.DatabaseColumn.ImageQuality,
-                Constant.DatabaseColumn.RelativePath,
-                Constant.DatabaseColumn.Time,
-                Constant.DatabaseColumn.UtcOffset
+            DatabaseColumn.Date,
+            DatabaseColumn.DateTime,
+            DatabaseColumn.DeleteFlag,
+            DatabaseColumn.File,
+            DatabaseColumn.Folder,
+            DatabaseColumn.ImageQuality,
+            DatabaseColumn.RelativePath,
+            DatabaseColumn.Time,
+            DatabaseColumn.UtcOffset
         }.AsReadOnly();
     }
 
@@ -68,7 +69,7 @@ namespace DialogUpgradeFiles.Constant
         public const int FixedChoiceWidth = 100;
 
         public const string FlagTooltip = "Toggle between true and false";
-        public const string FlagValue = Constant.BooleanValue.False;             // Default for: flags
+        public const string FlagValue = BooleanValue.False;             // Default for: flags
         public const int FlagWidth = 20;
         public const string NoteTooltip = "Write a textual note";
         public const int NoteWidth = 100;
@@ -125,8 +126,8 @@ namespace DialogUpgradeFiles.Constant
         public const int RowsPerInsert = 5000;
         public const int UtcOffsetPosition = 5;
         public const string VersionNumberMinimum = "2.3.0.0";
-        public const string DefaultSortTerms = Constant.DatabaseColumn.RelativePath + "," + Constant.SortTermValues.RelativePathDisplayLabel + "," + Constant.DatabaseColumn.RelativePath + "," + Constant.BooleanValue.True + ","
-            + Constant.DatabaseColumn.DateTime + "," + Constant.DatabaseColumn.DateTime + "," + Constant.DatabaseColumn.DateTime + "," + Constant.BooleanValue.True;
+        public const string DefaultSortTerms = DatabaseColumn.RelativePath + "," + SortTermValues.RelativePathDisplayLabel + "," + DatabaseColumn.RelativePath + "," + BooleanValue.True + ","
+            + DatabaseColumn.DateTime + "," + DatabaseColumn.DateTime + "," + DatabaseColumn.DateTime + "," + BooleanValue.True;
         public const string DefaultQuickPasteXML = "<Entries></Entries>";
         public const string IndexRelativePath = "IndexRelativePath";
         public const string IndexRelativePathFile = "IndexRelativePathFile";
@@ -301,9 +302,9 @@ namespace DialogUpgradeFiles.Constant
         public const string Slash = "/";
 
         // paths to notes, counters, and fixed choices
-        public const string CounterPath = ImageXml.Codes + ImageXml.Slash + Constant.Control.Counter;
-        public const string FixedChoicePath = ImageXml.Codes + ImageXml.Slash + Constant.Control.FixedChoice;
-        public const string NotePath = ImageXml.Codes + ImageXml.Slash + Constant.Control.Note;
+        public const string CounterPath = Codes + Slash + Control.Counter;
+        public const string FixedChoicePath = Codes + Slash + Control.FixedChoice;
+        public const string NotePath = Codes + Slash + Control.Note;
     }
 
     public static class SortTermValues
@@ -330,7 +331,7 @@ namespace DialogUpgradeFiles.Constant
         // DateTimes as stored in the database. The 2nd form is so it can read in from the DB both the legacy (UTC) format and current simpler format 
         public const string DateTimeDatabaseLegacyUTCFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";  // legacy DatabaseFormat
         public const string DateTimeDatabaseFormat = "yyyy-MM-dd HH:mm:ss";
-        public static readonly string[] DateTimeDatabaseFormats = { Constant.Time.DateTimeDatabaseFormat, Constant.Time.DateTimeDatabaseLegacyUTCFormat };
+        public static readonly string[] DateTimeDatabaseFormats = { DateTimeDatabaseFormat, DateTimeDatabaseLegacyUTCFormat };
 
         public const string DateTimeDisplayFormat = "dd-MMM-yyyy HH:mm:ss";
         public const string DateTimeCSVWithTSeparator = "yyyy-MM-dd'T'HH:mm:ss";
@@ -408,7 +409,7 @@ namespace DialogUpgradeFiles.Constant
     public static class DetectionColumns
     {
         public const string DetectionID = "detectionID";
-        public const string ImageID = Constant.DatabaseColumn.ID; // Foreign key
+        public const string ImageID = DatabaseColumn.ID; // Foreign key
         public const string Category = "category";
         public const string Conf = "conf";
         public const string BBox = "bbox";
@@ -432,7 +433,7 @@ namespace DialogUpgradeFiles.Constant
         public const float DefaultTypicalDetectionThresholdIfUnknown = 0.8f;        // Appropriate for Megadetector v4
         public const float DefaultConservativeDetectionThresholdIfUnknown = 0.3f;   // Appropriate for Megadetector v4
         public const float DefaultTypicalClassificationThresholdIfUnknown = 0.75f;  // Appropriate for Megadetector v4
-        public const float BoundingBoxDisplayThresholdDefault = Constant.DetectionValues.Undefined;   // Appropriate for Megadetector v4
+        public const float BoundingBoxDisplayThresholdDefault = Undefined;   // Appropriate for Megadetector v4
         public const string MDVersionUnknown = "vUnknown";
         public const float Undefined = -1F;
     }
@@ -440,7 +441,7 @@ namespace DialogUpgradeFiles.Constant
     public static class ClassificationColumns
     {
         public const string ClassificationID = "classificationID";
-        public const string DetectionID = Constant.DetectionColumns.DetectionID; // Foreign key
+        public const string DetectionID = DetectionColumns.DetectionID; // Foreign key
         public const string Category = "category";
         public const string Conf = "conf";
     }

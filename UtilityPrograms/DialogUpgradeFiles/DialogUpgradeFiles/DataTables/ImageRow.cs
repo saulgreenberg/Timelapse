@@ -21,47 +21,38 @@ namespace DialogUpgradeFiles.Database
         #region Public Properties - get /set  standard fields from the image row
         public string Date
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.Date); }
-            private set { this.Row.SetField(Constant.DatabaseColumn.Date, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.Date);
+            private set => this.Row.SetField(Constant.DatabaseColumn.Date, value);
         }
 
         // Set/Get the raw datetime value
         public DateTime DateTime
         {
-            get { return this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime); }
-            private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
+            get => this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime);
+            private set => this.Row.SetField(Constant.DatabaseColumn.DateTime, value);
         }
 
         // Get a version of the date/time suitable to display to the user 
-        public string DateTimeAsDisplayable
-        {
-            get { return DateTimeHandler.ToStringDisplayDateTime(this.DateTimeIncorporatingOffset); }
-        }
+        public string DateTimeAsDisplayable => DateTimeHandler.ToStringDisplayDateTime(this.DateTimeIncorporatingOffset);
 
         // Get the date/time with the UTC offset added into it
-        public DateTimeOffset DateTimeIncorporatingOffset
-        {
-            get { return DateTimeHandler.FromDatabaseDateTimeIncorporatingOffset(this.DateTime, this.UtcOffset); }
-        }
+        public DateTimeOffset DateTimeIncorporatingOffset => DateTimeHandler.FromDatabaseDateTimeIncorporatingOffset(this.DateTime, this.UtcOffset);
 
         public bool DeleteFlag
         {
-            get { return this.Row.GetBooleanField(Constant.DatabaseColumn.DeleteFlag); }
-            set { this.Row.SetField(Constant.DatabaseColumn.DeleteFlag, value); }
+            get => this.Row.GetBooleanField(Constant.DatabaseColumn.DeleteFlag);
+            set => this.Row.SetField(Constant.DatabaseColumn.DeleteFlag, value);
         }
 
         public string File
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.File); }
-            set { this.Row.SetField(Constant.DatabaseColumn.File, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.File);
+            set => this.Row.SetField(Constant.DatabaseColumn.File, value);
         }
 
         public FileSelectionEnum ImageQuality
         {
-            get
-            {
-                return this.Row.GetEnumField<FileSelectionEnum>(Constant.DatabaseColumn.ImageQuality);
-            }
+            get => this.Row.GetEnumField<FileSelectionEnum>(Constant.DatabaseColumn.ImageQuality);
             set
             {
                 switch (value)
@@ -73,33 +64,34 @@ namespace DialogUpgradeFiles.Database
                         this.Row.SetField<FileSelectionEnum>(Constant.DatabaseColumn.ImageQuality, value);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(ParamName, String.Format("{0} is not an ImageQuality.  ImageQuality must be one of CorruptFile, Dark, FileNoLongerAvailable, or Ok.", value));
+                        throw new ArgumentOutOfRangeException(ParamName,
+                            $"{value} is not an ImageQuality.  ImageQuality must be one of CorruptFile, Dark, FileNoLongerAvailable, or Ok.");
                 }
             }
         }
 
         public string Folder
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.Folder); }
-            set { this.Row.SetField(Constant.DatabaseColumn.Folder, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.Folder);
+            set => this.Row.SetField(Constant.DatabaseColumn.Folder, value);
         }
 
         public string RelativePath
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.RelativePath); }
-            set { this.Row.SetField(Constant.DatabaseColumn.RelativePath, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.RelativePath);
+            set => this.Row.SetField(Constant.DatabaseColumn.RelativePath, value);
         }
 
         public string Time
         {
-            get { return this.Row.GetStringField(Constant.DatabaseColumn.Time); }
-            private set { this.Row.SetField(Constant.DatabaseColumn.Time, value); }
+            get => this.Row.GetStringField(Constant.DatabaseColumn.Time);
+            private set => this.Row.SetField(Constant.DatabaseColumn.Time, value);
         }
 
         public TimeSpan UtcOffset
         {
-            get { return this.Row.GetUtcOffsetField(Constant.DatabaseColumn.UtcOffset); }
-            private set { this.Row.SetUtcOffsetField(Constant.DatabaseColumn.UtcOffset, value); }
+            get => this.Row.GetUtcOffsetField(Constant.DatabaseColumn.UtcOffset);
+            private set => this.Row.SetUtcOffsetField(Constant.DatabaseColumn.UtcOffset, value);
         }
         #endregion
 
@@ -127,10 +119,7 @@ namespace DialogUpgradeFiles.Database
 
         // This will be invoked only on an image file, so always returns false
         // That is, if its a video, an VideoRow would have been created and the IsVideo test method in that would have been invoked
-        public virtual bool IsVideo
-        {
-            get { return false; }
-        }
+        public virtual bool IsVideo => false;
 
         // Check if a datalabel is present in the ImageRow
         public bool Contains(string dataLabel)
@@ -152,7 +141,7 @@ namespace DialogUpgradeFiles.Database
         public string GetFilePath(string rootFolderPath)
         {
             // see RelativePath remarks in constructor
-            return String.IsNullOrEmpty(this.RelativePath)
+            return string.IsNullOrEmpty(this.RelativePath)
                 ? Path.Combine(rootFolderPath, this.File)
                 : Path.Combine(rootFolderPath, this.RelativePath, this.File);
         }
@@ -220,17 +209,10 @@ namespace DialogUpgradeFiles.Database
                     this.UtcOffset = DateTimeHandler.ParseDatabaseUtcOffsetString(value);
                     break;
                 case Constant.DatabaseColumn.ImageQuality:
-                    if (Enum.TryParse(value, out FileSelectionEnum result))
-                    {
-                        // The parse succeeded, where the  result is in result
-                        this.ImageQuality = result;
-                    }
-                    else
-                    {
-                        // The parse did not succeeded. The result contains the default enum value, ie, the same as returning default(Enum)
-                        this.ImageQuality = default;
-                    }
-                    // this.ImageQuality = (FileSelectionEnum)Enum.Parse(typeof(FileSelectionEnum), value);
+                    // The parse succeeded, where the  result is in result
+                    this.ImageQuality = Enum.TryParse(value, out FileSelectionEnum result) 
+                        ? result 
+                        : default; // The parse did not succeeded. The result contains the default enum value, ie, the same as returning default(Enum)
                     break;
                 default:
                     this.Row.SetField(dataLabel, value);
@@ -325,7 +307,7 @@ namespace DialogUpgradeFiles.Database
         //        {
         //            // ExifTool specific code - we transform the ExifTool results into the same dictionary structure used by the MetadataExtractor
         //            metadata.Clear();
-        //            Dictionary<string, string> exifData = Util.GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(this.GetFilePath(folderPath), metadataOnLoad.Tags);    
+        //            Dictionary<string, string> exifData = GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(this.GetFilePath(folderPath), metadataOnLoad.Tags);    
 
         //            foreach (KeyValuePair <string, string> kvp in exifData)
         //            {

@@ -222,12 +222,12 @@ namespace Timelapse.Database
                     return;
             }
 
-            Arguments arguments = Util.GlobalReferences.MainWindow.Arguments;
+            Arguments arguments = GlobalReferences.MainWindow.Arguments;
             // For all other special cases, we also set the relative path if we are contrained to a relative path
             if (arguments != null && arguments.ConstrainToRelativePath)
             {
                 this.SetAndUseRelativePathSearchTerm(arguments.RelativePath);
-            };
+            }
         }
         #endregion
 
@@ -387,10 +387,10 @@ namespace Timelapse.Database
                 else
                 {
                     // If we are using detections, then we have to qualify the data label e.g., DataTable.X
-                    string dataLabel = (this.DetectionSelections.Enabled == true) ? Constant.DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
+                    string dataLabel = this.DetectionSelections.Enabled ? Constant.DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
 
                     // Check to see if the search term is querying for an empty string
-                    if (String.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == Constant.SearchTermOperator.Equal)
+                    if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == Constant.SearchTermOperator.Equal)
                     {
                         // It is, so we also need to expand the query to check for both nulls an empty string, as both are considered equivalent for query purposes
                         // Form: ( dataLabel IS NULL OR  dataLabel = '' );
@@ -436,7 +436,7 @@ namespace Timelapse.Database
 
                 // We are now ready to assemble the search term
                 // First, and only if there terms have already been added to  the query, we need to add the appropriate operator
-                if (!String.IsNullOrEmpty(where))
+                if (!string.IsNullOrEmpty(where))
                 {
                     switch (termCombiningOperator)
                     {
@@ -472,7 +472,7 @@ namespace Timelapse.Database
                 return false;
             }
 
-            IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime && term.UseForSearching == true);
+            IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime && term.UseForSearching);
             if (timeTerms.Count() != 2)
             {
                 // We don't have two Time terms to combine
@@ -632,7 +632,7 @@ namespace Timelapse.Database
         //   or if relativePath is empty: ""
         public static string RelativePathGlobToIncludeSubfolders(string relativePathColumnName, string relativePath)
         {
-            if (String.IsNullOrEmpty(relativePath))
+            if (string.IsNullOrEmpty(relativePath))
             {
                 return String.Empty;
             }

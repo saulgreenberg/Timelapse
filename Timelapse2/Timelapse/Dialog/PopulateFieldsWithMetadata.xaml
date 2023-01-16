@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="clr-namespace:Timelapse.Controls"
-    xmlns:local="clr-namespace:Timelapse.Dialog"
     mc:Ignorable="d"
     Title="Populate a data field with metadata" 
 	MinHeight="600" MinWidth="768"

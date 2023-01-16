@@ -66,7 +66,7 @@ namespace DialogUpgradeFiles.Database
                 case Constant.DatabaseColumn.UtcOffset:
                     return new FileTableUtcOffsetColumn(control);
                 default:
-                    throw new NotSupportedException(String.Format("Unhandled control type {0}.", control.Type));
+                    throw new NotSupportedException($"Unhandled control type {control.Type}.");
             }
         }
         #endregion

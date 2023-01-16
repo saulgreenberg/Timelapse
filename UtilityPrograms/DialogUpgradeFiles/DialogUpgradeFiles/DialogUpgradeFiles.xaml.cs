@@ -14,7 +14,7 @@ using DragEventArgs = System.Windows.DragEventArgs;
 
 namespace DialogUpgradeFiles
 {
-    public partial class DialogUpgradeFilesAndFolders : Window
+    public partial class DialogUpgradeFilesAndFolders
     {
         #region Properties
         // These are set with parameters when this object is created
@@ -23,7 +23,7 @@ namespace DialogUpgradeFiles
         public readonly bool IsInvokedAsGeneralUpdateFacility; // Set to true if the Folder path is initially passed as non-empty string
 
         // Indicates whether the upgrade was cancelled mid-stream
-        public bool CancelUpgrade { get; set; } = false;
+        public bool CancelUpgrade { get; set; }
 
         // Set to true if we should delete the imageQuality column
         public bool IsDeleteImageQualityRequested { get; set; } = true;
@@ -52,7 +52,7 @@ namespace DialogUpgradeFiles
 
             // If the folder path is not supplied, then this is invoked as a general update facility
             // Otherwise it is invoked on a specific file path
-            this.IsInvokedAsGeneralUpdateFacility = true == String.IsNullOrWhiteSpace(this.FolderPath);
+            this.IsInvokedAsGeneralUpdateFacility = String.IsNullOrWhiteSpace(this.FolderPath);
 
             this.RunFolderName.Text = this.FolderPath;
 
@@ -148,7 +148,7 @@ namespace DialogUpgradeFiles
         // Select files and upgrade them
         private async void ButtonUpgradeSelectedFiles_Click(object sender, RoutedEventArgs e)
         {
-            if (true == Dialogs.TryGetFilesFromUserUsingOpenFileDialog("Choose one or more .tdb or .ddb files", this.previousFolderPath, ".ddb or .tdb files|*.*db", "", out string[] selectedFiles))
+            if (Dialogs.TryGetFilesFromUserUsingOpenFileDialog("Choose one or more .tdb or .ddb files", this.previousFolderPath, ".ddb or .tdb files|*.*db", "", out string[] selectedFiles))
             {
                 await this.BeginUpgrading(selectedFiles);
                 this.SetPreviousFolderPath(selectedFiles[0]);
@@ -158,7 +158,7 @@ namespace DialogUpgradeFiles
         // Select a folder and upgrade it
         private async void ButtonUpgradeSelectAFolder_Click(object sender, RoutedEventArgs e)
         {
-            if (true == Dialog.Dialogs.TryGetFoldersFromUserUsingOpenFileDialog("Choose one or more folders", this.previousFolderPath, out string[] selectedPaths))
+            if (Dialogs.TryGetFoldersFromUserUsingOpenFileDialog("Choose one or more folders", this.previousFolderPath, out string[] selectedPaths))
             {
                 await this.BeginUpgrading(selectedPaths);
                 this.SetPreviousFolderPath(selectedPaths[0]);
@@ -178,9 +178,9 @@ namespace DialogUpgradeFiles
         // Objects were dragged and dropped. Upgrade valid files
         private async void GridUpgradeFiles_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                string[] selectedPaths = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
+                string[] selectedPaths = (string[])e.Data.GetData(DataFormats.FileDrop);
                 await this.BeginUpgrading(selectedPaths);
                 this.SetPreviousFolderPath(selectedPaths[0]);
             }
@@ -244,7 +244,7 @@ namespace DialogUpgradeFiles
                 // Begin updating
                 // Prepare the feedback area
                 Mouse.OverrideCursor = Cursors.Wait;
-                this.TitleMessage.Text = String.Format("Upgrading {0} files", filePathsRequiringUpdating.Count);
+                this.TitleMessage.Text = $"Upgrading {filePathsRequiringUpdating.Count} files";
                 this.DictFileUpdateStatus.Clear();
 
                 // Update the files requiring upgrading
@@ -332,7 +332,6 @@ namespace DialogUpgradeFiles
                     ProgressCharacter = "-";
                     break;
                 case "-":
-                case "":
                 default:
                     ProgressCharacter = "\\";
                     break;
@@ -352,7 +351,7 @@ namespace DialogUpgradeFiles
                 string shortenedKey = kvp.Key.Length <= shortLength
                     ? kvp.Key
                     : "..." + kvp.Key.Substring(Math.Max(0, kvp.Key.Length - shortLength));
-                this.ListBoxResultsStatus.Items.Add(String.Format("{0,-40} {1}", kvp.Value, shortenedKey));
+                this.ListBoxResultsStatus.Items.Add($"{kvp.Value,-40} {shortenedKey}");
             }
             if (index >= 0)
             {

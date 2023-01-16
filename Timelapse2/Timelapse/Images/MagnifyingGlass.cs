@@ -27,14 +27,8 @@ namespace Timelapse.Images
         /// </summary>
         public bool Show
         {
-            get
-            {
-                return this.IsVisible;
-            }
-            set
-            {
-                this.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-            }
+            get => this.IsVisible;
+            set => this.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         }
         #endregion
 

@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace Timelapse.Util
 {
-    /// <summary>
-    /// Classes to wrap a stream and reporting for when bytes are read or written to the stream.
-    /// Used to intermittently report progress in the UI when reading a very large stream
-    /// </summary>
+    // Classes to wrap a stream and reporting for when bytes are read or written to the stream.
+    // Used to intermittently report progress in the UI when reading a very large stream
     #region Public Delegate
     /// <summary>
     /// The delegate for handling a ProgressStream Report event.
@@ -30,6 +28,7 @@ namespace Timelapse.Util
         /// Creates a new ProgressStream supplying the stream for it to report on.
         /// </summary>
         /// <param name="streamToReportOn">The underlying stream that will be reported on when bytes are read or written.</param>
+        /// <param name="cancelTokenSource">The cancellation token source.</param>
         public ProgressStream(Stream streamToReportOn, CancellationTokenSource cancelTokenSource)
         {
             if (streamToReportOn != null)
@@ -95,41 +94,23 @@ namespace Timelapse.Util
 
         #region Stream Members
 
-        public override bool CanRead
-        {
-            get { return innerStream.CanRead; }
-        }
+        public override bool CanRead => innerStream.CanRead;
 
-        public override bool CanSeek
-        {
-            get { return innerStream.CanSeek; }
-        }
+        public override bool CanSeek => innerStream.CanSeek;
 
-        public override bool CanWrite
-        {
-            get { return innerStream.CanWrite; }
-        }
+        public override bool CanWrite => innerStream.CanWrite;
 
         public override void Flush()
         {
             innerStream.Flush();
         }
 
-        public override long Length
-        {
-            get { return innerStream.Length; }
-        }
+        public override long Length => innerStream.Length;
 
         public override long Position
         {
-            get
-            {
-                return innerStream.Position;
-            }
-            set
-            {
-                innerStream.Position = value;
-            }
+            get => innerStream.Position;
+            set => innerStream.Position = value;
         }
 
         public override int Read(byte[] buffer, int offset, int count)

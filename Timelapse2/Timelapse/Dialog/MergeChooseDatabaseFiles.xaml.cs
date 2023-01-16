@@ -7,15 +7,17 @@ using System.Windows;
 using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.Dialog
 {
     /// <summary>
     /// Interaction logic for MergeChooseDatabaseFiles.xaml
     /// </summary>
-    public partial class MergeChooseDatabaseFiles : BusyableDialogWindow
+    public partial class MergeChooseDatabaseFiles
     {
         private readonly List<string> SourceddbFilePaths;
         private readonly string TemplatetdbFilePath;
@@ -25,7 +27,7 @@ namespace Timelapse.Dialog
         private readonly string DestinationddbFileName;
 
         // Tracks whether any changes to the database was made
-        private bool IsAnyDataUpdated = false;
+        private bool IsAnyDataUpdated;
 
         public ObservableCollection<ddbFileClass> ObservableddbFileList { get; set; }
         public string DatabaseToLoad { get; set; } = String.Empty;
@@ -49,52 +51,52 @@ namespace Timelapse.Dialog
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (this.SourceddbFilePaths == null || this.SourceddbFilePaths.Count == 0)
+            if (SourceddbFilePaths == null || SourceddbFilePaths.Count == 0)
             {
                 // Show error message
-                this.ListboxFileDatabases.Visibility = Visibility.Collapsed;
-                this.ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
-                this.LabelBanner.Content = "Warning: Merging cannot be done.";
-                this.TextBlockFinalMessage.Text = String.Format("Timelapse searches for database (.ddb) files in:{0}", Environment.NewLine);
-                this.TextBlockFinalMessage.Text += String.Format(" \u2022 the folder containing the template ({0}),{1}", this.RootFolderPath, Environment.NewLine);
-                this.TextBlockFinalMessage.Text += String.Format(" \u2022 its sub-folders.{0}{0}", Environment.NewLine);
-                this.TextBlockFinalMessage.Text += String.Format("No database (.ddb) files were found, so there is nothing to merge.");
-                this.MergeButton.IsEnabled = false;
+                ListboxFileDatabases.Visibility = Visibility.Collapsed;
+                ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
+                LabelBanner.Content = "Warning: Merging cannot be done.";
+                TextBlockFinalMessage.Text = String.Format("Timelapse searches for database (.ddb) files in:{0}", Environment.NewLine);
+                TextBlockFinalMessage.Text += String.Format(" \u2022 the folder containing the template ({0}),{1}", RootFolderPath, Environment.NewLine);
+                TextBlockFinalMessage.Text += String.Format(" \u2022 its sub-folders.{0}{0}", Environment.NewLine);
+                TextBlockFinalMessage.Text += "No database (.ddb) files were found, so there is nothing to merge.";
+                MergeButton.IsEnabled = false;
                 return;
             }
 
-            if (IsCondition.IsPathLengthTooLong(this.DestinationddbFilePath, FilePathTypeEnum.DDB))
+            if (IsCondition.IsPathLengthTooLong(DestinationddbFilePath, FilePathTypeEnum.DDB))
             {
-                string dir = Path.GetDirectoryName(this.DestinationddbFilePath);
-                dir = Path.GetDirectoryName(this.DestinationddbFilePath).Length < 41
+                string dir = Path.GetDirectoryName(DestinationddbFilePath);
+                dir = Path.GetDirectoryName(DestinationddbFilePath).Length < 41
                     ? dir
-                    : Path.GetDirectoryName(this.DestinationddbFilePath).Substring(0, 40);
-                string shortenedPath = "  - " + dir + "......." + Path.GetFileName(this.DestinationddbFilePath);
+                    : Path.GetDirectoryName(DestinationddbFilePath).Substring(0, 40);
+                string shortenedPath = "  - " + dir + "......." + Path.GetFileName(DestinationddbFilePath);
                 // The path of the TimelapseData-merged.ddb file is too long
-                this.ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
-                this.LabelBanner.Content = "Warning: Merging cannot be done.";
-                this.TextBlockFinalMessage.Text = String.Format("The path to the merged database (.ddb) file is too long: {0}{1}{0}", Environment.NewLine, shortenedPath);
-                this.TextBlockFinalMessage.Text += "Windows cannot perform file operations if the file path is more than " + Constant.File.MaxPathLength.ToString() + " characters." + Environment.NewLine + Environment.NewLine;
-                this.TextBlockFinalMessage.Text += "Try again after shortening the file path:" + Environment.NewLine;
-                this.TextBlockFinalMessage.Text += "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.";
-                this.MergeButton.IsEnabled = false;
+                ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
+                LabelBanner.Content = "Warning: Merging cannot be done.";
+                TextBlockFinalMessage.Text = String.Format("The path to the merged database (.ddb) file is too long: {0}{1}{0}", Environment.NewLine, shortenedPath);
+                TextBlockFinalMessage.Text += "Windows cannot perform file operations if the file path is more than " + File.MaxPathLength + " characters." + Environment.NewLine + Environment.NewLine;
+                TextBlockFinalMessage.Text += "Try again after shortening the file path:" + Environment.NewLine;
+                TextBlockFinalMessage.Text += "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.";
+                MergeButton.IsEnabled = false;
                 return;
             }
 
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
             // We have at least one or more valid .ddb files. Load them up into the list
-            foreach (string ddbFile in this.SourceddbFilePaths)
+            foreach (string ddbFile in SourceddbFilePaths)
             {
                 ObservableddbFileList.Add(new ddbFileClass
                 {
                     IsSelected = true,
                     FullPath = ddbFile,
-                    RelativePathIncludingFileName = GetRelativePathAndFileName(this.TemplatetdbFilePath, ddbFile)
+                    RelativePathIncludingFileName = GetRelativePathAndFileName(TemplatetdbFilePath, ddbFile)
                 });
             }
-            this.DataContext = this;
+            DataContext = this;
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {

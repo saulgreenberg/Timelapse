@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Recognition;
@@ -11,7 +12,7 @@ using Timelapse.Util;
 
 namespace Timelapse
 {
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Recognitions Submenu Opening 
         private void MenuItemRecognitions_SubmenuOpening(object sender, RoutedEventArgs e)
@@ -113,7 +114,7 @@ namespace Timelapse
                 //    - json recognizer's image paths do not have the sub-folder prefix
                 //    - at least one file is found that matches a path comprising and added sub-folder prefix
                 string subFolderPrefix = RecognitionUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
-                if (false == String.IsNullOrEmpty(subFolderPrefix))
+                if (false == string.IsNullOrEmpty(subFolderPrefix))
                 {
                     RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
@@ -296,7 +297,7 @@ namespace Timelapse
 
             if (foldersInJsonButNotInDB.Count > 0)
             {
-                folderDetails += "- While the recognition file included images in these folders, they were skipped over " + Environment.NewLine; ;
+                folderDetails += "- While the recognition file included images in these folders, they were skipped over " + Environment.NewLine; 
                 folderDetails += "   as their folder paths did not match any Relative Paths in the Timelapse database.";
                 foreach (string folder in foldersInJsonButNotInDB)
                 {

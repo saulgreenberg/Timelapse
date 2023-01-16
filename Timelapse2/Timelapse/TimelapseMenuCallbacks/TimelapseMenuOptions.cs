@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -7,7 +8,7 @@ using Timelapse.Util;
 namespace Timelapse
 {
     // Options Menu Callbacks
-    public partial class TimelapseWindow : Window, IDisposable
+    public partial class TimelapseWindow
     {
         #region Options sub-menu opening
         private void Options_SubmenuOpening(object sender, RoutedEventArgs e)

@@ -9,19 +9,14 @@ using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
-    public partial class VideoPlayer : UserControl
+    public partial class VideoPlayer
     {
         #region Public properties
         /// <summary>
         /// True if the video is unscaled, false if it is zoomed in
         /// </summary>        
-        public bool IsUnScaled
-        {
-            get
-            {
-                return this.videoScale.ScaleX == 1;
-            }
-        }
+        public bool IsUnScaled => this.videoScale.ScaleX == 1;
+
         #endregion
 
         #region Private variables

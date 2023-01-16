@@ -1,4 +1,5 @@
 ﻿using System;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -10,13 +11,7 @@ namespace Timelapse.Recognition
     public class RecognitionSelections
     {
         #region Public Properties
-        public bool Enabled
-        {
-            get
-            {
-                return this.UseRecognition;
-            }
-        }
+        public bool Enabled => this.UseRecognition;
 
         // Whether or not image recognition should be used
         public bool UseRecognition { get; set; }
@@ -41,14 +36,8 @@ namespace Timelapse.Recognition
         // The Confidence thresholds, used by the select user interface
         public double ConfidenceThreshold1ForUI
         {
-            get
-            {
-                return this.CurrentDetectionThreshold;
-            }
-            set
-            {
-                this.CurrentDetectionThreshold = value;
-            }
+            get => this.CurrentDetectionThreshold;
+            set => this.CurrentDetectionThreshold = value;
         }
 
         public double ConfidenceThreshold2ForUI { get; set; }
@@ -91,65 +80,40 @@ namespace Timelapse.Recognition
             }
         }
 
-        static private double TypicalDetectionThreshold
-        {
-            get
-            {
-                return GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                    ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
-                    : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalDetectionThreshold();
-            }
-        }
+        private static double TypicalDetectionThreshold =>
+            GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
+                ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
+                : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalDetectionThreshold();
 
         private double _currentDetectionThreshold = -1;
         public double CurrentDetectionThreshold
         {
-            set
-            {
-                this._currentDetectionThreshold = value;
-            }
-            get
-            {
-                return this._currentDetectionThreshold < 0
+            set => this._currentDetectionThreshold = value;
+            get =>
+                this._currentDetectionThreshold < 0
                     ? TypicalDetectionThreshold
                     : this._currentDetectionThreshold;
-            }
         }
 
-        static private double TypicalClassificationThreshold
-        {
-            get
-            {
-                return GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                    ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
-                    : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalClassificationThreshold();
-            }
-        }
+        private static double TypicalClassificationThreshold =>
+            GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
+                ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
+                : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalClassificationThreshold();
 
         private double _currentClassificationThreshold = -1;
         public double CurrentClassificationThreshold
         {
-            set
-            {
-                this._currentClassificationThreshold = value;
-            }
-            get
-            {
-                return this._currentClassificationThreshold < 0
+            set => this._currentClassificationThreshold = value;
+            get =>
+                this._currentClassificationThreshold < 0
                     ? TypicalClassificationThreshold
                     : this._currentClassificationThreshold;
-            }
         }
 
-        static public double ConservativeDetectionThreshold
-        {
-            get
-            {
-                return GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                    ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
-                    : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetConservativeDetectionThreshold();
-            }
-        }
+        public static double ConservativeDetectionThreshold =>
+            GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
+                ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
+                : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetConservativeDetectionThreshold();
 
         #endregion
 

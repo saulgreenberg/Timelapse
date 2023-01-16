@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
        xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:local="clr-namespace:Timelapse"
         mc:Ignorable="d"
         Title="Merge Databases..." Height="550" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded">
     <Grid>

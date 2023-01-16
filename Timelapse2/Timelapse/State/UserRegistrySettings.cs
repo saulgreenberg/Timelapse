@@ -21,11 +21,8 @@ namespace Timelapse.Util
         #region Public Methods
         public RegistryKey OpenRegistryKey()
         {
-            RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(this.keyPath, true);
-            if (registryKey == null)
-            {
-                registryKey = Registry.CurrentUser.CreateSubKey(this.keyPath);
-            }
+            RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(this.keyPath, true) 
+                                      ?? Registry.CurrentUser.CreateSubKey(this.keyPath);
             return registryKey;
         }
         #endregion

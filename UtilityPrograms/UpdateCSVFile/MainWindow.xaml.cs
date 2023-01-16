@@ -32,7 +32,6 @@ namespace UpdateCSVFile
         // Try to convert the csv file
         public bool TryConvertCsv(string csvOriginalFilePath, string csvTranslatedFilePath)
         {
-            bool abort = false;
             HeaderUpdateDictionary = new Dictionary<string, string>();
             // Open the various streams, which also populates HeaderUpdateDictionary
             if (OpenStreamsAndLoadHeaderUpdates(csvOriginalFilePath, csvTranslatedFilePath, this.jsonHeaderTranslationsFileName) == false)
@@ -46,14 +45,9 @@ namespace UpdateCSVFile
             List<string> ListUpdatedHeaders = new List<string>();
             foreach (string header in ListOriginalHeadersInCSVFile)
             {
-                if (HeaderUpdateDictionary.ContainsKey(header))
-                {
-                    ListUpdatedHeaders.Add(HeaderUpdateDictionary[header]);
-                }
-                else
-                {
-                    ListUpdatedHeaders.Add(header);
-                }
+                ListUpdatedHeaders.Add(HeaderUpdateDictionary.ContainsKey(header)
+                    ? HeaderUpdateDictionary[header]
+                    : header);
             }
 
             List<string> ListFinalHeaders = ListUpdatedHeaders.Select(item => (string)item.Clone()).ToList();
@@ -92,7 +86,6 @@ namespace UpdateCSVFile
                     {
                         this.FeedbackText.Text += String.Format("Expected {0} fields in line {1} but found {2}.{3}", ListUpdatedHeaders.Count, row.Count, rowArray.Length, Environment.NewLine);
                         this.FeedbackText.Text += String.Format("Could not update the data correctly due to the above reasons.{0}", Environment.NewLine);
-                        abort = true;
                         this.CloseStreams();
                         return false;
                     }
@@ -146,16 +139,9 @@ namespace UpdateCSVFile
                         rowDictionary.Add(headerArray[j], rowArray[j]);
                     }
                 }
-
-                if (abort)
-                {
-                    this.FeedbackText.Text += String.Format("Could not update the data correctly due to the above reasons.{0}", Environment.NewLine);
-                    this.CloseStreams();
-                    return false;
-                }
                 this.WriteListAsCommaSeparatedLine(outstream, ListFinalHeaders, rowDictionary);
             }
-            this.FeedbackText.Text += String.Format("Wrote {0} data rows.{1}", rowNumber, Environment.NewLine);
+            this.FeedbackText.Text += $"Wrote {rowNumber} data rows.{Environment.NewLine}";
             this.CloseStreams();
             return true;
         }

@@ -160,11 +160,12 @@ namespace Timelapse
         /// <summary>
         /// Sql Phrase - Create partial query to return all missing detections
         /// </summary>
-        ///  <param name="useCountForm">If true, return a SELECT COUNT vs a SELECT from</param>
+        ///  <param name="selectType">If true, return a SELECT COUNT vs a SELECT from</param>
         /// <returns> 
         /// Count Form:  SELECT COUNT  ( DataTable.Id ) FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL 
         /// Star Form: SELECT DataTable.*               FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL
         /// One Form:  SELECT 1                         FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL
+        /// </returns>
         public static string SelectMissingDetections(SelectTypesEnum selectType)
         {
             string phrase = String.Empty;
@@ -337,7 +338,7 @@ namespace Timelapse
         /// Sql phrase used in Where
         /// </summary>
         /// <param name="detectionCategory"></param>
-        /// <returns>Detections.Category = <DetectionCategory></returns>
+        /// <returns>Detections.Category = detectionCategory</returns>
         public static string DetectionCategoryEqualsDetectionCategory(string detectionCategory)
         {
             return Constant.DBTables.Detections + "." + Constant.DetectionColumns.Category + Sql.Equal + detectionCategory;
@@ -347,7 +348,8 @@ namespace Timelapse
         /// Sql phrase used in Where
         /// </summary>
         /// <param name="classificationCategory"></param>
-        /// <returns>Classifications.Category = <ClassificationCategory></returns>
+        /// <returns>Classifications.Category = classificationCategory</returns>
+        ///
         public static string ClassificationsCategoryEqualsClassificationCategory(string classificationCategory)
         {
             return Constant.DBTables.Classifications + "." + Constant.DetectionColumns.Category + Sql.Equal + classificationCategory;
@@ -358,7 +360,7 @@ namespace Timelapse
         /// </summary>
         /// <param name="lowerBound"></param>
         /// <param name="upperBound"></param>
-        /// <returns>Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <lowerBound> AND <upperBound></returns>
+        /// <returns>Group By Detections.Id Having Max ( Detections.conf ) BETWEEN lowerBound AND upperBound</returns>
         public static string GroupByDetectionsIdHavingMaxDetectionsConf(double lowerBound, double upperBound)
         {
             return Sql.GroupBy + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID +
@@ -372,7 +374,7 @@ namespace Timelapse
         /// </summary>
         /// <param name="lowerBound"></param>
         /// <param name="upperBound"></param>
-        /// <returns>GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) BETWEEN <lowerBound> AND <upperBound></returns>
+        /// <returns>GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) BETWEEN lowerBound AND upperBound</returns>
         public static string GroupByClassificationsIdHavingMaxClassificationsConf(double lowerBound, double upperBound)
         {
             return Sql.GroupBy + Constant.DBTables.Classifications + "." + Constant.ClassificationColumns.ClassificationID +

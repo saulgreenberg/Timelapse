@@ -16,7 +16,7 @@ namespace Timelapse.QuickPaste
     // Given a QuickPasteEntry (a name and a list of QuickPasteItems),
     // allow the user to edit it.
     // Currently, the only thing that is editable is its name and whether a particular item's data should be included when pasted
-    public partial class QuickPasteEditor : Window
+    public partial class QuickPasteEditor
     {
         #region Public Properties
         public QuickPasteEntry QuickPasteEntry { get; set; }

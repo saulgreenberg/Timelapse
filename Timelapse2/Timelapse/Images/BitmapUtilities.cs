@@ -15,7 +15,7 @@ namespace Timelapse.Images
     {
         #region Public - Get Bitmap from Image File
         // All bitmap laoding eventually invokes this static function
-        public static BitmapSource GetBitmapFromImageFile(string filePath, Nullable<int> desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
+        public static BitmapSource GetBitmapFromImageFile(string filePath, int? desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
             isCorruptOrMissing = true;
 
@@ -83,7 +83,7 @@ namespace Timelapse.Images
         #region Public - Get Bitmap from Video File
         // Get the bitmap representing a video file
         // Note that displayIntent is ignored as it's specific to interaction with WCF's bitmap cache, which doesn't occur in rendering video preview frames
-        public static BitmapSource GetBitmapFromVideoFile(string filePath, Nullable<int> desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
+        public static BitmapSource GetBitmapFromVideoFile(string filePath, int? desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {
@@ -145,7 +145,7 @@ namespace Timelapse.Images
         // This alternate way to get an image from a video file used the media encoder. 
         // While it works, its ~twice as slow as using NRECO FFMPeg.
         // We do include it as a fallback for the odd case where ffmpeg doesn't work (I had that with a single video).
-        public static BitmapSource GetVideoBitmapFromFileUsingMediaEncoder(string filePath, Nullable<int> desiredWidth, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum _, out bool isCorruptOrMissing)
+        public static BitmapSource GetVideoBitmapFromFileUsingMediaEncoder(string filePath, int? desiredWidth, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum _, out bool isCorruptOrMissing)
         {
             isCorruptOrMissing = true;
             // System.Diagnostics.Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
@@ -264,7 +264,7 @@ namespace Timelapse.Images
         // Either hard-code all this (or - even simpler - just create blank video with a play button. I think this function is a hangover of when I wanted to 
         // put a big play button in the middle of any video thumbnail, so I wrote a general purpose method to do it. BUt I don't need that any more.
         // Still, it at least shows how to draw atop a bitmap.
-        public static BitmapSource GetBitmapFromFileWithPlayButton(string path, Nullable<int> desiredWidth = null, ImageDisplayIntentEnum displayIntent = ImageDisplayIntentEnum.Persistent)
+        public static BitmapSource GetBitmapFromFileWithPlayButton(string path, int? desiredWidth = null, ImageDisplayIntentEnum displayIntent = ImageDisplayIntentEnum.Persistent)
         {
             BitmapSource bmp = BitmapUtilities.GetBitmapFromImageFile(path, desiredWidth, displayIntent, ImageDimensionEnum.UseWidth, out _);
             RenderTargetBitmap target = new RenderTargetBitmap(bmp.PixelWidth, bmp.PixelHeight, bmp.DpiX, bmp.DpiY, PixelFormats.Pbgra32);
