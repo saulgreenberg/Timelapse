@@ -77,7 +77,7 @@ namespace Timelapse.Database
         // Long: ID = Long
         public void SetWhere(long id)
         {
-            this.Where = Constant.DatabaseColumn.ID + " = " + id.ToString();
+            this.Where = Constant.DatabaseColumn.ID + " = " + id;
         }
 
         // ColumnTuple: columnName = Value

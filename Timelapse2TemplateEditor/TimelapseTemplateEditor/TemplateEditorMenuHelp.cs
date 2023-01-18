@@ -6,7 +6,7 @@ using Timelapse.Util;
 
 namespace Timelapse.Editor
 {
-    public partial class EditorWindow : Window
+    public partial class EditorWindow
     {
         // COPY EVERYTHING BETWEEEN BRACKETS FROM  TimelapseMenuCallbacks | TimelapseMenuHelp.cs file}
         // NOTE: COMMENT OUT FILEPLAYER_STOP AS NOT USED IN THE EDITOR

@@ -76,7 +76,7 @@ namespace DialogUpgradeFiles.Database
         // Long: ID = Long
         public void SetWhere(long id)
         {
-            this.Where = Constant.DatabaseColumn.ID + " = " + id.ToString();
+            this.Where = Constant.DatabaseColumn.ID + " = " + id;
         }
 
         // ColumnTuple: columnName = Value
@@ -91,7 +91,7 @@ namespace DialogUpgradeFiles.Database
         public void SetWhere(ColumnTuple columnTuple, string field)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
+            ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
             this.Where = $"{columnTuple.Name} = {Sql.Quote(field)}";
         }

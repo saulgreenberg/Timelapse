@@ -134,7 +134,7 @@ namespace Timelapse.Util
                     return false;
                 }
 
-                if (exifSubIfd.TryGetDateTime(ExifSubIfdDirectory.TagDateTimeOriginal, out dateTime) == false)
+                if (exifSubIfd.TryGetDateTime(ExifDirectoryBase.TagDateTimeOriginal, out dateTime) == false)
                 {
                     // We couldn't read the metadata. In case its a reconyx camera, the fallback is to use the Reconyx-specific metadata using its DateTimeOriginal tag
                     ReconyxHyperFireMakernoteDirectory reconyxMakernote = metadataDirectories.OfType<ReconyxHyperFireMakernoteDirectory>().FirstOrDefault();

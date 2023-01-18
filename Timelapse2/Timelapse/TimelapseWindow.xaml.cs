@@ -400,7 +400,6 @@ namespace Timelapse
         {
             // Add data entry callbacks to all editable controls. When the user changes an image's attribute using a particular control,
             // the callback updates the matching field for that image in the database.
-            DataEntryDateTime dateTime = null;
             foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
             {
                 string controlType = this.DataHandler.FileDatabase.FileTableColumnsByDataLabel[pair.Key].ControlType;
@@ -433,12 +432,12 @@ namespace Timelapse
                         note.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
                         break;
                     case Constant.DatabaseColumn.DateTime:
-                        dateTime = (DataEntryDateTime)pair.Value;
+                        DataEntryDateTime dateTime = (DataEntryDateTime)pair.Value;
                         dateTime.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
                         dateTime.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
                         break;
                     default:
-                        TracePrint.PrintMessage(String.Format("Unhandled control type '{0}' in SetUserInterfaceCallbacks.", controlType));
+                        TracePrint.PrintMessage($"Unhandled control type '{controlType}' in SetUserInterfaceCallbacks.");
                         break;
                 }
             }

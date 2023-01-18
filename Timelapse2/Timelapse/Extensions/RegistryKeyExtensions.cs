@@ -380,7 +380,7 @@ namespace Timelapse.Util
             ThrowIf.IsNullArgument(registryKey, nameof(registryKey));
             try
             {
-                registryKey.SetValue(subKeyPath, value.TotalSeconds.ToString(), RegistryValueKind.String);
+                registryKey.SetValue(subKeyPath, value.TotalSeconds.ToString(CultureInfo.InvariantCulture), RegistryValueKind.String);
             }
             catch
             {

@@ -73,11 +73,10 @@ namespace Timelapse.Util
         private static string GetMethodNameStack(string message = "", int level = 1)
         {
             StackTrace st = new StackTrace(true);
-            StackFrame sf;
             string methodStack = String.Empty;
             for (int i = 1; i <= level; i++)
             {
-                sf = st.GetFrame(i);
+                StackFrame sf = st.GetFrame(i);
                 methodStack += Path.GetFileName(sf.GetFileName()) + ": ";
                 methodStack += sf.GetMethod().Name;
                 if (i < level)

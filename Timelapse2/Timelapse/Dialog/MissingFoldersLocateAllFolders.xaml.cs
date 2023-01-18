@@ -185,19 +185,16 @@ namespace Timelapse.Dialog
             if (sender is ComboBox comboBoxSender)
             {
                 int rowIndex = 0;
-                CheckBox checkBox;
-                ComboBox comboBox;
-
                 foreach (MissingFolderRow mfr in this.observableCollection)
                 {
                     DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                        .ContainerFromIndex(rowIndex++);
                     if (null == dataGridRow) continue;
-                    comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (null == comboBox || comboBox != comboBoxSender) continue;
 
                     // We found the row.
-                    checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                    CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
                     if (null == checkBox) break;
 
                     if (comboBox.Items.Count > 1)
@@ -222,16 +219,14 @@ namespace Timelapse.Dialog
         private void SetInitialCheckboxValue()
         {
             int rowIndex = 0;
-            CheckBox checkBox;
-            ComboBox comboBox;
             foreach (MissingFolderRow mfr in this.observableCollection)
             {
                 DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                    .ContainerFromIndex(rowIndex);
                 if (null == dataGridRow) continue;
-                checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
                 if (null == checkBox) continue;
-                comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 if (null == comboBox) continue;
                 if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText) || comboBox.Items.Count > 1)
                 {
@@ -248,16 +243,14 @@ namespace Timelapse.Dialog
         private void EnsureCheckboxValue()
         {
             int rowIndex = 0;
-            CheckBox checkBox;
-            ComboBox comboBox;
             foreach (MissingFolderRow mfr in this.observableCollection)
             {
                 DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                    .ContainerFromIndex(rowIndex);
                 if (null == dataGridRow) continue;
-                checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
                 if (null == checkBox) continue;
-                comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 if (null == comboBox) continue;
                 if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
                 {
@@ -307,7 +300,6 @@ namespace Timelapse.Dialog
             MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
             // return (mfr == null || mfr.PossibleNewLocation.Count == 0) ? String.Empty : mfr.PossibleNewLocation[0];
             int rowIndex = 0;
-            ComboBox comboBox;
             foreach (MissingFolderRow row in this.observableCollection)
             {
                 if (row == mfr)
@@ -315,7 +307,7 @@ namespace Timelapse.Dialog
                     // We foound the row,
                     DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
                     if (null == dataGridRow) break;
-                    comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (null == comboBox) break;
                     location = (string)comboBox.SelectedItem;
                     break;

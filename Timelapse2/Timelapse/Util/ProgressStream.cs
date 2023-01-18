@@ -175,7 +175,7 @@ namespace Timelapse.Util
 
         #region Constructor - Various Forms
         public ProgressStreamReportEventArgs()
-            : base() { }
+        { }
 
         /// <summary>
         /// Creates a new ProgressStreamReportEventArgs initializing its members.

@@ -407,12 +407,12 @@ namespace Timelapse.Dialog
             else if (isCancelledAndDeletedImagesCount.Item1 == false)
             {
                 this.DoneMessagePanel.Content = "Deleted ";
-                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2.ToString() + " files";
+                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files";
             }
             else
             {
                 this.DoneMessagePanel.Content = "Cancelled, but ";
-                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2.ToString() + " files were already deleted." + Environment.NewLine;
+                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files were already deleted." + Environment.NewLine;
                 this.DoneMessagePanel.Content += "Deleted files are available in your Deleted folder." + Environment.NewLine;
                 this.DoneMessagePanel.Content += "Data for these deleted images has not been changed." + Environment.NewLine;
             }

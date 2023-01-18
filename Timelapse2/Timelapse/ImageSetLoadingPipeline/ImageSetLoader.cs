@@ -129,7 +129,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                         // Also, add its folder name (if it isn't already there) to a list so we can
                         // later show a meaningful error message to the user that these files were skipped.
                         // We do the folder name as otherwise the number of images could be overwhelming.
-                        string path = fileInfo.FullName.Substring(0, fileInfo.FullName.LastIndexOf(("\\")));
+                        string path = fileInfo.FullName.Substring(0, fileInfo.FullName.LastIndexOf(("\\"), StringComparison.Ordinal));
                         if (ImagesSkippedAsFilePathTooLong.Contains(path) == false)
                         {
                             ImagesSkippedAsFilePathTooLong.Add(path);

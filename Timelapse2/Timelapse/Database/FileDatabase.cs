@@ -691,7 +691,7 @@ namespace Timelapse.Database
                 queryValues.Remove(queryValues.Length - 2, 2); // Remove ", "
 
                 // Create the entire SQL command (limited to RowsPerInsert datalines)
-                string command = queryColumns.ToString() + queryValues.ToString();
+                string command = queryColumns + queryValues.ToString();
 
                 this.CreateBackupIfNeeded();
                 this.Database.ExecuteNonQuery(command);
@@ -1358,7 +1358,6 @@ namespace Timelapse.Database
             // We now have an unselected temporary data table
             // Get the original value of each, and update each date by the corrected amount if possible
             List<ImageRow> filesToAdjust = new List<ImageRow>();
-            TimeSpan mostRecentAdjustment;
             int count = endRow - startRow + 1;
             int fileIndex = 0;
             for (int row = startRow; row <= endRow; ++row)
@@ -1374,7 +1373,7 @@ namespace Timelapse.Database
                 // adjust the date/time
                 fileIndex++;
                 DateTime newImageDateTime = adjustment.Invoke(image.File, fileIndex, count, currentImageDateTime);
-                mostRecentAdjustment = newImageDateTime - currentImageDateTime;
+                TimeSpan mostRecentAdjustment = newImageDateTime - currentImageDateTime;
                 if (mostRecentAdjustment.Duration() < TimeSpan.FromSeconds(1))
                 {
                     // Ignore changes if it results in less than a 1 second change, 
@@ -1474,7 +1473,7 @@ namespace Timelapse.Database
             List<string> idClauses = new List<string>();
             foreach (long fileID in fileIDs)
             {
-                idClauses.Add(Constant.DatabaseColumn.ID + " = " + fileID.ToString());
+                idClauses.Add(Constant.DatabaseColumn.ID + " = " + fileID);
             }
             // Delete the data and markers associated with that image
             this.CreateBackupIfNeeded();
@@ -1968,7 +1967,7 @@ namespace Timelapse.Database
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage(String.Format("Read of marker failed for dataLabel '{0}'. {1}", dataLabel, exception.ToString()));
+                    TracePrint.PrintMessage(String.Format("Read of marker failed for dataLabel '{0}'. {1}", dataLabel, exception));
                     pointList = String.Empty;
                 }
                 markersForCounter.ParsePointList(pointList);
@@ -2058,7 +2057,7 @@ namespace Timelapse.Database
             // Note that I repeated the null check here, as for some reason it was still coming up as a CA1062 warning
             List<string> whereClauses = new List<string>
             {
-               Constant.DatabaseColumn.ID + Sql.Equal + imageID.ToString()
+               Constant.DatabaseColumn.ID + Sql.Equal + imageID
             };
             this.Database.Delete(Constant.DBTables.Markers, whereClauses);
         }
@@ -2067,7 +2066,7 @@ namespace Timelapse.Database
         #region ImageSet manipulation
         private void ImageSetLoadFromDatabase()
         {
-            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID.ToString();
+            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID;
             DataTable imageSetTable = this.Database.GetDataTableFromSelect(imageSetQuery);
             this.ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
             imageSetTable?.Dispose();
@@ -2507,8 +2506,6 @@ namespace Timelapse.Database
         // Return a list of folder paths missing in the DB but present in the jsonRecognizer file
         private bool CompareRecognizerAndDBFolders(Recognizer recognizer, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
         {
-            string folderpath;
-
             if (recognizer.images.Count <= 0)
             {
                 // No point continuing if there are no jsonRecognizer entries
@@ -2530,7 +2527,7 @@ namespace Timelapse.Database
             SortedSet<string> foldersInRecognizerList = new SortedSet<string>();
             foreach (image image in recognizer.images)
             {
-                folderpath = Path.GetDirectoryName(image.file);
+                string folderpath = Path.GetDirectoryName(image.file);
                 if (!string.IsNullOrEmpty(folderpath))
                 {
                     folderpath += "\\";
@@ -2598,7 +2595,7 @@ namespace Timelapse.Database
             // Retrieve the detection from the in-memory datatable.
             // Note that because IDs are in the database as a string, we convert it
             // PERFORMANCE: This takes a bit of time, not much... but could be improved. Not sure if there is an index automatically built on it. If not, do so.
-            return this.detectionDataTable.Select(Constant.DatabaseColumn.ID + Sql.Equal + fileID.ToString());
+            return this.detectionDataTable.Select(Constant.DatabaseColumn.ID + Sql.Equal + fileID);
         }
 
         // Get the detections associated with the current file, if any
@@ -2610,7 +2607,7 @@ namespace Timelapse.Database
                 this.RefreshClassificationsDataTable();
             }
             // Note that because IDs are in the database as a string, we convert it
-            return this.classificationsDataTable.Select(Constant.ClassificationColumns.DetectionID + Sql.Equal + detectionID.ToString());
+            return this.classificationsDataTable.Select(Constant.ClassificationColumns.DetectionID + Sql.Equal + detectionID);
         }
 
         // Return the label that matches the detection category 
@@ -2847,7 +2844,6 @@ namespace Timelapse.Database
                 image.SetValueFromDatabaseString(counterDataLabel, count.ToString());
             }
 
-            ColumnTuplesWithWhere columnTuplesWithWhere;
             List<ColumnTuplesWithWhere> columnTuplesWithWhereList = new List<ColumnTuplesWithWhere>();
             foreach (KeyValuePair<long, int> kvp in dict)
             {
@@ -2855,7 +2851,7 @@ namespace Timelapse.Database
                 //this.UpdateFile(kvp.Key, counterDataLabel, kvp.Value.ToString());
 
                 // Add a query to update the row in the database
-                columnTuplesWithWhere = new ColumnTuplesWithWhere();
+                ColumnTuplesWithWhere columnTuplesWithWhere = new ColumnTuplesWithWhere();
                 columnTuplesWithWhere.Columns.Add(new ColumnTuple(counterDataLabel, kvp.Value.ToString()));
                 columnTuplesWithWhere.SetWhere(kvp.Key);
                 columnTuplesWithWhereList.Add(columnTuplesWithWhere);

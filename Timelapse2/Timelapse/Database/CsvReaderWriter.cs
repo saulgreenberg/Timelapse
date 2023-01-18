@@ -289,8 +289,6 @@ namespace Timelapse.Database
                         foreach (string header in rowDict.Keys)
                         {
                             string type = String.Empty;
-                            ControlRow controlRow = null;
-
                             // For every column ...
                             if (header == Constant.ControlDeprecated.DateLabel || header == Constant.ControlDeprecated.TimeLabel || header == Constant.ControlDeprecated.Folder || header == Constant.ControlDeprecated.ImageQuality || header == Constant.DatabaseColumn.RootFolder)
                             {
@@ -300,7 +298,7 @@ namespace Timelapse.Database
                             }
                             else
                             {
-                                controlRow = fileDatabase.GetControlFromTemplateTable(header);
+                                ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(header);
                                 type = controlRow.Type;
                             }
 
@@ -562,14 +560,13 @@ namespace Timelapse.Database
             // - Date/Time/DateTime as they are handled elsewhere 
             //   - Date, Time formats must match exactl
             int rowNumber = 0;
-            bool errorInRow;
             int numberRowsWithErrors = 0;
             int maxRowsToReportWithErrors = 2;
             // For every row
             foreach (Dictionary<string, string> rowDict in rowDictionaryList)
             {
                 rowNumber++;
-                errorInRow = false;
+                bool errorInRow = false;
                 // Check for Date and Time columns, and deal with them separately
                 // Get the header type
 

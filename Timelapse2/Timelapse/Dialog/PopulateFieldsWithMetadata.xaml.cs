@@ -181,7 +181,6 @@ namespace Timelapse.Dialog
 
                 // This tuple list will hold the id, key and value that we will want to update in the database
                 List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-                int percentDone = 0;
 
                 double totalImages = this.FileDatabase.CountAllCurrentlySelectedFiles;
                 Dictionary<string, ImageMetadata> metadata = new Dictionary<string, ImageMetadata>();
@@ -222,17 +221,15 @@ namespace Timelapse.Dialog
 
                     if (this.ReadyToRefresh())
                     {
-                        percentDone = Convert.ToInt32(imageIndex / totalImages * 100.0);
+                        int percentDone = Convert.ToInt32(imageIndex / totalImages * 100.0);
                         this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("{0}/{1} images. Processing {2}", imageIndex, totalImages, image.File), true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
 
-                    string dataLabelToUpdate = "";
-
                     foreach (KeyValuePair<string, string> kvp in this.MetadataGrid.SelectedMetadata)
                     {
                         string metadataTag = kvp.Key;
-                        dataLabelToUpdate = kvp.Value;
+                        string dataLabelToUpdate = kvp.Value;
 
                         if (false == metadata.ContainsKey(metadataTag))
                         {

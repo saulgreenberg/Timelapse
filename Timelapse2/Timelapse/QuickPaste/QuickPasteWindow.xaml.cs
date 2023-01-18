@@ -95,7 +95,7 @@ namespace Timelapse.QuickPaste
                         {
                             tooltipText += Environment.NewLine;
                         }
-                        tooltipText += item.Label + ": " + item.Value.ToString();
+                        tooltipText += item.Label + ": " + item.Value;
                     }
                 }
 

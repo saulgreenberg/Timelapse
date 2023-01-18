@@ -299,7 +299,7 @@ namespace Timelapse.Database
                     return DateTimeAdjustmentEnum.MetadataNotUsed;
                 }
 
-                if (exifSubIfd.TryGetDateTime(ExifSubIfdDirectory.TagDateTimeOriginal, out DateTime dateTimeOriginal) == false)
+                if (exifSubIfd.TryGetDateTime(ExifDirectoryBase.TagDateTimeOriginal, out DateTime dateTimeOriginal) == false)
                 {
                     // We couldn't read the metadata. In case its a reconyx camera, the fallback is to use the Reconyx-specific metadata 
                     ReconyxHyperFireMakernoteDirectory reconyxMakernote = metadataDirectories.OfType<ReconyxHyperFireMakernoteDirectory>().FirstOrDefault();
@@ -379,7 +379,7 @@ namespace Timelapse.Database
                 }
                 catch (UnauthorizedAccessException exception)
                 {
-                    TracePrint.PrintMessage("Could not delete " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    TracePrint.PrintMessage("Could not delete " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception);
                     return false;
                 }
             }

@@ -76,7 +76,7 @@ namespace Timelapse.Recognition
             {
                 return true;
             }
-            return string.Compare(source, destination) == -1;
+            return String.CompareOrdinal(source, destination) == -1;
         }
 
         // Given two strings representing megadetector versions, return true if the destination appears to be the same or the higher version number
@@ -95,7 +95,7 @@ namespace Timelapse.Recognition
             {
                 return false;
             }
-            return string.Compare(source, destination) == -1;
+            return String.CompareOrdinal(source, destination) == -1;
         }
         #endregion
 

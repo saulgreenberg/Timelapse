@@ -61,7 +61,7 @@ namespace DialogUpgradeFiles.Database
                     case FileSelectionEnum.Missing:
                     case FileSelectionEnum.Ok:
                     case FileSelectionEnum.Dark:
-                        this.Row.SetField<FileSelectionEnum>(Constant.DatabaseColumn.ImageQuality, value);
+                        this.Row.SetField(Constant.DatabaseColumn.ImageQuality, value);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(ParamName,

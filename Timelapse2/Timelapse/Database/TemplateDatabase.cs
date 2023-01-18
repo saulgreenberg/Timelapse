@@ -88,7 +88,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in TryCreateOpen. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in TryCreateOpen. {0}", exception));
                 return new Tuple<bool, TemplateDatabase>(false, null);
             }
             finally
@@ -665,11 +665,11 @@ namespace Timelapse.Database
             // If the data label name and/or the label exists, keep incrementing the count that is appended to the end
             // of the field type until it forms a unique data label name
             int dataLabelUniqueIdentifier = 0;
-            string nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier.ToString();
+            string nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier;
             while (dataLabels.Contains(nextDataLabel) || labels.Contains(nextDataLabel))
             {
                 ++dataLabelUniqueIdentifier;
-                nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier.ToString();
+                nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier;
             }
 
             return nextDataLabel;
@@ -687,11 +687,11 @@ namespace Timelapse.Database
             // If the  label name exists, keep incrementing the count that is appended to the end
             // of the field type until it forms a unique data label name
             int labelUniqueIdentifier = 0;
-            string nextLabel = labelPrefix + labelUniqueIdentifier.ToString();
+            string nextLabel = labelPrefix + labelUniqueIdentifier;
             while (labels.Contains(nextLabel))
             {
                 ++labelUniqueIdentifier;
-                nextLabel = labelPrefix + labelUniqueIdentifier.ToString();
+                nextLabel = labelPrefix + labelUniqueIdentifier;
             }
 
             return nextLabel;

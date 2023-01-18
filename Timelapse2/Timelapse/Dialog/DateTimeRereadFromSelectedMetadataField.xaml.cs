@@ -141,7 +141,7 @@ namespace Timelapse.Dialog
                     continue;
                 }
 
-                if (DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value.ToString(), out DateTime _))
+                if (DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value, out DateTime _))
                 {
                     metadataList.Add(new Tuple<string, string, string, string>(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value));
                 }

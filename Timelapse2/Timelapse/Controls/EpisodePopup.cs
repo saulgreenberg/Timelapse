@@ -85,7 +85,6 @@ namespace Timelapse.Controls
             sp.Children.Add(label);
 
             int margin = 2;
-            FileTable fileTable; // To hold the results of the database selection as a table of ImageRows
 
             // We will only consider images whose relative path is the same as the current file
             string relativePath = currentImageRow.RelativePath;
@@ -130,6 +129,7 @@ namespace Timelapse.Controls
                 }
 
                 // Start on the left
+                FileTable fileTable; // To hold the results of the database selection as a table of ImageRows
                 if (goBackwardsRow >= 0)
                 {
                     // Add a popup image to the left of the caret

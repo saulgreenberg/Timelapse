@@ -310,7 +310,7 @@ namespace DialogUpgradeFiles
                 if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
                 {
                     longPaths.Add(destinationFilePath);
-                    System.Diagnostics.Debug.Print(destinationFilePath.Length.ToString() + "|" + destinationFilePath);
+                    System.Diagnostics.Debug.Print(destinationFilePath.Length + "|" + destinationFilePath);
                 }
             }
             return longPaths;
@@ -331,7 +331,6 @@ namespace DialogUpgradeFiles
                 case "/":
                     ProgressCharacter = "-";
                     break;
-                case "-":
                 default:
                     ProgressCharacter = "\\";
                     break;

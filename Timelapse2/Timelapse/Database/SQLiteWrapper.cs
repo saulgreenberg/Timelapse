@@ -69,7 +69,7 @@ namespace Timelapse.Database
             string query = Sql.CreateTable + tableName + Sql.OpenParenthesis + Environment.NewLine;               // CREATE TABLE <tablename> (
             foreach (SchemaColumnDefinition column in columnDefinitions)
             {
-                query += column.ToString() + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
+                query += column + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
             }
             query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);         // remove last comma / new line and replace with );
             query += Sql.CloseParenthesis + Sql.Semicolon;
@@ -156,7 +156,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception));
                 return dataTable;
             }
         }
@@ -263,7 +263,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetObjectFromSelect: {1}", query, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetObjectFromSelect: {1}", query, exception));
                 return null;
             }
         }
@@ -462,7 +462,7 @@ namespace Timelapse.Database
                 // we have to cater to different formats for integers, NULLS and strings...
                 if (column.Value == null)
                 {
-                    query += String.Format(" {0} = {1}{2}", column.Name.ToString(), Sql.Null, Sql.Comma);
+                    query += String.Format(" {0} = {1}{2}", column.Name, Sql.Null, Sql.Comma);
                 }
                 else
                 {
@@ -630,7 +630,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing statement '{0}'. in ExecuteNonQuery:{1}", commandString, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing statement '{0}'. in ExecuteNonQuery:{1}", commandString, exception));
             }
         }
 
@@ -731,7 +731,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure near executing statement '{0}' n ExecuteNonQueryWrappedInBeginEnd. {1}", mostRecentStatement, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure near executing statement '{0}' n ExecuteNonQueryWrappedInBeginEnd. {1}", mostRecentStatement, exception));
             }
         }
         #endregion
@@ -781,7 +781,7 @@ namespace Timelapse.Database
                                 break;
                             case 1:  // name (Column Name)
                             case 2:  // type (Column type)
-                                existingColumnDefinition += reader[field].ToString() + " ";
+                                existingColumnDefinition += reader[field] + " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (reader[field].ToString() != "0")
@@ -793,7 +793,7 @@ namespace Timelapse.Database
                                 string s = reader[field].ToString();
                                 if (!string.IsNullOrEmpty(s))
                                 {
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 break;
                             case 5:  // pk (Column is part of the primary key)
@@ -805,7 +805,7 @@ namespace Timelapse.Database
                             default:
                                 // This should never happen
                                 // But if it does, we just ignore it
-                                System.Diagnostics.Debug.Print("Unknown Field: " + field.ToString());
+                                System.Diagnostics.Debug.Print("Unknown Field: " + field);
                                 break;
                         }
                     }
@@ -904,7 +904,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in CopyTableContentsToEmptyTable. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in CopyTableContentsToEmptyTable. {0}", exception));
                 throw;
             }
         }
@@ -931,7 +931,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumns. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumns. {0}", exception));
                 return null;
             }
         }
@@ -959,7 +959,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumnsAndDefaultValues. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumnsAndDefaultValues. {0}", exception));
                 return null;
             }
         }
@@ -977,7 +977,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in ColumnExists. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in ColumnExists. {0}", exception));
                 return false;
             }
         }
@@ -989,7 +989,7 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnDefinition, nameof(columnDefinition));
 
-            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition.ToString());
+            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
         }
 
         /// <summary>
@@ -1052,7 +1052,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in AddColumn. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in AddColumn. {0}", exception));
                 throw;
             }
         }
@@ -1103,7 +1103,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in DeleteColumn. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in DeleteColumn. {0}", exception));
                 throw;
             }
         }
@@ -1175,7 +1175,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in RenameColumn. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in RenameColumn. {0}", exception));
                 throw;
             }
         }
@@ -1204,20 +1204,20 @@ namespace Timelapse.Database
                                      // Rename the column if needed
                                 currentColumnName = reader[field].ToString();
                                 existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Name))
-                                    ? attributes[SchemaAttributesEnum.Name].ToString()
+                                    ? attributes[SchemaAttributesEnum.Name]
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 2:  // type (Column type)
                                 existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Type))
-                                    ? attributes[SchemaAttributesEnum.Type].ToString()
+                                    ? attributes[SchemaAttributesEnum.Type]
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.NotNull))
                                 {
-                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull].ToString();
+                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull];
                                 }
                                 else if (reader[field].ToString() != "0")
                                 {
@@ -1228,12 +1228,12 @@ namespace Timelapse.Database
                             case 4:  // dflt_value (Column has a default value)
                                 if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Default))
                                 {
-                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default].ToString());
+                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default]);
                                 }
                                 else if (false == string.IsNullOrEmpty(reader[field].ToString()))
                                 {
                                     // Note that the default is already quoted, so we should not quote it again
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 existingColumnDefinition += " ";
                                 break;

@@ -39,12 +39,11 @@ namespace Timelapse
 
             // Part 1. Decrement the counter only if there is a number in it
             string oldCounterData = counter.Content;
-            string newCounterData;
             if (!string.IsNullOrEmpty(oldCounterData))
             {
                 int count = Convert.ToInt32(oldCounterData);
                 count = (count == 0) ? 0 : count - 1;           // Make sure its never negative, which could happen if a person manually enters the count 
-                newCounterData = count.ToString();
+                string newCounterData = count.ToString();
 
                 if (!newCounterData.Equals(oldCounterData))
                 {

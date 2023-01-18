@@ -6,7 +6,7 @@ using Timelapse.Dialog;
 
 namespace Timelapse.Editor.Dialog
 {
-    public partial class EditChoiceList : Window
+    public partial class EditChoiceList
     {
         private static readonly string[] NewLineDelimiter = { Environment.NewLine };
         private readonly UIElement PositionReference;
@@ -64,12 +64,11 @@ namespace Timelapse.Editor.Dialog
         private static string TrimLinesAndRemoveEmptyLines(string textlist)
         {
             List<string> trimmedchoices = new List<string>();
-            string trimmedchoice;
             List<string> choices = new List<string>(textlist.Split(NewLineDelimiter, StringSplitOptions.RemoveEmptyEntries));
 
             foreach (string choice in choices)
             {
-                trimmedchoice = choice.Trim();
+                string trimmedchoice = choice.Trim();
                 if (String.IsNullOrWhiteSpace(choice) == false && trimmedchoices.Contains(trimmedchoice) == false)
                 {
                     trimmedchoices.Add(trimmedchoice);

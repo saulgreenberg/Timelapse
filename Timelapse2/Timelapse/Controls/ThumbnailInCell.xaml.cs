@@ -144,13 +144,12 @@ namespace Timelapse.Controls
         public BitmapSource GetThumbnail(double cellWidth, double cellHeight)
         {
             BitmapSource bf;
-            double finalDesiredWidth;
             if (this.ImageRow.IsVideo == false)
             {
                 // Calculate scale factor to ensure that images of different aspect ratios completely fit in the cell
                 double desiredHeight = cellWidth / this.ImageRow.GetBitmapAspectRatioFromFile(this.RootFolder);
                 double scale = Math.Min(cellWidth / cellWidth, cellHeight / desiredHeight); // 1st term is ScaleWidth, 2nd term is ScaleHeight
-                finalDesiredWidth = (cellWidth * scale - 8);  // Subtract another 2 pixels for the grid border (I think)
+                double finalDesiredWidth = (cellWidth * scale - 8);  // Subtract another 2 pixels for the grid border (I think)
 
                 bf = this.ImageRow.LoadBitmap(this.RootFolder, Convert.ToInt32(finalDesiredWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
             }

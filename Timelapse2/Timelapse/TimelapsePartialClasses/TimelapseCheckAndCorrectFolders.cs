@@ -68,24 +68,22 @@ namespace Timelapse
             // We know that at least one or more folders are missing.
             // For each missing folder path, try to find all folders with the same name under the root folder.
             Dictionary<string, List<string>> matchingFolderNames = Util.FilesFolders.TryGetMissingFolders(fileDatabase.FolderPath, missingRelativePaths);
-            Dictionary<string, string> finalFileLocations;
 
             // We want to show the normal cursor when we display dialog boxes, so save the current cursor so we can store it.
             Cursor cursor = Mouse.OverrideCursor;
 
-            bool? result;
             if (matchingFolderNames != null)
             {
                 Mouse.OverrideCursor = null;
                 // Present a dialog box that asks the user to locate the missing folders. It will show possible locations for each folder (if any).
                 // The user can then confirm correct locations, manually set the locaton of those folders, or cancel altogether.
                 MissingFoldersLocateAllFolders dialog = new MissingFoldersLocateAllFolders(owner, fileDatabase.FolderPath, matchingFolderNames);
-                result = dialog.ShowDialog();
+                bool? result = dialog.ShowDialog();
 
                 if (result == true)
                 {
                     // Get the updated folder locations and update the database
-                    finalFileLocations = dialog.FinalFolderLocations;
+                    Dictionary<string, string>  finalFileLocations = dialog.FinalFolderLocations;
                     foreach (string key in finalFileLocations.Keys)
                     {
                         ColumnTuple columnToUpdate = new ColumnTuple(Constant.DatabaseColumn.RelativePath, finalFileLocations[key]);

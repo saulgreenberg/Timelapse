@@ -261,7 +261,7 @@ namespace DialogUpgradeFiles.Util
         public static TimeZoneInfo GetNeutralTimeZone()
         {
             // We now ignore time zone. 
-            TimeZoneInfo.AdjustmentRule[] adjustmentRules = new TimeZoneInfo.AdjustmentRule[0];
+            TimeZoneInfo.AdjustmentRule[] adjustmentRules = Array.Empty<TimeZoneInfo.AdjustmentRule>();
             return TimeZoneInfo.CreateCustomTimeZone(Constant.Time.NeutralTimeZone, new TimeSpan(0), Constant.Time.NeutralTimeZone, Constant.Time.NeutralTimeZone, Constant.Time.NeutralTimeZone, adjustmentRules, true);
         }
         #endregion

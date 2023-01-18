@@ -318,7 +318,7 @@ namespace DialogUpgradeFiles.Util
                                    || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) 
                                    || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase) 
                                    || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase))
-                                   || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
+                                   || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
         }
 
         private static void GetAllImageAndVideoFilesInFolderAndSubfolders(string rootFolderPath, List<FileInfo> fileInfoList, int recursionLevel)

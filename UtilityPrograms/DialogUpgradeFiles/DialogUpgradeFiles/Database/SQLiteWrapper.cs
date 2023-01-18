@@ -692,7 +692,7 @@ namespace DialogUpgradeFiles.Database
                             default:
                                 // This should never happen
                                 // But if it does, we just ignore it
-                                Debug.Print("Unknown Field: " + field.ToString());
+                                Debug.Print("Unknown Field: " + field);
                                 break;
                         }
                     }

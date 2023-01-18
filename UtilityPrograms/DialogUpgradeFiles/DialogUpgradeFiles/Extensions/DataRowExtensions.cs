@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Diagnostics;
+using DialogUpgradeFiles.Util;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -23,7 +24,7 @@ namespace DialogUpgradeFiles.Database
         public static DateTime GetDateTimeField(this DataRow row, string column)
         {
             // Check the arguments for null. 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
             try
             {
                 return (DateTime)row[column];
@@ -31,7 +32,7 @@ namespace DialogUpgradeFiles.Database
             catch
             {
                 // If for some reason we have an invalid date time (e.g., a null entry), always return a valid but improbable date (Jan 1 1900 midnight).
-                System.Diagnostics.Debug.Print("GetDateTimeField: Unexpected kind for date time in row with ID " + row.GetID());
+                Debug.Print("GetDateTimeField: Unexpected kind for date time in row with ID " + row.GetID());
                 return new DateTime(1900, 1, 1, 12, 0, 0, 0);
             }
         }
@@ -85,7 +86,7 @@ namespace DialogUpgradeFiles.Database
         public static long GetLongField(this DataRow row, string column)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
 
             return (long)row[column];
         }
@@ -93,7 +94,7 @@ namespace DialogUpgradeFiles.Database
         public static string GetStringField(this DataRow row, string columnName)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
 
             // throws ArgumentException if column is not present in table
             object field = row[columnName];
@@ -109,7 +110,7 @@ namespace DialogUpgradeFiles.Database
         public static TimeSpan GetUtcOffsetField(this DataRow row, string column)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
 
             // One user reported a bug with the timezone set to 0:00, where it was generating a cast exception on row[column]
             // I could not replicate it, but i put this catch in here to see if it would solve it.
@@ -134,7 +135,7 @@ namespace DialogUpgradeFiles.Database
         public static void SetField(this DataRow row, string column, bool value)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
 
             row[column] = $"{value}".ToLowerInvariant();
         }
@@ -142,7 +143,7 @@ namespace DialogUpgradeFiles.Database
         public static void SetField(this DataRow row, string column, DateTime value)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
 
             if (value.Kind != DateTimeKind.Utc)
             {
@@ -154,21 +155,21 @@ namespace DialogUpgradeFiles.Database
         public static void SetField(this DataRow row, string column, int value)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
             row[column] = value.ToString();
         }
 
         public static void SetField(this DataRow row, string column, long value)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
             row[column] = value;
         }
 
         public static void SetField(this DataRow row, string column, string value)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
             row[column] = value;
         }
 
@@ -180,7 +181,7 @@ namespace DialogUpgradeFiles.Database
         public static void SetUtcOffsetField(this DataRow row, string column, TimeSpan value)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
 
             Debug.Assert(value.Ticks % Constant.Time.UtcOffsetGranularity.Ticks == 0, "Unexpected rounding error: UTC offset is not an exact multiple of 15 minutes.");
             row[column] = value.TotalHours;

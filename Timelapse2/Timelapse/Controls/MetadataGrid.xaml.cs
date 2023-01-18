@@ -164,7 +164,7 @@ namespace Timelapse.Controls
 
                 // If UseDateMetadata only is true, then only show metadata fields whose values are parseable as dates.
                 if (false == this.UseDateMetadataOnly
-                    || (metadata.Value?.Value != null && DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value.ToString(), out DateTime _)))
+                    || (metadata.Value?.Value != null && DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value, out DateTime _)))
                 {
                     temp.Add(new DataContents(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value, String.Empty));
                 }
@@ -198,7 +198,7 @@ namespace Timelapse.Controls
             {
                 // If UseDateMetadata only is true, then only show metadata fields whose values are parseable as dates.
                 if (false == this.UseDateMetadataOnly
-                    || DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.ToString(), out DateTime _))
+                    || DateTimeHandler.TryParseMetadataDateTaken(metadata.Value, out DateTime _))
                 {
                     temp.Add(new DataContents(metadata.Key, String.Empty, metadata.Key, metadata.Value, ""));
                 }

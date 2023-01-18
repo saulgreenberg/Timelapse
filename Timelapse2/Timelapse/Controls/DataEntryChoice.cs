@@ -49,6 +49,9 @@ namespace Timelapse.Controls
         public DataEntryChoice(ControlRow control, DataEntryControls styleProvider)
             : base(control, styleProvider, ControlContentStyleEnum.ChoiceComboBox, ControlLabelStyleEnum.DefaultLabel)
         {
+            // Check the arguments for null 
+            ThrowIf.IsNullArgument(control, nameof(control));
+
             // The behaviour of the combo box
             this.ContentControl.Focusable = true;
             this.ContentControl.IsEditable = false;
@@ -56,13 +59,6 @@ namespace Timelapse.Controls
 
             // Callback used to allow Enter to select the highlit item
             this.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
-            // Check the arguments for null 
-
-            if (control == null)
-            {
-                // this should not happen
-                ThrowIf.IsNullArgument(control, nameof(control));
-            }
 
             // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end 
             ComboBoxItem cbi;
@@ -94,7 +90,7 @@ namespace Timelapse.Controls
                 Content = Constant.Unicode.Ellipsis
             };
             this.ContentControl.Items.Insert(0, cbi);
-            ((ComboBoxItem)this.ContentControl.Items[0]).Visibility = System.Windows.Visibility.Collapsed;
+            ((ComboBoxItem)this.ContentControl.Items[0]).Visibility = Visibility.Collapsed;
             this.ContentControl.SelectedIndex = 1;
         }
         #endregion

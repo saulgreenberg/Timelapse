@@ -243,11 +243,11 @@ namespace Timelapse.Images
                         Canvas.SetLeft(classificationUIObject, leftPosition);
                         Canvas.SetTop(classificationUIObject, topPosition);
                         canvas.Children.Add(classificationUIObject);
-                        Canvas.SetZIndex(classificationUIObject, 1);
+                        Panel.SetZIndex(classificationUIObject, 1);
                     }
                 }
             }
-            Canvas.SetZIndex(canvas, 1);
+            Panel.SetZIndex(canvas, 1);
             return true;
         }
 

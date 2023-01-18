@@ -27,7 +27,7 @@ using VersionChecks = Timelapse.Util.VersionChecks;
 namespace Timelapse.Editor
 {
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed.")]
-    public partial class EditorWindow : Window
+    public partial class EditorWindow
     {
         // state tracking
         private readonly EditorControls controls;
@@ -1086,13 +1086,13 @@ namespace Timelapse.Editor
             switch (control.Type)
             {
                 case Constant.DatabaseColumn.File:
-                    textBox.Text = Constant.ControlDefault.FileWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.FileWidth;
                     break;
                 case Constant.DatabaseColumn.DateTime:
-                    textBox.Text = Constant.ControlDefault.DateTimeWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.DateTimeWidth;
                     break;
                 case Constant.DatabaseColumn.RelativePath:
-                    textBox.Text = Constant.ControlDefault.RelativePathWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.RelativePathWidth;
                     break;
                 case Constant.DatabaseColumn.DeleteFlag:
                 case Constant.Control.Flag:

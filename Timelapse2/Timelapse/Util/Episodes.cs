@@ -135,7 +135,7 @@ namespace Timelapse
                     maxSearch--;
                 }
                 increment = last - first + 1;
-                return !(maxSearch == 0);
+                return maxSearch != 0;
             }
 
             // What is left is direction == DirectionEnum.Previous
@@ -167,7 +167,7 @@ namespace Timelapse
             {
                 increment--;
             }
-            return !(minSearch == 0);
+            return minSearch != 0;
         }
 
         /// <summary>

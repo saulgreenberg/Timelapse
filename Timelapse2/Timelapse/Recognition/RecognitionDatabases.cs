@@ -286,7 +286,7 @@ namespace Timelapse.Recognition
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Print("Invalid index: " + rows[0][0].ToString());
+                            System.Diagnostics.Debug.Print("Invalid index: " + rows[0][0]);
                             continue;
                         }
 
@@ -533,7 +533,7 @@ namespace Timelapse.Recognition
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Print("Invalid index: " + rows[0][0].ToString());
+                            System.Diagnostics.Debug.Print("Invalid index: " + rows[0][0]);
                             continue;
                         }
 

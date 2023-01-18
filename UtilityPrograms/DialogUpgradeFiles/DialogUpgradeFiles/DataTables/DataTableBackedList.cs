@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Windows.Controls;
+using DialogUpgradeFiles.Util;
+
 namespace DialogUpgradeFiles.Database
 {
     /// <summary>
@@ -109,7 +111,7 @@ namespace DialogUpgradeFiles.Database
         public int IndexOf(DataRowBackedObject row)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(row, nameof(row));
+            ThrowIf.IsNullArgument(row, nameof(row));
             return row.GetIndex(this.DataTable);
         }
         #endregion

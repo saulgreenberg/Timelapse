@@ -54,6 +54,7 @@ namespace DialogUpgradeFiles.Util
         public static DirectoryInfo GetOrCreateBackupFolder(string sourceFilePath)
         {
             string sourceFolderPath = Path.GetDirectoryName(sourceFilePath);
+            if (sourceFolderPath == null) return null;
             DirectoryInfo backupFolder = new DirectoryInfo(Path.Combine(sourceFolderPath, Constant.File.BackupFolder));   // The Backup Folder 
             if (backupFolder.Exists == false)
             {

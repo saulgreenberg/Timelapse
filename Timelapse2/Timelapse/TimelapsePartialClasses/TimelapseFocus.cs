@@ -96,12 +96,11 @@ namespace Timelapse
             // identify the currently selected control
             // if focus is currently set to the canvas this defaults to the first or last control, as appropriate
             int currentControl = moveToPreviousControl ? this.DataEntryControls.Controls.Count : -1;
-            Type type;
 
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if (focusedElement != null)
             {
-                type = focusedElement.GetType();
+                Type type = focusedElement.GetType();
 
                 // If we are moving the focus from outside to one of the controls in the data panel or the copy previous button,
                 // then try to restore the focus to the last control that had the focus.

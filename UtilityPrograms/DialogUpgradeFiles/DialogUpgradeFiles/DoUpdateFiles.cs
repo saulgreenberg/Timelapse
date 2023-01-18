@@ -32,8 +32,6 @@ namespace DialogUpgradeFiles
                     return UpgradeResultsEnum.FileNotFound;
                 case DatabaseTypeEnum.InvalidExtension:
                     return UpgradeResultsEnum.InvalidFile;
-                default:
-                    break;
             }
 
             // We now do the copy elsewhere
@@ -277,10 +275,7 @@ namespace DialogUpgradeFiles
                 if (templateDB.Controls.Any(x => x.DataLabel == dataLabelToRemove))
                 {
                     ControlRow control = templateDB.Controls.First(x => x.DataLabel == dataLabelToRemove);
-                    if (null != control)
-                    {
-                        templateDB.UpgradeTemplateRemoveControl(control);
-                    }
+                    templateDB.UpgradeTemplateRemoveControl(control);
                 }
             }
         }
@@ -590,7 +585,7 @@ namespace DialogUpgradeFiles
             string quickPasteEntriesAsJson = "[]"; // The empty quickpaste structure
             try
             {
-                if (fileDatabase?.ImageSet?.QuickPasteXML != null)
+                if (fileDatabase.ImageSet?.QuickPasteXML != null)
                 {
                     string xml = fileDatabase.ImageSet.QuickPasteXML;
                     List<QuickPasteEntry> quickPasteEntries = QuickPasteOperations.QuickPasteEntriesFromXML(fileDatabase, xml);
@@ -711,7 +706,7 @@ namespace DialogUpgradeFiles
                         hasValues = true;
 
                         // Extract the points in each cell as a list
-                        List<string> m = cellValue.Split('|').ToList<string>();
+                        List<string> m = cellValue.Split('|').ToList();
                         foreach (string scoords in m)
                         {
                             pointsInCell.Add(Point.Parse(scoords));

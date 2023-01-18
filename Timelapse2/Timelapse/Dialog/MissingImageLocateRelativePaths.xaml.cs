@@ -163,8 +163,6 @@ namespace Timelapse.Dialog
             }
             int selectedColumn = this.selectedRowTuple[0].Column.DisplayIndex;
             string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection());
-            Tuple<string, string, bool> rowValues;
-            ObservableCollection<Tuple<string, string, bool>> obsCollection;
             switch (selectedColumn)
             {
                 case 0:
@@ -175,9 +173,9 @@ namespace Timelapse.Dialog
                     // Use checkmark has been selected. 
                     // We need to update the datagrid with the new value. 
                     // To keep it simple,  just rebuild the observable collection and rebind it
-                    rowValues = (Tuple<string, string, bool>)this.selectedRowTuple[0].Item;
+                    Tuple<string, string, bool>  rowValues = (Tuple<string, string, bool>)this.selectedRowTuple[0].Item;
 
-                    obsCollection = new ObservableCollection<Tuple<string, string, bool>>();
+                    ObservableCollection<Tuple<string, string, bool>>  obsCollection = new ObservableCollection<Tuple<string, string, bool>>();
                     foreach (Tuple<string, string, bool> row in this.observableCollection)
                     {
                        

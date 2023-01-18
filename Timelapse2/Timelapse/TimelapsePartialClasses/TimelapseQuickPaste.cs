@@ -119,7 +119,7 @@ namespace Timelapse
         // add it to the quickpaste entries, and update the display and the ImageSetTable database as needed
         private void QuickPasteEntryNew()
         {
-            string title = "QuickPaste #" + (this.quickPasteEntries.Count + 1).ToString();
+            string title = "QuickPaste #" + (this.quickPasteEntries.Count + 1);
             QuickPasteEntry quickPasteEntry = QuickPasteOperations.TryGetQuickPasteItemFromDataFields(this.DataHandler.FileDatabase, this.DataHandler.ImageCache.CurrentRow, title);
             if (quickPasteEntry == null)
             {

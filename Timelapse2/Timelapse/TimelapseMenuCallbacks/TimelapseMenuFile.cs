@@ -363,7 +363,7 @@ namespace Timelapse
                     }
                     catch (Exception exception)
                     {
-                        TracePrint.PrintMessage(String.Format("Copy of '{0}' to '{1}' failed. {2}", sourceFile, destFileName, exception.ToString()));
+                        TracePrint.PrintMessage(String.Format("Copy of '{0}' to '{1}' failed. {2}", sourceFile, destFileName, exception));
                         this.StatusBar.SetMessage(String.Format("Could not copy '{0}' for some reason.", sourceFile));
                     }
                 }

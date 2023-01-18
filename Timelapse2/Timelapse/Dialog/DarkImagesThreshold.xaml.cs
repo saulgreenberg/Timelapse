@@ -634,9 +634,7 @@ namespace Timelapse.Dialog
                 this.DarkPixelRatioFound = 0;
                 this.FileName = image.File;
                 this.IsColor = false;
-                this.OldDarkClassification = string.IsNullOrEmpty(dataLabel)
-                    ? false
-                    : image.GetValueDatabaseString(dataLabel) == Constant.BooleanValue.True;
+                this.OldDarkClassification = !string.IsNullOrEmpty(dataLabel) && image.GetValueDatabaseString(dataLabel) == Constant.BooleanValue.True;
                 this.NewDarkClassification = false;
             }
         }

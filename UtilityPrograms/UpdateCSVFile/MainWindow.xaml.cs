@@ -11,7 +11,7 @@ namespace UpdateCSVFile
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         readonly string jsonHeaderTranslationsFileName = "headerTranslations.json";
         readonly string outSuffix = "_updated";
@@ -22,7 +22,7 @@ namespace UpdateCSVFile
         // for each existing column in the CSV file, the key value pair defines the old header , new header names
         // this dictionary will be created from the headerTranslations.json file
         Dictionary<string, string> HeaderUpdateDictionary;
-        string rootPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        private string rootPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
         public MainWindow()
         {

@@ -157,12 +157,11 @@ namespace Timelapse.DataStructures
         {
             string[] NewLineDelimiter = { Environment.NewLine };
             List<string> trimmedchoices = new List<string>();
-            string trimmedchoice;
             List<string> choices = new List<string>(textlist.Split(NewLineDelimiter, StringSplitOptions.RemoveEmptyEntries));
 
             foreach (string choice in choices)
             {
-                trimmedchoice = choice.Trim();
+                string trimmedchoice = choice.Trim();
                 if (String.IsNullOrWhiteSpace(choice) == false && trimmedchoices.Contains(trimmedchoice) == false)
                 {
                     trimmedchoices.Add(trimmedchoice);

@@ -229,7 +229,7 @@ namespace Timelapse.Dialog
             // Show the final message
             if (totalFileCount > 0)
             {
-                this.DoneMessagePanel.Content = "Dates for " + totalFileCount.ToString() + " files were swapped";
+                this.DoneMessagePanel.Content = "Dates for " + totalFileCount + " files were swapped";
             }
             else
             {

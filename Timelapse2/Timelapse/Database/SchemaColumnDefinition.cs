@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace Timelapse.Database
 {
@@ -27,7 +28,7 @@ namespace Timelapse.Database
         }
 
         // Float default converted to string 
-        public SchemaColumnDefinition(string name, string type, float defaultValue) : this(name, type, defaultValue.ToString())
+        public SchemaColumnDefinition(string name, string type, float defaultValue) : this(name, type, defaultValue.ToString(CultureInfo.InvariantCulture))
         {
         }
 

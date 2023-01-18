@@ -27,7 +27,7 @@ namespace Timelapse.Util
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage("Could not delete " + filePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    TracePrint.PrintMessage("Could not delete " + filePath + Environment.NewLine + exception.Message + ": " + exception);
                     return false;
                 }
                 return true;
@@ -48,7 +48,7 @@ namespace Timelapse.Util
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage("Could not move " + sourceFilePath + " to " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    TracePrint.PrintMessage("Could not move " + sourceFilePath + " to " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception);
                     return false;
                 }
                 return true;
@@ -382,8 +382,8 @@ namespace Timelapse.Util
         // return     "foo"
         public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
         {
-            if (String.Compare(Path.GetDirectoryName(path1), path2) == 0
-                || String.Compare(Path.GetDirectoryName(path1), path2) == 0)
+            if (String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0
+                || String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0)
             {
                 // both paths are identical, but one path contains a file 
                 return String.Empty;
@@ -550,7 +550,7 @@ namespace Timelapse.Util
                                    || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) 
                                    || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) 
                                    || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase))
-                                   || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
+                                   || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
         }
 
         private static void GetAllImageAndVideoFilesInFolderAndSubfolders(string rootFolderPath, List<FileInfo> fileInfoList, int recursionLevel)

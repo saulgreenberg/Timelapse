@@ -331,7 +331,7 @@ namespace DialogUpgradeFiles.Database
         #region ImageSet manipulation
         private void ImageSetLoadFromDatabase()
         {
-            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID.ToString();
+            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID;
             DataTable imageSetTable = this.Database.GetDataTableFromSelect(imageSetQuery);
             this.ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
             if (imageSetTable != null)

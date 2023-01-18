@@ -370,7 +370,7 @@ namespace Timelapse.Database
                         {
                             query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
                         }
-                        query = query.Substring(0, query.LastIndexOf(Sql.Comma));
+                        query = query.Substring(0, query.LastIndexOf(Sql.Comma, StringComparison.Ordinal));
                         query += Sql.Semicolon;
                         // Update the various dictionaries to reflect their current values
                         MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(mergedDetectionCategories, currentDetectionCategories);
@@ -397,7 +397,7 @@ namespace Timelapse.Database
                         {
                             query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
                         }
-                        query = query.Substring(0, query.LastIndexOf(Sql.Comma));
+                        query = query.Substring(0, query.LastIndexOf(Sql.Comma, StringComparison.Ordinal));
                         query += Sql.Semicolon;
 
                         // Update the various dictionaries to reflect their current values
@@ -465,7 +465,7 @@ namespace Timelapse.Database
         // Form: UPDATE dataTable SET IDColumn = (offset + dataTable.Id);
         private static string QueryAddOffsetToIDInTable(string tableName, string IDColumn, int offset)
         {
-            return Sql.Update + tableName + Sql.Set + IDColumn + Sql.Equal + Sql.OpenParenthesis + offset.ToString() + Sql.Plus + tableName + Sql.Dot + IDColumn + Sql.CloseParenthesis + Sql.Semicolon;
+            return Sql.Update + tableName + Sql.Set + IDColumn + Sql.Equal + Sql.OpenParenthesis + offset + Sql.Plus + tableName + Sql.Dot + IDColumn + Sql.CloseParenthesis + Sql.Semicolon;
         }
 
         //Form:  UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) EMD
@@ -511,9 +511,9 @@ namespace Timelapse.Database
                 + Constant.InfoColumns.DetectionCompletionTime + Sql.Equal + Sql.Quote(detection_completion_time) + Sql.Comma
                 + Constant.InfoColumns.Classifier + Sql.Equal + Sql.Quote(classifier) + Sql.Comma
                 + Constant.InfoColumns.ClassificationCompletionTime + Sql.Equal + Sql.Quote(classification_completion_time) + Sql.Comma
-                + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal + (Math.Round(typical_detection_threshold * 100) / 100).ToString() + Sql.Comma
-                + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal + (Math.Round(conservative_detection_threshold * 100) / 100).ToString() + Sql.Comma
-                + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal + (Math.Round(typical_classification_threshold * 100) / 100).ToString()
+                + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal + (Math.Round(typical_detection_threshold * 100) / 100) + Sql.Comma
+                + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal + (Math.Round(conservative_detection_threshold * 100) / 100) + Sql.Comma
+                + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal + (Math.Round(typical_classification_threshold * 100) / 100)
                 + Sql.Semicolon;
         }
 

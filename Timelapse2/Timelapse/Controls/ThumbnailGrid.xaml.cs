@@ -376,10 +376,9 @@ namespace Timelapse.Controls
             // Select the cells defined by the cells running from the topLeft cell to the BottomRight cell
             RowColumn indexCell = startCell;
 
-            ThumbnailInCell ci;
             while (true)
             {
-                ci = this.GetThumbnailInCellFromCell(indexCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(indexCell);
                 // If the cell doesn't contain a ThumbnailInCell, then we are at the end.
                 if (ci == null)
                 {
@@ -406,10 +405,9 @@ namespace Timelapse.Controls
             // Select the cells defined by the cells running from the topLeft cell to the BottomRight cell
             RowColumn indexCell = startCell;
 
-            ThumbnailInCell ci;
             while (true)
             {
-                ci = this.GetThumbnailInCellFromCell(indexCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(indexCell);
                 // This shouldn't happen, but ensure that the cell contains a ThumbnailInCell.
                 if (ci == null)
                 {
@@ -694,8 +692,6 @@ namespace Timelapse.Controls
             }
 
             int gridIndex = 0;
-
-            ThumbnailInCell tic;
             this.thumbnailInCells = new List<ThumbnailInCell>();
 
             // Add an empty thumbnailInCell to each grid cell until no more cells or files to display. The bitmap will be added via the backgroundWorker.
@@ -706,7 +702,7 @@ namespace Timelapse.Controls
 
                     // Check to see if the thumbnail already exists in a reusable form in the grid. 
                     string path = Path.Combine(this.FileTable[fileTableIndex].RelativePath, this.FileTable[fileTableIndex].File);
-                    tic = thumbnailsAlreadyInGrid.Find(x => String.Equals(x.Path, path));
+                    ThumbnailInCell tic = thumbnailsAlreadyInGrid.Find(x => String.Equals(x.Path, path));
 
                     if (tic == null || tic.Image.Source == null || this.Grid.Children.Contains(tic))
                     {
@@ -826,7 +822,6 @@ namespace Timelapse.Controls
             }
 
             int gridIndex = 0;
-            ThumbnailInCell thumbnailInCell;
             this.thumbnailInCells = new List<ThumbnailInCell>();
 
             // Add an empty thumbnailInCell to each grid cell until no more cells or files to display. The bitmap will be added via the backgroundWorker.
@@ -834,7 +829,7 @@ namespace Timelapse.Controls
             {
                 for (int currentColumn = 0; currentColumn < columnCount && fileTableIndex < fileTableCount; currentColumn++)
                 {
-                    thumbnailInCell = CreateEmptyThumbnail(fileTableIndex++, gridIndex++, cellWidth, cellHeight, currentRow, currentColumn);
+                    ThumbnailInCell thumbnailInCell = CreateEmptyThumbnail(fileTableIndex++, gridIndex++, cellWidth, cellHeight, currentRow, currentColumn);
                     Grid.SetRow(thumbnailInCell, currentRow);
                     Grid.SetColumn(thumbnailInCell, currentColumn);
                     this.Grid.Children.Add(thumbnailInCell);
@@ -933,11 +928,9 @@ namespace Timelapse.Controls
         private bool GridGetNextSelectedCell(RowColumn cell, out RowColumn nextCell)
         {
             RowColumn lastCell = new RowColumn(this.Grid.RowDefinitions.Count - 1, this.Grid.ColumnDefinitions.Count - 1);
-            ThumbnailInCell ci;
-
             while (this.GridGetNextCell(cell, lastCell, out nextCell))
             {
-                ci = this.GetThumbnailInCellFromCell(nextCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(nextCell);
 
                 // If there is no cell, we've reached the end, 
                 if (ci == null)
@@ -957,11 +950,9 @@ namespace Timelapse.Controls
         private bool GridGetPreviousSelectedCell(RowColumn cell, out RowColumn previousCell)
         {
             RowColumn lastCell = new RowColumn(0, 0);
-            ThumbnailInCell ci;
-
             while (this.GridGetPreviousCell(cell, lastCell, out previousCell))
             {
-                ci = this.GetThumbnailInCellFromCell(previousCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(previousCell);
 
                 // If there is no cell, terminate as we've reached the beginning
                 if (ci == null)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Windows;
 using BoundingBox = Timelapse.Images.BoundingBox;
 using BoundingBoxes = Timelapse.Images.BoundingBoxes;
@@ -13,9 +14,6 @@ namespace Timelapse
         public BoundingBoxes GetBoundingBoxesForCurrentFile(long fileID)
         {
             BoundingBoxes bboxes = new BoundingBoxes();
-            string detectionCategoryLabel;
-            string classificationCategoryLabel;
-
             if (this.DataHandler.FileDatabase.DetectionsExists())
             {
                 DataRow[] dataRows = this.DataHandler.FileDatabase.GetDetectionsFromFileID(fileID);
@@ -34,20 +32,18 @@ namespace Timelapse
                     {
                         bboxes.MaxConfidence = confidence;
                     }
-                    detectionCategoryLabel = this.DataHandler.FileDatabase.GetDetectionLabelFromCategory((string)detectionRow[Constant.DetectionColumns.Category]);
+                    string detectionCategoryLabel = this.DataHandler.FileDatabase.GetDetectionLabelFromCategory((string)detectionRow[Constant.DetectionColumns.Category]);
 
                     DataRow[] classificationDataTableRows = this.DataHandler.FileDatabase.GetClassificationsFromDetectionID((long)detectionRow[Constant.DetectionColumns.DetectionID]);
                     List<KeyValuePair<string, string>> classifications = new List<KeyValuePair<string, string>>();
 
-                    double conf = 0;
-
                     foreach (DataRow classificationRow in classificationDataTableRows)
                     {
-                        conf = (double)classificationRow[Constant.DetectionColumns.Conf];
+                        double conf = (double)classificationRow[Constant.DetectionColumns.Conf];
                         if (conf > 0.00)
                         {
-                            classificationCategoryLabel = this.DataHandler.FileDatabase.GetClassificationLabelFromCategory((string)classificationRow[Constant.ClassificationColumns.Category]);
-                            classifications.Add(new KeyValuePair<string, string>(classificationCategoryLabel, conf.ToString()));
+                            string classificationCategoryLabel = this.DataHandler.FileDatabase.GetClassificationLabelFromCategory((string)classificationRow[Constant.ClassificationColumns.Category]);
+                            classifications.Add(new KeyValuePair<string, string>(classificationCategoryLabel, conf.ToString(CultureInfo.InvariantCulture)));
                         }
                     }
                     BoundingBox box = new BoundingBox((string)detectionRow[3], confidence, (string)detectionRow[Constant.DetectionColumns.Category], detectionCategoryLabel, classifications);

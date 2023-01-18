@@ -1,5 +1,6 @@
 ﻿using DialogUpgradeFiles.Util;
 using System;
+using System.Globalization;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -66,7 +67,7 @@ namespace DialogUpgradeFiles.Database
         public ColumnTuple(string column, float value)
         {
             this.Name = column;
-            this.Value = value.ToString();
+            this.Value = value.ToString(CultureInfo.InvariantCulture);
         }
 
         // TimeSpan value
