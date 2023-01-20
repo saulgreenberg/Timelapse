@@ -16,7 +16,7 @@ namespace Timelapse.Controls
 {
     /// Two abstact classes are defined in this file:
     /// - DataEntryControl defines the base aspects of the control portion of a data entry control
-    /// - DataEntryControl<TContent, TLabel> defines the label and actual control presented on the display</TContent>
+    /// - DataEntryControl TContent, TLabel defines the label and actual control presented on the display
 
     /// <summary>
     /// Abstract class that defines the base aspects of a data entry control
@@ -148,7 +148,7 @@ namespace Timelapse.Controls
             {
                 this.ContentControl.Style = (Style)styleProvider.FindResource(contentStyleName.Value.ToString());
             }
-            this.ContentReadOnly = false;
+            // this.ContentReadOnly = false;
             this.ContentControl.IsEnabled = true;
             this.Width = control.Width;
 
@@ -313,6 +313,10 @@ namespace Timelapse.Controls
         private void FlashFontTimer_Tick(object sender, EventArgs e)
         {
             DispatcherTimer timer = sender as DispatcherTimer;
+            if (timer == null)
+            {
+                return;
+            }
             ((TextBlock)timer.Tag).FontStyle = FontStyles.Italic;
             timer.Stop();
         }

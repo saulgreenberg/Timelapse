@@ -203,7 +203,7 @@ namespace Timelapse.Util
             if (folderPaths == null || folderRoot == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(folderPaths));
                 // Not sure what happens if we have a null folderPaths, but we may as well try it.
                 return;
@@ -559,7 +559,7 @@ namespace Timelapse.Util
             if (fileInfoList == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // Not show what happens if we return with a null fileInfoList, but its worth a shot
                 // throw new ArgumentNullException(nameof(control));
                 return;

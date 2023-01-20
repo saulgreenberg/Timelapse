@@ -64,7 +64,7 @@ namespace Timelapse.Editor.Util
                         stackPanel = EditorControls.CreateStackPanel(styleProvider, dateTimeLabel, dateTimeContent);
                         break;
                     default:
-                        throw new NotSupportedException(String.Format("Unhandled control type {0}.", control.Type));
+                        throw new NotSupportedException($"Unhandled control type {control.Type}.");
                 }
 
                 stackPanel.Tag = control.DataLabel;
@@ -204,16 +204,28 @@ namespace Timelapse.Editor.Util
         // HIghlight control when it gets the focus (simulates aspects of tab control in Timelapse)
         private void Control_GotFocus(object sender, RoutedEventArgs e)
         {
-            Control control = sender as Control;
-            control.BorderThickness = new Thickness(Constant.Control.BorderThicknessHighlight);
-            control.BorderBrush = Constant.Control.BorderColorHighlight;
+            if (sender is Control control)
+            {
+                control.BorderThickness = new Thickness(Constant.Control.BorderThicknessHighlight);
+                control.BorderBrush = Constant.Control.BorderColorHighlight;
+            }
+            else
+            {
+                Timelapse.Util.TracePrint.StackTraceToOutput("Unexpected null");
+            }
         }
 
         private void Control_LostFocus(object sender, RoutedEventArgs e)
         {
-            Control control = sender as Control;
-            control.BorderThickness = new Thickness(Constant.Control.BorderThicknessNormal);
-            control.BorderBrush = Constant.Control.BorderColorNormal;
+            if (sender is Control control)
+            {
+                control.BorderThickness = new Thickness(Constant.Control.BorderThicknessNormal);
+                control.BorderBrush = Constant.Control.BorderColorNormal;
+            }
+            else
+            {
+                Timelapse.Util.TracePrint.StackTraceToOutput("Unexpected null");
+            }
         }
     }
 }

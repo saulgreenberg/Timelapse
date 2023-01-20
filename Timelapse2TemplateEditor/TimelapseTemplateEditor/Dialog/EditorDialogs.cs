@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Editor.Util;
@@ -22,40 +21,6 @@ namespace Timelapse.Editor.Dialog
                     Problem = $"The template file '{templateFileName}' no longer exists."
                 }
             };
-            messageBox.ShowDialog();
-        }
-
-        /// <summary>
-        /// One or more data labels were problematic
-        /// </summary>
-        public static void EditorDataLabelsProblematicDialog(Window owner, List<string> conversionErrors)
-        {
-            MessageBox messageBox = new MessageBox("One or more data labels were problematic", owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Warning,
-                    Problem = conversionErrors == null 
-                            ? "Some" 
-                            : conversionErrors.Count
-                        + " of your Data Labels were problematic." + Environment.NewLine + Environment.NewLine
-                        + "Data Labels:" + Environment.NewLine
-                        + "\u2022 must be unique," + Environment.NewLine
-                        + "\u2022 can only contain alphanumeric characters and '_'," + Environment.NewLine
-                        + "\u2022 cannot match particular reserved words.",
-                    Result = "We will automatically repair these Data Labels:"
-                }
-            };
-
-            if ((conversionErrors != null))
-            {
-                foreach (string erroneousDatalabel in conversionErrors)
-                {
-                    messageBox.Message.Solution += Environment.NewLine + "\u2022 " + erroneousDatalabel;
-                }
-
-                messageBox.Message.Hint = "Check if these are the names you want. You can also rename these corrected Data Labels if you want";
-            }
             messageBox.ShowDialog();
         }
 

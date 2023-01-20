@@ -22,7 +22,7 @@ namespace Timelapse.Util
             if (value == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(value));
                 return false;
             }
@@ -46,7 +46,7 @@ namespace Timelapse.Util
             if (str == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 return false;
             }
 
@@ -107,7 +107,7 @@ namespace Timelapse.Util
             if (String.IsNullOrWhiteSpace(filePath))
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 return false;
             }
             return IsPathEndingWithAShortFileName(filePath) || filePath.Length > Constant.File.MaxPathLength;

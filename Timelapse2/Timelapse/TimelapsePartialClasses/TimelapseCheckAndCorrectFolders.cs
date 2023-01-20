@@ -25,7 +25,7 @@ namespace Timelapse
             {
                 // this should not happen
                 // System.Diagnostics.Debug.Print("The fielDatabase was null and it shouldn't be");
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // No-op
                 return;
             }

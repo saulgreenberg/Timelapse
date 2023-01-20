@@ -125,8 +125,6 @@ namespace Timelapse.Controls
                         counter.ContentControl.ValueChanged += this.CounterControl_ValueChanged;
                         this.SetContextMenuCallbacks(counter);
                         break;
-                    default:
-                        break;
                 }
             }
         }
@@ -138,6 +136,7 @@ namespace Timelapse.Controls
         private void DateTimePicker_Loaded(object sender, RoutedEventArgs e)
         {
             DateTimePicker dateTimePicker = sender as DateTimePicker;
+            if (dateTimePicker == null) return;
             if (dateTimePicker.Template.FindName("PART_Calendar", dateTimePicker) is Calendar calendar)
             {
                 // System.Diagnostics.Debug.Print("DateTimePicker_Loaded: Adding calendar event ");

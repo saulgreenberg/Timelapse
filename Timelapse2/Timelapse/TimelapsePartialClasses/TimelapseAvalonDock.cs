@@ -16,7 +16,7 @@ namespace Timelapse
             if (sender == null || e == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(sender));
                 // Try treating this as a no-op instead of a throw
                 return;

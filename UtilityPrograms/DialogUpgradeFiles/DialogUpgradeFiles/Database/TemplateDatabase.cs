@@ -78,7 +78,7 @@ namespace DialogUpgradeFiles.Database
                 //we do this by checking the database integrity(which may raise an internal exception) and if that is ok, by checking if it has a templatetable.
                 if (templateDatabase.Database.PragmaGetQuickCheck() == false || templateDatabase.TableExists(Constant.DBTables.Template) == false)
                 {
-                    templateDatabase?.Dispose();
+                    templateDatabase.Dispose();
                     return null;
                 }
                 // if it's an existing database check if it needs updating to current structure and load data tables

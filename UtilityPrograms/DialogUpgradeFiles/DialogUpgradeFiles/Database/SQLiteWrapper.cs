@@ -551,19 +551,18 @@ namespace DialogUpgradeFiles.Database
             }
             catch
             {
+                Debug.Print("Catch: in ExecuteNonQuery on cmd: " + commandString);
             }
         }
 
-        /// <summary>
-        /// Given a list of complete queries, wrap up to 500 of them in a BEGIN/END statement so they are all executed in one go for efficiency
-        /// Continue for the next up to 500, and so on.
+        // Given a list of complete queries, wrap up to 500 of them in a BEGIN/END statement so they are all executed in one go for efficiency
+        // Continue for the next up to 500, and so on.
         // BEGIN
         //      query1
         //      query2
         //      ...
         //      queryn
         // END
-        /// </summary>
         public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements)
         {
             // Check the arguments for null 
@@ -579,7 +578,6 @@ namespace DialogUpgradeFiles.Database
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
                         // Invoke each query in the queries list
-                        int rowsUpgraded = 0;
                         int statementsInQuery = 0;
                         foreach (string statement in statements)
                         {
@@ -596,14 +594,14 @@ namespace DialogUpgradeFiles.Database
 
                             command.CommandText = statement;
                             //System.Diagnostics.Debug.Print(command.CommandText);
-                            rowsUpgraded += command.ExecuteNonQuery();
+                            command.ExecuteNonQuery();
 
                             // END
                             if (statementsInQuery > MaxStatementCount)
                             {
                                 command.CommandText = Sql.EndTransaction;
                                 //System.Diagnostics.Debug.Print(command.CommandText);
-                                rowsUpgraded += command.ExecuteNonQuery();
+                                command.ExecuteNonQuery();
                                 statementsInQuery = 0;
                             }
                         }
@@ -611,14 +609,15 @@ namespace DialogUpgradeFiles.Database
                         if (statementsInQuery != 0)
                         {
                             command.CommandText = Sql.EndTransaction;
-                            //System.Diagnostics.Debug.Print(command.CommandText);
-                            rowsUpgraded += command.ExecuteNonQuery();
+                            //Debug.Print(command.CommandText);
+                            command.ExecuteNonQuery();
                         }
                     }
                 }
             }
             catch
             {
+                Debug.Print("Catch: ExecuteNonQueryWrappedInBeginEnd");
             }
         }
         #endregion

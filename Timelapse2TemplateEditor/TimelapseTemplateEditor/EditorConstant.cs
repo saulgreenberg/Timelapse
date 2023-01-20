@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 
@@ -11,7 +10,8 @@ namespace Timelapse.Editor
         public const string MainWindowBaseTitle = "Timelapse Template Editor";  // The initial title shown in the window title bar
 
         public static readonly SolidColorBrush NotEditableCellColor = Brushes.LightGray; // Color of non-editable data grid items 
-        public static readonly Uri LatestVersionAddress = new Uri("http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/timelapse_template_version.xml");
+        // I think this isn't used any more
+        // public static readonly Uri LatestVersionAddress = new Uri("http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/timelapse_template_version.xml");
 
         // reserved words that cannot be used as a data label
         public static readonly ReadOnlyCollection<string> ReservedSqlKeywords = new List<string>()

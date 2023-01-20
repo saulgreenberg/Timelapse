@@ -14,12 +14,12 @@ namespace Timelapse.Editor
             ThrowIf.IsNullArgument(element, nameof(element));
             element.SetValue(ChoiceListProperty, value);
         }
-
-        public static string GetChoiceList(UIElement element)
-        {
-            // Check the arguments for null 
-            ThrowIf.IsNullArgument(element, nameof(element));
-            return (string)element.GetValue(ChoiceListProperty);
-        }
+        // UNUSED
+        //public static string GetChoiceList(UIElement element)
+        //{
+        //    // Check the arguments for null 
+        //    ThrowIf.IsNullArgument(element, nameof(element));
+        //    return (string)element.GetValue(ChoiceListProperty);
+        //}
     }
 }

@@ -74,7 +74,7 @@ namespace Timelapse.Controls
         #region Setting Content and Tooltip
         public override void SetContentAndTooltip(string value)
         {
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is Xceed.Wpf.Toolkit.WatermarkTextBox textBox)
+            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
             {
                 textBox.Text = value ?? Constant.Unicode.Ellipsis;
             }

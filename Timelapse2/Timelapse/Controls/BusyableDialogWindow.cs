@@ -128,6 +128,10 @@ namespace Timelapse.Controls
         protected void WindowCloseButtonIsEnabled(bool enableCloseButton)
         {
             Window window = Window.GetWindow(this);
+            if (window == null)
+            {
+                return;
+            }
             var wih = new WindowInteropHelper(window);
             IntPtr hwnd = wih.Handle;
 

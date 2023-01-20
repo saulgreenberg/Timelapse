@@ -36,8 +36,10 @@ namespace Timelapse.Controls
                     FieldInfo field = typeof(Slider).GetField(
                         "_autoToolTip",
                         BindingFlags.NonPublic | BindingFlags.Instance);
-
-                    this.autoToolTip = field.GetValue(this) as ToolTip;
+                    if (field != null) 
+                    { 
+                        this.autoToolTip = field.GetValue(this) as ToolTip;
+                    }
                 }
                 return this.autoToolTip;
             }

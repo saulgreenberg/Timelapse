@@ -162,7 +162,7 @@ namespace UpdateCSVFile
             }
 
             // Set the root path so the next time we try to get a csv file it will go to the same place
-            this.rootPath = Path.GetDirectoryName(csvOriginalFilePath);
+            this.rootPath = Path.GetDirectoryName(csvOriginalFilePath) ?? string.Empty;
 
             // Set the output file name
             string csvTranslatedFileName = Path.GetFileNameWithoutExtension(csvOriginalFilePath) + outSuffix + Path.GetExtension(csvOriginalFilePath);
@@ -365,7 +365,7 @@ namespace UpdateCSVFile
             }
 
             // Load the dictionary from the json file 
-            string jsonFilePath = Path.Combine(Path.GetDirectoryName(csvOriginalFilePath), jsonHeaderTranslationsFileName);
+            string jsonFilePath = Path.Combine(Path.GetDirectoryName(csvOriginalFilePath) ?? string.Empty, jsonHeaderTranslationsFileName);
             if (File.Exists(jsonFilePath) == false)
             {
                 this.FeedbackText.Text += String.Format("Warning: As the {0} file is not present, we assume that no headers need translating.{1}", jsonHeaderTranslationsFileName, Environment.NewLine);
@@ -419,7 +419,7 @@ namespace UpdateCSVFile
             foreach (string header in headers)
             {
                 // Quote all text. But if its already quoted, trim off quotes first
-                line += "\"" + valuesDictionary[header].Trim(new Char[] { '"' }) + "\"";
+                line += "\"" + valuesDictionary[header].Trim('"') + "\"";
                 line += (i != last) ? "," : Environment.NewLine;
                 i++;
             }

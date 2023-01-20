@@ -334,10 +334,7 @@ namespace DialogUpgradeFiles.Database
             string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID;
             DataTable imageSetTable = this.Database.GetDataTableFromSelect(imageSetQuery);
             this.ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
-            if (imageSetTable != null)
-            {
-                imageSetTable.Dispose();
-            }
+            imageSetTable.Dispose();
         }
         #endregion
 
@@ -532,14 +529,8 @@ namespace DialogUpgradeFiles.Database
 
             if (disposing)
             {
-                if (this.FileTable != null)
-                {
-                    this.FileTable.Dispose();
-                }
-                if (this.Markers != null)
-                {
-                    this.Markers.Dispose();
-                }
+                this.FileTable?.Dispose();
+                this.Markers?.Dispose();
             }
 
             base.Dispose(disposing);

@@ -35,14 +35,10 @@ namespace Timelapse_ViewOnly
             {
                 process.Start();
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                if (exception != null)
-                {
-                    // Error. A noop so we catch it cleanly but still leave the dialog running
-                    System.Diagnostics.Debug.Print("TryProcessStart: Can't start " + processStartInfo.FileName);
-                    return;
-                }
+                // Error. A noop so we catch it cleanly but still leave the dialog running
+                Debug.Print("TryProcessStart: Can't start " + processStartInfo.FileName);
             }
         }
     }

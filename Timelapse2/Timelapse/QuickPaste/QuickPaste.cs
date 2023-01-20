@@ -90,7 +90,7 @@ namespace Timelapse.QuickPaste
             if (fileDatabase == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 return quickPasteEntries;
                 // Not sure if the above return is effective. We could do the following instead
                 // throw new ArgumentNullException(nameof(fileDatabase));

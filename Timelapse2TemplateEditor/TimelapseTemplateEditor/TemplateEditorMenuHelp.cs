@@ -24,12 +24,6 @@ namespace Timelapse.Editor
             ProcessExecution.TryProcessStart(new Uri("http://saul.cpsc.ucalgary.ca/timelapse"));
         }
 
-        // Tutorial manual (via your browser) 
-        private void MenuTutorialManual_Click(object sender, RoutedEventArgs e)
-        {
-            ProcessExecution.TryProcessStart(new Uri("http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/Timelapse2/Timelapse2Manual.pdf"));
-        }
-
         // Tutorial guides (via your browser) 
         private void MenuItemGuidesAndManuals_Click(object sender, RoutedEventArgs e)
         {
@@ -55,8 +49,6 @@ namespace Timelapse.Editor
                         break;
                     case "MenuItemDatabaseGuide":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "TimelapseDatabaseGuide.pdf"));
-                        break;
-                    default:
                         break;
                 }
             }
@@ -115,8 +107,6 @@ namespace Timelapse.Editor
                         break;
                     case "MenuItemVideoCompanionQuickStart":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "Video-TimelapseQuickStartGuide.mp4"));
-                        break;
-                    default:
                         break;
                 }
             }

@@ -36,7 +36,7 @@ namespace Timelapse.Dialog
             if (window == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace("Window's owner property is null. Is a set of it prior to calling ShowDialog() missing?", 1);
+                TracePrint.StackTrace("Window's owner property is null. Is a set of it prior to calling ShowDialog() missing?", 1);
                 // Treat it as a no-op
                 return;
             }

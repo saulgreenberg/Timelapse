@@ -110,10 +110,10 @@ namespace Timelapse.Constant
 
         public static readonly ReadOnlyCollection<string> StandardTypes = new List<string>()
         {
-                Constant.DatabaseColumn.DateTime,
-                Constant.DatabaseColumn.DeleteFlag,
-                Constant.DatabaseColumn.File,
-                Constant.DatabaseColumn.RelativePath
+                DatabaseColumn.DateTime,
+                DatabaseColumn.DeleteFlag,
+                DatabaseColumn.File,
+                DatabaseColumn.RelativePath
         }.AsReadOnly();
     }
 
@@ -136,7 +136,7 @@ namespace Timelapse.Constant
         public const int FixedChoiceWidth = 100;
 
         public const string FlagTooltip = "Toggle between true and false";
-        public const string FlagValue = Constant.BooleanValue.False;             // Default for: flags
+        public const string FlagValue = BooleanValue.False;             // Default for: flags
         public const int FlagWidth = 20;
         public const string NoteTooltip = "Write a textual note";
         public const int NoteWidth = 100;
@@ -666,7 +666,7 @@ namespace Timelapse.Constant
     public static class DetectionColumns
     {
         public const string DetectionID = "detectionID";
-        public const string ImageID = Constant.DatabaseColumn.ID; // Foreign key
+        public const string ImageID = DatabaseColumn.ID; // Foreign key
         public const string Category = "category";
         public const string Conf = "conf";
         public const string BBox = "bbox";
@@ -704,7 +704,7 @@ namespace Timelapse.Constant
     public static class ClassificationColumns
     {
         public const string ClassificationID = "classificationID";
-        public const string DetectionID = Constant.DetectionColumns.DetectionID; // Foreign key
+        public const string DetectionID = DetectionColumns.DetectionID; // Foreign key
         public const string Category = "category";
         public const string Conf = "conf";
     }
