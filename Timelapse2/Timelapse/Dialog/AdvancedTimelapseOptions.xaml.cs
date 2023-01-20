@@ -133,8 +133,6 @@ namespace Timelapse.Dialog
                 case "RadioButtonAutoDeleteOnExit":
                     this.timelapseState.DeleteFolderManagement = DeleteFolderManagementEnum.AutoDeleteOnExit;
                     break;
-                default:
-                    break;
             }
         }
 
@@ -157,8 +155,6 @@ namespace Timelapse.Dialog
                     break;
                 case DeleteFolderManagementEnum.AutoDeleteOnExit:
                     this.RadioButtonAutoDeleteOnExit.IsChecked = true;
-                    break;
-                default:
                     break;
             }
         }

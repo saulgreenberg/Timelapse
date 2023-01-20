@@ -53,9 +53,6 @@ namespace Timelapse.QuickPaste
                             row.Copyable,
                             row.Type));
                         break;
-                    default:
-                        // Standard controls are not used in quick pastes, as it is unlikely the user will want to alter their contents
-                        break;
                 }
             }
             return quickPasteEntry;
@@ -166,8 +163,6 @@ namespace Timelapse.QuickPaste
                                 string value = (row.Type == Constant.Control.Flag) ? "False" : String.Empty;
                                 newQuickPasteEntry.Items.Add(new QuickPasteItem(row.DataLabel, row.Label, value, false, row.Type));
                             }
-                            break;
-                        default:
                             break;
                     }
                 }

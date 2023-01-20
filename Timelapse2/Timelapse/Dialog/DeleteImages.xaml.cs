@@ -160,7 +160,7 @@ namespace Timelapse.Dialog
                 this.Message.Result = $"\u2022 This data record will be removed.{Environment.NewLine}";
                 this.Message.Result +=
                     $"\u2022 The {imageOrVideo} is still intact, but it will not be displayed in Timelapse {Environment.NewLine}";
-                this.Message.Result += String.Format("   unless a duplicate record exists.");
+                this.Message.Result += "   unless a duplicate record exists.";
                 this.Message.Hint = "Deleting only the data is useful for removing a previously-created duplicate record of a file.";
             }
         }

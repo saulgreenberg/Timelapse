@@ -94,8 +94,6 @@ namespace Timelapse.Util
                 case FilePathTypeEnum.DisplayFile:
                     // The image path to test was passed in so we don't have to do anything
                     break;
-                default:
-                    break;
             }
             return IsPathLengthTooLong(filePath);
         }

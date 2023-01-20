@@ -9,7 +9,7 @@
         <Style x:Key="RadioButtonAsToggleButtonStyle" TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type ToggleButton}}" />
     </UserControl.Resources>
     <Grid Width="Auto" Height="Auto">
-        <StackPanel Orientation="Horizontal"  Grid.Column="1" >
+        <StackPanel Orientation="Horizontal">
             <RadioButton Name="FirstFile" BorderThickness="0" Background="White" Width="24" Height="24" GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
                                                          ToolTip="Go to the first file"
                                                          Tag="First" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >

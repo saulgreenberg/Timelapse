@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Timelapse.Dialog.AdvancedTimelapseOptions"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:Timelapse.Controls" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
         Title="Preferences" Height="830" Width="850" MinHeight="530" MinWidth="850" Loaded="Window_Loaded" >
     <Grid>
         <Grid.RowDefinitions>

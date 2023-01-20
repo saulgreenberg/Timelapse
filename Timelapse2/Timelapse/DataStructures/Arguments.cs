@@ -50,8 +50,6 @@ namespace Timelapse.DataStructures
                     case Constant.Arguments.ViewOnlyArgument:
                         this.IsViewOnly = true;
                         break;
-                    default:
-                        break;
                 }
             }
         }

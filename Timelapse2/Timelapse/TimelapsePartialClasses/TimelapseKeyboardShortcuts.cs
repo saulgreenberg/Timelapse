@@ -36,8 +36,6 @@ namespace Timelapse
 
                         // }
                         break;
-                    default:
-                        break;
                 }
                 return; // No images are loaded, so don't try to interpret any keys
             }

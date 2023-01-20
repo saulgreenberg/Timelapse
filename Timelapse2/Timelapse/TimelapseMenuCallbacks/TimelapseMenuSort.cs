@@ -63,8 +63,6 @@ namespace Timelapse
                     sortTerm1.ControlType = Constant.DatabaseColumn.ID;
                     sortTerm1.IsAscending = Constant.BooleanValue.True;
                     break;
-                default:
-                    break;
             }
             // Record the sort terms in the image set
             this.DataHandler.FileDatabase.ImageSet.SetSortTerms(sortTerm1, sortTerm2);

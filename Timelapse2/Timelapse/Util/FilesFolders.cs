@@ -77,18 +77,18 @@ namespace Timelapse.Util
 
             // Test: Check for invalid file locations
             // Disallowed are Drive letter roots and System/Hidden folders
-            string extension = System.IO.Path.GetExtension(filePath);
-            if (FilesFolders.IsFolderPathADriveLetter(System.IO.Path.GetDirectoryName(filePath)))
+            string extension = Path.GetExtension(filePath);
+            if (FilesFolders.IsFolderPathADriveLetter(Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInRootDriveFolder;
             }
-            if (FilesFolders.IsFolderSystemOrHidden(System.IO.Path.GetDirectoryName(filePath)))
+            if (FilesFolders.IsFolderSystemOrHidden(Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder;
             }
 
             // Test: Is it a .ddb or .tdb file
-            if (System.IO.Path.GetExtension(filePath) != Constant.File.FileDatabaseFileExtension && System.IO.Path.GetExtension(filePath) != Constant.File.TemplateDatabaseFileExtension)
+            if (Path.GetExtension(filePath) != Constant.File.FileDatabaseFileExtension && Path.GetExtension(filePath) != Constant.File.TemplateDatabaseFileExtension)
             {
                 return DatabaseFileErrorsEnum.NotATimelapseFile;
             }
@@ -197,6 +197,7 @@ namespace Timelapse.Util
         /// </summary>
         /// <param name="folderRoot"></param>
         /// <param name="folderPaths"></param>
+        /// <param name="prefixPath"></param>
         public static void GetAllFoldersContainingAnImageOrVideo(string folderRoot, List<string> folderPaths, string prefixPath)
         {
             // Check the arguments for null 
@@ -268,21 +269,21 @@ namespace Timelapse.Util
             }
             try
             {
-                string foldername = startFolder.Split(System.IO.Path.DirectorySeparatorChar).Last();
+                string foldername = startFolder.Split(Path.DirectorySeparatorChar).Last();
                 if ((ignoreBackupFolder && foldername == Constant.File.BackupFolder) || (ignoreDeletedFolder && foldername == Constant.File.DeletedFilesFolder))
                 {
 
                 }
                 else
                 {
-                    foundFiles.AddRange(System.IO.Directory.GetFiles(startFolder, pattern, SearchOption.TopDirectoryOnly));
+                    foundFiles.AddRange(Directory.GetFiles(startFolder, pattern, SearchOption.TopDirectoryOnly));
                     foreach (string directory in Directory.GetDirectories(startFolder))
                     {
                         GetAllFilesInFoldersAndSubfoldersMatchingPattern(directory, pattern, true, true, foundFiles);
                     }
                 }
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 return null;
             }
@@ -306,15 +307,14 @@ namespace Timelapse.Util
             Dictionary<string, List<string>> matchingFolders = new Dictionary<string, List<string>>();
             foreach (string missingFolderPath in missingFolderPaths)
             {
-                string missingFolderName = System.IO.Path.GetFileName(missingFolderPath);
+                string missingFolderName = Path.GetFileName(missingFolderPath);
                 List<string> matches = new List<string>();
                 foreach (string oneFolderPath in allFolderPaths)
                 {
-                    string allRelativePathName = System.IO.Path.GetFileName(oneFolderPath);
+                    string allRelativePathName = Path.GetFileName(oneFolderPath);
                     if (String.Equals(missingFolderName, allRelativePathName))
                     {
                         matches.Add(oneFolderPath);
-                        continue;
                     }
                 }
                 matchingFolders.Add(missingFolderPath, matches);
@@ -364,8 +364,8 @@ namespace Timelapse.Util
             {
                 return null;
             }
-            string fileName = System.IO.Path.GetFileName(fullPath);
-            string directoryName = System.IO.Path.GetDirectoryName(fullPath).TrimEnd('\\');
+            string fileName = Path.GetFileName(fullPath);
+            string directoryName = Path.GetDirectoryName(fullPath).TrimEnd('\\');
 
             //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
             string relativePath = rootPath.Equals(directoryName) ? String.Empty : directoryName.Substring(rootPath.Length + 1);
@@ -406,7 +406,7 @@ namespace Timelapse.Util
             {
                 return String.Empty;
             }
-            return System.IO.Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
+            return Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, ImageRow imageRow)
@@ -415,12 +415,12 @@ namespace Timelapse.Util
             {
                 return String.Empty;
             }
-            return System.IO.Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
+            return Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, string relativePath, string fileName)
         {
-            return System.IO.Path.Combine(rootPath, relativePath, fileName);
+            return Path.Combine(rootPath, relativePath, fileName);
         }
         #endregion
 
@@ -506,10 +506,10 @@ namespace Timelapse.Util
                 {
                     fileInfoList.AddRange(directoryInfo.GetFiles("*" + extension));
                 }
-                catch
+                catch (Exception exception)
                 {
                     // The call may fail if the OS denies access because of an I/O error or a specific type of security error
-                    continue;
+                    TracePrint.CatchException(exception.Message);
                 }
             }
             FilesRemoveAllButImagesAndVideos(fileInfoList);
@@ -533,7 +533,7 @@ namespace Timelapse.Util
 
         public static bool IsFolderPathADriveLetter(string path)
         {
-            return System.IO.Path.GetPathRoot(path) == path;
+            return Path.GetPathRoot(path) == path;
         }
         #endregion
 

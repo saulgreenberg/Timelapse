@@ -108,8 +108,6 @@ namespace Timelapse
                 case QuickPasteEventIdentifierEnum.PositionChanged:
                     this.State.QuickPasteWindowPosition = this.quickPasteWindow.Position;
                     break;
-                default:
-                    break;
             }
         }
         #endregion
