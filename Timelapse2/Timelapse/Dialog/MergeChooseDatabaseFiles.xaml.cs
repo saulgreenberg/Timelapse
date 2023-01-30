@@ -42,7 +42,7 @@ namespace Timelapse.Dialog
             this.RootFolderName = this.RootFolderPath.Split(Path.DirectorySeparatorChar).Last();
             this.DestinationddbFileName = Constant.File.MergedFileName;
             this.DestinationddbFilePath = Path.Combine(this.RootFolderPath, this.DestinationddbFileName);
-            this.SourceddbFilePaths = FilesFolders.GetAllFilesInFoldersAndSubfoldersMatchingPattern(this.RootFolderPath, "*" + Constant.File.FileDatabaseFileExtension, true, true, this.SourceddbFilePaths);
+            this.SourceddbFilePaths = FilesFolders.GetAllFilesInFoldersAndSubfoldersMatchingPattern(this.RootFolderPath, "*" + Constant.File.FileDatabaseFileExtension, true, true, null);
 
             // If the merged database file name is included in the source list (e.g., if it was previously created),
             // remove it from the list as a possible source file. Note that, if we can do any merging, we will be over-writing that file.

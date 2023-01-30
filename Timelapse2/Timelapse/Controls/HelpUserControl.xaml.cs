@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -109,7 +110,15 @@ namespace Timelapse.Controls
             p1.Inlines.Add(run5);
             p1.Inlines.Add(run6);
 
-            this.flowDocument.Blocks.InsertBefore(this.flowDocument.Blocks.FirstBlock, p1);
+            if (null != this.flowDocument.Blocks.FirstBlock)
+            {
+                TracePrint.NullException(nameof(this.flowDocument.Blocks.FirstBlock));
+                this.flowDocument.Blocks.InsertBefore(this.flowDocument.Blocks.FirstBlock, p1);
+            }
+            else
+            {
+                this.flowDocument.Blocks.Add(p1);
+            }
         }
         #endregion
 
@@ -122,6 +131,11 @@ namespace Timelapse.Controls
             {
                 // create a string containing the help text from the rtf help file
                 StreamResourceInfo sri = Application.GetResourceStream(new Uri(this.HelpFile));
+                if (null == sri)
+                {
+                    TracePrint.NullException(nameof(sri));
+                    throw new Exception("Could not get the help file from the resource");
+                }
                 StreamReader reader = new StreamReader(sri.Stream);
                 string helpText = reader.ReadToEnd();
 
@@ -135,14 +149,9 @@ namespace Timelapse.Controls
                 TextRange textRange = new TextRange(this.flowDocument.ContentStart, this.flowDocument.ContentEnd);
                 textRange.Load(stream, DataFormats.Rtf);
 
-                if (reader != null)
-                {
-                    reader.Dispose();
-                }
-                if (writer != null)
-                {
-                    writer.Dispose();
-                }
+                // We can now displose of the reader and write as we no longer need them.
+                reader.Dispose();
+                writer.Dispose();
             }
             catch
             {
@@ -172,7 +181,7 @@ namespace Timelapse.Controls
             var hyperlinks = GetVisuals(flowDocument).OfType<Hyperlink>();
             foreach (var link in hyperlinks)
             {
-                link.RequestNavigate += new System.Windows.Navigation.RequestNavigateEventHandler(this.Link_RequestNavigate);
+                link.RequestNavigate += this.Link_RequestNavigate;
             }
         }
 

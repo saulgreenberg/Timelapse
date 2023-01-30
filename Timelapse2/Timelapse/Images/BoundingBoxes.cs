@@ -32,6 +32,7 @@ namespace Timelapse.Images
         #endregion
 
         #region Public Methods - Draw BoundingBoxes In Canvas
+
         /// <summary>
         /// If detections are turned on, draw all bounding boxes relative to 0,0 and contrained by width and height within the provided
         /// The width/height should be the actual width/height of the image (also located at 0,0) as it appears in the canvas , which is required if the bounding boxes are to be drawn in the correct places
@@ -39,6 +40,10 @@ namespace Timelapse.Images
         /// The canvas should also be cleared of prior bounding boxes before this is invoked.
         /// </summary>
         /// <param name="canvas"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="margin"></param>
+        /// <param name="transformGroup"></param>
         public bool DrawBoundingBoxesInCanvas(Canvas canvas, double width, double height, int margin = 0, TransformGroup transformGroup = null)
         {
             if (canvas == null)
@@ -259,7 +264,7 @@ namespace Timelapse.Images
                 if (e.AddedItems.Count == 1)
                 {
                     cb.SelectedItem = e.AddedItems[0];
-                    // System.Diagnostics.Debug.Print(e.AddedItems[0].ToString());
+                    // Debug.Print(e.AddedItems[0].ToString());
                 }
             }
         }

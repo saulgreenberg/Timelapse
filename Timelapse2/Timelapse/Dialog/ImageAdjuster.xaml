@@ -22,9 +22,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Name="OtherControlsArea" Background="White" Grid.Row="0" Grid.RowSpan="3" Grid.ColumnSpan="3"></Border>
-        <Border Name="GammaArea" Background="WhiteSmoke" Grid.Row="4" Grid.ColumnSpan="3" Grid.Column="0"></Border>
-        <Border Name="ButtonArea" Background="White" Grid.Row="6" Grid.ColumnSpan="3" Grid.Column="0"></Border>
+        <Border Name="OtherControlsArea" Background="White" Grid.Row="0" Grid.RowSpan="3" Grid.ColumnSpan="3" />
+        <Border Name="GammaArea" Background="WhiteSmoke" Grid.Row="4" Grid.ColumnSpan="3" Grid.Column="0" />
+        <Border Name="ButtonArea" Background="White" Grid.Row="6" Grid.ColumnSpan="3" Grid.Column="0" />
         <RadioButton Name="CBNone" GroupName="SingleManipulation" Grid.Row="0" Grid.Column="0" Content="None" Margin="5" IsChecked="True" VerticalAlignment="Center" ToolTip="Clear special effects"/>
         <RadioButton Name="CBEdges" GroupName="SingleManipulation" Grid.Row="0" Grid.Column="1" Content="Edges" Margin="0,5,5,5" VerticalAlignment="Center" ToolTip="Detect and show edges in the image"/>
         <RadioButton Name="CBSharpen" GroupName="SingleManipulation" Grid.Row="0" Grid.Column="2" Content="Sharpen" Margin="5,5,5,5" VerticalAlignment="Center" ToolTip="Sharpen the image (a subtle effect)" />

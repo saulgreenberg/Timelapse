@@ -341,7 +341,7 @@ namespace Timelapse.Dialog
                     // No globs in Counters as that text field only allows numbers, we can't enter the special characters Glob required
                     // No globs in Dates the date entries are constrained by the date picker
                     // No globs in Fixed Choices as choice entries are constrained by menu selection
-                    termOperators = new string[]
+                    termOperators = new[]
                     {
                         Constant.SearchTermOperator.Equal,
                         Constant.SearchTermOperator.NotEqual,
@@ -355,7 +355,7 @@ namespace Timelapse.Dialog
                 else if (controlType == Constant.DatabaseColumn.RelativePath)
                 {
                     // Only equals (actually a glob including subfolders), as other options don't make sense for RelatvePath
-                    termOperators = new string[]
+                    termOperators = new[]
                     {
                         Constant.SearchTermOperator.Equal,
                     };
@@ -365,7 +365,7 @@ namespace Timelapse.Dialog
                          controlType == Constant.Control.Flag)
                 {
                     // Only equals and not equals in Flags, as other options don't make sense for booleans
-                    termOperators = new string[]
+                    termOperators = new[]
                     {
                         Constant.SearchTermOperator.Equal,
                         Constant.SearchTermOperator.NotEqual
@@ -373,7 +373,7 @@ namespace Timelapse.Dialog
                 }
                 else
                 {
-                    termOperators = new string[]
+                    termOperators = new[]
                     {
                         Constant.SearchTermOperator.Equal,
                         Constant.SearchTermOperator.NotEqual,
@@ -1002,7 +1002,7 @@ namespace Timelapse.Dialog
             GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = this.DetectionSelections.UseRecognition // && this.DetectionSelections.RecognitionType != RecognitionType.Classification
                 ? confidenceBounds.Item1
                 : 1;
-            // System.Diagnostics.Debug.Print(GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
+            // Debug.Print(GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
             this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
         }

@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="800"
              Loaded="VideoPlayer_Loaded"
@@ -60,8 +59,7 @@
 
         <!--The Video Dusokat-->
         <Canvas Name="VideoCanvas" ClipToBounds="True" Focusable="True" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
-            <MediaElement Name="Video" Focusable="True"  LoadedBehavior="Manual" ScrubbingEnabled="True" MediaEnded="Video_MediaEnded" MediaOpened="Video_MediaOpened" Unloaded="Video_Unloaded" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,1">
-            </MediaElement>
+            <MediaElement Name="Video" Focusable="True"  LoadedBehavior="Manual" ScrubbingEnabled="True" MediaEnded="Video_MediaEnded" MediaOpened="Video_MediaOpened" Unloaded="Video_Unloaded" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,1" />
         </Canvas>
 
         <!--The primary video controls (slider/play button)-->
@@ -86,12 +84,12 @@
         </StackPanel>
 
         <!--Video Playback controls (speed, autoreplay, repeat)-->
-        <GroupBox Grid.Row="2" Grid.Column="3" Margin="5,0,0,0" Width ="190" Height="66" Foreground="LightGray" BorderThickness=".4" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <GroupBox Grid.Row="1" Grid.Column="2" Margin="5,0,0,0" Width ="190" Height="66" Foreground="LightGray" BorderThickness=".4" VerticalAlignment="Top" HorizontalAlignment="Left">
             <GroupBox.Header>
                 Options
             </GroupBox.Header>
-            <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="3">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Top"  Grid.Row="2" Grid.Column="3" Margin="5,0,0,10">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="5,0,0,10">
                     <!--<Label Content="Speed" Foreground="LightGray"/>-->
                     <RadioButton Name="RBSlow" Content=".5x" Foreground="White" GroupName="Speed"  Margin="5,3,10,0" Checked="SetSpeed_Checked" Tag="0.5" VerticalAlignment="Center"/>
                     <RadioButton Name="RBNormal" Content="1x" Foreground="White"  GroupName="Speed"  Margin="0,0,10,0" Checked="SetSpeed_Checked" IsChecked="True" Tag="1" VerticalAlignment="Center"/>
@@ -108,7 +106,7 @@
         </GroupBox>
         
         <!--Open external player control-->
-        <Button Name="OpenExternalPlayer"  Grid.Row="2" Grid.Column="0" Width="143" Height="50" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,10,10,00" 
+        <Button Name="OpenExternalPlayer"  Grid.Row="1" Grid.Column="0" Width="143" Height="50" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,10,10,00" 
                 ToolTip="Open the current video in an external video player." Click="OpenExternalPlayer_Click">
             <StackPanel Orientation="Horizontal">
                 <Image Source="pack://application:,,,/Icons/ExternalVideoPlayer.png" Width="46" Height="32" Margin="3,0,0,0"/>

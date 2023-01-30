@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
@@ -75,7 +76,7 @@ namespace Timelapse
                 // We used to throw a new exception, but lets see what happens if we just return instead.
                 // i.e., lets just abort.
                 // throw new Exception(String.Format("in FileShow: possible problem with fileIndex value is {0}, where its not a valid row index in the image table.", fileIndex));
-                System.Diagnostics.Debug.Print(
+                Debug.Print(
                     $"in FileShow: possible problem with fileIndex (value is {fileIndex}, where its not a valid row index in the image table.");
                 return;
             }

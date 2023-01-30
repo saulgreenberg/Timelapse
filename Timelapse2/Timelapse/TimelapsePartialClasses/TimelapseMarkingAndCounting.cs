@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -107,7 +108,7 @@ namespace Timelapse
                 if (counter == null || marker == null)
                 {
                     // This shouldn't happen, but a user reported a 'null' crash somewhere in this method, so just in case...
-                    System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker. Counter or marker is null (and it shouldn't be");
+                    Debug.Print("In MarkableCanvas_AddMarker. Counter or marker is null (and it shouldn't be");
                     return;
                 }
 
@@ -173,7 +174,7 @@ namespace Timelapse
             }
             catch
             {
-                System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
+                Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
             }
         }
         #endregion

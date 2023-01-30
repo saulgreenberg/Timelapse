@@ -29,7 +29,7 @@ namespace Timelapse.Images
                 // We check this first as 'exists' will return false on a path too long error, and we want to display the correct bitmap
                 return Constant.ImageValues.FilePathTooLong.Value;
             }
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
             }
@@ -99,7 +99,7 @@ namespace Timelapse.Images
             // Our FFMPEG installation is the 64 bit version. In case someone is using a 32 bit machine, we use the MediaEncoder instead.
             if (Environment.Is64BitOperatingSystem == false)
             {
-                // System.Diagnostics.Debug.Print("Can't use ffmpeg as this is a 32 bit machine. Using MediaEncoder instead");
+                // Debug.Print("Can't use ffmpeg as this is a 32 bit machine. Using MediaEncoder instead");
                 return BitmapUtilities.GetVideoBitmapFromFileUsingMediaEncoder(filePath, desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
             }
             try
@@ -148,7 +148,7 @@ namespace Timelapse.Images
         public static BitmapSource GetVideoBitmapFromFileUsingMediaEncoder(string filePath, int? desiredWidth, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum _, out bool isCorruptOrMissing)
         {
             isCorruptOrMissing = true;
-            // System.Diagnostics.Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
+            // Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
 
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {

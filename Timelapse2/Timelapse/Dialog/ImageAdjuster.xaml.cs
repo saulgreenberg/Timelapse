@@ -9,8 +9,8 @@ using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
-    ///// <summary>
-    ///// Interaction logic for ImageAdjuster.xaml
+    /// <summary>
+    /// Interaction logic for ImageAdjuster.xaml
     /// </summary>
     public partial class ImageAdjuster
     {

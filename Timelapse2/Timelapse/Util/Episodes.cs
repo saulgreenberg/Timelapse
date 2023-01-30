@@ -42,7 +42,6 @@ namespace Timelapse
         public static void Reset()
         {
             Episodes.EpisodesDictionary = new Dictionary<int, Tuple<int, int>>();
-            return;
         }
         #endregion
 
@@ -175,12 +174,10 @@ namespace Timelapse
         /// </summary>
         private static bool EpisodeGetAroundIndex(FileTable files, int index, int maxRangeToSearch, out int first, out int count)
         {
-            DateTime date2;
 
-            int fileCount = files.RowCount;
+
             // Default in case there is only one file in this episode
             first = index;
-            int last = index;
             count = 1;
 
             // Note that numberOfFiles should never return zero if the provided index is valid
@@ -189,6 +186,9 @@ namespace Timelapse
                 return false;
             }
 
+            DateTime date2;
+            int fileCount = files.RowCount;
+            int last = index;
             ImageRow file = files[index];
             DateTime date1 = file.DateTime;
 

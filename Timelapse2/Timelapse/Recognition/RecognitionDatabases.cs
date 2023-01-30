@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using Timelapse.Controls;
@@ -217,7 +218,7 @@ namespace Timelapse.Recognition
                 // We will use that to search for the file index.
                 string query = Sql.Select + Constant.DatabaseColumn.ID + Sql.Comma + Constant.DatabaseColumn.RelativePath + Sql.Comma + Constant.DatabaseColumn.File + Sql.From + Constant.DBTables.FileData;
                 DataTable dataTable = detectionDB.GetDataTableFromSelect(query);
-                dataTable.PrimaryKey = new DataColumn[]
+                dataTable.PrimaryKey = new[]
                 {
                     dataTable.Columns[Constant.DatabaseColumn.ID],
                     dataTable.Columns[Constant.DatabaseColumn.File],
@@ -254,12 +255,12 @@ namespace Timelapse.Recognition
                         if (image.file.StartsWith(pathPrefixForTruncation) == false)
                         {
                             // Skip images that start with the truncation string, as these are outside of the image set
-                            // System.Diagnostics.Debug.Print("Skipping: " + image.file);
+                            // Debug.Print("Skipping: " + image.file);
                             continue;
                         }
                         // Remove the trunctation prefex from the file path 
                         imageFile = image.file.Substring(pathPrefixForTruncation.Length);
-                        // System.Diagnostics.Debug.Print("Using: " + image.file + " as " + imageFile);
+                        // Debug.Print("Using: " + image.file + " as " + imageFile);
                     }
 
                     // Form: FILE = Filename AND RELATIVEPATH = RelativePath
@@ -273,7 +274,7 @@ namespace Timelapse.Recognition
                     {
                         // Couldn't find the image. This could happen if that image and its data was deleted.
                         // This isn't a bug, as all we would do is skip that image.
-                        // System.Diagnostics.Debug.Print("Could not find: " + image.file);
+                        // Debug.Print("Could not find: " + image.file);
                         continue;
                     }
                     foreach (DataRow t in rows)
@@ -286,7 +287,7 @@ namespace Timelapse.Recognition
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Print("Invalid index: " + rows[0][0]);
+                            Debug.Print("Invalid index: " + rows[0][0]);
                             continue;
                         }
 
@@ -320,7 +321,7 @@ namespace Timelapse.Recognition
                                     new ColumnTuple(Constant.DetectionColumns.Conf, detection.conf),
                                     new ColumnTuple(Constant.DetectionColumns.BBox, bboxAsString),
                                 };
-                                // System.Diagnostics.Debug.Print("id:"+image.imageID.ToString());
+                                // Debug.Print("id:"+image.imageID.ToString());
                                 detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
                                 // If the detection has some classification info, then add that to the classifications data table
@@ -334,7 +335,7 @@ namespace Timelapse.Recognition
                                     {
                                         continue;
                                     }
-                                    // System.Diagnostics.Debug.Print(String.Format("{0} {1} {2}", detection.detectionID, category, conf));
+                                    // Debug.Print(String.Format("{0} {1} {2}", detection.detectionID, category, conf));
                                     List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>()
                                     {
                                         new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
@@ -368,7 +369,7 @@ namespace Timelapse.Recognition
                 detectionDB.Insert(Constant.DBTables.Detections, detectionInsertionStatements, progress, "Adding detections");
                 detectionDB.Insert(Constant.DBTables.Classifications, classificationInsertionStatements, progress, "Adding classifications");
                 fileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
-                // System.Diagnostics.Debug.Print("Files: " + fileCount + " Detections: " + detectionInsertionStatements.Count() + " Classifications: " + classificationInsertionStatements.Count());
+                // Debug.Print("Files: " + fileCount + " Detections: " + detectionInsertionStatements.Count() + " Classifications: " + classificationInsertionStatements.Count());
                 dataTable?.Dispose();
             }
         }
@@ -469,7 +470,7 @@ namespace Timelapse.Recognition
                 // We will use that to search for the file index.
                 string query = Sql.Select + Constant.DatabaseColumn.ID + Sql.Comma + Constant.DatabaseColumn.RelativePath + Sql.Comma + Constant.DatabaseColumn.File + Sql.From + Constant.DBTables.FileData;
                 DataTable dataTable = detectionDB.GetDataTableFromSelect(query);
-                dataTable.PrimaryKey = new DataColumn[]
+                dataTable.PrimaryKey = new[]
                 {
                     dataTable.Columns[Constant.DatabaseColumn.ID],
                     dataTable.Columns[Constant.DatabaseColumn.File],
@@ -498,14 +499,14 @@ namespace Timelapse.Recognition
                         if (image.file.StartsWith(pathPrefixForTruncation) == false)
                         {
                             // Skip images that start with the truncation string, as these are outside of the image set
-                            // System.Diagnostics.Debug.Print("Skipping: " + image.file);
+                            // Debug.Print("Skipping: " + image.file);
                             continue;
                         }
                         else
                         {
                             // Remove the trunctation prefex from the file path 
                             imageFile = image.file.Substring(pathPrefixForTruncation.Length);
-                            // System.Diagnostics.Debug.Print("Using: " + image.file + " as " + imageFile);
+                            // Debug.Print("Using: " + image.file + " as " + imageFile);
                         }
                     }
 
@@ -520,7 +521,7 @@ namespace Timelapse.Recognition
                     {
                         // Couldn't find the image. This could happen if that image and its data was deleted.
                         // This isn't a bug, as all we would do is skip that image.
-                        // System.Diagnostics.Debug.Print("Could not find: " + image.file);
+                        // Debug.Print("Could not find: " + image.file);
                         continue;
                     }
                     foreach (DataRow t in rows)
@@ -533,7 +534,7 @@ namespace Timelapse.Recognition
                         }
                         else
                         {
-                            System.Diagnostics.Debug.Print("Invalid index: " + rows[0][0]);
+                            Debug.Print("Invalid index: " + rows[0][0]);
                             continue;
                         }
 
@@ -567,7 +568,7 @@ namespace Timelapse.Recognition
                                     new ColumnTuple(Constant.DetectionColumns.Conf, detection.conf),
                                     new ColumnTuple(Constant.DetectionColumns.BBox, bboxAsString),
                                 };
-                                // System.Diagnostics.Debug.Print("id:"+image.imageID.ToString());
+                                // Debug.Print("id:"+image.imageID.ToString());
                                 detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
                                 // If the detection has some classification info, then add that to the classifications data table
@@ -581,7 +582,7 @@ namespace Timelapse.Recognition
                                     {
                                         continue;
                                     }
-                                    // System.Diagnostics.Debug.Print(String.Format("{0} {1} {2}", detection.detectionID, category, conf));
+                                    // Debug.Print(String.Format("{0} {1} {2}", detection.detectionID, category, conf));
                                     List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>()
                                     {
                                         new ColumnTuple(Constant.ClassificationColumns.ClassificationID, classificationIndex),
@@ -615,7 +616,7 @@ namespace Timelapse.Recognition
                 detectionDB.Insert(Constant.DBTables.Detections, detectionInsertionStatements);
                 detectionDB.Insert(Constant.DBTables.Classifications, classificationInsertionStatements);
                 fileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
-                // System.Diagnostics.Debug.Print("Files: " + fileCount + " Detections: " + detectionInsertionStatements.Count() + " Classifications: " + classificationInsertionStatements.Count());
+                // Debug.Print("Files: " + fileCount + " Detections: " + detectionInsertionStatements.Count() + " Classifications: " + classificationInsertionStatements.Count());
                 dataTable?.Dispose();
             }
         }

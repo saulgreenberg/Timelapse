@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 
@@ -234,7 +235,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -250,7 +251,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -265,7 +266,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -303,7 +304,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -320,7 +321,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -335,7 +336,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -350,7 +351,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -367,7 +368,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
         }
 
@@ -384,7 +385,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Could not write registry for " + registryKey);
+                Debug.Print("Could not write registry for " + registryKey);
             }
 
         }

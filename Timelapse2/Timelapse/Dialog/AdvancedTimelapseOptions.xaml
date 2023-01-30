@@ -81,7 +81,7 @@
                                           />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetCSVDefaults" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetCSVDefaults_Click"></Button>
+                        <Button Name="ResetCSVDefaults" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetCSVDefaults_Click" />
                     </DockPanel>
                 </GroupBox>
 
@@ -96,7 +96,7 @@
                                 <CheckBox Name="CheckBoxEnablePopulateMetadataOnLoad" Margin="30,0,0,0" Content="Enable the 'Populate Data Fields with Metadata as New Files are Loaded' dialog box" Height="22" FontWeight="Normal" VerticalAlignment="Top" Click="CheckBoxEnablePopulateMetadataOnLoad_Click" />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetPopulateMetadataDefaults" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetPopulateMetadataDefaults_Click"></Button>
+                        <Button Name="ResetPopulateMetadataDefaults" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetPopulateMetadataDefaults_Click" />
                     </DockPanel>
 
                 </GroupBox>
@@ -114,7 +114,7 @@
                                 <RadioButton Name="RadioButtonAutoDeleteOnExit" Margin="30,0,0,0" Content="When an image set is closed or on exit, Timelapse empties DeletedFiles (if it exists)." GroupName="Deletion" Height="22" FontWeight="Normal" VerticalAlignment="Top" Click="DeletedFileManagement_Click" />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetDeletedFileManagement" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDeletedFileManagement_Click"></Button>
+                        <Button Name="ResetDeletedFileManagement" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDeletedFileManagement_Click" />
                     </DockPanel>
                 </GroupBox>
 
@@ -128,7 +128,7 @@
                                 <CheckBox Name="CheckBoxTabOrderDeleteFlag" Margin="30,0,0,0" Content="Delete"   Height="22" FontWeight="Normal" VerticalAlignment="Top" Click="CheckBoxTabOrder_Click" />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetTabOrder" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetTabOrder_Click"></Button>
+                        <Button Name="ResetTabOrder" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetTabOrder_Click" />
                     </DockPanel>
                 </GroupBox>
 
@@ -145,7 +145,7 @@
                                 <TextBlock Name="TextEpisodeFeedback" Text="" TextWrapping="Wrap" FontWeight="Normal"  />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetEpisodeThreshold" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,5" VerticalAlignment="Bottom" Click="ResetSliderSetEpisodeMaxRange_Click"></Button>
+                        <Button Name="ResetEpisodeThreshold" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,5" VerticalAlignment="Bottom" Click="ResetSliderSetEpisodeMaxRange_Click" />
                     </DockPanel>
                 </GroupBox>
 
@@ -160,7 +160,7 @@
                                 <TextBlock Text="Mazimum zoom." TextWrapping="Wrap" FontWeight="Normal"  />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetMaxZoom" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,5" VerticalAlignment="Bottom" Click="ResetMaxZoom_Click"></Button>
+                        <Button Name="ResetMaxZoom" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,5" VerticalAlignment="Bottom" Click="ResetMaxZoom_Click" />
                     </DockPanel>
                 </GroupBox>
 
@@ -180,7 +180,7 @@
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetThrottle" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetThrottle_Click"></Button>
+                        <Button Name="ResetThrottle" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetThrottle_Click" />
                     </DockPanel>
                 </GroupBox>
 
@@ -196,7 +196,7 @@
                                 <TextBlock Text="High threshold" TextWrapping="Wrap" FontWeight="Normal" Height="54" Width="300" />
                             </StackPanel>
                         </StackPanel>
-                        <Button Name="ResetImageDifferencing" Content="Reset" FontWeight="Normal" Height="30" Width="58" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetImageDifferencingButton_Click"></Button>
+                        <Button Name="ResetImageDifferencing" Content="Reset" FontWeight="Normal" Height="30" Width="58" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetImageDifferencingButton_Click" />
                     </DockPanel>
                 </GroupBox>
 

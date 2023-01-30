@@ -277,7 +277,7 @@ namespace Timelapse.Database
 
             // Now we need to see if we have to handle detection table updates.
             // Check to see if the currentDDB file and the toBeMergedDDB file each have a Detections table.
-            bool toBeMergedDetectionsExists = FileDatabase.TableExists(Constant.DBTables.Detections, toBeMergedDDBPath);
+            bool toBeMergedDetectionsExists = TemplateDatabase.TableExists(Constant.DBTables.Detections, toBeMergedDDBPath);
             bool currentDetectionsExists = currentDDB.TableExists(Constant.DBTables.Detections);
 
             // A. Generate several dictionaries reflecting the contents of the info and category tables as held in the to be merged database
@@ -377,7 +377,7 @@ namespace Timelapse.Database
                     }
                     else
                     {
-                        // System.Diagnostics.Debug.Print("merged failed for detection categories");
+                        // Debug.Print("merged failed for detection categories");
                         return DatabaseFileErrorsEnum.DetectionCategoriesDiffers;
                     }
                 }
@@ -405,7 +405,7 @@ namespace Timelapse.Database
                     }
                     else
                     {
-                        // System.Diagnostics.Debug.Print("merged failed for classification categories");
+                        // Debug.Print("merged failed for classification categories");
                         return DatabaseFileErrorsEnum.ClassificationDictionaryDiffers;
                     }
                 }

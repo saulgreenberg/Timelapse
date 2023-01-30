@@ -82,7 +82,6 @@ namespace Timelapse
                 if (qpe.Count == 0)
                 {
                     Dialogs.MenuEditCouldNotImportQuickPasteEntriesDialog(this);
-                    return;
                 }
                 else
                 {
@@ -344,7 +343,7 @@ namespace Timelapse
             {
                 //foreach (ImageRow ir in filesToDelete)
                 //{
-                //    System.Diagnostics.Debug.Print(ir.ID.ToString());
+                //    Debug.Print(ir.ID.ToString());
                 //}
                 // if we delete the data for the current image only but not the file , we can sometimes get in the situation (particularly if we delete a duplicate) where the next fileID displayed is not the closest to the existing position.
                 // To resolve this, we get the closest non-deleted file ID before we do the deletion.
@@ -356,7 +355,7 @@ namespace Timelapse
                     // Check if is a deleted file. 
                     if (this.DataHandler.FileDatabase.IsFileRowInRange(nextFileIndex))
                     {
-                        // System.Diagnostics.Debug.Print("-->" + this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID.ToString());
+                        // Debug.Print("-->" + this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID.ToString());
                         if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID))
                         {
                             // Its not a deleted file, so we have a valid next file to display!
@@ -787,7 +786,7 @@ namespace Timelapse
                 {
                     // Only a single image is displayed: update the database for the current row with the control's value
                     this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, control.DataLabel, imageDatabaseControl.DefaultValue);
-                    // System.Diagnostics.Debug.Print(control.DataLabel + ":" + control.Content + ":" + imageDatabaseControl.DefaultValue);
+                    // Debug.Print(control.DataLabel + ":" + control.Content + ":" + imageDatabaseControl.DefaultValue);
                 }
                 else
                 {

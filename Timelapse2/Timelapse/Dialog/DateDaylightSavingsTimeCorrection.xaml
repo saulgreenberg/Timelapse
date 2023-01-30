@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Correct for standard and daylight savings time changes" 
 		MinHeight="728" MinWidth="768"
 		Height="856" Width="768"

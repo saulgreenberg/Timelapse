@@ -85,7 +85,6 @@ namespace Timelapse.Database
                                         // csvRow.Append(prefix + AddColumnValue(image.GetValueDatabaseString(dataLabel)));
                                         csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateString()));
                                         csvRow.Append(prefix + AddColumnValue(image.GetValueCSVTimeString()));
-                                        continue;
                                     }
                                     else
                                     {
@@ -321,12 +320,12 @@ namespace Timelapse.Database
                                     if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out dateTime))
                                     {
                                         // Standard DateTime
-                                        // System.Diagnostics.Debug.Print("Standard: " + dateTime.ToString());
+                                        // Debug.Print("Standard: " + dateTime.ToString());
                                     }
                                     else if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
                                     {
                                         // Standard DateTime wit T separator
-                                        // System.Diagnostics.Debug.Print("StandardT: " + dateTime.ToString());
+                                        // Debug.Print("StandardT: " + dateTime.ToString());
                                     }
                                 }
                                 else if (type == Constant.ControlDeprecated.DateLabel)
@@ -344,7 +343,7 @@ namespace Timelapse.Database
                                     string strDateTime = rowDict[header];
                                     if (DateTime.TryParseExact(strDateTime, Constant.Time.TimeFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
                                     {
-                                        //System.Diagnostics.Debug.Print("Time only: " + tempDateTime.ToString());
+                                        //Debug.Print("Time only: " + tempDateTime.ToString());
                                         timePortion = tempDateTime;
                                     }
                                 }
@@ -371,13 +370,13 @@ namespace Timelapse.Database
                             }
                             // We should now have a valid dateTime. Add it to the database. 
                             imageToUpdate.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.DateTime, dateTime));
-                            // System.Diagnostics.Debug.Print("Wrote DateTime: " + dateTime.ToString());
+                            // Debug.Print("Wrote DateTime: " + dateTime.ToString());
                         }
                         else
                         {
                             dateTimeErrors++;
                             // importErrors.Add(String.Format("{0}: Could not extract datetime", currentPath));
-                            // System.Diagnostics.Debug.Print("Could not extract datetime");
+                            // Debug.Print("Could not extract datetime");
                         }
                         dateTime = DateTime.MinValue;
                         datePortion = DateTime.MinValue;
@@ -617,10 +616,10 @@ namespace Timelapse.Database
                                     abort = true;
                                 }
                                 break;
-                            case Constant.Control.Note:
-                            default:
+                            // case Constant.Control.Note:
+                            // default:
                                 // as these can be any string, they don't require checking
-                                break;
+                                // break;
                         }
                         if (!errorInRow && abort)
                         {
@@ -710,12 +709,12 @@ namespace Timelapse.Database
                             if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out dateTime))
                             {
                                 // Standard DateTime
-                                // System.Diagnostics.Debug.Print("Standard: " + dateTime.ToString());
+                                // Debug.Print("Standard: " + dateTime.ToString());
                             }
                             else if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
                             {
                                 // Standard DateTime wit T separator
-                                // System.Diagnostics.Debug.Print("StandardT: " + dateTime.ToString());
+                                // Debug.Print("StandardT: " + dateTime.ToString());
                             }
                         }
                         else if (header == Constant.ControlDeprecated.DateLabel)
@@ -733,7 +732,7 @@ namespace Timelapse.Database
                             string strDateTime = rowDict[header];
                             if (DateTime.TryParseExact(strDateTime, Constant.Time.TimeFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
                             {
-                                //System.Diagnostics.Debug.Print("Time only: " + tempDateTime.ToString());
+                                //Debug.Print("Time only: " + tempDateTime.ToString());
                                 timePortion = tempDateTime;
                             }
                         }
@@ -765,7 +764,7 @@ namespace Timelapse.Database
                     }
                     // We should now have a valid dateTime. Add it to the database. 
                     imageToUpdate.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.DateTime, dateTime));
-                    // System.Diagnostics.Debug.Print("Wrote DateTime: " + dateTime.ToString());
+                    // Debug.Print("Wrote DateTime: " + dateTime.ToString());
                 }
 
                 // Add to the query only if there are columns to add!
@@ -840,7 +839,7 @@ namespace Timelapse.Database
                 List<List<string>> parsedRows = new List<List<string>>();
                 using (TextFieldParser parser = new TextFieldParser(path))
                 {
-                    parser.Delimiters = new string[] { "," };
+                    parser.Delimiters = new[] { "," };
                     while (true)
                     {
                         string[] parts = parser.ReadFields();
@@ -848,7 +847,7 @@ namespace Timelapse.Database
                         {
                             break;
                         }
-                        List<string> rowFields = parts.ToList<string>();
+                        List<string> rowFields = parts.ToList();
                         parsedRows.Add(rowFields);
                     }
                 }

@@ -119,7 +119,7 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            if (dgr?.Item == null)
+            if (dgr.Item == null)
             {
                 return;
             }

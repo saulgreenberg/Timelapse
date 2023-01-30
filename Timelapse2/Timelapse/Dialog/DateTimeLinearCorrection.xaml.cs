@@ -258,7 +258,7 @@ namespace Timelapse
             if (DateTimeHandler.TryParseDisplayDateTime(this.dateTimePickerLatestDateTime.Text, out DateTime newDateTime) == false)
             {
                 // If we can't parse the date,  do nothing.
-                // System.Diagnostics.Debug.Print("DateTimeLinearCorrection|ValueChanged: Could not parse the date:" + this.dateTimePickerLatestDateTime.Text);
+                // Debug.Print("DateTimeLinearCorrection|ValueChanged: Could not parse the date:" + this.dateTimePickerLatestDateTime.Text);
                 return;
             }
 

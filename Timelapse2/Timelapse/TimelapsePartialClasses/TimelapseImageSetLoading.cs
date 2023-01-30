@@ -96,7 +96,7 @@ namespace Timelapse
                 // THE IMPORTIMAGES FLAG DOESN"T SEEM TO DO WHAT THE ABOVE SUGGESTS... LOOK INTO IT
                 if (false == Dialogs.DialogIsFileValid(this, fileDatabaseFilePath))
                 {
-                    // System.Diagnostics.Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
+                    // Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
                     // If we are trying to import images for the first time, return the newly created ddb file
                     return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
                 }
@@ -391,7 +391,7 @@ namespace Timelapse
 
                 if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                 {
-                    // System.Diagnostics.Debug.Print("Cancelled: In BackgroundWorkerCompleted");
+                    // Debug.Print("Cancelled: In BackgroundWorkerCompleted");
                     isCancelled = true;
                     // Stop the ExifToolManager if it was invoked while loading files, which can occurs when populating metadata to a file via the EXIFTool on load.
                     //this.State.ExifToolManager.Stop();

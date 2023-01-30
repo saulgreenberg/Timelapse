@@ -317,21 +317,21 @@ namespace Timelapse.Recognition
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
                     {
                         // Probable that Recognizer is relative to the root folder: At least one image path begins with the subfolderPrefix name
-                        // System.Diagnostics.Debug.Print("Probable that Recognizer is relative to the root folder: At least one image path begins with the subfolderPrefix name.");
+                        // Debug.Print("Probable that Recognizer is relative to the root folder: At least one image path begins with the subfolderPrefix name.");
                         results = RecognizerPathTestResults.PathsRelativeToRootFolder;
                         break;
                     }
                     else if (File.Exists(Path.Combine(rootFolderPath, image.file)))
                     {
                         // Probable that Recognizer is relative to the root folder: At least one file is in the unaltered path.
-                        // System.Diagnostics.Debug.Print("Probable that Recognizer is relative to the root folder: At least one file is in the unaltered path.");
+                        // Debug.Print("Probable that Recognizer is relative to the root folder: At least one file is in the unaltered path.");
                         results = RecognizerPathTestResults.PathsRelativeToRootFolder;
                         break;
                     }
                     else if (nonEmptySubfolder && File.Exists(Path.Combine(rootFolderPath, subFolderPrefix, image.file)))
                     {
                         // Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix
-                        // System.Diagnostics.Debug.Print("Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix.");
+                        // Debug.Print("Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix.");
                         results = RecognizerPathTestResults.PathsRelativeToSubFolder;
                         break;
                     }

@@ -12,7 +12,15 @@ namespace Timelapse.Util
     /// </summary>
     public static class TracePrint
     {
+        #region Noop
+        // Its sometimes handy to invoke a noop operation, such as in a catch that doesn't do anything.
+        // This stops resharper from complaining.
+        public static void Noop()
+        {
+            ((Action)(() => { }))();
+        }
 
+        #endregion
         #region Specialized messages
         public static void NullException()
         {

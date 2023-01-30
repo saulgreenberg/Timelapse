@@ -171,7 +171,7 @@ namespace Timelapse.Controls
             catch // (Exception e)
             {
                 // Uncomment for debugging
-                //System.Diagnostics.Debug.Print("SetSource: Could not set the bitmapSource: " + e.Message);
+                //Debug.Print("SetSource: Could not set the bitmapSource: " + e.Message);
             }
         }
         #endregion

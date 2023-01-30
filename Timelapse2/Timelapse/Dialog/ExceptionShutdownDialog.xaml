@@ -22,8 +22,8 @@
                                     &#10;&#x2022; Alternately, select 'Copy report, and paste the report into an email to saul@ucalgary.ca."
                             Hint="If you can, also describe what you were doing at the time of the crash."/>
         <StackPanel Orientation="Horizontal"  Grid.Row="1">
-            <TextBlock Text="Technical problem description" Margin="10,10,5,10" Grid.Row="1" FontSize="14" FontWeight="Bold"/>
-            <TextBlock Text="to send to the Timelapse Developer" Margin="0,10,20,10" Grid.Row="1" FontSize="14" FontStyle="Italic"/>
+            <TextBlock Text="Technical problem description" Margin="10,10,5,10" FontSize="14" FontWeight="Bold"/>
+            <TextBlock Text="to send to the Timelapse Developer" Margin="0,10,20,10" FontSize="14" FontStyle="Italic"/>
         </StackPanel>
         <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto"  Grid.Row="2" Height="200" Margin="20,10,20,10">
             <TextBox Name="ExceptionReport" VerticalAlignment="Top" FontSize="10" TextWrapping="Wrap" IsReadOnly="True" />

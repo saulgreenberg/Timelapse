@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -43,7 +44,7 @@ namespace Timelapse
             {
                 if (this.DataHandler == null)
                 {
-                    System.Diagnostics.Debug.Print("Weird error in FolderPath - datahandler is null");
+                    Debug.Print("Weird error in FolderPath - datahandler is null");
                     return String.Empty;
                 }
                 else
@@ -73,8 +74,8 @@ namespace Timelapse
         private readonly DispatcherTimer timerFileNavigator;
 
         // Timer used to AutoPlay images via MediaControl buttons
-        private readonly DispatcherTimer FilePlayerTimer = new DispatcherTimer { };
-        private readonly DispatcherTimer DataGridSelectionsTimer = new DispatcherTimer { };
+        private readonly DispatcherTimer FilePlayerTimer = new DispatcherTimer();
+        private readonly DispatcherTimer DataGridSelectionsTimer = new DispatcherTimer();
 
         // Notifier: A toast that we can use anywher
         private Notifier ToastNotifier;
@@ -93,9 +94,9 @@ namespace Timelapse
             // this.Arguments = new DataStructures.Arguments(Environment.GetCommandLineArgs());
 
             // Register MarkableCanvas callbacks
-            this.MarkableCanvas.PreviewMouseDown += new MouseButtonEventHandler(this.MarkableCanvas_PreviewMouseDown);
-            this.MarkableCanvas.MouseEnter += new MouseEventHandler(this.MarkableCanvas_MouseEnter);
-            this.MarkableCanvas.MarkerEvent += new EventHandler<MarkerEventArgs>(this.MarkableCanvas_RaiseMarkerEvent);
+            this.MarkableCanvas.PreviewMouseDown += this.MarkableCanvas_PreviewMouseDown;
+            this.MarkableCanvas.MouseEnter += this.MarkableCanvas_MouseEnter;
+            this.MarkableCanvas.MarkerEvent += this.MarkableCanvas_RaiseMarkerEvent;
             this.MarkableCanvas.ThumbnailGrid.DoubleClick += this.ThumbnailGrid_DoubleClick;
             this.MarkableCanvas.ThumbnailGrid.SelectionChanged += this.ThumbanilGrid_SelectionChanged;
             this.MarkableCanvas.SwitchedToThumbnailGridViewEventAction += this.SwitchedToThumbnailGrid;
@@ -360,14 +361,8 @@ namespace Timelapse
 
             if (disposing)
             {
-                if (this.DataHandler != null)
-                {
-                    this.DataHandler.Dispose();
-                }
-                if (this.speechSynthesizer != null)
-                {
-                    this.speechSynthesizer.Dispose();
-                }
+                this.DataHandler?.Dispose();
+                this.speechSynthesizer?.Dispose();
             }
             this.disposed = true;
         }

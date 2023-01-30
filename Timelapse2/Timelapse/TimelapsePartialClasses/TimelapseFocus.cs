@@ -36,12 +36,12 @@ namespace Timelapse
         {
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if (focusedElement == null ||
-               focusedElement is Timelapse.Images.MarkableCanvas ||
-               focusedElement is System.Windows.Controls.TabItem)
+               focusedElement is Images.MarkableCanvas ||
+               focusedElement is TabItem)
             {
                 // We only want to save the focus on controls
                 // string message = (lastControlWithFocus == null) ? "Leave: No control has focus" : "Leave: " + lastControlWithFocus.GetType().ToString();
-                // System.Diagnostics.Debug.Print(message);
+                // Debug.Print(message);
                 return;
             }
             this.lastControlWithFocus = focusedElement;
@@ -51,7 +51,7 @@ namespace Timelapse
         {
             if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
             {
-                if (this.lastControlWithFocus == this.MarkableCanvas)
+                if (Equals(this.lastControlWithFocus, this.MarkableCanvas))
                 {
                     this.MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
                     this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();

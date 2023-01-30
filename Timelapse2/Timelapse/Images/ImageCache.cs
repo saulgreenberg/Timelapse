@@ -313,12 +313,12 @@ namespace Timelapse.Images
                     this.prefetechesByID.Clear();
                     this.unalteredBitmapsByID.Clear();
                     this.CacheBitmap(fileRow.ID, bitmap);
-                    // System.Diagnostics.Debug.Print("Loaded as forceUpdate " + fileRow.FileName);
+                    // Debug.Print("Loaded as forceUpdate " + fileRow.FileName);
                 }
                 else if (this.unalteredBitmapsByID.TryGetValue(fileRow.ID, out bitmap))
                 {
                     // There is a cached bitmap, so we are now using it (in out bitmap)
-                    // System.Diagnostics.Debug.Print("Prefetched immediate " + fileRow.FileName);
+                    // Debug.Print("Prefetched immediate " + fileRow.FileName);
                 }
                 else
                 {
@@ -328,7 +328,7 @@ namespace Timelapse.Images
                         // bitmap retrieval's already in progress, so wait for it to complete
                         prefetch.Wait();
                         bitmap = this.unalteredBitmapsByID[fileRow.ID];
-                        // System.Diagnostics.Debug.Print("Prefetched wait" + fileRow.FileName);
+                        // Debug.Print("Prefetched wait" + fileRow.FileName);
                     }
                     else
                     {
@@ -340,7 +340,7 @@ namespace Timelapse.Images
                         {
                             this.CacheBitmap(fileRow.ID, bitmap);
                         }
-                        // System.Diagnostics.Debug.Print("Loaded as not prefetched " + fileRow.FileName);
+                        // Debug.Print("Loaded as not prefetched " + fileRow.FileName);
                     }
                 }
 

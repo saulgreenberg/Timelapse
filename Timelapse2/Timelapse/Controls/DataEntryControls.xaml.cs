@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
@@ -181,7 +182,7 @@ namespace Timelapse.Controls
         // when the markable canvas is zoomed out to display multiple images
         public void SetEnableState(ControlsEnableStateEnum controlsToEnable, int imagesSelected)
         {
-            if (this.dataEntryHandler.ImageCache.Current == null)
+            if (this.dataEntryHandler?.ImageCache?.Current == null)
             {
                 return;
             }
@@ -313,7 +314,7 @@ namespace Timelapse.Controls
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Failed in DataEntryControls-DisposeAsNeeded");
+                Debug.Print("Failed in DataEntryControls-DisposeAsNeeded");
             }
         }
     }

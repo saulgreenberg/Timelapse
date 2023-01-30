@@ -75,7 +75,7 @@ namespace Timelapse.Controls
         public OffsetLens()
         {
             // Lens appearance
-            this.Radius = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2;
+            this.Radius = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0;
             this.BorderBrush = MakeOutlineBrush();
             this.BorderThickness = new Thickness(3);
             this.Background = Brushes.Black;
@@ -99,7 +99,14 @@ namespace Timelapse.Controls
             };
             TranslateTransform tt = new TranslateTransform(this.Offset.X, this.Offset.Y);
             magHandleAdorner.RenderTransform = tt;
-            myAdornerLayer.Add(magHandleAdorner);
+            if (null != myAdornerLayer)
+            {
+                myAdornerLayer.Add(magHandleAdorner);
+            }
+            else
+            {
+                TracePrint.NullException(nameof(myAdornerLayer));
+            }
 
             this.SetDirection(OffsetLensDirection.TopRight);
         }
@@ -151,8 +158,16 @@ namespace Timelapse.Controls
                 EndPoint = new Point(0, 1)
             };
             ColorConverter cc = new ColorConverter();
-            outlineBrush.GradientStops.Add(new GradientStop((Color)cc.ConvertFrom("#AAA"), 0));
-            outlineBrush.GradientStops.Add(new GradientStop((Color)cc.ConvertFrom("#111"), 1));
+            object o1= cc.ConvertFrom("#AAA");
+            Color lightGrey = o1 != null
+                ? (Color)o1
+                : Colors.LightGray;
+            object o2 = cc.ConvertFrom("#111");
+            Color darkGrey = o2 != null
+                ? (Color)o2
+                : Colors.DarkGray;
+            outlineBrush.GradientStops.Add(new GradientStop(lightGrey, 0));
+            outlineBrush.GradientStops.Add(new GradientStop(darkGrey, 1));
             return outlineBrush;
         }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Controls;
 using Timelapse.Util;
@@ -83,7 +84,7 @@ namespace Timelapse.Database
                 }
                 else
                 {
-                    System.Diagnostics.Debug.Print(
+                    Debug.Print(
                         $"in DataTableBackedList:this. Datatable count is {this.DataTable.Rows.Count}, but index is out of bounds at: {index}");
                     return null;
                 }
@@ -195,7 +196,7 @@ namespace Timelapse.Database
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Failed in DataTableBackedList - DisposeAsNeeded");
+                Debug.Print("Failed in DataTableBackedList - DisposeAsNeeded");
             }
         }
         #endregion

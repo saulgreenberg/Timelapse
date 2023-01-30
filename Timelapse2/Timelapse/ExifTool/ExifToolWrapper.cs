@@ -209,7 +209,10 @@ namespace Timelapse.ExifTool
             {
                 this._waitHandle.Set();
             }
-            catch { }
+            catch
+            {
+                TracePrint.CatchException("Acceptable catch.");
+            }
             if (!this._stopRequested && this.Resurrect)
                 this.Start();
         }
@@ -220,7 +223,7 @@ namespace Timelapse.ExifTool
 
             if (this.Status != ExeStatus.Ready)
             {
-                System.Diagnostics.Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
+                Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
                 // throw new ExifToolException("Process must be ready"); 
                 return;
 
@@ -395,7 +398,7 @@ namespace Timelapse.ExifTool
                 {
                     // This was introduced in the results in a later version of EXIF.
                     // I catch and discard it here as otherwise it generates the Debug.Assert message in the next test whenever exiftool is spawned.
-                    // System.Diagnostics.Debug.Print("ExifToolWrapper: Ready0000 caught and ignored.");
+                    // Debug.Print("ExifToolWrapper: Ready0000 caught and ignored.");
                     continue;
                 }
                 Debug.Assert(kv.Length == 2, $"Can not parse line :'{s}'");

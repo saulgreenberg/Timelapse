@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -657,7 +658,7 @@ namespace Timelapse.Images
                 }
                 catch
                 {
-                    return;
+                    TracePrint.Noop();
                 }
             }
         }
@@ -832,7 +833,7 @@ namespace Timelapse.Images
                         || status == ThumbnailGridRefreshStatus.Aborted)
 
                     {
-                        return;
+                        // return;
                     }
                     else if (status == ThumbnailGridRefreshStatus.AtZeroZoomLevel)
                     {
@@ -1113,7 +1114,7 @@ namespace Timelapse.Images
             TimeSpan timeDifference = DateTime.Now - lastMouseWheelDateTime;
             if (timeDifference < TimeSpan.FromMilliseconds(500)) // At least a 500 msecs delay in use of the scroll wheel is needed between transitions
             {
-                if (zoomIn == true &&
+                if (zoomIn &&
                     ((this.ImageToDisplay.Visibility == Visibility.Visible && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
                      || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled)))
                 {
@@ -1397,8 +1398,8 @@ namespace Timelapse.Images
         private Canvas DrawMarker(Marker marker, Size canvasRenderSize, bool doTransform)
         {
             Canvas markerCanvas = new Canvas();
-            markerCanvas.MouseRightButtonUp += new MouseButtonEventHandler(this.Marker_MouseRightButtonUp);
-            markerCanvas.MouseWheel += new MouseWheelEventHandler(this.ImageOrCanvas_MouseWheel); // Make the mouse wheel work over marks as well as the image
+            markerCanvas.MouseRightButtonUp += this.Marker_MouseRightButtonUp;
+            markerCanvas.MouseWheel += this.ImageOrCanvas_MouseWheel; // Make the mouse wheel work over marks as well as the image
 
             markerCanvas.ToolTip = string.IsNullOrEmpty(marker.Tooltip.Trim()) 
                 ? null 

@@ -179,22 +179,22 @@
             <Setter Property="IsReadOnly" Value="False" />
             <Setter Property="IsEditable" Value="False" />
 
-            <Setter Property="UIElement.SnapsToDevicePixels" Value="True"/>
-            <Setter Property="FrameworkElement.OverridesDefaultStyle" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
             <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
             <Setter Property="TextElement.Foreground" Value="Black"/>
-            <Setter Property="FrameworkElement.FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
-            <Setter Property="Control.Template">
+            <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Border Name="PART_Border" BorderBrush="{StaticResource BorderBrushCommonNormal}" BorderThickness="{StaticResource BorderThicknessCommonNormal}">
                             <Grid>
                                 
                                 <!-- Toggle button  -->
-                                <ToggleButton Name="ToggleButton" Grid.Column="2"
+                                <ToggleButton Name="ToggleButton" 
                                 ClickMode="Press" 
                                 Focusable="False"
                                 IsChecked="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"

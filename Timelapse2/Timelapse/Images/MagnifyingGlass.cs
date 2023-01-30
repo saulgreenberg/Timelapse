@@ -138,9 +138,9 @@ namespace Timelapse.Images
             {
                 StrokeThickness = 0.25,
                 X1 = 5,
-                Y1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
-                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5,
-                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
+                Y1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
+                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5.0,
+                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
                 Stroke = Brushes.Black,
                 Opacity = 0.5
             };
@@ -149,10 +149,10 @@ namespace Timelapse.Images
             Line horizontalCrosshair = new Line
             {
                 StrokeThickness = 0.25,
-                X1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
+                X1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
                 Y1 = 5,
-                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
-                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5,
+                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
+                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5.0,
                 Stroke = Brushes.Black,
                 Opacity = 0.5
             };

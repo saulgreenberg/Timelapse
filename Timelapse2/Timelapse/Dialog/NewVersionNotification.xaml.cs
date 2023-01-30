@@ -33,12 +33,12 @@ namespace Timelapse.Dialog
             this.lastestVersionNumber = latestVersionMumber;
 
             // Construct the template message
-            this.Title = String.Format("A new version of {0} is available.", this.applicationName);
+            this.Title = $"A new version of {this.applicationName} is available.";
 
             this.Message.Title = this.Title;
-            this.Message.What = String.Format("A new {0} version is available: {1}", this.applicationName, this.lastestVersionNumber);
+            this.Message.What = $"A new {this.applicationName} version is available: {this.lastestVersionNumber}";
             this.Message.What += Environment.NewLine;
-            this.Message.What += String.Format("You are running an older version:       {0} ", this.currentVersionNumber);
+            this.Message.What += $"You are running an older version:       {this.currentVersionNumber} ";
 
             this.Message.Reason = "We always recommend updating. Updates include bug fixes, enhancements, new features, and more. ";
             this.Message.Reason += Environment.NewLine + "Select 'Download New Version' to download it at the Timelapse download page.";
@@ -112,7 +112,7 @@ namespace Timelapse.Dialog
             var hyperlinks = GetVisuals(flowDocument).OfType<Hyperlink>();
             foreach (var link in hyperlinks)
             {
-                link.RequestNavigate += new System.Windows.Navigation.RequestNavigateEventHandler(this.Link_RequestNavigate);
+                link.RequestNavigate += this.Link_RequestNavigate;
             }
         }
 

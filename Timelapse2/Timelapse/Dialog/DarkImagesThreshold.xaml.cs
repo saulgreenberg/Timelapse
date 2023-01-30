@@ -100,7 +100,7 @@ namespace Timelapse.Dialog
                 }
             }
             // Populate the combobox with the labels of the available flag controls
-            this.CBPopulateFlagField.ItemsSource = this.FlagLabelsDataLabels.Keys.ToList<string>();
+            this.CBPopulateFlagField.ItemsSource = this.FlagLabelsDataLabels.Keys.ToList();
 
             // Gie the user some instructions depending on whether any flage are available
             if (this.FlagLabelsDataLabels.Count == 0)
@@ -305,7 +305,7 @@ namespace Timelapse.Dialog
                         imageQuality.IsColor = this.isColor;
                         imageQuality.DarkPixelRatioFound = this.darkPixelRatioFound;
 
-                        string newDarkClassificationAsString = imageQuality.NewDarkClassification == true
+                        string newDarkClassificationAsString = imageQuality.NewDarkClassification
                         ? Constant.BooleanValue.True
                         : Constant.BooleanValue.False;
 
@@ -380,7 +380,7 @@ namespace Timelapse.Dialog
         {
             Button resetButton = (Button)sender;
             resetButton.ContextMenu.IsEnabled = true;
-            resetButton.ContextMenu.PlacementTarget = sender as Button;
+            resetButton.ContextMenu.PlacementTarget = (Button)sender;
             resetButton.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
             resetButton.ContextMenu.IsOpen = true;
         }

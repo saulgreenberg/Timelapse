@@ -526,8 +526,8 @@ namespace Timelapse.Database
                 + Sql.Or
                 + SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(st2.Operator), st2.DatabaseValue)
                 + Sql.CloseParenthesis;
-            //System.Diagnostics.Debug.Print("Time term 1: " + st1.Operator + "|" + ts1.ToString());
-            //System.Diagnostics.Debug.Print("Time term 2: " + st2.Operator + "|" + ts2.ToString());
+            //Debug.Print("Time term 1: " + st1.Operator + "|" + ts1.ToString());
+            //Debug.Print("Time term 2: " + st2.Operator + "|" + ts2.ToString());
             return true;
         }
         #endregion

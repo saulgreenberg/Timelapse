@@ -21,10 +21,10 @@
 
     <!-- Bindings to activate the Find box using CTL-F -->
     <Window.CommandBindings>
-        <CommandBinding Command="Find" Executed="MenuItemFindByFileName_Click"></CommandBinding>
+        <CommandBinding Command="Find" Executed="MenuItemFindByFileName_Click" />
     </Window.CommandBindings>
     <Window.InputBindings>
-        <KeyBinding Key="F" Modifiers="Control" Command="Find"></KeyBinding>
+        <KeyBinding Key="F" Modifiers="Control" Command="Find" />
     </Window.InputBindings>
 
     <Grid>
@@ -596,7 +596,7 @@
                                         </Popup>
 
                                         <!-- Controls Tray panel (to hold controls) -->
-                                        <StackPanel Name="ControlsPanel">
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Name="ControlsPanel">
                                             <controls:DataEntryControls x:Name="DataEntryControls" />
                                         </StackPanel>
 
@@ -678,7 +678,7 @@
                                             LostFocus="FileNavigatorSlider_LostFocus"/>
                                             <controls:FilePlayer x:Name="FilePlayer" Grid.Row="0" Grid.Column="1" FilePlayerChange="FilePlayer_FilePlayerChange" Visibility="Collapsed"/>
                                         </Grid>
-                                        <images:MarkableCanvas x:Name="MarkableCanvas" Grid.Row="2" Grid.RowSpan="2" HorizontalAlignment="Stretch"/>
+                                        <images:MarkableCanvas x:Name="MarkableCanvas" Grid.Row="2" HorizontalAlignment="Stretch"/>
                                         <TextBlock Name="EpisodeText" Grid.Row="2"  IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="Black" FontSize="40" Margin="5,20,0,0">
                                             <TextBlock.Background>
                                                 <SolidColorBrush Color="AliceBlue" Opacity="0.6" />

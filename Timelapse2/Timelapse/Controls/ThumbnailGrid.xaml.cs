@@ -104,7 +104,7 @@ namespace Timelapse.Controls
             if (showMoreCells == true && this.Level >= Constant.ThumbnailGrid.MaxRows)
             {
                 // Showing more cells aborted as already displaying the maximum amount of rows. 
-                //System.Diagnostics.Debug.Print(String.Format("0 ThumbnailGridRefreshStatus.AtMaximumZoomLevel {0}", this.Level));
+                //Debug.Print(String.Format("0 ThumbnailGridRefreshStatus.AtMaximumZoomLevel {0}", this.Level));
                 return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
             }
             else if (showMoreCells == true)
@@ -119,7 +119,7 @@ namespace Timelapse.Controls
                 if (this.Level <= 0)
                 {
                     // Showing fewer cells aborted as we are already at or below zero 
-                    //System.Diagnostics.Debug.Print(String.Format("2b this.Level <= 0 {0}", this.Level));
+                    //Debug.Print(String.Format("2b this.Level <= 0 {0}", this.Level));
                     this.Level = 0;
                     return ThumbnailGridRefreshStatus.AtZeroZoomLevel;
                 }
@@ -214,7 +214,7 @@ namespace Timelapse.Controls
                 // use FFMPEG Probe (but that may mean another dll?)
                 BitmapSource bm = this.FileTable[this.FileTableStartIndex].LoadBitmap(this.FolderPath, Constant.ImageValues.PreviewWidth32, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth, out _);
                 cellWidth = (bm == null || bm.PixelHeight == 0) ? Convert.ToInt32(desiredCellHeight * Constant.ThumbnailGrid.AspectRatioDefault) : Convert.ToInt32(desiredCellHeight * bm.PixelWidth / bm.PixelHeight);
-                //System.Diagnostics.Debug.Print(String.Format("Bitmap {0} {1}", cellWidth, desiredCellHeight));
+                //Debug.Print(String.Format("Bitmap {0} {1}", cellWidth, desiredCellHeight));
             }
             else
             {
@@ -323,7 +323,6 @@ namespace Timelapse.Controls
             if (this.modifierKeyPressedOnMouseDown)
             {
                 this.modifierKeyPressedOnMouseDown = false;
-                return;
             }
         }
         #endregion
@@ -487,7 +486,7 @@ namespace Timelapse.Controls
                     {
                         if (thumbnailInCell.ImageRow.IsVideo == false)
                         {
-                            if (this.BackgroundWorker.CancellationPending == true)
+                            if (this.BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 this.BackgroundWorker.WorkerReportsProgress = false;
@@ -562,7 +561,7 @@ namespace Timelapse.Controls
                 }
                 catch
                 {
-                    return;
+                    TracePrint.CatchException("Catch is acceptable");
                 }
             };
 
@@ -575,7 +574,6 @@ namespace Timelapse.Controls
             this.BackgroundWorker.RunWorkerCompleted += (o, ea) =>
             {
                 this.BackgroundWorker.Dispose();
-                return;
             };
 
             this.CancelUpdate();
@@ -684,7 +682,7 @@ namespace Timelapse.Controls
             // Add as many columns of the and rows of the given cell width and height as can fit into the grid's available space
             for (int currentColumn = 0; currentColumn < columnCount; currentColumn++)
             {
-                this.Grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
+                this.Grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
             }
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
@@ -814,7 +812,7 @@ namespace Timelapse.Controls
             // Add as many columns of the and rows of the given cell width and height as can fit into the grid's available space
             for (int currentColumn = 0; currentColumn < columnCount; currentColumn++)
             {
-                this.Grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
+                this.Grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
             }
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
@@ -863,7 +861,7 @@ namespace Timelapse.Controls
             catch
             {
                 // Uncomment for tracing purposes
-                // System.Diagnostics.Debug.Print("UpdateThumbnailsLoadProgress Aborted | Catch");
+                // Debug.Print("UpdateThumbnailsLoadProgress Aborted | Catch");
             }
         }
 
@@ -877,7 +875,10 @@ namespace Timelapse.Controls
                     this.BackgroundWorker.CancelAsync();
                 }
             }
-            catch { }
+            catch
+            {
+                TracePrint.CatchException("Catch is an acceptable.");
+            }
         }
         #endregion
 

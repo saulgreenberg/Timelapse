@@ -22,7 +22,7 @@
                             ShowExplanationVisibility="True"/>
 
             <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
-                <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                <Rectangle Fill="#FF868686" Height="2" />
             </StackPanel>
 
             <!-- Ok/Cancel buttons-->
@@ -33,12 +33,9 @@
 
             <DockPanel Name="PrimaryPanel" DockPanel.Dock="Top" >
                 <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
-                    <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                    <Rectangle Fill="#FF868686" Height="2" />
 
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="145"/>

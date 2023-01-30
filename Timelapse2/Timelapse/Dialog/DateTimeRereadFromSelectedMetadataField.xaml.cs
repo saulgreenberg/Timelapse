@@ -256,7 +256,7 @@ namespace Timelapse.Dialog
                     {
                         keyValueList.Add(new KeyValuePair<string, string>(image.File, String.Format("Data field unchanged - file is missing metatdata {0} ", this.metadataFieldName)));
 
-                        // System.Diagnostics.Debug.Print(String.Format("{0}: No metadata", image.File));
+                        // Debug.Print(String.Format("{0}: No metadata", image.File));
                         continue;
                     }
                     metadataUpdateCount++;
@@ -290,7 +290,7 @@ namespace Timelapse.Dialog
         private void Datagrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
             // If there's no metadata, then just bail
-            if (this.noMetadataAvailable == true)
+            if (this.noMetadataAvailable)
             {
                 return;
             }

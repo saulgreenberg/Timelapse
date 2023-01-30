@@ -32,7 +32,7 @@
                         <Slider Name="TimeThresholdSlider" Width="300" IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="10" VerticalAlignment="Top"/>                        <TextBlock Name="TimeThresholdText" Text="--" FontWeight="Normal" Margin="5,0,0,0" />
                     </StackPanel>
                 </StackPanel>
-                <Button Name="ResetTimeThresholdSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" VerticalAlignment="Bottom" Click="ResetTimeThresholdSlider_Click"></Button>
+                <Button Name="ResetTimeThresholdSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" VerticalAlignment="Bottom" Click="ResetTimeThresholdSlider_Click" />
             </Grid>
         </GroupBox>
         <Button Margin="698,20,37,0" x:Name="OkButton" Content="Ok" IsDefault="True" Height="34" Click="OkButton_Click" AutomationProperties.AutomationId="OkButton" />

@@ -83,7 +83,7 @@ namespace Timelapse.Dialog
             }
 
             // Get the monitor screen that this window appears to be on
-            Screen screenInDpi = System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+            Screen screenInDpi = Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
 
             // A user reported a bug where the window height was negative. Not sure what value we should
             // really be testing against... Maybe MinWidth? Anyways, this should at least catch the worst of it.
@@ -980,7 +980,7 @@ namespace Timelapse.Dialog
             {
                 Message =
                 {
-                    Icon = System.Windows.MessageBoxImage.Error,
+                    Icon = MessageBoxImage.Error,
                     Reason = "You probably don't have a default program set up to display a photo viewer for " + extension + " files",
                     Solution = "Set up a photo viewer in your Windows Settings."
                                + Environment.NewLine
@@ -989,55 +989,6 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
-        #endregion
-
-        #region MessageBox: Show Exception Reporting  
-        // REPLACED BY ExceptionShutdownDialog  - DELETE after we are sure that other method works 
-        /// <summary>
-        /// Display a dialog showing unhandled exceptions. The dialog text is also placed in the clipboard so that the user can paste it into their email
-        /// </summary>
-        /// <param name="programName">The name of the program that generated the exception</param>
-        /// <param name="e">the exception</param>
-        /// <param name="owner">A window where the message will be positioned within it</param>
-        //public static void ShowExceptionReportingDialog(string programName, UnhandledExceptionEventArgs e, Window owner)
-        //{
-        //    // Check the arguments for null 
-        //    ThrowIf.IsNullArgument(e, nameof(e));
-
-        //    // once .NET 4.5+ is used it's meaningful to also report the .NET release version
-        //    // See https://msdn.microsoft.com/en-us/library/hh925568.aspx.
-        //    string title = programName + " needs to close. Please report this error.";
-        //    MessageBox exitNotification = new MessageBox(title, owner);
-        //    exitNotification.Message.Icon = MessageBoxImage.Error;
-        //    exitNotification.Message.Title = title;
-        //    exitNotification.Message.Problem = programName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
-        //    exitNotification.Message.What = "Please help us fix it! You should be able to paste the entire content of the Reason section below into an email to saul@ucalgary.ca , along with a description of what you were doing at the time.  To quickly copy the text, click on the 'Reason' details, hit ctrl+a to select all of it, ctrl+c to copy, and then email all that.";
-        //    exitNotification.Message.Reason = String.Format("{0}, {1}, .NET runtime {2}{3}", typeof(TimelapseWindow).Assembly.GetName(), Environment.OSVersion, Environment.Version, Environment.NewLine);
-        //    if (e.ExceptionObject != null)
-        //    {
-        //        exitNotification.Message.Reason += e.ExceptionObject.ToString();
-        //    }
-        //    exitNotification.Message.Result = String.Format("The data file is likely OK.  If it's not you can restore from the {0} folder.", Constant.File.BackupFolder);
-        //    exitNotification.Message.Hint = "\u2022 If you do the same thing this'll probably happen again.  If so, that's helpful to know as well." + Environment.NewLine;
-
-        //    // Modify text for custom exceptions
-        //    Exception custom_excepton = (Exception)e.ExceptionObject;
-        //    switch (custom_excepton.Message)
-        //    {
-        //        case Constant.ExceptionTypes.TemplateReadWriteException:
-        //            exitNotification.Message.Problem =
-        //                programName + "  could not read data from the template (.tdb) file. This could be because: " + Environment.NewLine +
-        //                "\u2022 the .tdb file is corrupt, or" + Environment.NewLine +
-        //                "\u2022 your system is somehow blocking Timelapse from manipulating that file (e.g., Citrix security will do that)" + Environment.NewLine +
-        //                "If you let us know, we will try and fix it. ";
-        //            break;
-        //        default:
-        //            exitNotification.Message.Problem = programName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
-        //            break;
-        //    }
-        //    Clipboard.SetText(exitNotification.Message.Reason);
-        //    exitNotification.ShowDialog();
-        //}
         #endregion
 
         #region MessageBox: No Updates Available
@@ -1120,7 +1071,7 @@ namespace Timelapse.Dialog
         public static void MissingFileSearchNoMatchesFoundDialog(Window owner, string fileName)
         {
             string title = "Timelapse could not find any matches to " + fileName;
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1146,7 +1097,7 @@ namespace Timelapse.Dialog
             Mouse.OverrideCursor = null;
 
             string title = count + " of your folders could not be found";
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1924,7 +1875,7 @@ namespace Timelapse.Dialog
         public static void ArgumentRelativePathDialog(Window owner, string folderName)
         {
             string title = "Timelapse is currently restricted to the folder: '" + folderName + "'";
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1944,7 +1895,7 @@ namespace Timelapse.Dialog
         public static void ArgumentTemplatePathDialog(Window owner, string fileName, string relativePathArgument)
         {
             string title = "Timelapse could not open the template";
-            Dialog.MessageBox messageBox = new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1977,7 +1928,7 @@ namespace Timelapse.Dialog
         public static void CustomSelectEpisodeDataLabelProblem(Window owner)
         {
             string title = "Timelapse cannot enable searches for Episode-related files";
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {

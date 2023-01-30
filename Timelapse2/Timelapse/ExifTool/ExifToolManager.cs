@@ -76,7 +76,7 @@ namespace Timelapse.ExifTool
             }
             catch
             {
-                // System.Diagnostics.Debug.Print("Catch in ExifToolManager:Stop");
+                // Debug.Print("Catch in ExifToolManager:Stop");
             }
         }
 
@@ -88,7 +88,7 @@ namespace Timelapse.ExifTool
                 // Debug.Print("In kill timer");
                 foreach (var process in Process.GetProcessesByName("exiftool(-k)"))
                 {
-                    // System.Diagnostics.Debug.Print(process.ProcessName);
+                    // Debug.Print(process.ProcessName);
                     process.Kill();
                 }
                 KillTimer.Stop();
@@ -96,7 +96,7 @@ namespace Timelapse.ExifTool
             }
             catch
             {
-                // System.Diagnostics.Debug.Print("ExifToolManager:KillTimer");
+                // Debug.Print("ExifToolManager:KillTimer");
             }
         }
         #endregion

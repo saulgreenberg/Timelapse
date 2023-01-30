@@ -24,7 +24,7 @@ namespace Timelapse
             if (fileDatabase == null)
             {
                 // this should not happen
-                // System.Diagnostics.Debug.Print("The fielDatabase was null and it shouldn't be");
+                // Debug.Print("The fielDatabase was null and it shouldn't be");
                 TracePrint.StackTrace(1);
                 // No-op
                 return;
@@ -46,7 +46,6 @@ namespace Timelapse
                     fileDatabase.ImageSet.RootFolder = actualRootFolderName;
                     fileDatabase.UpdateSyncImageSetToDatabase();
                 }
-                return;
             }
         }
         #endregion
@@ -57,7 +56,7 @@ namespace Timelapse
         /// </summary>
         /// <param name="owner"></param>
         /// <param name="fileDatabase"></param>
-        /// <param name="missingFolders"></param>
+        /// <param name="missingRelativePaths"></param>
         /// <returns>whether any folder are actually missing </returns>
         private static bool? CorrectForMissingFolders(Window owner, FileDatabase fileDatabase, List<string> missingRelativePaths)
         {

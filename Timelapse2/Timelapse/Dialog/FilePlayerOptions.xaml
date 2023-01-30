@@ -33,7 +33,7 @@
                         <TextBlock Name="SlowSpeedText" Text="--" FontWeight="Normal" Margin="5,0,0,0" />
                     </StackPanel>
                 </StackPanel>
-                <Button Name="ResetSlowSpeedSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" VerticalAlignment="Bottom" Click="ResetSlowSpeedSlider_Click"></Button>
+                <Button Name="ResetSlowSpeedSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" VerticalAlignment="Bottom" Click="ResetSlowSpeedSlider_Click" />
             </Grid>
         </GroupBox>
 
@@ -57,7 +57,7 @@
                         <TextBlock Name="FastSpeedText" Text="--" FontWeight="Normal"  Margin="5,0,0,0"/>
                     </StackPanel>
                 </StackPanel>
-                <Button Name="ResetFastSpeedSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" Margin="0,0,0,0" VerticalAlignment="Bottom" Click="ResetFastSpeedSlider_Click"></Button>
+                <Button Name="ResetFastSpeedSlider" Grid.Column="1" Content="Reset" FontWeight="Normal" Height="30" Width="130" Margin="0,0,0,0" VerticalAlignment="Bottom" Click="ResetFastSpeedSlider_Click" />
             </Grid>
         </GroupBox>
         <Button Margin="698,20,37,0" x:Name="OkButton" Content="Ok" IsDefault="True" Height="34" Click="OkButton_Click" AutomationProperties.AutomationId="OkButton" />

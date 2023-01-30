@@ -132,7 +132,7 @@ namespace Timelapse.Database
 
         public DataTable GetDataTableFromSelect(string query)
         {
-            // System.Diagnostics.Debug.Print("GetDataTableFromSelect: " + query);
+            // Debug.Print("GetDataTableFromSelect: " + query);
             DataTable dataTable = new DataTable();
             try
             {
@@ -144,7 +144,7 @@ namespace Timelapse.Database
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
                         command.CommandText = query;
-                        //System.Diagnostics.Debug.Print(query);
+                        //Debug.Print(query);
                         using (SQLiteDataReader reader = command.ExecuteReader())
                         {
                             dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
@@ -164,7 +164,7 @@ namespace Timelapse.Database
         // TEST CODE: Interruptable GetDataTableFromSelect
         //public DataTable GetDataTableFromSelect(string query, bool interruptable)
         //{
-        //    // System.Diagnostics.Debug.Print("GetDataTableFromSelect: " + query);
+        //    // Debug.Print("GetDataTableFromSelect: " + query);
         //    DataTable dataTable = new DataTable();
         //    try
         //    {
@@ -175,13 +175,13 @@ namespace Timelapse.Database
         //            if (interruptable) { 
         //                connection.ProgressOps =  10;
         //                connection.Progress += Connection_Progress;
-        //                System.Diagnostics.Debug.Print("Enabled");
+        //                Debug.Print("Enabled");
         //            }
         //            else 
         //            {
         //                connection.ProgressOps = 0;
         //                connection.Progress += null;
-        //                System.Diagnostics.Debug.Print("Disabled");
+        //                Debug.Print("Disabled");
 
         //            }
         //            connection.Open();
@@ -189,7 +189,7 @@ namespace Timelapse.Database
         //            using (SQLiteCommand command = new SQLiteCommand(connection))
         //            {
         //                command.CommandText = query;
-        //                //System.Diagnostics.Debug.Print(query);
+        //                //Debug.Print(query);
         //                using (SQLiteDataReader reader = command.ExecuteReader())
         //                {
         //                    dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
@@ -212,9 +212,9 @@ namespace Timelapse.Database
         //    if (i++ == 10)
         //    {
         //        e.ReturnCode = SQLiteProgressReturnCode.Interrupt;
-        //        System.Diagnostics.Debug.Print("Interrupted: " + i.ToString());
+        //        Debug.Print("Interrupted: " + i.ToString());
         //    }
-        //    else System.Diagnostics.Debug.Print ("Going: " + i.ToString());
+        //    else Debug.Print ("Going: " + i.ToString());
         //}
 
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
@@ -245,7 +245,7 @@ namespace Timelapse.Database
         /// <returns>A value containing the single result.</returns>
         private object GetScalarFromSelect(string query)
         {
-            // System.Diagnostics.Debug.Print("Scalar: " + query);
+            // Debug.Print("Scalar: " + query);
             try
             {
                 using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
@@ -255,7 +255,7 @@ namespace Timelapse.Database
                     {
                         //#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                         command.CommandText = query;
-                        //System.Diagnostics.Debug.Print("Count: " + query);
+                        //Debug.Print("Count: " + query);
                         //#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                         return command.ExecuteScalar();
                     }
@@ -624,7 +624,7 @@ namespace Timelapse.Database
                     {
                         command.CommandText = commandString;
                         command.ExecuteNonQuery();
-                        //System.Diagnostics.Debug.Print(commandString);
+                        //Debug.Print(commandString);
                     }
                 }
             }
@@ -692,12 +692,12 @@ namespace Timelapse.Database
                             if (statementsInQuery == 1)
                             {
                                 command.CommandText = Sql.BeginTransaction;
-                                //System.Diagnostics.Debug.Print(command.CommandText);
+                                //Debug.Print(command.CommandText);
                                 command.ExecuteNonQuery();
                             }
 
                             command.CommandText = statement;
-                            //System.Diagnostics.Debug.Print(command.CommandText);
+                            //Debug.Print(command.CommandText);
                             // Note: Its more efficient to do it this way than to send
                             // a bunch of semicolon-separated statements as a single query
                             rowsUpdated += command.ExecuteNonQuery();
@@ -706,7 +706,7 @@ namespace Timelapse.Database
                             if (statementsInQuery > MaxStatementCount)
                             {
                                 command.CommandText = Sql.EndTransaction;
-                                //System.Diagnostics.Debug.Print(command.CommandText);
+                                //Debug.Print(command.CommandText);
                                 rowsUpdated += command.ExecuteNonQuery();
                                 statementsInQuery = 0;
 
@@ -723,7 +723,7 @@ namespace Timelapse.Database
                         if (statementsInQuery != 0)
                         {
                             command.CommandText = Sql.EndTransaction;
-                            //System.Diagnostics.Debug.Print(command.CommandText);
+                            //Debug.Print(command.CommandText);
                             rowsUpdated += command.ExecuteNonQuery();
                         }
                     }
@@ -805,7 +805,7 @@ namespace Timelapse.Database
                             default:
                                 // This should never happen
                                 // But if it does, we just ignore it
-                                System.Diagnostics.Debug.Print("Unknown Field: " + field);
+                                Debug.Print("Unknown Field: " + field);
                                 break;
                         }
                     }
@@ -856,7 +856,7 @@ namespace Timelapse.Database
             string commaSeparatedColumns = GetSchemaColumnNamesAsString(connection, schemaFromTable);
             if (string.IsNullOrEmpty(commaSeparatedColumns))
             {
-                System.Diagnostics.Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
+                Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
                 return;
             }
             string sql = Sql.InsertInto + dataDestinationTable + Sql.OpenParenthesis + commaSeparatedColumns + Sql.CloseParenthesis + Sql.Select + commaSeparatedColumns + Sql.From + dataSourceTable;
@@ -1244,7 +1244,7 @@ namespace Timelapse.Database
                                 }
                                 break;
                             default:
-                                System.Diagnostics.Debug.Print(field.ToString());
+                                Debug.Print(field.ToString());
                                 break;
                         }
                     }

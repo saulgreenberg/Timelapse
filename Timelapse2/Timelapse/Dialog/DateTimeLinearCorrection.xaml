@@ -24,7 +24,7 @@
                             ShowExplanationVisibility="True" />
 
             <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
-                <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                <Rectangle Fill="#FF868686" Height="2" />
             </StackPanel>
 
             <DockPanel >

@@ -23,7 +23,7 @@
                                       &#10;&#x2022; 'Leave it as is' to leave those files there."
                             Hint="&#x2022; Restore 'deleted' backups by manually copying files from the DeletedFiles folder to your image set folder.
                                      &#10;&#x2022; Change how Timelapse manages the DeletedFiles folder via the 'Options | Preferences' menu" />
-        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1"></Rectangle>
+        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Leave it as is</Button>
