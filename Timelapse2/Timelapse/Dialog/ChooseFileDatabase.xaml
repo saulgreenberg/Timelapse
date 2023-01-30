@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:local="clr-namespace:Timelapse"
         mc:Ignorable="d"
         Title="Select the data file to use" Height="550" Width="650" MinHeight="550" MinWidth="650" Loaded="Window_Loaded">
     <Grid>

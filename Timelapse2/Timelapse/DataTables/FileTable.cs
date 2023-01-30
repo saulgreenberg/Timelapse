@@ -19,7 +19,7 @@ namespace Timelapse.Database
         private static ImageRow CreateRow(DataRow row)
         {
             // Return a image row or video row if its an image or video file respectively (as identified by its suffix)
-            switch (Util.FilesFolders.GetFileTypeByItsExtension(row.GetStringField(Constant.DatabaseColumn.File)))
+            switch (FilesFolders.GetFileTypeByItsExtension(row.GetStringField(Constant.DatabaseColumn.File)))
             {
                 case FileExtensionEnum.IsImage:
                     return new ImageRow(row);

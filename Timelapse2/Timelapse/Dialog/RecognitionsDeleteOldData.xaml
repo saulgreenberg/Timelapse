@@ -19,7 +19,7 @@
             Problem="Timelapse cannot import the recognition data"
             Hint="As old recognition data will be lost, make sure that this is what you want to do."/>
         
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1">
             <Button Name="CancelButton" IsCancel="True" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,40,10" Click="CancelButton_Click">_Cancel</Button>
             <Button Name="ReplaceButton" IsDefault="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Visible" Padding="10" Margin="10,10,10,10" Click="ReplaceButton_Click">_Completely replace the recognition data</Button>
         </StackPanel>

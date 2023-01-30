@@ -87,7 +87,6 @@ namespace Timelapse
         private void MenuItemEpisodeShowHide_Click(object sender, RoutedEventArgs e)
         {
             this.EpisodeShowHide(!Episodes.ShowEpisodes);
-            return;
         }
         public void EpisodeShowHide(bool show)
         {

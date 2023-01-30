@@ -258,7 +258,7 @@ namespace Timelapse.Database
 
                     foreach (KeyValuePair<string, string> kvp in exifData)
                     {
-                        metadata.Add(kvp.Key, new Timelapse.Util.ImageMetadata(String.Empty, kvp.Key, kvp.Value));
+                        metadata.Add(kvp.Key, new ImageMetadata(String.Empty, kvp.Key, kvp.Value));
                     }
                 }
 
@@ -374,7 +374,7 @@ namespace Timelapse.Database
                 try
                 {
                     // delete the Destination file if it already exists.
-                    Util.FilesFolders.TryDeleteFileIfExists(sourceFilePath);
+                    FilesFolders.TryDeleteFileIfExists(sourceFilePath);
                     return true;
                 }
                 catch (UnauthorizedAccessException exception)
@@ -396,12 +396,12 @@ namespace Timelapse.Database
            
             if (System.IO.File.Exists(destinationFilePath))
             {
-                return Util.FilesFolders.TryDeleteFileIfExists(destinationFilePath);
+                return FilesFolders.TryDeleteFileIfExists(destinationFilePath);
             }
 
             // A failure may occur if for some reason we could not move the file, for example, if we have loaded the image in a way that it locks the file.
             // I've changed image loading to avoid this, but its something to watch out for.
-            return Util.FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
+            return FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
         }
         #endregion
 

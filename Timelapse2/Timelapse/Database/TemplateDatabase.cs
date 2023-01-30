@@ -27,7 +27,7 @@ namespace Timelapse.Database
         #region Private Variables
         private bool disposed;
         private DataGrid editorDataGrid;
-        public DateTime mostRecentBackup = DateTime.MinValue;
+        public DateTime mostRecentBackup;
         private DataRowChangeEventHandler onTemplateTableRowChanged;
         #endregion
 
@@ -229,7 +229,7 @@ namespace Timelapse.Database
             // The database file exists. However, we still need to check if its valid. 
             using (TemplateDatabase database = new TemplateDatabase(filePath))
             {
-                if (database?.Database == null)
+                if (database.Database == null)
                 {
                     return false;
                 }
@@ -766,7 +766,7 @@ namespace Timelapse.Database
         {
             // Utilities.PrintMethodName();
             DataTable templateTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Template + Sql.OrderBy + Constant.Control.ControlOrder);
-            this.Controls = new DataTableBackedList<ControlRow>(templateTable, (DataRow row) => new ControlRow(row));
+            this.Controls = new DataTableBackedList<ControlRow>(templateTable, row => new ControlRow(row));
             this.Controls.BindDataGrid(this.editorDataGrid, this.onTemplateTableRowChanged);
         }
         #endregion

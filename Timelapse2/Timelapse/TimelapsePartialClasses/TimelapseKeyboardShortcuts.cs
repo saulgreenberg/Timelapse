@@ -126,7 +126,7 @@ namespace Timelapse
                     {
                         long currentFileID = this.DataHandler.ImageCache.Current.ID;
                         bool result = Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
-                        if (result == true)
+                        if (result)
                         {
                             if (Episodes.ShowEpisodes == false)
                             {

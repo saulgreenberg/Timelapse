@@ -24,14 +24,14 @@ namespace Timelapse.Util
             string message = String.IsNullOrWhiteSpace(nullVariableName)
                 ? "Null Exception"
                 : "Null Exception: " + nullVariableName;
-            Debug.Print(GetMethodNameStack(message, 2)); ;
+            Debug.Print(GetMethodNameStack(message, 2));
         }
         
        
 
         public static void CatchException(string message)
         {
-            Debug.Print(GetMethodNameStack("Catch: " + message, 2)); ;
+            Debug.Print(GetMethodNameStack("Catch: " + message, 2));
         }
         #endregion
 
@@ -42,7 +42,7 @@ namespace Timelapse.Util
         /// <param name="message"></param>
         public static void StackTraceToFile(string message)
         {
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
+            using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
             {
                 file.WriteLine(GetMethodNameStack(message, 5));
                 file.WriteLine("----");
@@ -51,7 +51,7 @@ namespace Timelapse.Util
 
         public static void StackTraceToOutput(string message)
         {
-            Debug.Print(GetMethodNameStack(message, 5)); ;
+            Debug.Print(GetMethodNameStack(message, 5));
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Timelapse.Util
         [Conditional("TRACE")]
         public static void StackTrace(string message)
         {
-            Debug.Print(GetMethodNameStack(message, 1));
+            Debug.Print(GetMethodNameStack(message));
         }
 
         /// <summary>

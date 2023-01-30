@@ -55,9 +55,13 @@ namespace Timelapse.Controls
         #region Public Show or hide the popup, where we display up to the maxNumberImagesToDisplay
         public void Show(bool isVisible, int maxNumberImagesToDisplay)
         {
-            ImageRow currentImageRow = timelapseWindow?.DataHandler?.ImageCache?.Current;
+            if (timelapseWindow == null)
+            {
+                TracePrint.NullException(nameof(timelapseWindow));
+                return;
+            }
             TimeSpan timeThreshold = timelapseWindow.State.EpisodeTimeThreshold;
-
+            ImageRow currentImageRow = timelapseWindow?.DataHandler?.ImageCache?.Current;
             if (isVisible == false || currentImageRow == null || FileDatabase == null)
             {
                 // Hide the popup if asked or if basic data isn't available, including deleting the children

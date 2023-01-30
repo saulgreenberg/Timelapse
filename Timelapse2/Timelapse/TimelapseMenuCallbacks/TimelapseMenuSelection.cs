@@ -38,7 +38,7 @@ namespace Timelapse
             this.MenuItemSelectMissingFiles.IsChecked = selection == FileSelectionEnum.Missing;
             this.MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             this.MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
-            this.MenuItemSelectRandomSample.IsEnabled = this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 50;
+            this.MenuItemSelectRandomSample.IsEnabled = this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
         }
         #endregion
 

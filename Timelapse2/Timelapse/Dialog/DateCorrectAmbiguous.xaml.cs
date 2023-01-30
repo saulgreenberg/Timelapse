@@ -42,7 +42,7 @@ namespace Timelapse.Dialog
             // Set up a progress handler that will update the progress bar
             this.InitalizeProgressHandler(this.BusyCancelIndicator);
 
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            Mouse.OverrideCursor = Cursors.Wait;
 
 
             // Find and display the ambiguous dates in the current selected set

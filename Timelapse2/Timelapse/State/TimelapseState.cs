@@ -112,14 +112,13 @@ namespace Timelapse.Util
             {
                 // We don't have a way to calculate the bounding box threshold, so just use this default for now
                 this.BoundingBoxDisplayThreshold = 0.5;
+                return;
             }
-            else
-            {
-                // Calculate the bounding box threshold from the typical and conservative values as specified in the  recognition file
-                float typicalThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
-                float conservativeThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
-                this.BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
-            }
+
+            // Calculate the bounding box threshold from the typical and conservative values as specified in the  recognition file
+            float typicalThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
+            float conservativeThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
+            this.BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
         }
         #endregion
 

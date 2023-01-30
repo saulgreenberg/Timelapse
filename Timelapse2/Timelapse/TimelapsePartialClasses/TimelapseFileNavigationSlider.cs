@@ -48,7 +48,9 @@ namespace Timelapse
             {
                 this.FileShow(this.FileNavigatorSlider);
                 this.State.MostRecentDragEvent = utcNow;
-                this.FileNavigatorSlider.AutoToolTipContent = this.DataHandler.ImageCache.Current.File;
+                this.FileNavigatorSlider.AutoToolTipContent = this.DataHandler?.ImageCache?.Current != null 
+                    ? this.DataHandler.ImageCache.Current.File
+                    : string.Empty;
             }
         }
 
@@ -71,7 +73,9 @@ namespace Timelapse
         {
             this.timerFileNavigator.Stop();
             this.FileShow(this.FileNavigatorSlider);
-            this.FileNavigatorSlider.AutoToolTipContent = this.DataHandler.ImageCache.Current.File;
+            this.FileNavigatorSlider.AutoToolTipContent = this.DataHandler?.ImageCache?.Current != null  
+                ? this.DataHandler.ImageCache.Current.File
+                : string.Empty;
         }
         #endregion
 
@@ -80,11 +84,11 @@ namespace Timelapse
         {
             if (enableCallback)
             {
-                this.FileNavigatorSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(this.FileNavigatorSlider_ValueChanged);
+                this.FileNavigatorSlider.ValueChanged += this.FileNavigatorSlider_ValueChanged;
             }
             else
             {
-                this.FileNavigatorSlider.ValueChanged -= new RoutedPropertyChangedEventHandler<double>(this.FileNavigatorSlider_ValueChanged);
+                this.FileNavigatorSlider.ValueChanged -= this.FileNavigatorSlider_ValueChanged;
             }
         }
 

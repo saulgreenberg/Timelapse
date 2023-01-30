@@ -34,7 +34,7 @@
                 <Button IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewTemplateButton_Click" IsEnabled="True">Open using New Template</Button>
             </StackPanel>
 
-            <ScrollViewer DockPanel.Dock="Top" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Vertical">
                     <Label FontWeight="Bold" Content=" If you choose 'Open using New template', Timelapse will update these controls and their associated data columns as follows."/>
                     <Grid Name="ActionGrid"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >

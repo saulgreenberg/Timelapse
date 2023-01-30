@@ -40,7 +40,7 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Get the sort terms. 
-            this.sortTermList = Database.SortTerms.GetSortTerms(this.database.CustomSelection.SearchTerms);
+            this.sortTermList = SortTerms.GetSortTerms(this.database.CustomSelection.SearchTerms);
 
             // We need the labels of the File and Date datalabels, as we will check to see if they are selected in the combo box
             foreach (SortTerm sortTerm in this.sortTermList)

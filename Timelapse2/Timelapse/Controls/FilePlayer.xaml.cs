@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
+using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
@@ -83,7 +84,13 @@ namespace Timelapse.Controls
         #region Button and Keypress Callbacks
         private void FilePlayer_Click(object sender, RoutedEventArgs e)
         {
-            RadioButton button = sender as RadioButton;
+            if (sender is RadioButton button == false)
+            {
+                TracePrint.NullException(nameof(button));
+                this.Selection = FilePlayerSelectionEnum.Stop;
+                return;
+            }
+
             switch ((string)button.Tag)
             {
                 case "First":

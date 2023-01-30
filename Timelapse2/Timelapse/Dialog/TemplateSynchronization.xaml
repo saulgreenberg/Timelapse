@@ -17,7 +17,7 @@
                             ShowExplanationVisibility="True"/>
         <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
             <Rectangle Fill="#FF868686" Height="2"/>
-            <ScrollViewer ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Height="250">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Height="250">
                 <TextBlock Name="TextBlockDetails" HorizontalAlignment="Left" Margin="10,10,10,0" VerticalAlignment="Top" TextWrapping="Wrap" FontSize="12" />
             </ScrollViewer>
         </StackPanel>
