@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -262,15 +264,42 @@ namespace Timelapse.Database
 
             // Create the second part of the query to:
             // - Create a temporary Markers Table mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
+            // - Note that we have to ensure that the columns in both markers table are in the same order. Consequently, we
+            //   get the ordered column names from the main database, and then construct a query that creates the tempTable
+            //   by selecting on those column names (in order)
             // - Update the Markers Table with the modified Ids
             // - Insert the Markers Table  into the main db's Markers Table
-            // Form: CREATE TEMPORARY TABLE tempMarkers AS SELECT * FROM attachedDB.Markers;
+            // Form: select name from pragma_table_info('MarkersTable')  as tblInfo  - return a list of columns
+            // CREATE TEMPORARY TABLE tempMarkers AS SELECT <comma-spearated column list> FROM attachedDB.Markers;
             //       UPDATE tempMarkers SET Id = (offsetID + tempMarkers.Id);
             //       INSERT INTO Markers SELECT * FROM tempMarkers;
-            query += QueryCreateTemporaryTableFromExistingTable(tempMarkersTable, attachedDB, Constant.DBTables.Markers);
+
+            //---------------------------------------------
+            // Get the columns in order
+            // Form: select name from pragma_table_info('MarkersTable')  as tblInfo 
+            string queryGetColumnName = Sql.SelectNameFromPragmaTableInfo +
+                                        Sql.OpenParenthesis + Sql.Quote(Constant.DBTables.Markers) +
+                                        Sql.CloseParenthesis + Sql.As + Sql.TBLINFO;
+            DataTable dataTable = currentDDB.GetDataTableFromSelect(queryGetColumnName);
+            string columns = string.Empty;
+            int i = 0;
+            foreach (DataRow row in dataTable.Rows)
+            {
+                if (i++ != 0)
+                {
+                    columns += Sql.Comma + " ";
+                }
+                columns += row[0].ToString() + " ";
+            }
+            query += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As + Sql.Select + columns + Sql.From + attachedDB + Sql.Dot + Constant.DBTables.Markers + Sql.Semicolon;
+            //---------------------------------------------
+            // This was the original form of the above before we did the Get the columns by order code. It introduced an issue when the markers were in different column orders, as
+            // the values would be inserted in the wrong columns. We keep it here just in case. Remove this commented code if it all appears to work.
+            // query += QueryCreateTemporaryTableFromExistingTable(tempMarkersTable, attachedDB, Constant.DBTables.Markers);
+            //---------------------------------------------
             query += QueryAddOffsetToIDInTable(tempMarkersTable, Constant.DatabaseColumn.ID, offsetId);
             query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable);
-
+            
             //
             // Part 5. Detection Table merge query
             //
@@ -305,6 +334,7 @@ namespace Timelapse.Database
                 // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
                 // This becomes the base comparison against which future databases will be compared to,
                 // in terms of generating best fit info, and whether detection/classification categories conflict or can be merged together.
+
 
                 // To do this, we first create temporary tables from the toBeMerged db 
                 query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedDB, Constant.DBTables.Info);

@@ -2166,7 +2166,6 @@ namespace Timelapse.Database
 
         // Try to read the recognition data from the Json file into the Recognizer structure
         // A progress bar is displayed
-        // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
         // Success: returns a filled in Recognizer structure
         // Failure: returns null
         public async Task<Recognizer> JsonDeserializeRecognizerFileAsync(string path)
@@ -2240,7 +2239,7 @@ namespace Timelapse.Database
 
                     // Resetting these tables to null will force reading the new values into them
                     // TODO: Put this somewhere else in case the user aborts the update!
-                    // TODO Update this comment: Resetting these tables to null will force reading the new values into them
+                    // Also Update this comment: Resetting these tables to null will force reading the new values into them
                     this.detectionDataTable = null; // to force repopulating the data structure if it already exists.
                     this.detectionCategoriesDictionary = null;
                     this.classificationCategoriesDictionary = null;

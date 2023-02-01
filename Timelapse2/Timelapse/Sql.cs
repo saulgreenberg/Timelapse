@@ -111,6 +111,7 @@ namespace Timelapse
         public const string SelectCountStarFrom = Sql.SelectCount + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis + Sql.From;
         public const string SelectDistinctCountStarFrom = Sql.SelectDistinctCount + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis + Sql.From;
         public const string SelectExists = " SELECT EXISTS ";
+        public const string SelectNameFromPragmaTableInfo = Sql.Select + Sql.Name + Sql.From + " PRAGMA_TABLE_INFO ";
         public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Sql.Select + Sql.Name + Sql.From + Sql.SqlMaster + Sql.Where + Sql.TypeEqualsTable + Sql.And + Sql.Name + Sql.Equal;
         public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = Sql.SelectCountStarFrom + Sql.SqlMaster + Sql.Where + Sql.TypeEqualsIndex + Sql.And + Sql.Name + Sql.Equal;
         public const string Semicolon = " ; ";
@@ -122,6 +123,7 @@ namespace Timelapse
         public const string Substr = " SUBSTR ";
 
         public const string Real = " REAL ";
+        public const string TBLINFO = " TBLINFO ";
         public const string Text = "TEXT";
         public const string TimeFunction = " Time ";
         public const string Then = " THEN ";

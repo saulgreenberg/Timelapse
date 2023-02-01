@@ -175,12 +175,6 @@ namespace Timelapse.Images
                 // MediaPlayer is not actually synchronous despite exposing synchronous APIs, so wait for it get the video loaded.  Otherwise
                 // the width and height properties are zero and only black pixels are drawn.  The properties will populate with just a call to
                 // Open() call but without also Play() only black is rendered
-
-                // TODO Rapidly show videos as it is too slow now, where:
-                // - ONLOAD It currently loads a blank video image when scouring thorugh the videos 
-                // - Rapid navigation: loads a blank video image in the background, then the video on pause
-                // - Multiview: very slow as only loads the  video.
-                // This will be fixed when we pre-process thumbnails
                 int timesTried = (displayIntent == ImageDisplayIntentEnum.Persistent) ? 1000 : 0;
                 while ((mediaPlayer.NaturalVideoWidth < 1) || (mediaPlayer.NaturalVideoHeight < 1))
                 {
@@ -343,7 +337,7 @@ namespace Timelapse.Images
                 bitmap.BeginInit();
                 bitmap.DecodePixelWidth = 1; // We try to generate a trivial thumbnail, as that suffices to know if this is a valid jpg;
                 bitmap.DecodePixelHeight = 1; // We try to generate a trivial thumbnail, as that suffices to know if this is a valid jpg;
-                // TODO Check this, as we changed the bitmap cache options from Default to OnLoad to ensure file deletions would work
+                // I changed the bitmap cache options from Default to OnLoad to ensure file deletions would work
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
                 bitmap.UriSource = new Uri(path);
                 bitmap.EndInit();

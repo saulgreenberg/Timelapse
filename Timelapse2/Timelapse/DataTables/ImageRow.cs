@@ -327,7 +327,7 @@ namespace Timelapse.Database
                 // daylight-standard transition occurred but the camera hadn't yet been serviced to put its clock on the new time,
                 // and needs to be reported separately as the change of day in images taken just after midnight is not an indicator
                 // of day-month ordering ambiguity in the image taken metadata.
-                // TODO DT NOTE: I Don't know if this is needed since we did the UTC eliminations
+                // NOTE: I Don't know if this is needed since we did the UTC eliminations
                 bool standardTimeAdjustment = exifDateTime - currentDateTime == TimeSpan.FromHours(1);
 
                 // snap to metadata time and return the extent of the time adjustment

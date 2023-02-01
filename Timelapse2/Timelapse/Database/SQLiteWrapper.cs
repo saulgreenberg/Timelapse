@@ -977,7 +977,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in ColumnExists. {0}", exception));
+                TracePrint.PrintMessage($"Failure in ColumnExists. {exception}");
                 return false;
             }
         }
