@@ -18,6 +18,7 @@ namespace Timelapse
             if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
             {
                 TracePrint.PrintMessage("FilesSelectAndShow: Expected a file database to be available.");
+                return;
             }
             await this.FilesSelectAndShowAsync(this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
         }

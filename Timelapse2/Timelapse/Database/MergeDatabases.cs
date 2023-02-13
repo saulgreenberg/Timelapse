@@ -58,7 +58,7 @@ namespace Timelapse.Database
                 // Backup the old merge file by moving it to the backup folder 
                 // Note that we do the move instead of copy as we will be overwriting the file anyways
                 backupMade = FileBackup.TryCreateBackup(destinationddbFilePath, true);
-                Util.FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
+                FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
             }
 
             FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationddbFilePath, templateDatabase).ConfigureAwait(true);
@@ -97,7 +97,7 @@ namespace Timelapse.Database
 
                     // Check each database file to see if its ok, or determine its error type.
                     // First, lets do a quick check to catch common db errors.
-                    DatabaseFileErrorsEnum databaseFileErrorsEnum = Util.FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
+                    DatabaseFileErrorsEnum databaseFileErrorsEnum = FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
                     if (databaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok || databaseFileErrorsEnum == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
                     {
                         // Things look ok so far. So lets try the merge, which may (or may not) find other errors
@@ -157,7 +157,7 @@ namespace Timelapse.Database
                 errorMessages.Errors.Clear();
                 errorMessages.Warnings.Clear();
                 errorMessages.Warnings.Add("Merge cancelled.");
-                Util.FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
+                FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
                 return errorMessages;
             }
 
@@ -289,7 +289,7 @@ namespace Timelapse.Database
                 {
                     columns += Sql.Comma + " ";
                 }
-                columns += row[0].ToString() + " ";
+                columns += row[0] + " ";
             }
             query += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As + Sql.Select + columns + Sql.From + attachedDB + Sql.Dot + Constant.DBTables.Markers + Sql.Semicolon;
             //---------------------------------------------

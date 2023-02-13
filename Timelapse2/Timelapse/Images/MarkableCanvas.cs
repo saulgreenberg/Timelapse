@@ -1048,7 +1048,7 @@ namespace Timelapse.Images
             // smaller than a given threshold, and less than 200 ms have passed since the original
             // mouse down. i.e., the use has done a rapid click and release on a small location
             if ((e.LeftButton == MouseButtonState.Released) &&
-                (sender == this.mouseDownSender) &&
+                (Equals(sender, this.mouseDownSender)) &&
                 this.isPanning == false &&
                 this.isDoubleClick == false)
             {

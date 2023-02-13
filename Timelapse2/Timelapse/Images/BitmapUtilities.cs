@@ -90,7 +90,7 @@ namespace Timelapse.Images
                 isCorruptOrMissing = true;
                 return Constant.ImageValues.FilePathTooLong.Value;
             }
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 isCorruptOrMissing = true;
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
@@ -108,7 +108,7 @@ namespace Timelapse.Images
                 //Saul TO DO:
                 // Note: not sure of the cost of creating a new converter every time. May be better to reuse it?
                 Stream outputBitmapAsStream = new MemoryStream();
-                FFMpegConverter ffMpeg = new NReco.VideoConverter.FFMpegConverter();
+                FFMpegConverter ffMpeg = new FFMpegConverter();
                 ffMpeg.GetVideoThumbnail(filePath, outputBitmapAsStream);
 
                 // Scale the video to the desired dimension
@@ -156,7 +156,7 @@ namespace Timelapse.Images
                 return Constant.ImageValues.FilePathTooLong.Value;
             }
 
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
             }
@@ -355,7 +355,7 @@ namespace Timelapse.Images
         /// </summary>
         public static double GetBitmapAspectRatioFromImageFile(string filePath)
         {
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value.Width / Constant.ImageValues.FileNoLongerAvailable.Value.Height;
             }

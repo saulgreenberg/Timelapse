@@ -262,7 +262,7 @@ namespace Timelapse.Util
         {
             try
             {
-                registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                registryKey.Write(subKeyPath, value.ToString(CultureInfo.InvariantCulture));
             }
             catch
             {
@@ -332,7 +332,7 @@ namespace Timelapse.Util
         {
             try
             {
-                registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                registryKey.Write(subKeyPath, value.ToString(CultureInfo.InvariantCulture));
             }
             catch
             {
@@ -347,7 +347,7 @@ namespace Timelapse.Util
         {
             try
             {
-                registryKey.Write(subKeyPath, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                registryKey.Write(subKeyPath, value.ToString(CultureInfo.InvariantCulture));
             }
             catch
             {

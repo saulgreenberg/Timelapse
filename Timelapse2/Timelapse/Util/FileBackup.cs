@@ -140,7 +140,7 @@ namespace Timelapse.Database
 
             try
             {
-                if (File.Exists(destinationFilePath) && new System.IO.FileInfo(destinationFilePath).Attributes.HasFlag(System.IO.FileAttributes.ReadOnly))
+                if (File.Exists(destinationFilePath) && new FileInfo(destinationFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
                 {
                     // Can't overwrite it...
                     return false;
@@ -165,11 +165,15 @@ namespace Timelapse.Database
 
             // age out older backup files (this skips the special checkpoint files)
             IEnumerable<FileInfo> backupFiles = FileBackup.GetBackupFiles(backupFolder, sourceFilePath, true).OrderByDescending(file => file.LastWriteTimeUtc);
+
+            // ReSharper disable All
+            // Resharper says this is heuristically unreachable, but that isn't true
             if (backupFiles == null)
             {
                 // We can't delete older backups, but at least we were able to create a backup.
                 return true;
             }
+            // ReSharper restore All
             foreach (FileInfo file in backupFiles.Skip(Constant.File.NumberOfBackupFilesToKeep))
             {
                 Util.FilesFolders.TryDeleteFileIfExists(file.FullName);

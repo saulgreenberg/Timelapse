@@ -145,7 +145,7 @@ namespace Timelapse
                 // Note that this passes a function which is invoked by the fileDatabase method. 
                 // This not only calculates the new times, but updates the progress bar as the fileDatabase method iterates through the files.
                 this.fileDatabase.UpdateAdjustedFileTimes(
-                   (string fileName, int fileIndex, int count, DateTime imageDateTime) =>
+                   (fileName, fileIndex, count, imageDateTime) =>
                    {
                        double imagePositionInInterval = (imageDateTime - this.earliestImageDateTime).Ticks / (double)intervalFromOldestToNewestImage.Ticks;
                        Debug.Assert((-0.0000001 < imagePositionInInterval) && (imagePositionInInterval < 1.0000001), String.Format("Interval position {0} is not between 0.0 and 1.0.", imagePositionInInterval));

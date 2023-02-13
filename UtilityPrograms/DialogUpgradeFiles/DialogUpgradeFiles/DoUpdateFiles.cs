@@ -223,7 +223,6 @@ namespace DialogUpgradeFiles
             }
             catch
             {
-
             }
         }
         #endregion

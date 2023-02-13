@@ -363,10 +363,14 @@ namespace Timelapse.Controls
         private void SelectFromInitialCellTo(RowColumn currentCell)
         {
             // If the first selected cell doesn't exist, make it the same as the currently selected cell
+            // ReSharper disable All
+            // While Resharper says this is heuristically unreachable, I'm unsure so I am leaving it in...
             if (this.cellChosenOnMouseDown == null)
             {
+                
                 this.cellChosenOnMouseDown = currentCell;
             }
+            // ReSharper restore All
             this.SelectNone(); // Clear the selections
 
             // Determine which cell is 

@@ -16,29 +16,20 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class NewVersionNotification
     {
-        #region Private Variables
-        private readonly string applicationName;
-        private readonly Version currentVersionNumber;
-        private readonly Version lastestVersionNumber;
-        #endregion
-
         #region Constructor, Loaded
-        public NewVersionNotification(Window owner, string applicationName, Version currentVersionNumber, Version latestVersionMumber)
+        public NewVersionNotification(Window owner, string applicationName, Version currentVersionNumber, Version latestVersionNumber)
         {
-            this.InitializeComponent();
 
+            this.InitializeComponent();
             this.Owner = owner;
-            this.applicationName = applicationName;
-            this.currentVersionNumber = currentVersionNumber;
-            this.lastestVersionNumber = latestVersionMumber;
 
             // Construct the template message
-            this.Title = $"A new version of {this.applicationName} is available.";
+            this.Title = $"A new version of {applicationName} is available.";
 
             this.Message.Title = this.Title;
-            this.Message.What = $"A new {this.applicationName} version is available: {this.lastestVersionNumber}";
+            this.Message.What = $"A new {applicationName} version is available: {latestVersionNumber}";
             this.Message.What += Environment.NewLine;
-            this.Message.What += $"You are running an older version:       {this.currentVersionNumber} ";
+            this.Message.What += $"You are running an older version:       {currentVersionNumber} ";
 
             this.Message.Reason = "We always recommend updating. Updates include bug fixes, enhancements, new features, and more. ";
             this.Message.Reason += Environment.NewLine + "Select 'Download New Version' to download it at the Timelapse download page.";
@@ -55,7 +46,7 @@ namespace Timelapse.Dialog
                 TextRange textRange = new TextRange(content.ContentStart, content.ContentEnd);
 
                 // Try to load the rtf file pointed at by the URI as a string
-                string filename = Constant.VersionUpdates.LatestVersionFileNamePrefix + String.Format("{0}", latestVersionMumber) + Constant.VersionUpdates.LatestVersionFileNameSuffix;
+                string filename = Constant.VersionUpdates.LatestVersionFileNamePrefix + String.Format("{0}", latestVersionNumber) + Constant.VersionUpdates.LatestVersionFileNameSuffix;
                 Uri uri = new Uri(Constant.VersionUpdates.LatestVersionBaseAddress, filename);
                 WebResponse response = WebRequest.Create(uri).GetResponse();
                 Stream streamfromuri = response.GetResponseStream();

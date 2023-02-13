@@ -184,7 +184,7 @@ namespace Timelapse.Dialog
 
                 ListBoxItem lbi = new ListBoxItem
                 {
-                    VerticalAlignment = System.Windows.VerticalAlignment.Top,
+                    VerticalAlignment = VerticalAlignment.Top,
                     Height = 28,
                     Content = filePath,
                     Tag = imageProperties

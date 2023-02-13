@@ -117,7 +117,7 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                            "'Populate data fields with image metadata...'",
-                                                               (bool optOut) =>
+                                                               optOut =>
                                                                {
                                                                    this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
@@ -194,7 +194,7 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                        "'Populate a data field with episodedata...'",
-                                                           (bool optOut) =>
+                                                           optOut =>
                                                            {
                                                                this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                            }))
@@ -462,7 +462,7 @@ namespace Timelapse
                 this.DataHandler.FileDatabase,
                 this.State.SuppressSelectedRereadDatesFromFilesPrompt,
                 "'Reread dates and times from files...'",
-                (bool optOut) => { this.State.SuppressSelectedRereadDatesFromFilesPrompt = optOut; }
+                optOut => { this.State.SuppressSelectedRereadDatesFromFilesPrompt = optOut; }
                 ))
             {
                 DateTimeRereadFromFiles rereadDates = new DateTimeRereadFromFiles(this, this.DataHandler.FileDatabase);
@@ -482,7 +482,7 @@ namespace Timelapse
                 this.DataHandler.FileDatabase,
                 this.State.SuppressSelectedDaylightSavingsCorrectionPrompt,
                 "'Correct for daylight savings time...'",
-                (bool optOut) => { this.State.SuppressSelectedDaylightSavingsCorrectionPrompt = optOut; }
+                optOut => { this.State.SuppressSelectedDaylightSavingsCorrectionPrompt = optOut; }
                 ))
             {
                 DateDaylightSavingsTimeCorrection dateTimeChange = new DateDaylightSavingsTimeCorrection(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache);
@@ -499,7 +499,7 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedDateTimeFixedCorrectionPrompt,
                                                                            "'Add a fixed correction value to every date/time...'",
-                                                               (bool optOut) =>
+                                                               optOut =>
                                                                {
                                                                    this.State.SuppressSelectedDateTimeFixedCorrectionPrompt = optOut;
                                                                }))
@@ -522,7 +522,7 @@ namespace Timelapse
                 this.DataHandler.FileDatabase,
                 this.State.SuppressSelectedDateTimeLinearCorrectionPrompt,
                 "'Correct for camera clock drift'",
-                (bool optOut) => { this.State.SuppressSelectedDateTimeLinearCorrectionPrompt = optOut; }
+                optOut => { this.State.SuppressSelectedDateTimeLinearCorrectionPrompt = optOut; }
                 ))
             {
                 DateTimeLinearCorrection linearDateCorrection = new DateTimeLinearCorrection(this, this.DataHandler.FileDatabase);
@@ -540,7 +540,7 @@ namespace Timelapse
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this, this.DataHandler.FileDatabase, this.State.SuppressSelectedAmbiguousDatesPrompt,
                 "'Correct ambiguous dates...'",
-                (bool optOut) =>
+                optOut =>
                  {
                      this.State.SuppressSelectedAmbiguousDatesPrompt = optOut;
                  }))
@@ -567,7 +567,7 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                            "'Re-read dates and times from a metadata field...'",
-                                                               (bool optOut) =>
+                                                               optOut =>
                                                                {
                                                                    this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
@@ -604,7 +604,7 @@ namespace Timelapse
             ImageRow currentImage = this.DataHandler?.ImageCache?.Current;
 
             // Search for - and return as list of relative path / filename tuples -  all folders under the root folder for files with the same name as the fileName.
-            List<Tuple<string, string>> matchingRelativePathFileNameList = Util.FilesFolders.SearchForFoldersContainingFileName(folderPath, currentImage.File);
+            List<Tuple<string, string>> matchingRelativePathFileNameList = FilesFolders.SearchForFoldersContainingFileName(folderPath, currentImage.File);
 
             // Remove any of the tuples that are spoken for i.e., that are already associated with a row in the database
             for (int i = matchingRelativePathFileNameList.Count - 1; i >= 0; i--)
@@ -712,7 +712,7 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedDarkThresholdPrompt,
                                                                            "'Populate a field with Dark classification data...'",
-                                                               (bool optOut) =>
+                                                               optOut =>
                                                                {
                                                                    this.State.SuppressSelectedDarkThresholdPrompt = optOut; // SG TODO
                                                                }))

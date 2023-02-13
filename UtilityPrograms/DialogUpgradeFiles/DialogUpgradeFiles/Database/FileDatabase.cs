@@ -76,7 +76,7 @@ namespace DialogUpgradeFiles.Database
             // Note that we avoid Selecting * from the DataTable, as that could be an expensive operation
             // Instead, we operate directly on the database. There is only one exception (updating DateTime),
             // as we have to regenerate all the column's values
-            // TODO XXXX: REPLACE CODE BELOW WITH new existing function this.TryGetImageSetVersionNumber(out string imageSetVersionNumber, false)), AS IT DOES EVERYTHING
+            // TODO: REPLACE CODE BELOW WITH new existing function this.TryGetImageSetVersionNumber(out string imageSetVersionNumber, false)), AS IT DOES EVERYTHING
             // Get the image set. We will be checking some of its values as we go along
             this.ImageSetLoadFromDatabase();
             await Task.Delay(Constant.BusyState.SleepTime);

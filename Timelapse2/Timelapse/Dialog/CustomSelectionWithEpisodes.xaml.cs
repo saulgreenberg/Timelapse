@@ -1013,7 +1013,7 @@ namespace Timelapse.Dialog
             this.SetDetectionCriteria();
             this.InitiateShowCountsOfMatchingFiles();
         }
-        private void DetectionCategoryComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void DetectionCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (this.IsLoaded == false)
             {

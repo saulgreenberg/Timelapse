@@ -179,7 +179,7 @@ namespace Timelapse.Dialog
                     foreach (Tuple<string, string, bool> row in this.observableCollection)
                     {
                        
-                        obsCollection.Add(row != rowValues
+                        obsCollection.Add(!Equals(row, rowValues)
                             // To make it work as a radio butotn, toggle all other rows to be what the selected row is not
                             ? new Tuple<string, string, bool>(row.Item1, row.Item2, rowValues.Item3)
                             // Toggle the selected row

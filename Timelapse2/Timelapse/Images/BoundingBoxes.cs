@@ -102,21 +102,21 @@ namespace Timelapse.Images
                     // The color and opacity of the bounding box depends upon its category and whether we are using color-blind friendly colors
                     case "0":
                         // In the current implementation, the first category is usually assigned to 'Empty', so this will likely never appear.
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.LavenderBlush, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.LavenderBlush, opacity);
                         break;
                     case "1":
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.DeepSkyBlue, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.DeepSkyBlue, opacity);
                         break;
                     case "2":
                         brush = (colorblind)
-                            ? Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.Yellow)
-                            : Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.Red, opacity);
+                            ? ColorsAndBrushes.SolidColorBrushFromColor(Colors.Yellow)
+                            : ColorsAndBrushes.SolidColorBrushFromColor(Colors.Red, opacity);
                         break;
                     case "3":
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.White, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.White, opacity);
                         break;
                     default:
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.PaleGreen, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.PaleGreen, opacity);
                         break;
                 }
                 rect.Stroke = brush;

@@ -104,7 +104,7 @@ namespace Timelapse
 
                 // If we are moving the focus from outside to one of the controls in the data panel or the copy previous button,
                 // then try to restore the focus to the last control that had the focus.
-                if (Constant.Control.KeyboardInputTypes.Contains(type) == false && focusedElement != this.CopyPreviousValuesButton)
+                if (Constant.Control.KeyboardInputTypes.Contains(type) == false && !Equals(focusedElement, this.CopyPreviousValuesButton))
                 {
                     if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
                     {
@@ -138,11 +138,11 @@ namespace Timelapse
             Func<int, int> incrementOrDecrement;
             if (moveToPreviousControl)
             {
-                incrementOrDecrement = (int index) => --index;
+                incrementOrDecrement = index => --index;
             }
             else
             {
-                incrementOrDecrement = (int index) => ++index;
+                incrementOrDecrement = index => ++index;
             }
 
             for (currentControl = incrementOrDecrement(currentControl);

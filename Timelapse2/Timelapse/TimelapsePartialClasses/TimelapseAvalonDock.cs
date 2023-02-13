@@ -22,7 +22,7 @@ namespace Timelapse
                 return;
             }
 
-            LayoutAnchorable la = sender as LayoutAnchorable;
+            if (!(sender is LayoutAnchorable la)) return;
             if (la.ContentId == "ContentIDDataEntryControlPanel" && (e.PropertyName == Constant.AvalonDockValues.FloatingWindowFloatingHeightProperty || e.PropertyName == Constant.AvalonDockValues.FloatingWindowFloatingWidthProperty))
             {
                 this.DockingManager_FloatingDataEntryWindowLimitSize();

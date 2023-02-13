@@ -45,7 +45,7 @@ namespace Timelapse.Images
                                 }
                                 else if (sharpen)
                                 {
-                                    ImageProcessor.Imaging.GaussianLayer gaussian = new ImageProcessor.Imaging.GaussianLayer(5, 3, 0);
+                                    ImageProcessor.Imaging.GaussianLayer gaussian = new ImageProcessor.Imaging.GaussianLayer(5, 3);
                                     // Load, resize, set the format and quality and save an image.
                                     imageFactory.Load(inImageStream)
                                                 .GaussianSharpen(gaussian)

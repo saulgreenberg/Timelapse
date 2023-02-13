@@ -75,7 +75,7 @@ namespace Timelapse
                 {
                     // This is a first time load of a ddb, as indicated by the non-empty returned result of the ddb file path to delete.
                     // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
-                    Util.FilesFolders.TryDeleteFileIfExists(results.Item2);
+                    FilesFolders.TryDeleteFileIfExists(results.Item2);
                 }
                 return false;
             }
@@ -203,7 +203,7 @@ namespace Timelapse
                 return;
             }
 
-            if (File.Exists(selectedCSVFilePath) && new System.IO.FileInfo(selectedCSVFilePath).Attributes.HasFlag(System.IO.FileAttributes.ReadOnly))
+            if (File.Exists(selectedCSVFilePath) && new FileInfo(selectedCSVFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
             {
                 // The file exists but its read only...
                 Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);

@@ -152,8 +152,8 @@ namespace Timelapse.Util
                 Screen screenContainingWindow = null;
 
                 // WPF Coordinates of the screen that contains the window
-                System.Windows.Point screenTopLeft = new System.Windows.Point(0, 0);
-                System.Windows.Point screenBottomRight = new System.Windows.Point(0, 0);
+                Point screenTopLeft = new Point(0, 0);
+                Point screenBottomRight = new Point(0, 0);
 
                 // The primary screen (which we will use in case we can't find a containing window)
                 Screen primaryScreen = null;

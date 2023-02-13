@@ -80,7 +80,7 @@ namespace Timelapse
         // Notifier: A toast that we can use anywher
         private Notifier ToastNotifier;
         // Record any command line arguments
-        public DataStructures.Arguments Arguments { get; set; } = new DataStructures.Arguments(Environment.GetCommandLineArgs());
+        public Arguments Arguments { get; set; } = new Arguments(Environment.GetCommandLineArgs());
         #endregion
 
         #region Main
@@ -267,13 +267,13 @@ namespace Timelapse
                 {
                     // We can't open the template. Show a message and ignore the arguments (by clearing them)
                     Dialogs.ArgumentTemplatePathDialog(this, this.Arguments.Template, this.Arguments.RelativePath);
-                    this.Arguments = new DataStructures.Arguments(null);
+                    this.Arguments = new Arguments(null);
                 }
             }
 
             if (this.State.IsViewOnly)
             {
-                Dialog.Dialogs.OpeningMessageViewOnly(this);
+                Dialogs.OpeningMessageViewOnly(this);
             }
 
             if (this.State.SuppressWarningToUpdateDBFilesToSQLPrompt == false)

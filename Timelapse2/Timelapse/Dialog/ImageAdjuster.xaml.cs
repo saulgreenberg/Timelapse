@@ -172,7 +172,7 @@ namespace Timelapse.Dialog
 
         #region UI Callbacks - image processing parameters altered in the UI
         // Send keboard events to the markable canvas, mostly so that the navigation keys will work.
-        private void Control_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Control_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             Keyboard.Focus(GlobalReferences.MainWindow.MarkableCanvas);
             GlobalReferences.MainWindow.MarkableCanvas.RaiseEvent(e);

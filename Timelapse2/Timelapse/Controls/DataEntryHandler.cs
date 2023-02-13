@@ -927,7 +927,7 @@ namespace Timelapse.Controls
             catch
             {
                 // This catch occurs when the id in fileIds[0] doesn't exist
-                System.Diagnostics.Debug.Write("Catch in GetValueDisplayStringCommonToFileIds: " + dataLabel);
+                Debug.Write("Catch in GetValueDisplayStringCommonToFileIds: " + dataLabel);
                 return null;
             }
         }

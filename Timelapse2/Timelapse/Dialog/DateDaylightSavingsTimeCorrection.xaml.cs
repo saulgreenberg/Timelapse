@@ -104,7 +104,7 @@ namespace Timelapse.Dialog
             // This not only calculates the new times, but updates the progress bar as the fileDatabase method iterates through the files.
             // this.fileDatabase.AdjustFileTimes(daylightSavingsAdjustment, startRow, endRow); // For all rows...
             this.fileDatabase.UpdateAdjustedFileTimes(
-               (string fileName, int fileIndex, int count, DateTime imageDateTime) =>
+               (fileName, fileIndex, count, imageDateTime) =>
                {
                    if (adjustment.Duration() >= TimeSpan.FromSeconds(1))
                    {

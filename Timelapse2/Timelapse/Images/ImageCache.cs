@@ -259,7 +259,7 @@ namespace Timelapse.Images
             {
                 // cache the bitmap, replacing any existing bitmap with the one passed
                 this.unalteredBitmapsByID.AddOrUpdate(id,
-                    (long newID) =>
+                    newID =>
                     {
                         // if the bitmap cache is full make room for the incoming bitmap
                         if (this.mostRecentlyUsedIDs.IsFull())
@@ -273,7 +273,7 @@ namespace Timelapse.Images
                         // indicate to add the bitmap
                         return bitmap;
                     },
-                    (long existingID, BitmapSource newBitmap) => newBitmap);
+                    (existingID, newBitmap) => newBitmap);
                 this.mostRecentlyUsedIDs.SetMostRecent(id);
             }
         }
@@ -430,7 +430,7 @@ namespace Timelapse.Images
                 this.CacheBitmap(nextFile.ID, nextBitmap);
                 this.prefetechesByID.TryRemove(nextFile.ID, out Task ignored);
             });
-            this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (long id, Task newPrefetch) => newPrefetch);
+            this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (id, newPrefetch) => newPrefetch);
             return true;
         }
         #endregion

@@ -90,7 +90,7 @@ namespace Timelapse.Database
 
         public static async Task<FileDatabase> CreateEmptyDatabase(string filePath, TemplateDatabase templateDatabase)
         {
-            Util.FilesFolders.TryDeleteFileIfExists(filePath);
+            FilesFolders.TryDeleteFileIfExists(filePath);
 
             // initialize the database if it's newly created
             FileDatabase fileDatabase = new FileDatabase(filePath);
@@ -216,6 +216,7 @@ namespace Timelapse.Database
             this.BindToDataGrid();
 
             // Create the MarkersTable and initialize it from the template table
+            // TODO: SHOULDN'T MARKERS TABLE BE A FOREIGN KEY??? TO CHECK WHY NOT
             schemaColumnDefinitions.Clear();
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.ID, Sql.CreationStringPrimaryKey));  // It begins with the ID integer primary key
             foreach (ControlRow control in this.Controls)
@@ -1923,7 +1924,7 @@ namespace Timelapse.Database
             if (File.Exists(Path.Combine(this.FolderPath, this.FileName)))
             {
                 // SAULXXX Should really check for failure, as TryMove will return true/false
-                Util.FilesFolders.TryMoveFileIfExists(
+               FilesFolders.TryMoveFileIfExists(
                     Path.Combine(this.FolderPath, this.FileName),
                     Path.Combine(this.FolderPath, newFileName));  // Change the file name to the new file name
                 this.FileName = newFileName; // Store the file name

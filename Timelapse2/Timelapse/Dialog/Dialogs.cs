@@ -2056,7 +2056,7 @@ namespace Timelapse.Dialog
         #region DialogIsFileValid checks for valid database file and displays appropriate dialog if it isn't
         public static bool DialogIsFileValid(Window owner, string filePath)
         {
-            switch (Util.FilesFolders.QuickCheckDatabaseFile(filePath))
+            switch (FilesFolders.QuickCheckDatabaseFile(filePath))
             {
                 case DatabaseFileErrorsEnum.Ok:
                     return true;

@@ -274,7 +274,7 @@ namespace Timelapse
             // Generate FileInfo list for every single image / video file in the folder path (including subfolders). These become the files to add to the database
             // PERFORMANCE - takes modest but noticable time to do if there are a huge number of files. 
             // TO DO: PUT THIS IN THE SHOW PROGRESS LOOP
-            Util.FilesFolders.GetAllImageAndVideoFilesInFolderAndSubfolders(selectedFolderPath, filesToAdd);
+            FilesFolders.GetAllImageAndVideoFilesInFolderAndSubfolders(selectedFolderPath, filesToAdd);
 
             if (filesToAdd.Count == 0)
             {
@@ -414,7 +414,7 @@ namespace Timelapse
                         this.FileNavigatorSlider.Visibility = Visibility.Visible;
                         this.StatusBar.SetMessage("Cancelled loading of image set");
                         Mouse.OverrideCursor = null;
-                        Util.FilesFolders.TryDeleteFileIfExists(filePathToDelete);
+                        FilesFolders.TryDeleteFileIfExists(filePathToDelete);
                         return;
                     }
                 }

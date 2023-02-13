@@ -51,7 +51,7 @@ namespace Timelapse
             this.DataGrid.ItemsSource = null;
 
             // Clear the arguments, in case we want to start a new session.
-            this.Arguments = new DataStructures.Arguments(null);
+            this.Arguments = new Arguments(null);
 
             // Reset the rest of the user interface 
             if (this.MarkableCanvas.ThumbnailGrid != null)

@@ -287,7 +287,7 @@ namespace Timelapse.ExifTool
             }
             finally
             {
-               Util.FilesFolders.TryDeleteFileIfExists(argFile);
+               FilesFolders.TryDeleteFileIfExists(argFile);
             }
         }
 
