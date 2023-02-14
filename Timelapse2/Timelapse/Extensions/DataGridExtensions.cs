@@ -83,9 +83,7 @@ namespace Timelapse.Util
                     return;
                 }
                 // The current row being examined
-                DataRowView currentRow = dataGrid.Items[currentRowIndexThatMayContainID] as DataRowView;
-
-                if ((long)currentRow.Row.ItemArray[0] == currentID)
+                if (dataGrid.Items[currentRowIndexThatMayContainID] is DataRowView currentRow && (long)currentRow.Row.ItemArray[0] == currentID)
                 {
                     // The ID is in the row indicated by rowIndex. Add that rowIndex as one of the rows we should select
                     rowIndexesToSelect.Add(currentRowIndexThatMayContainID);
@@ -102,7 +100,7 @@ namespace Timelapse.Util
                     for (int index = 0; index < dataGridItemsCount; index++)
                     {
                         currentRow = dataGrid.Items[index] as DataRowView;
-                        if ((long)currentRow.Row.ItemArray[0] == currentID)
+                        if (currentRow != null && (long)currentRow.Row.ItemArray[0] == currentID)
                         {
                             idFound = true;
                             rowIndexesToSelect.Add(index);

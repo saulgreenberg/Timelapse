@@ -215,7 +215,12 @@ namespace Timelapse.QuickPaste
         // Generate Event: Edit the quickpaste emtru
         private void EditItem_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem menuItem = sender as MenuItem;
+            if (sender is MenuItem menuItem == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
             this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Edit));
         }
@@ -223,7 +228,12 @@ namespace Timelapse.QuickPaste
         // Generate Event: Delete the quickpaste emtru
         private void DeleteItem_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem menuItem = sender as MenuItem;
+            if (sender is MenuItem menuItem == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
             this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Delete));
         }
@@ -231,7 +241,12 @@ namespace Timelapse.QuickPaste
         // Generate Event: MouseEnter on the quickpaste control
         private void QuickPasteControl_MouseEnter(object sender, MouseEventArgs e)
         {
-            Button button = sender as Button;
+            if (sender is Button button == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
             this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MouseEnter));
         }
@@ -239,15 +254,22 @@ namespace Timelapse.QuickPaste
         // Generate Event: MouseLeave on the quickpaste control
         private void QuickPasteControl_MouseLeave(object sender, MouseEventArgs e)
         {
-            Button button = sender as Button;
-            QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MouseLeave));
+            if (sender is Button button)
+            {
+                QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
+                this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry,
+                QuickPasteEventIdentifierEnum.MouseLeave));
+            }
         }
 
         // Generate Event: Select the quickpaste entry (quickpaste control has been activated)
         private void QuickPasteControl_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
+            if (sender is Button button == false)
+            {
+               TracePrint.NullException(nameof(sender));
+               return;
+            }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
             this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Paste));
         }

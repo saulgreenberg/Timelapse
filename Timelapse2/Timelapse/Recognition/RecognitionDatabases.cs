@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Windows.Documents;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Util;
@@ -138,6 +139,12 @@ namespace Timelapse.Recognition
             // Because we will not need these indexes later, we will drop them after the updates are done
 
             // Info Table: Populate
+            float typicalDetectionThreshold = recognizer.info.detector_metadata.typical_detection_threshold 
+                                              ?? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+            float typicalConservativeDetectionThreshold = recognizer.info.detector_metadata.conservative_detection_threshold
+                                                          ?? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+            float typicalClassificationThreshold = recognizer.info.classifier_metadata.typical_classification_threshold
+                                                   ?? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
             List<ColumnTuple> columnsToUpdate = new List<ColumnTuple>
             {
                 new ColumnTuple(Constant.InfoColumns.InfoID, 1),
@@ -146,9 +153,9 @@ namespace Timelapse.Recognition
                 new ColumnTuple(Constant.InfoColumns.Classifier, recognizer.info.classifier),
                 new ColumnTuple(Constant.InfoColumns.ClassificationCompletionTime, recognizer.info.classification_completion_time),
                 new ColumnTuple(Constant.InfoColumns.DetectorVersion, recognizer.info.detector_metadata.megadetector_version),
-                new ColumnTuple(Constant.InfoColumns.TypicalDetectionThreshold, (float) recognizer.info.detector_metadata.typical_detection_threshold),
-                new ColumnTuple(Constant.InfoColumns.ConservativeDetectionThreshold, (float) recognizer.info.detector_metadata.conservative_detection_threshold),
-                new ColumnTuple(Constant.InfoColumns.TypicalClassificationThreshold, (float) recognizer.info.classifier_metadata.typical_classification_threshold),
+                new ColumnTuple(Constant.InfoColumns.TypicalDetectionThreshold, typicalDetectionThreshold),
+                new ColumnTuple(Constant.InfoColumns.ConservativeDetectionThreshold, typicalConservativeDetectionThreshold),
+                new ColumnTuple(Constant.InfoColumns.TypicalClassificationThreshold, typicalClassificationThreshold),
             };
             List<List<ColumnTuple>> insertionStatements = new List<List<ColumnTuple>>
             {
@@ -390,6 +397,12 @@ namespace Timelapse.Recognition
             // Because we will not need these indexes later, we will drop them after the updates are done
 
             // Info Table: Populate
+            float typicalDetectionThreshold = recognizer.info.detector_metadata.typical_detection_threshold
+                                              ?? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+            float typicalConservativeDetectionThreshold = recognizer.info.detector_metadata.conservative_detection_threshold
+                                                          ?? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+            float typicalClassificationThreshold = recognizer.info.classifier_metadata.typical_classification_threshold
+                                                   ?? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
             List<ColumnTuple> columnsToUpdate = new List<ColumnTuple>
             {
                 new ColumnTuple(Constant.InfoColumns.InfoID, 1),
@@ -398,9 +411,9 @@ namespace Timelapse.Recognition
                 new ColumnTuple(Constant.InfoColumns.Classifier, recognizer.info.classifier),
                 new ColumnTuple(Constant.InfoColumns.ClassificationCompletionTime, recognizer.info.classification_completion_time),
                 new ColumnTuple(Constant.InfoColumns.DetectorVersion, recognizer.info.detector_metadata.megadetector_version),
-                new ColumnTuple(Constant.InfoColumns.TypicalDetectionThreshold, (float) recognizer.info.detector_metadata.typical_detection_threshold),
-                new ColumnTuple(Constant.InfoColumns.ConservativeDetectionThreshold, (float) recognizer.info.detector_metadata.conservative_detection_threshold),
-                new ColumnTuple(Constant.InfoColumns.TypicalClassificationThreshold, (float) recognizer.info.classifier_metadata.typical_classification_threshold),
+                new ColumnTuple(Constant.InfoColumns.TypicalDetectionThreshold, typicalDetectionThreshold),
+                new ColumnTuple(Constant.InfoColumns.ConservativeDetectionThreshold, typicalConservativeDetectionThreshold),
+                new ColumnTuple(Constant.InfoColumns.TypicalClassificationThreshold, typicalClassificationThreshold),
             };
             List<List<ColumnTuple>> insertionStatements = new List<List<ColumnTuple>>
             {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 #pragma warning disable IDE1006 // Naming Style - we are using lower case names to match the json structure, we  mute the warning
 namespace Timelapse.Recognition
 {
-    //    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Reviewed.")]
+    //[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Reviewed.")]
     //#pragma warning disable SA1300 // ElementMustBeginWithUpperCaseLetter
     // This file contains four classes, which will hold image recognition information read in from the JSON file that follows the Microsoft Megadetector specification
     // - Recognizer
@@ -137,14 +137,14 @@ namespace Timelapse.Recognition
 
     public class classifier_metadata
     {
-        public classifier_metadata()
-        {
-            typical_classification_threshold = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown; // CHECK THIS
-        }
         // typical_classification_threshold describes the typical bound of the classification probability
         // that normally produces a mostly correct result. For example, if it is .75, then the 
         // a classification probability of .75 or higher is likely correct
-        public float? typical_classification_threshold { get; set; } = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+        public float? typical_classification_threshold { get; set; }
+        public classifier_metadata()
+        {
+            typical_classification_threshold = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+        }
     }
 
     /// <summary>

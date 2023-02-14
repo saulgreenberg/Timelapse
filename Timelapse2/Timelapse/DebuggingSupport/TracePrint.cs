@@ -41,6 +41,11 @@ namespace Timelapse.Util
         {
             Debug.Print(GetMethodNameStack("Catch: " + message, 2));
         }
+
+        public static void UnexpectedException(string message)
+        {
+            Debug.Print(GetMethodNameStack("Unexpected exception: " + message, 2));
+        }
         #endregion
 
         #region Public methods

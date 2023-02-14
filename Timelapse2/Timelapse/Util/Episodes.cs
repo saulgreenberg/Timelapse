@@ -76,7 +76,7 @@ namespace Timelapse
             for (int i = 1; i <= count; i++)
             {
                 int currentFileIndex = first + i - 1;
-                if (!Episodes.EpisodesDictionary.ContainsKey(currentFileIndex))
+                if (Episodes.EpisodesDictionary != null && !Episodes.EpisodesDictionary.ContainsKey(currentFileIndex))
                 {
                     Tuple<int, int> tuple = inRange ? new Tuple<int, int>(i, count) : new Tuple<int, int>(int.MaxValue, int.MaxValue);
                     Episodes.EpisodesDictionary.Add(currentFileIndex, tuple);

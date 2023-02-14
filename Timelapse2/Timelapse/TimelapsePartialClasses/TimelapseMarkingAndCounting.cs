@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Timelapse.Controls;
 using Timelapse.EventArguments;
 using Timelapse.Images;
+using Timelapse.Util;
 
 namespace Timelapse
 {
@@ -24,6 +25,12 @@ namespace Timelapse
         // - regenerate the list of markers used by the markableCanvas
         private void MarkableCanvas_RaiseMarkerEvent(object sender, MarkerEventArgs e)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
             if (e.IsNew)
             {
                 // A marker has been added

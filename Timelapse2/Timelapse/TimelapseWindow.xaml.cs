@@ -689,7 +689,7 @@ namespace Timelapse
         // If the DoubleClick on the ThumbnailGrid selected an image or video, display it.
         private void ThumbnailGrid_DoubleClick(object sender, ThumbnailGridEventArgs e)
         {
-            if (e.ImageRow != null)
+            if (e.ImageRow != null && this.DataHandler.ImageCache.Current != null)
             {
                 // Switch to either the video or image view as needed
                 if (this.DataHandler.ImageCache.Current.IsVideo && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
@@ -718,6 +718,12 @@ namespace Timelapse
                 {
                     this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
                     DataRowView rowView = row.Item as DataRowView;
+                    if (rowView == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(rowView));
+                        return;
+                    }
                     long fileID = (long)rowView.Row.ItemArray[0];
                     this.FileShow(this.DataHandler.FileDatabase.GetFileOrNextFileIndex(fileID));
                     this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);

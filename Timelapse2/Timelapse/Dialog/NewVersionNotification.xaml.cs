@@ -46,10 +46,14 @@ namespace Timelapse.Dialog
                 TextRange textRange = new TextRange(content.ContentStart, content.ContentEnd);
 
                 // Try to load the rtf file pointed at by the URI as a string
-                string filename = Constant.VersionUpdates.LatestVersionFileNamePrefix + String.Format("{0}", latestVersionNumber) + Constant.VersionUpdates.LatestVersionFileNameSuffix;
+                string filename = Constant.VersionUpdates.LatestVersionFileNamePrefix + $"{latestVersionNumber}" + Constant.VersionUpdates.LatestVersionFileNameSuffix;
                 Uri uri = new Uri(Constant.VersionUpdates.LatestVersionBaseAddress, filename);
                 WebResponse response = WebRequest.Create(uri).GetResponse();
                 Stream streamfromuri = response.GetResponseStream();
+                if (streamfromuri == null)
+                {
+                    throw new ArgumentNullException(nameof(streamfromuri), "Unexpected null");
+                }
                 using (StreamReader reader = new StreamReader(streamfromuri))
                 {
                     string s = reader.ReadToEnd();

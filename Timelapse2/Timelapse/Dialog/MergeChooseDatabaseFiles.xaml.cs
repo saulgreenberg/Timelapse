@@ -39,6 +39,12 @@ namespace Timelapse.Dialog
             this.TemplatetdbFilePath = templatetdbFilePath;
             this.ObservableddbFileList = new ObservableCollection<ddbFileClass>();
             this.RootFolderPath = Path.GetDirectoryName(templatetdbFilePath);
+            if (this.RootFolderPath == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(RootFolderPath));
+                return;
+            }
             this.RootFolderName = this.RootFolderPath.Split(Path.DirectorySeparatorChar).Last();
             this.DestinationddbFileName = Constant.File.MergedFileName;
             this.DestinationddbFilePath = Path.Combine(this.RootFolderPath, this.DestinationddbFileName);
@@ -57,9 +63,9 @@ namespace Timelapse.Dialog
                 ListboxFileDatabases.Visibility = Visibility.Collapsed;
                 ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
                 LabelBanner.Content = "Warning: Merging cannot be done.";
-                TextBlockFinalMessage.Text = String.Format("Timelapse searches for database (.ddb) files in:{0}", Environment.NewLine);
-                TextBlockFinalMessage.Text += String.Format(" \u2022 the folder containing the template ({0}),{1}", RootFolderPath, Environment.NewLine);
-                TextBlockFinalMessage.Text += String.Format(" \u2022 its sub-folders.{0}{0}", Environment.NewLine);
+                TextBlockFinalMessage.Text = $"Timelapse searches for database (.ddb) files in:{Environment.NewLine}";
+                TextBlockFinalMessage.Text += $" \u2022 the folder containing the template ({RootFolderPath}),{Environment.NewLine}";
+                TextBlockFinalMessage.Text += $" \u2022 its sub-folders.{Environment.NewLine}{Environment.NewLine}";
                 TextBlockFinalMessage.Text += "No database (.ddb) files were found, so there is nothing to merge.";
                 MergeButton.IsEnabled = false;
                 return;
@@ -67,10 +73,10 @@ namespace Timelapse.Dialog
 
             if (IsCondition.IsPathLengthTooLong(DestinationddbFilePath, FilePathTypeEnum.DDB))
             {
-                string dir = Path.GetDirectoryName(DestinationddbFilePath);
-                dir = Path.GetDirectoryName(DestinationddbFilePath).Length < 41
+                string dir = Path.GetDirectoryName(DestinationddbFilePath) ?? "UnknownFolder";
+                dir = dir.Length < 41
                     ? dir
-                    : Path.GetDirectoryName(DestinationddbFilePath).Substring(0, 40);
+                    : dir.Substring(0, 40);
                 string shortenedPath = "  - " + dir + "......." + Path.GetFileName(DestinationddbFilePath);
                 // The path of the TimelapseData-merged.ddb file is too long
                 ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;

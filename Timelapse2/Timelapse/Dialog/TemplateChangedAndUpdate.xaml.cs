@@ -318,10 +318,10 @@ namespace Timelapse.Dialog
             // notify the user concerning the problem data labels
             MessageBox messageBox = new MessageBox("Select the new name for your 'Renamed' fields ", this)
             {
-                 Message =
+                Message =
                  {
                     Icon = MessageBoxImage.Error,
-                    Problem = "You indicated that the following fields should be renamed, but did not provide the new name" + Environment.NewLine 
+                    Problem = "You indicated that the following fields should be renamed, but did not provide the new name" + Environment.NewLine
                                 + "\u2022 " + string.Join<string>(", ", problemDataLabels),
                     Solution = "For each Rename action, either" + Environment.NewLine
                                 + "\u2022 use the drop down menu to provide the new name, or" + Environment.NewLine
@@ -412,10 +412,14 @@ namespace Timelapse.Dialog
         // Enable or Disable the Rename comboboxdepending on the state of the Rename radio button
         private void RbRenameAction_CheckChanged(Object o, RoutedEventArgs a)
         {
-            RadioButton rb = o as RadioButton;
-            ComboBox cb = rb.Tag as ComboBox;
-            cb.IsEnabled = (rb.IsChecked == true);
-            this.ShowHideItemsAsNeeded();
+            if (o is RadioButton rb)
+            {
+                if (rb.Tag is ComboBox cb)
+                {
+                    cb.IsEnabled = (rb.IsChecked == true);
+                    this.ShowHideItemsAsNeeded();
+                }
+            }
         }
 
         // Check other combo box selected values to see if it matches the just-selected combobox data label item, 

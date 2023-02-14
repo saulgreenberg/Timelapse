@@ -788,19 +788,25 @@ namespace Timelapse.Dialog
         // - update the UI to activate or deactivate (or show or hide) its various search terms
         private void Select_CheckedOrUnchecked(object sender, RoutedEventArgs args)
         {
-            CheckBox select = sender as CheckBox;
+            if (sender is CheckBox select == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
             int row = Grid.GetRow(select);  // And you have the row number...
 
             SearchTerm searchterms = this.database.CustomSelection.SearchTerms[row - 1];
-            searchterms.UseForSearching = select.IsChecked.Value;
+            searchterms.UseForSearching = select.IsChecked == true;
 
             TextBlock label = this.GetGridElement<TextBlock>(CustomSelectionWithEpisodes.LabelColumn, row);
             ComboBox expression = this.GetGridElement<ComboBox>(CustomSelectionWithEpisodes.OperatorColumn, row);
             UIElement value = this.GetGridElement<UIElement>(CustomSelectionWithEpisodes.ValueColumn, row);
 
-            label.FontWeight = select.IsChecked.Value ? FontWeights.DemiBold : FontWeights.Normal;
-            expression.IsEnabled = select.IsChecked.Value;
-            value.IsEnabled = select.IsChecked.Value;
+            label.FontWeight = select.IsChecked == true ? FontWeights.DemiBold : FontWeights.Normal;
+            expression.IsEnabled = select.IsChecked == true;
+            value.IsEnabled = select.IsChecked == true;
 
             this.UpdateSearchDialogFeedback();
         }
@@ -810,7 +816,12 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void Operator_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            ComboBox comboBox = sender as ComboBox;
+            if (sender is ComboBox comboBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             int row = Grid.GetRow(comboBox);  // Get the row number...
             this.database.CustomSelection.SearchTerms[row - 1].Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
             this.UpdateSearchDialogFeedback();
@@ -821,7 +832,12 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void NoteOrCounter_TextChanged(object sender, TextChangedEventArgs args)
         {
-            TextBox textBox = sender as TextBox;
+            if (sender is TextBox textBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             int row = Grid.GetRow(textBox);  // Get the row number...
             this.database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
             this.UpdateSearchDialogFeedback();
@@ -836,7 +852,11 @@ namespace Timelapse.Dialog
         // Value (DateTime): we need to construct a string DateTime from it
         private void DateTime_SelectedDateChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
         {
-            DateTimePicker datePicker = sender as DateTimePicker;
+            if (sender is DateTimePicker datePicker == false)
+            {
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             if (datePicker.Value.HasValue)
             {
                 int row = Grid.GetRow(datePicker);
@@ -853,7 +873,13 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void FixedChoice_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            ComboBox comboBox = sender as ComboBox;
+            if (sender is ComboBox comboBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
             int row = Grid.GetRow(comboBox);  // Get the row number...
             if (comboBox.SelectedValue == null)
             {
@@ -868,7 +894,12 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void Flag_CheckedOrUnchecked(object sender, RoutedEventArgs e)
         {
-            CheckBox checkBox = sender as CheckBox;
+            if(sender is CheckBox checkBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             int row = Grid.GetRow(checkBox);  // Get the row number...
             this.database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkBox.IsChecked.ToString().ToLower(); // Set the corresponding value to the current selection
             this.UpdateSearchDialogFeedback();
@@ -923,7 +954,7 @@ namespace Timelapse.Dialog
 
             // Enable  the reset button if at least one search term (including detections) is enabled
             this.ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected
-                                                    || (bool)this.ShowMissingDetectionsCheckbox.IsChecked;
+                                                    || this.ShowMissingDetectionsCheckbox.IsChecked == true;
 
             // Enable the and/or radio buttons if more than one non-standard selection was made
             this.RadioButtonTermCombiningAnd.IsEnabled = multipleNonStandardSelectionsMade > 1;
@@ -970,18 +1001,13 @@ namespace Timelapse.Dialog
                 return;
             }
             // Enable or disable the controls depending on the various checkbox states
-            this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
+            this.EnableDetectionControls(this.UseDetectionsCheckbox.IsChecked == true);
 
             this.SetDetectionCriteria();
             this.InitiateShowCountsOfMatchingFiles();
         }
 
-        private void SetDetectionCriteria()
-        {
-            SetDetectionCriteria(false);
-        }
-
-        private void SetDetectionCriteria(bool resetSlidersIfNeeded)
+        private void SetDetectionCriteria(bool resetSlidersIfNeeded = false)
         {
             if (this.IsLoaded == false || this.dontInvoke)
             {
@@ -1004,12 +1030,12 @@ namespace Timelapse.Dialog
                 : 1;
             // Debug.Print(GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
-            this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
+            this.EnableDetectionControls(this.UseDetectionsCheckbox.IsChecked == true);
         }
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            this.database.CustomSelection.ShowMissingDetections = (bool)this.ShowMissingDetectionsCheckbox.IsChecked;
+            this.database.CustomSelection.ShowMissingDetections = this.ShowMissingDetectionsCheckbox.IsChecked == true;
             this.SetDetectionCriteria();
             this.InitiateShowCountsOfMatchingFiles();
         }
@@ -1161,11 +1187,27 @@ namespace Timelapse.Dialog
 
             if (this.DetectionSelections.RecognitionType == RecognitionType.Detection)
             {
-                this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                if (this.DetectionConfidenceSpinnerLower.Value != null)
+                {
+                    this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                }
+                else
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(this.DetectionConfidenceSpinnerLower.Value));
+                }
             }
             else if (this.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
-                this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                if (this.DetectionConfidenceSpinnerLower.Value != null)
+                {
+                    this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                }
+                else
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(this.DetectionConfidenceSpinnerLower.Value));
+                }
             }
             this.InitiateShowCountsOfMatchingFiles();
         }
@@ -1262,7 +1304,7 @@ namespace Timelapse.Dialog
             this.DetectionGroupBox.IsEnabled = !this.database.CustomSelection.ShowMissingDetections;
             this.DetectionGroupBox.Background = this.database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
 
-            if ((bool)this.ShowMissingDetectionsCheckbox.IsChecked || (bool)this.UseDetectionsCheckbox.IsChecked)
+            if (this.ShowMissingDetectionsCheckbox.IsChecked == true || this.UseDetectionsCheckbox.IsChecked == true)
             {
                 this.ResetToAllImagesButton.IsEnabled = true;
             }
@@ -1274,7 +1316,7 @@ namespace Timelapse.Dialog
             // ALso need to restore state of this checkbox between repeated uses in Window_Loaded.
             this.DetectionSelections.RankByConfidence = this.RankByConfidenceCheckbox.IsChecked == true;
             this.InitiateShowCountsOfMatchingFiles();
-            this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
+            this.EnableDetectionControls(this.UseDetectionsCheckbox.IsChecked == true);
         }
         #endregion
 

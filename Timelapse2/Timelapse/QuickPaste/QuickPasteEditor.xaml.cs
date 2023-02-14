@@ -10,6 +10,7 @@ using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;
+using Timelapse.Util;
 
 namespace Timelapse.QuickPaste
 {
@@ -76,15 +77,27 @@ namespace Timelapse.QuickPaste
         // Invoke when the user clicks the checkbox to enable or disable the data row
         private void UseCurrentRow_CheckChanged(object sender, RoutedEventArgs e)
         {
-            CheckBox cbox = sender as CheckBox;
+            if (sender is CheckBox cbox == false)
+            {
+                TracePrint.NullException(nameof(cbox));
+                return;
+            }
 
             // Enable or disable the controls on that row to reflect whether the checkbox is checked or unchecked
             int row = Grid.GetRow(cbox);
 
             TextBlock label = this.GetGridElement<TextBlock>(GridColumnLabel, row);
             UIElement value = this.GetGridElement<UIElement>(GridColumnValue, row);
-            label.Foreground = cbox.IsChecked == true ? Brushes.Black : Brushes.Gray;
-            value.IsEnabled = cbox.IsChecked.Value;
+            if (cbox.IsChecked != null && cbox.IsChecked == true)
+            {
+                label.Foreground = Brushes.Black;
+                value.IsEnabled = cbox.IsChecked.Value;
+            }
+            else
+            {
+                label.Foreground = Brushes.Gray;
+                value.IsEnabled = cbox.IsChecked ?? false;
+            }
 
             // Update the QuickPaste row data structure to reflect the current checkbox state
             QuickPasteItem quickPasteRow = (QuickPasteItem)cbox.Tag;
@@ -97,7 +110,11 @@ namespace Timelapse.QuickPaste
         // - update the UI to show the new value
         private void NoteOrCounter_TextChanged(object sender, TextChangedEventArgs args)
         {
-            TextBox textBox = sender as TextBox;
+            if (sender is TextBox textBox == false)
+            {
+                TracePrint.NullException(nameof(textBox));
+                return;
+            }
             QuickPasteItem quickPasteItem = (QuickPasteItem)textBox.Tag;
             quickPasteItem.Value = textBox.Text;
         }
@@ -113,7 +130,11 @@ namespace Timelapse.QuickPaste
         // - update the UI to show the new value
         private void FixedChoice_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            ComboBox comboBox = sender as ComboBox;
+            if (sender is ComboBox comboBox == false)
+            {
+                TracePrint.NullException(nameof(comboBox));
+                return;
+            }
             QuickPasteItem quickPasteItem = (QuickPasteItem)comboBox.Tag;
             quickPasteItem.Value = comboBox.SelectedValue.ToString();
         }
@@ -123,7 +144,12 @@ namespace Timelapse.QuickPaste
         // - update the UI to show the new value
         private void Flag_CheckedOrUnchecked(object sender, RoutedEventArgs e)
         {
-            CheckBox checkBox = sender as CheckBox;
+            if (sender is CheckBox checkBox == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             QuickPasteItem quickPasteItem = (QuickPasteItem)checkBox.Tag;
             quickPasteItem.Value = checkBox.IsChecked.ToString();
         }

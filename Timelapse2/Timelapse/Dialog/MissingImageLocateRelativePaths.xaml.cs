@@ -34,10 +34,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Private Variables
-        private readonly FileDatabase FileDatabase;
         private readonly string FolderPath;
-        private readonly string FileName;
-        private readonly string RelativePath;
         private ObservableCollection<Tuple<string, string, bool>> observableCollection; // A tuple defining the contents of the datagrid
         private IList<DataGridCellInfo> selectedRowTuple; // Will contain the tuple of the row corresponding to the selected cell
         #endregion
@@ -58,14 +55,11 @@ namespace Timelapse.Dialog
             }
 
             this.Owner = owner;
-            this.FileDatabase = fileDatabase;
-            this.FolderPath = this.FileDatabase.FolderPath;
-            this.RelativePath = relativePath;
-            this.FileName = fileName;
+            this.FolderPath = fileDatabase.FolderPath;
 
             // Show the file name and its full relative path in the UI
-            this.RunImageName.Text = this.FileName;
-            this.RunRelativePath.Text = this.RelativePath;
+            this.RunImageName.Text = fileName;
+            this.RunRelativePath.Text = relativePath;
 
             // Create a collection comprising: relative path to the found image, number of other missing images found in that relative path, and whether or not that relative path should be used.
             // Then display it by binding it to the data grid 
@@ -162,7 +156,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int selectedColumn = this.selectedRowTuple[0].Column.DisplayIndex;
-            string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection());
+            string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection()) ?? String.Empty;
             switch (selectedColumn)
             {
                 case 0:

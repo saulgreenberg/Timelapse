@@ -114,12 +114,10 @@ namespace Timelapse.ImageSetLoadingPipeline
                         loadTasks = new List<Task>();
                         return;
                     }
-
-                    string directoryName = String.Empty;
+                    string directoryName = Path.GetDirectoryName(fileInfo.FullName);
                     try
                     {
-                        directoryName = Path.GetDirectoryName(fileInfo.FullName);
-                        if (directoryName.EndsWith(@"\") == false)
+                        if (directoryName != null && directoryName.EndsWith(@"\") == false)
                         {
                             directoryName += @"\";
                         }
@@ -137,7 +135,10 @@ namespace Timelapse.ImageSetLoadingPipeline
                         }
                         continue;
                     }
-                    string relativePath = directoryName.Replace(absolutePathPart, string.Empty).TrimEnd(Path.DirectorySeparatorChar);
+                    // The null portion shouldn't happen
+                    string relativePath = directoryName != null
+                        ? directoryName.Replace(absolutePathPart, string.Empty).TrimEnd(Path.DirectorySeparatorChar)
+                        : String.Empty;
 
                     ImageLoader loader = new ImageLoader(imageSetFolderPath, relativePath, fileInfo, dataHandler);
 

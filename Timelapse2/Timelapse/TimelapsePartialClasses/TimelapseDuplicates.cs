@@ -29,6 +29,12 @@ namespace Timelapse
 
             // Get the current image
             ImageRow row = this.DataHandler.ImageCache.Current;
+            if (row == null)
+            {
+                //Shouldn't happen
+                TracePrint.NullException(nameof(row));
+                return;
+            }
             FileInfo fileInfo = new FileInfo(row.File);
 
             // Create a duplicate of it

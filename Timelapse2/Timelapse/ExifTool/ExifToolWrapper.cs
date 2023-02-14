@@ -98,8 +98,16 @@ namespace Timelapse.ExifTool
                 {
                     try
                     {
-                        string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                        this.ExifToolPath = Path.Combine(dir, ExeName);
+                        string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+                        if (dir == null)
+                        {
+                            TracePrint.NullException(nameof(dir));
+                            this.ExifToolPath = ExeName;
+                        }
+                        else
+                        {
+                            this.ExifToolPath = Path.Combine(dir, ExeName);
+                        }
                     }
                     catch (Exception xcp)
                     {

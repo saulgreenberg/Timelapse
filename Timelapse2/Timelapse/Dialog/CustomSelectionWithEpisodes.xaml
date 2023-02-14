@@ -28,8 +28,8 @@
             <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"/>
             <Button Name="ResetToAllImagesButton" Content="_Reset to All Images" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="10,0,0,0"  Padding="10" Click="ResetToAllImagesButton_Click" IsEnabled="False"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Name="QueryMatches" HorizontalAlignment="Left"  Margin="10,5,0,5" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0"  FontWeight="DemiBold" FontSize="12"><Run Text="0  "/></TextBlock>
-                <TextBlock HorizontalAlignment="Left"  Margin="0,5,0,5" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0"  FontSize="12"><Run Text=" files match your query "/></TextBlock>
+                <TextBlock Name="QueryMatches" HorizontalAlignment="Left"  Margin="10,5,0,5" VerticalAlignment="Center"  FontWeight="DemiBold" FontSize="12"><Run Text="0  "/></TextBlock>
+                <TextBlock HorizontalAlignment="Left"  Margin="0,5,0,5" VerticalAlignment="Center"  FontSize="12"><Run Text=" files match your query "/></TextBlock>
                 <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
                 <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
             </StackPanel>

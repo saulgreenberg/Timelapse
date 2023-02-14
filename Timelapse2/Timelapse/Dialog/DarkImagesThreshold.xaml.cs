@@ -378,7 +378,19 @@ namespace Timelapse.Dialog
         // A drop-down menu providing the user with two ways to reset thresholds
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            Button resetButton = (Button)sender;
+            if (sender is Button resetButton == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
+            if (resetButton.ContextMenu == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(resetButton.ContextMenu));
+                return;
+            }
             resetButton.ContextMenu.IsEnabled = true;
             resetButton.ContextMenu.PlacementTarget = (Button)sender;
             resetButton.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
@@ -431,7 +443,11 @@ namespace Timelapse.Dialog
         // Set a new value for the Dark Pixel Ratio and update the UI
         private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
-            UIElement thumb = e.Source as UIElement;
+            if (e.Source is UIElement thumb == false)
+            {
+                TracePrint.NullException(nameof(thumb));
+                return;
+            }
 
             if ((Canvas.GetLeft(thumb) + e.HorizontalChange) >= (this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth))
             {

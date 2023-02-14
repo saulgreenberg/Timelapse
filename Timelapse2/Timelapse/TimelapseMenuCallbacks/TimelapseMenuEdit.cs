@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImageProcessor.Processors;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,8 @@ using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.QuickPaste;
 using Timelapse.Util;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using Xceed.Wpf.AvalonDock.Themes;
 
 // Edit Menu Callbacks
 namespace Timelapse
@@ -107,7 +110,7 @@ namespace Timelapse
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
-            if (this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
+            if (this.DataHandler.ImageCache.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
                 Dialogs.MenuEditPopulateDataFieldWithMetadataDialog(this);
@@ -138,7 +141,7 @@ namespace Timelapse
         private async void MenuItemEditPopulateFieldWithEpisodeData_Click(object sender, RoutedEventArgs e)
         {
             // Check: needs at least one file in the current selection,
-            if (this.DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles == 0 || this.DataHandler.FileDatabase.ImageSet == null)
+            if (this.DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles == 0 || this.DataHandler?.FileDatabase?.ImageSet == null)
             {
                 Dialogs.MenuOptionsCantPopulateDataFieldWithEpisodeAsNoFilesDialog(this);
                 return;
@@ -286,7 +289,12 @@ namespace Timelapse
         // - deleted images are moved to a backup folder.
         private async void MenuItemDeleteFiles_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem menuItem = sender as MenuItem;
+            if (sender is MenuItem menuItem == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
 
             // This callback is invoked by DeleteImage (which deletes the current image) and DeleteImages (which deletes the images marked by the deletion flag)
             // Thus we need to use two different methods to construct a table containing all the images marked for deletion
@@ -330,7 +338,7 @@ namespace Timelapse
             // If no images are selected for deletion. Warn the user.
             // Note that this should never happen, as the invoking menu item should be disabled (and thus not selectable)
             // if there aren't any images to delete. Still,...
-            if (filesToDelete == null || filesToDelete.Count < 1)
+            if (filesToDelete.Count < 1)
             {
                 Dialogs.MenuEditNoFilesMarkedForDeletionDialog(this);
                 return;
@@ -338,13 +346,16 @@ namespace Timelapse
 
             // if we delete data records, we can sometimes get in the situation (particularly if we delete a duplicate) where the next fileID displayed is not the closest to the existing position.
             // To resolve this, we get the closest non-deleted file ID before we do the deletion and then try to display that file.
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
+
             long currentFileID = this.DataHandler.ImageCache.Current.ID;
             if (deleteData)
             {
-                //foreach (ImageRow ir in filesToDelete)
-                //{
-                //    Debug.Print(ir.ID.ToString());
-                //}
                 // if we delete the data for the current image only but not the file , we can sometimes get in the situation (particularly if we delete a duplicate) where the next fileID displayed is not the closest to the existing position.
                 // To resolve this, we get the closest non-deleted file ID before we do the deletion.
                 int fileIndex = this.DataHandler.ImageCache.CurrentRow;
@@ -557,7 +568,7 @@ namespace Timelapse
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
-            if (this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
+            if (this.DataHandler.ImageCache.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
                 Dialogs.MenuEditPopulateDataFieldWithMetadataDialog(this);
@@ -595,20 +606,39 @@ namespace Timelapse
         {
             // Don't do anything if the image actually exists. This should not fire, as this menu item is only enabled 
             // if there is a current image that doesn't exist. But just in case...
+
             if (null == this.DataHandler?.ImageCache?.Current || File.Exists(FilesFolders.GetFullPath(this.DataHandler.FileDatabase.FolderPath, this.DataHandler?.ImageCache?.Current)))
             {
                 return;
             }
-
+            // Note:  there are redundant null checks due to Resharper indicating possible nullreference exceptions
+            if (null == this.DataHandler)
+            {
+                // Shouldn't happen. 
+                TracePrint.NullException(nameof(this.DataHandler));
+                return;
+            }
             string folderPath = this.DataHandler.FileDatabase.FolderPath;
             ImageRow currentImage = this.DataHandler?.ImageCache?.Current;
 
+            if (null == currentImage)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(currentImage));
+                return;
+            }
             // Search for - and return as list of relative path / filename tuples -  all folders under the root folder for files with the same name as the fileName.
             List<Tuple<string, string>> matchingRelativePathFileNameList = FilesFolders.SearchForFoldersContainingFileName(folderPath, currentImage.File);
 
             // Remove any of the tuples that are spoken for i.e., that are already associated with a row in the database
             for (int i = matchingRelativePathFileNameList.Count - 1; i >= 0; i--)
             {
+                if (null == this.DataHandler)
+                {
+                    // Shouldn't happen. 
+                    TracePrint.NullException(nameof(this.DataHandler));
+                    return;
+                }
                 if (this.DataHandler.FileDatabase.ExistsRelativePathAndFileInDataTable(matchingRelativePathFileNameList[i].Item1, matchingRelativePathFileNameList[i].Item2))
                 {
                     // We only want matching files that are not already assigned to another datafield in the database
@@ -625,6 +655,12 @@ namespace Timelapse
             }
 
             // Now retrieve a list of all filenames located in the same folder (i.e., that have the same relative path) as the missing file.
+            if (null == this.DataHandler)
+            {
+                // Shouldn't happen. 
+                TracePrint.NullException(nameof(this.DataHandler));
+                return;
+            }
             List<string> otherMissingFiles = this.DataHandler.FileDatabase.SelectFileNamesWithRelativePathFromDatabase(currentImage.RelativePath);
 
             // Remove the current missing file from the list, as well as any file that exists i.e., that is not missing.
@@ -698,7 +734,7 @@ namespace Timelapse
                 await this.FilesSelectAndShowAsync().ConfigureAwait(true);
                 return;
             }
-            if (result != null && false == result.Value)
+            if (result != null) // && false == result.Value -> this is always true
             {
                 Dialogs.MenuEditNoFoldersAreMissing(this);
             }
@@ -785,8 +821,13 @@ namespace Timelapse
                 if (this.MarkableCanvas.ThumbnailGrid.IsVisible == false && this.MarkableCanvas.ThumbnailGrid.IsGridActive == false)
                 {
                     // Only a single image is displayed: update the database for the current row with the control's value
+                    if (this.DataHandler.ImageCache.Current == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                        continue;
+                    }
                     this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, control.DataLabel, imageDatabaseControl.DefaultValue);
-                    // Debug.Print(control.DataLabel + ":" + control.Content + ":" + imageDatabaseControl.DefaultValue);
                 }
                 else
                 {

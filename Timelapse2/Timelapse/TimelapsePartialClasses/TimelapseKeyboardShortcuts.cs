@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Enums;
@@ -66,6 +67,12 @@ namespace Timelapse
                 {
                     // The quickpaste window is visible, and thus able to take shortcuts.
                     string key = new KeyConverter().ConvertToString(currentKey.Key);
+                    if (key == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(key));
+                        return;
+                    }
                     if (key.StartsWith("NumPad"))
                     {
                         key = key.Remove(0, 6);

@@ -120,8 +120,17 @@ namespace Timelapse.Images
                 EndPoint = new Point(0, 1)
             };
             ColorConverter cc = new ColorConverter();
-            outlineBrush.GradientStops.Add(new GradientStop((Color)cc.ConvertFrom("#AAA"), 0));
-            outlineBrush.GradientStops.Add(new GradientStop((Color)cc.ConvertFrom("#111"), 1));
+            object stop1 = cc.ConvertFrom("#AAA");
+            object stop2 = cc.ConvertFrom("#111");
+            if (stop1 != null && stop2 != null)
+            {
+                outlineBrush.GradientStops.Add(new GradientStop((Color)stop1, 0));
+                outlineBrush.GradientStops.Add(new GradientStop((Color)stop2, 1));
+            }
+            else
+            {
+                TracePrint.NullException(nameof(stop1) + " and " + nameof(stop2));
+            }
             this.magnifierLens.Stroke = outlineBrush;
             this.lensCanvas.Children.Add(this.magnifierLens);
 

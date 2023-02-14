@@ -53,6 +53,14 @@ namespace Timelapse
             this.earliestImageDateTime = DateTime.MaxValue;
 
             // Search the images for the two images with the earliest and latest data/time date 
+
+            if (this.fileDatabase.FileTable.RowCount == 0)
+            {
+                // Shouldn't happen, as the menu should be disabled when there are no images
+                TracePrint.UnexpectedException(nameof(this.fileDatabase.FileTable.RowCount) + " should have had at least one element");
+                return;
+            }
+
             ImageRow latestImageRow = null;
             ImageRow earliestImageRow = null;
             foreach (ImageRow image in this.fileDatabase.FileTable)
@@ -75,17 +83,22 @@ namespace Timelapse
             }
 
             // At this point, we should have succeeded getting the oldest and newest data/time
-
+            if (earliestImageRow == null || latestImageRow == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(earliestImageRow) + "or " + nameof(latestImageRow));
+                return;
+            }
             // Configure the earliest date (in datetime picker) and its image
             this.earliestImageName.Content = earliestImageRow.File;
             this.earliestImageDate.Content = DateTimeHandler.ToStringDisplayDateTime(this.earliestImageDateTime);
-            this.imageEarliest.Source = earliestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out bool isCorruptOrMissing);
+            this.imageEarliest.Source = earliestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out _);
 
             // Configure the latest date (in datetime picker) and its image
             this.latestImageName.Content = latestImageRow.File;
             DataEntryHandler.Configure(this.dateTimePickerLatestDateTime, this.latestImageDateTime);
             this.dateTimePickerLatestDateTime.ValueChanged += this.DateTimePicker_ValueChanged;
-            this.imageLatest.Source = latestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out isCorruptOrMissing);
+            this.imageLatest.Source = latestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out _);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -263,7 +276,7 @@ namespace Timelapse
             }
 
             // Inform the user if the date picker date goes below the earlest time,  
-            if (this.dateTimePickerLatestDateTime.Value.Value <= this.earliestImageDateTime)
+            if (this.dateTimePickerLatestDateTime.Value != null && this.dateTimePickerLatestDateTime.Value.Value <= this.earliestImageDateTime)
             {
                 Dialogs.DateTimeNewTimeShouldBeLaterThanEarlierTimeDialog(this);
             }

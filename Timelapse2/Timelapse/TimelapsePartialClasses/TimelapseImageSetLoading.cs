@@ -595,8 +595,17 @@ namespace Timelapse
         {
             importImages = false;
 
+
             string databaseFileName;
             string directoryPath = Path.GetDirectoryName(templateDatabasePath);
+
+            if (directoryPath == null)
+            {
+                // Null is returned if directory is a root drive (say) C:
+                TracePrint.NullException(nameof(directoryPath));
+                databaseFilePath = null;
+                return false;
+            }
             string[] fileDatabasePaths = Directory.GetFiles(directoryPath, "*.ddb");
             if (fileDatabasePaths.Length == 1)
             {

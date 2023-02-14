@@ -66,6 +66,12 @@ namespace Timelapse.Database
             }
 
             string sourceFolderPath = Path.GetDirectoryName(sourceFilePath);
+            if (sourceFolderPath == null)
+            {
+                // If the path consists of a root directory, such as "c:\", null is returned.
+                // This shouldn't happen
+                return null;
+            }
 
             DirectoryInfo backupFolder = new DirectoryInfo(Path.Combine(sourceFolderPath, Constant.File.BackupFolder));   // The Backup Folder 
             if (backupFolder.Exists == false)

@@ -147,7 +147,12 @@ namespace Timelapse.Util
             {
                 // Find the screen (if any) that contains the window
                 PresentationSource source = PresentationSource.FromVisual(timelapse);
-
+                if (source == null)
+                {
+                    // Shouldn't happen. If it does, just return the same window rectangle i.e., as a noop.
+                    TracePrint.NullException(nameof(source));
+                    return windowRect;
+                }
                 // The screen contiaing the window
                 Screen screenContainingWindow = null;
 
@@ -174,6 +179,13 @@ namespace Timelapse.Util
                         continue;
                     }
 
+                    if (source.CompositionTarget == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(source.CompositionTarget));
+                        continue;
+                    }
+
                     // Get the  coordinates of the currentscreen and transform it into wpf coordinates. 
                     // Note that we subtract the task bar height as well.
                     screenTopLeft.X = screen.Bounds.Left;
@@ -195,6 +207,12 @@ namespace Timelapse.Util
                 // If none of the screens contains the window, then we will fit it into the primary screen at the window's width and height at the origin
                 if (screenContainingWindow == null)
                 {
+                    if (primaryScreen == null || source.CompositionTarget == null)
+                    {
+                        // Shouldn't happen. Return the original window as there is nothing we can really do
+                        TracePrint.NullException(nameof(primaryScreen) + " or  " + nameof(source.CompositionTarget));
+                        return windowRect;
+                    }
                     // Get the  coordinates of the currentscreen and transform it into wpf coordinates. 
                     // Note that we subtract the task bar height as well.
                     screenTopLeft.X = primaryScreen.Bounds.Left;
@@ -442,7 +460,7 @@ namespace Timelapse.Util
             Uri uri = new Uri(resourceFilePath);
             try
             {
-                using (Stream stream = System.Windows.Application.GetResourceStream(uri).Stream)
+                using (Stream stream = System.Windows.Application.GetResourceStream(uri)?.Stream)
                 {
                     serializer.Deserialize(stream);
                 }

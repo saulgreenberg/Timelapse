@@ -68,8 +68,9 @@ namespace Timelapse.Images
                 return;
             }
 
+
             // If the current image is marked as corrupted, we will only show the original (replacement) image
-            if (!this.Current.IsDisplayable(this.Database.FolderPath))
+            if (this.Current == null || !this.Current.IsDisplayable(this.Database.FolderPath))
             {
                 this.CurrentDifferenceState = ImageDifferenceEnum.Unaltered;
                 return;
@@ -201,6 +202,13 @@ namespace Timelapse.Images
             newFileToDisplay = false;
             if (base.TryMoveToFile(fileIndex) == false)
             {
+                return false;
+            }
+
+            if (this.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.Current));
                 return false;
             }
 

@@ -72,10 +72,22 @@ namespace Timelapse.Dialog
             double dpiWidthFactor = 1;
             double dpiHeightFactor = 1;
             Window mainWindow = System.Windows.Application.Current.MainWindow;
+            if (mainWindow == null)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(mainWindow));
+                return false;
+            }
             PresentationSource presentationSource = PresentationSource.FromVisual(mainWindow);
             if (presentationSource != null)
             {
                 CompositionTarget compositionTarget = presentationSource.CompositionTarget;
+                if (compositionTarget == null)
+                {
+                    // This shouldn't happen
+                    TracePrint.NullException(nameof(compositionTarget));
+                    return false;
+                }
                 Matrix m = compositionTarget.TransformToDevice;
                 //Matrix m = PresentationSource.FromVisual(System.Windows.Application.Current.MainWindow).CompositionTarget.TransformToDevice;
                 dpiWidthFactor = m.M11;
@@ -416,7 +428,7 @@ namespace Timelapse.Dialog
                 }
             };
 
-            bool proceedWithOperation = (bool)messageBox.ShowDialog();
+            bool proceedWithOperation = messageBox.ShowDialog() == true;
             if (proceedWithOperation && messageBox.DontShowAgain.IsChecked.HasValue && persistOptOut != null)
             {
                 persistOptOut(messageBox.DontShowAgain.IsChecked.Value);

@@ -41,9 +41,10 @@ namespace Timelapse
         {
             // change selection
             // if the data grid is bound the file database automatically updates its contents on SelectFiles()
-            if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
+            if (this.DataHandler?.FileDatabase == null)
             {
                 TracePrint.PrintMessage("FilesSelectAndShow() should not be reachable with a null data handler.  Is a menu item wrongly enabled?");
+                return false;
             }
 
             // Select the files according to the given selection

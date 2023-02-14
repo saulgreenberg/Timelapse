@@ -370,7 +370,7 @@ namespace Timelapse.Dialog
         // Set the confirm checkbox, which enables the ok button if the data deletions are confirmed. 
         private void ConfirmBox_Checked(object sender, RoutedEventArgs e)
         {
-            this.StartDoneButton.IsEnabled = (bool)this.chkboxConfirm.IsChecked;
+            this.StartDoneButton.IsEnabled = this.chkboxConfirm.IsChecked == true;
         }
 
         // Cancel button selected

@@ -2096,6 +2096,14 @@ namespace Timelapse.Database
                 versionNumber = Constant.DatabaseValues.VersionNumberMinimum;
                 return true;
             }
+
+            if (this.ImageSet == null)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(this.ImageSet));
+                versionNumber = Constant.DatabaseValues.VersionNumberMinimum;
+                return true;
+            }
             versionNumber = this.ImageSet.VersionCompatability;
             return true;
         }
@@ -2529,6 +2537,12 @@ namespace Timelapse.Database
             foreach (image image in recognizer.images)
             {
                 string folderpath = Path.GetDirectoryName(image.file);
+                if (folderpath == null)
+                {
+                    // Null if its a root folder e.g. C:\\
+                    TracePrint.NullException(nameof(folderpath));
+                    return false;
+                }
                 if (!string.IsNullOrEmpty(folderpath))
                 {
                     folderpath += "\\";
@@ -2591,11 +2605,16 @@ namespace Timelapse.Database
                 // its important to show detection data (including bounding boxes) as rapidly as possible, such as when a user is quickly scrolling through images.
                 // So I am not clear on how to optimize this (although I suspect a thread running in the background when Timelapse is loaded could perhaps do this)
                 this.RefreshDetectionsDataTable();
-                //this.detectionDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Detections);
             }
             // Retrieve the detection from the in-memory datatable.
             // Note that because IDs are in the database as a string, we convert it
             // PERFORMANCE: This takes a bit of time, not much... but could be improved. Not sure if there is an index automatically built on it. If not, do so.
+            if (this.detectionDataTable == null)
+            {
+                // Shouldn't happen as the above should reset it
+                TracePrint.NullException(nameof(this.detectionDataTable));
+                return null;
+            }
             return this.detectionDataTable.Select(Constant.DatabaseColumn.ID + Sql.Equal + fileID);
         }
 
@@ -2606,6 +2625,13 @@ namespace Timelapse.Database
             {
                 //this.classificationsDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Classifications);
                 this.RefreshClassificationsDataTable();
+            }
+
+            if (this.classificationsDataTable == null)
+            {
+                // Shouldn't happen as the above should reset it
+                TracePrint.NullException(nameof(this.classificationsDataTable));
+                return null;
             }
             // Note that because IDs are in the database as a string, we convert it
             return this.classificationsDataTable.Select(Constant.ClassificationColumns.DetectionID + Sql.Equal + detectionID);
@@ -2890,7 +2916,15 @@ namespace Timelapse.Database
             {
                 return false;
             }
-            threshold = (float)this.Database.ScalarGetFloatValue(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BoundingBoxDisplayThreshold);
+
+            float? fthreshold = this.Database.ScalarGetFloatValue(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BoundingBoxDisplayThreshold);
+            if (fthreshold == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(fthreshold));
+                return false;
+            }
+            threshold = (float)fthreshold;
             return true;
         }
         #endregion

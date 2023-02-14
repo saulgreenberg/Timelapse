@@ -285,7 +285,11 @@ namespace Timelapse.Util
                     // create the key whose values represent elements of the list
                     RegistryKey subKey = registryKey.OpenSubKey(subKeyPath, true) 
                                          ?? registryKey.CreateSubKey(subKeyPath);
-
+                    if (subKey == null)
+                    {
+                        TracePrint.NullException(nameof(subKey));
+                        return;
+                    }
                     // write the values
                     int index = 0;
                     foreach (string value in values)
@@ -304,7 +308,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                Debug.Print("Could not write registry for " + registryKey);
+                TracePrint.CatchException("Could not write registry for " + registryKey);
             }
         }
 

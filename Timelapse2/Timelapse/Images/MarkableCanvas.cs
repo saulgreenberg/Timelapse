@@ -576,7 +576,15 @@ namespace Timelapse.Images
             }
             // These operations are only needed if we weren't in the single image view
             this.ThumbnailGrid.Visibility = Visibility.Collapsed;
-            this.SwitchedToSingleImageViewEventAction();
+            Action OnSwitchedToSingleImageViewEventAction = this.SwitchedToSingleImageViewEventAction;
+            if (OnSwitchedToSingleImageViewEventAction == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(OnSwitchedToSingleImageViewEventAction));
+                return;
+            }
+            OnSwitchedToSingleImageViewEventAction();
+
             this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
 
             // Show the DuplicateIndicator for the main window, if needed
@@ -598,7 +606,15 @@ namespace Timelapse.Images
             }
             // These operations are only needed if we weren't in the single image view
             this.ThumbnailGrid.Visibility = Visibility.Collapsed;
-            this.SwitchedToSingleImageViewEventAction();
+            Action OnSwitchedToSingleImageViewEventAction = this.SwitchedToSingleImageViewEventAction;
+            if (OnSwitchedToSingleImageViewEventAction == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(OnSwitchedToSingleImageViewEventAction));
+                return;
+            }
+            OnSwitchedToSingleImageViewEventAction();
+
             this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
 
             // Show the DuplicateIndicator for the main window, if needed
@@ -615,7 +631,15 @@ namespace Timelapse.Images
             this.GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuster, if it is visible)
 
             this.ThumbnailGrid.Visibility = Visibility.Visible;
-            this.SwitchedToThumbnailGridViewEventAction();
+            Action OnSwitchedToThumbnailGridViewEventAction = this.SwitchedToThumbnailGridViewEventAction;
+            if (OnSwitchedToThumbnailGridViewEventAction == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(OnSwitchedToThumbnailGridViewEventAction));
+                return;
+            }
+            OnSwitchedToThumbnailGridViewEventAction();
+            
 
             this.ImageToDisplay.Visibility = Visibility.Collapsed;
             this.SetMagnifiersAccordingToCurrentState(false, false);
@@ -1470,7 +1494,7 @@ namespace Timelapse.Images
             Canvas.SetLeft(whiteOutline, position);
             Canvas.SetTop(whiteOutline, position);
 
-            if (marker.Emphasise)
+            if (marker.Emphasise && glow != null)
             {
                 position = (markerCanvas.Width - glow.Width) / 2.0;
                 Canvas.SetLeft(glow, position);
