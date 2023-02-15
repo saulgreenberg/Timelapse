@@ -33,7 +33,11 @@
                  ItemsSource="{Binding ObservableddbFileList}" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding RelativePathIncludingFileName}" Checked="Selector_CheckChanged" Unchecked="Selector_CheckChanged"/>
+                    <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding RelativePathIncludingFileName}" Checked="Selector_CheckChanged" Unchecked="Selector_CheckChanged">
+                        <d:CheckBox.DataContext>
+                            <d:DesignInstance />
+                        </d:CheckBox.DataContext>
+                    </CheckBox>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

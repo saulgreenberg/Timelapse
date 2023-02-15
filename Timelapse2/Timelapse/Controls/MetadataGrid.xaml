@@ -55,6 +55,7 @@
             </DataGrid.ColumnHeaderStyle>
 
             <!--Column definitions-->
+            
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Key" IsReadOnly="True" Visibility="Collapsed" Binding="{Binding MetadataKey}" Width="0"/>
                 <DataGridTextColumn Header="Metadata directory" IsReadOnly="True" Visibility="Collapsed" Binding="{Binding MetadataKind}"/>
@@ -63,11 +64,16 @@
                 <DataGridTemplateColumn Header="Data field" Width=".5*" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
+                            <!-- It complained about the notes label, but it seems to work and I couldn't figure out how to resolve it -->
+                            <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
                             <ComboBox 
                                 ItemsSource="{Binding ElementName=MainWindow, Path=DataContext.NoteLabels}"
                                 SelectedItem="{Binding AssignedLabel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                SelectionChanged="ComboBox_SelectionChanged"
-                                />
+                                SelectionChanged="ComboBox_SelectionChanged">
+                                <d:ComboBox.DataContext>
+                                    <d:DesignInstance />
+                                </d:ComboBox.DataContext>
+                            </ComboBox>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

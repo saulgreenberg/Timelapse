@@ -223,6 +223,12 @@ namespace Timelapse
                     RecognitionsDeleteOldData messageBox = new RecognitionsDeleteOldData(this, result);
                     if (true == messageBox.ShowDialog())
                     {
+                        if (this.DataHandler?.FileDatabase == null)
+                        {
+                            //Shouldn't happen
+                            TracePrint.NullException(nameof(this.DataHandler.FileDatabase));
+                            return;
+                        }
                         // Try again by deleting the old recognition data 
                         result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
                         if (result == RecognizerImportResultEnum.Cancelled)

@@ -164,11 +164,20 @@ namespace Timelapse
         {
             try
             {
+
+
                 int currentPosition = 0;
                 int lastPosition = 0;
                 if (this.DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles <= 0 || selectedRowIndex < 0)
                 {
                     // There are no images to navigate
+                    return new Point(0, 0);
+                }
+
+                if (this.DataHandler?.FileDatabase == null)
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(this.DataHandler.FileDatabase));
                     return new Point(0, 0);
                 }
 

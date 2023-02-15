@@ -80,11 +80,12 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
 
-                <DataGrid.CellStyle>
+                <!-- SAULXXX I wanted to have the cell content be displayed in the tooltip, but this doesn't work -->
+                <!--<DataGrid.CellStyle>
                     <Style TargetType="DataGridCell">
                         <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self},Path=Content.Text}"/>
                     </Style>
-                </DataGrid.CellStyle>
+                </DataGrid.CellStyle>-->
             </DataGrid>
         </ScrollViewer>
 

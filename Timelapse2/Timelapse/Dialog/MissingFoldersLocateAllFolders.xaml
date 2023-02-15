@@ -62,7 +62,6 @@
 
                 <DataGrid.Columns>
 
-
                     <DataGridTextColumn Header="Folder name" Width="Auto" Binding="{Binding FolderName}"/>
 
                     <DataGridTextColumn Header="Expected old location" Width="*" Binding="{Binding ExpectedOldLocation}"/>
@@ -70,22 +69,25 @@
                     <DataGridTemplateColumn Width="*" Header="Possible new locations">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <!--<Border BorderBrush="White" BorderThickness=".5">-->
-                                    <ComboBox Height="Auto" Name="Part_Combo" SelectionChanged="Part_Combo_SelectionChanged" />
-                                <!--</Border>-->
+                                <ComboBox Height="Auto" Name="Part_Combo" SelectionChanged="Part_Combo_SelectionChanged" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
+
                     </DataGridTemplateColumn>
 
-
+                    <!-- Use column -->
                     <DataGridTemplateColumn Width="Auto" Header="Use?"  >
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <CheckBox  Name="Part_Checkbox" VerticalAlignment="Center" IsChecked="{Binding Use, UpdateSourceTrigger=PropertyChanged}" Checked="Checkbox_CheckChanged" Unchecked="Checkbox_CheckChanged"/>
+                                
+                                <!-- It seems to work, and all my efforts to figure out how to resolve this didn't work-->
+                                <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
+                                <CheckBox Name="Part_Checkbox" VerticalAlignment="Center" IsChecked="{Binding Path=Use, UpdateSourceTrigger=PropertyChanged}" Checked="Checkbox_CheckChanged" Unchecked="Checkbox_CheckChanged"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
+                    <!-- Locate button column -->
                     <DataGridTemplateColumn Width="Auto">
 
                         <DataGridTemplateColumn.CellTemplate>
@@ -96,7 +98,8 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    
+
+                    <!-- View button column -->
                     <DataGridTemplateColumn Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -106,14 +109,15 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    
                 </DataGrid.Columns>
 
-                <DataGrid.CellStyle>
+                <!-- Celll styles for all columns -->
+                <!-- SaulXXX I wanted to create a tooltip that contained the content of the cell, but this doesn't work -->
+                <!--<DataGrid.CellStyle>
                     <Style TargetType="DataGridCell">
                         <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self},Path=Content.Text}"/>
                     </Style>
-                </DataGrid.CellStyle>
+                </DataGrid.CellStyle>-->
             </DataGrid>
         </ScrollViewer>
 

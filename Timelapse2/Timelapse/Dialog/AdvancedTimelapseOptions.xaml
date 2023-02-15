@@ -13,31 +13,6 @@
             <StackPanel Orientation="Vertical" >
                 <controls:StockMessageControl x:Name="Message" Margin="15,0,15,0" Icon="Question"
                             Title="Preferences (applied every time you run Timelapse on this machine)"/>
-                <!--Automated Image Recognition-->
-                <!--<GroupBox Name="AutomatedImageRecognitionPanel" Header="Automated Image Recognition"  VerticalAlignment="Top" FontWeight="Bold" FontSize="12"  Margin="15,0,15,5" Padding="10,0,10,0" Width="776" Height="Auto" IsEnabled="False">
-                    <DockPanel Width="751">
-                        <StackPanel Orientation="Vertical" >
-                            <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" FontWeight="Normal" FontStyle="Normal" FontSize="12" Width="656"> 
-                                Timelapse can import, show, and let you filter images using image recognition files produced by a 3rd party (see manual).
-                                       <LineBreak/><Italic><Bold>Note:</Bold> An image set with recognitions must be loaded to activate this panel.</Italic>
-                            </TextBlock>
-                            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" Margin="0,10,0,0" >
-                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,0" >
-                                    <CheckBox Name="CheckBoxBoundingBoxAnnotate" Content="Annotate bounding box" Margin="27,0,0,0" FontWeight="Normal"  IsChecked ="True" ToolTip="Annotate each bounding box with a label or menu containing the recognizer's classification.&#x0a;This adds information at the expense of some clutter." Click="CheckBoxBounidngBoxAnnotate_Click"/>
-                                    <CheckBox Name="CheckBoxBoundingBoxColorBlindFriendlyColors" Content="Use color-blind friendly colors" Margin="15,0,0,0" ToolTip="Apply a bounding box color without transparency that is somewhat better for color-blind people" FontWeight="Normal" Click="CheckBoxBounidngBoxColorBlindRinedlyColors_Click"/>
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top"  Margin="30,10,0,0">
-                                    <Slider Name="BoundingBoxDisplayThresholdSlider" Width="200" ValueChanged="BoundingBoxDisplayThreshold_ValueChanged" VerticalAlignment="Top" IsSnapToTickEnabled="True" TickFrequency="0.05" Minimum="0" Maximum="1" LargeChange="0.05"/>
-                                    <TextBlock Name="BoundingBoxThresholdDisplayValue"  FontWeight="Normal" Text="0.00" MinWidth="40"/>
-                                    <TextBlock Name="BoundingBoxThresholdDisplayText" Text="Always display bounding boxes above this confidence threshold" FontWeight="Normal"/>
-                                </StackPanel>
-
-                            </StackPanel>
-                        </StackPanel>
-                        <Button Name="ResetDetections" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDetections_Click"></Button>
-                    </DockPanel>
-                </GroupBox>-->
 
                 <!--Exporting Data to a CSV File -->
                 <GroupBox Header="Exporting data to a CSV File " FontWeight="Bold" FontSize="12"  Margin="15,0,15,5" Padding="10,0,10,0"  Width="776" Height="Auto">

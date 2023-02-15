@@ -47,12 +47,16 @@ namespace Timelapse.Dialog
                 return finalFolderLocations;
             }
         }
+
+        //private readonly ObservableCollection<MissingFolderRow> observableCollection; // A tuple defining the contents of the datagrid
+        private ObservableCollection<MissingFolderRow> observableCollection { get; set; } // A tuple defining the contents of the datagrid
+
         #endregion
 
         #region Private variables
         private readonly string useLocateButtonText = "0 matches. Try [Locate]";
         private readonly string RootPath;
-        private readonly ObservableCollection<MissingFolderRow> observableCollection; // A tuple defining the contents of the datagrid
+
         private IList<DataGridCellInfo> selectedRowValues; // Will contain the tuple of the row corresponding to the selected cell
         #endregion
 
@@ -173,9 +177,11 @@ namespace Timelapse.Dialog
             }
         }
 
+        // Currently a no-op. We don't want to invoke the EnsureCheckboxValue as done previously, as
+        // it resets the checkbox even when we uncheck  or check it.
         private void Checkbox_CheckChanged(object sender, RoutedEventArgs e)
         {
-            this.EnsureCheckboxValue();
+            // this.EnsureCheckboxValue();
         }
 
         // Whenever the selection changes (which only happens if the user actually selects something)
@@ -201,7 +207,6 @@ namespace Timelapse.Dialog
                     {
                         checkBox.IsChecked = true;
                     }
-
                 }
             }
         }
@@ -240,6 +245,9 @@ namespace Timelapse.Dialog
             }
         }
 
+        // Sets the Use checkbox to the appropriate initial values when its invoked.
+        // If there is only one option in the location, Use is checked.
+        // If there are two options, Use is unchecked.
         private void EnsureCheckboxValue()
         {
             int rowIndex = 0;
@@ -265,26 +273,6 @@ namespace Timelapse.Dialog
                 rowIndex++;
             }
         }
-
-        //private void SetCheckboxValue(CheckBox checkBox)
-        //{
-        //    int rowIndex = 0;
-        //    ComboBox comboBox;
-        //    foreach (MissingFolderRow mfr in this.observableCollection)
-        //    {
-        //        DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
-        //           .ContainerFromIndex(rowIndex);
-        //        if (Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox") == checkBox)
-        //        {
-        //            comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
-        //            if (string.IsNullOrEmpty((string)comboBox.SelectedItem))
-        //            {
-        //                checkBox.IsChecked = false;
-        //            }
-        //        }
-        //        rowIndex++;
-        //    }
-        //}
         #endregion
 
         #region Helper methods

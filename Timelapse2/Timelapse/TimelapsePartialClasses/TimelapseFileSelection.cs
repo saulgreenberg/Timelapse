@@ -112,7 +112,7 @@ namespace Timelapse
                     status = "Missing files";
                     break;
                 default:
-                    throw new NotSupportedException(String.Format("Unhandled file selection {0}.", selection));
+                    throw new NotSupportedException($"Unhandled file selection {selection}.");
             }
             // Show feedback of the status description in both the status bar and the data entry control panel title
             this.StatusBar.SetView(status);

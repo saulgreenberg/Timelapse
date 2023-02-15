@@ -40,19 +40,18 @@ namespace Timelapse.Dialog
             this.RadioButtonDeletionManagement_Set(this.timelapseState.DeleteFolderManagement);
 
             // CSV Include Folder column option
-
-            // CSV DateTime options
-            if (this.timelapseState.CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
+            switch (this.timelapseState.CSVDateTimeOptions)
             {
-                this.RadioButtonCSVDateAndTimeColumns.IsChecked = true;
-            }
-            else if (this.timelapseState.CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
-            {
-                this.RadioButtonCSVLocalDateTimeColumn.IsChecked = true;
-            }
-            else if (this.timelapseState.CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
-            {
-                this.RadioButtonCSVLocalDateTimeColumnWithoutT.IsChecked = true;
+                // CSV DateTime options
+                case CSVDateTimeOptionsEnum.DateAndTimeColumns:
+                    this.RadioButtonCSVDateAndTimeColumns.IsChecked = true;
+                    break;
+                case CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator:
+                    this.RadioButtonCSVLocalDateTimeColumn.IsChecked = true;
+                    break;
+                case CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn:
+                    this.RadioButtonCSVLocalDateTimeColumnWithoutT.IsChecked = true;
+                    break;
             }
 
             this.CheckBoxCSVInsertSpaceBeforeDates.IsChecked = this.timelapseState.CSVInsertSpaceBeforeDates;
@@ -82,23 +81,11 @@ namespace Timelapse.Dialog
             this.DifferenceThreshold.ToolTip = this.timelapseState.DifferenceThreshold;
             this.DifferenceThreshold.Maximum = Constant.ImageValues.DifferenceThresholdMax;
             this.DifferenceThreshold.Minimum = Constant.ImageValues.DifferenceThresholdMin;
-
-            // Detections
-            //this.CheckBoxBoundingBoxAnnotate.IsChecked = this.timelapseState.BoundingBoxAnnotate;
-            //this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = this.timelapseState.BoundingBoxColorBlindFriendlyColors;
-            //this.AutomatedImageRecognitionPanel.IsEnabled = detectionsLoaded;
-
-            //this.CheckBoxBoundingBoxAnnotate.IsEnabled = detectionsLoaded;
-            //this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsEnabled = detectionsLoaded;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            //this.BoundingBoxDisplayThresholdSlider.IsEnabled = true;
-            //this.BoundingBoxDisplayThresholdSlider.Value = this.timelapseState.BoundingBoxDisplayThreshold;
-            //this.CheckBoxBoundingBoxAnnotate.IsEnabled = true;
-            //this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsEnabled = true;
         }
         #endregion
 
@@ -116,8 +103,6 @@ namespace Timelapse.Dialog
 
         #region Callbacks + Helper: Delete Folder Management
         // Check the appropriate radio button to match the state
-
-
         // Set the state to match the radio button selection
         private void DeletedFileManagement_Click(object sender, RoutedEventArgs e)
         {
@@ -259,49 +244,6 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        //#region Callbacks - Detection and Bounding Boxsettings
-        //private void ResetDetections_Click(object sender, RoutedEventArgs e)
-        //{
-        //    this.CheckBoxBoundingBoxAnnotate.IsChecked = true;
-        //    this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = false;
-        //    this.BoundingBoxDisplayThresholdSlider.IsEnabled = true;
-        //    this.timelapseState.BoundingBoxDisplayThresholdResetToDefault();
-        //    this.BoundingBoxDisplayThresholdSlider.Value = this.timelapseState.BoundingBoxDisplayThreshold;
-        //}
-
-        //private void BoundingBoxDisplayThreshold_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        //{
-        //    if (!(sender is Slider slider))
-        //    {
-        //        return;
-        //    }
-        //    this.BoundingBoxThresholdDisplayValue.Text = slider.Value.ToString("0.00");
-        //    if (slider.Value == 0)
-        //    {
-        //        this.BoundingBoxThresholdDisplayText.Text = "This setting will display all bounding boxes";
-        //    }
-        //    else if (slider.Value == 1)
-        //    {
-        //        this.BoundingBoxThresholdDisplayText.Text = "This setting will never display bounding boxes";
-        //    }
-        //    else
-        //    {
-        //        this.BoundingBoxThresholdDisplayText.Text = "Always display bounding boxes above this confidence threshold";
-        //    }
-        //    this.timelapseState.BoundingBoxDisplayThreshold = slider.Value;
-        //}
-
-        //private void CheckBoxBounidngBoxColorBlindRinedlyColors_Click(object sender, RoutedEventArgs e)
-        //{
-        //    this.timelapseState.BoundingBoxColorBlindFriendlyColors = this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked == true;
-        //}
-
-        //private void CheckBoxBounidngBoxAnnotate_Click(object sender, RoutedEventArgs e)
-        //{
-        //    this.timelapseState.BoundingBoxAnnotate = this.CheckBoxBoundingBoxAnnotate.IsChecked == true;
-        //}
-        //#endregion
-
         #region Callbacks - Episode searching threshold
         private void SliderSetEpisodeMaxRange_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -320,10 +262,9 @@ namespace Timelapse.Dialog
 
         private void SetSliderSetEpisodeMaxRangeFeedack(int episodeThreshold)
         {
-            TextEpisodeFeedback.Text = String.Format("Check up to {0} surrounding files to determine the episode range", episodeThreshold);
+            TextEpisodeFeedback.Text = $"Check up to {episodeThreshold} surrounding files to determine the episode range";
             this.SliderSetEpisodeMaxRange.ToolTip = episodeThreshold;
         }
-
         #endregion
 
         #region Callbacks - Maxium zoom
@@ -349,9 +290,6 @@ namespace Timelapse.Dialog
         {
             this.DialogResult = true;
         }
-
-
         #endregion
-
     }
 }

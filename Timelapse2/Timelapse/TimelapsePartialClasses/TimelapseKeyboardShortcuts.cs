@@ -131,6 +131,12 @@ namespace Timelapse
                     direction = currentKey.Key == Key.Right ? DirectionEnum.Next : DirectionEnum.Previous;
                     if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
+                        if (this.DataHandler.ImageCache.Current == null)
+                        {
+                            // Shouldn't happen
+                            TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                            return;
+                        }
                         long currentFileID = this.DataHandler.ImageCache.Current.ID;
                         bool result = Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
                         if (result)

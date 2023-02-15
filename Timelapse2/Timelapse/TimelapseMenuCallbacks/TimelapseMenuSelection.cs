@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
+using Timelapse.Util;
 using MessageBox = Timelapse.Dialog.MessageBox;
 
 namespace Timelapse
@@ -176,6 +178,13 @@ namespace Timelapse
                 return;
             }
 
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                //Shouldn't happen
+                TracePrint.UnexpectedException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
+
             // If its select all folders, then 
             if (mi == MenuItemSelectAllFolders)
             {
@@ -224,14 +233,29 @@ namespace Timelapse
         {
             // the first time the custom selection dialog is launched update the DateTime search terms to the time of the current image
             SearchTerm firstDateTimeSearchTerm = this.DataHandler.FileDatabase.CustomSelection.SearchTerms.FirstOrDefault(searchTerm => searchTerm.DataLabel == Constant.DatabaseColumn.DateTime);
+            if (firstDateTimeSearchTerm == null)
+            {
+                // Shouldn't happen, as there should always be a datetime columne
+                TracePrint.NullException(nameof(firstDateTimeSearchTerm));
+                return;
+            }
             if (firstDateTimeSearchTerm.GetDateTime() == Constant.ControlDefault.DateTimeDefaultValue)
             {
-                DateTime defaultDate = this.DataHandler.ImageCache.Current.DateTime;
+                DateTime defaultDate;
+                if (this.DataHandler.ImageCache.Current == null)
+                {
+                    // Should't happen
+                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    defaultDate = DateTime.Now;
+                }
+                else
+                {
+                    defaultDate = this.DataHandler.ImageCache.Current.DateTime;
+                }
                 this.DataHandler.FileDatabase.CustomSelection.SetDateTimes(defaultDate);
             }
 
             // show the dialog and process the resuls
-            //Dialog.CustomSelection customSelection = new Dialog.CustomSelection(this.DataHandler.FileDatabase, this.DataEntryControls, this, this.IsUTCOffsetControlHidden(), this.DataHandler.FileDatabase.CustomSelection.DetectionSelections)
             Dialog.CustomSelectionWithEpisodes customSelection = new Dialog.CustomSelectionWithEpisodes(this.DataHandler.FileDatabase, this.DataEntryControls, this, this.DataHandler.FileDatabase.CustomSelection.DetectionSelections, this.DataHandler.ImageCache.Current)
             {
                 Owner = this
@@ -240,6 +264,12 @@ namespace Timelapse
             // Set the selection to show all images and a valid image
             if (changeToCustomSelection == true)
             {
+                if (this.DataHandler.ImageCache.Current == null)
+                {
+                    // Shouldn't happen.
+                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    return;
+                }
                 await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
                 if (this.MenuItemSelectCustomSelection.IsChecked || this.MenuItemSelectCustomSelection.IsChecked)
                 {
@@ -264,6 +294,12 @@ namespace Timelapse
         // Useful when, for example, the user has selected a view, but then changed some data values where items no longer match the current selection.
         private async void MenuItemSelectReselect_Click(object sender, RoutedEventArgs e)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
             // Reselect the images, which re-sorts them to the current sort criteria. 
             await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
         }
@@ -279,6 +315,13 @@ namespace Timelapse
             this.MenuItemSelectAllFiles.IsChecked = false;
             if (true == useRandomSample)
             {
+                if (this.DataHandler.ImageCache.Current == null)
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    this.StatusBar.SetView("Something went wrong with random sample");
+                    return;
+                }
                 this.DataHandler.FileDatabase.CustomSelection.RandomSample = customSelection.SampleSize;
                 await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
                 this.DataHandler.FileDatabase.CustomSelection.RandomSample = 0;

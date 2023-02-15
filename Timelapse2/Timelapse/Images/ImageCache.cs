@@ -186,7 +186,7 @@ namespace Timelapse.Images
         #endregion
 
         #region Public Methods - Move to File
-        public override bool TryMoveToFile(int fileIndex)
+        public sealed override bool TryMoveToFile(int fileIndex)
         {
             return this.TryMoveToFile(fileIndex, false, out _);
         }

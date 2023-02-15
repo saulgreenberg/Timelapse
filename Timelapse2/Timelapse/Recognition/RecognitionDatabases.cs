@@ -164,7 +164,7 @@ namespace Timelapse.Recognition
             detectionDB.Insert(Constant.DBTables.Info, insertionStatements);
 
             // DetectionCategories:  Populate
-            if (recognizer.detection_categories != null || recognizer.detection_categories.Count > 0)
+            if (recognizer.detection_categories != null || recognizer.detection_categories?.Count > 0)
             {
                 bool emptyCategoryExists = false;
                 insertionStatements = new List<List<ColumnTuple>>();
@@ -422,7 +422,8 @@ namespace Timelapse.Recognition
             detectionDB.Insert(Constant.DBTables.Info, insertionStatements);
 
             // DetectionCategories:  Populate
-            if (recognizer.detection_categories != null || recognizer.detection_categories.Count > 0)
+            // SAULXX: USED TO BE: if (recognizer.detection_categories != null || recognizer.detection_categories.Count > 0)
+            if (recognizer.detection_categories != null && recognizer.detection_categories.Count > 0)
             {
                 bool emptyCategoryExists = false;
                 insertionStatements = new List<List<ColumnTuple>>();

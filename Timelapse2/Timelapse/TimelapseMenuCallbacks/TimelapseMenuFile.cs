@@ -328,6 +328,13 @@ namespace Timelapse
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                Dialogs.MenuFileCantExportCurrentImageDialog(this);
+                return;
+            }
+
             if (!this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
             {
                 // Can't export the currently displayed image as a file

@@ -260,17 +260,21 @@ namespace Timelapse.Dialog
                 // Retrieve selected items, but only if the rename radio button is enabled and checked
                 // retrieve selected items, but only if the rename radio button is checked
                 UIElement uiComboBox = this.GetUIElement(row, 4);
-                if (uiComboBox != null)
+                if (uiComboBox is ComboBox cb && cb.IsEnabled)
                 {
-                    if (uiComboBox is ComboBox cb && cb.IsEnabled)
+                    ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
+                    if (cb.SelectedItem != null)
                     {
-                        ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
-                        if (cb.SelectedItem != null)
+                        if (cbi != null)
                         {
                             selectedDataLabels.Add(cbi.Content.ToString());
                         }
-                        continue;
+                        else
+                        {
+                            TracePrint.NullException(nameof(cbi));
+                        }
                     }
+                    continue;
                 }
 
                 // If this is a Delete action row and a previously selected data label matches it, hide it. 
@@ -368,7 +372,16 @@ namespace Timelapse.Dialog
                         ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
                         if (cb.SelectedItem != null)
                         {
-                            this.TemplateSyncResults.DataLabelsToRename.Add(new KeyValuePair<string, string>(datalabel, cbi.Content.ToString()));
+                            if (cbi != null)
+                            {
+                                this.TemplateSyncResults.DataLabelsToRename.Add(new KeyValuePair<string, string>(datalabel, cbi.Content.ToString()));
+                            }
+                            else
+                            {
+                                // Shouldn't happen. Not sure if unknown value workaround will work
+                               TracePrint.NullException(nameof(cbi));
+                               this.TemplateSyncResults.DataLabelsToRename.Add(new KeyValuePair<string, string>(datalabel, "Unknown value"));
+                            }
                             continue;
                         }
                     }
@@ -427,7 +440,7 @@ namespace Timelapse.Dialog
         private void CbRenameMenu_SelectionChanged(Object o, SelectionChangedEventArgs a)
         {
             ComboBox activeComboBox = o as ComboBox;
-            if ((ComboBoxItem)activeComboBox.SelectedItem == null)
+            if ((ComboBoxItem)activeComboBox?.SelectedItem == null)
             {
                 return;
             }
@@ -440,7 +453,7 @@ namespace Timelapse.Dialog
                     if (combobox.SelectedItem != null)
                     {
                         ComboBoxItem cbi = combobox.SelectedItem as ComboBoxItem;
-                        if (cbi.Content.ToString() == datalabelSelected)
+                        if (cbi?.Content.ToString() == datalabelSelected)
                         {
                             combobox.SelectedIndex = -1;
                         }

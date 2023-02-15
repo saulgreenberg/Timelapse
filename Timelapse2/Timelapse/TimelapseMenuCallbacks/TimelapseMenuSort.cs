@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.Util;
 
 namespace Timelapse
 {
@@ -81,10 +82,7 @@ namespace Timelapse
             };
             if (customSort.ShowDialog() == true)
             {
-                if (this.DataHandler != null && this.DataHandler.FileDatabase != null)
-                {
-                    this.DataHandler.FileDatabase.ImageSet.SetSortTerms(customSort.SortTerm1, customSort.SortTerm2);
-                }
+                this.DataHandler?.FileDatabase?.ImageSet.SetSortTerms(customSort.SortTerm1, customSort.SortTerm2);
                 await this.DoSortAndShowSortFeedbackAsync(true).ConfigureAwait(true);
             }
             else
@@ -107,6 +105,12 @@ namespace Timelapse
         // Only invoked by the above menu functions 
         private async Task DoSortAndShowSortFeedbackAsync(bool updateMenuChecks)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
             // Sync the current sort settings into the actual database. While this is done
             // on closing Timelapse, this will save it on the odd chance that Timelapse crashes before it exits.
             this.DataHandler.FileDatabase.UpdateSyncImageSetToDatabase(); // SAULXXX CHECK IF THIS IS NEEDED

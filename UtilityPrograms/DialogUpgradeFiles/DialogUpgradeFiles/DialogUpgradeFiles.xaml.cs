@@ -361,7 +361,7 @@ namespace DialogUpgradeFiles
 
         public void DebugFeedback(bool success, string message)
         {
-            bool trace = false; // Change to true to show the feedback
+            bool trace = true; // Change to true to show the feedback
             if (trace)
             {
                 message = success
@@ -373,7 +373,7 @@ namespace DialogUpgradeFiles
 
         public void DebugFeedback(string message)
         {
-            bool trace = false; // Change to true to show the feedback
+            bool trace = true; // Change to true to show the feedback
             if (trace)
             {
                 System.Diagnostics.Debug.Print(message);

@@ -243,6 +243,13 @@ namespace Timelapse.Dialog
         private static string GetRelativePathAndFileName(string tdbPath, string ddbFilePath)
         {
             string tdbPathWithoutFileName = Path.GetDirectoryName(tdbPath);
+            if (tdbPathWithoutFileName == null)
+            {
+                // Shouldn't happen, i.e., Only occurs if its the drive e.g., C://
+                // Not sure if setting the tdbPath to the drive letter will work, though.
+                TracePrint.NullException(nameof(tdbPathWithoutFileName));
+                tdbPathWithoutFileName = Path.GetPathRoot(tdbPath);
+            }
             string relativePathAndFileName = ddbFilePath.Replace(tdbPathWithoutFileName.TrimEnd(Path.DirectorySeparatorChar) + "\\", "");
             return relativePathAndFileName;
         }

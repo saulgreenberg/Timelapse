@@ -117,6 +117,13 @@ namespace Timelapse
                 return;
             }
 
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
+
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                            "'Populate data fields with image metadata...'",
@@ -583,19 +590,17 @@ namespace Timelapse
                                                                    this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
             {
+                if (this.DataHandler.ImageCache.Current == null)
+                {
+                    //Shouldn't happen. And should likely produce an error message.
+                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    return;
+                }
                 PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache.Current.GetFilePath(this.FolderPath), true);
                 if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
                     await this.FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
-
-                //using (DateTimeRereadFromSelectedMetadataField populateField = new DateTimeRereadFromSelectedMetadataField(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache.Current.GetFilePath(this.FolderPath)))
-                //{
-                //    if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
-                //    {
-                //        await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-                //    };
-                //}
             }
         }
         #endregion

@@ -251,9 +251,6 @@ namespace Timelapse.Dialog
         // The (bool, int return value: true if the operation has been cancelled, and if so how many images were deleted before the cancel event
         private async Task<Tuple<bool, int>> DoDeleteFilesAsync(List<ImageRow> imagesToDelete, bool deleteFiles, bool deleteData)
         {
-            // cache the current ID as the current image may be invalidated
-            long currentFileID = this.imageCache.Current.ID;
-
             List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
             List<long> imageIDsToDropFromDatabase = new List<long>();
             int fileIndex = 0;

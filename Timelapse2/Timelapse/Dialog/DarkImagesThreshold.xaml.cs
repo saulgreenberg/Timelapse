@@ -232,6 +232,12 @@ namespace Timelapse.Dialog
         // Utility routine for calling a typical sequence of UI update actions
         private void DisplayImageAndDetails()
         {
+            if (this.imageEnumerator.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.imageEnumerator.Current));
+                return;
+            }
             this.bitmap = this.imageEnumerator.Current.LoadBitmap(this.fileDatabase.FolderPath, out _).AsWriteable();
             this.Image.Source = this.bitmap;
             this.FileName.Content = this.imageEnumerator.Current.File;

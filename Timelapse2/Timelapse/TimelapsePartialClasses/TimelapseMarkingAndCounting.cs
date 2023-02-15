@@ -110,6 +110,13 @@ namespace Timelapse
         /// </summary>
         private void MarkableCanvas_AddMarker(DataEntryCounter counter, Marker marker)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
+
             try // Make this a noop to handle the rare bug 'Object reference not set to an instance of an object.' as not sure which object was the problematic one
             {
                 if (counter == null || marker == null)
@@ -165,6 +172,13 @@ namespace Timelapse
                     }
                 }
 
+                if (markersForCounter == null)
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(markersForCounter));
+                    return;
+                }
+
                 // fill in marker information
                 marker.ShowLabel = true; // Show the annotation as its created. We will clear it on the next refresh
                 marker.LabelShownPreviously = false;
@@ -181,7 +195,7 @@ namespace Timelapse
             }
             catch
             {
-                Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
+                TracePrint.CatchException("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
             }
         }
         #endregion

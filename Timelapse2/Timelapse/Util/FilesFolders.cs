@@ -365,7 +365,16 @@ namespace Timelapse.Util
                 return null;
             }
             string fileName = Path.GetFileName(fullPath);
-            string directoryName = Path.GetDirectoryName(fullPath).TrimEnd('\\');
+
+            string directoryName = Path.GetDirectoryName(fullPath);
+            if (directoryName == null)
+            {
+                // Shouldn't normally happen, i.e., Only happens if its a drive e.g., C:
+                // NOt sure if this workaround works
+                TracePrint.NullException(nameof(fileName));
+                directoryName = Path.GetPathRoot(fullPath);
+            }
+            directoryName = directoryName.TrimEnd('\\');
 
             //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
             string relativePath = rootPath.Equals(directoryName) ? String.Empty : directoryName.Substring(rootPath.Length + 1);
@@ -390,11 +399,25 @@ namespace Timelapse.Util
             }
             if (path1.Length > path2.Length)
             {
-                return Path.GetDirectoryName(path1).Replace(path2 + "\\", "");
+                string dir1 = Path.GetDirectoryName(path1);
+                if (dir1 == null)
+                {
+                    // Shouldn't happen. Empty workaround likely does not work.
+                    TracePrint.NullException(nameof(dir1));
+                    return string.Empty;
+                }
+                return dir1.Replace(path2 + "\\", "");
             }
             else
             {
-                return Path.GetDirectoryName(path2).Replace(path1 + "\\", "");
+                string dir2 = Path.GetDirectoryName(path2);
+                if (dir2 == null)
+                {
+                    // Shouldn't happen. Empty workaround likely does not work.
+                    TracePrint.NullException(nameof(dir2));
+                    return string.Empty;
+                }
+                return dir2.Replace(path1 + "\\", "");
             }
         }
         #endregion
@@ -545,10 +568,10 @@ namespace Timelapse.Util
         // These are prefixed by '._' and are not actually a valid image or video
         private static void FilesRemoveAllButImagesAndVideos(List<FileInfo> fileInfoList)
         {
-            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) 
-                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) 
-                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) 
-                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase)
                                    || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase))
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
         }

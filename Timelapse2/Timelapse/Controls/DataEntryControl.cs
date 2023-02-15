@@ -312,8 +312,7 @@ namespace Timelapse.Controls
         }
         private void FlashFontTimer_Tick(object sender, EventArgs e)
         {
-            DispatcherTimer timer = sender as DispatcherTimer;
-            if (timer == null)
+            if (!(sender is DispatcherTimer timer))
             {
                 return;
             }
