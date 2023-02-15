@@ -18,6 +18,7 @@ namespace Timelapse
             if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
             {
                 TracePrint.PrintMessage("FilesSelectAndShow: Expected a file database to be available.");
+                return;
             }
             await this.FilesSelectAndShowAsync(this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
         }
@@ -40,9 +41,10 @@ namespace Timelapse
         {
             // change selection
             // if the data grid is bound the file database automatically updates its contents on SelectFiles()
-            if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
+            if (this.DataHandler?.FileDatabase == null)
             {
                 TracePrint.PrintMessage("FilesSelectAndShow() should not be reachable with a null data handler.  Is a menu item wrongly enabled?");
+                return false;
             }
 
             // Select the files according to the given selection
@@ -110,7 +112,7 @@ namespace Timelapse
                     status = "Missing files";
                     break;
                 default:
-                    throw new NotSupportedException(String.Format("Unhandled file selection {0}.", selection));
+                    throw new NotSupportedException($"Unhandled file selection {selection}.");
             }
             // Show feedback of the status description in both the status bar and the data entry control panel title
             this.StatusBar.SetView(status);

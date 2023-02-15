@@ -44,6 +44,12 @@ namespace Timelapse.Dialog
             this.InitalizeProgressHandler(this.BusyCancelIndicator);
 
             // Get the original date and display it
+            if (fileEnumerator.Current == null)
+            {
+                // Shouldn't happen. I'm not sure what would happen if this bungs up, but at least we will get a message.
+                TracePrint.NullException(nameof(fileEnumerator.Current));
+                return;
+            }
             this.OriginalDate.Content = fileEnumerator.Current.DateTimeAsDisplayable;
             this.NewDate.Content = this.OriginalDate.Content;
 
@@ -104,7 +110,7 @@ namespace Timelapse.Dialog
             // This not only calculates the new times, but updates the progress bar as the fileDatabase method iterates through the files.
             // this.fileDatabase.AdjustFileTimes(daylightSavingsAdjustment, startRow, endRow); // For all rows...
             this.fileDatabase.UpdateAdjustedFileTimes(
-               (string fileName, int fileIndex, int count, DateTime imageDateTime) =>
+               (fileName, fileIndex, count, imageDateTime) =>
                {
                    if (adjustment.Duration() >= TimeSpan.FromSeconds(1))
                    {
@@ -154,7 +160,7 @@ namespace Timelapse.Dialog
             this.WindowCloseButtonIsEnabled(false);
 
             // Calculate the required adjustment
-            bool forward = (bool)this.rbForward.IsChecked;
+            bool forward = this.rbForward.IsChecked == true;
             int startRow;
             int endRow;
             if (forward)
@@ -169,7 +175,7 @@ namespace Timelapse.Dialog
             }
 
             // Update the database
-            int hours = (bool)this.rbAddHour.IsChecked ? 1 : -1;
+            int hours = this.rbAddHour.IsChecked == true? 1 : -1;
             TimeSpan daylightSavingsAdjustment = new TimeSpan(hours, 0, 0);
 
             // This call does all the actual updating...
@@ -197,7 +203,7 @@ namespace Timelapse.Dialog
         // Examine the checkboxes to see what state our selection is in, and provide feedback as appropriate
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
-            if ((bool)this.rbAddHour.IsChecked || (bool)this.rbSubtractHour.IsChecked)
+            if (this.rbAddHour.IsChecked == true || this.rbSubtractHour.IsChecked == true)
             {
                 if (DateTimeHandler.TryParseDisplayDateTime((string)this.OriginalDate.Content, out DateTime dateTime) == false)
                 {
@@ -205,12 +211,12 @@ namespace Timelapse.Dialog
                     this.StartDoneButton.IsEnabled = false;
                     return;
                 }
-                int hours = ((bool)this.rbAddHour.IsChecked) ? 1 : -1;
+                int hours = this.rbAddHour.IsChecked == true ? 1 : -1;
                 TimeSpan daylightSavingsAdjustment = new TimeSpan(hours, 0, 0);
                 dateTime = dateTime.Add(daylightSavingsAdjustment);
                 this.NewDate.Content = DateTimeHandler.ToStringDisplayDateTime(dateTime);
             }
-            if (((bool)this.rbAddHour.IsChecked || (bool)this.rbSubtractHour.IsChecked) && ((bool)this.rbBackwards.IsChecked || (bool)this.rbForward.IsChecked))
+            if ((this.rbAddHour.IsChecked == true || this.rbSubtractHour.IsChecked == true) && (this.rbBackwards.IsChecked == true || this.rbForward.IsChecked == true))
             {
                 this.StartDoneButton.IsEnabled = true;
             }

@@ -120,8 +120,17 @@ namespace Timelapse.Images
                 EndPoint = new Point(0, 1)
             };
             ColorConverter cc = new ColorConverter();
-            outlineBrush.GradientStops.Add(new GradientStop((Color)cc.ConvertFrom("#AAA"), 0));
-            outlineBrush.GradientStops.Add(new GradientStop((Color)cc.ConvertFrom("#111"), 1));
+            object stop1 = cc.ConvertFrom("#AAA");
+            object stop2 = cc.ConvertFrom("#111");
+            if (stop1 != null && stop2 != null)
+            {
+                outlineBrush.GradientStops.Add(new GradientStop((Color)stop1, 0));
+                outlineBrush.GradientStops.Add(new GradientStop((Color)stop2, 1));
+            }
+            else
+            {
+                TracePrint.NullException(nameof(stop1) + " and " + nameof(stop2));
+            }
             this.magnifierLens.Stroke = outlineBrush;
             this.lensCanvas.Children.Add(this.magnifierLens);
 
@@ -138,9 +147,9 @@ namespace Timelapse.Images
             {
                 StrokeThickness = 0.25,
                 X1 = 5,
-                Y1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
-                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5,
-                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
+                Y1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
+                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5.0,
+                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
                 Stroke = Brushes.Black,
                 Opacity = 0.5
             };
@@ -149,10 +158,10 @@ namespace Timelapse.Images
             Line horizontalCrosshair = new Line
             {
                 StrokeThickness = 0.25,
-                X1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
+                X1 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
                 Y1 = 5,
-                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2,
-                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5,
+                X2 = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0,
+                Y2 = Constant.MarkableCanvas.MagnifyingGlassDiameter - 5.0,
                 Stroke = Brushes.Black,
                 Opacity = 0.5
             };

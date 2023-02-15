@@ -4,6 +4,8 @@
     xmlns:images="clr-namespace:Timelapse.Images"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
     xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
     AutomationProperties.AutomationId="Timelapse" Name="Timelapse"
     Loaded="Window_Loaded" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" PreviewKeyUp="Window_PreviewKeyUp"
     Height="800" Width="1200"
@@ -21,10 +23,10 @@
 
     <!-- Bindings to activate the Find box using CTL-F -->
     <Window.CommandBindings>
-        <CommandBinding Command="Find" Executed="MenuItemFindByFileName_Click"></CommandBinding>
+        <CommandBinding Command="Find" Executed="MenuItemFindByFileName_Click" />
     </Window.CommandBindings>
     <Window.InputBindings>
-        <KeyBinding Key="F" Modifiers="Control" Command="Find"></KeyBinding>
+        <KeyBinding Key="F" Modifiers="Control" Command="Find" />
     </Window.InputBindings>
 
     <Grid>
@@ -533,8 +535,16 @@
                 <xcad:DockingManager.DocumentHeaderTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{Binding IconSource}" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding Title}" />
+                            <Image Source="{Binding IconSource}" Margin="0,0,4,0">
+                                <d:Image.DataContext>
+                                    <d:DesignInstance />
+                                </d:Image.DataContext>
+                            </Image>
+                            <TextBlock Text="{Binding Title}">
+                                <d:TextBlock.DataContext>
+                                    <d:DesignInstance />
+                                </d:TextBlock.DataContext>
+                            </TextBlock>
                         </StackPanel>
                     </DataTemplate>
                 </xcad:DockingManager.DocumentHeaderTemplate>
@@ -543,8 +553,16 @@
                     <DataTemplate>
                         <!--This is a hack to get the DataEntryControlPanel tooltip to work, as setting it within the DataEntryControlPanel doesn't seem to work -->
                         <StackPanel Orientation="Horizontal" ToolTip="Data Entry: Drag the title bar to reposition this panel to either sides, the top or bottom, or even as a separate window">
-                            <Image Source="{Binding IconSource}" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding Title}" />
+                            <Image Source="{Binding IconSource}" Margin="0,0,4,0">
+                                <d:Image.DataContext>
+                                    <d:DesignInstance />
+                                </d:Image.DataContext>
+                            </Image>
+                            <TextBlock Text="{Binding Title}">
+                                <d:TextBlock.DataContext>
+                                    <d:DesignInstance />
+                                </d:TextBlock.DataContext>
+                            </TextBlock>
                         </StackPanel>
                     </DataTemplate>
                 </xcad:DockingManager.AnchorableTitleTemplate>
@@ -596,7 +614,7 @@
                                         </Popup>
 
                                         <!-- Controls Tray panel (to hold controls) -->
-                                        <StackPanel Name="ControlsPanel">
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Name="ControlsPanel">
                                             <controls:DataEntryControls x:Name="DataEntryControls" />
                                         </StackPanel>
 
@@ -678,7 +696,7 @@
                                             LostFocus="FileNavigatorSlider_LostFocus"/>
                                             <controls:FilePlayer x:Name="FilePlayer" Grid.Row="0" Grid.Column="1" FilePlayerChange="FilePlayer_FilePlayerChange" Visibility="Collapsed"/>
                                         </Grid>
-                                        <images:MarkableCanvas x:Name="MarkableCanvas" Grid.Row="2" Grid.RowSpan="2" HorizontalAlignment="Stretch"/>
+                                        <images:MarkableCanvas x:Name="MarkableCanvas" Grid.Row="2" HorizontalAlignment="Stretch"/>
                                         <TextBlock Name="EpisodeText" Grid.Row="2"  IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="Black" FontSize="40" Margin="5,20,0,0">
                                             <TextBlock.Background>
                                                 <SolidColorBrush Color="AliceBlue" Opacity="0.6" />

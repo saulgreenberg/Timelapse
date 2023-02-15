@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics;
 using Timelapse.Util;
 
 namespace Timelapse.Database
@@ -31,7 +32,7 @@ namespace Timelapse.Database
             catch
             {
                 // If for some reason we have an invalid date time (e.g., a null entry), always return a valid but improbable date (Jan 1 1900 midnight).
-                System.Diagnostics.Debug.Print("GetDateTimeField: Unexpected kind for date time in row with ID " + row.GetID());
+                Debug.Print("GetDateTimeField: Unexpected kind for date time in row with ID " + row.GetID());
                 return new DateTime(1900, 1, 1, 12, 0, 0, 0);
             }
         }

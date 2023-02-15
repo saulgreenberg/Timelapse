@@ -68,8 +68,9 @@ namespace Timelapse.Images
                 return;
             }
 
+
             // If the current image is marked as corrupted, we will only show the original (replacement) image
-            if (!this.Current.IsDisplayable(this.Database.FolderPath))
+            if (this.Current == null || !this.Current.IsDisplayable(this.Database.FolderPath))
             {
                 this.CurrentDifferenceState = ImageDifferenceEnum.Unaltered;
                 return;
@@ -185,7 +186,7 @@ namespace Timelapse.Images
         #endregion
 
         #region Public Methods - Move to File
-        public override bool TryMoveToFile(int fileIndex)
+        public sealed override bool TryMoveToFile(int fileIndex)
         {
             return this.TryMoveToFile(fileIndex, false, out _);
         }
@@ -201,6 +202,13 @@ namespace Timelapse.Images
             newFileToDisplay = false;
             if (base.TryMoveToFile(fileIndex) == false)
             {
+                return false;
+            }
+
+            if (this.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.Current));
                 return false;
             }
 
@@ -259,7 +267,7 @@ namespace Timelapse.Images
             {
                 // cache the bitmap, replacing any existing bitmap with the one passed
                 this.unalteredBitmapsByID.AddOrUpdate(id,
-                    (long newID) =>
+                    newID =>
                     {
                         // if the bitmap cache is full make room for the incoming bitmap
                         if (this.mostRecentlyUsedIDs.IsFull())
@@ -273,7 +281,7 @@ namespace Timelapse.Images
                         // indicate to add the bitmap
                         return bitmap;
                     },
-                    (long existingID, BitmapSource newBitmap) => newBitmap);
+                    (existingID, newBitmap) => newBitmap);
                 this.mostRecentlyUsedIDs.SetMostRecent(id);
             }
         }
@@ -313,12 +321,12 @@ namespace Timelapse.Images
                     this.prefetechesByID.Clear();
                     this.unalteredBitmapsByID.Clear();
                     this.CacheBitmap(fileRow.ID, bitmap);
-                    // System.Diagnostics.Debug.Print("Loaded as forceUpdate " + fileRow.FileName);
+                    // Debug.Print("Loaded as forceUpdate " + fileRow.FileName);
                 }
                 else if (this.unalteredBitmapsByID.TryGetValue(fileRow.ID, out bitmap))
                 {
                     // There is a cached bitmap, so we are now using it (in out bitmap)
-                    // System.Diagnostics.Debug.Print("Prefetched immediate " + fileRow.FileName);
+                    // Debug.Print("Prefetched immediate " + fileRow.FileName);
                 }
                 else
                 {
@@ -328,7 +336,7 @@ namespace Timelapse.Images
                         // bitmap retrieval's already in progress, so wait for it to complete
                         prefetch.Wait();
                         bitmap = this.unalteredBitmapsByID[fileRow.ID];
-                        // System.Diagnostics.Debug.Print("Prefetched wait" + fileRow.FileName);
+                        // Debug.Print("Prefetched wait" + fileRow.FileName);
                     }
                     else
                     {
@@ -340,7 +348,7 @@ namespace Timelapse.Images
                         {
                             this.CacheBitmap(fileRow.ID, bitmap);
                         }
-                        // System.Diagnostics.Debug.Print("Loaded as not prefetched " + fileRow.FileName);
+                        // Debug.Print("Loaded as not prefetched " + fileRow.FileName);
                     }
                 }
 
@@ -430,7 +438,7 @@ namespace Timelapse.Images
                 this.CacheBitmap(nextFile.ID, nextBitmap);
                 this.prefetechesByID.TryRemove(nextFile.ID, out Task ignored);
             });
-            this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (long id, Task newPrefetch) => newPrefetch);
+            this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (id, newPrefetch) => newPrefetch);
             return true;
         }
         #endregion

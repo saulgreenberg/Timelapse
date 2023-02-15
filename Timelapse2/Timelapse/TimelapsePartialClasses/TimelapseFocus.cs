@@ -36,12 +36,12 @@ namespace Timelapse
         {
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if (focusedElement == null ||
-               focusedElement is Timelapse.Images.MarkableCanvas ||
-               focusedElement is System.Windows.Controls.TabItem)
+               focusedElement is Images.MarkableCanvas ||
+               focusedElement is TabItem)
             {
                 // We only want to save the focus on controls
                 // string message = (lastControlWithFocus == null) ? "Leave: No control has focus" : "Leave: " + lastControlWithFocus.GetType().ToString();
-                // System.Diagnostics.Debug.Print(message);
+                // Debug.Print(message);
                 return;
             }
             this.lastControlWithFocus = focusedElement;
@@ -51,7 +51,7 @@ namespace Timelapse
         {
             if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
             {
-                if (this.lastControlWithFocus == this.MarkableCanvas)
+                if (Equals(this.lastControlWithFocus, this.MarkableCanvas))
                 {
                     this.MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
                     this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
@@ -96,16 +96,15 @@ namespace Timelapse
             // identify the currently selected control
             // if focus is currently set to the canvas this defaults to the first or last control, as appropriate
             int currentControl = moveToPreviousControl ? this.DataEntryControls.Controls.Count : -1;
-            Type type;
 
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if (focusedElement != null)
             {
-                type = focusedElement.GetType();
+                Type type = focusedElement.GetType();
 
                 // If we are moving the focus from outside to one of the controls in the data panel or the copy previous button,
                 // then try to restore the focus to the last control that had the focus.
-                if (Constant.Control.KeyboardInputTypes.Contains(type) == false && focusedElement != this.CopyPreviousValuesButton)
+                if (Constant.Control.KeyboardInputTypes.Contains(type) == false && !Equals(focusedElement, this.CopyPreviousValuesButton))
                 {
                     if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
                     {
@@ -139,11 +138,11 @@ namespace Timelapse
             Func<int, int> incrementOrDecrement;
             if (moveToPreviousControl)
             {
-                incrementOrDecrement = (int index) => --index;
+                incrementOrDecrement = index => --index;
             }
             else
             {
-                incrementOrDecrement = (int index) => ++index;
+                incrementOrDecrement = index => ++index;
             }
 
             for (currentControl = incrementOrDecrement(currentControl);

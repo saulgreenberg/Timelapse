@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit"
         Title="Correct for standard and daylight savings time changes" 
 		MinHeight="728" MinWidth="768"
 		Height="856" Width="768"
@@ -80,11 +79,11 @@
                     HeadersVisibility="Column">
                     <DataGrid.ColumnHeaderStyle>
                         <Style  TargetType="DataGridColumnHeader" >
-                            <Setter Property="Control.FontWeight" Value="Bold" />
-                            <Setter Property="Control.BorderThickness" Value="1" />
-                            <Setter Property="Control.Padding" Value="4" />
-                            <Setter Property="Control.Background" Value="Gainsboro" />
-                            <Setter Property="Control.BorderBrush" Value="Black" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="Padding" Value="4" />
+                            <Setter Property="Background" Value="Gainsboro" />
+                            <Setter Property="BorderBrush" Value="Black" />
                         </Style>
                     </DataGrid.ColumnHeaderStyle>
                 </DataGrid>

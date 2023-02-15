@@ -29,7 +29,7 @@ namespace Timelapse.Images
                 // We check this first as 'exists' will return false on a path too long error, and we want to display the correct bitmap
                 return Constant.ImageValues.FilePathTooLong.Value;
             }
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
             }
@@ -90,7 +90,7 @@ namespace Timelapse.Images
                 isCorruptOrMissing = true;
                 return Constant.ImageValues.FilePathTooLong.Value;
             }
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 isCorruptOrMissing = true;
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
@@ -99,7 +99,7 @@ namespace Timelapse.Images
             // Our FFMPEG installation is the 64 bit version. In case someone is using a 32 bit machine, we use the MediaEncoder instead.
             if (Environment.Is64BitOperatingSystem == false)
             {
-                // System.Diagnostics.Debug.Print("Can't use ffmpeg as this is a 32 bit machine. Using MediaEncoder instead");
+                // Debug.Print("Can't use ffmpeg as this is a 32 bit machine. Using MediaEncoder instead");
                 return BitmapUtilities.GetVideoBitmapFromFileUsingMediaEncoder(filePath, desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
             }
             try
@@ -108,7 +108,7 @@ namespace Timelapse.Images
                 //Saul TO DO:
                 // Note: not sure of the cost of creating a new converter every time. May be better to reuse it?
                 Stream outputBitmapAsStream = new MemoryStream();
-                FFMpegConverter ffMpeg = new NReco.VideoConverter.FFMpegConverter();
+                FFMpegConverter ffMpeg = new FFMpegConverter();
                 ffMpeg.GetVideoThumbnail(filePath, outputBitmapAsStream);
 
                 // Scale the video to the desired dimension
@@ -148,7 +148,7 @@ namespace Timelapse.Images
         public static BitmapSource GetVideoBitmapFromFileUsingMediaEncoder(string filePath, int? desiredWidth, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum _, out bool isCorruptOrMissing)
         {
             isCorruptOrMissing = true;
-            // System.Diagnostics.Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
+            // Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
 
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {
@@ -156,7 +156,7 @@ namespace Timelapse.Images
                 return Constant.ImageValues.FilePathTooLong.Value;
             }
 
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value;
             }
@@ -175,12 +175,6 @@ namespace Timelapse.Images
                 // MediaPlayer is not actually synchronous despite exposing synchronous APIs, so wait for it get the video loaded.  Otherwise
                 // the width and height properties are zero and only black pixels are drawn.  The properties will populate with just a call to
                 // Open() call but without also Play() only black is rendered
-
-                // TODO Rapidly show videos as it is too slow now, where:
-                // - ONLOAD It currently loads a blank video image when scouring thorugh the videos 
-                // - Rapid navigation: loads a blank video image in the background, then the video on pause
-                // - Multiview: very slow as only loads the  video.
-                // This will be fixed when we pre-process thumbnails
                 int timesTried = (displayIntent == ImageDisplayIntentEnum.Persistent) ? 1000 : 0;
                 while ((mediaPlayer.NaturalVideoWidth < 1) || (mediaPlayer.NaturalVideoHeight < 1))
                 {
@@ -343,7 +337,7 @@ namespace Timelapse.Images
                 bitmap.BeginInit();
                 bitmap.DecodePixelWidth = 1; // We try to generate a trivial thumbnail, as that suffices to know if this is a valid jpg;
                 bitmap.DecodePixelHeight = 1; // We try to generate a trivial thumbnail, as that suffices to know if this is a valid jpg;
-                // TODO Check this, as we changed the bitmap cache options from Default to OnLoad to ensure file deletions would work
+                // I changed the bitmap cache options from Default to OnLoad to ensure file deletions would work
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
                 bitmap.UriSource = new Uri(path);
                 bitmap.EndInit();
@@ -361,7 +355,7 @@ namespace Timelapse.Images
         /// </summary>
         public static double GetBitmapAspectRatioFromImageFile(string filePath)
         {
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 return Constant.ImageValues.FileNoLongerAvailable.Value.Width / Constant.ImageValues.FileNoLongerAvailable.Value.Height;
             }

@@ -17,7 +17,7 @@
                             Solution="In the field below, rename that file to whatever you want."
                             Result="The file will be renamed, and Timelapse will subsequently save data to the renamed file."/>
         <StackPanel Name="StackPanelCorrect" Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
-            <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+            <Rectangle Fill="#FF868686" Height="2" />
             <StackPanel Orientation="Horizontal">
                 <TextBlock HorizontalAlignment="Left" Margin="10,10,10,10"  VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap" FontSize="12" >
 				    <Run FontWeight="Bold" Text="Rename" /> <Run Name="runOriginalFileName" Text="---" /> <Run FontWeight="Bold" Text="to:" />  

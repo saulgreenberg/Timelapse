@@ -27,7 +27,7 @@ using VersionChecks = Timelapse.Util.VersionChecks;
 namespace Timelapse.Editor
 {
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed.")]
-    public partial class EditorWindow : Window
+    public partial class EditorWindow
     {
         // state tracking
         private readonly EditorControls controls;
@@ -107,7 +107,7 @@ namespace Timelapse.Editor
         // Invoke the Update Timelapse files program
         private void MenuItemUpgradeTimelapseFiles_Click(object sender, RoutedEventArgs e)
         {
-            DialogUpgradeFilesAndFolders dialogUpdateFiles = new DialogUpgradeFiles.DialogUpgradeFilesAndFolders(this, String.Empty, VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+            DialogUpgradeFilesAndFolders dialogUpdateFiles = new DialogUpgradeFilesAndFolders(this, String.Empty, VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
             dialogUpdateFiles.ShowDialog();
         }
 
@@ -194,21 +194,21 @@ namespace Timelapse.Editor
                 // First, check the file path length and notify the user the template couldn't be loaded because its path is too long 
                 // Note: The SaveFileDialog doesn't do the right thing when the user specifies a really long file name / path (it just returns the DefaultTemplateDatabaseFileName without a path), 
                 // so we test for that too as it also indicates a too longpath name
-                if (Timelapse.Util.IsCondition.IsPathLengthTooLong(templateFileName, Timelapse.Enums.FilePathTypeEnum.TDB) || templateFileName.Equals(Path.GetFileNameWithoutExtension(Constant.File.DefaultTemplateDatabaseFileName)))
+                if (IsCondition.IsPathLengthTooLong(templateFileName, Enums.FilePathTypeEnum.TDB) || templateFileName.Equals(Path.GetFileNameWithoutExtension(Constant.File.DefaultTemplateDatabaseFileName)))
                 {
                     Dialogs.TemplatePathTooLongDialog(this, templateFileName);
                     return;
                 }
-                if (IsCondition.IsPathLengthTooLong(templateFileName, Timelapse.Enums.FilePathTypeEnum.Backup))
+                if (IsCondition.IsPathLengthTooLong(templateFileName, Enums.FilePathTypeEnum.Backup))
                 {
-                    Timelapse.Dialog.Dialogs.BackupPathTooLongDialog(this);
+                    Dialogs.BackupPathTooLongDialog(this);
                     makeBackup = false;
                 }
 
                 // Overwrite the file if it exists
                 if (File.Exists(templateFileName) && makeBackup)
                 {
-                    Database.FileBackup.TryCreateBackup(templateFileName);
+                    FileBackup.TryCreateBackup(templateFileName);
                     File.Delete(templateFileName);
                 }
 
@@ -248,9 +248,9 @@ namespace Timelapse.Editor
                     return;
                 }
 
-                if (IsCondition.IsPathLengthTooLong(openFileDialog.FileName, Timelapse.Enums.FilePathTypeEnum.Backup))
+                if (IsCondition.IsPathLengthTooLong(openFileDialog.FileName, Enums.FilePathTypeEnum.Backup))
                 {
-                    Timelapse.Dialog.Dialogs.BackupPathTooLongDialog(this);
+                    Dialogs.BackupPathTooLongDialog(this);
                 }
 
                 // But check to see if we are opening it up with an older version of TImelapse vs. the previous version that opened it
@@ -264,7 +264,7 @@ namespace Timelapse.Editor
                         string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
                         if (VersionChecks.IsVersion1GreaterThanVersion2(thisVersion, timelapseCurrentVersionNumber))
                         {
-                            if (true != Dialog.EditorDialogs.EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(this, this.userSettings))
+                            if (true != EditorDialogs.EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(this, this.userSettings))
                             {
                                 // The user aborted loading the template
                                 return;
@@ -297,7 +297,7 @@ namespace Timelapse.Editor
         private async Task DoOpenTemplate(string templateFilePath)
         {
             // This likely isn't needed as the OpenFileDialog won't let us do that anyways. But just in case...
-            if (IsCondition.IsPathLengthTooLong(templateFilePath, Timelapse.Enums.FilePathTypeEnum.TDB))
+            if (IsCondition.IsPathLengthTooLong(templateFilePath, Enums.FilePathTypeEnum.TDB))
             {
                 Dialogs.TemplatePathTooLongDialog(this, templateFilePath);
                 return;
@@ -408,7 +408,7 @@ namespace Timelapse.Editor
                 {
                     MenuItem recentImageSetItem = new MenuItem();
                     recentImageSetItem.Click += this.MenuItemRecentTemplate_Click;
-                    recentImageSetItem.Header = String.Format("_{0} {1}", index, recentTemplatePath);
+                    recentImageSetItem.Header = $"_{index} {recentTemplatePath}";
                     recentImageSetItem.ToolTip = recentTemplatePath;
                     this.MenuFileRecentTemplates.Items.Add(recentImageSetItem);
                     ++index;
@@ -499,7 +499,10 @@ namespace Timelapse.Editor
         /// </summary>
         private void AddControlButton_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
+            if (!(sender is Button button))
+            {
+                return;
+            }
             string controlType = button.Tag.ToString();
 
             // Commit any edits that are in progress
@@ -565,12 +568,12 @@ namespace Timelapse.Editor
             ControlRow choiceControl = this.templateDatabase.Controls.FirstOrDefault(control => control.ControlOrder.ToString().Equals(button.Tag.ToString()));
             if (choiceControl == null)
             {
-                TracePrint.PrintMessage(String.Format("Control named {0} not found.", button.Tag));
+                TracePrint.PrintMessage($"Control named {button.Tag} not found.");
                 return;
             }
 
             Choices choices = Choices.ChoicesFromJson(choiceControl.List);
-            Dialog.EditChoiceList choiceListDialog = new Dialog.EditChoiceList(button, choices, this);
+            EditChoiceList choiceListDialog = new EditChoiceList(button, choices, this);
             bool? result = choiceListDialog.ShowDialog();
             if (result == true)
             {
@@ -623,13 +626,11 @@ namespace Timelapse.Editor
                     break;
                 case EditorConstant.ColumnHeader.DefaultValue:
                     // Default value for Counters should not accept spaces 
-                    ControlRow control = new ControlRow((currentRow.Item as DataRowView).Row);
+                    ControlRow control = new ControlRow((currentRow.Item as DataRowView)?.Row);
                     if (control.Type == Constant.Control.Counter)
                     {
                         e.Handled = e.Key == Key.Space;
                     }
-                    break;
-                default:
                     break;
             }
         }
@@ -658,7 +659,7 @@ namespace Timelapse.Editor
 
                 case EditorConstant.ColumnHeader.DefaultValue:
                     // Restrict certain default values for counters, flags (and perhaps fixed choices in the future)
-                    ControlRow control = new ControlRow((currentRow.Item as DataRowView).Row);
+                    ControlRow control = new ControlRow((currentRow.Item as DataRowView)?.Row);
                     switch (control.Type)
                     {
                         case Constant.Control.Counter:
@@ -683,19 +684,19 @@ namespace Timelapse.Editor
                             // The default value should be constrained to one of the choices, but that introduces a chicken and egg problem
                             // So lets just ignore it for now.
                             break;
-                        case Constant.Control.Note:
-                        default:
+                        // case Constant.Control.Note:
+                        // default:
                             // no restrictions on Notes 
-                            break;
+                            // break;
                     }
                     break;
                 case EditorConstant.ColumnHeader.Width:
                     // Only allow digits in widths as they must be parseable as integers
                     e.Handled = !IsCondition.IsDigits(e.Text);
                     break;
-                default:
-                    // no restrictions on any of the other editable coumns
-                    break;
+                //default:
+                //   no restrictions on any of the other editable coumns
+                //   break;
             }
         }
 
@@ -771,9 +772,9 @@ namespace Timelapse.Editor
                 case EditorConstant.ColumnHeader.Width:
                     ValidateWidths(e, editedRow);
                     break;
-                default:
-                    // no restrictions on any of the other editable columns
-                    break;
+                //default:
+                //  no restrictions on any of the other editable columns
+                //  break;
             }
 
             // While hitting return after editing (say) a note will raise a RowChanged event, 
@@ -904,6 +905,12 @@ namespace Timelapse.Editor
         {
             // Check to see if the data label entered is a reserved word or if its a non-unique label
             TextBox textBox = e.EditingElement as TextBox;
+            if (textBox == null)
+            {
+                    TracePrint.NullException();
+                    return;
+            }
+
             string dataLabel = textBox.Text;
 
             // Check to see if the data label is empty. If it is, generate a unique data label and warn the user
@@ -1019,8 +1026,13 @@ namespace Timelapse.Editor
         // There is no need to check other validations here (e.g., unallowed characters) as these will have been caught previously 
         private void ValidateDefaults(DataGridCellEditEndingEventArgs e, DataGridRow currentRow)
         {
-            ControlRow control = new ControlRow((currentRow.Item as DataRowView).Row);
+            ControlRow control = new ControlRow((currentRow.Item as DataRowView)?.Row);
             TextBox textBox = e.EditingElement as TextBox;
+            if (textBox == null)
+            {
+                TracePrint.NullException();
+                return;
+            }
             switch (control.Type)
             {
                 case Constant.Control.Flag:
@@ -1065,34 +1077,42 @@ namespace Timelapse.Editor
                         }
                     }
                     break;
-                case Constant.Control.Counter:
-                case Constant.Control.Note:
-                default:
-                    // empty fields are allowed in these control types
-                    break;
+                //case Constant.Control.Counter:
+                //case Constant.Control.Note:
+                //default:
+                // empty fields are allowed in these control types
+                //   break;
             }
         }
 
         // Validation of Widths: if a control's width is empty, reset it to its corresponding default width
         private static void ValidateWidths(DataGridCellEditEndingEventArgs e, DataGridRow currentRow)
         {
+
             TextBox textBox = e.EditingElement as TextBox;
-            if (!String.IsNullOrWhiteSpace(textBox.Text))
+
+            if (currentRow?.Item == null || textBox == null)
+            {
+                TracePrint.NullException();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(textBox.Text))
             {
                 return;
             }
 
-            ControlRow control = new ControlRow((currentRow.Item as DataRowView).Row);
+            ControlRow control = new ControlRow((currentRow.Item as DataRowView)?.Row);
             switch (control.Type)
             {
                 case Constant.DatabaseColumn.File:
-                    textBox.Text = Constant.ControlDefault.FileWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.FileWidth;
                     break;
                 case Constant.DatabaseColumn.DateTime:
-                    textBox.Text = Constant.ControlDefault.DateTimeWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.DateTimeWidth;
                     break;
                 case Constant.DatabaseColumn.RelativePath:
-                    textBox.Text = Constant.ControlDefault.RelativePathWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.RelativePathWidth;
                     break;
                 case Constant.DatabaseColumn.DeleteFlag:
                 case Constant.Control.Flag:
@@ -1104,11 +1124,9 @@ namespace Timelapse.Editor
                 case Constant.Control.Counter:
                     textBox.Text = Constant.ControlDefault.CounterWidth.ToString();
                     break;
-                case Constant.Control.Note:
-                    textBox.Text = Constant.ControlDefault.NoteWidth.ToString();
-                    break;
+                // case Constant.Control.Note:
                 default:
-                    Constant.ControlDefault.NoteWidth.ToString();
+                    textBox.Text = Constant.ControlDefault.NoteWidth.ToString();
                     break;
             }
         }
@@ -1121,16 +1139,17 @@ namespace Timelapse.Editor
             List<ControlRow> controlsInSpreadsheetOrder = this.templateDatabase.Controls.OrderBy(control => control.SpreadsheetOrder).ToList();
             this.SpreadsheetPreview.Columns.Clear();
 
+            // Unused. Can likely delete
             // Find the DateTime Control 
-            ControlRow dateTimeControl = null;
-            foreach (ControlRow control in controlsInSpreadsheetOrder)
-            {
-                if (control.Type == Constant.DatabaseColumn.DateTime)
-                {
-                    dateTimeControl = control;
-                    break;
-                }
-            }
+            //ControlRow dateTimeControl = null;
+            //foreach (ControlRow control in controlsInSpreadsheetOrder)
+            //{
+            //    if (control.Type == Constant.DatabaseColumn.DateTime)
+            //    {
+            //        dateTimeControl = control;
+            //        break;
+            //    }
+            //}
 
             // Now generate the spreadsheet columns as needed. 
             foreach (ControlRow control in controlsInSpreadsheetOrder)
@@ -1169,11 +1188,9 @@ namespace Timelapse.Editor
         #region Dragging and Dropping of Controls to Reorder them
         private void ControlsPanel_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.Source != this.ControlsPanel)
-            {
-                this.isMouseDown = true;
-                this.mouseDownStartPosition = e.GetPosition(this.ControlsPanel);
-            }
+            if (Equals(e.Source, this.ControlsPanel)) return;
+            this.isMouseDown = true;
+            this.mouseDownStartPosition = e.GetPosition(this.ControlsPanel);
         }
 
         private void ControlsPanel_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -1184,8 +1201,9 @@ namespace Timelapse.Editor
                 this.isMouseDragging = false;
                 this.realMouseDragSource?.ReleaseMouseCapture();
             }
-            catch
+            catch (Exception exception)
             {
+                TracePrint.CatchException(exception.Message);
             }
         }
 
@@ -1200,6 +1218,11 @@ namespace Timelapse.Editor
                 {
                     this.isMouseDragging = true;
                     this.realMouseDragSource = e.Source as UIElement;
+                    if (this.realMouseDragSource == null)
+                    {
+                        TracePrint.NullException();
+                        return;
+                    }
                     this.realMouseDragSource.CaptureMouse();
                     DragDrop.DoDragDrop(this.dummyMouseDragSource, new DataObject("UIElement", e.Source, true), DragDropEffects.Move);
                 }

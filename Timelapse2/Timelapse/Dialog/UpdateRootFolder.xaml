@@ -18,7 +18,7 @@
             </Grid.RowDefinitions>
             <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
                             Title="Update the root folder location (if desired)."/>
-            <Rectangle Fill="#FF868686" Height="1" Grid.Row="1"></Rectangle>
+            <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
 
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
                 <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>

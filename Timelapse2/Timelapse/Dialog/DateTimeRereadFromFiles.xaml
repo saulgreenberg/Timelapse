@@ -17,11 +17,11 @@
                             Hint="Updates are only done when a file's date and time differs from what is recorded in the DateTime field."
                             ShowExplanationVisibility="True"/>
             <StackPanel>
-                <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                <Rectangle Fill="#FF868686" Height="2" />
             </StackPanel>
             <DockPanel Name="DockPanelImage" >
 
-                <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"></Rectangle>
+                <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top" />
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
                     <Button Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="StartButton_Click" IsEnabled="True">_Start</Button>
@@ -34,11 +34,11 @@
                    >
                     <DataGrid.ColumnHeaderStyle>
                         <Style  TargetType="DataGridColumnHeader" >
-                            <Setter Property="Control.FontWeight" Value="Bold" />
-                            <Setter Property="Control.BorderThickness" Value="1" />
-                            <Setter Property="Control.Padding" Value="4" />
-                            <Setter Property="Control.Background" Value="Gainsboro" />
-                            <Setter Property="Control.BorderBrush" Value="Black" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="Padding" Value="4" />
+                            <Setter Property="Background" Value="Gainsboro" />
+                            <Setter Property="BorderBrush" Value="Black" />
                         </Style>
                     </DataGrid.ColumnHeaderStyle>
                 </DataGrid>

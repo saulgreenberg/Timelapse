@@ -117,7 +117,7 @@
                 <Label Content="Dark pixel threshold" FontWeight="Bold" Grid.Column="0" Padding="0,4,0,0" Margin="4,13,3,0"/>
 
                 <Canvas Name="FeedbackCanvas" Background="Beige" Width="Auto" Height="30" Grid.Column="1">
-                    <Rectangle Name="RectDarkPixelRatioFound" Stroke="Black" StrokeThickness="2" Fill="DarkGray" Canvas.Left="0" Canvas.Top="0"></Rectangle>
+                    <Rectangle Name="RectDarkPixelRatioFound" Stroke="Black" StrokeThickness="2" Fill="DarkGray" Canvas.Left="0" Canvas.Top="0" />
                     <Thumb Name="DarkPixelRatioThumb" Canvas.Left="50" Canvas.Top="0" Canvas.ZIndex="99" DragDelta="Thumb_DragDelta" Cursor="Hand">
                         <Thumb.Template>
                             <ControlTemplate>
@@ -156,7 +156,7 @@
             </Grid>
 
             <!--Separator-->
-            <Rectangle Fill="#FF868686" Height="2" Grid.Row="5" Grid.ColumnSpan="2" Margin="10,5,10,5"></Rectangle>
+            <Rectangle Fill="#FF868686" Height="2" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,5,10,5" />
 
             <!--Cancel/Start buttons-->
             <Grid Width="Auto" Height="Auto" Grid.Row="6" Grid.Column="1">
@@ -169,8 +169,8 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
-                    <Button Name="CancelButton" Grid.Row="0" Grid.Column="1" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-                    <Button Name="StartDoneButton" Grid.Row="0" Grid.Column="2" IsDefault="True" IsEnabled="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="StartButton_Click">_Start</Button>
+                    <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button Name="StartDoneButton" IsDefault="True" IsEnabled="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="StartButton_Click">_Start</Button>
                 </StackPanel>
             </Grid>
             <StackPanel Orientation="Vertical" Grid.Row="6" Grid.Column="0">

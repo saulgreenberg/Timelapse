@@ -142,7 +142,7 @@ namespace Timelapse.Dialog
                     obsCollection = new ObservableCollection<Tuple<string, string, string, bool>>();
                     foreach (Tuple<string, string, string, bool> row in this.observableCollection)
                     {
-                        if (row != rowValues)
+                        if (!Equals(row, rowValues))
                         {
                             obsCollection.Add(row);
                         }
@@ -166,7 +166,7 @@ namespace Timelapse.Dialog
                     obsCollection = new ObservableCollection<Tuple<string, string, string, bool>>();
                     foreach (Tuple<string, string, string, bool> row in this.observableCollection)
                     {
-                        if (row != rowValues)
+                        if (!Equals(row, rowValues))
                         {
                             obsCollection.Add(row);
                         }

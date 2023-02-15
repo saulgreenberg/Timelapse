@@ -66,6 +66,12 @@ namespace Timelapse.Database
             }
 
             string sourceFolderPath = Path.GetDirectoryName(sourceFilePath);
+            if (sourceFolderPath == null)
+            {
+                // If the path consists of a root directory, such as "c:\", null is returned.
+                // This shouldn't happen
+                return null;
+            }
 
             DirectoryInfo backupFolder = new DirectoryInfo(Path.Combine(sourceFolderPath, Constant.File.BackupFolder));   // The Backup Folder 
             if (backupFolder.Exists == false)
@@ -140,7 +146,7 @@ namespace Timelapse.Database
 
             try
             {
-                if (File.Exists(destinationFilePath) && new System.IO.FileInfo(destinationFilePath).Attributes.HasFlag(System.IO.FileAttributes.ReadOnly))
+                if (File.Exists(destinationFilePath) && new FileInfo(destinationFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
                 {
                     // Can't overwrite it...
                     return false;
@@ -158,18 +164,22 @@ namespace Timelapse.Database
             catch
             {
                 // Old code: We just don't create the backup now. While we previously threw an exception, we now test and warn the user earlier on in the code that a backup can't be made 
-                // System.Diagnostics.Debug.Print("Did not back up" + destinationFilePath);
+                // Debug.Print("Did not back up" + destinationFilePath);
                 // throw new PathTooLongException("Backup failure: Could not create backups as the file path is too long", e);
                 return false;
             }
 
             // age out older backup files (this skips the special checkpoint files)
             IEnumerable<FileInfo> backupFiles = FileBackup.GetBackupFiles(backupFolder, sourceFilePath, true).OrderByDescending(file => file.LastWriteTimeUtc);
+
+            // ReSharper disable All
+            // Resharper says this is heuristically unreachable, but that isn't true
             if (backupFiles == null)
             {
                 // We can't delete older backups, but at least we were able to create a backup.
                 return true;
             }
+            // ReSharper restore All
             foreach (FileInfo file in backupFiles.Skip(Constant.File.NumberOfBackupFilesToKeep))
             {
                 Util.FilesFolders.TryDeleteFileIfExists(file.FullName);

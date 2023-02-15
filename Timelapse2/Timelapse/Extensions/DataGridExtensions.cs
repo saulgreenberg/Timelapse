@@ -55,7 +55,7 @@ namespace Timelapse.Util
             if (dataGrid == null || idRowIndexes == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(idRowIndexes) + " or " nameof(dataGrid));
                 // Not sure what the consequences of this empty return is, but ...
                 return;
@@ -69,25 +69,21 @@ namespace Timelapse.Util
             }
 
             int topmostRowIndex = int.MaxValue; // Keeps track of the topmost row index, as this is the one we will want to scroll too
-            DataRowView currentRow;                   // The current row being examined
+            
             List<int> rowIndexesToSelect = new List<int>();
-            long currentID;
-            int currentRowIndexThatMayContainID;
-
             foreach (Tuple<long, int> idRowIndex in idRowIndexes)
             {
-                currentID = (int)idRowIndex.Item1;
-                currentRowIndexThatMayContainID = idRowIndex.Item2;
+                long currentID = (int)idRowIndex.Item1;
+                int currentRowIndexThatMayContainID = idRowIndex.Item2;
 
                 // Get the row indicated by rowIndex (after first checking that such a row exists)
                 if (dataGrid.Items.Count < currentRowIndexThatMayContainID)
                 {
-                    // System.Diagnostics.Debug.Print("row index " + currentRowIndexThatMayContainID + " is not in array sized " + dataGrid.Items.Count);
+                    // Debug.Print("row index " + currentRowIndexThatMayContainID + " is not in array sized " + dataGrid.Items.Count);
                     return;
                 }
-                currentRow = dataGrid.Items[currentRowIndexThatMayContainID] as DataRowView;
-
-                if ((long)currentRow.Row.ItemArray[0] == currentID)
+                // The current row being examined
+                if (dataGrid.Items[currentRowIndexThatMayContainID] is DataRowView currentRow && (long)currentRow.Row.ItemArray[0] == currentID)
                 {
                     // The ID is in the row indicated by rowIndex. Add that rowIndex as one of the rows we should select
                     rowIndexesToSelect.Add(currentRowIndexThatMayContainID);
@@ -104,7 +100,7 @@ namespace Timelapse.Util
                     for (int index = 0; index < dataGridItemsCount; index++)
                     {
                         currentRow = dataGrid.Items[index] as DataRowView;
-                        if ((long)currentRow.Row.ItemArray[0] == currentID)
+                        if (currentRow != null && (long)currentRow.Row.ItemArray[0] == currentID)
                         {
                             idFound = true;
                             rowIndexesToSelect.Add(index);
@@ -118,7 +114,7 @@ namespace Timelapse.Util
                     if (idFound == false)
                     {
                         // The id should always be found. But just in case  we ignore IDS that aren't found
-                        // System.Diagnostics.Debug.Print("could not find ID: " + currentID + " in array sized " + dataGrid.Items.Count);
+                        // Debug.Print("could not find ID: " + currentID + " in array sized " + dataGrid.Items.Count);
                     }
                 }
             }

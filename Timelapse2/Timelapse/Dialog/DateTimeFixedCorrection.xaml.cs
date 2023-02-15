@@ -107,8 +107,7 @@ namespace Timelapse.Dialog
         {
             // Note that this passes a function which is invoked by the fileDatabase method. 
             // This not only calculates the new times, but updates the progress bar as the fileDatabase method iterates through the files.
-            this.fileDatabase.UpdateAdjustedFileTimes(
-               (string fileName, int fileIndex, int count, DateTime imageDateTime) =>
+            this.fileDatabase.UpdateAdjustedFileTimes((fileName, fileIndex, count, imageDateTime) =>
                {
                    if (adjustment.Duration() >= TimeSpan.FromSeconds(1))
                    {

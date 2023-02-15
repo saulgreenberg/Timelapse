@@ -27,7 +27,7 @@ namespace Timelapse.Util
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage("Could not delete " + filePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    TracePrint.PrintMessage("Could not delete " + filePath + Environment.NewLine + exception.Message + ": " + exception);
                     return false;
                 }
                 return true;
@@ -48,7 +48,7 @@ namespace Timelapse.Util
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage("Could not move " + sourceFilePath + " to " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    TracePrint.PrintMessage("Could not move " + sourceFilePath + " to " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception);
                     return false;
                 }
                 return true;
@@ -77,18 +77,18 @@ namespace Timelapse.Util
 
             // Test: Check for invalid file locations
             // Disallowed are Drive letter roots and System/Hidden folders
-            string extension = System.IO.Path.GetExtension(filePath);
-            if (FilesFolders.IsFolderPathADriveLetter(System.IO.Path.GetDirectoryName(filePath)))
+            string extension = Path.GetExtension(filePath);
+            if (FilesFolders.IsFolderPathADriveLetter(Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInRootDriveFolder;
             }
-            if (FilesFolders.IsFolderSystemOrHidden(System.IO.Path.GetDirectoryName(filePath)))
+            if (FilesFolders.IsFolderSystemOrHidden(Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder;
             }
 
             // Test: Is it a .ddb or .tdb file
-            if (System.IO.Path.GetExtension(filePath) != Constant.File.FileDatabaseFileExtension && System.IO.Path.GetExtension(filePath) != Constant.File.TemplateDatabaseFileExtension)
+            if (Path.GetExtension(filePath) != Constant.File.FileDatabaseFileExtension && Path.GetExtension(filePath) != Constant.File.TemplateDatabaseFileExtension)
             {
                 return DatabaseFileErrorsEnum.NotATimelapseFile;
             }
@@ -197,13 +197,14 @@ namespace Timelapse.Util
         /// </summary>
         /// <param name="folderRoot"></param>
         /// <param name="folderPaths"></param>
+        /// <param name="prefixPath"></param>
         public static void GetAllFoldersContainingAnImageOrVideo(string folderRoot, List<string> folderPaths, string prefixPath)
         {
             // Check the arguments for null 
             if (folderPaths == null || folderRoot == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(folderPaths));
                 // Not sure what happens if we have a null folderPaths, but we may as well try it.
                 return;
@@ -268,21 +269,21 @@ namespace Timelapse.Util
             }
             try
             {
-                string foldername = startFolder.Split(System.IO.Path.DirectorySeparatorChar).Last();
+                string foldername = startFolder.Split(Path.DirectorySeparatorChar).Last();
                 if ((ignoreBackupFolder && foldername == Constant.File.BackupFolder) || (ignoreDeletedFolder && foldername == Constant.File.DeletedFilesFolder))
                 {
 
                 }
                 else
                 {
-                    foundFiles.AddRange(System.IO.Directory.GetFiles(startFolder, pattern, SearchOption.TopDirectoryOnly));
+                    foundFiles.AddRange(Directory.GetFiles(startFolder, pattern, SearchOption.TopDirectoryOnly));
                     foreach (string directory in Directory.GetDirectories(startFolder))
                     {
                         GetAllFilesInFoldersAndSubfoldersMatchingPattern(directory, pattern, true, true, foundFiles);
                     }
                 }
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 return null;
             }
@@ -306,15 +307,14 @@ namespace Timelapse.Util
             Dictionary<string, List<string>> matchingFolders = new Dictionary<string, List<string>>();
             foreach (string missingFolderPath in missingFolderPaths)
             {
-                string missingFolderName = System.IO.Path.GetFileName(missingFolderPath);
+                string missingFolderName = Path.GetFileName(missingFolderPath);
                 List<string> matches = new List<string>();
                 foreach (string oneFolderPath in allFolderPaths)
                 {
-                    string allRelativePathName = System.IO.Path.GetFileName(oneFolderPath);
+                    string allRelativePathName = Path.GetFileName(oneFolderPath);
                     if (String.Equals(missingFolderName, allRelativePathName))
                     {
                         matches.Add(oneFolderPath);
-                        continue;
                     }
                 }
                 matchingFolders.Add(missingFolderPath, matches);
@@ -364,8 +364,17 @@ namespace Timelapse.Util
             {
                 return null;
             }
-            string fileName = System.IO.Path.GetFileName(fullPath);
-            string directoryName = System.IO.Path.GetDirectoryName(fullPath).TrimEnd('\\');
+            string fileName = Path.GetFileName(fullPath);
+
+            string directoryName = Path.GetDirectoryName(fullPath);
+            if (directoryName == null)
+            {
+                // Shouldn't normally happen, i.e., Only happens if its a drive e.g., C:
+                // NOt sure if this workaround works
+                TracePrint.NullException(nameof(fileName));
+                directoryName = Path.GetPathRoot(fullPath);
+            }
+            directoryName = directoryName.TrimEnd('\\');
 
             //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
             string relativePath = rootPath.Equals(directoryName) ? String.Empty : directoryName.Substring(rootPath.Length + 1);
@@ -382,19 +391,33 @@ namespace Timelapse.Util
         // return     "foo"
         public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
         {
-            if (String.Compare(Path.GetDirectoryName(path1), path2) == 0
-                || String.Compare(Path.GetDirectoryName(path1), path2) == 0)
+            if (String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0
+                || String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0)
             {
                 // both paths are identical, but one path contains a file 
                 return String.Empty;
             }
             if (path1.Length > path2.Length)
             {
-                return Path.GetDirectoryName(path1).Replace(path2 + "\\", "");
+                string dir1 = Path.GetDirectoryName(path1);
+                if (dir1 == null)
+                {
+                    // Shouldn't happen. Empty workaround likely does not work.
+                    TracePrint.NullException(nameof(dir1));
+                    return string.Empty;
+                }
+                return dir1.Replace(path2 + "\\", "");
             }
             else
             {
-                return Path.GetDirectoryName(path2).Replace(path1 + "\\", "");
+                string dir2 = Path.GetDirectoryName(path2);
+                if (dir2 == null)
+                {
+                    // Shouldn't happen. Empty workaround likely does not work.
+                    TracePrint.NullException(nameof(dir2));
+                    return string.Empty;
+                }
+                return dir2.Replace(path1 + "\\", "");
             }
         }
         #endregion
@@ -406,7 +429,7 @@ namespace Timelapse.Util
             {
                 return String.Empty;
             }
-            return System.IO.Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
+            return Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, ImageRow imageRow)
@@ -415,12 +438,12 @@ namespace Timelapse.Util
             {
                 return String.Empty;
             }
-            return System.IO.Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
+            return Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, string relativePath, string fileName)
         {
-            return System.IO.Path.Combine(rootPath, relativePath, fileName);
+            return Path.Combine(rootPath, relativePath, fileName);
         }
         #endregion
 
@@ -506,10 +529,10 @@ namespace Timelapse.Util
                 {
                     fileInfoList.AddRange(directoryInfo.GetFiles("*" + extension));
                 }
-                catch
+                catch (Exception exception)
                 {
                     // The call may fail if the OS denies access because of an I/O error or a specific type of security error
-                    continue;
+                    TracePrint.CatchException(exception.Message);
                 }
             }
             FilesRemoveAllButImagesAndVideos(fileInfoList);
@@ -533,7 +556,7 @@ namespace Timelapse.Util
 
         public static bool IsFolderPathADriveLetter(string path)
         {
-            return System.IO.Path.GetPathRoot(path) == path;
+            return Path.GetPathRoot(path) == path;
         }
         #endregion
 
@@ -545,12 +568,12 @@ namespace Timelapse.Util
         // These are prefixed by '._' and are not actually a valid image or video
         private static void FilesRemoveAllButImagesAndVideos(List<FileInfo> fileInfoList)
         {
-            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase) 
-                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase) 
-                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase) 
-                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase) 
+            fileInfoList.RemoveAll(x => !(x.Name.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                   || x.Name.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase)
                                    || x.Name.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase))
-                                   || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix) == 0);
+                                   || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
         }
 
         private static void GetAllImageAndVideoFilesInFolderAndSubfolders(string rootFolderPath, List<FileInfo> fileInfoList, int recursionLevel)
@@ -559,7 +582,7 @@ namespace Timelapse.Util
             if (fileInfoList == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // Not show what happens if we return with a null fileInfoList, but its worth a shot
                 // throw new ArgumentNullException(nameof(control));
                 return;

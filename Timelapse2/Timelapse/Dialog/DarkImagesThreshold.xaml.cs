@@ -100,7 +100,7 @@ namespace Timelapse.Dialog
                 }
             }
             // Populate the combobox with the labels of the available flag controls
-            this.CBPopulateFlagField.ItemsSource = this.FlagLabelsDataLabels.Keys.ToList<string>();
+            this.CBPopulateFlagField.ItemsSource = this.FlagLabelsDataLabels.Keys.ToList();
 
             // Gie the user some instructions depending on whether any flage are available
             if (this.FlagLabelsDataLabels.Count == 0)
@@ -232,6 +232,12 @@ namespace Timelapse.Dialog
         // Utility routine for calling a typical sequence of UI update actions
         private void DisplayImageAndDetails()
         {
+            if (this.imageEnumerator.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.imageEnumerator.Current));
+                return;
+            }
             this.bitmap = this.imageEnumerator.Current.LoadBitmap(this.fileDatabase.FolderPath, out _).AsWriteable();
             this.Image.Source = this.bitmap;
             this.FileName.Content = this.imageEnumerator.Current.File;
@@ -305,7 +311,7 @@ namespace Timelapse.Dialog
                         imageQuality.IsColor = this.isColor;
                         imageQuality.DarkPixelRatioFound = this.darkPixelRatioFound;
 
-                        string newDarkClassificationAsString = imageQuality.NewDarkClassification == true
+                        string newDarkClassificationAsString = imageQuality.NewDarkClassification
                         ? Constant.BooleanValue.True
                         : Constant.BooleanValue.False;
 
@@ -378,9 +384,21 @@ namespace Timelapse.Dialog
         // A drop-down menu providing the user with two ways to reset thresholds
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            Button resetButton = (Button)sender;
+            if (sender is Button resetButton == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
+            if (resetButton.ContextMenu == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(resetButton.ContextMenu));
+                return;
+            }
             resetButton.ContextMenu.IsEnabled = true;
-            resetButton.ContextMenu.PlacementTarget = sender as Button;
+            resetButton.ContextMenu.PlacementTarget = (Button)sender;
             resetButton.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
             resetButton.ContextMenu.IsOpen = true;
         }
@@ -431,7 +449,11 @@ namespace Timelapse.Dialog
         // Set a new value for the Dark Pixel Ratio and update the UI
         private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
-            UIElement thumb = e.Source as UIElement;
+            if (e.Source is UIElement thumb == false)
+            {
+                TracePrint.NullException(nameof(thumb));
+                return;
+            }
 
             if ((Canvas.GetLeft(thumb) + e.HorizontalChange) >= (this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth))
             {
@@ -634,9 +656,7 @@ namespace Timelapse.Dialog
                 this.DarkPixelRatioFound = 0;
                 this.FileName = image.File;
                 this.IsColor = false;
-                this.OldDarkClassification = string.IsNullOrEmpty(dataLabel)
-                    ? false
-                    : image.GetValueDatabaseString(dataLabel) == Constant.BooleanValue.True;
+                this.OldDarkClassification = !string.IsNullOrEmpty(dataLabel) && image.GetValueDatabaseString(dataLabel) == Constant.BooleanValue.True;
                 this.NewDarkClassification = false;
             }
         }

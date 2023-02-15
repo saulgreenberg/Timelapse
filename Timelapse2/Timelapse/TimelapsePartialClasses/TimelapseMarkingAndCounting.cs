@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Timelapse.Controls;
 using Timelapse.EventArguments;
 using Timelapse.Images;
+using Timelapse.Util;
 
 namespace Timelapse
 {
@@ -23,6 +25,12 @@ namespace Timelapse
         // - regenerate the list of markers used by the markableCanvas
         private void MarkableCanvas_RaiseMarkerEvent(object sender, MarkerEventArgs e)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
             if (e.IsNew)
             {
                 // A marker has been added
@@ -39,12 +47,11 @@ namespace Timelapse
 
             // Part 1. Decrement the counter only if there is a number in it
             string oldCounterData = counter.Content;
-            string newCounterData;
             if (!string.IsNullOrEmpty(oldCounterData))
             {
                 int count = Convert.ToInt32(oldCounterData);
                 count = (count == 0) ? 0 : count - 1;           // Make sure its never negative, which could happen if a person manually enters the count 
-                newCounterData = count.ToString();
+                string newCounterData = count.ToString();
 
                 if (!newCounterData.Equals(oldCounterData))
                 {
@@ -103,12 +110,19 @@ namespace Timelapse
         /// </summary>
         private void MarkableCanvas_AddMarker(DataEntryCounter counter, Marker marker)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
+
             try // Make this a noop to handle the rare bug 'Object reference not set to an instance of an object.' as not sure which object was the problematic one
             {
                 if (counter == null || marker == null)
                 {
                     // This shouldn't happen, but a user reported a 'null' crash somewhere in this method, so just in case...
-                    System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker. Counter or marker is null (and it shouldn't be");
+                    Debug.Print("In MarkableCanvas_AddMarker. Counter or marker is null (and it shouldn't be");
                     return;
                 }
 
@@ -158,6 +172,13 @@ namespace Timelapse
                     }
                 }
 
+                if (markersForCounter == null)
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(markersForCounter));
+                    return;
+                }
+
                 // fill in marker information
                 marker.ShowLabel = true; // Show the annotation as its created. We will clear it on the next refresh
                 marker.LabelShownPreviously = false;
@@ -174,7 +195,7 @@ namespace Timelapse
             }
             catch
             {
-                System.Diagnostics.Debug.Print("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
+                TracePrint.CatchException("In MarkableCanvas_AddMarker / Catch. Converted to a no-op due to problem.");
             }
         }
         #endregion

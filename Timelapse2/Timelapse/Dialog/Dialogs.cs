@@ -36,7 +36,7 @@ namespace Timelapse.Dialog
             if (window == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace("Window's owner property is null. Is a set of it prior to calling ShowDialog() missing?", 1);
+                TracePrint.StackTrace("Window's owner property is null. Is a set of it prior to calling ShowDialog() missing?", 1);
                 // Treat it as a no-op
                 return;
             }
@@ -72,10 +72,22 @@ namespace Timelapse.Dialog
             double dpiWidthFactor = 1;
             double dpiHeightFactor = 1;
             Window mainWindow = System.Windows.Application.Current.MainWindow;
+            if (mainWindow == null)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(mainWindow));
+                return false;
+            }
             PresentationSource presentationSource = PresentationSource.FromVisual(mainWindow);
             if (presentationSource != null)
             {
                 CompositionTarget compositionTarget = presentationSource.CompositionTarget;
+                if (compositionTarget == null)
+                {
+                    // This shouldn't happen
+                    TracePrint.NullException(nameof(compositionTarget));
+                    return false;
+                }
                 Matrix m = compositionTarget.TransformToDevice;
                 //Matrix m = PresentationSource.FromVisual(System.Windows.Application.Current.MainWindow).CompositionTarget.TransformToDevice;
                 dpiWidthFactor = m.M11;
@@ -83,7 +95,7 @@ namespace Timelapse.Dialog
             }
 
             // Get the monitor screen that this window appears to be on
-            Screen screenInDpi = System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+            Screen screenInDpi = Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
 
             // A user reported a bug where the window height was negative. Not sure what value we should
             // really be testing against... Maybe MinWidth? Anyways, this should at least catch the worst of it.
@@ -416,7 +428,7 @@ namespace Timelapse.Dialog
                 }
             };
 
-            bool proceedWithOperation = (bool)messageBox.ShowDialog();
+            bool proceedWithOperation = messageBox.ShowDialog() == true;
             if (proceedWithOperation && messageBox.DontShowAgain.IsChecked.HasValue && persistOptOut != null)
             {
                 persistOptOut(messageBox.DontShowAgain.IsChecked.Value);
@@ -527,7 +539,7 @@ namespace Timelapse.Dialog
                     Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 Use shorter folder or file names.",
                     Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength + " characters."
                              + "Timelapse will shut down until you fix this.",
-                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength.ToString() + " characters."
+                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
                 }
             };
             if (e != null)
@@ -552,7 +564,7 @@ namespace Timelapse.Dialog
                               Constant.File.DeletedFilesFolder + " folder." + Environment.NewLine
                               + "However, the new file paths are too long for Windows to handle.",
                     Reason = "Windows cannot perform file operations if the file path is more than " +
-                             (Constant.File.MaxPathLength + 8).ToString() + " characters.",
+                             (Constant.File.MaxPathLength + 8) + " characters.",
                     Solution = "Click Okay to delete these files without backing them up, or Cancel to abort." +
                                Environment.NewLine
                                + "Alternately, shorten the path to your files, preferably well below the length limit:" +
@@ -578,11 +590,11 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Error,
                     Title = title,
                     Problem = "Timelapse skipped reading some of your images in the folders below, as their file paths were too long.",
-                    Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength.ToString() + " characters.",
+                    Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Try reloading this image set after shortening the file path:"
                                + Environment.NewLine
                                + "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.",
-                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength.ToString() + " characters."
+                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
                 }
             };
 
@@ -607,7 +619,7 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not open the template (.tdb) file as its name is too long:"
                               + Environment.NewLine
                               + "\u2022 " + templateDatabasePath,
-                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.",
+                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
                                + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
@@ -627,7 +639,7 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not load the database (.ddb) file as its name is too long:"
                               + Environment.NewLine
                               + "\u2022 " + databasePath,
-                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.",
+                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine
                         + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
                         + "\u2022 use shorter folder or file names.",
@@ -647,7 +659,7 @@ namespace Timelapse.Dialog
                               + Environment.NewLine
                               + "The issue is that the backup file can't be created as its name is too long for Windows to handle.",
                     Reason = "Timelapse normally creates time-stamped backup files of your template, database, and csv files within a " + Constant.File.BackupFolder + " folder." + Environment.NewLine
-                             + "However, Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.",
+                             + "However, Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
                                + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
@@ -668,7 +680,7 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not rename the database (.ddb) file as its name would be too long:"
                               + Environment.NewLine
                               + "\u2022 " + databasePath,
-                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength.ToString() + " characters.",
+                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
                                + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
@@ -717,7 +729,7 @@ namespace Timelapse.Dialog
         #region MessageBox: template includes a control of an unknown type
         public static void TemplateIncludesControlOfUnknownType(Window owner, string unknownTypes)
         {
-            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(owner, nameof(owner));
             // notify the user the template couldn't be loaded rather than silently doing nothing
             new MessageBox("Your template file has an issue.", owner)
             {
@@ -741,7 +753,7 @@ namespace Timelapse.Dialog
         #region MessageBox: Corrupted template
         public static void TemplateFileNotLoadedAsCorruptDialog(Window owner, string templateDatabasePath)
         {
-            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(owner, nameof(owner));
             // notify the user the template couldn't be loaded rather than silently doing nothing
             MessageBox messageBox = new MessageBox("Timelapse could not load the Template file.", owner)
             {
@@ -804,7 +816,7 @@ namespace Timelapse.Dialog
         #region MessageBox: Not a Timelapse File
         public static void FileNotATimelapseFile(Window owner, string templateDatabasePath)
         {
-            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(owner, nameof(owner));
             // notify the user the template couldn't be loaded rather than silently doing nothing
             new MessageBox("Could not load the Timelapse file.", owner)
             {
@@ -827,7 +839,7 @@ namespace Timelapse.Dialog
         // notify the user the template couldn't be loaded rather than silently doing nothing
         public static void TemplateFileNotATDB(Window owner, string templateDatabasePath)
         {
-            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(owner, nameof(owner));
             new MessageBox("Could not load the Timelapse Template file.", owner)
             {
                 Message =
@@ -847,7 +859,7 @@ namespace Timelapse.Dialog
         // notify the user the database couldn't be loaded rather than silently doing nothing
         public static void DatabaseFileNotADDB(Window owner, string databasePath)
         {
-            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(owner, nameof(owner));
             new MessageBox("Could not load the Timelapse Database file.", owner)
             {
                 Message =
@@ -917,7 +929,7 @@ namespace Timelapse.Dialog
                 messageBox.Message.Result += "\u2022 copy the value \u00AB" + text + "\u00BB in this field from here to the last file of your selected files.";
             }
             messageBox.Message.Result += Environment.NewLine + "\u2022 over-write any existing data values in those fields"
-                                      + Environment.NewLine + "\u2022 will affect " + imagesAffected.ToString() + " files.";
+                                      + Environment.NewLine + "\u2022 will affect " + imagesAffected + " files.";
             return messageBox.ShowDialog();
         }
 
@@ -938,8 +950,8 @@ namespace Timelapse.Dialog
                 }
             };
             messageBox.Message.Result += !checkForZero && string.IsNullOrEmpty(text)
-                ? "\u2022 clear this field across all " + filesAffected.ToString() + " of your selected files."
-                : messageBox.Message.Result += "\u2022 set this field to \u00AB" + text + "\u00BB across all " + filesAffected.ToString() + " of your selected files.";
+                ? "\u2022 clear this field across all " + filesAffected + " of your selected files."
+                : messageBox.Message.Result += "\u2022 set this field to \u00AB" + text + "\u00BB across all " + filesAffected + " of your selected files.";
             messageBox.Message.Result += Environment.NewLine + "\u2022 over-write any existing data values in those fields";
             return messageBox.ShowDialog();
         }
@@ -956,11 +968,11 @@ namespace Timelapse.Dialog
                 {
                     Icon = MessageBoxImage.Question,
                     What = "Propagate to Here is not undoable, and can overwrite existing values.",
-                    Reason = "\u2022 The last non-empty value \u00AB" + text + "\u00BB was seen " + imagesAffected.ToString() + " files back."
+                    Reason = "\u2022 The last non-empty value \u00AB" + text + "\u00BB was seen " + imagesAffected + " files back."
                              + Environment.NewLine
                              + "\u2022 That field's value will be copied across all files between that file and this one of your selected files",
                     Result = "If you select yes: " + Environment.NewLine
-                                                   + "\u2022 " + imagesAffected.ToString() + " files will be affected."
+                                                   + "\u2022 " + imagesAffected + " files will be affected."
                 }
             }.ShowDialog();
         }
@@ -980,7 +992,7 @@ namespace Timelapse.Dialog
             {
                 Message =
                 {
-                    Icon = System.Windows.MessageBoxImage.Error,
+                    Icon = MessageBoxImage.Error,
                     Reason = "You probably don't have a default program set up to display a photo viewer for " + extension + " files",
                     Solution = "Set up a photo viewer in your Windows Settings."
                                + Environment.NewLine
@@ -989,55 +1001,6 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
-        #endregion
-
-        #region MessageBox: Show Exception Reporting  
-        // REPLACED BY ExceptionShutdownDialog  - DELETE after we are sure that other method works 
-        /// <summary>
-        /// Display a dialog showing unhandled exceptions. The dialog text is also placed in the clipboard so that the user can paste it into their email
-        /// </summary>
-        /// <param name="programName">The name of the program that generated the exception</param>
-        /// <param name="e">the exception</param>
-        /// <param name="owner">A window where the message will be positioned within it</param>
-        //public static void ShowExceptionReportingDialog(string programName, UnhandledExceptionEventArgs e, Window owner)
-        //{
-        //    // Check the arguments for null 
-        //    ThrowIf.IsNullArgument(e, nameof(e));
-
-        //    // once .NET 4.5+ is used it's meaningful to also report the .NET release version
-        //    // See https://msdn.microsoft.com/en-us/library/hh925568.aspx.
-        //    string title = programName + " needs to close. Please report this error.";
-        //    MessageBox exitNotification = new MessageBox(title, owner);
-        //    exitNotification.Message.Icon = MessageBoxImage.Error;
-        //    exitNotification.Message.Title = title;
-        //    exitNotification.Message.Problem = programName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
-        //    exitNotification.Message.What = "Please help us fix it! You should be able to paste the entire content of the Reason section below into an email to saul@ucalgary.ca , along with a description of what you were doing at the time.  To quickly copy the text, click on the 'Reason' details, hit ctrl+a to select all of it, ctrl+c to copy, and then email all that.";
-        //    exitNotification.Message.Reason = String.Format("{0}, {1}, .NET runtime {2}{3}", typeof(TimelapseWindow).Assembly.GetName(), Environment.OSVersion, Environment.Version, Environment.NewLine);
-        //    if (e.ExceptionObject != null)
-        //    {
-        //        exitNotification.Message.Reason += e.ExceptionObject.ToString();
-        //    }
-        //    exitNotification.Message.Result = String.Format("The data file is likely OK.  If it's not you can restore from the {0} folder.", Constant.File.BackupFolder);
-        //    exitNotification.Message.Hint = "\u2022 If you do the same thing this'll probably happen again.  If so, that's helpful to know as well." + Environment.NewLine;
-
-        //    // Modify text for custom exceptions
-        //    Exception custom_excepton = (Exception)e.ExceptionObject;
-        //    switch (custom_excepton.Message)
-        //    {
-        //        case Constant.ExceptionTypes.TemplateReadWriteException:
-        //            exitNotification.Message.Problem =
-        //                programName + "  could not read data from the template (.tdb) file. This could be because: " + Environment.NewLine +
-        //                "\u2022 the .tdb file is corrupt, or" + Environment.NewLine +
-        //                "\u2022 your system is somehow blocking Timelapse from manipulating that file (e.g., Citrix security will do that)" + Environment.NewLine +
-        //                "If you let us know, we will try and fix it. ";
-        //            break;
-        //        default:
-        //            exitNotification.Message.Problem = programName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
-        //            break;
-        //    }
-        //    Clipboard.SetText(exitNotification.Message.Reason);
-        //    exitNotification.ShowDialog();
-        //}
         #endregion
 
         #region MessageBox: No Updates Available
@@ -1120,7 +1083,7 @@ namespace Timelapse.Dialog
         public static void MissingFileSearchNoMatchesFoundDialog(Window owner, string fileName)
         {
             string title = "Timelapse could not find any matches to " + fileName;
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1145,12 +1108,12 @@ namespace Timelapse.Dialog
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
 
-            string title = count.ToString() + " of your folders could not be found";
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            string title = count + " of your folders could not be found";
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
-                    Problem = "Timelapse checked for the folders containing your image and video files, and noticed that " + count.ToString() + " are missing.",
+                    Problem = "Timelapse checked for the folders containing your image and video files, and noticed that " + count + " are missing.",
                     Reason = "These folders may have been moved, renamed, or deleted since Timelapse last recorded their location.",
                     Solution = "If you want to try to locate missing folders and files, select: "
                                + Environment.NewLine
@@ -1924,7 +1887,7 @@ namespace Timelapse.Dialog
         public static void ArgumentRelativePathDialog(Window owner, string folderName)
         {
             string title = "Timelapse is currently restricted to the folder: '" + folderName + "'";
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1944,7 +1907,7 @@ namespace Timelapse.Dialog
         public static void ArgumentTemplatePathDialog(Window owner, string fileName, string relativePathArgument)
         {
             string title = "Timelapse could not open the template";
-            Dialog.MessageBox messageBox = new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -1977,7 +1940,7 @@ namespace Timelapse.Dialog
         public static void CustomSelectEpisodeDataLabelProblem(Window owner)
         {
             string title = "Timelapse cannot enable searches for Episode-related files";
-            new Dialog.MessageBox(title, owner, MessageBoxButton.OK)
+            new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
@@ -2068,7 +2031,7 @@ namespace Timelapse.Dialog
         #region MessageBox: ddb file opened with an older version of Timelapse than recorded in it
         public static bool? DatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner)
         {
-            Util.ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(owner, nameof(owner));
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
             // notify the user the template couldn't be loaded rather than silently doing nothing
@@ -2105,7 +2068,7 @@ namespace Timelapse.Dialog
         #region DialogIsFileValid checks for valid database file and displays appropriate dialog if it isn't
         public static bool DialogIsFileValid(Window owner, string filePath)
         {
-            switch (Util.FilesFolders.QuickCheckDatabaseFile(filePath))
+            switch (FilesFolders.QuickCheckDatabaseFile(filePath))
             {
                 case DatabaseFileErrorsEnum.Ok:
                     return true;

@@ -2,14 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Timelapse.Editor"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:xcad="http://schemas.xceed.com/wpf/xaml/avalondock"
         xmlns:controls="clr-namespace:Timelapse.Controls;assembly=Timelapse2"
-        Name="TemplateEditor" Height="825" Width="1200" MinHeight="600" MinWidth="800" Icon="Icons/TemplateEditor.ico" 
+        xmlns:database1="clr-namespace:Timelapse.Database;assembly=Timelapse2"
+        Height="825" Width="1200" MinHeight="600" MinWidth="800" Icon="Icons/TemplateEditor.ico" 
         Loaded="Window_Loaded" Closing="Window_Closing">
     <Window.Resources>
         <ResourceDictionary>
-            <!-- Define the default text assoicated with the various controls -->
+            <!-- Define the default text associated with the various controls -->
             <ToolTip x:Key="DefaultValueToolTip">
                 <TextBlock>An optional default data value that will be displayed to the analyst</TextBlock>
             </ToolTip>
@@ -325,7 +325,7 @@
         <xcad:DockingManager AllowMixedOrientation="True" BorderBrush="Black" BorderThickness="1" Grid.Row="1">
             <!-- Bind the tab title to the tab header -->
             <xcad:DockingManager.DocumentHeaderTemplate>
-                <DataTemplate>
+                <DataTemplate DataType="xcad:LayoutContent">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="{Binding IconSource}" Margin="0,0,4,0"/>
                         <TextBlock Text="{Binding Title}" />
@@ -370,13 +370,14 @@
                                         <Run FontSize="12" Text="This will fill in the tables below, which you can modify as needed."/>
                                     </TextBlock>
 
-                                    <TextBlock Name="HelpMessageForTemplate" Visibility="Collapsed" Grid.Row="0"  Margin="5">
+                                    <TextBlock Name="HelpMessageForTemplate" Visibility="Collapsed" Grid.Row="0"
+                                               Grid.Column="0" Margin="5">
                                          <Run FontWeight="Bold" Text="Use the buttons on the right to add new data types. Click to edit the white fields (gray fields are uneditable)."/>
                                         <LineBreak/>
                                          <Run FontWeight="Bold" Text="Fixed choice data types: click 'Define List' to define the menu, one item per line."/>
                                     </TextBlock>
 
-                                    <Grid Margin="10,5,0,0" Grid.Row="1" Name="GridContainingPrimaryUI" >
+                                    <Grid Margin="10,5,0,0" Grid.Row="1" Grid.Column="0" Name="GridContainingPrimaryUI" >
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Name="DisplayGridColumn" />
                                             <ColumnDefinition Name="EditButtonColumn" Width="100"/>
@@ -500,7 +501,7 @@
                                                 <!-- Copyable Column -->
                                                 <DataGridTemplateColumn  MinWidth="25" Width="Auto" Header="Copyable" SortMemberPath="Include" CanUserSort="False" >
                                                     <DataGridTemplateColumn.CellTemplate>
-                                                        <DataTemplate>
+                                                        <DataTemplate DataType="controls:DataEntryControl">
                                                             <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Copyable, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                     </DataGridTemplateColumn.CellTemplate>
@@ -514,7 +515,7 @@
                                                 <!-- Visible Column -->
                                                 <DataGridTemplateColumn MinWidth="25" Width="Auto" Header="Visible" SortMemberPath="Include" CanUserSort="False" >
                                                     <DataGridTemplateColumn.CellTemplate>
-                                                        <DataTemplate>
+                                                        <DataTemplate DataType="database1:ControlRow">
                                                             <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=Visible, UpdateSourceTrigger=PropertyChanged}" />
                                                         </DataTemplate>
                                                     </DataGridTemplateColumn.CellTemplate>
@@ -528,7 +529,7 @@
                                                 <!--List Column -->
                                                 <DataGridTemplateColumn MinWidth="40" Header="List" Width="80"  CanUserSort="False" IsReadOnly="True" >
                                                     <DataGridTemplateColumn.CellTemplate>
-                                                        <DataTemplate>
+                                                        <DataTemplate DataType="database1:ControlRow">
                                                             <StackPanel>
                                                                 <Button Name="btnButton" Tag="{Binding Path=ControlOrder}" Click="ChoiceListButton_Click" local:EditorWindowExtensions.ChoiceList="{Binding Path=List, Mode=TwoWay}" Margin="3,1,3,1"  Content="Define List" >
                                                                     <Button.Style>
@@ -587,7 +588,8 @@
                                         </DockPanel>
 
                                         <!-- Grid containing controls and spreadsheet order plus assorted help text-->
-                                        <Grid Name="OtherGrids" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,7,0,0">
+                                        <Grid Name="OtherGrids" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                              Margin="0,7,0,0">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />

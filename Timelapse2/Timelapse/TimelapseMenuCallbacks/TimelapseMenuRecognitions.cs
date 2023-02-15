@@ -19,7 +19,7 @@ namespace Timelapse
         {
             this.FilePlayer_Stop(); // In case the FilePlayer is going
             bool detectionsExist = false;
-            if (this?.DataHandler?.FileDatabase != null)
+            if (this.DataHandler?.FileDatabase != null)
             {
                 detectionsExist = this.DataHandler.FileDatabase.DetectionsExists();
             }
@@ -32,7 +32,7 @@ namespace Timelapse
         #region Populate a data field with detection counts
         private void MenuItemPopulateDataFieldWithDetectionCounts_Click(object sender, RoutedEventArgs e)
         {
-            if (this?.DataHandler?.FileDatabase?.Database != null && this.DataHandler.FileDatabase.DetectionsExists())
+            if (this.DataHandler?.FileDatabase?.Database != null && this.DataHandler.FileDatabase.DetectionsExists())
             {
                 PopulateFieldWithDetectionCounts dialog = new PopulateFieldWithDetectionCounts(this, this.DataHandler.FileDatabase);
                 if (true == dialog.ShowDialog())
@@ -45,7 +45,7 @@ namespace Timelapse
 
         private void MenuBoundingBoxSetOptions_Click(object sender, RoutedEventArgs e)
         {
-            if (this?.DataHandler?.FileDatabase?.Database != null && this.DataHandler.FileDatabase.DetectionsExists())
+            if (this.DataHandler?.FileDatabase?.Database != null && this.DataHandler.FileDatabase.DetectionsExists())
             {
                 RecognitionOptionsForBoundingBox dialog = new RecognitionOptionsForBoundingBox(this, this.State);
                 if (true == dialog.ShowDialog())
@@ -223,6 +223,12 @@ namespace Timelapse
                     RecognitionsDeleteOldData messageBox = new RecognitionsDeleteOldData(this, result);
                     if (true == messageBox.ShowDialog())
                     {
+                        if (this.DataHandler?.FileDatabase == null)
+                        {
+                            //Shouldn't happen
+                            TracePrint.NullException(nameof(this.DataHandler.FileDatabase));
+                            return;
+                        }
                         // Try again by deleting the old recognition data 
                         result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
                         if (result == RecognizerImportResultEnum.Cancelled)

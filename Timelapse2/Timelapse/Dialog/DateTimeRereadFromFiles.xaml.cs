@@ -169,7 +169,7 @@ namespace Timelapse.Dialog
                 catch (Exception exception)
                 {
                     // This shouldn't happen, but just in case. 
-                    TracePrint.PrintMessage(string.Format("Unexpected exception processing '{0}' in DateTimeReread. {1}", file.File, exception.ToString()));
+                    TracePrint.PrintMessage(string.Format("Unexpected exception processing '{0}' in DateTimeReread. {1}", file.File, exception));
                     feedbackMessage += string.Format("\x2716 skipping: {0}", exception.Message);
                     feedbackRows.Add(new DateTimeFeedbackTuple(file.File, feedbackMessage));
                     break;

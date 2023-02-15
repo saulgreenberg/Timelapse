@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -56,7 +58,7 @@ namespace Timelapse.Database
                 // Backup the old merge file by moving it to the backup folder 
                 // Note that we do the move instead of copy as we will be overwriting the file anyways
                 backupMade = FileBackup.TryCreateBackup(destinationddbFilePath, true);
-                Util.FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
+                FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
             }
 
             FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationddbFilePath, templateDatabase).ConfigureAwait(true);
@@ -95,7 +97,7 @@ namespace Timelapse.Database
 
                     // Check each database file to see if its ok, or determine its error type.
                     // First, lets do a quick check to catch common db errors.
-                    DatabaseFileErrorsEnum databaseFileErrorsEnum = Util.FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
+                    DatabaseFileErrorsEnum databaseFileErrorsEnum = FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
                     if (databaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok || databaseFileErrorsEnum == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
                     {
                         // Things look ok so far. So lets try the merge, which may (or may not) find other errors
@@ -155,7 +157,7 @@ namespace Timelapse.Database
                 errorMessages.Errors.Clear();
                 errorMessages.Warnings.Clear();
                 errorMessages.Warnings.Add("Merge cancelled.");
-                Util.FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
+                FilesFolders.TryDeleteFileIfExists(destinationddbFilePath);
                 return errorMessages;
             }
 
@@ -262,22 +264,49 @@ namespace Timelapse.Database
 
             // Create the second part of the query to:
             // - Create a temporary Markers Table mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
+            // - Note that we have to ensure that the columns in both markers table are in the same order. Consequently, we
+            //   get the ordered column names from the main database, and then construct a query that creates the tempTable
+            //   by selecting on those column names (in order)
             // - Update the Markers Table with the modified Ids
             // - Insert the Markers Table  into the main db's Markers Table
-            // Form: CREATE TEMPORARY TABLE tempMarkers AS SELECT * FROM attachedDB.Markers;
+            // Form: select name from pragma_table_info('MarkersTable')  as tblInfo  - return a list of columns
+            // CREATE TEMPORARY TABLE tempMarkers AS SELECT <comma-spearated column list> FROM attachedDB.Markers;
             //       UPDATE tempMarkers SET Id = (offsetID + tempMarkers.Id);
             //       INSERT INTO Markers SELECT * FROM tempMarkers;
-            query += QueryCreateTemporaryTableFromExistingTable(tempMarkersTable, attachedDB, Constant.DBTables.Markers);
+
+            //---------------------------------------------
+            // Get the columns in order
+            // Form: select name from pragma_table_info('MarkersTable')  as tblInfo 
+            string queryGetColumnName = Sql.SelectNameFromPragmaTableInfo +
+                                        Sql.OpenParenthesis + Sql.Quote(Constant.DBTables.Markers) +
+                                        Sql.CloseParenthesis + Sql.As + Sql.TBLINFO;
+            DataTable dataTable = currentDDB.GetDataTableFromSelect(queryGetColumnName);
+            string columns = string.Empty;
+            int i = 0;
+            foreach (DataRow row in dataTable.Rows)
+            {
+                if (i++ != 0)
+                {
+                    columns += Sql.Comma + " ";
+                }
+                columns += row[0] + " ";
+            }
+            query += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As + Sql.Select + columns + Sql.From + attachedDB + Sql.Dot + Constant.DBTables.Markers + Sql.Semicolon;
+            //---------------------------------------------
+            // This was the original form of the above before we did the Get the columns by order code. It introduced an issue when the markers were in different column orders, as
+            // the values would be inserted in the wrong columns. We keep it here just in case. Remove this commented code if it all appears to work.
+            // query += QueryCreateTemporaryTableFromExistingTable(tempMarkersTable, attachedDB, Constant.DBTables.Markers);
+            //---------------------------------------------
             query += QueryAddOffsetToIDInTable(tempMarkersTable, Constant.DatabaseColumn.ID, offsetId);
             query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable);
-
+            
             //
             // Part 5. Detection Table merge query
             //
 
             // Now we need to see if we have to handle detection table updates.
             // Check to see if the currentDDB file and the toBeMergedDDB file each have a Detections table.
-            bool toBeMergedDetectionsExists = FileDatabase.TableExists(Constant.DBTables.Detections, toBeMergedDDBPath);
+            bool toBeMergedDetectionsExists = TemplateDatabase.TableExists(Constant.DBTables.Detections, toBeMergedDDBPath);
             bool currentDetectionsExists = currentDDB.TableExists(Constant.DBTables.Detections);
 
             // A. Generate several dictionaries reflecting the contents of the info and category tables as held in the to be merged database
@@ -305,6 +334,7 @@ namespace Timelapse.Database
                 // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
                 // This becomes the base comparison against which future databases will be compared to,
                 // in terms of generating best fit info, and whether detection/classification categories conflict or can be merged together.
+
 
                 // To do this, we first create temporary tables from the toBeMerged db 
                 query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedDB, Constant.DBTables.Info);
@@ -370,14 +400,14 @@ namespace Timelapse.Database
                         {
                             query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
                         }
-                        query = query.Substring(0, query.LastIndexOf(Sql.Comma));
+                        query = query.Substring(0, query.LastIndexOf(Sql.Comma, StringComparison.Ordinal));
                         query += Sql.Semicolon;
                         // Update the various dictionaries to reflect their current values
                         MergeDatabases.DictionaryReplaceSecondDictWithFirstDictElements(mergedDetectionCategories, currentDetectionCategories);
                     }
                     else
                     {
-                        // System.Diagnostics.Debug.Print("merged failed for detection categories");
+                        // Debug.Print("merged failed for detection categories");
                         return DatabaseFileErrorsEnum.DetectionCategoriesDiffers;
                     }
                 }
@@ -397,7 +427,7 @@ namespace Timelapse.Database
                         {
                             query += Sql.OpenParenthesis + Sql.Quote(kvp.Key) + Sql.Comma + Sql.Quote(kvp.Value) + Sql.CloseParenthesis + Sql.Comma;
                         }
-                        query = query.Substring(0, query.LastIndexOf(Sql.Comma));
+                        query = query.Substring(0, query.LastIndexOf(Sql.Comma, StringComparison.Ordinal));
                         query += Sql.Semicolon;
 
                         // Update the various dictionaries to reflect their current values
@@ -405,7 +435,7 @@ namespace Timelapse.Database
                     }
                     else
                     {
-                        // System.Diagnostics.Debug.Print("merged failed for classification categories");
+                        // Debug.Print("merged failed for classification categories");
                         return DatabaseFileErrorsEnum.ClassificationDictionaryDiffers;
                     }
                 }
@@ -465,7 +495,7 @@ namespace Timelapse.Database
         // Form: UPDATE dataTable SET IDColumn = (offset + dataTable.Id);
         private static string QueryAddOffsetToIDInTable(string tableName, string IDColumn, int offset)
         {
-            return Sql.Update + tableName + Sql.Set + IDColumn + Sql.Equal + Sql.OpenParenthesis + offset.ToString() + Sql.Plus + tableName + Sql.Dot + IDColumn + Sql.CloseParenthesis + Sql.Semicolon;
+            return Sql.Update + tableName + Sql.Set + IDColumn + Sql.Equal + Sql.OpenParenthesis + offset + Sql.Plus + tableName + Sql.Dot + IDColumn + Sql.CloseParenthesis + Sql.Semicolon;
         }
 
         //Form:  UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) EMD
@@ -511,9 +541,9 @@ namespace Timelapse.Database
                 + Constant.InfoColumns.DetectionCompletionTime + Sql.Equal + Sql.Quote(detection_completion_time) + Sql.Comma
                 + Constant.InfoColumns.Classifier + Sql.Equal + Sql.Quote(classifier) + Sql.Comma
                 + Constant.InfoColumns.ClassificationCompletionTime + Sql.Equal + Sql.Quote(classification_completion_time) + Sql.Comma
-                + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal + (Math.Round(typical_detection_threshold * 100) / 100).ToString() + Sql.Comma
-                + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal + (Math.Round(conservative_detection_threshold * 100) / 100).ToString() + Sql.Comma
-                + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal + (Math.Round(typical_classification_threshold * 100) / 100).ToString()
+                + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal + (Math.Round(typical_detection_threshold * 100) / 100) + Sql.Comma
+                + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal + (Math.Round(conservative_detection_threshold * 100) / 100) + Sql.Comma
+                + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal + (Math.Round(typical_classification_threshold * 100) / 100)
                 + Sql.Semicolon;
         }
 

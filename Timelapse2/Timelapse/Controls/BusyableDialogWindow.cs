@@ -83,7 +83,7 @@ namespace Timelapse.Controls
 
         #region Cancellation callbacks
         // The user has indicates that he/she wishes to cancel the operation
-        private void CancelAsyncOperationButton_Click(object sender, RoutedEventArgs e)
+        public void CancelAsyncOperationButton_Click(object sender, RoutedEventArgs e)
         {
             // Set this so that it will be caught in the above await task
             this.TokenSource.Cancel();
@@ -128,6 +128,10 @@ namespace Timelapse.Controls
         protected void WindowCloseButtonIsEnabled(bool enableCloseButton)
         {
             Window window = Window.GetWindow(this);
+            if (window == null)
+            {
+                return;
+            }
             var wih = new WindowInteropHelper(window);
             IntPtr hwnd = wih.Handle;
 

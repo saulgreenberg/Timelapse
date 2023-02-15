@@ -17,8 +17,7 @@ namespace Timelapse.Util
         // - manipulating datetime (e.g., swapping the day/month
 
         #region Static TryParse from string to get DateTime
-        // TODO: DT We can combine these two simply by using constant that has both formats
-
+        // TODO: Replace these with a single call, where we create an ENUM as an argument (e.g. DateTimeFormat.DatabaseDateTime)
         // All these forms returm a valid dateTime, even if the try's fail (just in case)
         public static bool TryParseDatabaseDateTime(string dateTimeAsString, out DateTime dateTime)
         {
@@ -134,7 +133,7 @@ namespace Timelapse.Util
                     return false;
                 }
 
-                if (exifSubIfd.TryGetDateTime(ExifSubIfdDirectory.TagDateTimeOriginal, out dateTime) == false)
+                if (exifSubIfd.TryGetDateTime(ExifDirectoryBase.TagDateTimeOriginal, out dateTime) == false)
                 {
                     // We couldn't read the metadata. In case its a reconyx camera, the fallback is to use the Reconyx-specific metadata using its DateTimeOriginal tag
                     ReconyxHyperFireMakernoteDirectory reconyxMakernote = metadataDirectories.OfType<ReconyxHyperFireMakernoteDirectory>().FirstOrDefault();

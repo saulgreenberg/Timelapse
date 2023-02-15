@@ -6,9 +6,9 @@ namespace Timelapse.Images
     {
         public static WriteableBitmap AsWriteable(this BitmapSource bitmapSource)
         {
-            if (bitmapSource is WriteableBitmap)
+            if (bitmapSource is WriteableBitmap bitmap)
             {
-                return bitmapSource as WriteableBitmap;
+                return bitmap;
             }
 
             WriteableBitmap writeableBitmap = new WriteableBitmap(bitmapSource);

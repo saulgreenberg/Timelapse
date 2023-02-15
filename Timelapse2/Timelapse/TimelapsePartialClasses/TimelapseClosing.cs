@@ -51,7 +51,7 @@ namespace Timelapse
             this.DataGrid.ItemsSource = null;
 
             // Clear the arguments, in case we want to start a new session.
-            this.Arguments = new DataStructures.Arguments(null);
+            this.Arguments = new Arguments(null);
 
             // Reset the rest of the user interface 
             if (this.MarkableCanvas.ThumbnailGrid != null)
@@ -155,9 +155,12 @@ namespace Timelapse
 
             // persist user specific state to the registry
             // note that we have to set the bookmark scale and transform in the state, as it is not done elsewhere
-            this.State.BookmarkScale = this.MarkableCanvas.GetBookmarkScale();
-            this.State.BookmarkTranslation = this.MarkableCanvas.GetBookmarkTranslation();
-
+            if (this.MarkableCanvas != null)
+            {
+                this.State.BookmarkScale = this.MarkableCanvas.GetBookmarkScale();
+                this.State.BookmarkTranslation = this.MarkableCanvas.GetBookmarkTranslation();
+            }
+            
             // Clear the QuickPasteEntries from the ImageSet table and save its state, including the QuickPaste window position
             this.quickPasteEntries = null;
             if (this.quickPasteWindow != null)
@@ -183,8 +186,8 @@ namespace Timelapse
                 // FOr example, the memory profiler (dotMemory by JetBrains) suggests that far too many strings are allocated
                 // e.g., the many RelativePaths are repeatedly allocated when opening a database
                 // Needs to be investigated further
-                this.DataHandler.FileDatabase.DisposeAsNeeded();
-                this.DataHandler.DisposeAsNeeded();
+                this.DataHandler?.FileDatabase?.DisposeAsNeeded();
+                this.DataHandler?.DisposeAsNeeded();
                 this.DataEntryControls.DisposeAsNeeded();
             }
         }

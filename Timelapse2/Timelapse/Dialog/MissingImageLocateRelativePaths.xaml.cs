@@ -34,10 +34,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Private Variables
-        private readonly FileDatabase FileDatabase;
         private readonly string FolderPath;
-        private readonly string FileName;
-        private readonly string RelativePath;
         private ObservableCollection<Tuple<string, string, bool>> observableCollection; // A tuple defining the contents of the datagrid
         private IList<DataGridCellInfo> selectedRowTuple; // Will contain the tuple of the row corresponding to the selected cell
         #endregion
@@ -58,14 +55,11 @@ namespace Timelapse.Dialog
             }
 
             this.Owner = owner;
-            this.FileDatabase = fileDatabase;
-            this.FolderPath = this.FileDatabase.FolderPath;
-            this.RelativePath = relativePath;
-            this.FileName = fileName;
+            this.FolderPath = fileDatabase.FolderPath;
 
             // Show the file name and its full relative path in the UI
-            this.RunImageName.Text = this.FileName;
-            this.RunRelativePath.Text = this.RelativePath;
+            this.RunImageName.Text = fileName;
+            this.RunRelativePath.Text = relativePath;
 
             // Create a collection comprising: relative path to the found image, number of other missing images found in that relative path, and whether or not that relative path should be used.
             // Then display it by binding it to the data grid 
@@ -119,7 +113,7 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            if (dgr?.Item == null)
+            if (dgr.Item == null)
             {
                 return;
             }
@@ -162,9 +156,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int selectedColumn = this.selectedRowTuple[0].Column.DisplayIndex;
-            string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection());
-            Tuple<string, string, bool> rowValues;
-            ObservableCollection<Tuple<string, string, bool>> obsCollection;
+            string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection()) ?? String.Empty;
             switch (selectedColumn)
             {
                 case 0:
@@ -175,13 +167,13 @@ namespace Timelapse.Dialog
                     // Use checkmark has been selected. 
                     // We need to update the datagrid with the new value. 
                     // To keep it simple,  just rebuild the observable collection and rebind it
-                    rowValues = (Tuple<string, string, bool>)this.selectedRowTuple[0].Item;
+                    Tuple<string, string, bool>  rowValues = (Tuple<string, string, bool>)this.selectedRowTuple[0].Item;
 
-                    obsCollection = new ObservableCollection<Tuple<string, string, bool>>();
+                    ObservableCollection<Tuple<string, string, bool>>  obsCollection = new ObservableCollection<Tuple<string, string, bool>>();
                     foreach (Tuple<string, string, bool> row in this.observableCollection)
                     {
                        
-                        obsCollection.Add(row != rowValues
+                        obsCollection.Add(!Equals(row, rowValues)
                             // To make it work as a radio butotn, toggle all other rows to be what the selected row is not
                             ? new Tuple<string, string, bool>(row.Item1, row.Item2, rowValues.Item3)
                             // Toggle the selected row

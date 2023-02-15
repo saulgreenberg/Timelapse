@@ -27,7 +27,7 @@ namespace Timelapse.ExifTool
             if (response == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(response));
                 // Treat it as a failure case?
                 this.IsSuccess = false;
@@ -98,8 +98,16 @@ namespace Timelapse.ExifTool
                 {
                     try
                     {
-                        string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                        this.ExifToolPath = Path.Combine(dir, ExeName);
+                        string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+                        if (dir == null)
+                        {
+                            TracePrint.NullException(nameof(dir));
+                            this.ExifToolPath = ExeName;
+                        }
+                        else
+                        {
+                            this.ExifToolPath = Path.Combine(dir, ExeName);
+                        }
                     }
                     catch (Exception xcp)
                     {
@@ -209,7 +217,10 @@ namespace Timelapse.ExifTool
             {
                 this._waitHandle.Set();
             }
-            catch { }
+            catch
+            {
+                TracePrint.CatchException("Acceptable catch.");
+            }
             if (!this._stopRequested && this.Resurrect)
                 this.Start();
         }
@@ -220,7 +231,7 @@ namespace Timelapse.ExifTool
 
             if (this.Status != ExeStatus.Ready)
             {
-                System.Diagnostics.Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
+                Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
                 // throw new ExifToolException("Process must be ready"); 
                 return;
 
@@ -284,7 +295,7 @@ namespace Timelapse.ExifTool
             }
             finally
             {
-               Util.FilesFolders.TryDeleteFileIfExists(argFile);
+               FilesFolders.TryDeleteFileIfExists(argFile);
             }
         }
 
@@ -342,7 +353,7 @@ namespace Timelapse.ExifTool
             if (data == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(data));
                 // try this to indicate the failure case
                 return new ExifToolResponse(false, "data dictionary is null");
@@ -395,7 +406,7 @@ namespace Timelapse.ExifTool
                 {
                     // This was introduced in the results in a later version of EXIF.
                     // I catch and discard it here as otherwise it generates the Debug.Assert message in the next test whenever exiftool is spawned.
-                    // System.Diagnostics.Debug.Print("ExifToolWrapper: Ready0000 caught and ignored.");
+                    // Debug.Print("ExifToolWrapper: Ready0000 caught and ignored.");
                     continue;
                 }
                 Debug.Assert(kv.Length == 2, $"Can not parse line :'{s}'");

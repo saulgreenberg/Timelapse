@@ -48,7 +48,7 @@ namespace Timelapse.Util
             else if (rendersPerSecond > Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondUpperBound)
             {
                 rendersPerSecond = Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondUpperBound;
-                // System.Diagnostics.Debug.Print("RendersPerSecond corrected as it was not within range");
+                // Debug.Print("RendersPerSecond corrected as it was not within range");
             }
 
             this.DesiredImageRendersPerSecond = rendersPerSecond;

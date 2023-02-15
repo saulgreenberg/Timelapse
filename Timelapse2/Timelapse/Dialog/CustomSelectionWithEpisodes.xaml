@@ -28,10 +28,10 @@
             <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"/>
             <Button Name="ResetToAllImagesButton" Content="_Reset to All Images" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="10,0,0,0"  Padding="10" Click="ResetToAllImagesButton_Click" IsEnabled="False"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Name="QueryMatches" HorizontalAlignment="Left"  Margin="10,5,0,5" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0"  FontWeight="DemiBold" FontSize="12"><Run Text="0  "/></TextBlock>
-                <TextBlock HorizontalAlignment="Left"  Margin="0,5,0,5" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0"  FontSize="12"><Run Text=" files match your query "/></TextBlock>
-                <Button Name="CancelButton" Grid.Column="0" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-                <Button Name="OkButton" Grid.Column="1" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+                <TextBlock Name="QueryMatches" HorizontalAlignment="Left"  Margin="10,5,0,5" VerticalAlignment="Center"  FontWeight="DemiBold" FontSize="12"><Run Text="0  "/></TextBlock>
+                <TextBlock HorizontalAlignment="Left"  Margin="0,5,0,5" VerticalAlignment="Center"  FontSize="12"><Run Text=" files match your query "/></TextBlock>
+                <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
             </StackPanel>
         </DockPanel>
 
@@ -55,7 +55,7 @@
 
                     <!--Row 0-->
                     <CheckBox Name="UseDetectionsCheckbox" Grid.Row="0" Grid.Column="0" Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="False" Checked="UseDetections_CheckedChanged" Unchecked="UseDetections_CheckedChanged"/>
-                    <TextBlock Text="Use recognition" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="5" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200" />
+                    <TextBlock Text="Use recognition" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200" />
                     <CheckBox Name="RankByConfidenceCheckbox" Content="Rank by confidence" Grid.Row="0" Grid.Column="2" Margin="0,0,5,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsChecked="False" Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"/>
 
                     <!--Row 1-->
@@ -82,8 +82,8 @@
                     </Border>
 
                     <!--Row 4 Option to show episode info -->
-                    <StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="0,5,0,0"  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4">
-                        <CheckBox Name="CheckboxShowAllEpisodeImages"  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" 
+                    <StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="0,5,0,0"  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3">
+                        <CheckBox Name="CheckboxShowAllEpisodeImages" 
                               VerticalContentAlignment="Center" FontWeight="DemiBold"
                               Content="Include all files in an episode when at least one file matches" IsChecked="False"
                               Checked="CheckboxShowAllEpisodeImages_CheckedChanged" Unchecked="CheckboxShowAllEpisodeImages_CheckedChanged"

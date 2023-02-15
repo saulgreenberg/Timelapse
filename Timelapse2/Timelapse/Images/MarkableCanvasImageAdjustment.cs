@@ -135,6 +135,8 @@ namespace Timelapse.Images
                     // If we cannot get a valid file, there is no image to manipulate. 
                     // So abort and signal a change in image state that says there is no displayable image to adjust (consumed by ImageAdjuster)
                     this.OnImageStateChanged(new ImageStateEventArgs(false));
+                    this.Processing = false;
+                    return;
                 }
 
                 // Set the state to Processing is used to indicate that other attempts to process the image should be aborted util this is done.

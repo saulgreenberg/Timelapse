@@ -29,7 +29,7 @@
                             Hint="If you are unsure if these are valid or bogus files, try to open one of them outside of Timelapse.
                                   &#10;If you can't, then you should probably skip them."/>
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4" Margin="0,0,10,0">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1" Margin="0,0,10,0">
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Don't skip</Button>
             <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Skip bogus files</Button>
         </StackPanel>

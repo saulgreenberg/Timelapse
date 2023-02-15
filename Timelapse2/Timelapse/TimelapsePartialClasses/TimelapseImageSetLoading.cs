@@ -96,7 +96,7 @@ namespace Timelapse
                 // THE IMPORTIMAGES FLAG DOESN"T SEEM TO DO WHAT THE ABOVE SUGGESTS... LOOK INTO IT
                 if (false == Dialogs.DialogIsFileValid(this, fileDatabaseFilePath))
                 {
-                    // System.Diagnostics.Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
+                    // Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
                     // If we are trying to import images for the first time, return the newly created ddb file
                     return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
                 }
@@ -274,7 +274,7 @@ namespace Timelapse
             // Generate FileInfo list for every single image / video file in the folder path (including subfolders). These become the files to add to the database
             // PERFORMANCE - takes modest but noticable time to do if there are a huge number of files. 
             // TO DO: PUT THIS IN THE SHOW PROGRESS LOOP
-            Util.FilesFolders.GetAllImageAndVideoFilesInFolderAndSubfolders(selectedFolderPath, filesToAdd);
+            FilesFolders.GetAllImageAndVideoFilesInFolderAndSubfolders(selectedFolderPath, filesToAdd);
 
             if (filesToAdd.Count == 0)
             {
@@ -391,7 +391,7 @@ namespace Timelapse
 
                 if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                 {
-                    // System.Diagnostics.Debug.Print("Cancelled: In BackgroundWorkerCompleted");
+                    // Debug.Print("Cancelled: In BackgroundWorkerCompleted");
                     isCancelled = true;
                     // Stop the ExifToolManager if it was invoked while loading files, which can occurs when populating metadata to a file via the EXIFTool on load.
                     //this.State.ExifToolManager.Stop();
@@ -414,7 +414,7 @@ namespace Timelapse
                         this.FileNavigatorSlider.Visibility = Visibility.Visible;
                         this.StatusBar.SetMessage("Cancelled loading of image set");
                         Mouse.OverrideCursor = null;
-                        Util.FilesFolders.TryDeleteFileIfExists(filePathToDelete);
+                        FilesFolders.TryDeleteFileIfExists(filePathToDelete);
                         return;
                     }
                 }
@@ -595,8 +595,17 @@ namespace Timelapse
         {
             importImages = false;
 
+
             string databaseFileName;
             string directoryPath = Path.GetDirectoryName(templateDatabasePath);
+
+            if (directoryPath == null)
+            {
+                // Null is returned if directory is a root drive (say) C:
+                TracePrint.NullException(nameof(directoryPath));
+                databaseFilePath = null;
+                return false;
+            }
             string[] fileDatabasePaths = Directory.GetFiles(directoryPath, "*.ddb");
             if (fileDatabasePaths.Length == 1)
             {

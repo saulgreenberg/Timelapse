@@ -27,14 +27,14 @@
                                       &#10;This is important, as a renamed control will preserve its previously entered data."                                      
                             ShowExplanationVisibility="True"/>
         <DockPanel >
-            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"></Rectangle>
+            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top" />
 
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseOldTemplate_Click">Open using Old Template</Button>
                 <Button IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewTemplateButton_Click" IsEnabled="True">Open using New Template</Button>
             </StackPanel>
 
-            <ScrollViewer DockPanel.Dock="Top" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <StackPanel Orientation="Vertical">
                     <Label FontWeight="Bold" Content=" If you choose 'Open using New template', Timelapse will update these controls and their associated data columns as follows."/>
                     <Grid Name="ActionGrid"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
@@ -55,7 +55,7 @@
                     <TextBlock Name="TextBlockDetails" HorizontalAlignment="Left" Margin="10,10,10,0" VerticalAlignment="Stretch" TextWrapping="Wrap" FontSize="12" />
                 </StackPanel>
             </ScrollViewer>
-            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Bottom"></Rectangle>
+            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Bottom" />
         </DockPanel>
     </DockPanel>
 </Window>

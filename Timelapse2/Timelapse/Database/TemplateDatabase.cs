@@ -27,7 +27,7 @@ namespace Timelapse.Database
         #region Private Variables
         private bool disposed;
         private DataGrid editorDataGrid;
-        public DateTime mostRecentBackup = DateTime.MinValue;
+        public DateTime mostRecentBackup;
         private DataRowChangeEventHandler onTemplateTableRowChanged;
         #endregion
 
@@ -88,7 +88,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in TryCreateOpen. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in TryCreateOpen. {0}", exception));
                 return new Tuple<bool, TemplateDatabase>(false, null);
             }
             finally
@@ -131,30 +131,26 @@ namespace Timelapse.Database
                     return;
                 }
 
-                // no existing table to clone...
-                // If other is null, then we are creating the template
+                // no existing table to clone... as other must be null
+                // , then we are creating the template
                 // Otherwise, we are adding a template to the .ddb file
                 // In this case, we check to see which it is, as we add a TemplateInfo table only to the .tdb file
-                if (other == null)
-                {
-                    List<SchemaColumnDefinition> templateInfoColumns = new List<SchemaColumnDefinition>
+                List<SchemaColumnDefinition> templateInfoColumns = new List<SchemaColumnDefinition>
                     {
                         new SchemaColumnDefinition(Constant.DatabaseColumn.VersionCompatabily, Sql.Text, Constant.DatabaseValues.VersionNumberMinimum)
                     };
-                    this.Database.CreateTable(Constant.DBTables.TemplateInfo, templateInfoColumns);
+                this.Database.CreateTable(Constant.DBTables.TemplateInfo, templateInfoColumns);
 
-                    // so add the version number to the templateinfo table
-                    List<List<ColumnTuple>> templateContents = new List<List<ColumnTuple>>();
-                    // Get the version of the current Timelapse program
+                // so add the version number to the templateinfo table
+                List<List<ColumnTuple>> templateContents = new List<List<ColumnTuple>>();
+                // Get the version of the current Timelapse program
 
-                    List<ColumnTuple> version = new List<ColumnTuple>
+                List<ColumnTuple> version = new List<ColumnTuple>
                     {
                         new ColumnTuple(Constant.DatabaseColumn.VersionCompatabily, VersionChecks.GetTimelapseCurrentVersionNumber().ToString())
                     };
-                    templateContents.Add(version);
-                    this.Database.Insert(Constant.DBTables.TemplateInfo, templateContents);
-                }
-
+                templateContents.Add(version);
+                this.Database.Insert(Constant.DBTables.TemplateInfo, templateContents);
 
                 // Add standard controls to template table
                 List<List<ColumnTuple>> standardControls = new List<List<ColumnTuple>>();
@@ -197,12 +193,7 @@ namespace Timelapse.Database
 
         protected virtual async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
         {
-            await Task.Run(() =>
-            {
-                this.GetControlsSortedByControlOrder();
-                // If there are things to do, add them here.
-                // See pre-2.2.2.5 version for example code
-            }).ConfigureAwait(true);
+            await Task.Run(this.GetControlsSortedByControlOrder).ConfigureAwait(true);
         }
 
         protected virtual async Task OnExistingDatabaseOpenedAsync(TemplateDatabase other, TemplateSyncResults templateSyncResults)
@@ -238,7 +229,7 @@ namespace Timelapse.Database
             // The database file exists. However, we still need to check if its valid. 
             using (TemplateDatabase database = new TemplateDatabase(filePath))
             {
-                if (database?.Database == null)
+                if (database.Database == null)
                 {
                     return false;
                 }
@@ -426,8 +417,8 @@ namespace Timelapse.Database
 
             // For backwards compatability: MarkForDeletion DataLabel is of the type DeleteFlag,
             // which is a standard control. So we coerce it into thinking its a different type.
-            string controlType = controlToRemove.DataLabel == Constant.ControlDeprecated.MarkForDeletion 
-                ? Constant.ControlDeprecated.MarkForDeletion 
+            string controlType = controlToRemove.DataLabel == Constant.ControlDeprecated.MarkForDeletion
+                ? Constant.ControlDeprecated.MarkForDeletion
                 : controlToRemove.Type;
             if (Constant.Control.StandardTypes.Contains(controlType))
             {
@@ -622,9 +613,6 @@ namespace Timelapse.Database
                     case Constant.Control.SpreadsheetOrder:
                         control.SpreadsheetOrder = newOrder;
                         break;
-                    default:
-                        // Ignore unhandled columns, as these are the ones that are not visible   
-                        break;
                 }
             }
             // sync new order to database
@@ -665,11 +653,11 @@ namespace Timelapse.Database
             // If the data label name and/or the label exists, keep incrementing the count that is appended to the end
             // of the field type until it forms a unique data label name
             int dataLabelUniqueIdentifier = 0;
-            string nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier.ToString();
+            string nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier;
             while (dataLabels.Contains(nextDataLabel) || labels.Contains(nextDataLabel))
             {
                 ++dataLabelUniqueIdentifier;
-                nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier.ToString();
+                nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier;
             }
 
             return nextDataLabel;
@@ -687,11 +675,11 @@ namespace Timelapse.Database
             // If the  label name exists, keep incrementing the count that is appended to the end
             // of the field type until it forms a unique data label name
             int labelUniqueIdentifier = 0;
-            string nextLabel = labelPrefix + labelUniqueIdentifier.ToString();
+            string nextLabel = labelPrefix + labelUniqueIdentifier;
             while (labels.Contains(nextLabel))
             {
                 ++labelUniqueIdentifier;
-                nextLabel = labelPrefix + labelUniqueIdentifier.ToString();
+                nextLabel = labelPrefix + labelUniqueIdentifier;
             }
 
             return nextLabel;
@@ -778,7 +766,7 @@ namespace Timelapse.Database
         {
             // Utilities.PrintMethodName();
             DataTable templateTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Template + Sql.OrderBy + Constant.Control.ControlOrder);
-            this.Controls = new DataTableBackedList<ControlRow>(templateTable, (DataRow row) => new ControlRow(row));
+            this.Controls = new DataTableBackedList<ControlRow>(templateTable, row => new ControlRow(row));
             this.Controls.BindDataGrid(this.editorDataGrid, this.onTemplateTableRowChanged);
         }
         #endregion

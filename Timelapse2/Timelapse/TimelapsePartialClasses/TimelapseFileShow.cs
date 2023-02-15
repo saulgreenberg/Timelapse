@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using DialogUpgradeFiles.Database;
 using Timelapse.Controls;
 using Timelapse.Enums;
 using Timelapse.Images;
+using Timelapse.Util;
 
 namespace Timelapse
 {
@@ -75,8 +78,18 @@ namespace Timelapse
                 // We used to throw a new exception, but lets see what happens if we just return instead.
                 // i.e., lets just abort.
                 // throw new Exception(String.Format("in FileShow: possible problem with fileIndex value is {0}, where its not a valid row index in the image table.", fileIndex));
-                System.Diagnostics.Debug.Print(
+                Debug.Print(
                     $"in FileShow: possible problem with fileIndex (value is {fileIndex}, where its not a valid row index in the image table.");
+                return;
+            }
+
+            // Get the current image in the image cache. If we can't, abort.
+            Database.ImageRow imageCacheCurrent = this.DataHandler.ImageCache.Current;
+
+            if (imageCacheCurrent == null)
+            {
+                // This should not happen.
+                TracePrint.NullException(nameof(imageCacheCurrent));
                 return;
             }
 
@@ -94,7 +107,7 @@ namespace Timelapse
             {
                 // update value
                 string controlType = this.DataHandler.FileDatabase.FileTableColumnsByDataLabel[control.Key].ControlType;
-                control.Value.SetContentAndTooltip(this.DataHandler.ImageCache.Current.GetValueDisplayString(control.Value.DataLabel));
+                control.Value.SetContentAndTooltip(imageCacheCurrent.GetValueDisplayString(control.Value.DataLabel));
 
                 // for note controls, update the autocomplete list if an edit occurred
                 if (controlType == Constant.Control.Note)
@@ -117,17 +130,17 @@ namespace Timelapse
             this.FileNavigatorSlider.Value = fileIndex + 1;
 
             // Get the bounding boxes and markers (if any) for the current image;
-            BoundingBoxes bboxes = this.GetBoundingBoxesForCurrentFile(this.DataHandler.ImageCache.Current.ID);
-            this.markersOnCurrentFile = this.DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(this.DataHandler.ImageCache.Current.ID);
+            BoundingBoxes bboxes = this.GetBoundingBoxesForCurrentFile(imageCacheCurrent.ID);
+            this.markersOnCurrentFile = this.DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(imageCacheCurrent.ID);
             List<Marker> displayMarkers = this.GetDisplayMarkers();
 
             // Display new file if the file changed
             // This avoids unnecessary image reloads and refreshes in cases where FileShow() is just being called to refresh controls
             if (newFileToDisplay)
             {
-                if (this.DataHandler.ImageCache.Current.IsVideo)
+                if (imageCacheCurrent.IsVideo)
                 {
-                    this.MarkableCanvas.SetNewVideo(this.DataHandler.ImageCache.Current.GetFileInfo(this.DataHandler.FileDatabase.FolderPath), displayMarkers);
+                    this.MarkableCanvas.SetNewVideo(imageCacheCurrent.GetFileInfo(this.DataHandler.FileDatabase.FolderPath), displayMarkers);
                     this.EnableImageManipulationMenus(false);
                 }
                 else
@@ -141,7 +154,7 @@ namespace Timelapse
             }
             else if (this.IsDisplayingSingleImage())
             {
-                if (this.DataHandler.ImageCache.Current.IsVideo)
+                if (imageCacheCurrent.IsVideo)
                 {
                     this.MarkableCanvas.SwitchToVideoView();
                 }
@@ -162,7 +175,7 @@ namespace Timelapse
             // Refresh the Magnifier if needed
             if (this.IsDisplayingSingleImage())
             {
-                if (this.DataHandler.ImageCache.Current.IsVideo)
+                if (imageCacheCurrent.IsVideo)
                 {
                     this.MarkableCanvas.SetMagnifiersAccordingToCurrentState(false, true);
                 }

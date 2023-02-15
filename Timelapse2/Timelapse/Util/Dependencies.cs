@@ -65,6 +65,12 @@ namespace Timelapse.Util
             ThrowIf.IsNullArgument(executingAssembly, nameof(executingAssembly));
 
             string directoryContainingCurrentExecutable = Path.GetDirectoryName(executingAssembly.Location);
+            if (directoryContainingCurrentExecutable == null)
+            {
+                // If the path consists of a root directory, such as "c:\", null is returned.
+                // That shouldn't happen
+                return false;
+            }
             foreach (string binaryName in Dependencies.CommonRequiredBinaries)
             {
                 if (File.Exists(Path.Combine(directoryContainingCurrentExecutable, binaryName)) == false)

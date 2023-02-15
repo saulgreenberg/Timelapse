@@ -37,7 +37,7 @@ namespace Timelapse.DataStructures
                         // Make sure there is an argument there
                         if ((index + 1) < arguments.Length)
                         {
-                            this.Template = @arguments[index + 1];
+                            this.Template = arguments[index + 1];
                         }
                         break;
                     case Constant.Arguments.RelativePathArgument:
@@ -49,8 +49,6 @@ namespace Timelapse.DataStructures
                         break;
                     case Constant.Arguments.ViewOnlyArgument:
                         this.IsViewOnly = true;
-                        break;
-                    default:
                         break;
                 }
             }

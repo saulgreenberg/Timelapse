@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -575,7 +576,15 @@ namespace Timelapse.Images
             }
             // These operations are only needed if we weren't in the single image view
             this.ThumbnailGrid.Visibility = Visibility.Collapsed;
-            this.SwitchedToSingleImageViewEventAction();
+            Action OnSwitchedToSingleImageViewEventAction = this.SwitchedToSingleImageViewEventAction;
+            if (OnSwitchedToSingleImageViewEventAction == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(OnSwitchedToSingleImageViewEventAction));
+                return;
+            }
+            OnSwitchedToSingleImageViewEventAction();
+
             this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
 
             // Show the DuplicateIndicator for the main window, if needed
@@ -597,7 +606,15 @@ namespace Timelapse.Images
             }
             // These operations are only needed if we weren't in the single image view
             this.ThumbnailGrid.Visibility = Visibility.Collapsed;
-            this.SwitchedToSingleImageViewEventAction();
+            Action OnSwitchedToSingleImageViewEventAction = this.SwitchedToSingleImageViewEventAction;
+            if (OnSwitchedToSingleImageViewEventAction == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(OnSwitchedToSingleImageViewEventAction));
+                return;
+            }
+            OnSwitchedToSingleImageViewEventAction();
+
             this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
 
             // Show the DuplicateIndicator for the main window, if needed
@@ -614,7 +631,15 @@ namespace Timelapse.Images
             this.GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuster, if it is visible)
 
             this.ThumbnailGrid.Visibility = Visibility.Visible;
-            this.SwitchedToThumbnailGridViewEventAction();
+            Action OnSwitchedToThumbnailGridViewEventAction = this.SwitchedToThumbnailGridViewEventAction;
+            if (OnSwitchedToThumbnailGridViewEventAction == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(OnSwitchedToThumbnailGridViewEventAction));
+                return;
+            }
+            OnSwitchedToThumbnailGridViewEventAction();
+            
 
             this.ImageToDisplay.Visibility = Visibility.Collapsed;
             this.SetMagnifiersAccordingToCurrentState(false, false);
@@ -657,7 +682,7 @@ namespace Timelapse.Images
                 }
                 catch
                 {
-                    return;
+                    TracePrint.Noop();
                 }
             }
         }
@@ -832,7 +857,7 @@ namespace Timelapse.Images
                         || status == ThumbnailGridRefreshStatus.Aborted)
 
                     {
-                        return;
+                        // return;
                     }
                     else if (status == ThumbnailGridRefreshStatus.AtZeroZoomLevel)
                     {
@@ -1047,7 +1072,7 @@ namespace Timelapse.Images
             // smaller than a given threshold, and less than 200 ms have passed since the original
             // mouse down. i.e., the use has done a rapid click and release on a small location
             if ((e.LeftButton == MouseButtonState.Released) &&
-                (sender == this.mouseDownSender) &&
+                (Equals(sender, this.mouseDownSender)) &&
                 this.isPanning == false &&
                 this.isDoubleClick == false)
             {
@@ -1113,7 +1138,7 @@ namespace Timelapse.Images
             TimeSpan timeDifference = DateTime.Now - lastMouseWheelDateTime;
             if (timeDifference < TimeSpan.FromMilliseconds(500)) // At least a 500 msecs delay in use of the scroll wheel is needed between transitions
             {
-                if (zoomIn == true &&
+                if (zoomIn &&
                     ((this.ImageToDisplay.Visibility == Visibility.Visible && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
                      || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled)))
                 {
@@ -1397,8 +1422,8 @@ namespace Timelapse.Images
         private Canvas DrawMarker(Marker marker, Size canvasRenderSize, bool doTransform)
         {
             Canvas markerCanvas = new Canvas();
-            markerCanvas.MouseRightButtonUp += new MouseButtonEventHandler(this.Marker_MouseRightButtonUp);
-            markerCanvas.MouseWheel += new MouseWheelEventHandler(this.ImageOrCanvas_MouseWheel); // Make the mouse wheel work over marks as well as the image
+            markerCanvas.MouseRightButtonUp += this.Marker_MouseRightButtonUp;
+            markerCanvas.MouseWheel += this.ImageOrCanvas_MouseWheel; // Make the mouse wheel work over marks as well as the image
 
             markerCanvas.ToolTip = string.IsNullOrEmpty(marker.Tooltip.Trim()) 
                 ? null 
@@ -1469,7 +1494,7 @@ namespace Timelapse.Images
             Canvas.SetLeft(whiteOutline, position);
             Canvas.SetTop(whiteOutline, position);
 
-            if (marker.Emphasise)
+            if (marker.Emphasise && glow != null)
             {
                 position = (markerCanvas.Width - glow.Width) / 2.0;
                 Canvas.SetLeft(glow, position);

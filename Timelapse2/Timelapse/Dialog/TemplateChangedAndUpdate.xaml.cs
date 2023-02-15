@@ -260,17 +260,21 @@ namespace Timelapse.Dialog
                 // Retrieve selected items, but only if the rename radio button is enabled and checked
                 // retrieve selected items, but only if the rename radio button is checked
                 UIElement uiComboBox = this.GetUIElement(row, 4);
-                if (uiComboBox != null)
+                if (uiComboBox is ComboBox cb && cb.IsEnabled)
                 {
-                    if (uiComboBox is ComboBox cb && cb.IsEnabled)
+                    ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
+                    if (cb.SelectedItem != null)
                     {
-                        ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
-                        if (cb.SelectedItem != null)
+                        if (cbi != null)
                         {
                             selectedDataLabels.Add(cbi.Content.ToString());
                         }
-                        continue;
+                        else
+                        {
+                            TracePrint.NullException(nameof(cbi));
+                        }
                     }
+                    continue;
                 }
 
                 // If this is a Delete action row and a previously selected data label matches it, hide it. 
@@ -316,13 +320,18 @@ namespace Timelapse.Dialog
 
             if (problemDataLabels.Count <= 0) return true;
             // notify the user concerning the problem data labels
-            MessageBox messageBox = new MessageBox("Select the new name for your 'Renamed' fields ", this);
-            messageBox.Message.Icon = MessageBoxImage.Error;
-            messageBox.Message.Problem = "You indicated that the following fields should be renamed, but did not provide the new name" + Environment.NewLine;
-            messageBox.Message.Problem += "\u2022 " + string.Join<string>(", ", problemDataLabels);
-            messageBox.Message.Solution = "For each Rename action, either" + Environment.NewLine;
-            messageBox.Message.Solution += "\u2022 use the drop down menu to provide the new name, or" + Environment.NewLine;
-            messageBox.Message.Solution += "\u2022 set the Update Action back to Delete.";
+            MessageBox messageBox = new MessageBox("Select the new name for your 'Renamed' fields ", this)
+            {
+                Message =
+                 {
+                    Icon = MessageBoxImage.Error,
+                    Problem = "You indicated that the following fields should be renamed, but did not provide the new name" + Environment.NewLine
+                                + "\u2022 " + string.Join<string>(", ", problemDataLabels),
+                    Solution = "For each Rename action, either" + Environment.NewLine
+                                + "\u2022 use the drop down menu to provide the new name, or" + Environment.NewLine
+                                + "\u2022 set the Update Action back to Delete."
+                }
+            };
             messageBox.ShowDialog();
             return false;
         }
@@ -363,7 +372,16 @@ namespace Timelapse.Dialog
                         ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
                         if (cb.SelectedItem != null)
                         {
-                            this.TemplateSyncResults.DataLabelsToRename.Add(new KeyValuePair<string, string>(datalabel, cbi.Content.ToString()));
+                            if (cbi != null)
+                            {
+                                this.TemplateSyncResults.DataLabelsToRename.Add(new KeyValuePair<string, string>(datalabel, cbi.Content.ToString()));
+                            }
+                            else
+                            {
+                                // Shouldn't happen. Not sure if unknown value workaround will work
+                               TracePrint.NullException(nameof(cbi));
+                               this.TemplateSyncResults.DataLabelsToRename.Add(new KeyValuePair<string, string>(datalabel, "Unknown value"));
+                            }
                             continue;
                         }
                     }
@@ -407,10 +425,14 @@ namespace Timelapse.Dialog
         // Enable or Disable the Rename comboboxdepending on the state of the Rename radio button
         private void RbRenameAction_CheckChanged(Object o, RoutedEventArgs a)
         {
-            RadioButton rb = o as RadioButton;
-            ComboBox cb = rb.Tag as ComboBox;
-            cb.IsEnabled = (rb.IsChecked == true);
-            this.ShowHideItemsAsNeeded();
+            if (o is RadioButton rb)
+            {
+                if (rb.Tag is ComboBox cb)
+                {
+                    cb.IsEnabled = (rb.IsChecked == true);
+                    this.ShowHideItemsAsNeeded();
+                }
+            }
         }
 
         // Check other combo box selected values to see if it matches the just-selected combobox data label item, 
@@ -418,7 +440,7 @@ namespace Timelapse.Dialog
         private void CbRenameMenu_SelectionChanged(Object o, SelectionChangedEventArgs a)
         {
             ComboBox activeComboBox = o as ComboBox;
-            if ((ComboBoxItem)activeComboBox.SelectedItem == null)
+            if ((ComboBoxItem)activeComboBox?.SelectedItem == null)
             {
                 return;
             }
@@ -431,7 +453,7 @@ namespace Timelapse.Dialog
                     if (combobox.SelectedItem != null)
                     {
                         ComboBoxItem cbi = combobox.SelectedItem as ComboBoxItem;
-                        if (cbi.Content.ToString() == datalabelSelected)
+                        if (cbi?.Content.ToString() == datalabelSelected)
                         {
                             combobox.SelectedIndex = -1;
                         }

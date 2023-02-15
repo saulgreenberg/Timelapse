@@ -22,7 +22,7 @@
                     &#10;&#x2022; 'Don't correct paths' uses the original paths,
                     &#10;&#x2022; 'Cancel' aborts loading recognitions."
            Hint="'Correct the paths' is likely what you want, as some of your image paths match the adjusted paths."/>
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1">
             <Button IsCancel="True" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,40,10" Click="CancelButton_Click">_Cancel</Button>
             <Button IsDefault="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="LeaveThingsAsTheyAre_Click">_Don't correct paths</Button>
             <Button IsDefault="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Visible" Padding="10" Margin="10,10,10,10" Click="AddSubfolder_Click">_Correct paths</Button>

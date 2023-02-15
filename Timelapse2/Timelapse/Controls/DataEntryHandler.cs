@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -125,8 +126,6 @@ namespace Timelapse.Controls
                         counter.ContentControl.ValueChanged += this.CounterControl_ValueChanged;
                         this.SetContextMenuCallbacks(counter);
                         break;
-                    default:
-                        break;
                 }
             }
         }
@@ -138,9 +137,10 @@ namespace Timelapse.Controls
         private void DateTimePicker_Loaded(object sender, RoutedEventArgs e)
         {
             DateTimePicker dateTimePicker = sender as DateTimePicker;
+            if (dateTimePicker == null) return;
             if (dateTimePicker.Template.FindName("PART_Calendar", dateTimePicker) is Calendar calendar)
             {
-                // System.Diagnostics.Debug.Print("DateTimePicker_Loaded: Adding calendar event ");
+                // Debug.Print("DateTimePicker_Loaded: Adding calendar event ");
                 calendar.Tag = dateTimePicker;
                 calendar.IsTodayHighlighted = false; // Don't highlight today's date, as it could be confusing given what this control is used for.
                 calendar.SelectedDatesChanged += this.Calendar_SelectedDatesChanged;
@@ -164,7 +164,7 @@ namespace Timelapse.Controls
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Error in setting text in clipboard (see SetContextMenuCallbacks in DataEntryHandler");
+                Debug.Print("Error in setting text in clipboard (see SetContextMenuCallbacks in DataEntryHandler");
             }
 
             MenuItem menuItemPropagateFromLastValue = new MenuItem()
@@ -395,6 +395,11 @@ namespace Timelapse.Controls
 
             // Display the appropriate dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control 
             ImageRow imageRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.Current : this.FileDatabase.FileTable[this.ThumbnailGrid.GetSelected()[0]];
+            if (imageRow == null)
+            {
+                TracePrint.NullException(nameof(imageRow));
+                return;
+            }
             string valueToCopy = imageRow.GetValueDisplayString(control.DataLabel);
             bool checkForZero = control is DataEntryCounter;
             if (Dialogs.DataEntryConfirmCopyForwardDialog(Application.Current.MainWindow, valueToCopy, imagesAffected, checkForZero) != true)
@@ -429,7 +434,7 @@ namespace Timelapse.Controls
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Error in setting text in clipboard (see MenuItemCopyToClipboard_Click in DataEntryHandler");
+                Debug.Print("Error in setting text in clipboard (see MenuItemCopyToClipboard_Click in DataEntryHandler");
             }
         }
 
@@ -447,10 +452,10 @@ namespace Timelapse.Controls
                 return;
             }
             string newContent = Clipboard.GetText().Trim();
-            if (control is DataEntryCounter _)
+            if (control is DataEntryCounter)
             {
                 // For counters, removing any leading 0's, but if this ends up with an empty string, then revert to 0
-                newContent = newContent.TrimStart(new Char[] { '0' });
+                newContent = newContent.TrimStart('0');
                 if (string.IsNullOrEmpty(newContent))
                 {
                     newContent = "0";
@@ -469,6 +474,11 @@ namespace Timelapse.Controls
             StackPanel stackPanel = (StackPanel)sender;
             DataEntryControl control = (DataEntryControl)stackPanel.Tag;
 
+            if (stackPanel.ContextMenu == null)
+            {
+                TracePrint.NullException(nameof(stackPanel));
+                return;
+            }
             MenuItem menuItemCopyToAll = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.CopyToAllIndex];
             MenuItem menuItemCopyForward = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.CopyForwardIndex];
             MenuItem menuItemPropagateFromLastValue = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.PropagateFromLastValueIndex];
@@ -500,7 +510,7 @@ namespace Timelapse.Controls
             catch
             {
                 clipboardText = String.Empty;
-                System.Diagnostics.Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
+                Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
             }
             if (string.IsNullOrEmpty(clipboardText))
             {
@@ -508,17 +518,17 @@ namespace Timelapse.Controls
             }
             else
             {
-                if (control is DataEntryNote _)
+                if (control is DataEntryNote)
                 {
                     // Any string is valid
                     menuItemPasteFromClipboard.IsEnabled = true;
                 }
-                else if (control is DataEntryFlag _)
+                else if (control is DataEntryFlag)
                 {
                     // Only true / false is valid
                     menuItemPasteFromClipboard.IsEnabled = (clipboardText == "true" || clipboardText == "false");
                 }
-                else if (control is DataEntryCounter _)
+                else if (control is DataEntryCounter)
                 {
                     // Only a positive integer is valid
                     menuItemPasteFromClipboard.IsEnabled = Int32.TryParse(clipboardText, out int x) && x >= 0;
@@ -546,10 +556,10 @@ namespace Timelapse.Controls
                 // Alter the paste header to show the text that will be pasted e.g Paste 'Lion'
                 if (menuItemPasteFromClipboard.IsEnabled)
                 {
-                    if (control is DataEntryCounter _)
+                    if (control is DataEntryCounter)
                     {
                         // removing any leading 0's, but if its empty make it a 0
-                        clipboardText = clipboardText.TrimStart(new Char[] { '0' });
+                        clipboardText = clipboardText.TrimStart('0');
                         if (string.IsNullOrEmpty(clipboardText))
                         {
                             clipboardText = "0";
@@ -634,7 +644,7 @@ namespace Timelapse.Controls
             catch (IndexOutOfRangeException e)
             {
                 // I don't know why we get this occassional error, so this is an attempt to print out the result so we can debug it
-                System.Diagnostics.Debug.Print(
+                Debug.Print(
                     $"IsCopyFromLastNonEmptyValuePossible: IndexOutOfRange Exception, where index is: {currentIndex}{Environment.NewLine}{e.Message}");
                 return (nearestRowWithCopyableValue >= 0);
             }
@@ -645,7 +655,7 @@ namespace Timelapse.Controls
         #region Event handlers - Content Selections and Changes
         private void DateTimeControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            // System.Diagnostics.Debug.Print("DateTimeControl_ValueChanged triggered");
+            // Debug.Print("DateTimeControl_ValueChanged triggered");
             if (this.IsProgrammaticControlUpdate)
             {
                 return;
@@ -667,19 +677,19 @@ namespace Timelapse.Controls
             if (dateTimePicker.Template.FindName("PART_Calendar", dateTimePicker) is Calendar calendar)
             {
                 this.IsProgrammaticControlUpdate = true;
-                // System.Diagnostics.Debug.Print("Got it " + calendar.ToString());
+                // Debug.Print("Got it " + calendar.ToString());
                 calendar.DisplayDate = dateTimePicker.Value.Value;
                 calendar.SelectedDate = dateTimePicker.Value.Value;
                 if (calendar.Template.FindName("PART_TimePicker", calendar) is TimePicker timepicker)
                 {
                     timepicker.Value = dateTimePicker.Value.Value;
-                    // System.Diagnostics.Debug.Print("Setting Time pickker");
+                    // Debug.Print("Setting Time pickker");
                 }
                 this.IsProgrammaticControlUpdate = false;
             }
             // else
             // {
-            //    System.Diagnostics.Debug.Print("Not a calendar");
+            //    Debug.Print("Not a calendar");
             // }
         }
 
@@ -693,14 +703,37 @@ namespace Timelapse.Controls
                 return;
             }
             Calendar calendar = sender as Calendar;
+            if (calendar == null)
+            {
+                TracePrint.NullException(nameof(calendar));
+                return;
+            }
             DateTimePicker dateTimePicker = (DateTimePicker)calendar.Tag;
+            if (dateTimePicker == null)
+            {
+                TracePrint.NullException(nameof(dateTimePicker));
+                return;
+            }
+            if (dateTimePicker.Value == null)
+            {
+                TracePrint.NullException(nameof(dateTimePicker.Value));
+                return;
+            }
             TimeSpan timespan = dateTimePicker.Value.Value.TimeOfDay;
             this.IsProgrammaticControlUpdate = true;
             dateTimePicker.Value = calendar.SelectedDate + timespan; // + dateTimePicker.Value.Value.TimeOfDay;
-            // Update file data table and write the new DateTime, Date, and Time to the database
-            this.DateTimeUpdate(dateTimePicker, (DateTime)dateTimePicker.Value);
 
-            // System.Diagnostics.Debug.Print("Got calendar event " + calendar.SelectedDate.ToString());
+            // Update file data table and write the new DateTime, Date, and Time to the database
+            if (dateTimePicker.Value != null)
+            {
+                this.DateTimeUpdate(dateTimePicker, (DateTime)dateTimePicker.Value);
+            }
+            else
+            {
+                TracePrint.NullException(nameof(dateTimePicker.Value));
+            }
+
+            // Debug.Print("Got calendar event " + calendar.SelectedDate.ToString());
             this.IsProgrammaticControlUpdate = false;
         }
 
@@ -708,6 +741,11 @@ namespace Timelapse.Controls
         private void DateTimeUpdate(DateTimePicker dateTimePicker, DateTime dateTime)
         {
             // update file data table and write the new DateTime, Date, and Time to the database
+            if (this.ImageCache?.Current == null)
+            {
+                TracePrint.NullException(nameof(this.ImageCache));
+                return;
+            }
             this.ImageCache.Current.SetDateTime(dateTime);
             dateTimePicker.ToolTip = DateTimeHandler.ToStringDisplayDateTime(dateTime);
 
@@ -778,8 +816,13 @@ namespace Timelapse.Controls
                 return;
             }
             CheckBox checkBox = (CheckBox)sender;
+            if (checkBox == null)
+            {
+                TracePrint.NullException(nameof(checkBox));
+                return;
+            }
             DataEntryControl control = (DataEntryControl)checkBox.Tag;
-            string value = ((bool)checkBox.IsChecked) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+            string value = (bool)(checkBox.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
 
             control.SetContentAndTooltip(value);
             this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
@@ -794,6 +837,11 @@ namespace Timelapse.Controls
             if (this.ThumbnailGrid.IsVisible == false && this.ThumbnailGrid.IsGridActive == false)
             {
                 // Only a single image is displayed: update the database for the current row with the control's value
+                if (this.ImageCache?.Current == null)
+                {
+                    TracePrint.NullException(nameof(ImageCache));
+                    return;
+                }
                 this.FileDatabase.UpdateFile(this.ImageCache.Current.ID, datalabel, content);
             }
             else
@@ -854,7 +902,7 @@ namespace Timelapse.Controls
                 ImageRow imageRow = this.FileDatabase.FileTable[fileIds[0]];
 
                 // The above line is what causes the crash, when the id in fileIds[0] doesn't exist
-                // System.Diagnostics.Debug.Print("Success: " + dataLabel + ": " + fileIds[0]);
+                // Debug.Print("Success: " + dataLabel + ": " + fileIds[0]);
 
                 string contents = imageRow.GetValueDisplayString(dataLabel);
                 contents = contents.Trim();
@@ -879,7 +927,7 @@ namespace Timelapse.Controls
             catch
             {
                 // This catch occurs when the id in fileIds[0] doesn't exist
-                System.Diagnostics.Debug.Write("Catch in GetValueDisplayStringCommonToFileIds: " + dataLabel);
+                Debug.Write("Catch in GetValueDisplayStringCommonToFileIds: " + dataLabel);
                 return null;
             }
         }
@@ -892,7 +940,17 @@ namespace Timelapse.Controls
         {
             // If anything is null, we defer resetting anything. Note that we may get an update later (e.g., via the timer)
             DataEntryHandler handler = GlobalReferences.MainWindow?.DataHandler;
-            if (handler?.ImageCache?.CurrentDifferenceState != null && handler?.FileDatabase != null)
+            if (handler == null)
+            {
+                TracePrint.NullException(nameof(handler));
+                return null;
+            }
+            if (handler.ImageCache?.Current == null)
+            {
+                TracePrint.NullException(nameof(handler.ImageCache));
+                return null;
+            }
+            if (handler.ImageCache?.CurrentDifferenceState != null && handler.FileDatabase != null)
             {
                 // Get the path
                 string path = handler.ImageCache.Current.GetFilePath(handler.FileDatabase.FolderPath);
@@ -934,7 +992,7 @@ namespace Timelapse.Controls
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Failed in DataEntryHandler-DisposeAsNeeded");
+                Debug.Print("Failed in DataEntryHandler-DisposeAsNeeded");
             }
         }
         #endregion

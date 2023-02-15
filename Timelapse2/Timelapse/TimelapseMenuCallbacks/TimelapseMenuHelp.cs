@@ -55,8 +55,6 @@ namespace Timelapse
                     case "MenuItemDatabaseGuide":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "TimelapseDatabaseGuide.pdf"));
                         break;
-                    default:
-                        break;
                 }
             }
         }
@@ -114,8 +112,6 @@ namespace Timelapse
                         break;
                     case "MenuItemVideoCompanionQuickStart":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "Video-TimelapseQuickStartGuide.mp4"));
-                        break;
-                    default:
                         break;
                 }
             }

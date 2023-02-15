@@ -160,7 +160,7 @@ namespace Timelapse.Dialog
                 this.Message.Result = $"\u2022 This data record will be removed.{Environment.NewLine}";
                 this.Message.Result +=
                     $"\u2022 The {imageOrVideo} is still intact, but it will not be displayed in Timelapse {Environment.NewLine}";
-                this.Message.Result += String.Format("   unless a duplicate record exists.");
+                this.Message.Result += "   unless a duplicate record exists.";
                 this.Message.Hint = "Deleting only the data is useful for removing a previously-created duplicate record of a file.";
             }
         }
@@ -184,7 +184,7 @@ namespace Timelapse.Dialog
 
                 ListBoxItem lbi = new ListBoxItem
                 {
-                    VerticalAlignment = System.Windows.VerticalAlignment.Top,
+                    VerticalAlignment = VerticalAlignment.Top,
                     Height = 28,
                     Content = filePath,
                     Tag = imageProperties
@@ -251,9 +251,6 @@ namespace Timelapse.Dialog
         // The (bool, int return value: true if the operation has been cancelled, and if so how many images were deleted before the cancel event
         private async Task<Tuple<bool, int>> DoDeleteFilesAsync(List<ImageRow> imagesToDelete, bool deleteFiles, bool deleteData)
         {
-            // cache the current ID as the current image may be invalidated
-            long currentFileID = this.imageCache.Current.ID;
-
             List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
             List<long> imageIDsToDropFromDatabase = new List<long>();
             int fileIndex = 0;
@@ -370,7 +367,7 @@ namespace Timelapse.Dialog
         // Set the confirm checkbox, which enables the ok button if the data deletions are confirmed. 
         private void ConfirmBox_Checked(object sender, RoutedEventArgs e)
         {
-            this.StartDoneButton.IsEnabled = (bool)this.chkboxConfirm.IsChecked;
+            this.StartDoneButton.IsEnabled = this.chkboxConfirm.IsChecked == true;
         }
 
         // Cancel button selected
@@ -407,12 +404,12 @@ namespace Timelapse.Dialog
             else if (isCancelledAndDeletedImagesCount.Item1 == false)
             {
                 this.DoneMessagePanel.Content = "Deleted ";
-                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2.ToString() + " files";
+                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files";
             }
             else
             {
                 this.DoneMessagePanel.Content = "Cancelled, but ";
-                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2.ToString() + " files were already deleted." + Environment.NewLine;
+                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files were already deleted." + Environment.NewLine;
                 this.DoneMessagePanel.Content += "Deleted files are available in your Deleted folder." + Environment.NewLine;
                 this.DoneMessagePanel.Content += "Data for these deleted images has not been changed." + Environment.NewLine;
             }

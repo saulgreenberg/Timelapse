@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
-using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.Controls
@@ -73,7 +71,7 @@ namespace Timelapse.Controls
         //  A better solution is to find out where it is being disabled and fix it there.
         private void ContentControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs keyEvent)
         {
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is Xceed.Wpf.Toolkit.WatermarkTextBox textBox)
+            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
             {
                 // If we are in viewonly state, this ensures that the number textbox can't be edited.
                 textBox.IsReadOnly = GlobalReferences.TimelapseState.IsViewOnly;
@@ -109,7 +107,7 @@ namespace Timelapse.Controls
                 previousControlDataLabel = this.DataLabel;
             }
             // Also set the keyboard focus to this control 
-            Keyboard.Focus(this.ContentControl);
+            System.Windows.Input.Keyboard.Focus(this.ContentControl);
         }
 
         // Behaviour: Highlight the border and make the text caret appear whenever the control gets the keyboard focus
@@ -117,7 +115,7 @@ namespace Timelapse.Controls
         {
             this.ContentControl.BorderThickness = new Thickness(Constant.Control.BorderThicknessHighlight);
             this.ContentControl.BorderBrush = Constant.Control.BorderColorHighlight;
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is Xceed.Wpf.Toolkit.WatermarkTextBox textBox)
+            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
             {
                 textBox.IsReadOnlyCaretVisible = true;
             }

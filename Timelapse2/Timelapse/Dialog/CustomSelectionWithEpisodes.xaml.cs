@@ -46,7 +46,7 @@ namespace Timelapse.Dialog
         private bool dontUpdate = true;
 
         // Remember note fields that contain Episode data
-        string NoteDataLabelContainingEpisodeData;
+        private string NoteDataLabelContainingEpisodeData;
 
         // UseTime Checkbox, funciton is to specify whether the select should use a pure time range instead of a pure date range
         private readonly CheckBox CheckBoxUseTime = new CheckBox()
@@ -56,7 +56,7 @@ namespace Timelapse.Dialog
             FontStyle = FontStyles.Italic,
             VerticalAlignment = VerticalAlignment.Center,
             IsChecked = false,
-            Width = Double.NaN,
+            Width = double.NaN,
             Margin = new Thickness
             {
                 Left = 10
@@ -80,7 +80,7 @@ namespace Timelapse.Dialog
             Content = "Or ",
             GroupName = "LogicalOperators",
             VerticalAlignment = VerticalAlignment.Center,
-            Width = Double.NaN,
+            Width = double.NaN,
             IsEnabled = false
         };
 
@@ -184,7 +184,7 @@ namespace Timelapse.Dialog
                 }
 
                 // Set the combobox selection to the last used one.
-                string categoryLabel = String.Empty;
+                string categoryLabel;
                 if (this.DetectionSelections.RecognitionType == RecognitionType.Empty)
                 {
                     // If we don't know the recognition type, default to All
@@ -298,34 +298,36 @@ namespace Timelapse.Dialog
                     Margin = new Thickness(5)
                 };
 
-                if (searchTerm.Label == Constant.DatabaseColumn.DateTime)
+                switch (searchTerm.Label)
                 {
-                    // Change DateTime to Date
-                    controlLabel.Text = Constant.ControlDeprecated.DateLabel;
-
-                    // Remember the DateTime labels so we can switch their values when the CheckboxUseTime is checked/unchecked
-                    if (dateTimeLabel1 == null)
+                    case Constant.DatabaseColumn.DateTime:
                     {
-                        // Must be the 1st one, as its unassigned
-                        dateTimeLabel1 = controlLabel;
-                    }
-                    else
-                    {
-                        // Must be the 2nd one as the first one is unassigned
-                        dateTimeLabel2 = controlLabel;
-                    }
-                }
-                else if (searchTerm.Label == Constant.DatabaseColumn.RelativePath)
-                {
-                    // RelativePath label adds details
-                    controlLabel.Inlines.Add(searchTerm.Label + " folder");
-                    controlLabel.Inlines.Add(new Run(Environment.NewLine + "includes subfolders") { FontStyle = FontStyles.Italic, FontSize = 10 });
-                }
-                else
-                {
-                    // Just use the label's name
-                    controlLabel.Text = searchTerm.Label;
+                        // Change DateTime to Date
+                        controlLabel.Text = Constant.ControlDeprecated.DateLabel;
 
+                        // Remember the DateTime labels so we can switch their values when the CheckboxUseTime is checked/unchecked
+                        if (dateTimeLabel1 == null)
+                        {
+                            // Must be the 1st one, as its unassigned
+                            dateTimeLabel1 = controlLabel;
+                        }
+                        else
+                        {
+                            // Must be the 2nd one as the first one is unassigned
+                            dateTimeLabel2 = controlLabel;
+                        }
+
+                        break;
+                    }
+                    case Constant.DatabaseColumn.RelativePath:
+                        // RelativePath label adds details
+                        controlLabel.Inlines.Add(searchTerm.Label + " folder");
+                        controlLabel.Inlines.Add(new Run(Environment.NewLine + "includes subfolders") { FontStyle = FontStyles.Italic, FontSize = 10 });
+                        break;
+                    default:
+                        // Just use the label's name
+                        controlLabel.Text = searchTerm.Label;
+                        break;
                 }
                 Grid.SetRow(controlLabel, gridRowIndex);
                 Grid.SetColumn(controlLabel, CustomSelectionWithEpisodes.LabelColumn);
@@ -334,56 +336,55 @@ namespace Timelapse.Dialog
                 // The operators allowed for each search term type
                 string controlType = searchTerm.ControlType;
                 string[] termOperators;
-                if (controlType == Constant.Control.Counter ||
-                    controlType == Constant.DatabaseColumn.DateTime ||
-                    controlType == Constant.Control.FixedChoice)
+                switch (controlType)
                 {
-                    // No globs in Counters as that text field only allows numbers, we can't enter the special characters Glob required
-                    // No globs in Dates the date entries are constrained by the date picker
-                    // No globs in Fixed Choices as choice entries are constrained by menu selection
-                    termOperators = new string[]
-                    {
-                        Constant.SearchTermOperator.Equal,
-                        Constant.SearchTermOperator.NotEqual,
-                        Constant.SearchTermOperator.LessThan,
-                        Constant.SearchTermOperator.GreaterThan,
-                        Constant.SearchTermOperator.LessThanOrEqual,
-                        Constant.SearchTermOperator.GreaterThanOrEqual
-                    };
-                }
-                // Relative path only allows = (this will be converted later to a glob to get subfolders) 
-                else if (controlType == Constant.DatabaseColumn.RelativePath)
-                {
-                    // Only equals (actually a glob including subfolders), as other options don't make sense for RelatvePath
-                    termOperators = new string[]
-                    {
-                        Constant.SearchTermOperator.Equal,
-                    };
-                }
-                // Only equals and not equals (For relative path this will be converted later to a glob to get subfolders) 
-                else if (controlType == Constant.DatabaseColumn.DeleteFlag ||
-                         controlType == Constant.Control.Flag)
-                {
-                    // Only equals and not equals in Flags, as other options don't make sense for booleans
-                    termOperators = new string[]
-                    {
-                        Constant.SearchTermOperator.Equal,
-                        Constant.SearchTermOperator.NotEqual
-                    };
-                }
-                else
-                {
-                    termOperators = new string[]
-                    {
-                        Constant.SearchTermOperator.Equal,
-                        Constant.SearchTermOperator.NotEqual,
-                        Constant.SearchTermOperator.LessThan,
-                        Constant.SearchTermOperator.GreaterThan,
-                        Constant.SearchTermOperator.LessThanOrEqual,
-                        Constant.SearchTermOperator.GreaterThanOrEqual,
-                        Constant.SearchTermOperator.Glob,
-                        Constant.SearchTermOperator.NotGlob
-                    };
+                    case Constant.Control.Counter:
+                    case Constant.DatabaseColumn.DateTime:
+                    case Constant.Control.FixedChoice:
+                        // No globs in Counters as that text field only allows numbers, we can't enter the special characters Glob required
+                        // No globs in Dates the date entries are constrained by the date picker
+                        // No globs in Fixed Choices as choice entries are constrained by menu selection
+                        termOperators = new[]
+                        {
+                            Constant.SearchTermOperator.Equal,
+                            Constant.SearchTermOperator.NotEqual,
+                            Constant.SearchTermOperator.LessThan,
+                            Constant.SearchTermOperator.GreaterThan,
+                            Constant.SearchTermOperator.LessThanOrEqual,
+                            Constant.SearchTermOperator.GreaterThanOrEqual
+                        };
+                        break;
+                    // Relative path only allows = (this will be converted later to a glob to get subfolders) 
+                    case Constant.DatabaseColumn.RelativePath:
+                        // Only equals (actually a glob including subfolders), as other options don't make sense for RelatvePath
+                        termOperators = new[]
+                        {
+                            Constant.SearchTermOperator.Equal,
+                        };
+                        break;
+                    // Only equals and not equals (For relative path this will be converted later to a glob to get subfolders) 
+                    case Constant.DatabaseColumn.DeleteFlag:
+                    case Constant.Control.Flag:
+                        // Only equals and not equals in Flags, as other options don't make sense for booleans
+                        termOperators = new[]
+                        {
+                            Constant.SearchTermOperator.Equal,
+                            Constant.SearchTermOperator.NotEqual
+                        };
+                        break;
+                    default:
+                        termOperators = new[]
+                        {
+                            Constant.SearchTermOperator.Equal,
+                            Constant.SearchTermOperator.NotEqual,
+                            Constant.SearchTermOperator.LessThan,
+                            Constant.SearchTermOperator.GreaterThan,
+                            Constant.SearchTermOperator.LessThanOrEqual,
+                            Constant.SearchTermOperator.GreaterThanOrEqual,
+                            Constant.SearchTermOperator.Glob,
+                            Constant.SearchTermOperator.NotGlob
+                        };
+                        break;
                 }
 
                 // term operator combo box
@@ -402,175 +403,181 @@ namespace Timelapse.Dialog
                 Grid.SetColumn(operatorsComboBox, CustomSelectionWithEpisodes.OperatorColumn);
                 this.SearchTerms.Children.Add(operatorsComboBox);
 
-                // Value column: The value used for comparison in the search
-                // Notes and Counters both uses a text field, so they can be constructed as a textbox
-                // However, counter textboxes are modified to only allow integer input (both direct typing or pasting are checked)
-                if (controlType == Constant.DatabaseColumn.DateTime)
+                switch (controlType)
                 {
-                    DateTime dateTime = this.database.CustomSelection.GetDateTimePLAINVERSION(gridRowIndex - 1);
-                    // The DateTime Picker is set to show only the date portion
-                    DateTimePicker dateValue = new DateTimePicker()
+                    // Value column: The value used for comparison in the search
+                    // Notes and Counters both uses a text field, so they can be constructed as a textbox
+                    // However, counter textboxes are modified to only allow integer input (both direct typing or pasting are checked)
+                    case Constant.DatabaseColumn.DateTime:
                     {
-                        FontWeight = FontWeights.Normal,
-                        Format = DateTimeFormat.Custom,
-                        FormatString = Constant.Time.DateFormat,
-                        IsEnabled = searchTerm.UseForSearching,
-                        Width = DefaultControlWidth,
-                        CultureInfo = CultureInfo.CreateSpecificCulture("en-US"),
-                        Value = dateTime,
-                        TimePickerVisibility = Visibility.Collapsed
-                    };
-                    // Remember the DateTime controls so we can switch whether they show Date or Time when the CheckboxUseTime is checked/unchecked
-                    if (this.dateTimeControl1 == null)
-                    {
-                        // must be the first dateValue
-                        this.dateTimeControl1 = dateValue;
-                    }
-                    else
-                    {
-                        // must be the 2nd dateValue
-                        this.dateTimeControl2 = dateValue;
-                    }
-                    dateValue.ValueChanged += this.DateTime_SelectedDateChanged;
-                    Grid.SetRow(dateValue, gridRowIndex);
-                    Grid.SetColumn(dateValue, CustomSelectionWithEpisodes.ValueColumn);
-                    this.SearchTerms.Children.Add(dateValue);
-                }
-                else if (controlType == Constant.DatabaseColumn.RelativePath)
-                {
-                    // Relative path uses a dropdown that shows existing folders
-                    ComboBox comboBoxValue = new ComboBox()
-                    {
-                        FontWeight = FontWeights.Normal,
-                        IsEnabled = searchTerm.UseForSearching,
-                        Width = CustomSelectionWithEpisodes.DefaultControlWidth,
-                        Height = 25,
-                        Margin = thickness,
-
-                    };
-                    // Create the dropdown menu containing only folders with images in it
-                    Arguments arguments = GlobalReferences.MainWindow.Arguments;
-                    List<string> newFolderList;
-                    if (false == arguments.ConstrainToRelativePath)
-                    {
-                        // We are not constrained to a particular relative path
-                        newFolderList = this.database.GetFoldersFromRelativePaths();
-                        comboBoxValue.ItemsSource = newFolderList;
-                    }
-                    else
-                    {
-                        // We are constrained to a particular relative path
-                        // Generate a folder list that is just the relativePath and its sub-folders
-                        newFolderList = new List<string>();
-                        foreach (string folder in this.database.GetFoldersFromRelativePaths())
+                        DateTime dateTime = this.database.CustomSelection.GetDateTimePLAINVERSION(gridRowIndex - 1);
+                        // The DateTime Picker is set to show only the date portion
+                        DateTimePicker dateValue = new DateTimePicker()
                         {
-                            // Add the folder to the menu only if it isn't constrained by the relative path arguments
-                            if (arguments.ConstrainToRelativePath && !(folder == arguments.RelativePath || folder.StartsWith(arguments.RelativePath + @"\")))
-                            {
-                                continue;
-                            }
-                            newFolderList.Add(folder);
-                        }
-                        comboBoxValue.ItemsSource = newFolderList;
-
-                    }
-                    // Set the relativepath item to the current relative path search term
-                    if (newFolderList.Count > 0)
-                    {
-                        if (comboBoxValue.Items.Contains(searchTerm.DatabaseValue))
+                            FontWeight = FontWeights.Normal,
+                            Format = DateTimeFormat.Custom,
+                            FormatString = Constant.Time.DateFormat,
+                            IsEnabled = searchTerm.UseForSearching,
+                            Width = DefaultControlWidth,
+                            CultureInfo = CultureInfo.CreateSpecificCulture("en-US"),
+                            Value = dateTime,
+                            TimePickerVisibility = Visibility.Collapsed
+                        };
+                        // Remember the DateTime controls so we can switch whether they show Date or Time when the CheckboxUseTime is checked/unchecked
+                        if (this.dateTimeControl1 == null)
                         {
-                            comboBoxValue.SelectedItem = searchTerm.DatabaseValue;
+                            // must be the first dateValue
+                            this.dateTimeControl1 = dateValue;
                         }
                         else
                         {
-                            comboBoxValue.SelectedIndex = 0;
+                            // must be the 2nd dateValue
+                            this.dateTimeControl2 = dateValue;
                         }
-                        searchTerm.DatabaseValue = (string)comboBoxValue.SelectedValue;
+                        dateValue.ValueChanged += this.DateTime_SelectedDateChanged;
+                        Grid.SetRow(dateValue, gridRowIndex);
+                        Grid.SetColumn(dateValue, CustomSelectionWithEpisodes.ValueColumn);
+                        this.SearchTerms.Children.Add(dateValue);
+                        break;
                     }
-                    comboBoxValue.SelectionChanged += this.FixedChoice_SelectionChanged;
-                    Grid.SetRow(comboBoxValue, gridRowIndex);
-                    Grid.SetColumn(comboBoxValue, CustomSelectionWithEpisodes.ValueColumn);
-                    this.SearchTerms.Children.Add(comboBoxValue);
-                }
-                else if (controlType == Constant.DatabaseColumn.File ||
-                         controlType == Constant.Control.Counter ||
-                         controlType == Constant.Control.Note)
-                {
-                    AutocompleteTextBox textBoxValue = new AutocompleteTextBox()
+                    case Constant.DatabaseColumn.RelativePath:
                     {
-                        FontWeight = FontWeights.Normal,
-                        Autocompletions = null,
-                        IsEnabled = searchTerm.UseForSearching,
-                        Text = searchTerm.DatabaseValue,
-                        Margin = thickness,
-                        Width = CustomSelectionWithEpisodes.DefaultControlWidth,
-                        Height = 22,
-                        TextWrapping = TextWrapping.NoWrap,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        VerticalContentAlignment = VerticalAlignment.Center
-                    };
-                    if (controlType == Constant.Control.Note)
-                    {
-                        // Add existing autocompletions for this control
-                        textBoxValue.Autocompletions = this.dataEntryControls.AutocompletionGetForNote(searchTerm.DataLabel);
+                        // Relative path uses a dropdown that shows existing folders
+                        ComboBox comboBoxValue = new ComboBox()
+                        {
+                            FontWeight = FontWeights.Normal,
+                            IsEnabled = searchTerm.UseForSearching,
+                            Width = CustomSelectionWithEpisodes.DefaultControlWidth,
+                            Height = 25,
+                            Margin = thickness,
+
+                        };
+                        // Create the dropdown menu containing only folders with images in it
+                        Arguments arguments = GlobalReferences.MainWindow.Arguments;
+                        List<string> newFolderList;
+                        if (false == arguments.ConstrainToRelativePath)
+                        {
+                            // We are not constrained to a particular relative path
+                            newFolderList = this.database.GetFoldersFromRelativePaths();
+                            comboBoxValue.ItemsSource = newFolderList;
+                        }
+                        else
+                        {
+                            // We are constrained to a particular relative path
+                            // Generate a folder list that is just the relativePath and its sub-folders
+                            newFolderList = new List<string>();
+                            foreach (string folder in this.database.GetFoldersFromRelativePaths())
+                            {
+                                // Add the folder to the menu only if it isn't constrained by the relative path arguments
+                                if (arguments.ConstrainToRelativePath && !(folder == arguments.RelativePath || folder.StartsWith(arguments.RelativePath + @"\")))
+                                {
+                                    continue;
+                                }
+                                newFolderList.Add(folder);
+                            }
+                            comboBoxValue.ItemsSource = newFolderList;
+
+                        }
+                        // Set the relativepath item to the current relative path search term
+                        if (newFolderList.Count > 0)
+                        {
+                            if (comboBoxValue.Items.Contains(searchTerm.DatabaseValue))
+                            {
+                                comboBoxValue.SelectedItem = searchTerm.DatabaseValue;
+                            }
+                            else
+                            {
+                                comboBoxValue.SelectedIndex = 0;
+                            }
+                            searchTerm.DatabaseValue = (string)comboBoxValue.SelectedValue;
+                        }
+                        comboBoxValue.SelectionChanged += this.FixedChoice_SelectionChanged;
+                        Grid.SetRow(comboBoxValue, gridRowIndex);
+                        Grid.SetColumn(comboBoxValue, CustomSelectionWithEpisodes.ValueColumn);
+                        this.SearchTerms.Children.Add(comboBoxValue);
+                        break;
                     }
-
-                    // The following is specific only to Counters
-                    if (controlType == Constant.Control.Counter)
+                    case Constant.DatabaseColumn.File:
+                    case Constant.Control.Counter:
+                    case Constant.Control.Note:
                     {
-                        textBoxValue.PreviewTextInput += this.Counter_PreviewTextInput;
-                        DataObject.AddPastingHandler(textBoxValue, this.Counter_Paste);
+                        AutocompleteTextBox textBoxValue = new AutocompleteTextBox()
+                        {
+                            FontWeight = FontWeights.Normal,
+                            Autocompletions = null,
+                            IsEnabled = searchTerm.UseForSearching,
+                            Text = searchTerm.DatabaseValue,
+                            Margin = thickness,
+                            Width = CustomSelectionWithEpisodes.DefaultControlWidth,
+                            Height = 22,
+                            TextWrapping = TextWrapping.NoWrap,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            VerticalContentAlignment = VerticalAlignment.Center
+                        };
+                        if (controlType == Constant.Control.Note)
+                        {
+                            // Add existing autocompletions for this control
+                            textBoxValue.Autocompletions = this.dataEntryControls.AutocompletionGetForNote(searchTerm.DataLabel);
+                        }
+
+                        // The following is specific only to Counters
+                        if (controlType == Constant.Control.Counter)
+                        {
+                            textBoxValue.PreviewTextInput += Counter_PreviewTextInput;
+                            DataObject.AddPastingHandler(textBoxValue, this.Counter_Paste);
+                        }
+                        textBoxValue.TextChanged += this.NoteOrCounter_TextChanged;
+
+                        Grid.SetRow(textBoxValue, gridRowIndex);
+                        Grid.SetColumn(textBoxValue, CustomSelectionWithEpisodes.ValueColumn);
+                        this.SearchTerms.Children.Add(textBoxValue);
+                        break;
                     }
-                    textBoxValue.TextChanged += this.NoteOrCounter_TextChanged;
-
-                    Grid.SetRow(textBoxValue, gridRowIndex);
-                    Grid.SetColumn(textBoxValue, CustomSelectionWithEpisodes.ValueColumn);
-                    this.SearchTerms.Children.Add(textBoxValue);
-                }
-                else if (controlType == Constant.Control.FixedChoice)
-                {
-                    // FixedChoice presents combo boxes, so they can be constructed the same way
-                    ComboBox comboBoxValue = new ComboBox()
+                    case Constant.Control.FixedChoice:
                     {
-                        FontWeight = FontWeights.Normal,
-                        IsEnabled = searchTerm.UseForSearching,
-                        Width = CustomSelectionWithEpisodes.DefaultControlWidth,
-                        Margin = thickness,
+                        // FixedChoice presents combo boxes, so they can be constructed the same way
+                        ComboBox comboBoxValue = new ComboBox()
+                        {
+                            FontWeight = FontWeights.Normal,
+                            IsEnabled = searchTerm.UseForSearching,
+                            Width = CustomSelectionWithEpisodes.DefaultControlWidth,
+                            Margin = thickness,
 
-                        // Create the dropdown menu 
-                        ItemsSource = searchTerm.List,
-                        SelectedItem = searchTerm.DatabaseValue
-                    };
-                    comboBoxValue.SelectionChanged += this.FixedChoice_SelectionChanged;
-                    Grid.SetRow(comboBoxValue, gridRowIndex);
-                    Grid.SetColumn(comboBoxValue, CustomSelectionWithEpisodes.ValueColumn);
-                    this.SearchTerms.Children.Add(comboBoxValue);
-                }
-                else if (controlType == Constant.DatabaseColumn.DeleteFlag ||
-                         controlType == Constant.Control.Flag)
-                {
-                    // Flags present checkboxes
-                    CheckBox flagCheckBox = new CheckBox()
+                            // Create the dropdown menu 
+                            ItemsSource = searchTerm.List,
+                            SelectedItem = searchTerm.DatabaseValue
+                        };
+                        comboBoxValue.SelectionChanged += this.FixedChoice_SelectionChanged;
+                        Grid.SetRow(comboBoxValue, gridRowIndex);
+                        Grid.SetColumn(comboBoxValue, CustomSelectionWithEpisodes.ValueColumn);
+                        this.SearchTerms.Children.Add(comboBoxValue);
+                        break;
+                    }
+                    case Constant.DatabaseColumn.DeleteFlag:
+                    case Constant.Control.Flag:
                     {
-                        FontWeight = FontWeights.Normal,
-                        Margin = thickness,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        IsChecked = !String.Equals(searchTerm.DatabaseValue, Constant.BooleanValue.False, StringComparison.OrdinalIgnoreCase),
-                        IsEnabled = searchTerm.UseForSearching
-                    };
-                    flagCheckBox.Checked += this.Flag_CheckedOrUnchecked;
-                    flagCheckBox.Unchecked += this.Flag_CheckedOrUnchecked;
+                        // Flags present checkboxes
+                        CheckBox flagCheckBox = new CheckBox()
+                        {
+                            FontWeight = FontWeights.Normal,
+                            Margin = thickness,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            HorizontalAlignment = HorizontalAlignment.Left,
+                            IsChecked = !String.Equals(searchTerm.DatabaseValue, Constant.BooleanValue.False, StringComparison.OrdinalIgnoreCase),
+                            IsEnabled = searchTerm.UseForSearching
+                        };
+                        flagCheckBox.Checked += this.Flag_CheckedOrUnchecked;
+                        flagCheckBox.Unchecked += this.Flag_CheckedOrUnchecked;
 
-                    searchTerm.DatabaseValue = flagCheckBox.IsChecked.Value ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+                        searchTerm.DatabaseValue = flagCheckBox.IsChecked.Value ? Constant.BooleanValue.True : Constant.BooleanValue.False;
 
-                    Grid.SetRow(flagCheckBox, gridRowIndex);
-                    Grid.SetColumn(flagCheckBox, CustomSelectionWithEpisodes.ValueColumn);
-                    this.SearchTerms.Children.Add(flagCheckBox);
-                }
-                else
-                {
-                    throw new NotSupportedException(String.Format("Unhandled control type '{0}'.", controlType));
+                        Grid.SetRow(flagCheckBox, gridRowIndex);
+                        Grid.SetColumn(flagCheckBox, CustomSelectionWithEpisodes.ValueColumn);
+                        this.SearchTerms.Children.Add(flagCheckBox);
+                        break;
+                    }
+                    default:
+                        throw new NotSupportedException($"Unhandled control type '{controlType}'.");
                 }
 
                 if (searchTerm.DataLabel == Constant.DatabaseColumn.DateTime && firstDateTimeControlSeen == false)
@@ -682,7 +689,7 @@ namespace Timelapse.Dialog
             // Separator
             Separator separator = new Separator()
             {
-                Width = Double.NaN
+                Width = double.NaN
             };
 
             // Haader text
@@ -697,7 +704,7 @@ namespace Timelapse.Dialog
             StackPanel spAnd = new StackPanel()
             {
                 Orientation = Orientation.Horizontal,
-                Width = Double.NaN
+                Width = double.NaN
             };
 
             TextBlock tbAnd = new TextBlock()
@@ -731,7 +738,7 @@ namespace Timelapse.Dialog
             {
                 Orientation = Orientation.Vertical,
                 Margin = new Thickness(10, 0, 0, 0),
-                Width = Double.NaN
+                Width = double.NaN
             };
 
             sp.Children.Add(separator);
@@ -748,7 +755,7 @@ namespace Timelapse.Dialog
             // Separator
             Separator separator = new Separator()
             {
-                Width = Double.NaN
+                Width = double.NaN
             };
 
             // Haader text
@@ -764,7 +771,7 @@ namespace Timelapse.Dialog
             {
                 Orientation = Orientation.Vertical,
                 Margin = new Thickness(10, 0, 0, 0),
-                Width = Double.NaN
+                Width = double.NaN
             };
 
             sp.Children.Add(separator);
@@ -788,19 +795,25 @@ namespace Timelapse.Dialog
         // - update the UI to activate or deactivate (or show or hide) its various search terms
         private void Select_CheckedOrUnchecked(object sender, RoutedEventArgs args)
         {
-            CheckBox select = sender as CheckBox;
+            if (sender is CheckBox select == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
             int row = Grid.GetRow(select);  // And you have the row number...
 
             SearchTerm searchterms = this.database.CustomSelection.SearchTerms[row - 1];
-            searchterms.UseForSearching = select.IsChecked.Value;
+            searchterms.UseForSearching = select.IsChecked == true;
 
             TextBlock label = this.GetGridElement<TextBlock>(CustomSelectionWithEpisodes.LabelColumn, row);
             ComboBox expression = this.GetGridElement<ComboBox>(CustomSelectionWithEpisodes.OperatorColumn, row);
             UIElement value = this.GetGridElement<UIElement>(CustomSelectionWithEpisodes.ValueColumn, row);
 
-            label.FontWeight = select.IsChecked.Value ? FontWeights.DemiBold : FontWeights.Normal;
-            expression.IsEnabled = select.IsChecked.Value;
-            value.IsEnabled = select.IsChecked.Value;
+            label.FontWeight = select.IsChecked == true ? FontWeights.DemiBold : FontWeights.Normal;
+            expression.IsEnabled = select.IsChecked == true;
+            value.IsEnabled = select.IsChecked == true;
 
             this.UpdateSearchDialogFeedback();
         }
@@ -810,7 +823,12 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void Operator_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            ComboBox comboBox = sender as ComboBox;
+            if (sender is ComboBox comboBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             int row = Grid.GetRow(comboBox);  // Get the row number...
             this.database.CustomSelection.SearchTerms[row - 1].Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
             this.UpdateSearchDialogFeedback();
@@ -821,14 +839,19 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void NoteOrCounter_TextChanged(object sender, TextChangedEventArgs args)
         {
-            TextBox textBox = sender as TextBox;
+            if (sender is TextBox textBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             int row = Grid.GetRow(textBox);  // Get the row number...
             this.database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
             this.UpdateSearchDialogFeedback();
         }
 
         // Value (Counter) Helper function: textbox accept only typed numbers 
-        private void Counter_PreviewTextInput(object sender, TextCompositionEventArgs args)
+        private static void Counter_PreviewTextInput(object sender, TextCompositionEventArgs args)
         {
             args.Handled = IsNumbersOnly(args.Text);
         }
@@ -836,7 +859,11 @@ namespace Timelapse.Dialog
         // Value (DateTime): we need to construct a string DateTime from it
         private void DateTime_SelectedDateChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
         {
-            DateTimePicker datePicker = sender as DateTimePicker;
+            if (sender is DateTimePicker datePicker == false)
+            {
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             if (datePicker.Value.HasValue)
             {
                 int row = Grid.GetRow(datePicker);
@@ -853,7 +880,13 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void FixedChoice_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            ComboBox comboBox = sender as ComboBox;
+            if (sender is ComboBox comboBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
             int row = Grid.GetRow(comboBox);  // Get the row number...
             if (comboBox.SelectedValue == null)
             {
@@ -868,7 +901,12 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria 
         private void Flag_CheckedOrUnchecked(object sender, RoutedEventArgs e)
         {
-            CheckBox checkBox = sender as CheckBox;
+            if(sender is CheckBox checkBox == false)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             int row = Grid.GetRow(checkBox);  // Get the row number...
             this.database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkBox.IsChecked.ToString().ToLower(); // Set the corresponding value to the current selection
             this.UpdateSearchDialogFeedback();
@@ -923,7 +961,7 @@ namespace Timelapse.Dialog
 
             // Enable  the reset button if at least one search term (including detections) is enabled
             this.ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected
-                                                    || (bool)this.ShowMissingDetectionsCheckbox.IsChecked;
+                                                    || this.ShowMissingDetectionsCheckbox.IsChecked == true;
 
             // Enable the and/or radio buttons if more than one non-standard selection was made
             this.RadioButtonTermCombiningAnd.IsEnabled = multipleNonStandardSelectionsMade > 1;
@@ -970,18 +1008,13 @@ namespace Timelapse.Dialog
                 return;
             }
             // Enable or disable the controls depending on the various checkbox states
-            this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
+            this.EnableDetectionControls(this.UseDetectionsCheckbox.IsChecked == true);
 
             this.SetDetectionCriteria();
             this.InitiateShowCountsOfMatchingFiles();
         }
 
-        private void SetDetectionCriteria()
-        {
-            SetDetectionCriteria(false);
-        }
-
-        private void SetDetectionCriteria(bool resetSlidersIfNeeded)
+        private void SetDetectionCriteria(bool resetSlidersIfNeeded = false)
         {
             if (this.IsLoaded == false || this.dontInvoke)
             {
@@ -1002,18 +1035,18 @@ namespace Timelapse.Dialog
             GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = this.DetectionSelections.UseRecognition // && this.DetectionSelections.RecognitionType != RecognitionType.Classification
                 ? confidenceBounds.Item1
                 : 1;
-            // System.Diagnostics.Debug.Print(GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
+            // Debug.Print(GlobalReferences.TimelapseState.BoundingBoxThresholdOveride.ToString());
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
-            this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
+            this.EnableDetectionControls(this.UseDetectionsCheckbox.IsChecked == true);
         }
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            this.database.CustomSelection.ShowMissingDetections = (bool)this.ShowMissingDetectionsCheckbox.IsChecked;
+            this.database.CustomSelection.ShowMissingDetections = this.ShowMissingDetectionsCheckbox.IsChecked == true;
             this.SetDetectionCriteria();
             this.InitiateShowCountsOfMatchingFiles();
         }
-        private void DetectionCategoryComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void DetectionCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (this.IsLoaded == false)
             {
@@ -1103,7 +1136,7 @@ namespace Timelapse.Dialog
                     this.DetectionSelections.InterpretAllDetectionsAsEmpty = false;
                     string detectionCategory = this.database.GetDetectionCategoryFromLabel((string)this.DetectionCategoryComboBox.SelectedItem);
 
-                    if (String.IsNullOrWhiteSpace(detectionCategory))
+                    if (string.IsNullOrWhiteSpace(detectionCategory))
                     {
                         // CLASSIFICATION
                         this.DetectionSelections.RecognitionType = RecognitionType.Classification;
@@ -1161,11 +1194,27 @@ namespace Timelapse.Dialog
 
             if (this.DetectionSelections.RecognitionType == RecognitionType.Detection)
             {
-                this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                if (this.DetectionConfidenceSpinnerLower.Value != null)
+                {
+                    this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                }
+                else
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(this.DetectionConfidenceSpinnerLower.Value));
+                }
             }
             else if (this.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
-                this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                if (this.DetectionConfidenceSpinnerLower.Value != null)
+                {
+                    this.DetectionSelections.CurrentDetectionThreshold = (double)this.DetectionConfidenceSpinnerLower.Value;
+                }
+                else
+                {
+                    // Shouldn't happen
+                    TracePrint.NullException(nameof(this.DetectionConfidenceSpinnerLower.Value));
+                }
             }
             this.InitiateShowCountsOfMatchingFiles();
         }
@@ -1262,7 +1311,7 @@ namespace Timelapse.Dialog
             this.DetectionGroupBox.IsEnabled = !this.database.CustomSelection.ShowMissingDetections;
             this.DetectionGroupBox.Background = this.database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
 
-            if ((bool)this.ShowMissingDetectionsCheckbox.IsChecked || (bool)this.UseDetectionsCheckbox.IsChecked)
+            if (this.ShowMissingDetectionsCheckbox.IsChecked == true || this.UseDetectionsCheckbox.IsChecked == true)
             {
                 this.ResetToAllImagesButton.IsEnabled = true;
             }
@@ -1274,7 +1323,7 @@ namespace Timelapse.Dialog
             // ALso need to restore state of this checkbox between repeated uses in Window_Loaded.
             this.DetectionSelections.RankByConfidence = this.RankByConfidenceCheckbox.IsChecked == true;
             this.InitiateShowCountsOfMatchingFiles();
-            this.EnableDetectionControls((bool)this.UseDetectionsCheckbox.IsChecked);
+            this.EnableDetectionControls(this.UseDetectionsCheckbox.IsChecked == true);
         }
         #endregion
 
@@ -1385,7 +1434,6 @@ namespace Timelapse.Dialog
             string value = row.GetValueDisplayString(dataLabel);
             return (null != value && rgx.IsMatch(value));
         }
-
         #endregion
     }
 }

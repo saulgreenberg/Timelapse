@@ -83,7 +83,7 @@ namespace Timelapse.Util
                 this.BookmarkTranslation = new Point(registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkTranslationX, 1.0), registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkTranslationY, 1.0));
                 this.BoundingBoxAnnotate = registryKey.GetBoolean(Constant.WindowRegistryKeys.BoundingBoxAnnotate, false);
                 this.BoundingBoxColorBlindFriendlyColors = registryKey.GetBoolean(Constant.WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, false);
-                this.CSVDateTimeOptions = registryKey.GetEnum<CSVDateTimeOptionsEnum>(Constant.WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn);
+                this.CSVDateTimeOptions = registryKey.GetEnum(Constant.WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn);
                 if (this.CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeUTCWithOffset)
                 {
                     // We no longer use the above option, so revert it to the default CSV setting
@@ -92,7 +92,7 @@ namespace Timelapse.Util
                 }
                 this.CSVIncludeFolderColumn = registryKey.GetBoolean(Constant.WindowRegistryKeys.CSVIncludeFolderColumn, true);
                 this.CSVInsertSpaceBeforeDates = registryKey.GetBoolean(Constant.WindowRegistryKeys.CSVInsertSpaceBeforeDates, true);
-                this.CustomSelectionTermCombiningOperator = registryKey.GetEnum<CustomSelectionOperatorEnum>(Constant.WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionOperatorEnum.And);
+                this.CustomSelectionTermCombiningOperator = registryKey.GetEnum(Constant.WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionOperatorEnum.And);
                 this.DarkPixelRatioThreshold = registryKey.GetDouble(Constant.WindowRegistryKeys.DarkPixelRatio, Constant.ImageValues.DarkPixelRatioThresholdDefault);
                 this.DarkPixelThreshold = registryKey.GetInteger(Constant.WindowRegistryKeys.DarkPixelThreshold, Constant.ImageValues.DarkPixelThresholdDefault);
                 this.DeleteFolderManagement = (DeleteFolderManagementEnum)registryKey.GetInteger(Constant.WindowRegistryKeys.DeleteFolderManagementValue, (int)DeleteFolderManagementEnum.ManualDelete);

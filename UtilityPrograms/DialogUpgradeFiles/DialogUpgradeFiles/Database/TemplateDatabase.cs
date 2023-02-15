@@ -1,11 +1,11 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DialogUpgradeFiles.Util;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -57,10 +57,7 @@ namespace DialogUpgradeFiles.Database
             }
             finally
             {
-                if (disposableTemplateDB != null)
-                {
-                    disposableTemplateDB.Dispose();
-                }
+                disposableTemplateDB?.Dispose();
             }
         }
 
@@ -81,10 +78,7 @@ namespace DialogUpgradeFiles.Database
                 //we do this by checking the database integrity(which may raise an internal exception) and if that is ok, by checking if it has a templatetable.
                 if (templateDatabase.Database.PragmaGetQuickCheck() == false || templateDatabase.TableExists(Constant.DBTables.Template) == false)
                 {
-                    if (templateDatabase != null)
-                    {
-                        templateDatabase.Dispose();
-                    }
+                    templateDatabase.Dispose();
                     return null;
                 }
                 // if it's an existing database check if it needs updating to current structure and load data tables
@@ -368,11 +362,11 @@ namespace DialogUpgradeFiles.Database
             // If the data label name and/or the label exists, keep incrementing the count that is appended to the end
             // of the field type until it forms a unique data label name
             int dataLabelUniqueIdentifier = 0;
-            string nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier.ToString();
+            string nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier;
             while (dataLabels.Contains(nextDataLabel) || labels.Contains(nextDataLabel))
             {
                 ++dataLabelUniqueIdentifier;
-                nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier.ToString();
+                nextDataLabel = dataLabelPrefix + dataLabelUniqueIdentifier;
             }
 
             return nextDataLabel;
@@ -390,11 +384,11 @@ namespace DialogUpgradeFiles.Database
             // If the  label name exists, keep incrementing the count that is appended to the end
             // of the field type until it forms a unique data label name
             int labelUniqueIdentifier = 0;
-            string nextLabel = labelPrefix + labelUniqueIdentifier.ToString();
+            string nextLabel = labelPrefix + labelUniqueIdentifier;
             while (labels.Contains(nextLabel))
             {
                 ++labelUniqueIdentifier;
-                nextLabel = labelPrefix + labelUniqueIdentifier.ToString();
+                nextLabel = labelPrefix + labelUniqueIdentifier;
             }
 
             return nextLabel;
@@ -801,9 +795,6 @@ namespace DialogUpgradeFiles.Database
                     case Constant.Control.SpreadsheetOrder:
                         control.SpreadsheetOrder = newOrder;
                         break;
-                    default:
-                        // Ignore unhandled columns, as these are the ones that are not visible   
-                        break;
                 }
             }
             // sync new order to database
@@ -877,10 +868,7 @@ namespace DialogUpgradeFiles.Database
 
             if (disposing)
             {
-                if (this.Controls != null)
-                {
-                    this.Controls.Dispose();
-                }
+                this.Controls?.Dispose();
             }
 
             this.disposed = true;

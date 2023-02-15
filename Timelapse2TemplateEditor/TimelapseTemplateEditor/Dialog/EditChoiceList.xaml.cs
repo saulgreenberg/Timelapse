@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;
+using Timelapse.Util;
 
 namespace Timelapse.Editor.Dialog
 {
-    public partial class EditChoiceList : Window
+    public partial class EditChoiceList
     {
-        private static readonly string[] NewLineDelimiter = { Environment.NewLine };
         private readonly UIElement PositionReference;
         public Choices Choices { get; private set; }
 
@@ -40,6 +38,11 @@ namespace Timelapse.Editor.Dialog
             if (Application.Current != null)
             {
                 double choiceRightSide = this.Left + this.ActualWidth;
+                if (Application.Current.MainWindow == null)
+                {
+                    TracePrint.NullException(nameof(Application.Current.MainWindow));
+                    return;
+                }
                 double mainWindowRightSide = Application.Current.MainWindow.Left + Application.Current.MainWindow.ActualWidth;
                 if (choiceRightSide > mainWindowRightSide)
                 {
@@ -58,24 +61,6 @@ namespace Timelapse.Editor.Dialog
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
-        }
-
-        // Transform the list by trimming leading and trailing white space for each line, removing empty lines, and removing duplicate items
-        private static string TrimLinesAndRemoveEmptyLines(string textlist)
-        {
-            List<string> trimmedchoices = new List<string>();
-            string trimmedchoice;
-            List<string> choices = new List<string>(textlist.Split(NewLineDelimiter, StringSplitOptions.RemoveEmptyEntries));
-
-            foreach (string choice in choices)
-            {
-                trimmedchoice = choice.Trim();
-                if (String.IsNullOrWhiteSpace(choice) == false && trimmedchoices.Contains(trimmedchoice) == false)
-                {
-                    trimmedchoices.Add(trimmedchoice);
-                }
-            }
-            return string.Join(string.Join(String.Empty, NewLineDelimiter), trimmedchoices);
         }
     }
 }

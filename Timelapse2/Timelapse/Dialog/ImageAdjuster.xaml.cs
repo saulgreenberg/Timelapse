@@ -9,8 +9,8 @@ using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
-    ///// <summary>
-    ///// Interaction logic for ImageAdjuster.xaml
+    /// <summary>
+    /// Interaction logic for ImageAdjuster.xaml
     /// </summary>
     public partial class ImageAdjuster
     {
@@ -123,11 +123,7 @@ namespace Timelapse.Dialog
         #region Update Image Parameters
         // Update the image processing parameters to those in the checkboxes and sliders
         // Then generate an event to inform the Markable Canvase to update the image according to those paraemeters
-        private void UpdateImageParametersAndGenerateEvent()
-        {
-            this.UpdateImageParametersAndGenerateEvent(false);
-        }
-        private void UpdateImageParametersAndGenerateEvent(bool forceUpdate)
+        private void UpdateImageParametersAndGenerateEvent(bool forceUpdate = false)
         {
             //this.AdjustLook();
             this.EnableControls(true);
@@ -172,7 +168,7 @@ namespace Timelapse.Dialog
 
         #region UI Callbacks - image processing parameters altered in the UI
         // Send keboard events to the markable canvas, mostly so that the navigation keys will work.
-        private void Control_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Control_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             Keyboard.Focus(GlobalReferences.MainWindow.MarkableCanvas);
             GlobalReferences.MainWindow.MarkableCanvas.RaiseEvent(e);

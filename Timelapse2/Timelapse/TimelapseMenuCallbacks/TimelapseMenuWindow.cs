@@ -1,7 +1,6 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
 using Timelapse.Util;
+using MenuItem = System.Windows.Controls.MenuItem;
 
 namespace Timelapse
 {
@@ -24,7 +23,11 @@ namespace Timelapse
         #region Restore a particular window layout as identified in the menu's tag
         private void MenuItemWindowRestore_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem mi = sender as MenuItem;
+            if (!(sender is MenuItem mi))
+            {
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
             string layout = mi.Tag.ToString();
             this.AvalonLayout_TryLoad(layout);
 
@@ -41,17 +44,24 @@ namespace Timelapse
         #endregion
 
         #region Save a particular window layout, where the layout name is identified in the menu's tag
+
         private void MenuItemWindowSave_Click(object sender, RoutedEventArgs e)
         {
             // Save the window layout to the registry, where the registry key name is found in the menu tag
             // Note that the data entry control panel must be visible in order to save its location.
             // So if its not visible, temporarily make it visible.
-            MenuItem mi = sender as MenuItem;
+            if (!(sender is MenuItem mi))
+            {
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+
             bool visibilityState = this.DataEntryControlPanel.IsVisible;
             this.DataEntryControlPanel.IsVisible = true;
             this.AvalonLayout_TrySave(mi.Tag.ToString());
             this.DataEntryControlPanel.IsVisible = visibilityState;
         }
-        #endregion
     }
+    #endregion
 }
+

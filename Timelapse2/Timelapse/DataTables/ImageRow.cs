@@ -258,7 +258,7 @@ namespace Timelapse.Database
 
                     foreach (KeyValuePair<string, string> kvp in exifData)
                     {
-                        metadata.Add(kvp.Key, new Timelapse.Util.ImageMetadata(String.Empty, kvp.Key, kvp.Value));
+                        metadata.Add(kvp.Key, new ImageMetadata(String.Empty, kvp.Key, kvp.Value));
                     }
                 }
 
@@ -299,7 +299,7 @@ namespace Timelapse.Database
                     return DateTimeAdjustmentEnum.MetadataNotUsed;
                 }
 
-                if (exifSubIfd.TryGetDateTime(ExifSubIfdDirectory.TagDateTimeOriginal, out DateTime dateTimeOriginal) == false)
+                if (exifSubIfd.TryGetDateTime(ExifDirectoryBase.TagDateTimeOriginal, out DateTime dateTimeOriginal) == false)
                 {
                     // We couldn't read the metadata. In case its a reconyx camera, the fallback is to use the Reconyx-specific metadata 
                     ReconyxHyperFireMakernoteDirectory reconyxMakernote = metadataDirectories.OfType<ReconyxHyperFireMakernoteDirectory>().FirstOrDefault();
@@ -327,7 +327,7 @@ namespace Timelapse.Database
                 // daylight-standard transition occurred but the camera hadn't yet been serviced to put its clock on the new time,
                 // and needs to be reported separately as the change of day in images taken just after midnight is not an indicator
                 // of day-month ordering ambiguity in the image taken metadata.
-                // TODO DT NOTE: I Don't know if this is needed since we did the UTC eliminations
+                // NOTE: I Don't know if this is needed since we did the UTC eliminations
                 bool standardTimeAdjustment = exifDateTime - currentDateTime == TimeSpan.FromHours(1);
 
                 // snap to metadata time and return the extent of the time adjustment
@@ -374,12 +374,12 @@ namespace Timelapse.Database
                 try
                 {
                     // delete the Destination file if it already exists.
-                    Util.FilesFolders.TryDeleteFileIfExists(sourceFilePath);
+                    FilesFolders.TryDeleteFileIfExists(sourceFilePath);
                     return true;
                 }
                 catch (UnauthorizedAccessException exception)
                 {
-                    TracePrint.PrintMessage("Could not delete " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception.ToString());
+                    TracePrint.PrintMessage("Could not delete " + sourceFilePath + Environment.NewLine + exception.Message + ": " + exception);
                     return false;
                 }
             }
@@ -396,12 +396,12 @@ namespace Timelapse.Database
            
             if (System.IO.File.Exists(destinationFilePath))
             {
-                return Util.FilesFolders.TryDeleteFileIfExists(destinationFilePath);
+                return FilesFolders.TryDeleteFileIfExists(destinationFilePath);
             }
 
             // A failure may occur if for some reason we could not move the file, for example, if we have loaded the image in a way that it locks the file.
             // I've changed image loading to avoid this, but its something to watch out for.
-            return Util.FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
+            return FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
         }
         #endregion
 

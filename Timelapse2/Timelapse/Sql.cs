@@ -111,6 +111,7 @@ namespace Timelapse
         public const string SelectCountStarFrom = Sql.SelectCount + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis + Sql.From;
         public const string SelectDistinctCountStarFrom = Sql.SelectDistinctCount + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis + Sql.From;
         public const string SelectExists = " SELECT EXISTS ";
+        public const string SelectNameFromPragmaTableInfo = Sql.Select + Sql.Name + Sql.From + " PRAGMA_TABLE_INFO ";
         public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Sql.Select + Sql.Name + Sql.From + Sql.SqlMaster + Sql.Where + Sql.TypeEqualsTable + Sql.And + Sql.Name + Sql.Equal;
         public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = Sql.SelectCountStarFrom + Sql.SqlMaster + Sql.Where + Sql.TypeEqualsIndex + Sql.And + Sql.Name + Sql.Equal;
         public const string Semicolon = " ; ";
@@ -122,6 +123,7 @@ namespace Timelapse
         public const string Substr = " SUBSTR ";
 
         public const string Real = " REAL ";
+        public const string TBLINFO = " TBLINFO ";
         public const string Text = "TEXT";
         public const string TimeFunction = " Time ";
         public const string Then = " THEN ";
@@ -205,7 +207,7 @@ namespace Timelapse
         /// <summary>
         /// Sql Phrase - Create partial query to return detections
         /// </summary>
-        /// <param name="useCountForm">If true, form is SELECT COUNT vs SELECT</param>
+        /// <param name="selectType"></param>
         /// <returns>
         /// Count Form:  SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
         /// Star Form:   SELECT DataTable.*                     FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
@@ -244,7 +246,7 @@ namespace Timelapse
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="useCountForm"></param>
+        /// <param name="selectType"></param>
         /// <returns>
         /// Count Form:  Select COUNT  ( * )  FROM (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
         /// Star Form:   SELECT  DISTINCT                           DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
@@ -310,6 +312,7 @@ namespace Timelapse
         /// <param name="dataLabel"></param>
         /// <param name="mathOperator"></param>
         /// <param name="value"></param>
+        /// <param name="castAsInteger"></param>
         /// <returns>DataLabel operator "value", e.g., DataLabel > "5"</returns>
         public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value, bool castAsInteger)
         {
@@ -388,7 +391,8 @@ namespace Timelapse
         /// </summary>
         /// <param name="tableName"></param>
         /// <param name="episodeNoteField"></param>
-        public static string CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(string tableName, string episodeNoteField, bool CountOnly)
+        /// <param name="countOnly"></param>
+        public static string CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(string tableName, string episodeNoteField, bool countOnly)
         {
             // using DataTable and Episode,
             // Select Complete form:  String.Format("Select * from DataTable WHERE SUBSTR(DataTable.{0}, 0, instr(DataTable.{0}, ':')) in (Select substr({0}, 0, instr({0}, ':')) From (", episodeNoteField);
@@ -403,7 +407,7 @@ namespace Timelapse
             // FROM 
             // Count form:   
             // Select form:  (
-            string frontwrapper = CountOnly
+            string frontwrapper = countOnly
                 ? Sql.SelectCountStarFrom
                 : Sql.SelectStarFrom;
             frontwrapper += tableName + Sql.Where + Sql.Substr + Sql.OpenParenthesis + tableName + Sql.Dot + episodeNoteField + Sql.Comma + "0" + Sql.Comma
@@ -411,7 +415,7 @@ namespace Timelapse
                                 + Sql.In + Sql.OpenParenthesis + Sql.Select + Sql.Substr + Sql.OpenParenthesis + episodeNoteField + Sql.Comma + "0" + Sql.Comma
                                 + Sql.Instr + Sql.OpenParenthesis + episodeNoteField + Sql.Comma + Sql.Quote(":") + Sql.CloseParenthesis + Sql.CloseParenthesis
                                 + Sql.From;
-            frontwrapper += CountOnly
+            frontwrapper += countOnly
                 ? String.Empty
                 : Sql.OpenParenthesis;
             return frontwrapper;

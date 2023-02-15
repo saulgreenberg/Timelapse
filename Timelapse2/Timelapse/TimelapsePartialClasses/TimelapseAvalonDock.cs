@@ -16,13 +16,13 @@ namespace Timelapse
             if (sender == null || e == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(sender));
                 // Try treating this as a no-op instead of a throw
                 return;
             }
 
-            LayoutAnchorable la = sender as LayoutAnchorable;
+            if (!(sender is LayoutAnchorable la)) return;
             if (la.ContentId == "ContentIDDataEntryControlPanel" && (e.PropertyName == Constant.AvalonDockValues.FloatingWindowFloatingHeightProperty || e.PropertyName == Constant.AvalonDockValues.FloatingWindowFloatingWidthProperty))
             {
                 this.DockingManager_FloatingDataEntryWindowLimitSize();

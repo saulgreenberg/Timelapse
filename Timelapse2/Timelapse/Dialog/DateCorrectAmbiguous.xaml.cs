@@ -42,7 +42,7 @@ namespace Timelapse.Dialog
             // Set up a progress handler that will update the progress bar
             this.InitalizeProgressHandler(this.BusyCancelIndicator);
 
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            Mouse.OverrideCursor = Cursors.Wait;
 
 
             // Find and display the ambiguous dates in the current selected set
@@ -229,7 +229,7 @@ namespace Timelapse.Dialog
             // Show the final message
             if (totalFileCount > 0)
             {
-                this.DoneMessagePanel.Content = "Dates for " + totalFileCount.ToString() + " files were swapped";
+                this.DoneMessagePanel.Content = "Dates for " + totalFileCount + " files were swapped";
             }
             else
             {

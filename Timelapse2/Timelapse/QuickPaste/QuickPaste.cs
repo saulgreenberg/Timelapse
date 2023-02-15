@@ -53,9 +53,6 @@ namespace Timelapse.QuickPaste
                             row.Copyable,
                             row.Type));
                         break;
-                    default:
-                        // Standard controls are not used in quick pastes, as it is unlikely the user will want to alter their contents
-                        break;
                 }
             }
             return quickPasteEntry;
@@ -90,7 +87,7 @@ namespace Timelapse.QuickPaste
             if (fileDatabase == null)
             {
                 // this should not happen
-                TracePrint.PrintStackTrace(1);
+                TracePrint.StackTrace(1);
                 return quickPasteEntries;
                 // Not sure if the above return is effective. We could do the following instead
                 // throw new ArgumentNullException(nameof(fileDatabase));
@@ -166,8 +163,6 @@ namespace Timelapse.QuickPaste
                                 string value = (row.Type == Constant.Control.Flag) ? "False" : String.Empty;
                                 newQuickPasteEntry.Items.Add(new QuickPasteItem(row.DataLabel, row.Label, value, false, row.Type));
                             }
-                            break;
-                        default:
                             break;
                     }
                 }

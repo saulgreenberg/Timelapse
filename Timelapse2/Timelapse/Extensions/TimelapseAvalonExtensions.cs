@@ -147,13 +147,18 @@ namespace Timelapse.Util
             {
                 // Find the screen (if any) that contains the window
                 PresentationSource source = PresentationSource.FromVisual(timelapse);
-
+                if (source == null)
+                {
+                    // Shouldn't happen. If it does, just return the same window rectangle i.e., as a noop.
+                    TracePrint.NullException(nameof(source));
+                    return windowRect;
+                }
                 // The screen contiaing the window
                 Screen screenContainingWindow = null;
 
                 // WPF Coordinates of the screen that contains the window
-                System.Windows.Point screenTopLeft = new System.Windows.Point(0, 0);
-                System.Windows.Point screenBottomRight = new System.Windows.Point(0, 0);
+                Point screenTopLeft = new Point(0, 0);
+                Point screenBottomRight = new Point(0, 0);
 
                 // The primary screen (which we will use in case we can't find a containing window)
                 Screen primaryScreen = null;
@@ -171,6 +176,13 @@ namespace Timelapse.Util
 
                     if (screenContainingWindow != null)
                     {
+                        continue;
+                    }
+
+                    if (source.CompositionTarget == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(source.CompositionTarget));
                         continue;
                     }
 
@@ -195,6 +207,12 @@ namespace Timelapse.Util
                 // If none of the screens contains the window, then we will fit it into the primary screen at the window's width and height at the origin
                 if (screenContainingWindow == null)
                 {
+                    if (primaryScreen == null || source.CompositionTarget == null)
+                    {
+                        // Shouldn't happen. Return the original window as there is nothing we can really do
+                        TracePrint.NullException(nameof(primaryScreen) + " or  " + nameof(source.CompositionTarget));
+                        return windowRect;
+                    }
                     // Get the  coordinates of the currentscreen and transform it into wpf coordinates. 
                     // Note that we subtract the task bar height as well.
                     screenTopLeft.X = primaryScreen.Bounds.Left;
@@ -307,7 +325,7 @@ namespace Timelapse.Util
             }
             catch
             {
-                // System.Diagnostics.Debug.Print("Catch: Problem in TimelapseAvalonExtensions - FitIntoScreen");
+                // Debug.Print("Catch: Problem in TimelapseAvalonExtensions - FitIntoScreen");
                 return new Rect(5, 5, 740, 740);
             }
         }
@@ -442,7 +460,7 @@ namespace Timelapse.Util
             Uri uri = new Uri(resourceFilePath);
             try
             {
-                using (Stream stream = System.Windows.Application.GetResourceStream(uri).Stream)
+                using (Stream stream = System.Windows.Application.GetResourceStream(uri)?.Stream)
                 {
                     serializer.Deserialize(stream);
                 }

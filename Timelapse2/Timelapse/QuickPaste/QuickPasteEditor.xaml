@@ -26,8 +26,8 @@
             <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
                 <TextBlock Name="Note" TextWrapping="Wrap"  HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed" Margin="0,0,10,0">QuickPaste will do nothing: no items are selected as 'Use'.</TextBlock>
-                <Button Name="CancelButton" Grid.Column="1" IsDefault="False"  VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-                <Button Name="OkButton" Grid.Column="1" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+                <Button Name="CancelButton" IsDefault="False"  VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="OkButton"  IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
             </StackPanel>
         </DockPanel>
 

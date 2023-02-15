@@ -75,7 +75,7 @@ namespace Timelapse
                 {
                     // This is a first time load of a ddb, as indicated by the non-empty returned result of the ddb file path to delete.
                     // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
-                    Util.FilesFolders.TryDeleteFileIfExists(results.Item2);
+                    FilesFolders.TryDeleteFileIfExists(results.Item2);
                 }
                 return false;
             }
@@ -203,7 +203,7 @@ namespace Timelapse
                 return;
             }
 
-            if (File.Exists(selectedCSVFilePath) && new System.IO.FileInfo(selectedCSVFilePath).Attributes.HasFlag(System.IO.FileAttributes.ReadOnly))
+            if (File.Exists(selectedCSVFilePath) && new FileInfo(selectedCSVFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
             {
                 // The file exists but its read only...
                 Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);
@@ -328,6 +328,13 @@ namespace Timelapse
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {
+            if (this.DataHandler.ImageCache.Current == null)
+            {
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                Dialogs.MenuFileCantExportCurrentImageDialog(this);
+                return;
+            }
+
             if (!this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
             {
                 // Can't export the currently displayed image as a file
@@ -363,7 +370,7 @@ namespace Timelapse
                     }
                     catch (Exception exception)
                     {
-                        TracePrint.PrintMessage(String.Format("Copy of '{0}' to '{1}' failed. {2}", sourceFile, destFileName, exception.ToString()));
+                        TracePrint.PrintMessage(String.Format("Copy of '{0}' to '{1}' failed. {2}", sourceFile, destFileName, exception));
                         this.StatusBar.SetMessage(String.Format("Could not copy '{0}' for some reason.", sourceFile));
                     }
                 }

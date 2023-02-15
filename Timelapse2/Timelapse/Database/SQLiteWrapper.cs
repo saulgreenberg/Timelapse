@@ -69,7 +69,7 @@ namespace Timelapse.Database
             string query = Sql.CreateTable + tableName + Sql.OpenParenthesis + Environment.NewLine;               // CREATE TABLE <tablename> (
             foreach (SchemaColumnDefinition column in columnDefinitions)
             {
-                query += column.ToString() + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
+                query += column + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
             }
             query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);         // remove last comma / new line and replace with );
             query += Sql.CloseParenthesis + Sql.Semicolon;
@@ -132,7 +132,7 @@ namespace Timelapse.Database
 
         public DataTable GetDataTableFromSelect(string query)
         {
-            // System.Diagnostics.Debug.Print("GetDataTableFromSelect: " + query);
+            // Debug.Print("GetDataTableFromSelect: " + query);
             DataTable dataTable = new DataTable();
             try
             {
@@ -144,7 +144,7 @@ namespace Timelapse.Database
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
                         command.CommandText = query;
-                        //System.Diagnostics.Debug.Print(query);
+                        //Debug.Print(query);
                         using (SQLiteDataReader reader = command.ExecuteReader())
                         {
                             dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
@@ -156,7 +156,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception));
                 return dataTable;
             }
         }
@@ -164,7 +164,7 @@ namespace Timelapse.Database
         // TEST CODE: Interruptable GetDataTableFromSelect
         //public DataTable GetDataTableFromSelect(string query, bool interruptable)
         //{
-        //    // System.Diagnostics.Debug.Print("GetDataTableFromSelect: " + query);
+        //    // Debug.Print("GetDataTableFromSelect: " + query);
         //    DataTable dataTable = new DataTable();
         //    try
         //    {
@@ -175,13 +175,13 @@ namespace Timelapse.Database
         //            if (interruptable) { 
         //                connection.ProgressOps =  10;
         //                connection.Progress += Connection_Progress;
-        //                System.Diagnostics.Debug.Print("Enabled");
+        //                Debug.Print("Enabled");
         //            }
         //            else 
         //            {
         //                connection.ProgressOps = 0;
         //                connection.Progress += null;
-        //                System.Diagnostics.Debug.Print("Disabled");
+        //                Debug.Print("Disabled");
 
         //            }
         //            connection.Open();
@@ -189,7 +189,7 @@ namespace Timelapse.Database
         //            using (SQLiteCommand command = new SQLiteCommand(connection))
         //            {
         //                command.CommandText = query;
-        //                //System.Diagnostics.Debug.Print(query);
+        //                //Debug.Print(query);
         //                using (SQLiteDataReader reader = command.ExecuteReader())
         //                {
         //                    dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
@@ -212,9 +212,9 @@ namespace Timelapse.Database
         //    if (i++ == 10)
         //    {
         //        e.ReturnCode = SQLiteProgressReturnCode.Interrupt;
-        //        System.Diagnostics.Debug.Print("Interrupted: " + i.ToString());
+        //        Debug.Print("Interrupted: " + i.ToString());
         //    }
-        //    else System.Diagnostics.Debug.Print ("Going: " + i.ToString());
+        //    else Debug.Print ("Going: " + i.ToString());
         //}
 
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
@@ -245,7 +245,7 @@ namespace Timelapse.Database
         /// <returns>A value containing the single result.</returns>
         private object GetScalarFromSelect(string query)
         {
-            // System.Diagnostics.Debug.Print("Scalar: " + query);
+            // Debug.Print("Scalar: " + query);
             try
             {
                 using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
@@ -255,7 +255,7 @@ namespace Timelapse.Database
                     {
                         //#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                         command.CommandText = query;
-                        //System.Diagnostics.Debug.Print("Count: " + query);
+                        //Debug.Print("Count: " + query);
                         //#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                         return command.ExecuteScalar();
                     }
@@ -263,7 +263,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetObjectFromSelect: {1}", query, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetObjectFromSelect: {1}", query, exception));
                 return null;
             }
         }
@@ -462,7 +462,7 @@ namespace Timelapse.Database
                 // we have to cater to different formats for integers, NULLS and strings...
                 if (column.Value == null)
                 {
-                    query += String.Format(" {0} = {1}{2}", column.Name.ToString(), Sql.Null, Sql.Comma);
+                    query += String.Format(" {0} = {1}{2}", column.Name, Sql.Null, Sql.Comma);
                 }
                 else
                 {
@@ -624,13 +624,13 @@ namespace Timelapse.Database
                     {
                         command.CommandText = commandString;
                         command.ExecuteNonQuery();
-                        //System.Diagnostics.Debug.Print(commandString);
+                        //Debug.Print(commandString);
                     }
                 }
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing statement '{0}'. in ExecuteNonQuery:{1}", commandString, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing statement '{0}'. in ExecuteNonQuery:{1}", commandString, exception));
             }
         }
 
@@ -692,12 +692,12 @@ namespace Timelapse.Database
                             if (statementsInQuery == 1)
                             {
                                 command.CommandText = Sql.BeginTransaction;
-                                //System.Diagnostics.Debug.Print(command.CommandText);
+                                //Debug.Print(command.CommandText);
                                 command.ExecuteNonQuery();
                             }
 
                             command.CommandText = statement;
-                            //System.Diagnostics.Debug.Print(command.CommandText);
+                            //Debug.Print(command.CommandText);
                             // Note: Its more efficient to do it this way than to send
                             // a bunch of semicolon-separated statements as a single query
                             rowsUpdated += command.ExecuteNonQuery();
@@ -706,7 +706,7 @@ namespace Timelapse.Database
                             if (statementsInQuery > MaxStatementCount)
                             {
                                 command.CommandText = Sql.EndTransaction;
-                                //System.Diagnostics.Debug.Print(command.CommandText);
+                                //Debug.Print(command.CommandText);
                                 rowsUpdated += command.ExecuteNonQuery();
                                 statementsInQuery = 0;
 
@@ -723,7 +723,7 @@ namespace Timelapse.Database
                         if (statementsInQuery != 0)
                         {
                             command.CommandText = Sql.EndTransaction;
-                            //System.Diagnostics.Debug.Print(command.CommandText);
+                            //Debug.Print(command.CommandText);
                             rowsUpdated += command.ExecuteNonQuery();
                         }
                     }
@@ -731,7 +731,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure near executing statement '{0}' n ExecuteNonQueryWrappedInBeginEnd. {1}", mostRecentStatement, exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure near executing statement '{0}' n ExecuteNonQueryWrappedInBeginEnd. {1}", mostRecentStatement, exception));
             }
         }
         #endregion
@@ -781,7 +781,7 @@ namespace Timelapse.Database
                                 break;
                             case 1:  // name (Column Name)
                             case 2:  // type (Column type)
-                                existingColumnDefinition += reader[field].ToString() + " ";
+                                existingColumnDefinition += reader[field] + " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (reader[field].ToString() != "0")
@@ -793,7 +793,7 @@ namespace Timelapse.Database
                                 string s = reader[field].ToString();
                                 if (!string.IsNullOrEmpty(s))
                                 {
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 break;
                             case 5:  // pk (Column is part of the primary key)
@@ -805,7 +805,7 @@ namespace Timelapse.Database
                             default:
                                 // This should never happen
                                 // But if it does, we just ignore it
-                                System.Diagnostics.Debug.Print("Unknown Field: " + field.ToString());
+                                Debug.Print("Unknown Field: " + field);
                                 break;
                         }
                     }
@@ -856,7 +856,7 @@ namespace Timelapse.Database
             string commaSeparatedColumns = GetSchemaColumnNamesAsString(connection, schemaFromTable);
             if (string.IsNullOrEmpty(commaSeparatedColumns))
             {
-                System.Diagnostics.Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
+                Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
                 return;
             }
             string sql = Sql.InsertInto + dataDestinationTable + Sql.OpenParenthesis + commaSeparatedColumns + Sql.CloseParenthesis + Sql.Select + commaSeparatedColumns + Sql.From + dataSourceTable;
@@ -904,7 +904,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in CopyTableContentsToEmptyTable. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in CopyTableContentsToEmptyTable. {0}", exception));
                 throw;
             }
         }
@@ -931,7 +931,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumns. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumns. {0}", exception));
                 return null;
             }
         }
@@ -959,7 +959,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumnsAndDefaultValues. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumnsAndDefaultValues. {0}", exception));
                 return null;
             }
         }
@@ -977,7 +977,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in ColumnExists. {0}", exception.ToString()));
+                TracePrint.PrintMessage($"Failure in ColumnExists. {exception}");
                 return false;
             }
         }
@@ -989,7 +989,7 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnDefinition, nameof(columnDefinition));
 
-            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition.ToString());
+            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
         }
 
         /// <summary>
@@ -1052,7 +1052,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in AddColumn. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in AddColumn. {0}", exception));
                 throw;
             }
         }
@@ -1103,7 +1103,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in DeleteColumn. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in DeleteColumn. {0}", exception));
                 throw;
             }
         }
@@ -1175,7 +1175,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in RenameColumn. {0}", exception.ToString()));
+                TracePrint.PrintMessage(String.Format("Failure in RenameColumn. {0}", exception));
                 throw;
             }
         }
@@ -1204,20 +1204,20 @@ namespace Timelapse.Database
                                      // Rename the column if needed
                                 currentColumnName = reader[field].ToString();
                                 existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Name))
-                                    ? attributes[SchemaAttributesEnum.Name].ToString()
+                                    ? attributes[SchemaAttributesEnum.Name]
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 2:  // type (Column type)
                                 existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Type))
-                                    ? attributes[SchemaAttributesEnum.Type].ToString()
+                                    ? attributes[SchemaAttributesEnum.Type]
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
                                 if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.NotNull))
                                 {
-                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull].ToString();
+                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull];
                                 }
                                 else if (reader[field].ToString() != "0")
                                 {
@@ -1228,12 +1228,12 @@ namespace Timelapse.Database
                             case 4:  // dflt_value (Column has a default value)
                                 if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Default))
                                 {
-                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default].ToString());
+                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default]);
                                 }
                                 else if (false == string.IsNullOrEmpty(reader[field].ToString()))
                                 {
                                     // Note that the default is already quoted, so we should not quote it again
-                                    existingColumnDefinition += Sql.Default + reader[field].ToString() + " ";
+                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
                                 }
                                 existingColumnDefinition += " ";
                                 break;
@@ -1244,7 +1244,7 @@ namespace Timelapse.Database
                                 }
                                 break;
                             default:
-                                System.Diagnostics.Debug.Print(field.ToString());
+                                Debug.Print(field.ToString());
                                 break;
                         }
                     }

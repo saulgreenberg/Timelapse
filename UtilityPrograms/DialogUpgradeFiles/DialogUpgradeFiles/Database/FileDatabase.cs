@@ -76,7 +76,7 @@ namespace DialogUpgradeFiles.Database
             // Note that we avoid Selecting * from the DataTable, as that could be an expensive operation
             // Instead, we operate directly on the database. There is only one exception (updating DateTime),
             // as we have to regenerate all the column's values
-            // TODO XXXX: REPLACE CODE BELOW WITH new existing function this.TryGetImageSetVersionNumber(out string imageSetVersionNumber, false)), AS IT DOES EVERYTHING
+            // TODO: REPLACE CODE BELOW WITH new existing function this.TryGetImageSetVersionNumber(out string imageSetVersionNumber, false)), AS IT DOES EVERYTHING
             // Get the image set. We will be checking some of its values as we go along
             this.ImageSetLoadFromDatabase();
             await Task.Delay(Constant.BusyState.SleepTime);
@@ -331,13 +331,10 @@ namespace DialogUpgradeFiles.Database
         #region ImageSet manipulation
         private void ImageSetLoadFromDatabase()
         {
-            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID.ToString();
+            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID;
             DataTable imageSetTable = this.Database.GetDataTableFromSelect(imageSetQuery);
             this.ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
-            if (imageSetTable != null)
-            {
-                imageSetTable.Dispose();
-            }
+            imageSetTable.Dispose();
         }
         #endregion
 
@@ -532,14 +529,8 @@ namespace DialogUpgradeFiles.Database
 
             if (disposing)
             {
-                if (this.FileTable != null)
-                {
-                    this.FileTable.Dispose();
-                }
-                if (this.Markers != null)
-                {
-                    this.Markers.Dispose();
-                }
+                this.FileTable?.Dispose();
+                this.Markers?.Dispose();
             }
 
             base.Dispose(disposing);

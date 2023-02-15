@@ -55,9 +55,13 @@ namespace Timelapse.Controls
         #region Public Show or hide the popup, where we display up to the maxNumberImagesToDisplay
         public void Show(bool isVisible, int maxNumberImagesToDisplay)
         {
-            ImageRow currentImageRow = timelapseWindow?.DataHandler?.ImageCache?.Current;
+            if (timelapseWindow == null)
+            {
+                TracePrint.NullException(nameof(timelapseWindow));
+                return;
+            }
             TimeSpan timeThreshold = timelapseWindow.State.EpisodeTimeThreshold;
-
+            ImageRow currentImageRow = timelapseWindow?.DataHandler?.ImageCache?.Current;
             if (isVisible == false || currentImageRow == null || FileDatabase == null)
             {
                 // Hide the popup if asked or if basic data isn't available, including deleting the children
@@ -85,7 +89,6 @@ namespace Timelapse.Controls
             sp.Children.Add(label);
 
             int margin = 2;
-            FileTable fileTable; // To hold the results of the database selection as a table of ImageRows
 
             // We will only consider images whose relative path is the same as the current file
             string relativePath = currentImageRow.RelativePath;
@@ -130,6 +133,7 @@ namespace Timelapse.Controls
                 }
 
                 // Start on the left
+                FileTable fileTable; // To hold the results of the database selection as a table of ImageRows
                 if (goBackwardsRow >= 0)
                 {
                     // Add a popup image to the left of the caret

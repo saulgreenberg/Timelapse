@@ -104,7 +104,7 @@ namespace Timelapse.Controls
             if (showMoreCells == true && this.Level >= Constant.ThumbnailGrid.MaxRows)
             {
                 // Showing more cells aborted as already displaying the maximum amount of rows. 
-                //System.Diagnostics.Debug.Print(String.Format("0 ThumbnailGridRefreshStatus.AtMaximumZoomLevel {0}", this.Level));
+                //Debug.Print(String.Format("0 ThumbnailGridRefreshStatus.AtMaximumZoomLevel {0}", this.Level));
                 return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
             }
             else if (showMoreCells == true)
@@ -119,7 +119,7 @@ namespace Timelapse.Controls
                 if (this.Level <= 0)
                 {
                     // Showing fewer cells aborted as we are already at or below zero 
-                    //System.Diagnostics.Debug.Print(String.Format("2b this.Level <= 0 {0}", this.Level));
+                    //Debug.Print(String.Format("2b this.Level <= 0 {0}", this.Level));
                     this.Level = 0;
                     return ThumbnailGridRefreshStatus.AtZeroZoomLevel;
                 }
@@ -214,7 +214,7 @@ namespace Timelapse.Controls
                 // use FFMPEG Probe (but that may mean another dll?)
                 BitmapSource bm = this.FileTable[this.FileTableStartIndex].LoadBitmap(this.FolderPath, Constant.ImageValues.PreviewWidth32, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth, out _);
                 cellWidth = (bm == null || bm.PixelHeight == 0) ? Convert.ToInt32(desiredCellHeight * Constant.ThumbnailGrid.AspectRatioDefault) : Convert.ToInt32(desiredCellHeight * bm.PixelWidth / bm.PixelHeight);
-                //System.Diagnostics.Debug.Print(String.Format("Bitmap {0} {1}", cellWidth, desiredCellHeight));
+                //Debug.Print(String.Format("Bitmap {0} {1}", cellWidth, desiredCellHeight));
             }
             else
             {
@@ -323,7 +323,6 @@ namespace Timelapse.Controls
             if (this.modifierKeyPressedOnMouseDown)
             {
                 this.modifierKeyPressedOnMouseDown = false;
-                return;
             }
         }
         #endregion
@@ -364,10 +363,14 @@ namespace Timelapse.Controls
         private void SelectFromInitialCellTo(RowColumn currentCell)
         {
             // If the first selected cell doesn't exist, make it the same as the currently selected cell
+            // ReSharper disable All
+            // While Resharper says this is heuristically unreachable, I'm unsure so I am leaving it in...
             if (this.cellChosenOnMouseDown == null)
             {
+                
                 this.cellChosenOnMouseDown = currentCell;
             }
+            // ReSharper restore All
             this.SelectNone(); // Clear the selections
 
             // Determine which cell is 
@@ -376,10 +379,9 @@ namespace Timelapse.Controls
             // Select the cells defined by the cells running from the topLeft cell to the BottomRight cell
             RowColumn indexCell = startCell;
 
-            ThumbnailInCell ci;
             while (true)
             {
-                ci = this.GetThumbnailInCellFromCell(indexCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(indexCell);
                 // If the cell doesn't contain a ThumbnailInCell, then we are at the end.
                 if (ci == null)
                 {
@@ -406,10 +408,9 @@ namespace Timelapse.Controls
             // Select the cells defined by the cells running from the topLeft cell to the BottomRight cell
             RowColumn indexCell = startCell;
 
-            ThumbnailInCell ci;
             while (true)
             {
-                ci = this.GetThumbnailInCellFromCell(indexCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(indexCell);
                 // This shouldn't happen, but ensure that the cell contains a ThumbnailInCell.
                 if (ci == null)
                 {
@@ -489,7 +490,7 @@ namespace Timelapse.Controls
                     {
                         if (thumbnailInCell.ImageRow.IsVideo == false)
                         {
-                            if (this.BackgroundWorker.CancellationPending == true)
+                            if (this.BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 this.BackgroundWorker.WorkerReportsProgress = false;
@@ -564,7 +565,7 @@ namespace Timelapse.Controls
                 }
                 catch
                 {
-                    return;
+                    TracePrint.CatchException("Catch is acceptable");
                 }
             };
 
@@ -577,7 +578,6 @@ namespace Timelapse.Controls
             this.BackgroundWorker.RunWorkerCompleted += (o, ea) =>
             {
                 this.BackgroundWorker.Dispose();
-                return;
             };
 
             this.CancelUpdate();
@@ -686,7 +686,7 @@ namespace Timelapse.Controls
             // Add as many columns of the and rows of the given cell width and height as can fit into the grid's available space
             for (int currentColumn = 0; currentColumn < columnCount; currentColumn++)
             {
-                this.Grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
+                this.Grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
             }
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
@@ -694,8 +694,6 @@ namespace Timelapse.Controls
             }
 
             int gridIndex = 0;
-
-            ThumbnailInCell tic;
             this.thumbnailInCells = new List<ThumbnailInCell>();
 
             // Add an empty thumbnailInCell to each grid cell until no more cells or files to display. The bitmap will be added via the backgroundWorker.
@@ -706,7 +704,7 @@ namespace Timelapse.Controls
 
                     // Check to see if the thumbnail already exists in a reusable form in the grid. 
                     string path = Path.Combine(this.FileTable[fileTableIndex].RelativePath, this.FileTable[fileTableIndex].File);
-                    tic = thumbnailsAlreadyInGrid.Find(x => String.Equals(x.Path, path));
+                    ThumbnailInCell tic = thumbnailsAlreadyInGrid.Find(x => String.Equals(x.Path, path));
 
                     if (tic == null || tic.Image.Source == null || this.Grid.Children.Contains(tic))
                     {
@@ -818,7 +816,7 @@ namespace Timelapse.Controls
             // Add as many columns of the and rows of the given cell width and height as can fit into the grid's available space
             for (int currentColumn = 0; currentColumn < columnCount; currentColumn++)
             {
-                this.Grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
+                this.Grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
             }
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
@@ -826,7 +824,6 @@ namespace Timelapse.Controls
             }
 
             int gridIndex = 0;
-            ThumbnailInCell thumbnailInCell;
             this.thumbnailInCells = new List<ThumbnailInCell>();
 
             // Add an empty thumbnailInCell to each grid cell until no more cells or files to display. The bitmap will be added via the backgroundWorker.
@@ -834,7 +831,7 @@ namespace Timelapse.Controls
             {
                 for (int currentColumn = 0; currentColumn < columnCount && fileTableIndex < fileTableCount; currentColumn++)
                 {
-                    thumbnailInCell = CreateEmptyThumbnail(fileTableIndex++, gridIndex++, cellWidth, cellHeight, currentRow, currentColumn);
+                    ThumbnailInCell thumbnailInCell = CreateEmptyThumbnail(fileTableIndex++, gridIndex++, cellWidth, cellHeight, currentRow, currentColumn);
                     Grid.SetRow(thumbnailInCell, currentRow);
                     Grid.SetColumn(thumbnailInCell, currentColumn);
                     this.Grid.Children.Add(thumbnailInCell);
@@ -868,7 +865,7 @@ namespace Timelapse.Controls
             catch
             {
                 // Uncomment for tracing purposes
-                // System.Diagnostics.Debug.Print("UpdateThumbnailsLoadProgress Aborted | Catch");
+                // Debug.Print("UpdateThumbnailsLoadProgress Aborted | Catch");
             }
         }
 
@@ -882,7 +879,10 @@ namespace Timelapse.Controls
                     this.BackgroundWorker.CancelAsync();
                 }
             }
-            catch { }
+            catch
+            {
+                TracePrint.CatchException("Catch is an acceptable.");
+            }
         }
         #endregion
 
@@ -933,11 +933,9 @@ namespace Timelapse.Controls
         private bool GridGetNextSelectedCell(RowColumn cell, out RowColumn nextCell)
         {
             RowColumn lastCell = new RowColumn(this.Grid.RowDefinitions.Count - 1, this.Grid.ColumnDefinitions.Count - 1);
-            ThumbnailInCell ci;
-
             while (this.GridGetNextCell(cell, lastCell, out nextCell))
             {
-                ci = this.GetThumbnailInCellFromCell(nextCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(nextCell);
 
                 // If there is no cell, we've reached the end, 
                 if (ci == null)
@@ -957,11 +955,9 @@ namespace Timelapse.Controls
         private bool GridGetPreviousSelectedCell(RowColumn cell, out RowColumn previousCell)
         {
             RowColumn lastCell = new RowColumn(0, 0);
-            ThumbnailInCell ci;
-
             while (this.GridGetPreviousCell(cell, lastCell, out previousCell))
             {
-                ci = this.GetThumbnailInCellFromCell(previousCell);
+                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(previousCell);
 
                 // If there is no cell, terminate as we've reached the beginning
                 if (ci == null)

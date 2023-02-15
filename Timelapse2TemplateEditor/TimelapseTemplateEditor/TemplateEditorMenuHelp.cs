@@ -6,7 +6,7 @@ using Timelapse.Util;
 
 namespace Timelapse.Editor
 {
-    public partial class EditorWindow : Window
+    public partial class EditorWindow
     {
         // COPY EVERYTHING BETWEEEN BRACKETS FROM  TimelapseMenuCallbacks | TimelapseMenuHelp.cs file}
         // NOTE: COMMENT OUT FILEPLAYER_STOP AS NOT USED IN THE EDITOR
@@ -22,12 +22,6 @@ namespace Timelapse.Editor
         private void MenuTimelapseWebPage_Click(object sender, RoutedEventArgs e)
         {
             ProcessExecution.TryProcessStart(new Uri("http://saul.cpsc.ucalgary.ca/timelapse"));
-        }
-
-        // Tutorial manual (via your browser) 
-        private void MenuTutorialManual_Click(object sender, RoutedEventArgs e)
-        {
-            ProcessExecution.TryProcessStart(new Uri("http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/Timelapse2/Timelapse2Manual.pdf"));
         }
 
         // Tutorial guides (via your browser) 
@@ -55,8 +49,6 @@ namespace Timelapse.Editor
                         break;
                     case "MenuItemDatabaseGuide":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "TimelapseDatabaseGuide.pdf"));
-                        break;
-                    default:
                         break;
                 }
             }
@@ -115,8 +107,6 @@ namespace Timelapse.Editor
                         break;
                     case "MenuItemVideoCompanionQuickStart":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "Video-TimelapseQuickStartGuide.mp4"));
-                        break;
-                    default:
                         break;
                 }
             }

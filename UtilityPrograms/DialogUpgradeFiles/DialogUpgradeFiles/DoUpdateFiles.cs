@@ -6,6 +6,7 @@ using DialogUpgradeFiles.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,8 +33,6 @@ namespace DialogUpgradeFiles
                     return UpgradeResultsEnum.FileNotFound;
                 case DatabaseTypeEnum.InvalidExtension:
                     return UpgradeResultsEnum.InvalidFile;
-                default:
-                    break;
             }
 
             // We now do the copy elsewhere
@@ -225,7 +224,6 @@ namespace DialogUpgradeFiles
             }
             catch
             {
-
             }
         }
         #endregion
@@ -277,10 +275,7 @@ namespace DialogUpgradeFiles
                 if (templateDB.Controls.Any(x => x.DataLabel == dataLabelToRemove))
                 {
                     ControlRow control = templateDB.Controls.First(x => x.DataLabel == dataLabelToRemove);
-                    if (null != control)
-                    {
-                        templateDB.UpgradeTemplateRemoveControl(control);
-                    }
+                    templateDB.UpgradeTemplateRemoveControl(control);
                 }
             }
         }
@@ -390,39 +385,73 @@ namespace DialogUpgradeFiles
             // Note: We can probably do this in a single operation rather than three ...
 
             // Remove Date from DataTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.Date);
-            timelapse.DebugFeedback(success, "Data Table: Date schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.Date))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Data Table: No Date column to delete: " + filePath); ;
+            }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.Date);
+                timelapse.DebugFeedback(success, "Data Table: Date schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
             }
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Remove Time from DataTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.Time);
-            timelapse.DebugFeedback(success, " Data Table: Time schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.Time))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Data Table: No Time column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData,
+                    Constant.DatabaseColumn.Time);
+                timelapse.DebugFeedback(success, " Data Table: Time schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Remove UtcOffset from DataTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset);
-            timelapse.DebugFeedback(success, "Data Table: UtcOffset schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Data Table: No UtcOffset column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset);
+                timelapse.DebugFeedback(success, "Data Table: UtcOffset schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Remove Folder from DataTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.Folder);
-            timelapse.DebugFeedback(success, "Data Table: Folder schema and data deleted from DataTable: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.Folder))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Data Table: No Folder column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData,
+                    Constant.DatabaseColumn.Folder);
+                timelapse.DebugFeedback(success,
+                    "Data Table: Folder schema and data deleted from DataTable: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
@@ -446,13 +475,23 @@ namespace DialogUpgradeFiles
             // Either Remove or Alter the ImageQuality Column
             if (removeImageQualityColumn)
             {
-                // Remove the Image Quality Column
-                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.ImageQuality);
-                timelapse.DebugFeedback(success, "DataTable: ImageQuality schema and data deleted: " + filePath);
-                if (!success)
+                // Remove Folder from DataTable
+                if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.ImageQuality))
                 {
-                    return UpgradeResultsEnum.Failed;
+                    timelapse.DebugFeedback("Data Table: No ImageQuality column to delete: " + filePath); ;
                 }
+                else
+                {
+                    // Remove the Image Quality Column
+                    success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.FileData,
+                        Constant.DatabaseColumn.ImageQuality);
+                    timelapse.DebugFeedback(success, "DataTable: ImageQuality schema and data deleted: " + filePath);
+                    if (!success)
+                    {
+                        return UpgradeResultsEnum.Failed;
+                    }
+                }
+
                 await Task.Delay(Constant.BusyState.SleepTime);
             }
             else
@@ -490,21 +529,40 @@ namespace DialogUpgradeFiles
 
             // IMAGE SET TABLE MANIPULATION
             // Remove Timezone from ImageSetTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.TimeZone);
-            timelapse.DebugFeedback(success, "Data Table: Timezone schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.TimeZone))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Image Set Table: No TimeZone column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet,
+                    Constant.DatabaseColumn.TimeZone);
+                timelapse.DebugFeedback(success, "Data Table: Timezone schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Remove WhiteSpaceTrimmed from ImageSetTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.WhiteSpaceTrimmed);
-            timelapse.DebugFeedback(success, "ImageSet Table: WhiteSpaceTrimmed schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.WhiteSpaceTrimmed))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Image Set Table: No WhiteSpaceTrimmed column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet,
+                    Constant.DatabaseColumn.WhiteSpaceTrimmed);
+                timelapse.DebugFeedback(success,
+                    "ImageSet Table: WhiteSpaceTrimmed schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Check if a cancel has occured
@@ -514,12 +572,22 @@ namespace DialogUpgradeFiles
             }
 
             // Remove Magnifier from ImageSetTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.MagnifyingGlass);
-            timelapse.DebugFeedback(success, "ImageSet Table: MagnifyingGlass schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.MagnifyingGlass))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Image Set Table: No MagnifyingGlass column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet,
+                    Constant.DatabaseColumn.MagnifyingGlass);
+                timelapse.DebugFeedback(success,
+                    "ImageSet Table: MagnifyingGlass schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Add RootFolder to the ImageSetTable (which replaces the Folder column in the DataTable
@@ -542,14 +610,37 @@ namespace DialogUpgradeFiles
             }
 
             // Delete the Filter and SelectedFOlder columns from the ImageSetTable
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.SelectedFolder);
-            timelapse.DebugFeedback(success, "ImageSet Table: SelectedFolder column and data deleted: " + filePath);
-            success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.Selection);
-            timelapse.DebugFeedback(success, "ImageSet Table: Selection column schema and data deleted: " + filePath);
-            if (!success)
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.SelectedFolder))
             {
-                return UpgradeResultsEnum.Failed;
+                timelapse.DebugFeedback("Image Set Table: No SelectedFolder column to delete: " + filePath); ;
             }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet,
+                    Constant.DatabaseColumn.SelectedFolder);
+                timelapse.DebugFeedback(success, "ImageSet Table: SelectedFolder column and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
+            if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.Selection))
+            {
+                timelapse.DebugFeedback("Image Set Table: No Selection column to delete: " + filePath); ;
+            }
+            else
+            {
+                success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet,
+                    Constant.DatabaseColumn.Selection);
+                timelapse.DebugFeedback(success,
+                    "ImageSet Table: Selection column schema and data deleted: " + filePath);
+                if (!success)
+                {
+                    return UpgradeResultsEnum.Failed;
+                }
+            }
+
             await Task.Delay(Constant.BusyState.SleepTime);
 
             // Add a SearchTerm column to the ImageSetTable
@@ -590,7 +681,7 @@ namespace DialogUpgradeFiles
             string quickPasteEntriesAsJson = "[]"; // The empty quickpaste structure
             try
             {
-                if (fileDatabase?.ImageSet?.QuickPasteXML != null)
+                if (fileDatabase.ImageSet?.QuickPasteXML != null)
                 {
                     string xml = fileDatabase.ImageSet.QuickPasteXML;
                     List<QuickPasteEntry> quickPasteEntries = QuickPasteOperations.QuickPasteEntriesFromXML(fileDatabase, xml);
@@ -685,7 +776,7 @@ namespace DialogUpgradeFiles
             foreach (MarkerRow row in fileDatabase.Markers)
             {
                 bool hasValues = false;
-                List<List<Point>>  cellsInRow = new List<List<Point>>(); // A list of all cells, with each cell listing the point entries
+                List<List<Point>> cellsInRow = new List<List<Point>>(); // A list of all cells, with each cell listing the point entries
                 // Note that we have to handle the special case where the order of cells differs from the schema column order.
                 // When that happens,  marker data may be inserted in the wrong column
                 // This occurs when:
@@ -704,14 +795,14 @@ namespace DialogUpgradeFiles
                 {
                     // Collect the cell values (i.e., the points) corresponding to each data label
                     string cellValue = row[dataLabel];
-                    List<Point>  pointsInCell = new List<Point>();  // Each entry represents a cell
+                    List<Point> pointsInCell = new List<Point>();  // Each entry represents a cell
                     if (false == string.IsNullOrEmpty(cellValue))
                     {
                         // We have at least one value, so we will want to create a row for it.
                         hasValues = true;
 
                         // Extract the points in each cell as a list
-                        List<string> m = cellValue.Split('|').ToList<string>();
+                        List<string> m = cellValue.Split('|').ToList();
                         foreach (string scoords in m)
                         {
                             pointsInCell.Add(Point.Parse(scoords));

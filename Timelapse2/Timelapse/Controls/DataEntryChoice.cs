@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
@@ -49,6 +50,9 @@ namespace Timelapse.Controls
         public DataEntryChoice(ControlRow control, DataEntryControls styleProvider)
             : base(control, styleProvider, ControlContentStyleEnum.ChoiceComboBox, ControlLabelStyleEnum.DefaultLabel)
         {
+            // Check the arguments for null 
+            ThrowIf.IsNullArgument(control, nameof(control));
+
             // The behaviour of the combo box
             this.ContentControl.Focusable = true;
             this.ContentControl.IsEditable = false;
@@ -56,13 +60,6 @@ namespace Timelapse.Controls
 
             // Callback used to allow Enter to select the highlit item
             this.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
-            // Check the arguments for null 
-
-            if (control == null)
-            {
-                // this should not happen
-                ThrowIf.IsNullArgument(control, nameof(control));
-            }
 
             // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end 
             ComboBoxItem cbi;
@@ -94,7 +91,7 @@ namespace Timelapse.Controls
                 Content = Constant.Unicode.Ellipsis
             };
             this.ContentControl.Items.Insert(0, cbi);
-            ((ComboBoxItem)this.ContentControl.Items[0]).Visibility = System.Windows.Visibility.Collapsed;
+            ((ComboBoxItem)this.ContentControl.Items[0]).Visibility = Visibility.Collapsed;
             this.ContentControl.SelectedIndex = 1;
         }
         #endregion
@@ -116,48 +113,56 @@ namespace Timelapse.Controls
                 keyEvent.Handled = true;
                 GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
             }
-            else if (keyEvent.Key == Key.Return || keyEvent.Key == Key.Enter)
+            else
             {
                 ComboBox comboBox = sender as ComboBox;
-                for (int i = 0; i < comboBox.Items.Count; i++)
+                if (comboBox == null)
                 {
-                    ComboBoxItem comboBoxItem = (ComboBoxItem)comboBox.ItemContainerGenerator.ContainerFromIndex(i);
-                    if (comboBoxItem != null && comboBoxItem.IsHighlighted)
+                    return;
+                }
+                if (keyEvent.Key == Key.Return || keyEvent.Key == Key.Enter)
+                {
+                    for (int i = 0; i < comboBox.Items.Count; i++)
                     {
-                        comboBox.SelectedValue = comboBoxItem.Content.ToString();
+                        ComboBoxItem comboBoxItem = (ComboBoxItem)comboBox.ItemContainerGenerator.ContainerFromIndex(i);
+                        if (comboBoxItem != null && comboBoxItem.IsHighlighted)
+                        {
+                            comboBox.SelectedValue = comboBoxItem.Content.ToString();
+                        }
                     }
                 }
-            }
-            else if (keyEvent.Key == Key.Up || keyEvent.Key == Key.Down || keyEvent.Key == Key.Home)
-            {
-                // Because we have inserted an invisible ellipses into the list, we have to skip over it when a 
-                // user navigates the combobox with the keyboard using the arrow keys
-                ComboBox comboBox = sender as ComboBox;
+                else if (keyEvent.Key == Key.Up || keyEvent.Key == Key.Down || keyEvent.Key == Key.Home)
+                {
+                    // Because we have inserted an invisible ellipses into the list, we have to skip over it when a 
+                    // user navigates the combobox with the keyboard using the arrow keys
+                    if (keyEvent.Key == Key.Up && (comboBox.SelectedIndex == 1 || comboBox.SelectedIndex == -1))
+                    {
+                        // If the user tries to navigate to the ellipsis at the beginning of the list, keep it on the first valid item
+                        if (comboBox.SelectedIndex == -1)
+                        {
+                            comboBox.SelectedIndex = 1;
+                        }
 
-                if (keyEvent.Key == Key.Up && (comboBox.SelectedIndex == 1 || comboBox.SelectedIndex == -1))
-                {
-                    // If the user tries to navigate to the ellipsis at the beginning of the list, keep it on the first valid item
-                    if (comboBox.SelectedIndex == -1)
-                    {
-                        comboBox.SelectedIndex = 1;
+                        keyEvent.Handled = true;
                     }
-                    keyEvent.Handled = true;
-                }
-                else if (keyEvent.Key == Key.Down && (comboBox.SelectedIndex == comboBox.Items.Count - 1 || comboBox.SelectedIndex == -1))
-                {
-                    // If the user tries to navigate beyond the end of the list, keep it on the last valid item
-                    // But the -1 should only be triggered to go back to the beginning
-                    if (comboBox.SelectedIndex == -1)
+                    else if (keyEvent.Key == Key.Down && (comboBox.SelectedIndex == comboBox.Items.Count - 1 ||
+                                                          comboBox.SelectedIndex == -1))
                     {
-                        comboBox.SelectedIndex = 1;
+                        // If the user tries to navigate beyond the end of the list, keep it on the last valid item
+                        // But the -1 should only be triggered to go back to the beginning
+                        if (comboBox.SelectedIndex == -1)
+                        {
+                            comboBox.SelectedIndex = 1;
+                        }
+
+                        keyEvent.Handled = true;
                     }
-                    keyEvent.Handled = true;
-                }
-                else if (keyEvent.Key == Key.Home)
-                {
-                    // Key.Home - go to the first item.
-                    comboBox.SelectedIndex = 1;
-                    keyEvent.Handled = true;
+                    else if (keyEvent.Key == Key.Home)
+                    {
+                        // Key.Home - go to the first item.
+                        comboBox.SelectedIndex = 1;
+                        keyEvent.Handled = true;
+                    }
                 }
             }
         }

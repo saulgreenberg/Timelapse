@@ -33,7 +33,7 @@ namespace Timelapse.Dialog
             {
                 string databaseName = Path.GetFileName(fileDatabasePaths[index]);
                 string databaseNameWithoutExtension = Path.GetFileNameWithoutExtension(databaseName);
-                if (String.Equals(databaseNameWithoutExtension, templateDatabaseNameWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(databaseNameWithoutExtension, templateDatabaseNameWithoutExtension, StringComparison.OrdinalIgnoreCase))
                 {
                     defaultDatabaseIndex = index;
                 }

@@ -44,14 +44,14 @@
         <TextBox x:Name="FeedbackText" Height="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="10"  VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Text="" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" />
         <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="2"  VerticalAlignment="Bottom">
             <Button Name="StartButton" Content="Update CSV File"  Click="StartButton_Click"/>
-            <StackPanel Orientation="Vertical" Margin="0" Grid.Row="2"  VerticalAlignment="Bottom">
-                <StackPanel Orientation="Horizontal"  Grid.Row="2"  VerticalAlignment="Bottom">
+            <StackPanel Orientation="Vertical" Margin="0"  VerticalAlignment="Bottom">
+                <StackPanel Orientation="Horizontal"  VerticalAlignment="Bottom">
                     <CheckBox Name="TrimFileCheckBox" Content="Trim characters from the file name"  Margin="50,0,0,0" VerticalAlignment="Center" Unchecked="TrimFile_CheckedChanged" Checked="TrimFile_CheckedChanged"/>
                     <Slider Name="TrimSlider" IsEnabled="False" Width="200" Maximum="50" SmallChange="1" TickFrequency="1" Value="33" VerticalAlignment="Center" IsSnapToTickEnabled="True"/>
                     <Label Name="NumbCharacters" Content="{Binding ElementName=TrimSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}"/>
                     <Label Content="characters to trim"/>
                 </StackPanel >
-                <StackPanel Orientation="Horizontal" Grid.Row="2"  VerticalAlignment="Bottom">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
                     <CheckBox Name="CreateRelativePathCheckBox" IsChecked="False" Content="Create a relative path from the remaining file path"  Margin="50,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel >
             </StackPanel >

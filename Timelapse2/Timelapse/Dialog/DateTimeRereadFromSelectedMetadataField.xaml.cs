@@ -123,7 +123,7 @@ namespace Timelapse.Dialog
             // If there is no metadata, this is an easy way to inform the user
             if (this.metadataDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Timelapse.Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
                 this.noMetadataAvailable = true;
             }
             else
@@ -141,7 +141,7 @@ namespace Timelapse.Dialog
                     continue;
                 }
 
-                if (DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value.ToString(), out DateTime _))
+                if (DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value, out DateTime _))
                 {
                     metadataList.Add(new Tuple<string, string, string, string>(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value));
                 }
@@ -256,7 +256,7 @@ namespace Timelapse.Dialog
                     {
                         keyValueList.Add(new KeyValuePair<string, string>(image.File, String.Format("Data field unchanged - file is missing metatdata {0} ", this.metadataFieldName)));
 
-                        // System.Diagnostics.Debug.Print(String.Format("{0}: No metadata", image.File));
+                        // Debug.Print(String.Format("{0}: No metadata", image.File));
                         continue;
                     }
                     metadataUpdateCount++;
@@ -290,7 +290,7 @@ namespace Timelapse.Dialog
         private void Datagrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
             // If there's no metadata, then just bail
-            if (this.noMetadataAvailable == true)
+            if (this.noMetadataAvailable)
             {
                 return;
             }

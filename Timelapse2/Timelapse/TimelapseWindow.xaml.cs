@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -43,7 +44,7 @@ namespace Timelapse
             {
                 if (this.DataHandler == null)
                 {
-                    System.Diagnostics.Debug.Print("Weird error in FolderPath - datahandler is null");
+                    Debug.Print("Weird error in FolderPath - datahandler is null");
                     return String.Empty;
                 }
                 else
@@ -73,13 +74,13 @@ namespace Timelapse
         private readonly DispatcherTimer timerFileNavigator;
 
         // Timer used to AutoPlay images via MediaControl buttons
-        private readonly DispatcherTimer FilePlayerTimer = new DispatcherTimer { };
-        private readonly DispatcherTimer DataGridSelectionsTimer = new DispatcherTimer { };
+        private readonly DispatcherTimer FilePlayerTimer = new DispatcherTimer();
+        private readonly DispatcherTimer DataGridSelectionsTimer = new DispatcherTimer();
 
         // Notifier: A toast that we can use anywher
         private Notifier ToastNotifier;
         // Record any command line arguments
-        public DataStructures.Arguments Arguments { get; set; } = new DataStructures.Arguments(Environment.GetCommandLineArgs());
+        public Arguments Arguments { get; set; } = new Arguments(Environment.GetCommandLineArgs());
         #endregion
 
         #region Main
@@ -93,9 +94,9 @@ namespace Timelapse
             // this.Arguments = new DataStructures.Arguments(Environment.GetCommandLineArgs());
 
             // Register MarkableCanvas callbacks
-            this.MarkableCanvas.PreviewMouseDown += new MouseButtonEventHandler(this.MarkableCanvas_PreviewMouseDown);
-            this.MarkableCanvas.MouseEnter += new MouseEventHandler(this.MarkableCanvas_MouseEnter);
-            this.MarkableCanvas.MarkerEvent += new EventHandler<MarkerEventArgs>(this.MarkableCanvas_RaiseMarkerEvent);
+            this.MarkableCanvas.PreviewMouseDown += this.MarkableCanvas_PreviewMouseDown;
+            this.MarkableCanvas.MouseEnter += this.MarkableCanvas_MouseEnter;
+            this.MarkableCanvas.MarkerEvent += this.MarkableCanvas_RaiseMarkerEvent;
             this.MarkableCanvas.ThumbnailGrid.DoubleClick += this.ThumbnailGrid_DoubleClick;
             this.MarkableCanvas.ThumbnailGrid.SelectionChanged += this.ThumbanilGrid_SelectionChanged;
             this.MarkableCanvas.SwitchedToThumbnailGridViewEventAction += this.SwitchedToThumbnailGrid;
@@ -266,13 +267,13 @@ namespace Timelapse
                 {
                     // We can't open the template. Show a message and ignore the arguments (by clearing them)
                     Dialogs.ArgumentTemplatePathDialog(this, this.Arguments.Template, this.Arguments.RelativePath);
-                    this.Arguments = new DataStructures.Arguments(null);
+                    this.Arguments = new Arguments(null);
                 }
             }
 
             if (this.State.IsViewOnly)
             {
-                Dialog.Dialogs.OpeningMessageViewOnly(this);
+                Dialogs.OpeningMessageViewOnly(this);
             }
 
             if (this.State.SuppressWarningToUpdateDBFilesToSQLPrompt == false)
@@ -360,14 +361,8 @@ namespace Timelapse
 
             if (disposing)
             {
-                if (this.DataHandler != null)
-                {
-                    this.DataHandler.Dispose();
-                }
-                if (this.speechSynthesizer != null)
-                {
-                    this.speechSynthesizer.Dispose();
-                }
+                this.DataHandler?.Dispose();
+                this.speechSynthesizer?.Dispose();
             }
             this.disposed = true;
         }
@@ -400,7 +395,6 @@ namespace Timelapse
         {
             // Add data entry callbacks to all editable controls. When the user changes an image's attribute using a particular control,
             // the callback updates the matching field for that image in the database.
-            DataEntryDateTime dateTime = null;
             foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
             {
                 string controlType = this.DataHandler.FileDatabase.FileTableColumnsByDataLabel[pair.Key].ControlType;
@@ -433,12 +427,12 @@ namespace Timelapse
                         note.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
                         break;
                     case Constant.DatabaseColumn.DateTime:
-                        dateTime = (DataEntryDateTime)pair.Value;
+                        DataEntryDateTime dateTime = (DataEntryDateTime)pair.Value;
                         dateTime.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
                         dateTime.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
                         break;
                     default:
-                        TracePrint.PrintMessage(String.Format("Unhandled control type '{0}' in SetUserInterfaceCallbacks.", controlType));
+                        TracePrint.PrintMessage($"Unhandled control type '{controlType}' in SetUserInterfaceCallbacks.");
                         break;
                 }
             }
@@ -695,7 +689,7 @@ namespace Timelapse
         // If the DoubleClick on the ThumbnailGrid selected an image or video, display it.
         private void ThumbnailGrid_DoubleClick(object sender, ThumbnailGridEventArgs e)
         {
-            if (e.ImageRow != null)
+            if (e.ImageRow != null && this.DataHandler.ImageCache.Current != null)
             {
                 // Switch to either the video or image view as needed
                 if (this.DataHandler.ImageCache.Current.IsVideo && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
@@ -724,6 +718,12 @@ namespace Timelapse
                 {
                     this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
                     DataRowView rowView = row.Item as DataRowView;
+                    if (rowView == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(rowView));
+                        return;
+                    }
                     long fileID = (long)rowView.Row.ItemArray[0];
                     this.FileShow(this.DataHandler.FileDatabase.GetFileOrNextFileIndex(fileID));
                     this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Enums;
@@ -36,8 +37,6 @@ namespace Timelapse
 
                         // }
                         break;
-                    default:
-                        break;
                 }
                 return; // No images are loaded, so don't try to interpret any keys
             }
@@ -68,6 +67,12 @@ namespace Timelapse
                 {
                     // The quickpaste window is visible, and thus able to take shortcuts.
                     string key = new KeyConverter().ConvertToString(currentKey.Key);
+                    if (key == null)
+                    {
+                        // Shouldn't happen
+                        TracePrint.NullException(nameof(key));
+                        return;
+                    }
                     if (key.StartsWith("NumPad"))
                     {
                         key = key.Remove(0, 6);
@@ -126,9 +131,15 @@ namespace Timelapse
                     direction = currentKey.Key == Key.Right ? DirectionEnum.Next : DirectionEnum.Previous;
                     if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.LeftCtrl))
                     {
+                        if (this.DataHandler.ImageCache.Current == null)
+                        {
+                            // Shouldn't happen
+                            TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                            return;
+                        }
                         long currentFileID = this.DataHandler.ImageCache.Current.ID;
                         bool result = Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
-                        if (result == true)
+                        if (result)
                         {
                             if (Episodes.ShowEpisodes == false)
                             {

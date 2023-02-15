@@ -83,7 +83,7 @@ namespace Timelapse.Recognition
         private static double TypicalDetectionThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
                 ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
-                : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalDetectionThreshold();
+                : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
 
         private double _currentDetectionThreshold = -1;
         public double CurrentDetectionThreshold
@@ -98,7 +98,7 @@ namespace Timelapse.Recognition
         private static double TypicalClassificationThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
                 ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
-                : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetTypicalClassificationThreshold();
+                : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalClassificationThreshold();
 
         private double _currentClassificationThreshold = -1;
         public double CurrentClassificationThreshold
@@ -113,7 +113,7 @@ namespace Timelapse.Recognition
         public static double ConservativeDetectionThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
                 ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
-                : (double)GlobalReferences.MainWindow?.DataHandler?.FileDatabase.GetConservativeDetectionThreshold();
+                : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
 
         #endregion
 

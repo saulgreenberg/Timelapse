@@ -53,6 +53,14 @@ namespace Timelapse
             this.earliestImageDateTime = DateTime.MaxValue;
 
             // Search the images for the two images with the earliest and latest data/time date 
+
+            if (this.fileDatabase.FileTable.RowCount == 0)
+            {
+                // Shouldn't happen, as the menu should be disabled when there are no images
+                TracePrint.UnexpectedException(nameof(this.fileDatabase.FileTable.RowCount) + " should have had at least one element");
+                return;
+            }
+
             ImageRow latestImageRow = null;
             ImageRow earliestImageRow = null;
             foreach (ImageRow image in this.fileDatabase.FileTable)
@@ -75,17 +83,22 @@ namespace Timelapse
             }
 
             // At this point, we should have succeeded getting the oldest and newest data/time
-
+            if (earliestImageRow == null || latestImageRow == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(earliestImageRow) + "or " + nameof(latestImageRow));
+                return;
+            }
             // Configure the earliest date (in datetime picker) and its image
             this.earliestImageName.Content = earliestImageRow.File;
             this.earliestImageDate.Content = DateTimeHandler.ToStringDisplayDateTime(this.earliestImageDateTime);
-            this.imageEarliest.Source = earliestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out bool isCorruptOrMissing);
+            this.imageEarliest.Source = earliestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out _);
 
             // Configure the latest date (in datetime picker) and its image
             this.latestImageName.Content = latestImageRow.File;
             DataEntryHandler.Configure(this.dateTimePickerLatestDateTime, this.latestImageDateTime);
             this.dateTimePickerLatestDateTime.ValueChanged += this.DateTimePicker_ValueChanged;
-            this.imageLatest.Source = latestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out isCorruptOrMissing);
+            this.imageLatest.Source = latestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out _);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -145,7 +158,7 @@ namespace Timelapse
                 // Note that this passes a function which is invoked by the fileDatabase method. 
                 // This not only calculates the new times, but updates the progress bar as the fileDatabase method iterates through the files.
                 this.fileDatabase.UpdateAdjustedFileTimes(
-                   (string fileName, int fileIndex, int count, DateTime imageDateTime) =>
+                   (fileName, fileIndex, count, imageDateTime) =>
                    {
                        double imagePositionInInterval = (imageDateTime - this.earliestImageDateTime).Ticks / (double)intervalFromOldestToNewestImage.Ticks;
                        Debug.Assert((-0.0000001 < imagePositionInInterval) && (imagePositionInInterval < 1.0000001), String.Format("Interval position {0} is not between 0.0 and 1.0.", imagePositionInInterval));
@@ -258,12 +271,12 @@ namespace Timelapse
             if (DateTimeHandler.TryParseDisplayDateTime(this.dateTimePickerLatestDateTime.Text, out DateTime newDateTime) == false)
             {
                 // If we can't parse the date,  do nothing.
-                // System.Diagnostics.Debug.Print("DateTimeLinearCorrection|ValueChanged: Could not parse the date:" + this.dateTimePickerLatestDateTime.Text);
+                // Debug.Print("DateTimeLinearCorrection|ValueChanged: Could not parse the date:" + this.dateTimePickerLatestDateTime.Text);
                 return;
             }
 
             // Inform the user if the date picker date goes below the earlest time,  
-            if (this.dateTimePickerLatestDateTime.Value.Value <= this.earliestImageDateTime)
+            if (this.dateTimePickerLatestDateTime.Value != null && this.dateTimePickerLatestDateTime.Value.Value <= this.earliestImageDateTime)
             {
                 Dialogs.DateTimeNewTimeShouldBeLaterThanEarlierTimeDialog(this);
             }

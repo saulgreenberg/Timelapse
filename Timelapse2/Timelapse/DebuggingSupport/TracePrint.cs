@@ -12,18 +12,59 @@ namespace Timelapse.Util
     /// </summary>
     public static class TracePrint
     {
+        #region Noop
+        // Its sometimes handy to invoke a noop operation, such as in a catch that doesn't do anything.
+        // This stops resharper from complaining.
+        public static void Noop()
+        {
+            ((Action)(() => { }))();
+        }
+
+        #endregion
+        #region Specialized messages
+        public static void NullException()
+        {
+            NullException(String.Empty);
+        }
+
+        public static void NullException(string nullVariableName)
+        {
+            string message = String.IsNullOrWhiteSpace(nullVariableName)
+                ? "Null Exception"
+                : "Null Exception: " + nullVariableName;
+            Debug.Print(GetMethodNameStack(message, 2));
+        }
+        
+       
+
+        public static void CatchException(string message)
+        {
+            Debug.Print(GetMethodNameStack("Catch: " + message, 2));
+        }
+
+        public static void UnexpectedException(string message)
+        {
+            Debug.Print(GetMethodNameStack("Unexpected exception: " + message, 2));
+        }
+        #endregion
+
         #region Public methods
         /// <summary>
         /// Print a message and stack trace to a file
         /// </summary>
         /// <param name="message"></param>
-        public static void PrintStackTraceToFile(string message)
+        public static void StackTraceToFile(string message)
         {
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
+            using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
             {
                 file.WriteLine(GetMethodNameStack(message, 5));
                 file.WriteLine("----");
             }
+        }
+
+        public static void StackTraceToOutput(string message)
+        {
+            Debug.Print(GetMethodNameStack(message, 5));
         }
 
         /// <summary>
@@ -34,14 +75,14 @@ namespace Timelapse.Util
         // Option to print various failure messagesfor debugging
         public static void PrintMessage(string message)
         {
-            Debug.Print("PrintFailure: " + message);
+            Debug.Print("Failure: " + message);
         }
 
         /// <summary>
         /// Debug print the method name followed by its stack level 
         /// </summary>
         [Conditional("TRACE")]
-        public static void PrintStackTrace(int level)
+        public static void StackTrace(int level)
         {
             Debug.Print(GetMethodNameStack(String.Empty, level));
         }
@@ -50,19 +91,20 @@ namespace Timelapse.Util
         /// Debug print the method name followed a message
         /// </summary>
         [Conditional("TRACE")]
-        public static void PrintStackTrace(string message)
+        public static void StackTrace(string message)
         {
-            Debug.Print(GetMethodNameStack(message, 1));
+            Debug.Print(GetMethodNameStack(message));
         }
 
         /// <summary>
         /// Debug print the method name followed a message and stack level
         /// </summary>
-        public static void PrintStackTrace(string message, int level)
+        public static void StackTrace(string message, int level)
         {
             Debug.Print(GetMethodNameStack(message, level));
         }
         #endregion
+
 
         #region Private (Internal) methods
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -73,11 +115,10 @@ namespace Timelapse.Util
         private static string GetMethodNameStack(string message = "", int level = 1)
         {
             StackTrace st = new StackTrace(true);
-            StackFrame sf;
             string methodStack = String.Empty;
             for (int i = 1; i <= level; i++)
             {
-                sf = st.GetFrame(i);
+                StackFrame sf = st.GetFrame(i);
                 methodStack += Path.GetFileName(sf.GetFileName()) + ": ";
                 methodStack += sf.GetMethod().Name;
                 if (i < level)

@@ -24,7 +24,7 @@
                             ShowExplanationVisibility="True" />
 
             <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
-                <Rectangle Fill="#FF868686" Height="2"></Rectangle>
+                <Rectangle Fill="#FF868686" Height="2" />
             </StackPanel>
 
             <DockPanel >
@@ -90,11 +90,11 @@
                     HeadersVisibility="Column">
                         <DataGrid.ColumnHeaderStyle>
                             <Style  TargetType="DataGridColumnHeader" >
-                                <Setter Property="Control.FontWeight" Value="Bold" />
-                                <Setter Property="Control.BorderThickness" Value="1" />
-                                <Setter Property="Control.Padding" Value="4" />
-                                <Setter Property="Control.Background" Value="Gainsboro" />
-                                <Setter Property="Control.BorderBrush" Value="Black" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="Padding" Value="4" />
+                                <Setter Property="Background" Value="Gainsboro" />
+                                <Setter Property="BorderBrush" Value="Black" />
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
                     </DataGrid>

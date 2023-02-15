@@ -45,9 +45,10 @@
                                 <CheckBox Name="CheckBoxIncludeEpisodeID" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,10,10,10"  IsEnabled="True"  FontWeight="Normal" IsChecked="True"
                                           Content="Include identifying Episode number"
                                  />
-                                <TextBlock Text="Examples of current format settings:"  Margin="5,0,0,0" FontWeight="DemiBold"></TextBlock>
-                                <TextBlock Name="TBEpisode" Text="Episode:    23:1|7"  FontWeight="Normal" Margin="15,5,0,0"></TextBlock>
-                                <TextBlock Name="TBSingleton" Text="Singleton: 23:1|1"  FontWeight="Normal" Margin="15,5,0,0"></TextBlock>                           </StackPanel>
+                                <TextBlock Text="Examples of current format settings:"  Margin="5,0,0,0" FontWeight="DemiBold" />
+                                <TextBlock Name="TBEpisode" Text="Episode:    23:1|7"  FontWeight="Normal" Margin="15,5,0,0" />
+                                <TextBlock Name="TBSingleton" Text="Singleton: 23:1|1"  FontWeight="Normal" Margin="15,5,0,0" />
+                            </StackPanel>
                         </GroupBox>
                     </StackPanel>
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -89,7 +90,7 @@ namespace Timelapse.Database
 
         public static async Task<FileDatabase> CreateEmptyDatabase(string filePath, TemplateDatabase templateDatabase)
         {
-            Util.FilesFolders.TryDeleteFileIfExists(filePath);
+            FilesFolders.TryDeleteFileIfExists(filePath);
 
             // initialize the database if it's newly created
             FileDatabase fileDatabase = new FileDatabase(filePath);
@@ -215,6 +216,7 @@ namespace Timelapse.Database
             this.BindToDataGrid();
 
             // Create the MarkersTable and initialize it from the template table
+            // TODO: SHOULDN'T MARKERS TABLE BE A FOREIGN KEY??? TO CHECK WHY NOT
             schemaColumnDefinitions.Clear();
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.ID, Sql.CreationStringPrimaryKey));  // It begins with the ID integer primary key
             foreach (ControlRow control in this.Controls)
@@ -245,7 +247,7 @@ namespace Timelapse.Database
                 {
                     // The TemplateTable in the .tdb and .ddb database differ. 
                     // Update the .ddb Template table by dropping the .ddb template table and replacing it with the .tdb table. 
-                    base.Database.DropTable(Constant.DBTables.Template);
+                    Database.DropTable(Constant.DBTables.Template);
                     await base.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
                 }
 
@@ -399,7 +401,7 @@ namespace Timelapse.Database
             if (fileDatabase.Database.PragmaGetQuickCheck() == false || fileDatabase.TableExists(Constant.DBTables.FileData) == false)
             {
                 // The database file is likely corrupt, possibly due to missing a key table, is an empty file, or is otherwise unreadable
-                fileDatabase?.Dispose();
+                fileDatabase.Dispose();
                 return null;
             }
             await fileDatabase.UpgradeDatabasesAndCompareTemplatesAsync(templateDatabase, templateSyncResults).ConfigureAwait(true);
@@ -514,7 +516,7 @@ namespace Timelapse.Database
                     warning += (templateSyncResults.DataLabelsInImageButNotTemplateDatabase.Count == 1)
                         ? " data field in your .ddb data file has no corresponding control in your .tdb template file: "
                         : " data fields in your .ddb data file have no corresponding controls in your .tdb template file: ";
-                    warning += String.Format("'{0}'", string.Join(", ", templateSyncResults.DataLabelsInImageButNotTemplateDatabase.Keys));
+                    warning += $"'{string.Join(", ", templateSyncResults.DataLabelsInImageButNotTemplateDatabase.Keys)}'";
                     templateSyncResults.ControlSynchronizationWarnings.Add(warning);
                 }
             }
@@ -542,25 +544,25 @@ namespace Timelapse.Database
         // Upgrade the database as needed from older to newer formats to preserve backwards compatability 
         private async Task UpgradeDatabasesForBackwardsCompatabilityAsync()
         {
-            bool neverRun = true;
-            if (neverRun)
-            {
-                // This method is currently a placeholder until we need to do some updating
-                return;
-            }
+            //bool neverRun = true;
+            //if (neverRun)
+            //{
+            //    // This method is currently a placeholder until we need to do some updating
+            //    return;
+            //}
             // Some comparisons are triggered by comparing
             // - the version number stored in the DB's ImageSetTable 
             // - the current Timelapse program version of the 
             // - particular version numbers where known changes occured 
             // Note: if we can't retrieve the version number from the image set, then set it to a very low version number to guarantee all checks will be made
-            if (false == this.TryGetImageSetVersionNumber(out string imageSetVersionNumber, true))
-            {
-                imageSetVersionNumber = Constant.DatabaseValues.VersionNumberMinimum;
-            }
-            // Get the version of the current Timelapse program
-            string timelapseVersionNumberAsString = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+            //if (false == this.TryGetImageSetVersionNumber(out string imageSetVersionNumber, true))
+            //{
+            //    imageSetVersionNumber = Constant.DatabaseValues.VersionNumberMinimum;
+            //}
+            //// Get the version of the current Timelapse program
+            //string timelapseVersionNumberAsString = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
 
-            // Add code here that check and repair backward compatability
+            //// Add code here that check and repair backward compatability
             await Task.Run(() =>
             {
                 // See pre-2.2.2.5 version for example code
@@ -657,7 +659,7 @@ namespace Timelapse.Database
                                 {
                                     // There is already a value in the note, so use that
                                     queryValues.Append($"{Sql.Quote(imageProperties.GetValueDisplayString(columnName))}{Sql.Comma}");
-                                    // System.Diagnostics.Debug.Print("Value is: " + imageProperties.GetValueDisplayString(columnName));
+                                    // Debug.Print("Value is: " + imageProperties.GetValueDisplayString(columnName));
                                 }
                                 else
                                 {
@@ -691,7 +693,7 @@ namespace Timelapse.Database
                 queryValues.Remove(queryValues.Length - 2, 2); // Remove ", "
 
                 // Create the entire SQL command (limited to RowsPerInsert datalines)
-                string command = queryColumns.ToString() + queryValues.ToString();
+                string command = queryColumns + queryValues.ToString();
 
                 this.CreateBackupIfNeeded();
                 this.Database.ExecuteNonQuery(command);
@@ -938,11 +940,11 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
 
-            // System.Diagnostics.Debug.Print("Select Query: " + query);
+            // Debug.Print("Select Query: " + query);
             // PERFORMANCE  This seems to be the main performance bottleneck. Running a query on a large database that returns
             // a large datatable (e.g., all files) is very slow. There is likely a better way to do this, but I am not sure what
             // as I am not that savvy in database optimizations.
-            // System.Diagnostics.Debug.Print(query);
+            // Debug.Print(query);
             DataTable filesTable = await Task.Run(() => this.Database.GetDataTableFromSelect(query)).ConfigureAwait(true);
             this.FileTable = new FileTable(filesTable);
         }
@@ -1096,14 +1098,14 @@ namespace Timelapse.Database
             foreach (string relativePath in relativePathList.Cast<String>())
             {
                 allPaths.Add(relativePath);
-                string parent = string.IsNullOrEmpty(relativePath) ? String.Empty : System.IO.Path.GetDirectoryName(relativePath);
+                string parent = string.IsNullOrEmpty(relativePath) ? String.Empty : Path.GetDirectoryName(relativePath);
                 while (!String.IsNullOrWhiteSpace(parent))
                 {
                     if (!allPaths.Contains(parent))
                     {
                         allPaths.Add(parent);
                     }
-                    parent = System.IO.Path.GetDirectoryName(parent);
+                    parent = Path.GetDirectoryName(parent);
                 }
             }
             allPaths.Sort();
@@ -1230,7 +1232,7 @@ namespace Timelapse.Database
                 ImageRow image = this.FileTable[index];
                 if (null == image)
                 {
-                    System.Diagnostics.Debug.Print(
+                    Debug.Print(
                         $"in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {index}");
                     continue;
                 }
@@ -1266,7 +1268,7 @@ namespace Timelapse.Database
                 ImageRow image = this.FileTable[fileIndex];
                 if (null == image)
                 {
-                    System.Diagnostics.Debug.Print(
+                    Debug.Print(
                         $"in FileDatabase.UpdateFiles v2: FileTable returned null as there is no index: {fileIndex}");
                     continue;
                 }
@@ -1328,7 +1330,7 @@ namespace Timelapse.Database
             {
                 throw new ArgumentOutOfRangeException(nameof(adjustment), "The current format of the time column does not support milliseconds.");
             }
-            this.UpdateAdjustedFileTimes((string fileName, int fileIndex, int count, DateTime imageTime) => imageTime + adjustment, startRow, endRow, CancellationToken.None);
+            this.UpdateAdjustedFileTimes((fileName, fileIndex, count, imageTime) => imageTime + adjustment, startRow, endRow, CancellationToken.None);
         }
 
         // Given a time difference in ticks, update all the date/time field in the database
@@ -1358,7 +1360,6 @@ namespace Timelapse.Database
             // We now have an unselected temporary data table
             // Get the original value of each, and update each date by the corrected amount if possible
             List<ImageRow> filesToAdjust = new List<ImageRow>();
-            TimeSpan mostRecentAdjustment;
             int count = endRow - startRow + 1;
             int fileIndex = 0;
             for (int row = startRow; row <= endRow; ++row)
@@ -1374,7 +1375,7 @@ namespace Timelapse.Database
                 // adjust the date/time
                 fileIndex++;
                 DateTime newImageDateTime = adjustment.Invoke(image.File, fileIndex, count, currentImageDateTime);
-                mostRecentAdjustment = newImageDateTime - currentImageDateTime;
+                TimeSpan mostRecentAdjustment = newImageDateTime - currentImageDateTime;
                 if (mostRecentAdjustment.Duration() < TimeSpan.FromSeconds(1))
                 {
                     // Ignore changes if it results in less than a 1 second change, 
@@ -1474,7 +1475,7 @@ namespace Timelapse.Database
             List<string> idClauses = new List<string>();
             foreach (long fileID in fileIDs)
             {
-                idClauses.Add(Constant.DatabaseColumn.ID + " = " + fileID.ToString());
+                idClauses.Add(Constant.DatabaseColumn.ID + " = " + fileID);
             }
             // Delete the data and markers associated with that image
             this.CreateBackupIfNeeded();
@@ -1572,7 +1573,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             // Uncommment this to see the actual complete query
-            // System.Diagnostics.Debug.Print("File Counts: " + query);
+            // Debug.Print("File Counts: " + query);
             return this.Database.ScalarGetCountFromSelect(query);
         }
 
@@ -1637,7 +1638,7 @@ namespace Timelapse.Database
             query += Sql.CloseParenthesis;
 
             // Uncommment this to see the actual complete query
-            //System.Diagnostics.Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetCountFromSelect(query).ToString() );
+            //Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetCountFromSelect(query).ToString() );
             return this.Database.ScalarGetCountFromSelect(query) != 0;
         }
 
@@ -1687,7 +1688,7 @@ namespace Timelapse.Database
                 query += constrainToRelativePathTerm + Sql.And + selectionTerm + Sql.CloseParenthesis;
             }
 
-            // System.Diagnostics.Debug.Print("ExistsRowThatMatchesExactSelection: " + query);
+            // Debug.Print("ExistsRowThatMatchesExactSelection: " + query);
             return this.Database.ScalarBoolFromOneOrZero(query);
         }
         #endregion
@@ -1923,7 +1924,7 @@ namespace Timelapse.Database
             if (File.Exists(Path.Combine(this.FolderPath, this.FileName)))
             {
                 // SAULXXX Should really check for failure, as TryMove will return true/false
-                Util.FilesFolders.TryMoveFileIfExists(
+               FilesFolders.TryMoveFileIfExists(
                     Path.Combine(this.FolderPath, this.FileName),
                     Path.Combine(this.FolderPath, newFileName));  // Change the file name to the new file name
                 this.FileName = newFileName; // Store the file name
@@ -1968,7 +1969,7 @@ namespace Timelapse.Database
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage(String.Format("Read of marker failed for dataLabel '{0}'. {1}", dataLabel, exception.ToString()));
+                    TracePrint.PrintMessage(String.Format("Read of marker failed for dataLabel '{0}'. {1}", dataLabel, exception));
                     pointList = String.Empty;
                 }
                 markersForCounter.ParsePointList(pointList);
@@ -1981,7 +1982,7 @@ namespace Timelapse.Database
         private void MarkersLoadRowsFromDatabase()
         {
             string markersQuery = Sql.SelectStarFrom + Constant.DBTables.Markers;
-            this.Markers = new DataTableBackedList<MarkerRow>(this.Database.GetDataTableFromSelect(markersQuery), (DataRow row) => new MarkerRow(row));
+            this.Markers = new DataTableBackedList<MarkerRow>(this.Database.GetDataTableFromSelect(markersQuery), row => new MarkerRow(row));
         }
 
         // Add an empty new row to the marker list if it isnt there. Return true if we added it, otherwise false 
@@ -2058,7 +2059,7 @@ namespace Timelapse.Database
             // Note that I repeated the null check here, as for some reason it was still coming up as a CA1062 warning
             List<string> whereClauses = new List<string>
             {
-               Constant.DatabaseColumn.ID + Sql.Equal + imageID.ToString()
+               Constant.DatabaseColumn.ID + Sql.Equal + imageID
             };
             this.Database.Delete(Constant.DBTables.Markers, whereClauses);
         }
@@ -2067,10 +2068,10 @@ namespace Timelapse.Database
         #region ImageSet manipulation
         private void ImageSetLoadFromDatabase()
         {
-            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID.ToString();
+            string imageSetQuery = Sql.SelectStarFrom + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + " = " + Constant.DatabaseValues.ImageSetRowID;
             DataTable imageSetTable = this.Database.GetDataTableFromSelect(imageSetQuery);
             this.ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
-            imageSetTable?.Dispose();
+            imageSetTable.Dispose();
         }
 
         // Try getting the version number as recorded in the ImageSet datatable.
@@ -2092,6 +2093,14 @@ namespace Timelapse.Database
             {
                 // As there is no version column, this must be a really early version.
                 // Return some very low number, which should trigger most checks and updates
+                versionNumber = Constant.DatabaseValues.VersionNumberMinimum;
+                return true;
+            }
+
+            if (this.ImageSet == null)
+            {
+                // This shouldn't happen
+                TracePrint.NullException(nameof(this.ImageSet));
                 versionNumber = Constant.DatabaseValues.VersionNumberMinimum;
                 return true;
             }
@@ -2166,7 +2175,6 @@ namespace Timelapse.Database
 
         // Try to read the recognition data from the Json file into the Recognizer structure
         // A progress bar is displayed
-        // TODO: Make this cancellable, although I am not sure how to intercept the cancel button
         // Success: returns a filled in Recognizer structure
         // Failure: returns null
         public async Task<Recognizer> JsonDeserializeRecognizerFileAsync(string path)
@@ -2177,9 +2185,9 @@ namespace Timelapse.Database
             }
 
             Recognizer jsonRecognizer = null;
-            using (ProgressStream ps = new ProgressStream(System.IO.File.OpenRead(path), GlobalReferences.CancelTokenSource))
+            using (ProgressStream ps = new ProgressStream(File.OpenRead(path), GlobalReferences.CancelTokenSource))
             {
-                ps.BytesRead += new ProgressStreamReportDelegate(PStream_BytesRead);
+                ps.BytesRead += PStream_BytesRead;
 
                 using (TextReader sr = new StreamReader(ps))
                 {
@@ -2240,7 +2248,7 @@ namespace Timelapse.Database
 
                     // Resetting these tables to null will force reading the new values into them
                     // TODO: Put this somewhere else in case the user aborts the update!
-                    // TODO Update this comment: Resetting these tables to null will force reading the new values into them
+                    // Also Update this comment: Resetting these tables to null will force reading the new values into them
                     this.detectionDataTable = null; // to force repopulating the data structure if it already exists.
                     this.detectionCategoriesDictionary = null;
                     this.classificationCategoriesDictionary = null;
@@ -2276,19 +2284,19 @@ namespace Timelapse.Database
                         }
 
                         // Step 2. Merge the DB and Json detection categories if they are compatable
-                        if (dbDetectionCategories?.ContainsKey("0") == true)
+                        if (dbDetectionCategories.ContainsKey("0"))
                         {
                             // Remove the 0: Empty key/value pair, as that is artificially generated by timelapse and is not in the JSON
                             dbDetectionCategories.Remove("0");
                         }
                         if (Util.Dictionaries.MergeDictionaries(dbDetectionCategories, jsonRecognizer.detection_categories, out Dictionary<string, string> mergedDetectionCategories))
                         {
-                            // System.Diagnostics.Debug.Print("merged succeeded for detection categories");
+                            // Debug.Print("merged succeeded for detection categories");
                             jsonRecognizer.detection_categories = new Dictionary<string, string>(mergedDetectionCategories);
                         }
                         else
                         {
-                            // System.Diagnostics.Debug.Print("merged failed for detection categories");
+                            // Debug.Print("merged failed for detection categories");
                             return RecognizerImportResultEnum.IncompatableDetectionCategories;
                         }
 
@@ -2296,12 +2304,12 @@ namespace Timelapse.Database
                         // If they are, then we can just use the existing DB categories as they will apply to the new categories.
                         if (Util.Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories))
                         {
-                            // System.Diagnostics.Debug.Print("merged succeeded for classification categories");
+                            // Debug.Print("merged succeeded for classification categories");
                             jsonRecognizer.classification_categories = new Dictionary<string, string>(mergedClassificationCategories);
                         }
                         else
                         {
-                            // System.Diagnostics.Debug.Print("merged failed for classification categories");
+                            // Debug.Print("merged failed for classification categories");
                             return RecognizerImportResultEnum.IncompatableClassificationCategories;
                         }
                         clearDBRecognitionData = mergeDetections == false; // just to make it more readable
@@ -2507,8 +2515,6 @@ namespace Timelapse.Database
         // Return a list of folder paths missing in the DB but present in the jsonRecognizer file
         private bool CompareRecognizerAndDBFolders(Recognizer recognizer, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
         {
-            string folderpath;
-
             if (recognizer.images.Count <= 0)
             {
                 // No point continuing if there are no jsonRecognizer entries
@@ -2530,7 +2536,13 @@ namespace Timelapse.Database
             SortedSet<string> foldersInRecognizerList = new SortedSet<string>();
             foreach (image image in recognizer.images)
             {
-                folderpath = Path.GetDirectoryName(image.file);
+                string folderpath = Path.GetDirectoryName(image.file);
+                if (folderpath == null)
+                {
+                    // Null if its a root folder e.g. C:\\
+                    TracePrint.NullException(nameof(folderpath));
+                    return false;
+                }
                 if (!string.IsNullOrEmpty(folderpath))
                 {
                     folderpath += "\\";
@@ -2593,12 +2605,17 @@ namespace Timelapse.Database
                 // its important to show detection data (including bounding boxes) as rapidly as possible, such as when a user is quickly scrolling through images.
                 // So I am not clear on how to optimize this (although I suspect a thread running in the background when Timelapse is loaded could perhaps do this)
                 this.RefreshDetectionsDataTable();
-                //this.detectionDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Detections);
             }
             // Retrieve the detection from the in-memory datatable.
             // Note that because IDs are in the database as a string, we convert it
             // PERFORMANCE: This takes a bit of time, not much... but could be improved. Not sure if there is an index automatically built on it. If not, do so.
-            return this.detectionDataTable.Select(Constant.DatabaseColumn.ID + Sql.Equal + fileID.ToString());
+            if (this.detectionDataTable == null)
+            {
+                // Shouldn't happen as the above should reset it
+                TracePrint.NullException(nameof(this.detectionDataTable));
+                return null;
+            }
+            return this.detectionDataTable.Select(Constant.DatabaseColumn.ID + Sql.Equal + fileID);
         }
 
         // Get the detections associated with the current file, if any
@@ -2609,8 +2626,15 @@ namespace Timelapse.Database
                 //this.classificationsDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Classifications);
                 this.RefreshClassificationsDataTable();
             }
+
+            if (this.classificationsDataTable == null)
+            {
+                // Shouldn't happen as the above should reset it
+                TracePrint.NullException(nameof(this.classificationsDataTable));
+                return null;
+            }
             // Note that because IDs are in the database as a string, we convert it
-            return this.classificationsDataTable.Select(Constant.ClassificationColumns.DetectionID + Sql.Equal + detectionID.ToString());
+            return this.classificationsDataTable.Select(Constant.ClassificationColumns.DetectionID + Sql.Equal + detectionID);
         }
 
         // Return the label that matches the detection category 
@@ -2824,7 +2848,7 @@ namespace Timelapse.Database
         // Given a Counter DataLabel, count the number of detections associated with each image, and set that image's counter to that count
         public bool DetectionsAddCountToCounter(string counterDataLabel, double confidenceValue, IProgress<ProgressBarArguments> progress)
         {
-            if (this?.Database == null || false == this.DetectionsExists())
+            if (this.Database == null || false == this.DetectionsExists())
             {
                 return false;
             }
@@ -2847,7 +2871,6 @@ namespace Timelapse.Database
                 image.SetValueFromDatabaseString(counterDataLabel, count.ToString());
             }
 
-            ColumnTuplesWithWhere columnTuplesWithWhere;
             List<ColumnTuplesWithWhere> columnTuplesWithWhereList = new List<ColumnTuplesWithWhere>();
             foreach (KeyValuePair<long, int> kvp in dict)
             {
@@ -2855,7 +2878,7 @@ namespace Timelapse.Database
                 //this.UpdateFile(kvp.Key, counterDataLabel, kvp.Value.ToString());
 
                 // Add a query to update the row in the database
-                columnTuplesWithWhere = new ColumnTuplesWithWhere();
+                ColumnTuplesWithWhere columnTuplesWithWhere = new ColumnTuplesWithWhere();
                 columnTuplesWithWhere.Columns.Add(new ColumnTuple(counterDataLabel, kvp.Value.ToString()));
                 columnTuplesWithWhere.SetWhere(kvp.Key);
                 columnTuplesWithWhereList.Add(columnTuplesWithWhere);
@@ -2893,7 +2916,15 @@ namespace Timelapse.Database
             {
                 return false;
             }
-            threshold = (float)this.Database.ScalarGetFloatValue(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BoundingBoxDisplayThreshold);
+
+            float? fthreshold = this.Database.ScalarGetFloatValue(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BoundingBoxDisplayThreshold);
+            if (fthreshold == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(fthreshold));
+                return false;
+            }
+            threshold = (float)fthreshold;
             return true;
         }
         #endregion
@@ -3135,7 +3166,7 @@ namespace Timelapse.Database
             }
             catch
             {
-                System.Diagnostics.Debug.Print("Failed in FileDatabase:DisposeAsNeeded");
+                Debug.Print("Failed in FileDatabase:DisposeAsNeeded");
             }
         }
         #endregion

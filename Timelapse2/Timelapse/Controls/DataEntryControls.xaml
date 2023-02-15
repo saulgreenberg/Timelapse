@@ -18,7 +18,9 @@
         <Thickness  x:Key="BorderThicknessCommonHighlight">3</Thickness>
 
         <!-- DefaultLabel Style: Properties -->
+        <!-- ReSharper disable Xaml.RedundantResource -->
         <Style x:Key="DefaultLabel" TargetType="Label">
+            <!-- ReSharper restore Xaml.RedundantResource -->
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="5,4,5,0"/>
@@ -26,8 +28,10 @@
             <Setter Property="Height" Value="25" />
         </Style>
 
+        <!-- ReSharper disable Xaml.RedundantResource -->
         <!--NoteTextBox Style: Properties-->
         <Style x:Key="NoteTextBox" TargetType="TextBox">
+            <!-- ReSharper restore Xaml.RedundantResource -->
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="5,0,5,0"/>
@@ -70,8 +74,10 @@
 
         </Style>
 
+        <!-- ReSharper disable Xaml.RedundantResource -->
         <!-- CounterTextBox Style: Properties -->
         <Style x:Key="CounterTextBox" TargetType="xctk:IntegerUpDown">
+            <!-- ReSharper restore Xaml.RedundantResource -->
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="5,0,5,0"/>
@@ -89,8 +95,11 @@
             <Setter Property="AllowTextInput" Value="true" />
         </Style>
 
+
+        <!-- ReSharper disable Xaml.RedundantResource -->
         <!-- DateTimeBox Style: Properties -->
         <Style x:Key="DateTimeBox" TargetType="xctk:DateTimePicker">
+            <!-- ReSharper restore Xaml.RedundantResource -->
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="BorderThickness" Value="{StaticResource BorderThicknessCommonNormal}"/>
@@ -102,7 +111,7 @@
             <Setter Property="IsReadOnly" Value="False" />
         </Style>
 
-        <!-- UTCOffsetBox Style: Properties -->
+        <!-- UTCOffsetBox Style: Properties --><!--
         <Style x:Key="UTCOffsetBox" TargetType="xctk:TimeSpanUpDown">
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -113,7 +122,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Focusable" Value="True" />
             <Setter Property="IsReadOnly" Value="False" />
-        </Style>
+        </Style>-->
 
         <!-- ChoiceComboBox Style - implements a Flat Choice style -->
         <SolidColorBrush x:Key="ComboBoxNormalBackgroundBrush" Color="#fff" />
@@ -166,7 +175,9 @@
         </ControlTemplate>
 
         <!-- Choice ComboBox Template  -->
+        <!-- ReSharper disable Xaml.RedundantResource -->
         <Style x:Key="ChoiceComboBox"  TargetType="{x:Type ComboBox}">
+            <!-- ReSharper restore Xaml.RedundantResource -->
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -179,22 +190,22 @@
             <Setter Property="IsReadOnly" Value="False" />
             <Setter Property="IsEditable" Value="False" />
 
-            <Setter Property="UIElement.SnapsToDevicePixels" Value="True"/>
-            <Setter Property="FrameworkElement.OverridesDefaultStyle" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
             <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
             <Setter Property="TextElement.Foreground" Value="Black"/>
-            <Setter Property="FrameworkElement.FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
-            <Setter Property="Control.Template">
+            <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Border Name="PART_Border" BorderBrush="{StaticResource BorderBrushCommonNormal}" BorderThickness="{StaticResource BorderThicknessCommonNormal}">
                             <Grid>
                                 
                                 <!-- Toggle button  -->
-                                <ToggleButton Name="ToggleButton" Grid.Column="2"
+                                <ToggleButton Name="ToggleButton" 
                                 ClickMode="Press" 
                                 Focusable="False"
                                 IsChecked="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
@@ -277,7 +288,9 @@
 
         <!-- Counter Button Style -->
         <SolidColorBrush x:Key="CounterBrushDisabledForeground" Color="#888" />
+        <!-- ReSharper disable Xaml.RedundantResource -->
         <Style x:Key="CounterButton" TargetType="RadioButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <!-- ReSharper restore Xaml.RedundantResource -->
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Margin" Value="5,0,5,0" />
             <Setter Property="Padding" Value="8,0,8,0" />
@@ -369,7 +382,9 @@
             <SolidColorBrush x:Key="FlagBrushGlyph" Color="#444" />
             <SolidColorBrush x:Key="FlagBrushGlyphLight" Color="Silver" />
 
+             <!-- ReSharper disable Xaml.RedundantResource -->
             <Style x:Key="FlagCheckBox" TargetType="{x:Type CheckBox}">
+                <!-- ReSharper restore Xaml.RedundantResource -->
                 <Setter Property="FocusVisualStyle">
                     <Setter.Value>
                         <Style>
@@ -523,7 +538,9 @@
             </Style>
             
             <!-- Container Style Properities -->
+        <!-- ReSharper disable Xaml.RedundantResource -->
             <Style x:Key="ContainerStyle" TargetType="StackPanel">
+                <!-- ReSharper restore Xaml.RedundantResource -->
                 <Setter Property="Orientation" Value="Horizontal"/>
                 <Setter Property="Margin" Value="0,0,10,0" />
                 <Setter Property="Height" Value="35"/>

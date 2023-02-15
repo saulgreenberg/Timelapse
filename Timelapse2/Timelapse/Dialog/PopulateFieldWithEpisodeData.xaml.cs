@@ -109,13 +109,11 @@ namespace Timelapse.Dialog
             {
                 string dataLabelToUpdate = this.dataLabelByLabel[this.dataFieldLabel];
                 this.TotalImages = this.fileDatabase.CountAllCurrentlySelectedFiles;
-                int percentDone = 0;
                 ObservableCollection<KeyValuePair<string, string>> keyValueList = new ObservableCollection<KeyValuePair<string, string>>();
                 List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
 
                 //for (int imageIndex = 0; imageIndex < totalImages; ++imageIndex)
                 int imageIndex = 0;
-                string singletonData;
                 while (imageIndex < TotalImages)
                 {
                     Episodes.Reset();
@@ -132,7 +130,7 @@ namespace Timelapse.Dialog
                     // Provide feedback to the busy indicator every now and then
                     if (this.ReadyToRefresh())
                     {
-                        percentDone = Convert.ToInt32(imageIndex / TotalImages * 100.0);
+                        int percentDone = Convert.ToInt32(imageIndex / TotalImages * 100.0);
                         this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("Processing {0}/{1} images.  ", imageIndex, TotalImages), true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
@@ -142,7 +140,7 @@ namespace Timelapse.Dialog
                     {
 
                         this.EpisodeCount++;
-                        singletonData = String.Format("{0}1|1", this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty);
+                        string singletonData = String.Format("{0}1|1", this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty);
 
                         List<ColumnTuple> ctl = new List<ColumnTuple>() { new ColumnTuple(this.dataLabelByLabel[this.dataFieldLabel], singletonData) };
                         imagesToUpdate.Add(new ColumnTuplesWithWhere(ctl, this.fileDatabase.FileTable[imageIndex].ID));

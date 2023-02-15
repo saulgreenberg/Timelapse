@@ -9,7 +9,7 @@ namespace Timelapse.Editor.Dialog
     /// This dialog displays a list of metadata found in a selected file. 
     /// </summary>
     // Note: There are lots of commonalities between this dialog and DialogPopulate, but its not clear if it's worth the effort of factoring the two.
-    public partial class InspectMetadata : Window
+    public partial class InspectMetadata
     {
         #region Private variables
         private string FilePath;

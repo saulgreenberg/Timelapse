@@ -31,8 +31,8 @@
                                   &#10;&#x2022; too low confidence values may result in spurious bounding boxes.
                                   &#10;&#x2022; too high confidence values may hide bounding boxes that would have been useful."
                             ShowExplanationVisibility="False" />
-        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1"></Rectangle>
-        <!--Automated Image Recognition-->
+        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
+            <!--Automated Image Recognition-->
         <GroupBox Name="AutomatedImageRecognitionPanel" Header="Bounding box options"  Grid.Row="2" VerticalAlignment="Top" FontWeight="Bold" FontSize="12"  Margin="15,20,15,5" Padding="10,0,10,0" Width="776" Height="Auto" IsEnabled="True">
             <DockPanel Width="751">
                 <StackPanel Orientation="Vertical" >
@@ -53,9 +53,9 @@
 
                     </StackPanel>
                 </StackPanel>
-                <Button Name="ResetDetections" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDetections_Click"></Button>
+                <Button Name="ResetDetections" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetDetections_Click" />
             </DockPanel>
         </GroupBox>
-        <Button Name="OkButton" Content="Okay" FontWeight="Normal" Height="30" Width="60" Margin="0,0,20,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"  Grid.Row="4" Click="OkButton_Click"></Button>
+        <Button Name="OkButton" Content="Okay" FontWeight="Normal" Height="30" Width="60" Margin="0,0,20,10" VerticalAlignment="Bottom" HorizontalAlignment="Right"  Grid.Row="3" Click="OkButton_Click" />
     </Grid>
 </Window>

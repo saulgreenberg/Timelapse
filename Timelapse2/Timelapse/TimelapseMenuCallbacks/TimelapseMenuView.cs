@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Enums;
+using Timelapse.Util;
 
 namespace Timelapse
 {
@@ -54,6 +55,11 @@ namespace Timelapse
         // View Episode helper function
         private void EpisodeShowNextOrPrevious_Click(DirectionEnum direction)
         {
+            if (this.DataHandler?.ImageCache?.Current == null)
+            {
+                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                return;
+            }
             long currentFileID = this.DataHandler.ImageCache.Current.ID;
             bool result = Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out int increment);
             if (result)

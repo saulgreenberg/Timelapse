@@ -98,7 +98,7 @@ namespace Timelapse.Controls
         #region Initialization, Loaded
         public MetadataGrid()
         {
-            this.SelectedMetadata = this.GetSelectedFromMetadataList(this.viewModel.MetadataList, this.SelectedMetadata);
+            this.SelectedMetadata = this.GetSelectedFromMetadataList(this.viewModel.MetadataList, null);
             DataContext = viewModel;
             InitializeComponent();
 
@@ -149,7 +149,7 @@ namespace Timelapse.Controls
             // If there is no metadata, this is an easy way to inform the user
             if (this.metadataDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Timelapse.Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
             }
 
             ObservableCollection<DataContents> temp = new ObservableCollection<DataContents>();
@@ -164,7 +164,7 @@ namespace Timelapse.Controls
 
                 // If UseDateMetadata only is true, then only show metadata fields whose values are parseable as dates.
                 if (false == this.UseDateMetadataOnly
-                    || (metadata.Value?.Value != null && DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value.ToString(), out DateTime _)))
+                    || (metadata.Value?.Value != null && DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value, out DateTime _)))
                 {
                     temp.Add(new DataContents(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value, String.Empty));
                 }
@@ -189,7 +189,7 @@ namespace Timelapse.Controls
             // If there is no metadata, inform the user by setting bogus dictionary values which will appear on the grid
             if (exifDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Timelapse.Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
             }
 
             // In order to populate the metadataDictionary and datagrid , we have to unpack the ExifTool dictionary, recreate the dictionary, and create a list containing four values
@@ -198,7 +198,7 @@ namespace Timelapse.Controls
             {
                 // If UseDateMetadata only is true, then only show metadata fields whose values are parseable as dates.
                 if (false == this.UseDateMetadataOnly
-                    || DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.ToString(), out DateTime _))
+                    || DateTimeHandler.TryParseMetadataDateTaken(metadata.Value, out DateTime _))
                 {
                     temp.Add(new DataContents(metadata.Key, String.Empty, metadata.Key, metadata.Value, ""));
                 }
@@ -300,7 +300,7 @@ namespace Timelapse.Controls
                 if (datalabelCell.Content is ContentPresenter presenter1)
                 {
                     ComboBox cb = (ComboBox)System.Windows.Media.VisualTreeHelper.GetChild(presenter1, 0);
-                    //System.Diagnostics.Debug.Print(cb.Text + "|" + (string)chosenComboBox.SelectedValue);
+                    //Debug.Print(cb.Text + "|" + (string)chosenComboBox.SelectedValue);
                     if (cb != selectedComboBox && cb.Text == (string)selectedComboBox.SelectedValue)
                     {
                         cb.Text = String.Empty;
@@ -352,11 +352,11 @@ namespace Timelapse.Controls
         #region Class: DataContents: A class defining the data model behind each row in the AvailableMetadataDataGrid 
         public class DataContents
         {
-            public string MetadataKey { get; set; } = String.Empty;
-            public string MetadataKind { get; set; } = String.Empty;
-            public string MetadataName { get; set; } = String.Empty;
-            public string MetadataValue { get; set; } = String.Empty;
-            public string AssignedLabel { get; set; } = String.Empty;
+            public string MetadataKey { get; set; }
+            public string MetadataKind { get; set; }
+            public string MetadataName { get; set; }
+            public string MetadataValue { get; set; }
+            public string AssignedLabel { get; set; }
             public DataContents(string metadataKey, string metadataKind, string metadataName, string metadataValue, string assignedDataLabel)
             {
                 this.MetadataKey = metadataKey;

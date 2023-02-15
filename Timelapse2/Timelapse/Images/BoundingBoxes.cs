@@ -32,6 +32,7 @@ namespace Timelapse.Images
         #endregion
 
         #region Public Methods - Draw BoundingBoxes In Canvas
+
         /// <summary>
         /// If detections are turned on, draw all bounding boxes relative to 0,0 and contrained by width and height within the provided
         /// The width/height should be the actual width/height of the image (also located at 0,0) as it appears in the canvas , which is required if the bounding boxes are to be drawn in the correct places
@@ -39,6 +40,10 @@ namespace Timelapse.Images
         /// The canvas should also be cleared of prior bounding boxes before this is invoked.
         /// </summary>
         /// <param name="canvas"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="margin"></param>
+        /// <param name="transformGroup"></param>
         public bool DrawBoundingBoxesInCanvas(Canvas canvas, double width, double height, int margin = 0, TransformGroup transformGroup = null)
         {
             if (canvas == null)
@@ -97,21 +102,21 @@ namespace Timelapse.Images
                     // The color and opacity of the bounding box depends upon its category and whether we are using color-blind friendly colors
                     case "0":
                         // In the current implementation, the first category is usually assigned to 'Empty', so this will likely never appear.
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.LavenderBlush, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.LavenderBlush, opacity);
                         break;
                     case "1":
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.DeepSkyBlue, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.DeepSkyBlue, opacity);
                         break;
                     case "2":
                         brush = (colorblind)
-                            ? Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.Yellow)
-                            : Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.Red, opacity);
+                            ? ColorsAndBrushes.SolidColorBrushFromColor(Colors.Yellow)
+                            : ColorsAndBrushes.SolidColorBrushFromColor(Colors.Red, opacity);
                         break;
                     case "3":
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.White, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.White, opacity);
                         break;
                     default:
-                        brush = Util.ColorsAndBrushes.SolidColorBrushFromColor(Colors.PaleGreen, opacity);
+                        brush = ColorsAndBrushes.SolidColorBrushFromColor(Colors.PaleGreen, opacity);
                         break;
                 }
                 rect.Stroke = brush;
@@ -243,11 +248,11 @@ namespace Timelapse.Images
                         Canvas.SetLeft(classificationUIObject, leftPosition);
                         Canvas.SetTop(classificationUIObject, topPosition);
                         canvas.Children.Add(classificationUIObject);
-                        Canvas.SetZIndex(classificationUIObject, 1);
+                        Panel.SetZIndex(classificationUIObject, 1);
                     }
                 }
             }
-            Canvas.SetZIndex(canvas, 1);
+            Panel.SetZIndex(canvas, 1);
             return true;
         }
 
@@ -259,7 +264,7 @@ namespace Timelapse.Images
                 if (e.AddedItems.Count == 1)
                 {
                     cb.SelectedItem = e.AddedItems[0];
-                    // System.Diagnostics.Debug.Print(e.AddedItems[0].ToString());
+                    // Debug.Print(e.AddedItems[0].ToString());
                 }
             }
         }

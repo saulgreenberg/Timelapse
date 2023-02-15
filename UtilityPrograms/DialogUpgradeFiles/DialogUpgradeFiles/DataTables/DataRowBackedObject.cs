@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using DialogUpgradeFiles.Util;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -38,7 +39,7 @@ namespace DialogUpgradeFiles.Database
         public int GetIndex(DataTable dataTable)
         {
             // Check the arguments for null 
-            Util.ThrowIf.IsNullArgument(dataTable, nameof(dataTable));
+            ThrowIf.IsNullArgument(dataTable, nameof(dataTable));
 
             return dataTable.Rows.IndexOf(this.Row);
         }

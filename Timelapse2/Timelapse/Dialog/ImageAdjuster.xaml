@@ -14,6 +14,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -21,9 +22,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Name="OtherControlsArea" Background="White" Grid.Row="0" Grid.RowSpan="3" Grid.ColumnSpan="3"></Border>
-        <Border Name="GammaArea" Background="WhiteSmoke" Grid.Row="4" Grid.ColumnSpan="3"></Border>
-        <Border Name="ButtonArea" Background="White" Grid.Row="6" Grid.ColumnSpan="3"></Border>
+        <Border Name="OtherControlsArea" Background="White" Grid.Row="0" Grid.RowSpan="3" Grid.ColumnSpan="3" />
+        <Border Name="GammaArea" Background="WhiteSmoke" Grid.Row="4" Grid.ColumnSpan="3" Grid.Column="0" />
+        <Border Name="ButtonArea" Background="White" Grid.Row="6" Grid.ColumnSpan="3" Grid.Column="0" />
         <RadioButton Name="CBNone" GroupName="SingleManipulation" Grid.Row="0" Grid.Column="0" Content="None" Margin="5" IsChecked="True" VerticalAlignment="Center" ToolTip="Clear special effects"/>
         <RadioButton Name="CBEdges" GroupName="SingleManipulation" Grid.Row="0" Grid.Column="1" Content="Edges" Margin="0,5,5,5" VerticalAlignment="Center" ToolTip="Detect and show edges in the image"/>
         <RadioButton Name="CBSharpen" GroupName="SingleManipulation" Grid.Row="0" Grid.Column="2" Content="Sharpen" Margin="5,5,5,5" VerticalAlignment="Center" ToolTip="Sharpen the image (a subtle effect)" />
@@ -36,12 +37,12 @@
         <Slider Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Name="BrightnessSlider" Maximum="100" Minimum="-100" Value="0" VerticalAlignment="Center" Margin="0,0,5,0" IsMoveToPointEnabled="True"
                 ToolTip="Change the image brightness" LargeChange="5" SmallChange="5" TickFrequency="5" IsSnapToTickEnabled="True"/>
 
-        <Separator Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" VerticalAlignment="Top" Margin="5,0,10,0" Background="LightGray"/>
+        <Separator Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Top" Margin="5,0,10,0" Background="LightGray"/>
         <CheckBox  Name="CBGamma" Grid.Row="4" Grid.Column="0" Content="Gamma" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5,5,5,5" IsChecked="False" ToolTip="Change the image gamma. Use for clarifying very light and dark areas"
                    Checked="CBGamma_CheckedChanged" Unchecked="CBGamma_CheckedChanged"/>
         <Slider Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Name="GammaSlider" Maximum="100" Minimum="-100" Value="0" VerticalAlignment="Center" IsMoveToPointEnabled="True" Margin="0,0,5,0"
                   IsEnabled="true" ToolTip="Change the image gamma. Use for clarifying very light and dark areas" LargeChange=".1" SmallChange=".1" TickFrequency=".1" IsSnapToTickEnabled="True"/>
-        <Separator Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" VerticalAlignment="Top" Margin="5,0,10,0" Background="LightGray"/>
+        <Separator Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Top" Margin="5,0,10,0" Background="LightGray"/>
         <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,8,5,0">
             <Button Name="ButtonApply" DockPanel.Dock="Left" Content="Apply" IsDefault="True" ToolTip="Apply the image adjustments on the current image" Click="ButtonApply_Click" PreviewKeyDown="Control_PreviewKeyDown" />
             <Button Name="ButtonReset" Content="Reset" DockPanel.Dock="Left" HorizontalAlignment="Right" VerticalAlignment="Center" Click="ButtonReset_Click" ToolTip="Reset the controls to their default (neutral) values" Margin="10,0,0,0"/>

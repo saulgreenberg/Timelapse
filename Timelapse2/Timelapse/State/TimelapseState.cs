@@ -93,7 +93,7 @@ namespace Timelapse.Util
             if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null
                 && GlobalReferences.MainWindow.DataHandler.FileDatabase.DetectionsExists()
                 && true == GlobalReferences.MainWindow?.DataHandler?.FileDatabase.TryGetBoundingBoxDisplayThreshold(out float threshold)
-                && threshold != Constant.RecognizerValues.Undefined)
+                && Math.Abs(threshold - Constant.RecognizerValues.Undefined) > 0.1)
             {
                 this.BoundingBoxDisplayThreshold = threshold;
             }
@@ -112,16 +112,22 @@ namespace Timelapse.Util
             {
                 // We don't have a way to calculate the bounding box threshold, so just use this default for now
                 this.BoundingBoxDisplayThreshold = 0.5;
+                return;
             }
-            else
-            {
-                // Calculate the bounding box threshold from the typical and conservative values as specified in the  recognition file
-                float typicalThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
-                float conservativeThreshold = GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
-                this.BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
-            }
+
+            // Calculate the bounding box threshold from the typical and conservative values as specified in the  recognition file
+            float typicalThreshold = GlobalReferences.MainWindow.DataHandler != null
+                ? GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold()
+                : Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+
+            float conservativeThreshold = GlobalReferences.MainWindow.DataHandler != null
+                ? GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold()
+                : Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+
+            this.BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
         }
-        #endregion
+        #endregion;
+
 
         #region Key Repeat methods
         /// <summary>

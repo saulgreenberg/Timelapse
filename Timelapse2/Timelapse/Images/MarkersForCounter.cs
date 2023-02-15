@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using Timelapse.Util;
 
@@ -80,8 +81,7 @@ namespace Timelapse.Images
             {
                 // Just in case there is a weird format in the point list.
                 // essentially it will add points to the list until the first parsing failure
-                System.Diagnostics.Debug.Print("Parsing issue in MarkersForCounter.ParsePointList");
-                return;
+                Debug.Print("Parsing issue in MarkersForCounter.ParsePointList");
             }
         }
         #endregion
