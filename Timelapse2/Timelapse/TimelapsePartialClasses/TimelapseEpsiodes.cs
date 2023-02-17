@@ -25,7 +25,7 @@ namespace Timelapse
                 }
                 else
                 {
-                    this.EpisodeText.Text = (episode.Item2 == 1) ? "Single" : String.Format("Episode {0}/{1}", episode.Item1, episode.Item2);
+                    this.EpisodeText.Text = (episode.Item2 == 1) ? "Single" : $"Episode {episode.Item1}/{episode.Item2}";
                 }
                 this.EpisodeText.Foreground = (episode.Item1 == 1) ? Brushes.Red : Brushes.Black;
                 this.EpisodeText.Visibility = Visibility.Visible;

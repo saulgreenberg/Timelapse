@@ -35,9 +35,10 @@ namespace Timelapse.Dialog
             if (count >= 100)
             {
                 // Reality check...
-                this.Message.Hint = String.Format("Do you really want to copy {0} files? This seems like alot.{1}", count, Environment.NewLine) + this.Message.Hint;
+                this.Message.Hint =
+                    $"Do you really want to copy {count} files? This seems like alot.{Environment.NewLine}" + this.Message.Hint;
             }
-            this.Message.Title = String.Format("Export (by copying) {0} currently selected files", count);
+            this.Message.Title = $"Export (by copying) {count} currently selected files";
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -175,7 +176,8 @@ namespace Timelapse.Dialog
                     if (this.ReadyToRefresh())
                     {
                         int percentDone = Convert.ToInt32((copiedFiles + skippedFiles) / Convert.ToDouble(totalFiles) * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("Copying {0} / {1} files", copiedFiles, totalFiles), true, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"Copying {copiedFiles} / {totalFiles} files", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
                     }
                 }
@@ -185,7 +187,7 @@ namespace Timelapse.Dialog
             {
                 if (copiedFiles >= 0)
                 {
-                    return String.Format("Export cancelled after copying {0} files", copiedFiles);
+                    return $"Export cancelled after copying {copiedFiles} files";
                 }
                 else if (copiedFiles == -1)
                 {
@@ -195,12 +197,12 @@ namespace Timelapse.Dialog
             }
             if (skippedFiles == 0)
             {
-                return String.Format("Copied {0} out of {1} files{2}", copiedFiles, totalFiles, Environment.NewLine);
+                return $"Copied {copiedFiles} out of {totalFiles} files{Environment.NewLine}";
             }
-            string feedbackMessage = String.Format("Copied {0} out of {1} files{2}", copiedFiles, totalFiles, Environment.NewLine);
+            string feedbackMessage = $"Copied {copiedFiles} out of {totalFiles} files{Environment.NewLine}";
             feedbackMessage += (skippedFiles == 1)
-                    ? String.Format("Skipped {0} file (perhaps it is missing?)", skippedFiles)
-                    : String.Format("Skipped {0} files (perhaps they are missing?)", skippedFiles);
+                    ? $"Skipped {skippedFiles} file (perhaps it is missing?)"
+                    : $"Skipped {skippedFiles} files (perhaps they are missing?)";
             return feedbackMessage;
         }
 

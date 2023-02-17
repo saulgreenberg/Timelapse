@@ -190,8 +190,8 @@ namespace Timelapse.Dialog
         // Update all the labels to show the current old and new classification values
         private void UpdateLabels()
         {
-            this.DarkPixelRatio.Content = String.Format("{0,3:##0}%", 100 * this.darkPixelRatio);
-            this.RatioFound.Content = String.Format("{0,3:##0}", 100 * this.darkPixelRatioFound);
+            this.DarkPixelRatio.Content = $"{100 * this.darkPixelRatio,3:##0}%";
+            this.RatioFound.Content = $"{100 * this.darkPixelRatioFound,3:##0}";
 
             // We don't want to update labels if the image is not valid 
             if (false == Boolean.TryParse(this.OriginalClassification.Content.ToString(), out _))
@@ -332,20 +332,22 @@ namespace Timelapse.Dialog
                     if (this.ReadyToRefresh())
                     {
                         int percentDone = (int)(100.0 * fileIndex / selectedFilesCount);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("{0}/{1} images. Processing {2}", fileIndex, selectedFilesCount, file.File), true, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"{fileIndex}/{selectedFilesCount} images. Processing {file.File}", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                 }
 
                 // Update the database to reflect the changed values
                 // Tracks whether any changes to the data or database are made
-                this.Progress.Report(new ProgressBarArguments(100, String.Format("Writing changes for {0} files. Please wait...", filesToUpdate.Count), false, true));
+                this.Progress.Report(new ProgressBarArguments(100,
+                    $"Writing changes for {filesToUpdate.Count} files. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 this.IsAnyDataUpdated = true;
                 this.fileDatabase.UpdateFiles(filesToUpdate);
                 return filesToUpdate.Count > 0
-                ? String.Format("{0} files examined, with {1} updated to reflect changes.", selectedFilesCount, filesToUpdate.Count)
-                : String.Format("{0} files examined. None were updated as nothing has changed.", selectedFilesCount);
+                ? $"{selectedFilesCount} files examined, with {filesToUpdate.Count} updated to reflect changes."
+                : $"{selectedFilesCount} files examined. None were updated as nothing has changed.";
             }, this.Token).ConfigureAwait(true);
         }
         #endregion
@@ -367,7 +369,7 @@ namespace Timelapse.Dialog
                 if (success)
                 {
                     this.LabelWarning1.Content = "Press Start to populate Dark classification data";
-                    this.LabelWarning2.Content = String.Format("in the {0} data field", this.ChosenFlagLabel);
+                    this.LabelWarning2.Content = $"in the {this.ChosenFlagLabel} data field";
                 }
                 else
                 {

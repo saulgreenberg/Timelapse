@@ -308,7 +308,8 @@ namespace Timelapse.QuickPaste
             else
             {
                 // We should never get here
-                throw new NotSupportedException(String.Format("Unhandled control type in QuickPasteEditor '{0}'.", quickPasteItem.ControlType));
+                throw new NotSupportedException(
+                    $"Unhandled control type in QuickPasteEditor '{quickPasteItem.ControlType}'.");
             }
             this.Note.Visibility = this.QuickPasteEntry.IsAtLeastOneItemPastable() ? Visibility.Collapsed : Visibility.Visible;
         }

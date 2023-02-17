@@ -48,7 +48,7 @@ namespace Timelapse.Dialog
                     this.CancelButton.Visibility = Visibility.Visible;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(buttonType), String.Format("Unhandled button type {0}.", buttonType));
+                    throw new ArgumentOutOfRangeException(nameof(buttonType), $"Unhandled button type {buttonType}.");
             }
         }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
-using Timelapse.Util;
 
 namespace Timelapse.Recognition
 {

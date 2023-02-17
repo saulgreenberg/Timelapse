@@ -1,6 +1,4 @@
-﻿using System.Windows;
-
-namespace Timelapse
+﻿namespace Timelapse
 {
     /// <summary>
     /// Interaction logic for Timelapse

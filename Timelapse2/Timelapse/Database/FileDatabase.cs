@@ -467,7 +467,8 @@ namespace Timelapse.Database
 
                 if (imageDatabaseControl.Type != templateControl.Type)
                 {
-                    templateSyncResults.ControlSynchronizationErrors.Add(String.Format("- The field with DataLabel '{0}' is of type '{1}' in the image data file but of type '{2}' in the template.{3}", dataLabel, imageDatabaseControl.Type, templateControl.Type, Environment.NewLine));
+                    templateSyncResults.ControlSynchronizationErrors.Add(
+                        $"- The field with DataLabel '{dataLabel}' is of type '{imageDatabaseControl.Type}' in the image data file but of type '{templateControl.Type}' in the template.{Environment.NewLine}");
                 }
 
                 // Check if  item(s) in the choice list has been removed. If so, a data field set with the removed value will not be displayable
@@ -477,8 +478,10 @@ namespace Timelapse.Database
                 if (choiceValuesRemovedInTemplate.Count > 0)
                 {
                     // Add warnings due to changes in the Choice control's menu
-                    templateSyncResults.ControlSynchronizationWarnings.Add(String.Format("- As the choice control '{0}' no longer includes the following menu items, it can't display data with corresponding values:", dataLabel));
-                    templateSyncResults.ControlSynchronizationWarnings.Add(String.Format("   {0}", string.Join<string>(", ", choiceValuesRemovedInTemplate)));
+                    templateSyncResults.ControlSynchronizationWarnings.Add(
+                        $"- As the choice control '{dataLabel}' no longer includes the following menu items, it can't display data with corresponding values:");
+                    templateSyncResults.ControlSynchronizationWarnings.Add(
+                        $"   {string.Join<string>(", ", choiceValuesRemovedInTemplate)}");
                 }
 
                 // Check if there are any other changed values in any of the columns that may affect the UI appearance. If there are, then we need to signal syncing of the template
@@ -506,7 +509,8 @@ namespace Timelapse.Database
                     warning += (templateSyncResults.DataLabelsInTemplateButNotImageDatabase.Count == 1)
                         ? " new control was found in your .tdb template file: "
                         : " new controls were found in your .tdb template file: ";
-                    warning += String.Format("'{0}'", string.Join(", ", templateSyncResults.DataLabelsInTemplateButNotImageDatabase.Keys));
+                    warning +=
+                        $"'{string.Join(", ", templateSyncResults.DataLabelsInTemplateButNotImageDatabase.Keys)}'";
                     templateSyncResults.ControlSynchronizationWarnings.Add(warning);
                 }
                 if (areDeletedColumnsInTemplate)
@@ -676,7 +680,7 @@ namespace Timelapse.Database
                                 queryValues.Append($"{Sql.Quote(defaultValueLookup[columnName])}{Sql.Comma}");
                                 break;
                             default:
-                                TracePrint.PrintMessage(String.Format("Unhandled control type '{0}' in AddImages.", controlType));
+                                TracePrint.PrintMessage($"Unhandled control type '{controlType}' in AddImages.");
                                 break;
                         }
                     }
@@ -861,7 +865,7 @@ namespace Timelapse.Database
                         }
                         else if (sortTerm[i].DataLabel == Constant.DatabaseColumn.DateTime)
                         {
-                            term[i] = String.Format("datetime({0})", Constant.DatabaseColumn.DateTime);
+                            term[i] = $"datetime({Constant.DatabaseColumn.DateTime})";
 
                             // DUPLICATE RECORDS Special case if DateTime is the first search term and there is no 2nd search term. 
                             // If there are multiple files with the same date/time and one of them is a duplicate,
@@ -872,7 +876,8 @@ namespace Timelapse.Database
                         else if (sortTerm[i].DataLabel == Constant.DatabaseColumn.File)
                         {
                             // File: the modified term creates a file path by concatenating relative path and file
-                            term[i] = String.Format("{0}{1}{2}", Constant.DatabaseColumn.RelativePath, Sql.Comma, Constant.DatabaseColumn.File);
+                            term[i] =
+                                $"{Constant.DatabaseColumn.RelativePath}{Sql.Comma}{Constant.DatabaseColumn.File}";
                         }
 
                         else if (sortTerm[i].DataLabel != Constant.DatabaseColumn.ID
@@ -888,7 +893,7 @@ namespace Timelapse.Database
                         else if (sortTerm[i].ControlType == Constant.Control.Counter)
                         {
                             // Its a counter type: modify sorting of blanks by transforming it into a '-1' and then by casting it as an integer
-                            term[i] = String.Format("Cast(COALESCE(NULLIF({0}, ''), '-1') as Integer)", sortTerm[i].DataLabel);
+                            term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Integer)";
                         }
                         else
                         {
@@ -1969,7 +1974,7 @@ namespace Timelapse.Database
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage(String.Format("Read of marker failed for dataLabel '{0}'. {1}", dataLabel, exception));
+                    TracePrint.PrintMessage($"Read of marker failed for dataLabel '{dataLabel}'. {exception}");
                     pointList = String.Empty;
                 }
                 markersForCounter.ParsePointList(pointList);
@@ -2031,7 +2036,7 @@ namespace Timelapse.Database
             MarkerRow marker = this.Markers.Find(imageID);
             if (marker == null)
             {
-                TracePrint.PrintMessage(String.Format("Image ID {0} missing in markers table.", imageID));
+                TracePrint.PrintMessage($"Image ID {imageID} missing in markers table.");
                 return;
             }
 
@@ -2051,7 +2056,7 @@ namespace Timelapse.Database
             MarkerRow marker = this.Markers.Find(imageID);
             if (marker == null)
             {
-                TracePrint.PrintMessage(String.Format("Image ID {0} missing in markers table.", imageID));
+                TracePrint.PrintMessage($"Image ID {imageID} missing in markers table.");
                 return;
             }
             this.Markers.RemoveAt(this.Markers.IndexOf(marker));
@@ -2191,11 +2196,12 @@ namespace Timelapse.Database
 
                 using (TextReader sr = new StreamReader(ps))
                 {
+                    TextReader capturedSr = sr;
                     await Task.Run(() =>
                     {
                         try
                         {
-                            using (JsonReader reader = new JsonTextReader(sr))
+                            using (JsonReader reader = new JsonTextReader(capturedSr))
                             {
                                 JsonSerializer serializer = new JsonSerializer();
                                 jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
@@ -2348,7 +2354,8 @@ namespace Timelapse.Database
                                     return RecognizerImportResultEnum.Cancelled;
                                 }
                                 int percent = Convert.ToInt32(i * 100.0 / count);
-                                progress.Report(new ProgressBarArguments(percent, String.Format("Examining database recognitions ({0:N2}/{1:N2})...", i, count), true, false));
+                                progress.Report(new ProgressBarArguments(percent,
+                                    $"Examining database recognitions ({i:N2}/{count:N2})...", true, false));
                                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                             }
                             i++;
@@ -2381,7 +2388,8 @@ namespace Timelapse.Database
                                     return RecognizerImportResultEnum.Cancelled;
                                 }
                                 int percent = Convert.ToInt32(i * 100.0 / count);
-                                progress.Report(new ProgressBarArguments(percent, String.Format("Comparing recognitions ({0:N0}/{1:N0})...", i, count), true, false));
+                                progress.Report(new ProgressBarArguments(percent,
+                                    $"Comparing recognitions ({i:N0}/{count:N0})...", true, false));
                                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                             }
                             i++;
@@ -2956,12 +2964,11 @@ namespace Timelapse.Database
             // We put this in a try/catch. If anything fails, we just revert to the default custom selection (All)
             try
             {
-                // Get the stored custom selection, and determine custom selection state (all, relativepath or custom).
-                CustomSelection customSelectionFromJson = null;
-                string relativePathContent = String.Empty;
+                string relativePathContent = string.Empty;
 
+                // Get the stored custom selection, and determine custom selection state (all, relativepath or custom).
                 // Ig there is a problem in the customSelectionFromJson (eg if its null or has no search terms), it will return ALL
-                customSelectionFromJson = JsonConvert.DeserializeObject<CustomSelection>(this.ImageSet.SearchTermsAsJSON);
+                CustomSelection customSelectionFromJson = JsonConvert.DeserializeObject<CustomSelection>(this.ImageSet.SearchTermsAsJSON);
 
                 // Various checks (including null and several settings that could be confusing to the user)
                 if (customSelectionFromJson == null ||

@@ -9,7 +9,6 @@ using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Images;
-using Timelapse.Util;
 
 namespace Timelapse.Controls
 {
@@ -279,7 +278,7 @@ namespace Timelapse.Controls
                 }
                 else
                 {
-                    this.EpisodeTextBlock.Text = (episode.Item2 == 1) ? "Single" : String.Format("{0}/{1}", episode.Item1, episode.Item2);
+                    this.EpisodeTextBlock.Text = (episode.Item2 == 1) ? "Single" : $"{episode.Item1}/{episode.Item2}";
                 }
                 this.EpisodeTextBlock.Foreground = (episode.Item1 == 1) ? Brushes.Red : Brushes.Black;
                 this.EpisodeTextBlock.FontWeight = (episode.Item1 == 1 && episode.Item2 != 1) ? FontWeights.Bold : FontWeights.Normal;
@@ -316,7 +315,7 @@ namespace Timelapse.Controls
             if (duplicateSequence.Y > 1)
             {
                 this.DuplicateIndicatorInOverview.Visibility = Visibility.Visible;
-                this.DuplicateIndicatorInOverview.Text = String.Format("Duplicate: {0}/{1}", duplicateSequence.X, duplicateSequence.Y);
+                this.DuplicateIndicatorInOverview.Text = $"Duplicate: {duplicateSequence.X}/{duplicateSequence.Y}";
             }
             else
             {

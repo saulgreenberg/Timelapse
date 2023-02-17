@@ -279,7 +279,7 @@ namespace Timelapse.Images
         }
         private static string ReformatFloatToTwoDecimalPlacesAndEpsilon(float value)
         {
-            return (value >= .1) ? String.Format("{0:#.##}", value) : "\u03B5";
+            return (value >= .1) ? $"{value:#.##}" : "\u03B5";
         }
         #endregion
     }

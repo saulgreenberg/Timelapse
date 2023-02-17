@@ -4,7 +4,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Windows.Documents;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Util;
@@ -239,7 +238,8 @@ namespace Timelapse.Recognition
                 {
                     if (j % 10000 == 0)
                     {
-                        progress.Report(new ProgressBarArguments(Convert.ToInt32(j * 100.0 / totalFiles), String.Format("Adding new recognitions ({0:N0}/{1:N0})...", j, totalFiles), false, false));
+                        progress.Report(new ProgressBarArguments(Convert.ToInt32(j * 100.0 / totalFiles),
+                            $"Adding new recognitions ({j:N0}/{totalFiles:N0})...", false, false));
                     }
                     j++;
 

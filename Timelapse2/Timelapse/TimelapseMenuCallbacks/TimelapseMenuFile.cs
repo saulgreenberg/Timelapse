@@ -15,7 +15,6 @@ using Timelapse.Util;
 using DialogResult = System.Windows.Forms.DialogResult;
 using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
-using Task = System.Threading.Tasks.Task;
 
 // File Menu Callbacks
 namespace Timelapse
@@ -370,8 +369,8 @@ namespace Timelapse
                     }
                     catch (Exception exception)
                     {
-                        TracePrint.PrintMessage(String.Format("Copy of '{0}' to '{1}' failed. {2}", sourceFile, destFileName, exception));
-                        this.StatusBar.SetMessage(String.Format("Could not copy '{0}' for some reason.", sourceFile));
+                        TracePrint.PrintMessage($"Copy of '{sourceFile}' to '{destFileName}' failed. {exception}");
+                        this.StatusBar.SetMessage($"Could not copy '{sourceFile}' for some reason.");
                     }
                 }
             }
@@ -408,7 +407,7 @@ namespace Timelapse
                 }
                 this.DataHandler.FileDatabase.RenameFile(renameFileDatabase.NewFilename);
                 this.StatusBar.SetMessage("Database file renamed");
-                this.Title = String.Format("{0} ({1})", Constant.Defaults.MainWindowBaseTitle, renameFileDatabase.NewFilename);
+                this.Title = $"{Constant.Defaults.MainWindowBaseTitle} ({renameFileDatabase.NewFilename})";
                 if (IsCondition.IsPathLengthTooLong(Path.Combine(this.FolderPath, renameFileDatabase.NewFilename), FilePathTypeEnum.Backup))
                 {
                     Dialogs.BackupPathTooLongDialog(this);

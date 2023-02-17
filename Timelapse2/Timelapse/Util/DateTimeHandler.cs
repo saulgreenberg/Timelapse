@@ -117,7 +117,7 @@ namespace Timelapse.Util
             // Use only on images, as video files don't contain the desired metadata. 
             try
             {
-                IReadOnlyList<MetadataDirectory> metadataDirectories = null;
+                IReadOnlyList<MetadataDirectory> metadataDirectories;
 
                 // Performance tweaks. Reading in sequential scan, does this speed up? Under the covers, the MetadataExtractor is using a sequential read, allowing skip forward but not random access.
                 // Exif is small, do we need a big block?

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
-using Timelapse.Util;
 
 namespace Timelapse
 {

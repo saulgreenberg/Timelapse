@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Windows;
 using Timelapse.DataStructures;
 using Timelapse.Enums;

@@ -85,7 +85,7 @@ namespace Timelapse.Database
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
-            this.Where = String.Format("{0} = {1}", columnTuple.Name, Sql.Quote(columnTuple.Value));
+            this.Where = $"{columnTuple.Name} = {Sql.Quote(columnTuple.Value)}";
         }
 
         // ColumnTuple: columnName = field
@@ -94,20 +94,20 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
-            this.Where = String.Format("{0} = {1}", columnTuple.Name, Sql.Quote(field));
+            this.Where = $"{columnTuple.Name} = {Sql.Quote(field)}";
         }
 
         // FILE = file AND RELATIVEPATH = relativePath
         public void SetWhere(string relativePath, string file)
         {
-            this.Where = String.Format("{0} = {1}", Constant.DatabaseColumn.File, Sql.Quote(file));
-            this.Where += String.Format(" AND {0} = {1}", Constant.DatabaseColumn.RelativePath, Sql.Quote(relativePath));
+            this.Where = $"{Constant.DatabaseColumn.File} = {Sql.Quote(file)}";
+            this.Where += $" AND {Constant.DatabaseColumn.RelativePath} = {Sql.Quote(relativePath)}";
         }
 
         // FILE = file
         public void SetWhere(string file)
         {
-            this.Where = String.Format("{0} = {1}", Constant.DatabaseColumn.File, Sql.Quote(file));
+            this.Where = $"{Constant.DatabaseColumn.File} = {Sql.Quote(file)}";
         }
 
         // ColumnTuple: columnName <> field
@@ -116,7 +116,7 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
-            this.Where = String.Format("{0} <> {1}", columnTuple.Name, Sql.Quote(field));
+            this.Where = $"{columnTuple.Name} <> {Sql.Quote(field)}";
         }
         #endregion
     }

@@ -222,7 +222,8 @@ namespace Timelapse.Dialog
                     if (this.ReadyToRefresh())
                     {
                         int percentDone = Convert.ToInt32(imageIndex / totalImages * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("{0}/{1} images. Processing {2}", imageIndex, totalImages, image.File), true, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"{imageIndex}/{totalImages} images. Processing {image.File}", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
 
@@ -260,7 +261,8 @@ namespace Timelapse.Dialog
                             }
                             else
                             {
-                                feedbackData.Add(new Tuple<string, string, string>(image.File, metadataTag, String.Format("Data field unchanged - '{0}' is not a valid date/time.", metadataValue)));
+                                feedbackData.Add(new Tuple<string, string, string>(image.File, metadataTag,
+                                    $"Data field unchanged - '{metadataValue}' is not a valid date/time."));
                                 continue;
                             }
                         }
@@ -273,7 +275,8 @@ namespace Timelapse.Dialog
                     }
                 }
                 this.isAnyDataUpdated = true;
-                this.Progress.Report(new ProgressBarArguments(100, String.Format("Writing metadata for {0} files. Please wait...", totalImages), false, true));
+                this.Progress.Report(new ProgressBarArguments(100,
+                    $"Writing metadata for {totalImages} files. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 this.FileDatabase.UpdateFiles(imagesToUpdate);
                 return feedbackData;

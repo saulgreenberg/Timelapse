@@ -280,7 +280,7 @@ namespace Timelapse.Extensions
             }
             else
             {
-                throw new NotSupportedException(String.Format("Unhandled image format {0}.", image.Format));
+                throw new NotSupportedException($"Unhandled image format {image.Format}.");
             }
         }
         #endregion

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
-using Timelapse.Util;
 
 namespace Timelapse
 {

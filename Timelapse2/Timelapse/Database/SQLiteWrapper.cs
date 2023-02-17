@@ -156,7 +156,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception));
+                TracePrint.PrintMessage($"Failure executing query '{query}' in GetDataTableFromSelect. {exception}");
                 return dataTable;
             }
         }
@@ -263,7 +263,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetObjectFromSelect: {1}", query, exception));
+                TracePrint.PrintMessage($"Failure executing query '{query}' in GetObjectFromSelect: {exception}");
                 return null;
             }
         }
@@ -308,11 +308,11 @@ namespace Timelapse.Database
                 // Construct the query. The newlines are to format it for pretty printing
                 string query = Sql.InsertInto + tableName;               // INSERT INTO table_name
                 query += Environment.NewLine;
-                query += String.Format("({0}) ", columns);                         // (col1, col2, ... coln)
+                query += $"({columns}) ";                         // (col1, col2, ... coln)
                 query += Environment.NewLine;
                 query += Sql.Values;                                     // VALUES
                 query += Environment.NewLine;
-                query += String.Format("({0}); ", values);                         // ('value1', 'value2', ... 'valueN');
+                query += $"({values}); ";                         // ('value1', 'value2', ... 'valueN');
                 queries.Add(query);
             }
 
@@ -432,7 +432,7 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(columnToUpdate, nameof(columnToUpdate));
 
             string query = Sql.Update + tableName + Sql.Set;
-            query += String.Format(" {0} = {1}", columnToUpdate.Name, Sql.Quote(columnToUpdate.Value));
+            query += $" {columnToUpdate.Name} = {Sql.Quote(columnToUpdate.Value)}";
             this.ExecuteNonQuery(query);
         }
 
@@ -462,11 +462,11 @@ namespace Timelapse.Database
                 // we have to cater to different formats for integers, NULLS and strings...
                 if (column.Value == null)
                 {
-                    query += String.Format(" {0} = {1}{2}", column.Name, Sql.Null, Sql.Comma);
+                    query += $" {column.Name} = {Sql.Null}{Sql.Comma}";
                 }
                 else
                 {
-                    query += String.Format(" {0} = {1}{2}", column.Name, Sql.Quote(column.Value), Sql.Comma);
+                    query += $" {column.Name} = {Sql.Quote(column.Value)}{Sql.Comma}";
                 }
             }
             query = query.Substring(0, query.Length - Sql.Comma.Length); // Remove the last comma
@@ -630,7 +630,8 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing statement '{0}'. in ExecuteNonQuery:{1}", commandString, exception));
+                TracePrint.PrintMessage(
+                    $"Failure executing statement '{commandString}'. in ExecuteNonQuery:{exception}");
             }
         }
 
@@ -680,7 +681,8 @@ namespace Timelapse.Database
                             if (progress != null && i % progressFrequency == 0)
                             {
                                 int percent = Convert.ToInt32(i * 100.0 / statementsCount);
-                                progress.Report(new ProgressBarArguments(percent, String.Format("{0} ({1:N0}/{2:N0})...", progressString, i, statementsCount), false, false));
+                                progress.Report(new ProgressBarArguments(percent,
+                                    $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
                                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
 
                             }
@@ -713,7 +715,8 @@ namespace Timelapse.Database
                                 if (progress != null)
                                 {
                                     int percent = Convert.ToInt32(i * 100.0 / statementsCount);
-                                    progress.Report(new ProgressBarArguments(percent, String.Format("{0} ({1:N0}/{2:N0})...", progressString, i, statementsCount), false, false));
+                                    progress.Report(new ProgressBarArguments(percent,
+                                        $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
                                     Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                                 }
                             }
@@ -731,7 +734,8 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure near executing statement '{0}' n ExecuteNonQueryWrappedInBeginEnd. {1}", mostRecentStatement, exception));
+                TracePrint.PrintMessage(
+                    $"Failure near executing statement '{mostRecentStatement}' n ExecuteNonQueryWrappedInBeginEnd. {exception}");
             }
         }
         #endregion
@@ -904,7 +908,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in CopyTableContentsToEmptyTable. {0}", exception));
+                TracePrint.PrintMessage($"Failure in CopyTableContentsToEmptyTable. {exception}");
                 throw;
             }
         }
@@ -931,7 +935,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumns. {0}", exception));
+                TracePrint.PrintMessage($"Failure executing getschema in SchemaGetColumns. {exception}");
                 return null;
             }
         }
@@ -959,7 +963,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure executing getschema in SchemaGetColumnsAndDefaultValues. {0}", exception));
+                TracePrint.PrintMessage($"Failure executing getschema in SchemaGetColumnsAndDefaultValues. {exception}");
                 return null;
             }
         }
@@ -1013,7 +1017,8 @@ namespace Timelapse.Database
                     // Check if a column named Name already exists in the source Table. If so, abort as we cannot add duplicate column names
                     if (columnNames.Contains(columnDefinition.Name))
                     {
-                        throw new ArgumentException(String.Format("Column '{0}' is already present in table '{1}'.", columnDefinition.Name, tableName), nameof(columnDefinition));
+                        throw new ArgumentException(
+                            $"Column '{columnDefinition.Name}' is already present in table '{tableName}'.", nameof(columnDefinition));
                     }
 
                     // If columnNumber would result in the column being inserted at the end of the table, then use the more efficient method to do so.
@@ -1052,7 +1057,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in AddColumn. {0}", exception));
+                TracePrint.PrintMessage($"Failure in AddColumn. {exception}");
                 throw;
             }
         }
@@ -1103,7 +1108,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in DeleteColumn. {0}", exception));
+                TracePrint.PrintMessage($"Failure in DeleteColumn. {exception}");
                 throw;
             }
         }
@@ -1146,12 +1151,12 @@ namespace Timelapse.Database
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
                     if (currentColumnNames.Contains(currentColumnName) == false)
                     {
-                        throw new ArgumentException(String.Format("No column named '{0}' exists to rename.", currentColumnName), nameof(currentColumnName));
+                        throw new ArgumentException($"No column named '{currentColumnName}' exists to rename.", nameof(currentColumnName));
                     }
                     if (false == string.IsNullOrEmpty(newColumnName) && currentColumnNames.Contains(newColumnName))
                     {
                         // If its a name change, we have to ensure that name is valid and that it doesn't already exit
-                        throw new ArgumentException(String.Format("Column '{0}' is already in use.", newColumnName));
+                        throw new ArgumentException($"Column '{newColumnName}' is already in use.");
                     }
                     string newSchema = SchemaCloneButAlterColumn(connection, sourceTable, currentColumnName, attributes);
 
@@ -1175,7 +1180,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in RenameColumn. {0}", exception));
+                TracePrint.PrintMessage($"Failure in RenameColumn. {exception}");
                 throw;
             }
         }
@@ -1292,7 +1297,7 @@ namespace Timelapse.Database
             }
             if (columnToRemove == -1)
             {
-                throw new ArgumentOutOfRangeException(String.Format("Column '{0}' not found in table '{1}'.", columnName, tableName));
+                throw new ArgumentOutOfRangeException($"Column '{columnName}' not found in table '{tableName}'.");
             }
 
             columnDefinitions.RemoveAt(columnToRemove);
@@ -1376,7 +1381,7 @@ namespace Timelapse.Database
                 {
                     return false;
                 }
-                query = String.Format("SELECT COUNT(*)_ FROM {0}", tableName);
+                query = $"SELECT COUNT(*)_ FROM {tableName}";
                 return this.ScalarGetCountFromSelect(query) != 0;
             }
         }

@@ -33,7 +33,7 @@ namespace Timelapse.Util
             ThrowIf.IsNullArgument(timelapse, nameof(timelapse));
 
             bool isResourceFile = false;
-            string layoutName = String.Empty;
+            string layoutName;
 
             // Layouts are loaded from either the registry or from a resource file
             // If from the registry, then the registry lookup key is the the layoutKey

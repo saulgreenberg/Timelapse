@@ -349,18 +349,20 @@ namespace Timelapse
                 }
                 else
                 {
-                    message = (folderLoadProgress.TotalPasses > 1) ? String.Format("Pass {0}/{1}{2}", folderLoadProgress.CurrentPass, folderLoadProgress.TotalPasses, Environment.NewLine) : String.Empty;
+                    message = (folderLoadProgress.TotalPasses > 1) ? $"Pass {folderLoadProgress.CurrentPass}/{folderLoadProgress.TotalPasses}{Environment.NewLine}"
+                        : String.Empty;
                     if (folderLoadProgress.CurrentPass == 1 && folderLoadProgress.CurrentFile == folderLoadProgress.TotalFiles)
                     {
                         // I suspect this never gets displayed, but just in case.
-                        message = String.Format("{0}Finalizing analysis of {1} files - could take several minutes ", message, folderLoadProgress.TotalFiles);
+                        message =
+                            $"{message}Finalizing analysis of {folderLoadProgress.TotalFiles} files - could take several minutes ";
                     }
                     else
                     {
                         string what = (folderLoadProgress.CurrentPass == 1) ? "Analyzing file" : "Adding files to database";
                         message = (folderLoadProgress.CurrentPass == 2 && folderLoadProgress.CurrentFile == 0)
-                            ? String.Format("{0}{1} ...", message, what)
-                            : String.Format("{0}{1} {2} of {3}", message, what, folderLoadProgress.CurrentFile, folderLoadProgress.TotalFiles);
+                            ? $"{message}{what} ..."
+                            : $"{message}{what} {folderLoadProgress.CurrentFile} of {folderLoadProgress.TotalFiles}";
                     }
                 }
 

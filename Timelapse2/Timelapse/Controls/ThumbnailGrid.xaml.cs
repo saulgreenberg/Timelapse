@@ -51,7 +51,6 @@ namespace Timelapse.Controls
 
         // Whether the Grid is activated (i..e, with a zoom level), 
         public bool IsGridActive => Level > 0;
-        public bool IsAtMinimum { get; private set; }
         #endregion
 
         #region Private variables

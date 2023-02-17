@@ -4,13 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Speech.Synthesis.TtsEngine;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
-using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
 
@@ -78,7 +76,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                 existingPaths = new HashSet<string>(from file in filetable
                                                     select Path.Combine(imageSetFolderPath, Path.Combine(file.RelativePath, file.File)).ToLowerInvariant());
             }
-            FileInfo[] filesToAddInfoArray = null;
+            FileInfo[] filesToAddInfoArray;
             filesToAddInfoArray = (from fileInfo in fileInfos
                                    where existingPaths.Contains(fileInfo.FullName.ToLowerInvariant()) == false
                                    select fileInfo).OrderBy(f => f.FullName).ToArray();
@@ -88,7 +86,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             // The queue will take image rows ready for insertion to the second pass
             // The eventindicates explicitly when the first pass is done.
             ConcurrentQueue<ImageRow> databaseInsertionQueue = new ConcurrentQueue<ImageRow>();
-
+            ConcurrentQueue<ImageRow> capturedDatabaseInsertionQueue = databaseInsertionQueue;
             // We trim as well, as it handles both the case where it already has a trailing \ and when it is missing it.
             // For example, if we opened a template in a top level drive, it would have a following '\'
             string absolutePathPart = imageSetFolderPath.TrimEnd(Path.DirectorySeparatorChar) + @"\";
@@ -145,13 +143,13 @@ namespace Timelapse.ImageSetLoadingPipeline
                     Task loaderTask = loader.LoadImageAsync(() =>
                     {
                         // Both of these operations are atomic, the specific number and the specific loader at any given
-                        // time may not coorespond.
+                        // time may not correspond.
                         Interlocked.Increment(ref this.imagesLoaded);
                         this.LastLoadComplete = loader;
                         if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                         {
                             // User requested we cancel the task. So stop going through files.
-                            // The caller will check the cancelation token again, and will stop further actions and clean up as needed.
+                            // The caller will check the cancellation token again, and will stop further actions and clean up as needed.
                             // Debug.Print("Cancelled from Loader.Task");
                             return;
                         }
@@ -161,7 +159,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                             // Note that there is no strict ordering here, anything may finish and insert in
                             // any order. By sorting the file infos above, things that sort first in the database should
                             // be done first, BUT THIS MAY REQUIRE ADDITIONAL FINESSE TO KEEP THE EXPLICIT ORDER CORRECT.
-                            databaseInsertionQueue.Enqueue(loader.File);
+                            capturedDatabaseInsertionQueue.Enqueue(loader.File);
                             Interlocked.Increment(ref this.imagesToInsert);
                         }
                     });
@@ -186,15 +184,16 @@ namespace Timelapse.ImageSetLoadingPipeline
             if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
             {
                 // Don't start the second pass if things have been cancelled.
-                // Not sure if we really need to clear the queue, but it ;ikelydoesn't hurt.
+                // Not sure if we really need to clear the queue, but it likely doesn't hurt.
                 Debug.Print("Cancellation in ImageSetLoader: Just before pass 2");
+                // ReSharper disable once RedundantAssignment
                 databaseInsertionQueue = new ConcurrentQueue<ImageRow> ();
                 return;
             }
             this.pass2 = new Task(() =>
             {
                 // This pass2 starts after pass1 is fully complete
-                List<ImageRow> imagesToInsert = databaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
+                List<ImageRow> imagesToInsert = capturedDatabaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
                 dataHandler.FileDatabase.AddFiles(imagesToInsert,
                                                   (file, fileIndex) =>
                                                   {

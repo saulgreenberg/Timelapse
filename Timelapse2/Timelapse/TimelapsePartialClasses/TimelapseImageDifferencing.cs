@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Enums;
 
@@ -62,13 +61,15 @@ namespace Timelapse
                     case ImageDifferenceResultEnum.NextImageNotAvailable:
                     case ImageDifferenceResultEnum.PreviousImageNotAvailable:
                     case ImageDifferenceResultEnum.NotCalculable:
-                        this.StatusBar.SetMessage(String.Format("Difference can't be shown: the {0} file is a video, missing, corrupt, or a different size", this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next"));
+                        this.StatusBar.SetMessage(
+                            $"Difference can't be shown: the {(this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file is a video, missing, corrupt, or a different size");
                         return;
                     case ImageDifferenceResultEnum.Success:
-                        this.StatusBar.SetMessage(String.Format("Viewing difference from {0} file.", this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next"));
+                        this.StatusBar.SetMessage(
+                            $"Viewing difference from {(this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file.");
                         break;
                     default:
-                        throw new NotSupportedException(String.Format("Unhandled difference result {0}.", result));
+                        throw new NotSupportedException($"Unhandled difference result {result}.");
                 }
             }
 
@@ -76,7 +77,8 @@ namespace Timelapse
             // the magnifying glass always displays the original non-diferenced image so ImageToDisplay is updated and ImageToMagnify left unchnaged
             // this allows the user to examine any particular differenced area and see what it really looks like in the non-differenced image. 
             this.MarkableCanvas.SetDisplayImage(this.DataHandler.ImageCache.GetCurrentImage);
-            this.StatusBar.SetMessage(String.Format("Viewing difference from {0} file.", this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next"));
+            this.StatusBar.SetMessage(
+                $"Viewing difference from {(this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file.");
         }
         #endregion
 

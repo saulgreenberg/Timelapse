@@ -295,7 +295,7 @@ namespace Timelapse.Recognition
             await Task.Run(() =>
             {
                 int totalImages = jsonRecognizer.images.Count;
-                string sTotalImages = String.Format("{0:N0}", jsonRecognizer.images.Count);
+                string sTotalImages = $"{jsonRecognizer.images.Count:N0}";
                 int i = 0;
 
                 // Skip certain conditions if the subFolder is empty
@@ -311,7 +311,8 @@ namespace Timelapse.Recognition
                         }
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
-                        progress.Report(new ProgressBarArguments(percentDone, String.Format("Checking image paths ({0:N0}/{1:N0}...)", i, sTotalImages), true, false));
+                        progress.Report(new ProgressBarArguments(percentDone,
+                            $"Checking image paths ({i:N0}/{sTotalImages:N0}...)", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
@@ -357,7 +358,7 @@ namespace Timelapse.Recognition
             await Task.Run(() =>
             {
                 int totalImages = jsonRecognizer.images.Count;
-                string sTotalImages = String.Format("{0:N0}", jsonRecognizer.images.Count);
+                string sTotalImages = $"{jsonRecognizer.images.Count:N0}";
                 int i = 0;
 
                 foreach (image image in jsonRecognizer.images)
@@ -371,7 +372,8 @@ namespace Timelapse.Recognition
                         }
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
-                        progress.Report(new ProgressBarArguments(percentDone, String.Format("Correcting image recognition paths ({0:N0}/{1:N0}...", i, sTotalImages), false, false));
+                        progress.Report(new ProgressBarArguments(percentDone,
+                            $"Correcting image recognition paths ({i:N0}/{sTotalImages:N0}...", false, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Add the prefix to the path

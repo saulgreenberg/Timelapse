@@ -96,7 +96,7 @@ namespace Timelapse.Controls
                 case Constant.DatabaseColumn.File:
                     return String.Format(Constant.SortTermValues.FileStatusBarLabel, specialCharacter);
                 default:
-                    return String.Format("{0}{1}", sortTerm, specialCharacter);
+                    return $"{sortTerm}{specialCharacter}";
             }
         }
         #endregion

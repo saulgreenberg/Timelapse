@@ -161,9 +161,11 @@ namespace Timelapse
                    (fileName, fileIndex, count, imageDateTime) =>
                    {
                        double imagePositionInInterval = (imageDateTime - this.earliestImageDateTime).Ticks / (double)intervalFromOldestToNewestImage.Ticks;
-                       Debug.Assert((-0.0000001 < imagePositionInInterval) && (imagePositionInInterval < 1.0000001), String.Format("Interval position {0} is not between 0.0 and 1.0.", imagePositionInInterval));
+                       Debug.Assert((-0.0000001 < imagePositionInInterval) && (imagePositionInInterval < 1.0000001),
+                           $"Interval position {imagePositionInInterval} is not between 0.0 and 1.0.");
                        TimeSpan adjustment = TimeSpan.FromTicks((long)(imagePositionInInterval * newestImageAdjustment.Ticks)); // Used to have a  .5 increment, I think to force rounding upwards                                                                                                        // TimeSpan.Duration means we do these checks on the absolute value (positive) of the Timespan, as slow clocks will have negative adjustments.
-                       Debug.Assert((TimeSpan.Zero <= adjustment.Duration()) && (adjustment.Duration() <= newestImageAdjustment.Duration()), String.Format("Expected adjustment {0} to be within [{1} {2}].", adjustment, TimeSpan.Zero, newestImageAdjustment));
+                       Debug.Assert((TimeSpan.Zero <= adjustment.Duration()) && (adjustment.Duration() <= newestImageAdjustment.Duration()),
+                           $"Expected adjustment {adjustment} to be within [{TimeSpan.Zero} {newestImageAdjustment}].");
 
                        if (adjustment.Duration() >= TimeSpan.FromSeconds(1))
                        {
@@ -178,7 +180,8 @@ namespace Timelapse
                        if (intervalFromLastRefresh > Constant.ThrottleValues.ProgressBarRefreshInterval)
                        {
                            int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
-                           progress.Report(new ProgressBarArguments(percentDone, String.Format("Pass 1: Calculating new date/times for {0} / {1} files", fileIndex, count), true, false));
+                           progress.Report(new ProgressBarArguments(percentDone,
+                               $"Pass 1: Calculating new date/times for {fileIndex} / {count} files", true, false));
                            Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                            this.lastRefreshDateTime = DateTime.Now;
                        }
@@ -187,7 +190,8 @@ namespace Timelapse
                        {
                            // After all files are processed, the next step would be updating the database. Disable the cancel button too.
                            // This really should be somehow signalled from the invoking method (ideally ExecuteNonQueryWrappedInBeginEnd every update interval), but this is a reasonable workaround.
-                           progress.Report(new ProgressBarArguments(100, String.Format("Pass 2: Updating {0} files. Please wait...", feedbackRows.Count), false, true));
+                           progress.Report(new ProgressBarArguments(100,
+                               $"Pass 2: Updating {feedbackRows.Count} files. Please wait...", false, true));
                            Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                        }
                        return imageDateTime + adjustment; // Returns the new time
@@ -238,7 +242,8 @@ namespace Timelapse
             // Provide summary feedback 
             if (this.IsAnyDataUpdated && this.Token.IsCancellationRequested == false)
             {
-                string message = string.Format("Updated {0}/{1} files whose dates have changed.", feedbackRows.Count, this.fileDatabase.CountAllCurrentlySelectedFiles);
+                string message =
+                    $"Updated {feedbackRows.Count}/{this.fileDatabase.CountAllCurrentlySelectedFiles} files whose dates have changed.";
                 feedbackRows.Insert(0, (new DateTimeFeedbackTuple("---", message)));
             }
 

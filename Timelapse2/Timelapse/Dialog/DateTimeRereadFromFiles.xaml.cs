@@ -88,7 +88,7 @@ namespace Timelapse.Dialog
 
                 // Pass 2. Update files in the database
                 // Provide feedback that we are in the second pass, disabling the Cancel button in the progress bar as we shouldn't cancel half-way through a database update.
-                string message = String.Format("Pass 2: Updating {0} files. Please wait...", filesToAdjust.Count);
+                string message = $"Pass 2: Updating {filesToAdjust.Count} files. Please wait...";
                 this.Progress.Report(new ProgressBarArguments(100, message, false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allow the UI to update.
 
@@ -96,13 +96,13 @@ namespace Timelapse.Dialog
                 this.DatabaseUpdateFileDates(filesToAdjust);
 
                 // Provide summary feedback 
-                message = string.Format("Updated {0}/{1} files whose dates have changed.", filesToAdjust.Count, count);
+                message = $"Updated {filesToAdjust.Count}/{count} files whose dates have changed.";
                 feedbackRows.Insert(0, (new DateTimeFeedbackTuple("---", message)));
                 if (missingFiles > 0)
                 {
                     message = (missingFiles == 1)
-                    ? String.Format("{0} file is missing, and was not examined.", missingFiles)
-                    : String.Format("{0} files are missing, and were not examined.", missingFiles);
+                    ? $"{missingFiles} file is missing, and was not examined."
+                    : $"{missingFiles} files are missing, and were not examined.";
                     feedbackRows.Insert(1, (new DateTimeFeedbackTuple("---", message)));
                 }
                 return feedbackRows;
@@ -169,8 +169,9 @@ namespace Timelapse.Dialog
                 catch (Exception exception)
                 {
                     // This shouldn't happen, but just in case. 
-                    TracePrint.PrintMessage(string.Format("Unexpected exception processing '{0}' in DateTimeReread. {1}", file.File, exception));
-                    feedbackMessage += string.Format("\x2716 skipping: {0}", exception.Message);
+                    TracePrint.PrintMessage(
+                        $"Unexpected exception processing '{file.File}' in DateTimeReread. {exception}");
+                    feedbackMessage += $"\x2716 skipping: {exception.Message}";
                     feedbackRows.Add(new DateTimeFeedbackTuple(file.File, feedbackMessage));
                     break;
                 }
@@ -180,7 +181,8 @@ namespace Timelapse.Dialog
                 if (intervalFromLastRefresh > Constant.ThrottleValues.ProgressBarRefreshInterval)
                 {
                     int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
-                    progress.Report(new ProgressBarArguments(percentDone, String.Format("Pass 1: Checking dates for {0} / {1} files", fileIndex, count), true, false));
+                    progress.Report(new ProgressBarArguments(percentDone,
+                        $"Pass 1: Checking dates for {fileIndex} / {count} files", true, false));
                     Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
                     this.lastRefreshDateTime = DateTime.Now;
                 }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows;
 using System.Windows.Controls;
-using DialogUpgradeFiles.Database;
 using Timelapse.Controls;
 using Timelapse.Enums;
 using Timelapse.Images;

@@ -1,5 +1,4 @@
-﻿using ImageProcessor.Processors;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,8 +11,6 @@ using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.QuickPaste;
 using Timelapse.Util;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
-using Xceed.Wpf.AvalonDock.Themes;
 
 // Edit Menu Callbacks
 namespace Timelapse
@@ -277,7 +274,7 @@ namespace Timelapse
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Delete submenu failed to open in Delete_SubmenuOpening. {0}", exception));
+                TracePrint.PrintMessage($"Delete submenu failed to open in Delete_SubmenuOpening. {exception}");
 
                 // This function was blowing up on one user's machine, but not others.
                 // I couldn't figure out why, so I just put this fallback in here to catch that unusual case.

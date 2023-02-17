@@ -156,7 +156,7 @@ namespace Timelapse.Util
                 if (rowIndex < 0 || rowIndex > (dataGrid.Items.Count - 1))
                 {
                     // This shouldn't happen, but...
-                    throw new ArgumentException(string.Format("{0} is an invalid row index.", rowIndex));
+                    throw new ArgumentException($"{rowIndex} is an invalid row index.");
                 }
                 dataGrid.SelectedIndex = rowIndex;  // This used to be for single selection. 
                 return;
@@ -167,7 +167,7 @@ namespace Timelapse.Util
                 if (rowIndex < 0 || rowIndex > (dataGrid.Items.Count - 1))
                 {
                     // This shouldn't happen, but...
-                    throw new ArgumentException(string.Format("{0} is an invalid row index.", rowIndex));
+                    throw new ArgumentException($"{rowIndex} is an invalid row index.");
                 }
                 dataGrid.SelectedItems.Add(dataGrid.Items[rowIndex]);
             }

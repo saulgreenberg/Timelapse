@@ -68,7 +68,8 @@ namespace Timelapse.Images
                 // Optional messages for eventual debugging of catch errors, 
                 if (exception is InsufficientMemoryException)
                 {
-                    TracePrint.PrintMessage(String.Format("ImageRow/LoadBitmap: exception getting bitmap from file: {0}\n.** Insufficient Memory Exception: {1}.\n--------------\n**StackTrace: {2}.\nXXXXXXXXXXXXXX\n\n", filePath, exception.Message, exception.StackTrace));
+                    TracePrint.PrintMessage(
+                        $"ImageRow/LoadBitmap: exception getting bitmap from file: {filePath}\n.** Insufficient Memory Exception: {exception.Message}.\n--------------\n**StackTrace: {exception.StackTrace}.\nXXXXXXXXXXXXXX\n\n");
                 }
                 else
                 {

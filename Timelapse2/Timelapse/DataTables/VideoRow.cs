@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.IO;
 using System.Windows.Media.Imaging;
 using Timelapse.Enums;

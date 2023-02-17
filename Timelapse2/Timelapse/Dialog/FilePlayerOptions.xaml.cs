@@ -46,22 +46,22 @@ namespace Timelapse.Dialog
             {
                 int framerate = (int)System.Math.Round(1.0 / this.state.FilePlayerSlowValue);
                 string plural = (framerate == 1) ? string.Empty : "s";
-                this.SlowSpeedText.Text = string.Format("{0} image{1} every second", framerate, plural);
+                this.SlowSpeedText.Text = $"{framerate} image{plural} every second";
             }
             else
             {
-                this.SlowSpeedText.Text = string.Format("1 image every {0:N2} seconds", this.state.FilePlayerSlowValue);
+                this.SlowSpeedText.Text = $"1 image every {this.state.FilePlayerSlowValue:N2} seconds";
             }
 
             if (this.state.FilePlayerFastValue <= 1)
             {
                 int framerate = (int)System.Math.Round(1.0 / this.state.FilePlayerFastValue);
                 string plural = (framerate == 1) ? string.Empty : "s";
-                this.FastSpeedText.Text = string.Format("{0} image{1} every second", framerate, plural);
+                this.FastSpeedText.Text = $"{framerate} image{plural} every second";
             }
             else
             {
-                this.FastSpeedText.Text = string.Format("1 image every {0:N2} seconds", this.state.FilePlayerFastValue);
+                this.FastSpeedText.Text = $"1 image every {this.state.FilePlayerFastValue:N2} seconds";
             }
         }
         #endregion

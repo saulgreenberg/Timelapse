@@ -132,7 +132,8 @@ namespace Timelapse
                 if (duplicateSequence.Y > 1)
                 {
                     this.DuplicateIndicatorInMainWindow.Visibility = Visibility.Visible;
-                    this.DuplicateIndicatorInMainWindow.Text = String.Format("Duplicate: {0}/{1}", duplicateSequence.X, duplicateSequence.Y);
+                    this.DuplicateIndicatorInMainWindow.Text =
+                        $"Duplicate: {duplicateSequence.X}/{duplicateSequence.Y}";
                 }
                 else
                 {

@@ -38,7 +38,7 @@ namespace Timelapse.Dialog
         {
             TimeSpan duration = TimeSpan.FromSeconds(this.TimeThresholdSlider.Value);
             string label = (duration >= TimeSpan.FromMinutes(1)) ? "minutes" : "seconds";
-            this.TimeThresholdText.Text = String.Format("{0:m\\:ss} {1}", duration, label);
+            this.TimeThresholdText.Text = $"{duration:m\\:ss} {label}";
         }
         #endregion
 

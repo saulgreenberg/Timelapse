@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
 

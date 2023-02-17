@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -63,6 +62,7 @@ namespace Timelapse.Database
 
             FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationddbFilePath, templateDatabase).ConfigureAwait(true);
             fd.Dispose();
+            // ReSharper disable once RedundantAssignment
             fd = null;
 
             // Open the database
@@ -78,7 +78,7 @@ namespace Timelapse.Database
             Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
             for (int i = 0; i < sourceddbFilePathsCount; i++)
             {
-
+                int uncapturedI = i;
                 // Try to merge each database into the merged database
                 await Task.Run(() =>
                 {
@@ -87,21 +87,22 @@ namespace Timelapse.Database
                         return;
                     }
                     // Report progress, introducing a delay to allow the UI thread to update and to make the progress bar linger on the display
-                    progress.Report(new ProgressBarArguments((int)((i + 1) / (double)sourceddbFilePathsCount * 100.0),
-                        String.Format("Merging {0}/{1} databases. Please wait...", i + 1, sourceddbFilePathsCount),
+                    
+                    progress.Report(new ProgressBarArguments((int)((uncapturedI + 1) / (double)sourceddbFilePathsCount * 100.0),
+                        $"Merging {uncapturedI + 1}/{sourceddbFilePathsCount} databases. Please wait...",
                         "Merging...",
                         true, false));
                     Thread.Sleep(250);
                     string message = String.Empty;
-                    string trimmedPath = sourceddbFilePaths[i].Substring(rootFolderPath.Length + 1);
+                    string trimmedPath = sourceddbFilePaths[uncapturedI].Substring(rootFolderPath.Length + 1);
 
                     // Check each database file to see if its ok, or determine its error type.
                     // First, lets do a quick check to catch common db errors.
-                    DatabaseFileErrorsEnum databaseFileErrorsEnum = FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[i]);
+                    DatabaseFileErrorsEnum databaseFileErrorsEnum = FilesFolders.QuickCheckDatabaseFile(sourceddbFilePaths[uncapturedI]);
                     if (databaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok || databaseFileErrorsEnum == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
                     {
                         // Things look ok so far. So lets try the merge, which may (or may not) find other errors
-                        databaseFileErrorsEnum = MergeDatabases.InsertSourceDataBaseTablesintoDestinationDatabase(destinationddb, sourceddbFilePaths[i], rootFolderPath, mergedddbDataLabels, infoDictionary, detectionCategories, classificationCategories);
+                        databaseFileErrorsEnum = MergeDatabases.InsertSourceDataBaseTablesintoDestinationDatabase(destinationddb, sourceddbFilePaths[uncapturedI], rootFolderPath, mergedddbDataLabels, infoDictionary, detectionCategories, classificationCategories);
                     }
                     // Now check the error state and generate a message if needed.
                     switch (databaseFileErrorsEnum)
@@ -146,7 +147,7 @@ namespace Timelapse.Database
                     }
                     if (!String.IsNullOrWhiteSpace(message))
                     {
-                        errorMessages.Warnings.Add(String.Format("{0}: {1}        - {2}", trimmedPath, Environment.NewLine, message));
+                        errorMessages.Warnings.Add($"{trimmedPath}: {Environment.NewLine}        - {message}");
                     }
 
                 }).ConfigureAwait(true);
@@ -176,7 +177,8 @@ namespace Timelapse.Database
             }
             if (backupMade && (errorMessages.Errors.Any() || errorMessages.Warnings.Any()))
             {
-                errorMessages.BackupMessages.Add(String.Format("Note: A backup of your original {0} can be found in the {1} folder", destinationddbFileName, Constant.File.BackupFolder));
+                errorMessages.BackupMessages.Add(
+                    $"Note: A backup of your original {destinationddbFileName} can be found in the {Constant.File.BackupFolder} folder");
             }
             return errorMessages;
         }

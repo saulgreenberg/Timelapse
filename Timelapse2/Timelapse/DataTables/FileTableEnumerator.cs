@@ -6,7 +6,7 @@ namespace Timelapse.Database
 {
     public class FileTableEnumerator : IEnumerator<ImageRow>
     {
-        protected FileDatabase Database { get; private set; }
+        protected FileDatabase Database { get;}
 
         // the current image, null if its no been set or if the database is empty
         public ImageRow Current { get; private set; }

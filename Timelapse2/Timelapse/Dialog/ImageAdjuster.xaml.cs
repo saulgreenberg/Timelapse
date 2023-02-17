@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.DataStructures;
 using Timelapse.EventArguments;
-using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {

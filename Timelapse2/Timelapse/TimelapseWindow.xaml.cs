@@ -552,7 +552,8 @@ namespace Timelapse
                 bool result = this.State.MostRecentImageSets.TryRemove(path);
                 if (!result)
                 {
-                    TracePrint.PrintMessage(String.Format("Removal of image set '{0}' no longer present on disk unexpectedly failed.", path));
+                    TracePrint.PrintMessage(
+                        $"Removal of image set '{path}' no longer present on disk unexpectedly failed.");
                 }
             }
 
@@ -567,7 +568,7 @@ namespace Timelapse
                 // Create a menu item for each path
                 MenuItem recentImageSetItem = new MenuItem();
                 recentImageSetItem.Click += this.MenuItemRecentImageSet_Click;
-                recentImageSetItem.Header = String.Format("_{0} {1}", index++, recentImageSetPath);
+                recentImageSetItem.Header = $"_{index++} {recentImageSetPath}";
                 recentImageSetItem.ToolTip = recentImageSetPath;
                 this.MenuItemRecentImageSets.Items.Add(recentImageSetItem);
             }

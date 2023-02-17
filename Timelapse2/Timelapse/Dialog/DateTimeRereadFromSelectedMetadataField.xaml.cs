@@ -248,13 +248,15 @@ namespace Timelapse.Dialog
                     if (this.ReadyToRefresh())
                     {
                         percentDone = Convert.ToInt32(imageIndex / totalFiles * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("{0}/{1} images. Processing {2}", imageIndex, totalFiles, image.File), true, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"{imageIndex}/{totalFiles} images. Processing {image.File}", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
 
                     if (metadata.ContainsKey(this.metadataFieldName) == false)
                     {
-                        keyValueList.Add(new KeyValuePair<string, string>(image.File, String.Format("Data field unchanged - file is missing metatdata {0} ", this.metadataFieldName)));
+                        keyValueList.Add(new KeyValuePair<string, string>(image.File,
+                            $"Data field unchanged - file is missing metatdata {this.metadataFieldName} "));
 
                         // Debug.Print(String.Format("{0}: No metadata", image.File));
                         continue;
@@ -270,13 +272,15 @@ namespace Timelapse.Dialog
                     }
                     else
                     {
-                        keyValueList.Add(new KeyValuePair<string, string>(image.File, String.Format("Data field unchanged - '{0}' is not a valid date/time.", metadataValue)));
+                        keyValueList.Add(new KeyValuePair<string, string>(image.File,
+                            $"Data field unchanged - '{metadataValue}' is not a valid date/time."));
                         continue;
                     }
                     imagesToUpdate.Add(imageUpdate);
                 }
                 this.IsAnyDataUpdated = true;
-                this.Progress.Report(new ProgressBarArguments(100, String.Format("Writing metadata for the {0}/{1} files that contain this metadata field. Please wait...", metadataUpdateCount, totalFiles), false, true));
+                this.Progress.Report(new ProgressBarArguments(100,
+                    $"Writing metadata for the {metadataUpdateCount}/{totalFiles} files that contain this metadata field. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 this.fileDatabase.UpdateFiles(imagesToUpdate);
                 return keyValueList;

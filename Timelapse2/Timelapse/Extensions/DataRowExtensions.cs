@@ -114,7 +114,7 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(row, nameof(row));
 
-            row[column] = String.Format("{0}", value).ToLowerInvariant();
+            row[column] = $"{value}".ToLowerInvariant();
         }
 
         public static void SetField(this DataRow row, string column, DateTime value)

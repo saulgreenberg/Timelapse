@@ -1006,7 +1006,7 @@ namespace Timelapse.Dialog
         #region MessageBox: No Updates Available
         public static void NoUpdatesAvailableDialog(Window owner, string applicationName, Version currentVersionNumber)
         {
-            new MessageBox(String.Format("No updates to {0} are available.", applicationName), owner)
+            new MessageBox($"No updates to {applicationName} are available.", owner)
             {
                 Message =
                 {
@@ -1508,7 +1508,7 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Icon = MessageBoxImage.Error,
-                    Problem = String.Format("The file {0} could not be opened.", csvFileName),
+                    Problem = $"The file {csvFileName} could not be opened.",
                     Reason = "Most likely the file is open in another program. The technical reason is:" + Environment.NewLine
                         + exceptionMessage,
                     Solution = "If the file is open in another program, close it.",

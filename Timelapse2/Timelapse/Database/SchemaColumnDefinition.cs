@@ -11,7 +11,7 @@ namespace Timelapse.Database
         /// - Log Text "Add text here" ;
         /// </summary>
         #region Public Properties
-        public string Name { get; private set; }
+        public string Name { get; }
         public string DefaultValue { get; private set; }
         public string Type { get; private set; }
         #endregion
@@ -56,7 +56,7 @@ namespace Timelapse.Database
         /// <returns></returns>
         public override string ToString()
         {
-            string columnDefinition = String.Format("{0} {1}", this.Name, this.Type);
+            string columnDefinition = $"{this.Name} {this.Type}";
             if (this.DefaultValue != null)
             {
                 columnDefinition += " DEFAULT " + Sql.Quote(this.DefaultValue);

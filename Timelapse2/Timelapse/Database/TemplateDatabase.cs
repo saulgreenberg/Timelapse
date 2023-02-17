@@ -88,7 +88,7 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage(String.Format("Failure in TryCreateOpen. {0}", exception));
+                TracePrint.PrintMessage($"Failure in TryCreateOpen. {exception}");
                 return new Tuple<bool, TemplateDatabase>(false, null);
             }
             finally
@@ -343,7 +343,7 @@ namespace Timelapse.Database
                     newControl.Label = newControl.DataLabel;
                     break;
                 default:
-                    throw new NotSupportedException(String.Format("Unhandled control type {0}.", controlType));
+                    throw new NotSupportedException($"Unhandled control type {controlType}.");
             }
             newControl.ControlOrder = this.GetOrderForNewControl();
             newControl.SpreadsheetOrder = newControl.ControlOrder;
@@ -372,7 +372,8 @@ namespace Timelapse.Database
                 {
                     dataLabel = control.DataLabel;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false, String.Format("Encountered empty data label and label at ID {0} in template table.", control.ID));
+                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                    $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
                 if (Constant.DatabaseColumn.ID != dataLabel)
@@ -395,7 +396,8 @@ namespace Timelapse.Database
                 {
                     dataLabel = control.Label;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false, String.Format("Encountered empty data label and label at ID {0} in template table.", control.ID));
+                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                    $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
                 if (Constant.DatabaseColumn.ID != dataLabel)
@@ -569,13 +571,15 @@ namespace Timelapse.Database
             // argument validation. Only ControlOrder and SpreadsheetOrder are orderable columns
             if (orderColumnName != Constant.Control.ControlOrder && orderColumnName != Constant.Control.SpreadsheetOrder)
             {
-                throw new ArgumentOutOfRangeException(nameof(orderColumnName), String.Format("column '{0}' is not a control order column.  Only '{1}' and '{2}' are order columns.", orderColumnName, Constant.Control.ControlOrder, Constant.Control.SpreadsheetOrder));
+                throw new ArgumentOutOfRangeException(nameof(orderColumnName),
+                    $"column '{orderColumnName}' is not a control order column.  Only '{Constant.Control.ControlOrder}' and '{Constant.Control.SpreadsheetOrder}' are order columns.");
             }
 
             List<long> uniqueOrderValues = newOrderByDataLabel.Values.Distinct().ToList();
             if (uniqueOrderValues.Count != newOrderByDataLabel.Count)
             {
-                throw new ArgumentException(String.Format("newOrderByDataLabel: Each control must have a unique value for its order.  {0} duplicate values were passed for '{1}'.", newOrderByDataLabel.Count - uniqueOrderValues.Count, orderColumnName), nameof(newOrderByDataLabel));
+                throw new ArgumentException(
+                    $"newOrderByDataLabel: Each control must have a unique value for its order.  {newOrderByDataLabel.Count - uniqueOrderValues.Count} duplicate values were passed for '{orderColumnName}'.", nameof(newOrderByDataLabel));
             }
 
             uniqueOrderValues.Sort();
@@ -585,7 +589,8 @@ namespace Timelapse.Database
                 int expectedOrder = control + 1;
                 if (uniqueOrderValues[control] != expectedOrder)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(newOrderByDataLabel), String.Format("Control order must be a ones based count.  An order of {0} was passed instead of the expected order {1} for '{2}'.", uniqueOrderValues[0], expectedOrder, orderColumnName));
+                    throw new ArgumentOutOfRangeException(nameof(newOrderByDataLabel),
+                        $"Control order must be a ones based count.  An order of {uniqueOrderValues[0]} was passed instead of the expected order {expectedOrder} for '{orderColumnName}'.");
                 }
             }
 

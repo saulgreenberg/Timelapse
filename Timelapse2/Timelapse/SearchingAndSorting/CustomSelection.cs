@@ -399,7 +399,8 @@ namespace Timelapse.Database
                     else
                     {
                         // The search term is querying for a non-empty value.
-                        Debug.Assert(searchTerm.DatabaseValue.Contains("\"") == false, String.Format("Search term '{0}' contains quotation marks and could be used for SQL injection.", searchTerm.DatabaseValue));
+                        Debug.Assert(searchTerm.DatabaseValue.Contains("\"") == false,
+                            $"Search term '{searchTerm.DatabaseValue}' contains quotation marks and could be used for SQL injection.");
                         if (dataLabel == Constant.DatabaseColumn.RelativePath || dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.RelativePath)
                         {
                             // Special case for RelativePath and DataTable.RelativePath, 
@@ -447,7 +448,7 @@ namespace Timelapse.Database
                             where += Sql.Or;
                             break;
                         default:
-                            throw new NotSupportedException(String.Format("Unhandled logical operator {0}.", termCombiningOperator));
+                            throw new NotSupportedException($"Unhandled logical operator {termCombiningOperator}.");
                     }
                 }
                 // Now we add the actual search terms

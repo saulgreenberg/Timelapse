@@ -53,7 +53,8 @@ namespace Timelapse.Database
         {
             if (this.DataLabel != Constant.DatabaseColumn.DateTime)
             {
-                throw new NotSupportedException(String.Format("Attempt to retrieve date/time from a SearchTerm with data label {0}.", this.DataLabel));
+                throw new NotSupportedException(
+                    $"Attempt to retrieve date/time from a SearchTerm with data label {this.DataLabel}.");
             }
             return DateTimeHandler.TryParseDatabaseDateTime(this.DatabaseValue, out DateTime dateTime)
                 ? dateTime
@@ -66,7 +67,8 @@ namespace Timelapse.Database
         {
             if (this.DataLabel != Constant.DatabaseColumn.DateTime)
             {
-                throw new NotSupportedException(String.Format("Attempt to retrieve date/time from a SearchTerm with data label {0}.", this.DataLabel));
+                throw new NotSupportedException(
+                    $"Attempt to retrieve date/time from a SearchTerm with data label {this.DataLabel}.");
             }
             this.DatabaseValue = DateTimeHandler.ToStringDatabaseDateTime(dateTime);
         }

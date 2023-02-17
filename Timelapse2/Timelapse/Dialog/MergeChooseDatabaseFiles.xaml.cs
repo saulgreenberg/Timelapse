@@ -167,7 +167,7 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text = "The merged database could not be created for the following reasons:";
                 foreach (string error in errorMessages.Errors)
                 {
-                    this.TextBlockFinalMessage.Text += String.Format("{0}\u2022 {1},", Environment.NewLine, error);
+                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {error},";
                 }
             }
             else if (errorMessages.Warnings.Count != 0)
@@ -177,13 +177,13 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text = "The merged database left out some files for the following reasons:";
                 foreach (string warning in errorMessages.Warnings)
                 {
-                    this.TextBlockFinalMessage.Text += String.Format("{0}\u2022 {1}", Environment.NewLine, warning);
+                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {warning}";
                 }
                 this.TextBlockFinalMessage.Text += Environment.NewLine + Environment.NewLine;
                 if (errorMessages.MergedFiles.Count == 0)
                 {
-                    this.TextBlockFinalMessage.Text += String.Format("{0}{1}", Environment.NewLine, "No files were left to merge");
-                    merged = false;
+                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}{"No files were left to merge"}";
+                    // already has this value: merged = false;
                 }
                 else
                 {
@@ -200,10 +200,10 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text += "These database files were merged:";
                 foreach (string file in errorMessages.MergedFiles)
                 {
-                    this.TextBlockFinalMessage.Text += String.Format("{0}\u2022 {1}", Environment.NewLine, file);
+                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {file}";
                 }
                 this.TextBlockFinalMessage.Text += String.Format("{0}{0}The merged database is located in:", Environment.NewLine);
-                this.TextBlockFinalMessage.Text += String.Format("{0}\u2022 {1}", Environment.NewLine, this.DestinationddbFilePath);
+                this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {this.DestinationddbFilePath}";
                 this.DoneWithLoadButton.Visibility = Visibility.Visible;
                 this.IsAnyDataUpdated = true;
             }

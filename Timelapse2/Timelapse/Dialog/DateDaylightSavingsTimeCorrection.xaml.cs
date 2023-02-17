@@ -124,7 +124,8 @@ namespace Timelapse.Dialog
                    if (this.ReadyToRefresh())
                    {
                        int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
-                       progress.Report(new ProgressBarArguments(percentDone, String.Format("Pass 1: Calculating new date/times for {0} / {1} files", fileIndex, count), true, false));
+                       progress.Report(new ProgressBarArguments(percentDone,
+                           $"Pass 1: Calculating new date/times for {fileIndex} / {count} files", true, false));
                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                    }
 
@@ -132,7 +133,8 @@ namespace Timelapse.Dialog
                    {
                        // After all files are processed, the next step would be updating the database. Disable the cancel button too.
                        // This really should be somehow signalled from the invoking method (ideally ExecuteNonQueryWrappedInBeginEnd every update interval), but this is a reasonable workaround.
-                       progress.Report(new ProgressBarArguments(100, String.Format("Pass 2: Updating {0} files. Please wait...", feedbackRows.Count), false, true));
+                       progress.Report(new ProgressBarArguments(100,
+                           $"Pass 2: Updating {feedbackRows.Count} files. Please wait...", false, true));
                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                    }
                    return imageDateTime + adjustment; // Returns the new time
@@ -185,7 +187,8 @@ namespace Timelapse.Dialog
             // Provide summary feedback 
             if (this.IsAnyDataUpdated && this.Token.IsCancellationRequested == false)
             {
-                string message = string.Format("Updated {0}/{1} files whose dates have changed.", feedbackRows.Count, this.fileDatabase.CountAllCurrentlySelectedFiles);
+                string message =
+                    $"Updated {feedbackRows.Count}/{this.fileDatabase.CountAllCurrentlySelectedFiles} files whose dates have changed.";
                 feedbackRows.Insert(0, (new DateTimeFeedbackTuple("---", message)));
             }
 

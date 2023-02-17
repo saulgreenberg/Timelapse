@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Timelapse.Util;
@@ -47,7 +46,7 @@ namespace Timelapse.Controls
                     default:
                         this.lblIconType.Content = "?";
                         this.iconType = MessageBoxImage.Question; // Show a reasonable default in the unlikely case this happens
-                        TracePrint.PrintMessage(String.Format("Unhandled icon type {0}.", this.Icon));
+                        TracePrint.PrintMessage($"Unhandled icon type {this.Icon}.");
                         break;
                 }
                 this.iconType = value;

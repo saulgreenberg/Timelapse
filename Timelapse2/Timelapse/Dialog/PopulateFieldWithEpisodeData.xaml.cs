@@ -94,10 +94,10 @@ namespace Timelapse.Dialog
             this.BusyCancelIndicator.IsBusy = false;
             this.WindowCloseButtonIsEnabled(true);
             this.TextBlockFeedbackLine1.Text = isCompleted
-                ? String.Format("Done, with {0} files processed.", TotalImages)
+                ? $"Done, with {TotalImages} files processed."
                 : "Operation cancelled.";
             this.TextBlockFeedbackLine2.Text = isCompleted
-                ? String.Format("Found {0} singleton{1}, and {2} episode{3}.", SingleCount, SingleCount == 1 ? String.Empty : "s", EpisodeNoSingletonsCount, EpisodeNoSingletonsCount == 1 ? String.Empty : "s")
+                ? $"Found {SingleCount} singleton{(SingleCount == 1 ? String.Empty : "s")}, and {EpisodeNoSingletonsCount} episode{(EpisodeNoSingletonsCount == 1 ? String.Empty : "s")}."
                 : "No changes were made";
             this.PrimaryPanel.Visibility = Visibility.Collapsed;
             this.FeedbackPanel.Visibility = Visibility.Visible;
@@ -131,7 +131,8 @@ namespace Timelapse.Dialog
                     if (this.ReadyToRefresh())
                     {
                         int percentDone = Convert.ToInt32(imageIndex / TotalImages * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("Processing {0}/{1} images.  ", imageIndex, TotalImages), true, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"Processing {imageIndex}/{TotalImages} images.  ", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
 
@@ -140,7 +141,8 @@ namespace Timelapse.Dialog
                     {
 
                         this.EpisodeCount++;
-                        string singletonData = String.Format("{0}1|1", this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty);
+                        string singletonData =
+                            $"{(this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty)}1|1";
 
                         List<ColumnTuple> ctl = new List<ColumnTuple>() { new ColumnTuple(this.dataLabelByLabel[this.dataFieldLabel], singletonData) };
                         imagesToUpdate.Add(new ColumnTuplesWithWhere(ctl, this.fileDatabase.FileTable[imageIndex].ID));
@@ -155,14 +157,15 @@ namespace Timelapse.Dialog
                         {
                             List<ColumnTuple> ctl = new List<ColumnTuple>() {
                                 new ColumnTuple(this.dataLabelByLabel[this.dataFieldLabel],
-                                String.Format("{0}{1}|{2}", this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty, episode.Value.Item1, episode.Value.Item2))};
+                                    $"{(this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty)}{episode.Value.Item1}|{episode.Value.Item2}")};
                             imagesToUpdate.Add(new ColumnTuplesWithWhere(ctl, this.fileDatabase.FileTable[imageIndex].ID));
                             imageIndex++;
                         }
                     }
                 }
                 this.IsAnyDataUpdated = true;
-                this.Progress.Report(new ProgressBarArguments(100, String.Format("Writing Episode data for {0} files. Please wait...", TotalImages), false, true));
+                this.Progress.Report(new ProgressBarArguments(100,
+                    $"Writing Episode data for {TotalImages} files. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 this.fileDatabase.UpdateFiles(imagesToUpdate);
 

@@ -114,9 +114,9 @@ namespace Timelapse.Util
                 return defaultValue;
             }
 
-            if (value is Int32)
+            if (value is Int32 iValue)
             {
-                return (int)value;
+                return iValue;
             }
 
             if (value is string @string)

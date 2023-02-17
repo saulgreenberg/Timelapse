@@ -25,7 +25,8 @@ namespace Timelapse.Dialog
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.Message.What = String.Format("Your 'DeletedFiles' sub-folder contains backups of {0} 'deleted' image or video files.", this.howManyDeleteFiles);
+            this.Message.What =
+                $"Your 'DeletedFiles' sub-folder contains backups of {this.howManyDeleteFiles} 'deleted' image or video files.";
         }
         #endregion
 

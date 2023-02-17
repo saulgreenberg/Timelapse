@@ -59,7 +59,7 @@ namespace Timelapse.Dialog
             if (sender is Slider slider)
             {
                 this.SampleSize = Convert.ToInt32(slider.Value);
-                this.TBFilesSelected.Text = String.Format(" / {0} files will be sampled", this.MaxSampleSize);
+                this.TBFilesSelected.Text = $" / {this.MaxSampleSize} files will be sampled";
                 this.DontPropagate = true;
                 this.UpDownRandom.Value = Convert.ToInt32(slider.Value);
                 this.DontPropagate = false;

@@ -124,7 +124,7 @@ namespace Timelapse.Controls
             int imagesLeftToDisplay = maxNumberImagesToDisplay;
             DateTime lastBackwardsDateTime = currentImageRow.DateTime;
             DateTime lastForwardsDateTime = currentImageRow.DateTime;
-            while (true && (goBackwardsRow >= 0 || goForwardsRow < availableRows))
+            while (goBackwardsRow >= 0 || goForwardsRow < availableRows)
             {
                 // Abort when there is no more work to do
                 if (imagesLeftToDisplay <= 0)

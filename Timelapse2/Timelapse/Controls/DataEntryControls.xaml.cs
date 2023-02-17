@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -94,7 +93,7 @@ namespace Timelapse.Controls
                 }
                 else
                 {
-                    TracePrint.PrintMessage(String.Format("Unhandled control type {0} in CreateControls.", control.Type));
+                    TracePrint.PrintMessage($"Unhandled control type {control.Type} in CreateControls.");
                     continue;
                 }
                 this.ControlGrid.Inlines.Add(controlToAdd.Container);

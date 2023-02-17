@@ -28,12 +28,9 @@ namespace Timelapse.Util
                 }
                 catch (Exception exception)
                 {
-                    if (exception != null)
-                    {
-                        // Error. A noop so we catch it cleanly but still leave the dialog running
-                        System.Media.SystemSounds.Beep.Play();
-                        return false;
-                    }
+                    // Error. A noop so we catch it cleanly but still leave the dialog running
+                    System.Media.SystemSounds.Beep.Play();
+                    return false;
                 }
                 return true;
             }

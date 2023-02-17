@@ -224,6 +224,7 @@ namespace DialogUpgradeFiles
             }
             catch
             {
+               
             }
         }
         #endregion

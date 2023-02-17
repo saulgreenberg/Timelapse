@@ -44,7 +44,8 @@ namespace Timelapse.Dialog
 
             this.Message.Title = this.ProgramName + " needs to close. Please report this error.";
             this.Message.Problem = this.ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
-            this.Message.Result = String.Format("Timelapse will shut down.{0}The data file is likely OK.  If it's not you can restore from the {1} folder.", Environment.NewLine, Constant.File.BackupFolder);
+            this.Message.Result =
+                $"Timelapse will shut down.{Environment.NewLine}The data file is likely OK.  If it's not you can restore from the {Constant.File.BackupFolder} folder.";
             this.ExceptionReport.Text = body;
 
             // Add text to the body explaining the specific exception
@@ -77,7 +78,7 @@ namespace Timelapse.Dialog
         // Start an email
         private void MailButton_Click(object sender, RoutedEventArgs e)
         {
-            Uri uri = new Uri(String.Format("mailto:{0}?subject={1}&body={2}", to, subject, Uri.EscapeUriString(body)));
+            Uri uri = new Uri($"mailto:{to}?subject={subject}&body={Uri.EscapeUriString(body)}");
             if (ProcessExecution.TryProcessStart(uri) == false)
             {
                 this.MailButton.Content = "Mailing failed - See 'alternate' instructions above, or press Cancel.";
@@ -89,7 +90,7 @@ namespace Timelapse.Dialog
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.Clear();
-            Clipboard.SetText(String.Format("Email this to {0} {1}{2}", to, Environment.NewLine, this.body));
+            Clipboard.SetText($"Email this to {to} {Environment.NewLine}{this.body}");
         }
         #endregion
 

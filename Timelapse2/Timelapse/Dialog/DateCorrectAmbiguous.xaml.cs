@@ -172,7 +172,8 @@ namespace Timelapse.Dialog
                     {
                         dateIndex++;
                         int percentDone = Convert.ToInt32(dateIndex / Convert.ToDouble(count) * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone, String.Format("Swapping day with month for {0} / {1} ambiguous dates", dateIndex, count), false, false));
+                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                            $"Swapping day with month for {dateIndex} / {count} ambiguous dates", false, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // The cancellation pattern is shown but is commented out. We don't do anything with the cancellation CancelToken, as we are actually updating the database at this point

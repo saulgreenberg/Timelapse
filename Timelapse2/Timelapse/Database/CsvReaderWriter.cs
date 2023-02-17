@@ -110,7 +110,8 @@ namespace Timelapse.Database
                             fileWriter.WriteLine(csvRow.ToString());
                             if (row % 5000 == 0)
                             {
-                                progress.Report(new ProgressBarArguments(Convert.ToInt32(((double)row) / countAllCurrentlySelectedFiles * 100.0), String.Format("Writing {0}/{1} file entries to CSV file. Please wait...", row, countAllCurrentlySelectedFiles), false, false));
+                                progress.Report(new ProgressBarArguments(Convert.ToInt32(((double)row) / countAllCurrentlySelectedFiles * 100.0),
+                                    $"Writing {row}/{countAllCurrentlySelectedFiles} file entries to CSV file. Please wait...", false, false));
                             }
                         }
                     }
@@ -407,7 +408,8 @@ namespace Timelapse.Database
                         if (imagesToUpdate.Count >= bulkFilesToHandle)
                         {
                             processedFilesCount += bulkFilesToHandle;
-                            progress.Report(new ProgressBarArguments(Convert.ToInt32(((double)processedFilesCount) / sortedRowDictionaryListCount * 100.0), String.Format("Processing {0}/{1} files. Please wait...", processedFilesCount, sortedRowDictionaryListCount), false, false));
+                            progress.Report(new ProgressBarArguments(Convert.ToInt32(((double)processedFilesCount) / sortedRowDictionaryListCount * 100.0),
+                                $"Processing {processedFilesCount}/{sortedRowDictionaryListCount} files. Please wait...", false, false));
                             fileDatabase.UpdateFiles(imagesToUpdate);
                             imagesToUpdate.Clear();
                         }
@@ -416,7 +418,7 @@ namespace Timelapse.Database
                     if (dateTimeErrors != 0)
                     {
                         // Need to check IF THIS WORKS FOR files with no date-time fields!
-                        importErrors.Add(String.Format("The Date/Time was not be updated for {0} / {1} files. ", dateTimeErrors, totalFilesProcessed));
+                        importErrors.Add($"The Date/Time was not be updated for {dateTimeErrors} / {totalFilesProcessed} files. ");
                         if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.DateTime) || (dataLabelsFromCSV.Contains(Constant.ControlDeprecated.DateLabel) && dataLabelsFromCSV.Contains(Constant.ControlDeprecated.TimeLabel)))
                         {
                             importErrors.Add("- some date / time values in the DateTime, Date or Time columns are in an unexpected format (see manual)");
@@ -441,7 +443,7 @@ namespace Timelapse.Database
             if (parsedFile == null)
             {
                 // Could not open the file
-                importErrors.Add(String.Format("The file '{0}' could not be read. Things to check:", Path.GetFileName(filePath)));
+                importErrors.Add($"The file '{Path.GetFileName(filePath)}' could not be read. Things to check:");
                 importErrors.Add("- Is the file is currently opened by another application?");
                 importErrors.Add("- Do you have permission to read this file (especially network file systems, which sometimes limit access).");
                 return false;
@@ -450,12 +452,12 @@ namespace Timelapse.Database
             // Abort if The CSV file is empty or only contains a header row
             if (parsedFile.Count < 1)
             {
-                importErrors.Add(String.Format("The file '{0}' appears to be empty.", Path.GetFileName(filePath)));
+                importErrors.Add($"The file '{Path.GetFileName(filePath)}' appears to be empty.");
                 return false;
             }
             else if (parsedFile.Count < 2)
             {
-                importErrors.Add(String.Format("The file '{0}' does not contain any data.", Path.GetFileName(filePath)));
+                importErrors.Add($"The file '{Path.GetFileName(filePath)}' does not contain any data.");
                 return false;
             }
             return true;
@@ -487,11 +489,12 @@ namespace Timelapse.Database
                 importErrors.Add("CSV columns necessary to locate your image or video files are missing: ");
                 if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.File) == false)
                 {
-                    importErrors.Add(String.Format("- the '{0}' column.", Constant.DatabaseColumn.File));
+                    importErrors.Add($"- the '{Constant.DatabaseColumn.File}' column.");
                 }
                 if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.RelativePath) == false)
                 {
-                    importErrors.Add(String.Format("- the '{0}' column (You still need it even if your files are all in your root folder).", Constant.DatabaseColumn.RelativePath));
+                    importErrors.Add(
+                        $"- the '{Constant.DatabaseColumn.RelativePath}' column (You still need it even if your files are all in your root folder).");
                 }
                 abort = true;
             }
@@ -503,7 +506,7 @@ namespace Timelapse.Database
                 importErrors.Add("These CSV column headings do not match any of the template'sDataLabels:");
                 foreach (string dataLabel in dataLabelsInHeaderButNotFileDatabase)
                 {
-                    importErrors.Add(String.Format("- {0}", dataLabel));
+                    importErrors.Add($"- {dataLabel}");
                     abort = true;
                 }
             }
@@ -629,7 +632,8 @@ namespace Timelapse.Database
                         }
                         if (numberRowsWithErrors > maxRowsToReportWithErrors)
                         {
-                            importErrors.Add(String.Format("- Timelapse only reports data errors for a maximum of {0} rows. Use the information above to start fixing them.", maxRowsToReportWithErrors));
+                            importErrors.Add(
+                                $"- Timelapse only reports data errors for a maximum of {maxRowsToReportWithErrors} rows. Use the information above to start fixing them.");
                             importErrors.Add("- Use the information above to check the data values in those columns for all rows.");
                             return false;
                         }
@@ -664,7 +668,8 @@ namespace Timelapse.Database
             {
                 string dbEntry = duplicateIDS.Count == 1 ? "entry" : "entries";
                 string csvEntry = duplicatesDictionaryList.Count == 1 ? "entry" : "entries";
-                errorMessage = String.Format("duplicate entry mismatch for {0}: {1} database {2} vs. {3} CSV {4}.", Path.Combine(relativePath, file), duplicateIDS.Count, dbEntry, duplicatesDictionaryList.Count, csvEntry);
+                errorMessage =
+                    $"duplicate entry mismatch for {Path.Combine(relativePath, file)}: {duplicateIDS.Count} database {dbEntry} vs. {duplicatesDictionaryList.Count} CSV {csvEntry}.";
             }
 
             int idIndex = 0;

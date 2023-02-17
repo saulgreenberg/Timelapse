@@ -261,7 +261,7 @@ namespace Timelapse.Controls
             }
             else
             {
-                throw new NotSupportedException(String.Format("Unhandled control type {0}.", control.GetType().Name));
+                throw new NotSupportedException($"Unhandled control type {control.GetType().Name}.");
             }
         }
         #endregion
@@ -822,7 +822,7 @@ namespace Timelapse.Controls
                 return;
             }
             DataEntryControl control = (DataEntryControl)checkBox.Tag;
-            string value = (bool)(checkBox.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+            string value = checkBox.IsChecked == true ? Constant.BooleanValue.True : Constant.BooleanValue.False;
 
             control.SetContentAndTooltip(value);
             this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
