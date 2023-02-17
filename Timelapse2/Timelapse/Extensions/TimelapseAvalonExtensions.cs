@@ -90,7 +90,7 @@ namespace Timelapse.Util
                 // Eve so, we check to see if the window position and size were saved; if they aren't there, it defaults to a reasonable size and position.
                 timelapse.AvalonLayout_LoadWindowPositionAndSizeFromRegistry(layoutName + Constant.AvalonDockValues.WindowRegistryKeySuffix);
                 timelapse.AvalonLayout_LoadWindowMaximizeStateFromRegistry(layoutName + Constant.AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
-                return result;
+                return false;
             }
 
             // After deserializing, a completely new LayoutRoot object is created.

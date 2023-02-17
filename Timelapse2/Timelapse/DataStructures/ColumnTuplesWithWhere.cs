@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Timelapse.Util;
 
 namespace Timelapse.Database
@@ -20,7 +19,7 @@ namespace Timelapse.Database
     public class ColumnTuplesWithWhere
     {
         #region Public Properties
-        public List<ColumnTuple> Columns { get; private set; }
+        public List<ColumnTuple> Columns { get; }
         public string Where { get; private set; }
         #endregion
 

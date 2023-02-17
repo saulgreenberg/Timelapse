@@ -182,7 +182,7 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text += Environment.NewLine + Environment.NewLine;
                 if (errorMessages.MergedFiles.Count == 0)
                 {
-                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}{"No files were left to merge"}";
+                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}No files were left to merge";
                     // already has this value: merged = false;
                 }
                 else

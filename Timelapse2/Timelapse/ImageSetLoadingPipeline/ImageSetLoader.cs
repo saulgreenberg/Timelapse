@@ -43,7 +43,6 @@ namespace Timelapse.ImageSetLoadingPipeline
         public int ImagesToLoad
         {
             get;
-            private set;
         }
 
         public List<string> ImagesSkippedAsFilePathTooLong { get; set; }
@@ -106,8 +105,8 @@ namespace Timelapse.ImageSetLoadingPipeline
                     if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                     {
                         // User requested we cancel the task. So stop going through files and adding any further tasks.
-                        // Although I am unsure about this, clearing the task lisk may help inhibit additional tasks being added
-                        // The caller will check the cancelation token again, and will stop further actions and clean up as needed.
+                        // Although I am unsure about this, clearing the task list may help inhibit additional tasks being added
+                        // The caller will check the cancellation token again, and will stop further actions and clean up as needed.
                         // Debug.Print("Cancelled from ImageSetLoader: this.pass1");
                         loadTasks = new List<Task>();
                         return;
@@ -136,9 +135,9 @@ namespace Timelapse.ImageSetLoadingPipeline
                     // The null portion shouldn't happen
                     string relativePath = directoryName != null
                         ? directoryName.Replace(absolutePathPart, string.Empty).TrimEnd(Path.DirectorySeparatorChar)
-                        : String.Empty;
+                        : string.Empty;
 
-                    ImageLoader loader = new ImageLoader(imageSetFolderPath, relativePath, fileInfo, dataHandler);
+                    ImageLoader loader = new ImageLoader(relativePath, fileInfo, dataHandler);
 
                     Task loaderTask = loader.LoadImageAsync(() =>
                     {

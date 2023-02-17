@@ -757,7 +757,6 @@ namespace Timelapse.Database
                     }
                 }
 
-                // NEW
                 // If Date and Time columns were used instead of DateTime, they have to be combined to get the DateTime
                 if (dateTime != DateTime.MinValue || (datePortion != DateTime.MinValue && timePortion != DateTime.MinValue))
                 {
@@ -781,7 +780,7 @@ namespace Timelapse.Database
                 dateTime = DateTime.MinValue;
                 datePortion = DateTime.MinValue;
                 timePortion = DateTime.MinValue;
-                //ENDNEW
+
                 idIndex++;
             }
             if (imagesToUpdate.Count > 0)

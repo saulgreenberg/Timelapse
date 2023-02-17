@@ -49,7 +49,7 @@ namespace Timelapse.Images
         /// <summary>
         /// Gets the grid containing a multitude of zoomed out images
         /// </summary>
-        public ThumbnailGrid ThumbnailGrid { get; private set; }
+        public ThumbnailGrid ThumbnailGrid { get; }
 
         /// <summary>
         /// We need a reference to the DataEntry Controls so we can enable and disable some of them
@@ -78,7 +78,7 @@ namespace Timelapse.Images
         /// <summary>
         /// Gets the image displayed in the magnifying glass
         /// </summary>
-        public Image ImageToMagnify { get; private set; }
+        public Image ImageToMagnify { get; }
 
         /// <summary>
         /// Whether the thumbnail grid is visible or not
@@ -119,7 +119,7 @@ namespace Timelapse.Images
         /// <summary>
         /// The VideoPlayer displayed by the markable canvasewhen a video is selected
         /// </summary>
-        public VideoPlayer VideoPlayer { get; private set; }
+        public VideoPlayer VideoPlayer { get; }
 
         /// <summary>
         /// Gets or sets the maximum zoom of the display image

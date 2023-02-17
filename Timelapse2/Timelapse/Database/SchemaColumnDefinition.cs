@@ -12,8 +12,8 @@ namespace Timelapse.Database
         /// </summary>
         #region Public Properties
         public string Name { get; }
-        public string DefaultValue { get; private set; }
-        public string Type { get; private set; }
+        public string DefaultValue { get; }
+        public string Type { get; }
         #endregion
 
         #region Constructors

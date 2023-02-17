@@ -278,7 +278,7 @@ namespace Timelapse.Dialog
                 List<ImageRow> selectedFiles = this.fileDatabase.FileTable.ToList();
                 List<ColumnTuplesWithWhere> filesToUpdate = new List<ColumnTuplesWithWhere>();
                 int fileIndex = 0;
-                int selectedFilesCount = (selectedFiles == null) ? 0 : selectedFiles.Count;
+                int selectedFilesCount = selectedFiles == null ? 0 : selectedFiles.Count;
                 string dataLabel = string.IsNullOrEmpty(this.ChosenFlagLabel)
                                     ? String.Empty
                                     : this.FlagLabelsDataLabels[this.ChosenFlagLabel];

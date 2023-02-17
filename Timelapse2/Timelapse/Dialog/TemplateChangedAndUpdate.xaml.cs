@@ -26,7 +26,7 @@ namespace Timelapse.Dialog
         private readonly List<ComboBox> comboBoxes = new List<ComboBox>();
         private readonly List<int> actionRows = new List<int>();
 
-        private TemplateSyncResults TemplateSyncResults { get; set; }
+        private TemplateSyncResults TemplateSyncResults { get; }
         #endregion
 
         #region Constructor, Loaded, Closing

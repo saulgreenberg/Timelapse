@@ -94,7 +94,7 @@ namespace Timelapse.Dialog
         // This timer is used to delay showing count information, which could be an expensive operation, as the user may be setting values quickly
         private readonly DispatcherTimer countTimer = new DispatcherTimer();
 
-        private RecognitionSelections DetectionSelections { get; set; }
+        private RecognitionSelections DetectionSelections { get; }
         #endregion
 
         #region Constructors and Loading

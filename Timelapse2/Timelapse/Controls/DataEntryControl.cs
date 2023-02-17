@@ -42,10 +42,10 @@ namespace Timelapse.Controls
         public bool Copyable { get; set; }
 
         /// <summary>Gets the container that holds the control.</summary>
-        public StackPanel Container { get; private set; }
+        public StackPanel Container { get; }
 
         /// <summary>Gets the data label which corresponds to this control.</summary>
-        public string DataLabel { get; private set; }
+        public string DataLabel { get; }
 
         public abstract IInputElement Focus(DependencyObject focusScope);
 
@@ -104,12 +104,12 @@ namespace Timelapse.Controls
         where TLabel : ContentControl, new()
     {
         #region DataEntryControl<TContent, TLabel> Properties
-        public TContent ContentControl { get; private set; }
+        public TContent ContentControl { get; }
 
         /// <summary>Gets the control label's value</summary>
         public string Label => (string)this.LabelControl.Content;
 
-        public TLabel LabelControl { get; private set; }
+        public TLabel LabelControl { get; }
 
         /// <summary>Gets or sets the width of the content control</summary>
         public int Width

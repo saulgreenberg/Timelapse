@@ -19,7 +19,7 @@ namespace Timelapse.Images
     {
         #region Public Properties
         // List of Bounding Boxes associated with the image
-        public List<BoundingBox> Boxes { get; private set; }
+        public List<BoundingBox> Boxes { get; }
         public float MaxConfidence { get; set; }
         #endregion
 

@@ -31,7 +31,7 @@ namespace Timelapse.Controls
         // it is reset by an external method
         public FileDatabase FileDatabase { get; set; }
 
-        private double ImageHeight { get; set; }
+        private double ImageHeight { get; }
         private readonly TimelapseWindow timelapseWindow = GlobalReferences.MainWindow;
         private readonly MarkableCanvas markableCanvas;
 

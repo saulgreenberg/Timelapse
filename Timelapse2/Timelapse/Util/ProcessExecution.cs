@@ -26,7 +26,7 @@ namespace Timelapse.Util
                 {
                     process.Start();
                 }
-                catch (Exception exception)
+                catch
                 {
                     // Error. A noop so we catch it cleanly but still leave the dialog running
                     System.Media.SystemSounds.Beep.Play();

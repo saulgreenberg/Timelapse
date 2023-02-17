@@ -34,7 +34,7 @@ namespace Timelapse.Images
 
         #region private properties and variables
         // This hides the actual parent, which is why we set it as a property
-        private new MarkableCanvas Parent { get; set; }
+        private new MarkableCanvas Parent { get; }
 
         // The lens is constructed within a canvas
         private readonly Canvas lensCanvas;

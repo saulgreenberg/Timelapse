@@ -19,7 +19,7 @@ namespace Timelapse.Database
         public DataTableBackedList<ControlRow> Controls { get; private set; }
 
         /// <summary>Gets the file name of the image database on disk.</summary>
-        public string FilePath { get; private set; }
+        public string FilePath { get; }
 
         public SQLiteWrapper Database { get; set; }
         #endregion
@@ -61,10 +61,7 @@ namespace Timelapse.Database
                 // We do this by checking the database integrity (which may raise an internal exception) and if that is ok, by checking if it has a TemplateTable. 
                 if (templateDatabase.Database.PragmaGetQuickCheck() == false || templateDatabase.TableExists(Constant.DBTables.Template) == false)
                 {
-                    if (templateDatabase != null)
-                    {
-                        templateDatabase.Dispose();
-                    }
+                    templateDatabase.Dispose();
                     return null;
                 }
 

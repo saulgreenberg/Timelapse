@@ -50,7 +50,7 @@ namespace Timelapse.Util
         public bool SuppressSelectedPopulateFieldFromMetadataPrompt { get; set; }
         public bool SuppressSelectedRereadDatesFromFilesPrompt { get; set; }
         public bool SuppressWarningToUpdateDBFilesToSQLPrompt { get; set; }
-        public Throttles Throttles { get; private set; }
+        public Throttles Throttles { get; }
         public bool TabOrderIncludeDateTime { get; set; }
         public bool TabOrderIncludeDeleteFlag { get; set; }
         public Size TimelapseWindowSize { get; set; }

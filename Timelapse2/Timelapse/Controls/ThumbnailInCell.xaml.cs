@@ -30,8 +30,8 @@ namespace Timelapse.Controls
         public int GridIndex { get; set; }
         public int FileTableIndex { get; set; }
         public ImageRow ImageRow { get; set; }
-        public double CellHeight { get; private set; }
-        public double CellWidth { get; private set; }
+        public double CellHeight { get; }
+        public double CellWidth { get; }
         public DateTime DateTimeLastBitmapWasSet { get; set; }
         public bool IsBitmapSet { get; private set; }
 

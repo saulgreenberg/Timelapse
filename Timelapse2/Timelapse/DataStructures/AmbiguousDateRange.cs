@@ -2,7 +2,7 @@
 {
     /// <summary>
     /// A class that stores various properties for each ambiguous date found,
-    /// including indeces in the file table that define a range of ambiguous dates. 
+    /// including indexes in the file table that define a range of ambiguous dates. 
     /// </summary>
     public class AmbiguousDateRange
     {

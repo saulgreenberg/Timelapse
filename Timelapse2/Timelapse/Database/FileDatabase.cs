@@ -48,11 +48,11 @@ namespace Timelapse.Database
         public string FileName { get; private set; }
 
         /// <summary>Get the complete path to the folder containing the database.</summary>
-        public string FolderPath { get; private set; }
+        public string FolderPath { get; }
 
-        public Dictionary<string, string> DataLabelFromStandardControlType { get; private set; }
+        public Dictionary<string, string> DataLabelFromStandardControlType { get; }
 
-        public Dictionary<string, FileTableColumn> FileTableColumnsByDataLabel { get; private set; }
+        public Dictionary<string, FileTableColumn> FileTableColumnsByDataLabel { get; }
 
         // contains the results of the data query
         public FileTable FileTable { get; private set; }

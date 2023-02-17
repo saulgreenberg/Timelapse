@@ -54,15 +54,13 @@ namespace Timelapse.ImageSetLoadingPipeline
         private readonly FileInfo fileInfo;
         private readonly DataEntryHandler dataHandler;
         private readonly string relativePath;
-        private readonly string imageSetFolderPath;
         #endregion
 
         #region Constructor
-        public ImageLoader(string imageSetFolderPath, string relativePath, FileInfo fileInfo, DataEntryHandler dataHandler)
+        public ImageLoader(string relativePath, FileInfo fileInfo, DataEntryHandler dataHandler)
         {
             this.fileInfo = fileInfo;
             this.dataHandler = dataHandler;
-            this.imageSetFolderPath = imageSetFolderPath;
             this.relativePath = relativePath;
         }
         #endregion

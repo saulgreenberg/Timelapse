@@ -12,15 +12,13 @@ namespace Timelapse.Dialog
         #region Private Variables
         private readonly MarkableCanvas markableCanvas;
         private readonly TimelapseState timelapseState;
-        //private readonly bool detectionsLoaded;
         #endregion
 
         #region Constructor and Loaded
-        public AdvancedTimelapseOptions(TimelapseState timelapseState, MarkableCanvas markableCanvas, Window owner, bool detectionsLoaded)
+        public AdvancedTimelapseOptions(TimelapseState timelapseState, MarkableCanvas markableCanvas, Window owner)
         {
             this.InitializeComponent();
             this.Owner = owner;
-            //this.detectionsLoaded = detectionsLoaded;
 
             // Check the arguments for null 
             ThrowIf.IsNullArgument(timelapseState, nameof(timelapseState));

@@ -14,8 +14,8 @@ namespace Timelapse.Controls
     public partial class DataEntryControls
     {
         #region Public properties and Private Variables
-        public List<DataEntryControl> Controls { get; private set; }
-        public Dictionary<string, DataEntryControl> ControlsByDataLabel { get; private set; }
+        public List<DataEntryControl> Controls { get; }
+        public Dictionary<string, DataEntryControl> ControlsByDataLabel { get; }
 
         private DataEntryHandler dataEntryHandler;
         #endregion
@@ -223,9 +223,8 @@ namespace Timelapse.Controls
                         // Notes: When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
                         string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(note.DataLabel);
-                        if (control is DataEntryNote &&
-                            (control.DataLabel == Constant.DatabaseColumn.File ||
-                             control.DataLabel == Constant.DatabaseColumn.RelativePath))
+                        if (control.DataLabel == Constant.DatabaseColumn.File ||
+                             control.DataLabel == Constant.DatabaseColumn.RelativePath)
                         {
                             note.IsEnabled = imagesSelected == 1;
                         }

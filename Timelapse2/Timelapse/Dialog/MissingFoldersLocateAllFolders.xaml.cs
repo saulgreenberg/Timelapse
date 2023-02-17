@@ -49,7 +49,7 @@ namespace Timelapse.Dialog
         }
 
         //private readonly ObservableCollection<MissingFolderRow> observableCollection; // A tuple defining the contents of the datagrid
-        private ObservableCollection<MissingFolderRow> observableCollection { get; set; } // A tuple defining the contents of the datagrid
+        private ObservableCollection<MissingFolderRow> observableCollection { get; } // A tuple defining the contents of the datagrid
 
         #endregion
 
@@ -337,10 +337,10 @@ namespace Timelapse.Dialog
         // An internal class used to store the contents of a datagrid row
         private class MissingFolderRow
         {
-            public string FolderName { get; set; }
-            public string ExpectedOldLocation { get; set; }
+            public string FolderName { get; }
+            public string ExpectedOldLocation { get; }
             public List<string> PossibleNewLocation { get; set; }
-            public bool Use { get; set; }
+            public bool Use { get; }
 
             public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use)
             {

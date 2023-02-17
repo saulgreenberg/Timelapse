@@ -11,9 +11,9 @@ namespace Timelapse.Database
     public abstract class FileTableColumn
     {
         #region Public Properties
-        public string ControlType { get; private set; }
+        public string ControlType { get; }
 
-        public string DataLabel { get; private set; }
+        public string DataLabel { get; }
 
         public abstract bool IsContentValid(string content);
         #endregion

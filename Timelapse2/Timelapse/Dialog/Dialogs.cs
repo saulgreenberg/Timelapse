@@ -1962,8 +1962,9 @@ namespace Timelapse.Dialog
 
         #region MessageBox: opening messages when Timelapse is started
         /// <summary>
-        /// Give the user various opening mesages
+        /// Give the user various opening messages
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public static void OpeningMessage(Window owner)
         {
             MessageBox openingMessage = new MessageBox("Opening Message ...", owner)
@@ -2124,6 +2125,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Testing messages for development
+        // ReSharper disable once UnusedMember.Global
         public static void RandomMessage(Window owner, string message)
         {
             // since the exported file isn't shown give the user some feedback about the export operation

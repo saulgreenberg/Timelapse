@@ -265,7 +265,7 @@ namespace Timelapse.Recognition
                             // Debug.Print("Skipping: " + image.file);
                             continue;
                         }
-                        // Remove the trunctation prefex from the file path 
+                        // Remove the truncation prefex from the file path 
                         imageFile = image.file.Substring(pathPrefixForTruncation.Length);
                         // Debug.Print("Using: " + image.file + " as " + imageFile);
                     }

@@ -136,8 +136,7 @@ namespace Timelapse
         /// <summary>Show Timelapse Preference dialog</summary>
         private void MenuItemPreferences_Click(object sender, RoutedEventArgs e)
         {
-            bool detectionsAvailable = this.DataHandler?.FileDatabase != null && this.DataHandler.FileDatabase.DetectionsExists();
-            AdvancedTimelapseOptions advancedTimelapseOptions = new AdvancedTimelapseOptions(this.State, this.MarkableCanvas, this, detectionsAvailable);
+            AdvancedTimelapseOptions advancedTimelapseOptions = new AdvancedTimelapseOptions(this.State, this.MarkableCanvas, this);
             advancedTimelapseOptions.ShowDialog();
 
             // Reset how some controls appear depending upon the current options
