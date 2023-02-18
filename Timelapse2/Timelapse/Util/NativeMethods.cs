@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Util
 {

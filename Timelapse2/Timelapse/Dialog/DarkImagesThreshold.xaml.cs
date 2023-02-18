@@ -12,9 +12,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Extensions;
-using Timelapse.Images;
+using Timelapse.State;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog

@@ -2,10 +2,11 @@
 using System.Globalization;
 using Timelapse.Enums;
 
+// ReSharper disable UnusedMember.Global
 namespace Timelapse
 {
     // Create SQL commands using constants rather than typing the SQL keywords. 
-    // This really helps avoid typos, bugs due to spacing such as not having spaces inbetween keywords, etc.
+    // This really helps avoid typos, bugs due to spacing such as not having spaces in between keywords, etc.
     public static class Sql
     {
         public const string AddColumn = " ADD COLUMN ";

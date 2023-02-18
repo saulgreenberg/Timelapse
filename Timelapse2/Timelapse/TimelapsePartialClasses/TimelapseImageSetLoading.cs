@@ -10,15 +10,17 @@ using System.Windows.Media.Imaging;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
-using Timelapse.Images;
 using Timelapse.ImageSetLoadingPipeline;
 using Timelapse.QuickPaste;
 using Timelapse.Util;
 using ToastNotifications.Core;
 using ToastNotifications.Messages;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     /// <summary>

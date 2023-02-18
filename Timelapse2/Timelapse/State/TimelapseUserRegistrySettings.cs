@@ -1,9 +1,12 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Windows;
+using Microsoft.Win32;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
+using Timelapse.Extensions;
+using Timelapse.Util;
 
-namespace Timelapse.Util
+namespace Timelapse.State
 {
     /// 
     /// Save the state of various things in the Registry.

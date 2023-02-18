@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 

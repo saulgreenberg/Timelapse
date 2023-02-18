@@ -3,8 +3,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Timelapse.Controls;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 
 namespace Timelapse.ImageSetLoadingPipeline

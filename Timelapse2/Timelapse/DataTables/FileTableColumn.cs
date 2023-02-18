@@ -1,6 +1,6 @@
 ﻿using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// FileTableColumn: An abstract class that 

@@ -7,8 +7,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Timelapse.Controls;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
+using Timelapse.Enums;
 using Timelapse.Util;
-using TimelapseUpgradeFiles.Enums;
 
 namespace Timelapse.Database
 {
@@ -336,6 +338,7 @@ namespace Timelapse.Database
         // This allows us to trim data in the database after the fact.
         // Form:
         // -- UPDATE tablename SET columname = TRIM(columnname);
+        // ReSharper disable once UnusedMember.Global
         public void TrimWhitespace(string tableName, List<string> columnNames)
         {
             // Check the arguments for null 

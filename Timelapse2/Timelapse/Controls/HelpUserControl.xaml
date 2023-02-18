@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="495" d:DesignWidth="759" Loaded="UserControl_Loaded">
-    <DockPanel Name="dockPanel">
+    <DockPanel>
         <FlowDocumentScrollViewer Name="ScrollViewer" MinHeight="100" MinWidth="100" DockPanel.Dock="Top" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Auto"/>
     </DockPanel>
 </UserControl>

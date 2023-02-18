@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Util;
 

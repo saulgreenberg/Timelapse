@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Images
 {

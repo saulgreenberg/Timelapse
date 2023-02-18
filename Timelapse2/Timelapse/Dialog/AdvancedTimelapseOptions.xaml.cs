@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Enums;
 using Timelapse.Images;
+using Timelapse.State;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog

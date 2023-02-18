@@ -8,7 +8,10 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.ExifTool;
+using Timelapse.Extensions;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -123,7 +126,7 @@ namespace Timelapse.Dialog
             // If there is no metadata, this is an easy way to inform the user
             if (this.metadataDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
                 this.noMetadataAvailable = true;
             }
             else
@@ -170,7 +173,7 @@ namespace Timelapse.Dialog
             // If there is no metadata, inform the user by setting bogus dictionary values which will appear on the grid
             if (exifDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Timelapse.Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
                 this.noMetadataAvailable = true;
             }
             else
@@ -185,7 +188,7 @@ namespace Timelapse.Dialog
                 // We only collect metadata for those fields whose value appears to have a valid date.
                 if (DateTime.TryParse(metadata.Value, out _))
                 {
-                    this.metadataDictionary.Add(metadata.Key, new Timelapse.Util.ImageMetadata(String.Empty, metadata.Key, metadata.Value));
+                    this.metadataDictionary.Add(metadata.Key, new ImageMetadata(String.Empty, metadata.Key, metadata.Value));
                     metadataList.Add(new Tuple<string, string, string, string>(metadata.Key, String.Empty, metadata.Key, metadata.Value));
                 }
             }
@@ -241,7 +244,7 @@ namespace Timelapse.Dialog
                         Dictionary<string, string> exifData = this.exifTool.FetchExifFrom(image.GetFilePath(this.fileDatabase.FolderPath), tags);
                         if (exifData.ContainsKey(tags[0]))
                         {
-                            metadata.Add(tags[0], new Timelapse.Util.ImageMetadata(String.Empty, tags[0], exifData[tags[0]]));
+                            metadata.Add(tags[0], new ImageMetadata(String.Empty, tags[0], exifData[tags[0]]));
                         }
                     }
 

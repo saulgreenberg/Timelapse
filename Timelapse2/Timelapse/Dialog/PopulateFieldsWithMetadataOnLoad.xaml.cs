@@ -4,6 +4,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 
 namespace Timelapse.Dialog
 {

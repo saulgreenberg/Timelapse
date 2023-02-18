@@ -1,4 +1,4 @@
-﻿<controls:BusyableDialogWindow x:Class="Timelapse.DateTimeLinearCorrection"
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateTimeLinearCorrection"
 		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:controls="clr-namespace:Timelapse.Controls"
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

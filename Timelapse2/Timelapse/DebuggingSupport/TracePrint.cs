@@ -4,10 +4,10 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Timelapse.DataStructures;
 
-namespace Timelapse.Util
+namespace Timelapse.DebuggingSupport
 {
     /// <summary>
-    /// Debugging: Various forms of printing out trace infromation containing a message and a stack trace of the method names 
+    /// Debugging: Various forms of printing out trace information containing a message and a stack trace of the method names 
     /// Only active when the TRACE flag is set in the Project properties
     /// </summary>
     public static class TracePrint
@@ -53,6 +53,7 @@ namespace Timelapse.Util
         /// Print a message and stack trace to a file
         /// </summary>
         /// <param name="message"></param>
+        // ReSharper disable once UnusedMember.Global
         public static void StackTraceToFile(string message)
         {
             using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))

@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Clipboard = System.Windows.Clipboard;

@@ -1,7 +1,9 @@
 ﻿using System.Data;
+using Timelapse.DataStructures;
+using Timelapse.Extensions;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// A DataRowBackedObject is a DataRow in a DataTable, which also has a Database ID. 

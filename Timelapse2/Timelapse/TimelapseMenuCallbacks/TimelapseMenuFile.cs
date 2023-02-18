@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -17,6 +18,7 @@ using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 
 // File Menu Callbacks
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow

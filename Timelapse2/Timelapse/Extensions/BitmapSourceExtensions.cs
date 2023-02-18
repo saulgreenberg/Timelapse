@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media.Imaging;
 
-namespace Timelapse.Images
+namespace Timelapse.Extensions
 {
     internal static class BitmapSourceExtensions
     {

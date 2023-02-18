@@ -1,21 +1,23 @@
-﻿using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using MetadataExtractor.Formats.Exif.Makernotes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.Exif.Makernotes;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.Images;
 using Timelapse.Util;
 using Directory = System.IO.Directory;
 using MetadataDirectory = MetadataExtractor.Directory;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// Represents the data in a row in the file database describing a single image or video.
@@ -28,8 +30,8 @@ namespace Timelapse.Database
         // Set/Get the raw datetime value
         public DateTime DateTime
         {
-            // There was still a UTCOffset conversionissues, so this kinda fixes it.
-            // Orignal code is in commentss
+            // There was still a UTCOffset conversion issues, so this kinda fixes it.
+            // Original code is in comments
             //get { return (this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime)); }
             //private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
             get => DateTime.SpecifyKind(this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime), DateTimeKind.Unspecified);

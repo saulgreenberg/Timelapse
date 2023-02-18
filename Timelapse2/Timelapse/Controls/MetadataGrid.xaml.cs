@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.ExifTool;
+using Timelapse.Extensions;
 using Timelapse.Util;
 
 namespace Timelapse.Controls
@@ -149,7 +150,7 @@ namespace Timelapse.Controls
             // If there is no metadata, this is an easy way to inform the user
             if (this.metadataDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
             }
 
             ObservableCollection<DataContents> temp = new ObservableCollection<DataContents>();
@@ -189,7 +190,7 @@ namespace Timelapse.Controls
             // If there is no metadata, inform the user by setting bogus dictionary values which will appear on the grid
             if (exifDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
             }
 
             // In order to populate the metadataDictionary and datagrid , we have to unpack the ExifTool dictionary, recreate the dictionary, and create a list containing four values

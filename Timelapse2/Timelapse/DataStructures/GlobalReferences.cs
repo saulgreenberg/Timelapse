@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using Timelapse.Controls;
-using Timelapse.Util;
+using Timelapse.State;
 
 namespace Timelapse.DataStructures
 {

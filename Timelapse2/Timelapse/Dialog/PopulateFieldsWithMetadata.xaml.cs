@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -212,7 +214,7 @@ namespace Timelapse.Dialog
                         {
                             if (exifData.ContainsKey(tag))
                             {
-                                metadata.Add(tag, new Timelapse.Util.ImageMetadata(String.Empty, tag, exifData[tag]));
+                                metadata.Add(tag, new ImageMetadata(String.Empty, tag, exifData[tag]));
                             }
                         }
                     }

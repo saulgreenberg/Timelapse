@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.Util;
 
 namespace Timelapse.Recognition

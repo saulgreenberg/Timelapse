@@ -1,10 +1,13 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
+using Microsoft.Win32;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
+using Timelapse.Util;
 
-namespace Timelapse.Util
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// Read and Write particular data types into the registry

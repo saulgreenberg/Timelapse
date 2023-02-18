@@ -3,6 +3,7 @@ using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Options Menu Callbacks

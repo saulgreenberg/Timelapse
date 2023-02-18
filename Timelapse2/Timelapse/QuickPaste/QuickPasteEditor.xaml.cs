@@ -9,8 +9,9 @@ using System.Windows.Media;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
-using Timelapse.Util;
 
 namespace Timelapse.QuickPaste
 {

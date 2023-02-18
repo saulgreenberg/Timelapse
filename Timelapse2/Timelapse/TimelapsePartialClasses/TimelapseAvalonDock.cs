@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
 using Xceed.Wpf.AvalonDock.Controls;
 using Xceed.Wpf.AvalonDock.Layout;
+
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // AvalonDock callbacks and methods

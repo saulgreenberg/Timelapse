@@ -2,10 +2,12 @@
 using System.Diagnostics;
 using System.Windows.Controls;
 using Timelapse.Controls;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Images;
-using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Showing Files
@@ -81,7 +83,7 @@ namespace Timelapse
             }
 
             // Get the current image in the image cache. If we can't, abort.
-            Database.ImageRow imageCacheCurrent = this.DataHandler.ImageCache.Current;
+            ImageRow imageCacheCurrent = this.DataHandler.ImageCache.Current;
 
             if (imageCacheCurrent == null)
             {

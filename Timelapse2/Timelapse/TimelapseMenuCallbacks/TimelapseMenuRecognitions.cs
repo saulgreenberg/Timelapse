@@ -5,11 +5,12 @@ using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Recognition;
-using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow

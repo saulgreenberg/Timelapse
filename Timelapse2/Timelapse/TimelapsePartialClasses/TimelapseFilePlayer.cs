@@ -2,6 +2,7 @@
 using Timelapse.Enums;
 using Timelapse.EventArguments;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // FilePlayer and FilePlayerTimer

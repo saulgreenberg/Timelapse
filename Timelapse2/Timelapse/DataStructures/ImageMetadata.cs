@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Timelapse.Util
+namespace Timelapse.DataStructures
 {
     /// <summary>
     /// Captures a single metadata record entry as extracted by MetaDataExtractor. 

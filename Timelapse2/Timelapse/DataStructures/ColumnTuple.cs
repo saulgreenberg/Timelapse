@@ -2,7 +2,7 @@
 using System.Globalization;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataStructures
 {
     /// <summary>
     /// A column name and a value to assign (or assigned) to that column. 

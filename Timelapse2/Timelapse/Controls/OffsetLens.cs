@@ -2,8 +2,8 @@
 using System.Windows.Documents;
 using System.Windows.Media;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
-using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.Controls

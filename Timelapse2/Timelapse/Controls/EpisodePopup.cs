@@ -8,6 +8,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -21,7 +23,7 @@ namespace Timelapse.Controls
     // episode limit is reached, then filling the other side. If there are no images in the episode, only the '^' marker will be displayed.
     // Importantly, the images on either side are chosen from the order that images were loaded, thus ignoring select and sort criteria.
     // It is sensitive to:
-    // - whether images were intially loaded in time-order - if not, then the left/right images may not be the ones in the episode
+    // - whether images were initially loaded in time-order - if not, then the left/right images may not be the ones in the episode
     // - whether images to the left/right were deleted, as the subsequent images may have a time difference greater than the threshold.
     public class EpisodePopup : Popup
     {

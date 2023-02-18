@@ -5,7 +5,6 @@
         IncompatableDetectionCategories,
         IncompatableClassificationCategories,
         JsonFileCouldNotBeRead,
-        JsonFileCorrupt,
         Success,
         Failure,
         Cancelled

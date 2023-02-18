@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace Timelapse.Util
+namespace Timelapse.DataStructures
 {
     /// <summary>
-    /// Maintain a recency-ordered collection of items
+    /// Maintain a recency ordered collection of items
     /// </summary>
     /// <typeparam name="TElement"></typeparam>
     public class RecencyOrderedList<TElement> : IEnumerable<TElement>
@@ -24,7 +24,7 @@ namespace Timelapse.Util
 
         #region Constructor
         /// <summary>
-        /// Initalize a recency order collection that holds maximumItems
+        /// Initialize a recency order collection that holds maximumItems
         /// When the collection is full, adding an item drops off the oldest item 
         /// </summary>
         /// <param name="maximumItems"></param>

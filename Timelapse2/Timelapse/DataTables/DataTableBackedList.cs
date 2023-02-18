@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Windows.Controls;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// DataTableBackedList is a list of DataRowBackedObjects associated with a DataTable

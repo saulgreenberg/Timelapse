@@ -2,8 +2,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
 

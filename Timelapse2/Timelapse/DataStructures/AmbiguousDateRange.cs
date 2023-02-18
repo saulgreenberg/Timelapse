@@ -1,4 +1,4 @@
-﻿namespace Timelapse.Dialog
+﻿namespace Timelapse.DataStructures
 {
     /// <summary>
     /// A class that stores various properties for each ambiguous date found,

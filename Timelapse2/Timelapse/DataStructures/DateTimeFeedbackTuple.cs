@@ -1,4 +1,4 @@
-﻿namespace Timelapse.Dialog
+﻿namespace Timelapse.DataStructures
 {
     /// <summary>
     /// Used by various DateTime Dialogs to store a particular file name with a feedback message 

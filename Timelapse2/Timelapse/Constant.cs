@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using Timelapse.Controls;
 using Xceed.Wpf.Toolkit;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse.Constant
 {
     // Various arguments accepted by Timelapse.

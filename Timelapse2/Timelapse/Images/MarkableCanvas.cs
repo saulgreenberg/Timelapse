@@ -12,6 +12,7 @@ using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
 using Timelapse.Util;

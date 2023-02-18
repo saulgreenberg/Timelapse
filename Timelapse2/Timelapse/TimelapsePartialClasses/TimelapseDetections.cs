@@ -4,6 +4,7 @@ using System.Globalization;
 using BoundingBox = Timelapse.Images.BoundingBox;
 using BoundingBoxes = Timelapse.Images.BoundingBoxes;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow

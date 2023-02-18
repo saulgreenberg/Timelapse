@@ -1,9 +1,9 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
-using Timelapse.Util;
 
 namespace Timelapse.Controls
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// FileTableFlagColumn - A FileTable Column holding Boolean true/false values

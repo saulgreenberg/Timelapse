@@ -4,10 +4,11 @@ using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     /// <summary> 
-    /// Progess handler / Progress bar updates; used by most calls to update the busy indicator
+    /// Progress handler / Progress bar updates; used by most calls to update the busy indicator
     /// </summary>
     public partial class TimelapseWindow
     {

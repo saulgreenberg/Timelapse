@@ -2,7 +2,9 @@
 using System.Windows;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
-using Timelapse.Util;
+using Timelapse.Extensions;
+
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     /// <summary>

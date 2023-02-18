@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Database;
+using Timelapse.SearchingAndSorting;
 
 namespace Timelapse.Dialog
 {

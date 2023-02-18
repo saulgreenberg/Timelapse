@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using Timelapse.DataStructures;
+using Timelapse.Extensions;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     // A MarkerRow is a table comprising 
     // - Id column which matches to the ID of the FileData (DataTable)

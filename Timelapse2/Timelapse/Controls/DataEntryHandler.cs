@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Images;
 using Timelapse.Util;

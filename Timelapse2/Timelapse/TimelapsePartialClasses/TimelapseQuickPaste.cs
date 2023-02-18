@@ -5,10 +5,11 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.QuickPaste;
-using Timelapse.Util;
 
 // A Partial class collecting the QuickPaste methods. 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow

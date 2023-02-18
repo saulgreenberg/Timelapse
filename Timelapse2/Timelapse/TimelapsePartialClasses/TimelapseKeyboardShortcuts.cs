@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Keyboard shortcuts

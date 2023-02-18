@@ -6,13 +6,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Controls;
-using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.QuickPaste;
+using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
 
 // Edit Menu Callbacks
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow

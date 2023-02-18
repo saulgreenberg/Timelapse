@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 
 namespace Timelapse
 {
     //
-    // Episodes is a static class that calculates and saves state information in various static data structures. Notabley, 
+    // Episodes is a static class that calculates and saves state information in various static data structures. Notably, 
     // - ShowEpisodes is a boolean that detemines whether Episode information should be displayed
     // - EpisodeDictionary caches episode information by FileTable index, where that information is created on demand 
     // 

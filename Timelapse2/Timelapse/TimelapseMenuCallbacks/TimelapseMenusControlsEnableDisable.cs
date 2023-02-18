@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using Timelapse.Controls;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Enabling or Disabling Menus and Controls

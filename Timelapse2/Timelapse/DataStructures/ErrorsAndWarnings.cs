@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Timelapse.Util
+namespace Timelapse.DataStructures
 {
     /// <summary>
     /// Holds two lists of strings that will eventually be displayed somewhere:

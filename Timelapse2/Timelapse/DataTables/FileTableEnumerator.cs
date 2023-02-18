@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Timelapse.Database;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     public class FileTableEnumerator : IEnumerator<ImageRow>
     {

@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using File = Timelapse.Constant.File;

@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Timelapse.Controls;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
-using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // File Selection which includes showing the current file

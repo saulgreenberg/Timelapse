@@ -6,7 +6,6 @@
         FlagCheckBox,
         NoteTextBox,
         CounterTextBox,
-        DateTimeBox,
-        UTCOffsetBox
+        DateTimeBox
     }
 }

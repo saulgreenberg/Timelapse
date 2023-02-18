@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.SearchingAndSorting
 {
     /// <summary>
     /// Class CustomSelection holds a list search term particles, each reflecting criteria for a given field

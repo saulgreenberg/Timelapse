@@ -6,10 +6,12 @@ using System.Text;
 using System.Windows;
 using System.Windows.Forms;
 using System.Xml;
+using Timelapse.DebuggingSupport;
+using Timelapse.Util;
 using Xceed.Wpf.AvalonDock.Layout;
 using Xceed.Wpf.AvalonDock.Layout.Serialization;
 
-namespace Timelapse.Util
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// These extensions save and restore the Avalon layouts (including main window and floating windows positions and sizes).

@@ -4,11 +4,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
-using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
-using Timelapse.Util;
+using Timelapse.SearchingAndSorting;
 using MessageBox = Timelapse.Dialog.MessageBox;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Select Menu Callbacks - runs database queries that creates a subset of images to display

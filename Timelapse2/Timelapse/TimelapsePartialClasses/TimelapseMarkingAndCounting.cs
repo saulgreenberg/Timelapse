@@ -4,10 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
 using Timelapse.Controls;
+using Timelapse.DebuggingSupport;
 using Timelapse.EventArguments;
 using Timelapse.Images;
-using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Marking and Counting

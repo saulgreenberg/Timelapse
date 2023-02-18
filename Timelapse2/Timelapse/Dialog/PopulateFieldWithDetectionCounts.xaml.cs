@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog

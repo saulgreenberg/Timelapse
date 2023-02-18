@@ -1,6 +1,6 @@
 ﻿using System;
 using Timelapse.Controls;
-using Timelapse.Database;
+using Timelapse.DataTables;
 
 namespace Timelapse.EventArguments
 {

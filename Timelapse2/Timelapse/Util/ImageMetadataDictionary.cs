@@ -1,5 +1,6 @@
 ﻿using MetadataExtractor;
 using System.Collections.Generic;
+using Timelapse.DataStructures;
 
 namespace Timelapse.Util
 {

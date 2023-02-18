@@ -7,11 +7,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
-using Timelapse.Util;
 using RowColumn = System.Drawing.Point;
 
 namespace Timelapse.Controls

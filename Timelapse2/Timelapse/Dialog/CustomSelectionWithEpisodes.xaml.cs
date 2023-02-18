@@ -13,8 +13,11 @@ using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Recognition;
+using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 

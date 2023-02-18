@@ -3,7 +3,7 @@ using System.Data;
 using System.Diagnostics;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// Various methods to get / set data row fields by type

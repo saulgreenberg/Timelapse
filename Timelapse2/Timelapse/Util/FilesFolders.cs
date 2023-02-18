@@ -4,6 +4,8 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using Timelapse.Database;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 
 namespace Timelapse.Util

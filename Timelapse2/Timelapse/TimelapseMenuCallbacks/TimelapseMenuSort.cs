@@ -3,9 +3,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
-using Timelapse.Database;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
+using Timelapse.SearchingAndSorting;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Sort Menu Callbacks

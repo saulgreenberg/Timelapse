@@ -1,8 +1,11 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
+using Newtonsoft.Json;
+using Timelapse.DataStructures;
+using Timelapse.Extensions;
+using Timelapse.SearchingAndSorting;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     ///  An ImageSet Row defines the contents of the (single) row in the ImageSet DataTable

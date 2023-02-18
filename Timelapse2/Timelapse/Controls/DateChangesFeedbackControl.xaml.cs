@@ -2,8 +2,8 @@
 using System.Collections.ObjectModel;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Timelapse.Database;
-using Timelapse.Dialog;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 
 namespace Timelapse.Controls
 {

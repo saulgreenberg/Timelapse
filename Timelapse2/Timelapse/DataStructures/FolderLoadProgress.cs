@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media.Imaging;
 
-namespace Timelapse.Images
+namespace Timelapse.DataStructures
 {
     // FolderLoadProgess is used to pass data to a background progress report during Image Set Loading  
     internal class FolderLoadProgress

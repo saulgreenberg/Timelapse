@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataTables;
 
 namespace Timelapse.Dialog
 {

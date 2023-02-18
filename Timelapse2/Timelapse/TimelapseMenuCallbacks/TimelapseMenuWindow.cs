@@ -1,7 +1,9 @@
 ﻿using System.Windows;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
+using Timelapse.Extensions;
 using MenuItem = System.Windows.Controls.MenuItem;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Window Menu Callbacks

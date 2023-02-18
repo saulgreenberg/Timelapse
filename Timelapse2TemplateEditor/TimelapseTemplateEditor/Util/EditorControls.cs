@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
 
@@ -211,7 +213,7 @@ namespace Timelapse.Editor.Util
             }
             else
             {
-                Timelapse.Util.TracePrint.StackTraceToOutput("Unexpected null");
+                TracePrint.StackTraceToOutput("Unexpected null");
             }
         }
 
@@ -224,7 +226,7 @@ namespace Timelapse.Editor.Util
             }
             else
             {
-                Timelapse.Util.TracePrint.StackTraceToOutput("Unexpected null");
+                TracePrint.StackTraceToOutput("Unexpected null");
             }
         }
     }

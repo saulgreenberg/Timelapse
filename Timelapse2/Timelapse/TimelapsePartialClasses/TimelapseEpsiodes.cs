@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Media;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow

@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using Timelapse.Database;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.QuickPaste

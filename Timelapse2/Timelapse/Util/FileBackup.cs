@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Timelapse.Enums;
 
-namespace Timelapse.Database
+namespace Timelapse.Util
 {
     /// <summary>
     /// Make a time-stamped backup of the given file in the backup folder.

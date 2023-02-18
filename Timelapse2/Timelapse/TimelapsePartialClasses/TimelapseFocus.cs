@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Controls;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Setting the focus, including tabs

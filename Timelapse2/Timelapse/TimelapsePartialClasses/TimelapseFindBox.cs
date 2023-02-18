@@ -2,8 +2,9 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using Timelapse.Database;
+using Timelapse.DataTables;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Find Box event handlers and helpers

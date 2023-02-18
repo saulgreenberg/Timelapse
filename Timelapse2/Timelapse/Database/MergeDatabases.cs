@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.Util;
