@@ -152,7 +152,7 @@ namespace Timelapse.Controls
                     ? 0
                     : Convert.ToInt32(desiredCellHeight * this.thumbnailInCells[0].CellWidth / this.thumbnailInCells[0].CellHeight); // From the aspect ratio
 
-                if (gridWidth == this.oldGridWidth && gridHeight == this.oldGridHeight)
+                if (Math.Abs(gridWidth - this.oldGridWidth) < .0001 && Math.Abs(gridHeight - this.oldGridHeight) < .0001)
                 {
                     // If the grid size hasn't changed, we must be navigating
                     navigating = true;
@@ -629,7 +629,7 @@ namespace Timelapse.Controls
             int fileTableIndex = this.FileTableStartIndex;
             int cellsInGrid = this.AvailableColumns * this.AvailableRows;
 
-            if (cellsInGrid <= 0 || this.Grid.RowDefinitions[0].ActualHeight != cellHeight)
+            if (cellsInGrid <= 0 || Math.Abs(this.Grid.RowDefinitions[0].ActualHeight - cellHeight) > .0001)
             {
                 // If The grid has nothing in it, or if the requested cell height isn't the same as the current one, return an empty list
                 // i.e., assumes this is a change in zoom level, thus we don't reuse thumbnails as we have to resize them anyways

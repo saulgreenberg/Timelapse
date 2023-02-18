@@ -30,16 +30,16 @@ namespace DialogUpgradeFiles
 
         // Used to display updating status information per file 
         public Dictionary<string, string> DictFileUpdateStatus { get; set; } = new Dictionary<string, string>();
-        public string ShortFileName { get; set; } = String.Empty;
+        public string ShortFileName { get; set; } = string.Empty;
 
         // Used to animate a character-based spinner
         public DispatcherTimer AnimateProgressTimer { get; set; } = new DispatcherTimer();
-        public string ProgressCharacter { get; set; } = String.Empty;     // a character that is updated to represent a spinner that shows activity
+        public string ProgressCharacter { get; set; } = string.Empty;     // a character that is updated to represent a spinner that shows activity
         #endregion
 
         #region Private variables
         private TemplateDatabase templateDatabase; // The database that holds the template
-        private string previousFolderPath = String.Empty;   // so that OpenFile/Folder dialogs will begin at the last opened path
+        private string previousFolderPath = string.Empty;   // so that OpenFile/Folder dialogs will begin at the last opened path
         #endregion
 
         #region Initialization and opening
@@ -52,7 +52,7 @@ namespace DialogUpgradeFiles
 
             // If the folder path is not supplied, then this is invoked as a general update facility
             // Otherwise it is invoked on a specific file path
-            this.IsInvokedAsGeneralUpdateFacility = String.IsNullOrWhiteSpace(this.FolderPath);
+            this.IsInvokedAsGeneralUpdateFacility = string.IsNullOrWhiteSpace(this.FolderPath);
 
             this.RunFolderName.Text = this.FolderPath;
 

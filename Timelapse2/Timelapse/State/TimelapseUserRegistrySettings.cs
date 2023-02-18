@@ -142,7 +142,7 @@ namespace Timelapse.State
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())
             {
-                return !string.IsNullOrEmpty(registryKey.GetString(key, String.Empty));
+                return !string.IsNullOrEmpty(registryKey.GetString(key, string.Empty));
             }
         }
 
@@ -153,7 +153,7 @@ namespace Timelapse.State
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())
             {
-                return registryKey.GetString(key, String.Empty);
+                return registryKey.GetString(key, string.Empty);
             }
         }
 

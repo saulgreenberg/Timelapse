@@ -202,7 +202,7 @@ namespace Timelapse.Dialog
                 this.Message.Title = $"Delete {numberOfImagesToDelete.ToString()} files(s) ";
                 this.Message.What =
                     $"Delete {numberOfImagesToDelete.ToString()} image and/or video(s) - if they exist - marked for deletion.";
-                this.Message.Result = String.Empty;
+                this.Message.Result = string.Empty;
                 this.Message.Hint = "\u2022 Restore deleted files by manually moving them ";
                 this.Message.Result +=
                     $"\u2022 The deleted file will be backed up in a sub-folder named {Constant.File.DeletedFilesFolder}.{Environment.NewLine}";

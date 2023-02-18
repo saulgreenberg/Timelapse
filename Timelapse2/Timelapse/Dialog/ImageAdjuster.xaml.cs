@@ -132,7 +132,7 @@ namespace Timelapse.Dialog
             }
 
             // We only update everything and send the event if the final values differ from the current values
-            if (forceUpdate || (this.Contrast != Convert.ToInt32(ContrastSlider.Value) || this.Brightness != Convert.ToInt32(BrightnessSlider.Value) || this.GammaValue != this.GammaSlider.Value
+            if (forceUpdate || (this.Contrast != Convert.ToInt32(ContrastSlider.Value) || this.Brightness != Convert.ToInt32(BrightnessSlider.Value) || Math.Abs(this.GammaValue - this.GammaSlider.Value) > .0001
                 || this.DetectEdges != CBEdges.IsChecked || this.Sharpen != CBSharpen.IsChecked || this.UseGamma != this.CBGamma.IsChecked))
             {
                 this.Contrast = Convert.ToInt32(ContrastSlider.Value);
@@ -227,7 +227,7 @@ namespace Timelapse.Dialog
         private bool IsNeutral()
         {
             return ((this.CBGamma.IsChecked == false && this.CBNone.IsChecked == true && this.BrightnessSlider.Value == 0 && this.ContrastSlider.Value == 0)
-                     || (this.CBGamma.IsChecked == true && this.GammaSlider.Value == 1));
+                     || (this.CBGamma.IsChecked == true && Math.Abs(this.GammaSlider.Value - 1) < .0001));
         }
         #endregion
     }

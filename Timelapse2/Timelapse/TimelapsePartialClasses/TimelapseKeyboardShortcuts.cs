@@ -234,11 +234,8 @@ namespace Timelapse
                 default:
                     return;
             }
-
-            if (currentKey != null)
-            {
-                currentKey.Handled = true;
-            }
+            currentKey.Handled = true;
+            
         }
         #endregion
     }

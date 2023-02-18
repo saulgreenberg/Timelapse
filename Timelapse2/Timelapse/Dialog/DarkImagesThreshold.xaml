@@ -11,7 +11,7 @@
 		Height="768" Width="768"
 		ResizeMode="CanResizeWithGrip"
 		ShowInTaskbar="False"
-		WindowStartupLocation="CenterOwner" BorderBrush="Black" PreviewKeyDown="Window_PreviewKeyDown">
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
     <Grid>
         <Grid PreviewKeyDown="Window_PreviewKeyDown" Grid.Row="0">
             <Grid.ColumnDefinitions>

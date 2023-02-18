@@ -77,7 +77,7 @@ namespace Timelapse.Controls
 
                 cbi = new ComboBoxItem()
                 {
-                    Content = String.Empty
+                    Content = string.Empty
                 };
                 this.ContentControl.Items.Insert(0, new Separator());
                 this.ContentControl.Items.Insert(0, cbi);
@@ -195,6 +195,7 @@ namespace Timelapse.Controls
 
         public void HideItems(List<String> itemsToHide)
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (this.ContentControl == null || this.ContentControl.Items == null || itemsToHide == null)
             {
                 return;

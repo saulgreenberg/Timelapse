@@ -25,7 +25,6 @@ namespace Timelapse
                         continue;
                     }
                     float confidence = float.Parse(detectionRow[2].ToString());
-                    string category = (string)detectionRow[1];
                     // Determine the maximum confidence of these detections
                     if (bboxes.MaxConfidence < confidence)
                     {

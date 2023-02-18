@@ -48,7 +48,7 @@ namespace Timelapse.Dialog
             this.filePath = filePath;
 
             // Store various states which will eventually be reset by the user
-            this.metadataFieldName = String.Empty;
+            this.metadataFieldName = string.Empty;
             this.metadataFieldSelected = false;
             this.noMetadataAvailable = true;
         }
@@ -188,8 +188,8 @@ namespace Timelapse.Dialog
                 // We only collect metadata for those fields whose value appears to have a valid date.
                 if (DateTime.TryParse(metadata.Value, out _))
                 {
-                    this.metadataDictionary.Add(metadata.Key, new ImageMetadata(String.Empty, metadata.Key, metadata.Value));
-                    metadataList.Add(new Tuple<string, string, string, string>(metadata.Key, String.Empty, metadata.Key, metadata.Value));
+                    this.metadataDictionary.Add(metadata.Key, new ImageMetadata(string.Empty, metadata.Key, metadata.Value));
+                    metadataList.Add(new Tuple<string, string, string, string>(metadata.Key, string.Empty, metadata.Key, metadata.Value));
                 }
             }
             this.AvailableMetadataDataGrid.ItemsSource = metadataList;
@@ -214,7 +214,6 @@ namespace Timelapse.Dialog
 
                 double totalFiles = this.fileDatabase.CountAllCurrentlySelectedFiles;
                 Dictionary<string, ImageMetadata> metadata = new Dictionary<string, ImageMetadata>();
-                List<ImageRow> filesToAdjust = new List<ImageRow>();
 
                 // Start up the progress bar, so it shows something as even small data sets will have a delay in it.
                 this.Progress.Report(new ProgressBarArguments(percentDone, "Initializing...", true, false));
@@ -244,7 +243,7 @@ namespace Timelapse.Dialog
                         Dictionary<string, string> exifData = this.exifTool.FetchExifFrom(image.GetFilePath(this.fileDatabase.FolderPath), tags);
                         if (exifData.ContainsKey(tags[0]))
                         {
-                            metadata.Add(tags[0], new ImageMetadata(String.Empty, tags[0], exifData[tags[0]]));
+                            metadata.Add(tags[0], new ImageMetadata(string.Empty, tags[0], exifData[tags[0]]));
                         }
                     }
 
@@ -325,7 +324,7 @@ namespace Timelapse.Dialog
             }
             else
             {
-                this.MetadataDisplayText.Content = String.Empty;
+                this.MetadataDisplayText.Content = string.Empty;
                 // Note that metadata name may still has spaces in it. We will have to strip it out and check it to make sure its an acceptable data label
                 this.metadataFieldSelected = false;
                 this.StartDoneButton.IsEnabled = this.metadataFieldSelected;

@@ -87,7 +87,7 @@ namespace Timelapse.Images
             }
 
             // Process the image based on the current image processing arguments. 
-            if (e.ForceUpdate == false && (e.Contrast == this.lastContrast && e.Brightness == this.lastBrightness && e.DetectEdges == this.lastDetectEdges && e.Sharpen == this.lastSharpen && e.UseGamma == this.lastUseGamma && e.GammaValue == this.lastGammaValue))
+            if (e.ForceUpdate == false && (e.Contrast == this.lastContrast && e.Brightness == this.lastBrightness && e.DetectEdges == this.lastDetectEdges && e.Sharpen == this.lastSharpen && e.UseGamma == this.lastUseGamma && Math.Abs(e.GammaValue - this.lastGammaValue) < .0001))
             {
                 // If there is no change from the last time we processed an image, abort as it would not make any difference to what the user sees
                 return;
@@ -110,7 +110,7 @@ namespace Timelapse.Images
             {
                 return;
             }
-            if (this.contrast != this.lastContrast || this.brightness != this.lastBrightness || this.detectEdges != this.lastDetectEdges || this.sharpen != this.lastSharpen || this.lastUseGamma != this.useGamma || this.lastGammaValue != this.gammaValue)
+            if (this.contrast != this.lastContrast || this.brightness != this.lastBrightness || this.detectEdges != this.lastDetectEdges || this.sharpen != this.lastSharpen || this.lastUseGamma != this.useGamma || Math.Abs(this.lastGammaValue - this.gammaValue) > .0001)
             {
                 // Update the image as at least one parameter has changed (which will affect the image's appearance)
                 await this.UpdateAndProcessImage().ConfigureAwait(true);

@@ -74,7 +74,7 @@ namespace Timelapse.Controls
         }
 
         // Path is the RelativePath/FileName of the image file
-        public string Path => (this.ImageRow == null) ? String.Empty : System.IO.Path.Combine(this.ImageRow.RelativePath, this.ImageRow.File);
+        public string Path => (this.ImageRow == null) ? string.Empty : System.IO.Path.Combine(this.ImageRow.RelativePath, this.ImageRow.File);
 
         public string RootFolder { get; set; }
         #endregion
@@ -100,7 +100,7 @@ namespace Timelapse.Controls
             this.Image.MinWidth = cellWidth;
             this.Image.MaxWidth = cellWidth;
 
-            this.RootFolder = String.Empty;
+            this.RootFolder = string.Empty;
         }
 
         // I tried to create a clone so we can add duplicates, but its commented out for now as it doesn't seem to
@@ -287,7 +287,7 @@ namespace Timelapse.Controls
                 // This was on request from a user, who needed to scan for the first/last image in a timelapse capture sequence
                 this.FileNameTextBlock.Text = System.IO.Path.GetFileNameWithoutExtension(this.ImageRow.File);
                 string timeInHHMM = this.ImageRow.DateTime.ToString("hh:mm");
-                //string timeInHHMM = (this.ImageRow.Time.Length > 3) ? this.ImageRow.Time.Remove(this.ImageRow.Time.Length - 3) : String.Empty;
+                //string timeInHHMM = (this.ImageRow.Time.Length > 3) ? this.ImageRow.Time.Remove(this.ImageRow.Time.Length - 3) : string.Empty;
                 this.TimeTextBlock.Text = " (" + timeInHHMM + ")";
             }
             this.EpisodeTextBlock.Visibility = Episodes.ShowEpisodes ? Visibility.Visible : Visibility.Hidden;

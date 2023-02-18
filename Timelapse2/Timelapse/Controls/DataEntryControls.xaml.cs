@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Timelapse.Database;
 using Timelapse.DataTables;
@@ -149,7 +148,7 @@ namespace Timelapse.Controls
                     string value = note.ContentControl.Text;
                     if (note.ContentControl.Autocompletions.ContainsKey(value) == false)
                     {
-                        note.ContentControl.Autocompletions.Add(value, String.Empty);
+                        note.ContentControl.Autocompletions.Add(value, string.Empty);
                     }
                 }
             }

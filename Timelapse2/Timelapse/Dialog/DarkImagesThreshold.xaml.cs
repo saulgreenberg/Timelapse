@@ -46,7 +46,7 @@ namespace Timelapse.Dialog
         private bool displatcherTimerIsPlaying;
 
         private readonly Dictionary<string, string> FlagLabelsDataLabels = new Dictionary<string, string>();
-        private string ChosenFlagLabel = String.Empty;
+        private string ChosenFlagLabel = string.Empty;
 
         // Tracks whether any changes to the data or database are made
         private bool IsAnyDataUpdated;
@@ -131,7 +131,6 @@ namespace Timelapse.Dialog
         {
             this.DialogResult = this.Token.IsCancellationRequested && this.IsAnyDataUpdated;
         }
-
         public void Dispose()
         {
             this.Dispose(true);
@@ -209,7 +208,7 @@ namespace Timelapse.Dialog
                 this.ThresholdMessage.Text = "Color - therefore not dark";
                 this.Percent.Visibility = Visibility.Collapsed;
                 this.RatioFound.Visibility = Visibility.Collapsed;
-                this.RatioFound.Content = String.Empty;
+                this.RatioFound.Content = string.Empty;
             }
             else
             {
@@ -247,9 +246,9 @@ namespace Timelapse.Dialog
             this.FileName.ToolTip = this.imageEnumerator.Current.File;
 
             if (string.IsNullOrEmpty(this.ChosenFlagLabel) ||
-                String.IsNullOrWhiteSpace(this.imageEnumerator?.Current?.GetValueDatabaseString(this.FlagLabelsDataLabels[this.ChosenFlagLabel])))
+                string.IsNullOrWhiteSpace(this.imageEnumerator?.Current?.GetValueDatabaseString(this.FlagLabelsDataLabels[this.ChosenFlagLabel])))
             {
-                this.OriginalClassification.Content = String.Empty;
+                this.OriginalClassification.Content = string.Empty;
             }
             else
             {
@@ -281,9 +280,10 @@ namespace Timelapse.Dialog
                 List<ImageRow> selectedFiles = this.fileDatabase.FileTable.ToList();
                 List<ColumnTuplesWithWhere> filesToUpdate = new List<ColumnTuplesWithWhere>();
                 int fileIndex = 0;
-                int selectedFilesCount = selectedFiles == null ? 0 : selectedFiles.Count;
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                int selectedFilesCount = selectedFiles.Count;
                 string dataLabel = string.IsNullOrEmpty(this.ChosenFlagLabel)
-                                    ? String.Empty
+                                    ? string.Empty
                                     : this.FlagLabelsDataLabels[this.ChosenFlagLabel];
                 foreach (ImageRow file in selectedFiles)
                 {

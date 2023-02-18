@@ -166,7 +166,7 @@
     //    /// One Form:  SELECT 1                         FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL
     //    public static string SelectMissingDetections(SelectTypesEnum selectType)
     //    {
-    //        string phrase = String.Empty;
+    //        string phrase = string.Empty;
     //        if (selectType == SelectTypesEnum.Count)
     //        {
     //            phrase = Sql.SelectCount + Sql.OpenParenthesis + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.CloseParenthesis;
@@ -211,7 +211,7 @@
     /// </returns>
     //public static string SelectDetections(SelectTypesEnum selectType)
     //{
-    //    string phrase = String.Empty;
+    //    string phrase = string.Empty;
     //    if (selectType == SelectTypesEnum.Count)
     //    {
     //        phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + Constant.DBTables.FileData + Sql.DotStar;
@@ -251,7 +251,7 @@
     /// </returns>
     //public static string SelectClassifications(SelectTypesEnum selectType)
     //{
-    //    string phrase = String.Empty;
+    //    string phrase = string.Empty;
     //    if (selectType == SelectTypesEnum.Count)
     //    {
     //        phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct;
@@ -311,7 +311,7 @@
     ///// <returns>DataLabel operator "value", e.g., DataLabel > "5"</returns>
     //public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value, bool castAsInteger)
     //{
-    //    value = value == null ? String.Empty : value.Trim();
+    //    value = value == null ? string.Empty : value.Trim();
 
     //    return castAsInteger
     //        ? Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsInteger + Sql.CloseParenthesis + mathOperator + Sql.Quote(value) 
@@ -321,7 +321,7 @@
     ///// <returns>DataLabel operator "value", e.g., Date(datetime)= Date('2016-08-19 19:08:22')</returns>
     //public static string DataLabelDateTimeOperatorValue(string dataLabel, string mathOperator, string value)
     //{
-    //    value = value == null ? String.Empty : value.Trim();
+    //    value = value == null ? string.Empty : value.Trim();
     //    return Sql.DateFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.DateFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
     //}
 
@@ -402,7 +402,7 @@
     //                        + Sql.Instr + Sql.OpenParenthesis + episodeNoteField + Sql.Comma + Sql.Quote(":") + Sql.CloseParenthesis + Sql.CloseParenthesis
     //                        + Sql.From;
     //    frontwrapper += CountOnly
-    //        ? String.Empty 
+    //        ? string.Empty 
     //        : Sql.OpenParenthesis;
     //    return frontwrapper;
     //}       

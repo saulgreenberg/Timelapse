@@ -55,7 +55,7 @@ namespace Timelapse.Controls
                 _dictDataLabel_Label = value;
                 // Note labels are a list of labels, with an Empty slot in the beginning to allow labels to be deselected
                 this.viewModel.NoteLabels = new ObservableCollection<string>(_dictDataLabel_Label.Values);
-                this.viewModel.NoteLabels.Insert(0, String.Empty);
+                this.viewModel.NoteLabels.Insert(0, string.Empty);
             }
         }
 
@@ -167,7 +167,7 @@ namespace Timelapse.Controls
                 if (false == this.UseDateMetadataOnly
                     || (metadata.Value?.Value != null && DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value, out DateTime _)))
                 {
-                    temp.Add(new DataContents(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value, String.Empty));
+                    temp.Add(new DataContents(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value, string.Empty));
                 }
             }
             this.viewModel.MetadataList = temp;
@@ -201,7 +201,7 @@ namespace Timelapse.Controls
                 if (false == this.UseDateMetadataOnly
                     || DateTimeHandler.TryParseMetadataDateTaken(metadata.Value, out DateTime _))
                 {
-                    temp.Add(new DataContents(metadata.Key, String.Empty, metadata.Key, metadata.Value, ""));
+                    temp.Add(new DataContents(metadata.Key, string.Empty, metadata.Key, metadata.Value, ""));
                 }
             }
             this.viewModel.MetadataList = temp;
@@ -257,7 +257,7 @@ namespace Timelapse.Controls
                     return kvp.Key;
                 }
             }
-            return String.Empty;
+            return string.Empty;
         }
         // Return a collection of keyvalue pairs comprised only of matching metadata fields and a non-empty data label
         private ObservableCollection<KeyValuePair<string, string>> GetSelectedFromMetadataList(ObservableCollection<DataContents> metadataList, ObservableCollection<KeyValuePair<string, string>> selectedMetadata)
@@ -269,7 +269,7 @@ namespace Timelapse.Controls
             selectedMetadata.Clear();
             foreach (DataContents dc in metadataList)
             {
-                if (false == String.IsNullOrWhiteSpace(dc.AssignedLabel))
+                if (false == string.IsNullOrWhiteSpace(dc.AssignedLabel))
                 {
                     // We have a non-empty data label, so add it.
                     selectedMetadata.Add(new KeyValuePair<string, string>(dc.MetadataKey, this.GetDataLabelFromLabel(dc.AssignedLabel)));
@@ -304,7 +304,7 @@ namespace Timelapse.Controls
                     //Debug.Print(cb.Text + "|" + (string)chosenComboBox.SelectedValue);
                     if (cb != selectedComboBox && cb.Text == (string)selectedComboBox.SelectedValue)
                     {
-                        cb.Text = String.Empty;
+                        cb.Text = string.Empty;
                     }
                 }
             }

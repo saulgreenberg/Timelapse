@@ -624,7 +624,7 @@ namespace Timelapse.Dialog
 
             // Load the available note fields in the Episode ComboBox
             // and set the CustomSelection to the current values
-            this.NoteDataLabelContainingEpisodeData = String.Empty;
+            this.NoteDataLabelContainingEpisodeData = string.Empty;
             foreach (ControlRow control in this.database.Controls)
             {
                 if (control.Type == Constant.Control.Note && EpisodeFieldCheckFormat(this.currentImageRow, control.DataLabel))
@@ -1260,7 +1260,7 @@ namespace Timelapse.Dialog
             // and update the spinner (also in two decimal places) only if the value differs
             // This stops the spinner from updated if values change in the 3rd decimal place and beyond
             double value = Round2(this.DetectionRangeSlider.HigherValue);
-            if (value != Round2(this.DetectionConfidenceSpinnerHigher.Value))
+            if (Math.Abs(value - Round2(this.DetectionConfidenceSpinnerHigher.Value)) > .0001)
             {
                 this.dontUpdateRangeSlider = true;
                 this.DetectionConfidenceSpinnerHigher.Value = value;
@@ -1276,7 +1276,7 @@ namespace Timelapse.Dialog
             // and update the spinner (also in two decimal places) only if the value differs
             // This stops the spinner from updated if values change in the 3rd decimal place and beyond
             double value = Round2(this.DetectionRangeSlider.LowerValue);
-            if (value != Round2(this.DetectionConfidenceSpinnerLower.Value))
+            if (Math.Abs(value - Round2(this.DetectionConfidenceSpinnerLower.Value)) > .0001)
             {
                 this.dontUpdateRangeSlider = true;
                 this.DetectionConfidenceSpinnerLower.Value = value;
@@ -1346,7 +1346,7 @@ namespace Timelapse.Dialog
             // Uncomment this to add feedback to the File count line desribing the kinds of files selected
             //if (this.UseDetectionsCheckbox.IsChecked == false)
             //{
-            //    this.QueryFileMatchNote.Text = String.Empty;
+            //    this.QueryFileMatchNote.Text = string.Empty;
             //}
             //else
             //{

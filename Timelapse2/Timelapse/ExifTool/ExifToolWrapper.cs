@@ -32,7 +32,7 @@ namespace Timelapse.ExifTool
                 // throw new ArgumentNullException(nameof(response));
                 // Treat it as a failure case?
                 this.IsSuccess = false;
-                this.Result = String.Empty;
+                this.Result = string.Empty;
                 return;
             }
 

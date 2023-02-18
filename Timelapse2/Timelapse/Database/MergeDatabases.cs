@@ -94,7 +94,7 @@ namespace Timelapse.Database
                         "Merging...",
                         true, false));
                     Thread.Sleep(250);
-                    string message = String.Empty;
+                    string message = string.Empty;
                     string trimmedPath = sourceddbFilePaths[uncapturedI].Substring(rootFolderPath.Length + 1);
 
                     // Check each database file to see if its ok, or determine its error type.
@@ -146,7 +146,7 @@ namespace Timelapse.Database
                             errorMessages.MergedFiles.Add(trimmedPath);
                             break;
                     }
-                    if (!String.IsNullOrWhiteSpace(message))
+                    if (!string.IsNullOrWhiteSpace(message))
                     {
                         errorMessages.Warnings.Add($"{trimmedPath}: {Environment.NewLine}        - {message}");
                     }
@@ -325,6 +325,7 @@ namespace Timelapse.Database
                 // either neither have them, or the one to be merged in doesn't have them
                 // triggerUpdate remains false
             }
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             else if (false == currentDetectionsExists && toBeMergedDetectionsExists)
             {
                 updateDetections = true;
@@ -447,6 +448,7 @@ namespace Timelapse.Database
 
             // E. The database to merge in has detections, so the SQL query also updates the Detections table.
 
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (updateClassifications && updateDetections)
             {
                 // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
@@ -506,7 +508,7 @@ namespace Timelapse.Database
         {
             // A longer query, so split into three lines
             // Note that tableName must be a DataTable for this to work
-            string query = Sql.Update + tableName + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.CaseWhen + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(String.Empty);
+            string query = Sql.Update + tableName + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.CaseWhen + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(string.Empty);
             query += Sql.Then + Sql.OpenParenthesis + Sql.Quote(pathPrefixToAdd) + Sql.Concatenate + Constant.DatabaseColumn.RelativePath + Sql.CloseParenthesis;
             query += Sql.Else + Sql.OpenParenthesis + Sql.Quote(pathPrefixToAdd + "\\") + Sql.Concatenate + Constant.DatabaseColumn.RelativePath + Sql.CloseParenthesis + " END " + Sql.Semicolon;
             return query;
@@ -520,7 +522,7 @@ namespace Timelapse.Database
 
         private static string QueryInsertTable2DataIntoTable1(string table1, string table2, List<string> listDataLabels)
         {
-            string dataLabels = String.Empty;
+            string dataLabels = string.Empty;
             foreach (string datalabels in listDataLabels)
             {
                 dataLabels += datalabels + ",";

@@ -22,9 +22,9 @@ namespace DialogUpgradeFiles.Database
         #region Constructors
         public SortTerm()
         {
-            this.DataLabel = String.Empty;
-            this.DisplayLabel = String.Empty;
-            this.ControlType = String.Empty;
+            this.DataLabel = string.Empty;
+            this.DisplayLabel = string.Empty;
+            this.ControlType = string.Empty;
             this.IsAscending = Constant.BooleanValue.True;
         }
 

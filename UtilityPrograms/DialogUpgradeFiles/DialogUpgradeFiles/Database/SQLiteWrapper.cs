@@ -220,8 +220,8 @@ namespace DialogUpgradeFiles.Database
             {
                 Debug.Assert(columnsToUpgrade != null && columnsToUpgrade.Count > 0, "No column updates are specified.");
 
-                string columns = String.Empty;
-                string values = String.Empty;
+                string columns = string.Empty;
+                string values = string.Empty;
                 foreach (ColumnTuple column in columnsToUpgrade)
                 {
                     columns += String.Format(" {0}" + Sql.Comma, column.Name);      // transform dictionary entries into a string "col1, col2, ... coln"
@@ -374,7 +374,7 @@ namespace DialogUpgradeFiles.Database
         {
             if (columnsToUpgrade.Columns.Count < 1)
             {
-                return String.Empty;
+                return string.Empty;
             }
             // UPDATE tableName SET 
             // colname1 = value1, 
@@ -386,7 +386,7 @@ namespace DialogUpgradeFiles.Database
             string query = Sql.Update + tableName + Sql.Set;
             if (columnsToUpgrade.Columns.Count < 0)
             {
-                return String.Empty;     // No data, so nothing to update. This isn't really an error, so...
+                return string.Empty;     // No data, so nothing to update. This isn't really an error, so...
             }
 
             // column_name = 'value'
@@ -404,7 +404,7 @@ namespace DialogUpgradeFiles.Database
             }
             query = query.Substring(0, query.Length - Sql.Comma.Length); // Remove the last comma
 
-            if (String.IsNullOrWhiteSpace(columnsToUpgrade.Where) == false)
+            if (string.IsNullOrWhiteSpace(columnsToUpgrade.Where) == false)
             {
                 query += Sql.Where;
                 query += columnsToUpgrade.Where;
@@ -422,7 +422,7 @@ namespace DialogUpgradeFiles.Database
         {
             // DELETE FROM table_name WHERE where
             string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
-            if (!String.IsNullOrWhiteSpace(where))
+            if (!string.IsNullOrWhiteSpace(where))
             {
                 // Add the WHERE clause only when where is not empty
                 query += Sql.Where;                   // WHERE
@@ -473,7 +473,7 @@ namespace DialogUpgradeFiles.Database
             {
                 return;
             }
-            string queries = String.Empty;                      // A list of SQL queries
+            string queries = string.Empty;                      // A list of SQL queries
 
             // Turn pragma foreign_key off before the delete, as otherwise it takes forever on largish tables
             // Notice that we do not wrap this in a begin / end, as the pragma does not work within that.
@@ -658,7 +658,7 @@ namespace DialogUpgradeFiles.Database
                 List<string> columnDefinitions = new List<string>();
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
                     for (int field = 0; field < reader.FieldCount; field++)
                     {
                         switch (field)
@@ -847,7 +847,7 @@ namespace DialogUpgradeFiles.Database
                         Dictionary<string, string> columndefaultsDict = new Dictionary<string, string>();
                         while (reader.Read())
                         {
-                            columndefaultsDict.Add(reader[1].ToString(), reader[4] != null ? reader[4].ToString() : String.Empty);
+                            columndefaultsDict.Add(reader[1].ToString(), reader[4] != null ? reader[4].ToString() : string.Empty);
                         }
                         return columndefaultsDict;
                     }
@@ -1011,11 +1011,11 @@ namespace DialogUpgradeFiles.Database
             SchemaAlterColumn(sourceTable, currentColumnName, attributes);
 
             ////// Some basic error checking to make sure we can do the operation
-            ////if (String.IsNullOrWhiteSpace(currentColumnName))
+            ////if (string.IsNullOrWhiteSpace(currentColumnName))
             ////{
             ////    throw new ArgumentOutOfRangeException(nameof(currentColumnName));
             ////}
-            ////if (String.IsNullOrWhiteSpace(newColumnName))
+            ////if (string.IsNullOrWhiteSpace(newColumnName))
             ////{
             ////    throw new ArgumentOutOfRangeException(nameof(newColumnName));
             ////}
@@ -1069,7 +1069,7 @@ namespace DialogUpgradeFiles.Database
         public bool SchemaAlterColumn(string sourceTable, string currentColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
             // Some basic error checking to make sure we can do the operation
-            if (String.IsNullOrWhiteSpace(currentColumnName))
+            if (string.IsNullOrWhiteSpace(currentColumnName))
             {
                 throw new ArgumentOutOfRangeException(nameof(currentColumnName));
             }
@@ -1080,7 +1080,7 @@ namespace DialogUpgradeFiles.Database
             }
             try
             {
-                string newColumnName = String.Empty;
+                string newColumnName = string.Empty;
                 if (attributes.ContainsKey(SchemaAttributesEnum.Name))
                 {
                     newColumnName = attributes[SchemaAttributesEnum.Name].Trim();
@@ -1179,12 +1179,12 @@ namespace DialogUpgradeFiles.Database
         private static string SchemaCloneButRenameColumn(SQLiteConnection connection, string tableName, string existingColumnName, string newColumnName)
         {
             Debug.Print(SchemaAttributesEnum.Default.ToString());
-            string newSchema = String.Empty;
+            string newSchema = string.Empty;
             using (SQLiteDataReader reader = GetSchema(connection, tableName))
             {
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
 
                     // Copy the existing column definition unless its the column named columnNam
                     for (int field = 0; field < reader.FieldCount; field++)
@@ -1235,13 +1235,13 @@ namespace DialogUpgradeFiles.Database
         /// </summary>
         private static string SchemaCloneButAlterColumn(SQLiteConnection connection, string tableName, string existingColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
-            string newSchema = String.Empty;
+            string newSchema = string.Empty;
             using (SQLiteDataReader reader = GetSchema(connection, tableName))
             {
-                string currentColumnName = String.Empty;
+                string currentColumnName = string.Empty;
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
 
                     // Copy the existing column definition unless its the column named columnNam
                     for (int field = 0; field < reader.FieldCount; field++)

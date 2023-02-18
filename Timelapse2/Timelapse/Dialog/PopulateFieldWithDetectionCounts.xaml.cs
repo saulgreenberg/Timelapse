@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,7 +17,7 @@ namespace Timelapse.Dialog
         #region Private Variables
         private readonly FileDatabase fileDatabase;
         private readonly Dictionary<string, string> dataLabelByLabel;
-        private string dataFieldLabel = String.Empty;
+        private string dataFieldLabel = string.Empty;
         private double confidenceValue;
         #endregion
 

@@ -28,7 +28,7 @@ namespace Timelapse.Dialog
             string messageUsingNewTemplate = Environment.NewLine + " o 'Open using New Template':   uses the new template, but will have the issues below.";
             string messageUsingOldTemplate = Environment.NewLine + " o Open using Old Template:'   ignores the new template, where it uses the original version of your template.";
             string messageExitTimelapse = Environment.NewLine + " o Exit Timelapse:'   closes Timelapse.";
-            string messageWarningLabel = String.Empty;
+            string messageWarningLabel = string.Empty;
 
             if (warnings.Count > 0)
             {

@@ -192,9 +192,9 @@ namespace Timelapse
             SortTerm sortTermDB1 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
             SortTerm sortTermDB2 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
             bool sortTermsOk = (sortTermDB1.DataLabel == Constant.DatabaseColumn.RelativePath && Constant.BooleanValue.True == sortTermDB1.IsAscending && sortTermDB2.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending)
-                               || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending && String.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+                               || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
 
-            if (!noteControlOk || !searchTermsOk || !sortTermsOk)
+            if (!searchTermsOk || !sortTermsOk)
             {
                 if (false == Dialogs.MenuOptionsCantPopulateDataFieldWithEpisodeAsSortIsWrong(this, searchTermsOk, sortTermsOk))
                 {
@@ -231,7 +231,7 @@ namespace Timelapse
             SortTerm sortTermDB2 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
             bool sortTermsOKForDuplicateOrdering =
                      (sortTermDB1.DataLabel == Constant.DatabaseColumn.RelativePath && sortTermDB2.DataLabel == Constant.DatabaseColumn.DateTime)
-                  || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && String.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+                  || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
 
             if (this.State.SuppressHowDuplicatesWork == false || sortTermsOKForDuplicateOrdering == false)
             {
@@ -396,7 +396,7 @@ namespace Timelapse
                             {
                                 // Its not a deleted file, so we have a valid next file to display!
                                 currentFileID = this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID;
-                                allDone = true;
+                                //allDone = true;
                                 break;
                             }
                         }

@@ -82,7 +82,7 @@ namespace Timelapse.Database
                                     if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                     {
                                         // Export both the separate Date and Time column data with or without a space as needed
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : String.Empty;
+                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                         // csvRow.Append(prefix + AddColumnValue(image.GetValueDatabaseString(dataLabel)));
                                         csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateString()));
                                         csvRow.Append(prefix + AddColumnValue(image.GetValueCSVTimeString()));
@@ -90,7 +90,7 @@ namespace Timelapse.Database
                                     else
                                     {
                                         // Export the single DateTime column data
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : String.Empty;
+                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                         if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
                                         {
                                             // with the T separator
@@ -194,16 +194,14 @@ namespace Timelapse.Database
 
                     // Handle duplicates and more
                     int nextRowIndex = 0;
-                    string currentPath = String.Empty;   // the path of the current row 
-                    string examinedPath = String.Empty;  // the path of a surrounding row currently being examined to see if its a duplicate
-                    string duplicatePath = String.Empty; // a duplicate was identified, and this holds the duplicate path
+                    string duplicatePath = string.Empty; // a duplicate was identified, and this holds the duplicate path
                     List<Dictionary<string, string>> duplicatesDictionaryList = new List<Dictionary<string, string>>();
 
                     foreach (Dictionary<string, string> rowDict in sortedRowDictionaryList)
                     {
                         // For every row...
                         nextRowIndex++;
-                        currentPath = Path.Combine(rowDict[Constant.DatabaseColumn.RelativePath], rowDict[Constant.DatabaseColumn.File]);
+                        string currentPath = Path.Combine(rowDict[Constant.DatabaseColumn.RelativePath], rowDict[Constant.DatabaseColumn.File]);   // the path of the current row 
 
                         #region Handle duplicates
                         // Duplicates are special cases, where we have to update each set of duplicates separately as a chunk.
@@ -248,7 +246,7 @@ namespace Timelapse.Database
                                 // We aren't currently in a sequence. Determine if the current entry is a singleton or the first duplicate in a sequence by checking its path against the next record.
                                 // If it is a duplicate, add it to the list.
                                 Dictionary<string, string> nextRow = sortedRowDictionaryList[nextRowIndex];
-                                examinedPath = Path.Combine(nextRow[Constant.DatabaseColumn.RelativePath], nextRow[Constant.DatabaseColumn.File]);
+                                string examinedPath = Path.Combine(nextRow[Constant.DatabaseColumn.RelativePath], nextRow[Constant.DatabaseColumn.File]);  // the path of a surrounding row currently being examined to see if its a duplicate
                                 if (examinedPath == currentPath)
                                 {
                                     // Yup, its the beginning of a sequence.
@@ -257,24 +255,23 @@ namespace Timelapse.Database
                                     duplicatesDictionaryList.Add(rowDict);
                                     continue;
                                 }
-                                else
+
+                                // It must be singleton
+                                duplicatePath = string.Empty;
+                                if (databaseDuplicates.Contains(currentPath))
                                 {
-                                    // It must be singleton
-                                    duplicatePath = String.Empty;
-                                    if (databaseDuplicates.Contains(currentPath))
+                                    // But, if the database contains a duplicate with the same relativePath/File, then we want to update just the first database duplicate, rather than update all those
+                                    // database duplicates with the same value (if we let it fall thorugh)
+                                    duplicatesDictionaryList.Add(rowDict);
+                                    string error = UpdateDuplicatesInDatabase(fileDatabase, duplicatesDictionaryList, Path.GetDirectoryName(currentPath), Path.GetFileName(currentPath));
+                                    if (false == string.IsNullOrEmpty(error))
                                     {
-                                        // But, if the database contains a duplicate with the same relativePath/File, then we want to update just the first database duplicate, rather than update all those
-                                        // database duplicates with the same value (if we let it fall thorugh)
-                                        duplicatesDictionaryList.Add(rowDict);
-                                        string error = UpdateDuplicatesInDatabase(fileDatabase, duplicatesDictionaryList, Path.GetDirectoryName(currentPath), Path.GetFileName(currentPath));
-                                        if (false == string.IsNullOrEmpty(error))
-                                        {
-                                            importErrors.Add(error);
-                                        }
-                                        duplicatesDictionaryList.Clear();
-                                        continue;
+                                        importErrors.Add(error);
                                     }
+                                    duplicatesDictionaryList.Clear();
+                                    continue;
                                 }
+
                             }
                         }
                         #endregion Handle duplicates
@@ -289,7 +286,7 @@ namespace Timelapse.Database
                         DateTime dateTime = DateTime.MinValue;
                         foreach (string header in rowDict.Keys)
                         {
-                            string type = String.Empty;
+                            string type;
                             // For every column ...
                             if (header == Constant.ControlDeprecated.DateLabel || header == Constant.ControlDeprecated.TimeLabel || header == Constant.ControlDeprecated.Folder || header == Constant.ControlDeprecated.ImageQuality || header == Constant.DatabaseColumn.RootFolder)
                             {
@@ -380,8 +377,11 @@ namespace Timelapse.Database
                             // importErrors.Add(String.Format("{0}: Could not extract datetime", currentPath));
                             // Debug.Print("Could not extract datetime");
                         }
+                        // ReSharper disable once RedundantAssignment
                         dateTime = DateTime.MinValue;
+                        // ReSharper disable once RedundantAssignment
                         datePortion = DateTime.MinValue;
+                        // ReSharper disable once RedundantAssignment
                         timePortion = DateTime.MinValue;
 
                         // NOTE: We currently do NOT report an error if there is a row in the csv file whose location does not match
@@ -393,7 +393,7 @@ namespace Timelapse.Database
                         // Add to the query only if there are columns to add!
                         if (imageToUpdate.Columns.Count > 0)
                         {
-                            if (rowDict.ContainsKey(Constant.DatabaseColumn.RelativePath) && !String.IsNullOrWhiteSpace(rowDict[Constant.DatabaseColumn.RelativePath]))
+                            if (rowDict.ContainsKey(Constant.DatabaseColumn.RelativePath) && !string.IsNullOrWhiteSpace(rowDict[Constant.DatabaseColumn.RelativePath]))
                             {
                                 imageToUpdate.SetWhere(rowDict[Constant.DatabaseColumn.RelativePath], rowDict[Constant.DatabaseColumn.File]);
                             }
@@ -415,6 +415,7 @@ namespace Timelapse.Database
                             imagesToUpdate.Clear();
                         }
                     }
+
                     // perform any remaining updates
                     if (dateTimeErrors != 0)
                     {
@@ -542,7 +543,7 @@ namespace Timelapse.Database
                 Dictionary<string, string> rowDictionary = new Dictionary<string, string>();
                 for (int i = 0; i < numberOfHeaders; i++)
                 {
-                    //string valueToAdd = (i < parsedRow.Count) ? parsedRow[i] : String.Empty;
+                    //string valueToAdd = (i < parsedRow.Count) ? parsedRow[i] : string.Empty;
                     rowDictionary.Add(dataLabelsFromCSV[i], parsedRow[i]);
                 }
                 rowDictionaryList.Add(rowDictionary);
@@ -604,7 +605,7 @@ namespace Timelapse.Database
                                 }
                                 break;
                             case Constant.Control.Counter:
-                                if (!String.IsNullOrWhiteSpace(rowDict[csvHeader]) && !Int32.TryParse(rowDict[csvHeader], out _))
+                                if (!string.IsNullOrWhiteSpace(rowDict[csvHeader]) && !Int32.TryParse(rowDict[csvHeader], out _))
                                 {
                                     // Counters must be integers / blanks 
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must be blank or a number, but is '{2}'", csvHeader, rowNumber, rowDict[csvHeader]));
@@ -613,15 +614,15 @@ namespace Timelapse.Database
                                 break;
                             case Constant.Control.FixedChoice:
                                 // We allow empty values, even though it may not be a list option
-                                if (false == String.IsNullOrWhiteSpace(rowDict[csvHeader]) && Choices.ChoicesFromJson(controlRow.List).Contains(rowDict[csvHeader]) == false)
+                                if (false == string.IsNullOrWhiteSpace(rowDict[csvHeader]) && Choices.ChoicesFromJson(controlRow.List).Contains(rowDict[csvHeader]) == false)
                                 {
                                     // Fixed Choices must be in the Choice List
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must be in the template's choice list, but '{2}' isn't in it.", csvHeader, rowNumber, rowDict[csvHeader]));
                                     abort = true;
                                 }
                                 break;
-                            // case Constant.Control.Note:
-                            // default:
+                                // case Constant.Control.Note:
+                                // default:
                                 // as these can be any string, they don't require checking
                                 // break;
                         }
@@ -659,7 +660,7 @@ namespace Timelapse.Database
         private static string UpdateDuplicatesInDatabase(FileDatabase fileDatabase, List<Dictionary<string, string>> duplicatesDictionaryList, string relativePath, string file)
         {
             List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-            string errorMessage = String.Empty;
+            string errorMessage = string.Empty;
 
             // Find THE IDs of ImageRows with those RelativePath / File values
 
@@ -681,12 +682,10 @@ namespace Timelapse.Database
                     break;
                 }
 
-                //NEW
                 CultureInfo provider = CultureInfo.InvariantCulture;
                 DateTime datePortion = DateTime.MinValue;
                 DateTime timePortion = DateTime.MinValue;
                 DateTime dateTime = DateTime.MinValue;
-                //ENDNEW
 
                 // Process each row
                 ColumnTuplesWithWhere imageToUpdate = new ColumnTuplesWithWhere();
@@ -778,10 +777,6 @@ namespace Timelapse.Database
                     imageToUpdate.SetWhere(duplicateIDS[idIndex]);
                     imagesToUpdate.Add(imageToUpdate);
                 }
-                dateTime = DateTime.MinValue;
-                datePortion = DateTime.MinValue;
-                timePortion = DateTime.MinValue;
-
                 idIndex++;
             }
             if (imagesToUpdate.Count > 0)

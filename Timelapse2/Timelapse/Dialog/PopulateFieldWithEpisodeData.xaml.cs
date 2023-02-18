@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,7 +20,7 @@ namespace Timelapse.Dialog
         #region Private Variables
         private readonly FileDatabase fileDatabase;
         private readonly Dictionary<string, string> dataLabelByLabel;
-        private string dataFieldLabel = String.Empty;
+        private string dataFieldLabel = string.Empty;
         private double TotalImages;
         private double SingleCount;
         private double EpisodeCount;
@@ -99,7 +98,7 @@ namespace Timelapse.Dialog
                 ? $"Done, with {TotalImages} files processed."
                 : "Operation cancelled.";
             this.TextBlockFeedbackLine2.Text = isCompleted
-                ? $"Found {SingleCount} singleton{(SingleCount == 1 ? String.Empty : "s")}, and {EpisodeNoSingletonsCount} episode{(EpisodeNoSingletonsCount == 1 ? String.Empty : "s")}."
+                ? $"Found {SingleCount} singleton{(Math.Abs(SingleCount - 1) < .0001 ? string.Empty : "s")}, and {EpisodeNoSingletonsCount} episode{(Math.Abs(EpisodeNoSingletonsCount - 1) < .0001 ? string.Empty : "s")}."
                 : "No changes were made";
             this.PrimaryPanel.Visibility = Visibility.Collapsed;
             this.FeedbackPanel.Visibility = Visibility.Visible;
@@ -109,12 +108,9 @@ namespace Timelapse.Dialog
         {
             return await Task.Run(() =>
             {
-                string dataLabelToUpdate = this.dataLabelByLabel[this.dataFieldLabel];
                 this.TotalImages = this.fileDatabase.CountAllCurrentlySelectedFiles;
-                ObservableCollection<KeyValuePair<string, string>> keyValueList = new ObservableCollection<KeyValuePair<string, string>>();
                 List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
 
-                //for (int imageIndex = 0; imageIndex < totalImages; ++imageIndex)
                 int imageIndex = 0;
                 while (imageIndex < TotalImages)
                 {
@@ -124,8 +120,6 @@ namespace Timelapse.Dialog
                     // Provide feedback if the operation was cancelled during the database update
                     if (Token.IsCancellationRequested)
                     {
-                        keyValueList.Clear();
-                        keyValueList.Add(new KeyValuePair<string, string>("Cancelled", "No changes were made"));
                         return false;
                     }
 
@@ -144,7 +138,7 @@ namespace Timelapse.Dialog
 
                         this.EpisodeCount++;
                         string singletonData =
-                            $"{(this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty)}1|1";
+                            $"{(this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : string.Empty)}1|1";
 
                         List<ColumnTuple> ctl = new List<ColumnTuple>() { new ColumnTuple(this.dataLabelByLabel[this.dataFieldLabel], singletonData) };
                         imagesToUpdate.Add(new ColumnTuplesWithWhere(ctl, this.fileDatabase.FileTable[imageIndex].ID));
@@ -159,7 +153,7 @@ namespace Timelapse.Dialog
                         {
                             List<ColumnTuple> ctl = new List<ColumnTuple>() {
                                 new ColumnTuple(this.dataLabelByLabel[this.dataFieldLabel],
-                                    $"{(this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : String.Empty)}{episode.Value.Item1}|{episode.Value.Item2}")};
+                                    $"{(this.IncludeAnEpisodeIDNumber ? this.EpisodeCount + ":" : string.Empty)}{episode.Value.Item1}|{episode.Value.Item2}")};
                             imagesToUpdate.Add(new ColumnTuplesWithWhere(ctl, this.fileDatabase.FileTable[imageIndex].ID));
                             imageIndex++;
                         }
@@ -171,7 +165,7 @@ namespace Timelapse.Dialog
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 this.fileDatabase.UpdateFiles(imagesToUpdate);
 
-                return true;//keyValueList;
+                return true;
             }, this.Token).ConfigureAwait(true);
         }
 

@@ -6,7 +6,7 @@ namespace DialogUpgradeFiles.Util
     public class Arguments
     {
         // The full Timelape template path
-        public string FolderPath { get; set; } = String.Empty;
+        public string FolderPath { get; set; } = string.Empty;
 
         public Arguments(string[] arguments)
         {

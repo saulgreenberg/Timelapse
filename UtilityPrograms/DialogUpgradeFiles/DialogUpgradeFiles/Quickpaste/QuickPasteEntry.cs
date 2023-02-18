@@ -13,7 +13,7 @@ namespace DialogUpgradeFiles.QuickPaste
         #region Constructor
         public QuickPasteEntry()
         {
-            this.Title = String.Empty;
+            this.Title = string.Empty;
             this.Items = new List<QuickPasteItem>();
         }
         #endregion

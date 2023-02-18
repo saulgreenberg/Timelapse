@@ -307,7 +307,7 @@ namespace Timelapse.Dialog
                     if (uiComboBox is ComboBox cb && cb.IsEnabled)
                     {
                         // The combobox is enabled, thus it's a renume
-                        if (cb.SelectedItem == null || cb.SelectedItem.ToString() == String.Empty)
+                        if (cb.SelectedItem == null || cb.SelectedItem.ToString() == string.Empty)
                         {
                             // Retrieve the data label and add it as an problem 
                             if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
@@ -350,7 +350,7 @@ namespace Timelapse.Dialog
                 }
 
                 // Retrieve the data label
-                string datalabel = String.Empty;
+                string datalabel = string.Empty;
                 if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
                 {
                     datalabel = textblockDataLabel.Text;

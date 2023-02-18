@@ -216,7 +216,7 @@ namespace Timelapse.Controls
             // Note that the null check for control (which should not happen) gives it an auto value 'just in case'
             TextBlock popupText = new TextBlock
             {
-                Text = String.Empty,
+                Text = string.Empty,
                 Width = width < 20 ? 80 : width,
                 Height = control?.Height ?? Double.NaN,
                 Padding = padding,
@@ -267,7 +267,7 @@ namespace Timelapse.Controls
             }
             Border border = (Border)this.PopupPreview.Child;
             TextBlock popupText = (TextBlock)border.Child;
-            popupText.Text = String.Empty;
+            popupText.Text = string.Empty;
             this.PopupPreview.IsOpen = false;
         }
 

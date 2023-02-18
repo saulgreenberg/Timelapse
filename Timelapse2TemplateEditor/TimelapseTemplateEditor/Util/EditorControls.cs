@@ -190,7 +190,7 @@ namespace Timelapse.Editor.Util
             Choices choices = Choices.ChoicesFromJson(control.List);
             if (choices.IncludeEmptyChoice)
             {
-                comboBox.Items.Add(String.Empty);
+                comboBox.Items.Add(string.Empty);
                 comboBox.Items.Add(new Separator());
             }
             foreach (string choice in choices.ChoiceList)

@@ -155,7 +155,7 @@ namespace Timelapse.Extensions
                     TracePrint.NullException(nameof(source));
                     return windowRect;
                 }
-                // The screen contiaing the window
+                // The screen containing the window
                 Screen screenContainingWindow = null;
 
                 // WPF Coordinates of the screen that contains the window
@@ -225,7 +225,7 @@ namespace Timelapse.Extensions
                     screenTopLeft = source.CompositionTarget.TransformFromDevice.Transform(screenTopLeft);
                     screenBottomRight = source.CompositionTarget.TransformFromDevice.Transform(screenBottomRight);
 
-                    screenContainingWindow = primaryScreen;
+                    // screenContainingWindow = primaryScreen;
                 }
 
                 // We allow some space for the task bar, assuming its visible at the screen's bottom
@@ -353,10 +353,8 @@ namespace Timelapse.Extensions
 
                 // Serialize the layout into a string
                 XmlLayoutSerializer serializer = new XmlLayoutSerializer(timelapse.DockingManager);
-                using (StringWriter stream = new StringWriter())
-                {
-                    serializer.Serialize(xmlWriter);
-                }
+                serializer.Serialize(xmlWriter);
+
                 if (!string.IsNullOrEmpty(xmlText.ToString().Trim()))
                 {
                     // Write the string to the registry under the given key name

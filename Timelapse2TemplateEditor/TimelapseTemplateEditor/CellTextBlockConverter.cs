@@ -21,7 +21,7 @@ namespace Timelapse.Editor
             {
                 return valString.Trim();
             }
-            return String.Empty;
+            return string.Empty;
         }
     }
 }

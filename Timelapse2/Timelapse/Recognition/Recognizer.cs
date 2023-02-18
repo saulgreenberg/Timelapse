@@ -163,7 +163,7 @@ namespace Timelapse.Recognition
         #region Constructor
         public image()
         {
-            this.file = String.Empty;
+            this.file = string.Empty;
             this.max_detection_conf = 0;
             this.detections = new List<detection>();
         }
@@ -191,7 +191,7 @@ namespace Timelapse.Recognition
         #region Constructor
         public detection()
         {
-            this.category = String.Empty;
+            this.category = string.Empty;
             this.conf = 0;
             this.classifications = new List<Object[]>();
             this.bbox = new double[4];

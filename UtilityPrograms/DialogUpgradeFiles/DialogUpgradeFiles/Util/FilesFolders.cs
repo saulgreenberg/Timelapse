@@ -166,7 +166,7 @@ namespace DialogUpgradeFiles.Util
         // For each missingFolderPath, gets its folder name and search for its first counterpart in the subdirectory under rootPath.
         // Returns a dictionary where 
         // - key is each missing relativePath, 
-        // - value is the possible found relativePath, or String.Empty if there is no match
+        // - value is the possible found relativePath, or string.Empty if there is no match
         public static Dictionary<string, List<string>> TryGetMissingFolders(string rootPath, List<string> missingFolderPaths)
         {
             if (missingFolderPaths == null)

@@ -203,6 +203,7 @@ namespace Timelapse
         #endregion
 
         #region TryFileShow Without Slider Callback - various forms
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool TryFileShowWithoutSliderCallback(DirectionEnum direction)
         {
             // Check to see if there are any images to show, 

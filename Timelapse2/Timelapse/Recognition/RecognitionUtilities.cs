@@ -86,12 +86,12 @@ namespace Timelapse.Recognition
             {
                 return true;
             }
-            if (source == Constant.RecognizerValues.MDVersionUnknown || String.IsNullOrWhiteSpace(source))
+            if (source == Constant.RecognizerValues.MDVersionUnknown || string.IsNullOrWhiteSpace(source))
             {
                 return true;
             }
 
-            if (destination == Constant.RecognizerValues.MDVersionUnknown || String.IsNullOrWhiteSpace(destination))
+            if (destination == Constant.RecognizerValues.MDVersionUnknown || string.IsNullOrWhiteSpace(destination))
             {
                 return false;
             }
@@ -134,11 +134,11 @@ namespace Timelapse.Recognition
                 {Constant.InfoColumns.TypicalDetectionThreshold, info.detector_metadata.typical_detection_threshold ?? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown},
                 {Constant.InfoColumns.ConservativeDetectionThreshold, info.detector_metadata.conservative_detection_threshold ?? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown},
                 {Constant.InfoColumns.Classifier, string.IsNullOrEmpty(info.classifier)
-                    ? String.Empty
+                    ? string.Empty
                     : info.classifier},
                 {Constant.InfoColumns.ClassificationCompletionTime,
                     string.IsNullOrEmpty(info.classification_completion_time)
-                    ? String.Empty
+                    ? string.Empty
                     : info.classification_completion_time},
                 {Constant.InfoColumns.TypicalClassificationThreshold, info.classifier_metadata.typical_classification_threshold ?? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown},
             };
@@ -274,12 +274,12 @@ namespace Timelapse.Recognition
             if (splitPath == null)
             {
                 // file is outside of root folder and its subfolders
-                return String.Empty;
+                return string.Empty;
             }
             else if (string.IsNullOrEmpty(splitPath.Item2))
             {
                 // Don't add prefix: file is in the root folder
-                return String.Empty;
+                return string.Empty;
             }
             return splitPath.Item2;
         }
@@ -299,7 +299,7 @@ namespace Timelapse.Recognition
                 int i = 0;
 
                 // Skip certain conditions if the subFolder is empty
-                bool nonEmptySubfolder = false == String.IsNullOrWhiteSpace(subFolderPrefix);
+                bool nonEmptySubfolder = false == string.IsNullOrWhiteSpace(subFolderPrefix);
                 foreach (image image in jsonRecognizer.images)
                 {
                     if (i % 10000 == 0)
@@ -312,7 +312,7 @@ namespace Timelapse.Recognition
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new ProgressBarArguments(percentDone,
-                            $"Checking image paths ({i:N0}/{sTotalImages:N0}...)", true, false));
+                            $"Checking image paths ({i:N0}/{sTotalImages}...)", true, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
@@ -373,7 +373,7 @@ namespace Timelapse.Recognition
                         // Progress report generated after every 10,000 images
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new ProgressBarArguments(percentDone,
-                            $"Correcting image recognition paths ({i:N0}/{sTotalImages:N0}...", false, false));
+                            $"Correcting image recognition paths ({i:N0}/{sTotalImages}...", false, false));
                         Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Add the prefix to the path

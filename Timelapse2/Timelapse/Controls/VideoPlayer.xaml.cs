@@ -15,7 +15,7 @@ namespace Timelapse.Controls
         /// <summary>
         /// True if the video is unscaled, false if it is zoomed in
         /// </summary>        
-        public bool IsUnScaled => this.videoScale.ScaleX == 1;
+        public bool IsUnScaled => Math.Abs(this.videoScale.ScaleX - 1) < 0.0001;
 
         #endregion
 
@@ -165,7 +165,7 @@ namespace Timelapse.Controls
                 this.videoScale.ScaleY = Math.Max(VideoZoomMinimum, this.videoScale.ScaleY);
 
                 // if there is no scaling, reset translations
-                if (this.videoScale.ScaleX == 1.0 && this.videoScale.ScaleY == 1.0)
+                if (Math.Abs(this.videoScale.ScaleX - 1.0) < .0001 && Math.Abs(this.videoScale.ScaleY - 1.0) < .0001)
                 {
                     this.videoTranslation.X = 0.0;
                     this.videoTranslation.Y = 0.0;

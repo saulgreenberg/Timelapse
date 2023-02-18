@@ -146,7 +146,7 @@ namespace Timelapse
                     }
                     else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
-                        string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
+                        string sampleFile = jsonRecognitions.images.Count == 0 ? string.Empty : jsonRecognitions.images[0].file;
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
@@ -171,7 +171,7 @@ namespace Timelapse
 
                     if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
-                        string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
+                        string sampleFile = jsonRecognitions.images.Count == 0 ? string.Empty : jsonRecognitions.images[0].file;
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
@@ -272,7 +272,7 @@ namespace Timelapse
         // Return a string that will be included in the message box invoked above that details the match (or mismatch) between the image set folder and recognition data folders
         private static string ComposeFolderDetails(List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
         {
-            string folderDetails = String.Empty;
+            string folderDetails = string.Empty;
             if (foldersInDBListButNotInJSon.Count == 0 && foldersInJsonButNotInDB.Count == 0)
             {
                 // All folders match, so don't show any details.

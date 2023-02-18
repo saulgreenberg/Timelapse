@@ -37,9 +37,9 @@ namespace DialogUpgradeFiles
 
             foreach (string file in filesDictionary.Keys.OrderBy(q => q).ToList())
             {
-                this.ShortFileName = String.IsNullOrWhiteSpace(commonPath)
+                this.ShortFileName = string.IsNullOrWhiteSpace(commonPath)
                     ? file
-                    : file.Replace(commonPath, String.Empty).TrimStart(Path.DirectorySeparatorChar);
+                    : file.Replace(commonPath, string.Empty).TrimStart(Path.DirectorySeparatorChar);
                 DictFileUpdateStatus.Add(this.ShortFileName, "Waiting:          ");
             }
             this.RefreshFileUpdateStatusDisplay(DictFileUpdateStatus, 0);
@@ -53,16 +53,16 @@ namespace DialogUpgradeFiles
             foreach (KeyValuePair<string, UpgradeResultsEnum> filekvp in filesDictionary.OrderBy(q => q.Key))
             {
                 string file = filekvp.Key;
-                string backupFilePath = String.Empty;
+                string backupFilePath = string.Empty;
 
                 // Feedback
                 this.LineFeedback($"Processing {i + 1} of {filesDictionary.Count} files");
                 await Task.Delay(Constant.BusyState.SleepTime);
 
                 // Extract the short file name
-                this.ShortFileName = String.IsNullOrWhiteSpace(commonPath)
+                this.ShortFileName = string.IsNullOrWhiteSpace(commonPath)
                         ? file
-                        : file.Replace(commonPath, String.Empty).TrimStart(Path.DirectorySeparatorChar);
+                        : file.Replace(commonPath, string.Empty).TrimStart(Path.DirectorySeparatorChar);
                 string shortFilePathWithoutExtension = Path.Combine(Path.GetDirectoryName(this.ShortFileName), Path.GetFileNameWithoutExtension(ShortFileName));
 
                 // Check if this file has been cancelled before continuing
@@ -110,7 +110,7 @@ namespace DialogUpgradeFiles
                     this.AnimateProgressTimer.Stop();
 
                     // Feedback based on result
-                    this.ProgressCharacter = String.Empty;
+                    this.ProgressCharacter = string.Empty;
                     switch (result)
                     {
                         case UpgradeResultsEnum.Upgraded:
@@ -308,7 +308,7 @@ namespace DialogUpgradeFiles
         string GetCommonPrefix(IEnumerable<string> strings)
         {
             return strings.Count() <= 1
-            ? String.Empty
+            ? string.Empty
             : strings.Aggregate(GetCommonPrefix);
         }
 

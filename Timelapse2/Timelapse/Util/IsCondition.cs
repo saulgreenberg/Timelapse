@@ -103,7 +103,7 @@ namespace Timelapse.Util
         private static bool IsPathLengthTooLong(string filePath)
         {
             // Check the arguments for null 
-            if (String.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
                 // this should not happen
                 TracePrint.StackTrace(1);

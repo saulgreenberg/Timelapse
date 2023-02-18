@@ -136,7 +136,7 @@ namespace DialogUpgradeFiles.Database
             if (list.Contains(Constant.ControlMiscellaneous.EmptyChoiceItem))
             {
                 list.Remove(Constant.ControlMiscellaneous.EmptyChoiceItem);
-                list.Insert(0, String.Empty);
+                list.Insert(0, string.Empty);
             }
             return list;
         }

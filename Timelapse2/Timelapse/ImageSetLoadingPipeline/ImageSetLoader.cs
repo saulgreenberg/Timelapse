@@ -74,10 +74,10 @@ namespace Timelapse.ImageSetLoadingPipeline
                 existingPaths = new HashSet<string>(from file in filetable
                                                     select Path.Combine(imageSetFolderPath, Path.Combine(file.RelativePath, file.File)).ToLowerInvariant());
             }
-            FileInfo[] filesToAddInfoArray;
-            filesToAddInfoArray = (from fileInfo in fileInfos
-                                   where existingPaths.Contains(fileInfo.FullName.ToLowerInvariant()) == false
-                                   select fileInfo).OrderBy(f => f.FullName).ToArray();
+
+            FileInfo[] filesToAddInfoArray = (from fileInfo in fileInfos
+                where existingPaths.Contains(fileInfo.FullName.ToLowerInvariant()) == false
+                select fileInfo).OrderBy(f => f.FullName).ToArray();
 
             this.ImagesToLoad = filesToAddInfoArray.Length;
 
@@ -107,6 +107,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                         // Although I am unsure about this, clearing the task list may help inhibit additional tasks being added
                         // The caller will check the cancellation token again, and will stop further actions and clean up as needed.
                         // Debug.Print("Cancelled from ImageSetLoader: this.pass1");
+                        // ReSharper disable once RedundantAssignment
                         loadTasks = new List<Task>();
                         return;
                     }

@@ -244,7 +244,6 @@ namespace Timelapse.DataTables
         {
             try
             {
-                Dictionary<string, string> validatedDictMetadataDatalabel = new Dictionary<string, string>();
                 Dictionary<string, ImageMetadata> metadata = new Dictionary<string, ImageMetadata>();
 
                 if (metadataOnLoad.MetadataToolSelected == MetadataToolEnum.MetadataExtractor)
@@ -260,7 +259,7 @@ namespace Timelapse.DataTables
 
                     foreach (KeyValuePair<string, string> kvp in exifData)
                     {
-                        metadata.Add(kvp.Key, new ImageMetadata(String.Empty, kvp.Key, kvp.Value));
+                        metadata.Add(kvp.Key, new ImageMetadata(string.Empty, kvp.Key, kvp.Value));
                     }
                 }
 
@@ -286,7 +285,7 @@ namespace Timelapse.DataTables
             // Use only on images, as video files don't contain the desired metadata. 
             try
             {
-                IReadOnlyList<MetadataDirectory> metadataDirectories = null;
+                IReadOnlyList<MetadataDirectory> metadataDirectories;
 
                 // Performance tweaks. Reading in sequential scan, does this speed up? Under the covers, the MetadataExtractor is using a sequential read, allowing skip forward but not random access.
                 // Exif is small, do we need a big block?

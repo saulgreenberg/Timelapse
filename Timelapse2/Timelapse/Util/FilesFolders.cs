@@ -296,7 +296,7 @@ namespace Timelapse.Util
         // For each missingFolderPath, gets its folder name and search for its first counterpart in the subdirectory under rootPath.
         // Returns a dictionary where 
         // - key is each missing relativePath, 
-        // - value is the possible found relativePath, or String.Empty if there is no match
+        // - value is the possible found relativePath, or string.Empty if there is no match
         public static Dictionary<string, List<string>> TryGetMissingFolders(string rootPath, List<string> missingFolderPaths)
         {
             if (missingFolderPaths == null)
@@ -378,7 +378,7 @@ namespace Timelapse.Util
             directoryName = directoryName.TrimEnd('\\');
 
             //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
-            string relativePath = rootPath.Equals(directoryName) ? String.Empty : directoryName.Substring(rootPath.Length + 1);
+            string relativePath = rootPath.Equals(directoryName) ? string.Empty : directoryName.Substring(rootPath.Length + 1);
             //string relativePath = directoryName.Substring(rootPath.Length + 1);
             return new Tuple<string, string, string>(rootPath, relativePath, fileName);
         }
@@ -396,7 +396,7 @@ namespace Timelapse.Util
                 || String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0)
             {
                 // both paths are identical, but one path contains a file 
-                return String.Empty;
+                return string.Empty;
             }
             if (path1.Length > path2.Length)
             {
@@ -428,7 +428,7 @@ namespace Timelapse.Util
         {
             if (fileDatabase == null || imageRow == null)
             {
-                return String.Empty;
+                return string.Empty;
             }
             return Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
         }
@@ -437,7 +437,7 @@ namespace Timelapse.Util
         {
             if (imageRow == null)
             {
-                return String.Empty;
+                return string.Empty;
             }
             return Path.Combine(rootPath, imageRow.RelativePath, imageRow.File);
         }
@@ -640,6 +640,7 @@ namespace Timelapse.Util
                 FilesRemoveAllButImagesAndVideos(fileInfoList);
                 if (fileInfoList.Count != 0)
                 {
+                    // ReSharper disable once RedundantAssignment
                     fileInfoList = fileInfoList.OrderBy(file => file.FullName).ToList();
                 }
             }

@@ -214,7 +214,7 @@ namespace Timelapse.Dialog
                         {
                             if (exifData.ContainsKey(tag))
                             {
-                                metadata.Add(tag, new ImageMetadata(String.Empty, tag, exifData[tag]));
+                                metadata.Add(tag, new ImageMetadata(string.Empty, tag, exifData[tag]));
                             }
                         }
                     }
@@ -240,7 +240,7 @@ namespace Timelapse.Dialog
                             // However, we still need to supply feedback and (if the user has asked for that option) to clear the data field
                             if (this.clearIfNoMetadata)
                             {
-                                List<ColumnTuple> clearField = new List<ColumnTuple>() { new ColumnTuple(dataLabelToUpdate, String.Empty) };
+                                List<ColumnTuple> clearField = new List<ColumnTuple>() { new ColumnTuple(dataLabelToUpdate, string.Empty) };
                                 imagesToUpdate.Add(new ColumnTuplesWithWhere(clearField, image.ID));
                                 feedbackData.Add(new Tuple<string, string, string>(image.File, metadataTag, "No metadata found - data field cleared"));
                             }

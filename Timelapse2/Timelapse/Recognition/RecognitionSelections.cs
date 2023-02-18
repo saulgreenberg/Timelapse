@@ -59,7 +59,7 @@ namespace Timelapse.Recognition
                     // If Threshold2 is .99 in the UI for empty items, we invert that, but to just above 0
                     // so we capture all the non-zero items (i.e., all images with detections in that range) as otherwise it could
                     //  omit the rare image with a max detection between 0 and .01
-                    lowerBound = (this.ConfidenceThreshold2ForUI == 0.99) ? justAboveZero : 1.0 - this.ConfidenceThreshold2ForUI;
+                    lowerBound = (Math.Abs(this.ConfidenceThreshold2ForUI - 0.99) < .0001) ? justAboveZero : 1.0 - this.ConfidenceThreshold2ForUI;
                     upperBound = 1.0 - this.ConfidenceThreshold1ForUI;
 
                 }

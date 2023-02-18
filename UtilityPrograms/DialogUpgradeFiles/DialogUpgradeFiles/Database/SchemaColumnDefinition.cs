@@ -35,11 +35,11 @@ namespace DialogUpgradeFiles.Database
         // Full form
         public SchemaColumnDefinition(string name, string type, string defaultValue)
         {
-            if (String.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentOutOfRangeException(nameof(name));
             }
-            if (String.IsNullOrWhiteSpace(type))
+            if (string.IsNullOrWhiteSpace(type))
             {
                 throw new ArgumentOutOfRangeException(nameof(type));
             }

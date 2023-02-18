@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
 
         public MessageBox(string title, Window owner, MessageBoxButton buttonType)
         {
-            if (String.IsNullOrWhiteSpace(title))
+            if (string.IsNullOrWhiteSpace(title))
             {
                 throw new ArgumentException("A title must be specified for the message box.", nameof(title));
             }

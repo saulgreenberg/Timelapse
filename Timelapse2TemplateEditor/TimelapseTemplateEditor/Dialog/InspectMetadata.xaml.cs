@@ -19,7 +19,7 @@ namespace Timelapse.Editor.Dialog
         {
             this.InitializeComponent();
             this.Owner = owner;
-            this.FilePath = String.Empty;
+            this.FilePath = string.Empty;
         }
 
         // After the interface is loaded, try to adjust the position of the dialog box

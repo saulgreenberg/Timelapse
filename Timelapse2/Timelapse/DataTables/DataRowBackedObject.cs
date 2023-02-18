@@ -35,6 +35,7 @@ namespace Timelapse.DataTables
 
         #region Public / Protected Methods
         // Return a ColumnTuples data structure, where the 'Where' is the ID
+        // ReSharper disable once UnusedMemberInSuper.Global
         public abstract ColumnTuplesWithWhere CreateColumnTuplesWithWhereByID();
 
         // Return the index of this row in the dataTable

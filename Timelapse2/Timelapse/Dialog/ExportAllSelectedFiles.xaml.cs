@@ -124,7 +124,7 @@ namespace Timelapse.Dialog
             {
                 if (Dialogs.OverwriteExistingFiles(this, existingFiles) != true)
                 {
-                    copiedFiles = -2; // indicates the duplicate file condition
+                    // copiedFiles = -2; // indicates the duplicate file condition
                     return "Export aborted to avoid overwriting files.";
                 }
             }
@@ -158,7 +158,7 @@ namespace Timelapse.Dialog
                     : string.Empty;
 
                     sourceFile = Path.Combine(FileDatabase.FolderPath, ir.RelativePath, ir.File);
-                    destFile = String.IsNullOrWhiteSpace(fileNamePrefix)
+                    destFile = string.IsNullOrWhiteSpace(fileNamePrefix)
                     ? Path.Combine(path, fileNamePrefix + ir.File)
                     : Path.Combine(path, fileNamePrefix + '.' + ir.File);
 

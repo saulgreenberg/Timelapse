@@ -163,7 +163,7 @@ namespace Timelapse.Controls
             if (value == null)
             {
                 // This should not happen
-                value = String.Empty;
+                value = string.Empty;
             }
 
             // Create the popup overlay

@@ -177,14 +177,14 @@ namespace DialogUpgradeFiles
                         {
                             // we also can't have a non-matching default value
                             // Easiest thing to do is to clear the default and leave the IncludeEmptyChoice alone
-                            control.DefaultValue = String.Empty;
+                            control.DefaultValue = string.Empty;
                         }
                     }
                     else if (false == choices.Contains(control.DefaultValue))
                     {
                         // We allow an empty choice, but we have a non-matching default value
                         // As above, easiest thing to do is to clear the default
-                        control.DefaultValue = String.Empty;
+                        control.DefaultValue = string.Empty;
                     }
                     templateDB.SyncControlToDatabase(control);
                 }
@@ -200,7 +200,7 @@ namespace DialogUpgradeFiles
             {
                 foreach (ControlRow control in templateDB.Controls)
                 {
-                    string defaultToUse = String.Empty;
+                    string defaultToUse = string.Empty;
                     if (control.Type == Constant.Control.FixedChoice || control.Type == Constant.Control.Choice)
                     {
                         // We are only interested in choice controls
@@ -217,7 +217,7 @@ namespace DialogUpgradeFiles
                         else if (includesEmptyChoice && (false == string.IsNullOrEmpty(control.DefaultValue) || false == choices.Contains(control.DefaultValue)))
                         {
                             // when we allow an empty choice, we can only have an empty default or a non-matching default value
-                            defaultToUse = String.Empty;
+                            defaultToUse = string.Empty;
                         }
                     }
                 }
@@ -596,9 +596,9 @@ namespace DialogUpgradeFiles
             string absolutePathPart = fileDatabase.FolderPath.TrimEnd(Path.DirectorySeparatorChar) + @"\";
             string rootFolder = Path.GetDirectoryName(absolutePathPart);
             rootFolder = string.IsNullOrEmpty(rootFolder)
-                ? String.Empty
+                ? string.Empty
                 : Path.GetFileName(rootFolder);
-            SchemaColumnDefinition scd = new SchemaColumnDefinition("RootFolder", "Text", String.Empty);
+            SchemaColumnDefinition scd = new SchemaColumnDefinition("RootFolder", "Text", string.Empty);
             fileDatabase.Database.SchemaAddColumnToEndOfTable(Constant.DBTables.ImageSet, scd);
             fileDatabase.Database.SetColumnToACommonValue(Constant.DBTables.ImageSet, "RootFolder", rootFolder);
             timelapse.DebugFeedback("ImageSet Table: Root folder added: " + filePath);

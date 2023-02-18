@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Timelapse.DataStructures
+﻿namespace Timelapse.DataStructures
 {
     /// <summary>
     /// Captures a single metadata record entry as extracted by MetaDataExtractor. 
@@ -36,7 +34,7 @@ namespace Timelapse.DataStructures
         /// </summary>
         public ImageMetadata()
         {
-            this.Initialize(String.Empty, String.Empty, String.Empty);
+            this.Initialize(string.Empty, string.Empty, string.Empty);
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace Timelapse.Dialog
                     }
                 }
                 // Should never happen as at least one 'Use' checkmark is checked
-                return new Tuple<string, string>(String.Empty, String.Empty);
+                return new Tuple<string, string>(string.Empty, string.Empty);
             }
         }
         #endregion
@@ -156,7 +156,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int selectedColumn = this.selectedRowTuple[0].Column.DisplayIndex;
-            string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection()) ?? String.Empty;
+            string possibleFolderLocation = Path.GetDirectoryName(GetPossibleLocationFromSelection()) ?? string.Empty;
             switch (selectedColumn)
             {
                 case 0:
@@ -194,7 +194,7 @@ namespace Timelapse.Dialog
             Tuple<string, string, bool> tuple = (Tuple<string, string, bool>)this.selectedRowTuple[0].Item;
             return (tuple != null)
                 ? tuple.Item1
-                : String.Empty;
+                : string.Empty;
         }
         #endregion
 

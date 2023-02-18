@@ -164,7 +164,7 @@ namespace DialogUpgradeFiles.Database
             {
                 return sortcriteria[termIndex].Trim();
             }
-            return String.Empty;
+            return string.Empty;
         }
         #endregion
     }

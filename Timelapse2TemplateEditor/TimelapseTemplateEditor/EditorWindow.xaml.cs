@@ -110,7 +110,7 @@ namespace Timelapse.Editor
         // Invoke the Update Timelapse files program
         private void MenuItemUpgradeTimelapseFiles_Click(object sender, RoutedEventArgs e)
         {
-            DialogUpgradeFilesAndFolders dialogUpdateFiles = new DialogUpgradeFilesAndFolders(this, String.Empty, VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+            DialogUpgradeFilesAndFolders dialogUpdateFiles = new DialogUpgradeFilesAndFolders(this, string.Empty, VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
             dialogUpdateFiles.ShowDialog();
         }
 
@@ -155,7 +155,7 @@ namespace Timelapse.Editor
 
             // Include the database file name in the window title if it is set
             this.Title = EditorConstant.MainWindowBaseTitle;
-            this.Title += templateIsLoaded ? " (" + Path.GetFileName(filePath) + ")" : String.Empty;
+            this.Title += templateIsLoaded ? " (" + Path.GetFileName(filePath) + ")" : string.Empty;
 
             // Switch to the appropriate tab
             this.TemplatePane.IsActive = templateIsLoaded;
@@ -349,7 +349,7 @@ namespace Timelapse.Editor
             this.SpreadsheetPreview.Columns.Clear();
 
             // Enable/disable the various menus as needed.
-            this.ResetUIElements(false, String.Empty);
+            this.ResetUIElements(false, string.Empty);
         }
         #endregion
 
@@ -590,7 +590,7 @@ namespace Timelapse.Editor
                 else if (!string.IsNullOrEmpty(choiceControl.DefaultValue) && choiceListDialog.Choices.Contains(choiceControl.DefaultValue) == false)
                 {
                     EditorDialogs.EditorDefaultChoiceValuesMustMatchChoiceListsDialog(this, choiceControl.DefaultValue);
-                    choiceControl.DefaultValue = String.Empty;
+                    choiceControl.DefaultValue = string.Empty;
                 }
                 choiceControl.List = choiceListDialog.Choices.GetAsJson;
                 this.SyncControlToDatabase(choiceControl);
@@ -917,7 +917,7 @@ namespace Timelapse.Editor
             string dataLabel = textBox.Text;
 
             // Check to see if the data label is empty. If it is, generate a unique data label and warn the user
-            if (String.IsNullOrWhiteSpace(dataLabel))
+            if (string.IsNullOrWhiteSpace(dataLabel))
             {
                 EditorDialogs.EditorDataLabelsCannotBeEmptyDialog(this);
                 textBox.Text = this.templateDatabase.GetNextUniqueDataLabel("DataLabel");
@@ -986,7 +986,7 @@ namespace Timelapse.Editor
             {
                 string label = textBox.Text;
                 // Check to see if the data label is empty. If it is, generate a unique data label and warn the user
-                if (String.IsNullOrWhiteSpace(label))
+                if (string.IsNullOrWhiteSpace(label))
                 {
                     EditorDialogs.EditorLabelsCannotBeEmptyDialog(this);
                     if (currentRow != null)
@@ -1039,7 +1039,7 @@ namespace Timelapse.Editor
             switch (control.Type)
             {
                 case Constant.Control.Flag:
-                    if (String.IsNullOrWhiteSpace(textBox.Text))
+                    if (string.IsNullOrWhiteSpace(textBox.Text))
                     {
                         textBox.Text = Constant.ControlDefault.FlagValue;
                     }
@@ -1047,7 +1047,7 @@ namespace Timelapse.Editor
                 case Constant.Control.FixedChoice:
                     // Check to see if the value matches one of the items on the menu
                     Choices choices = Choices.ChoicesFromJson(control.List);
-                    if (choices.IncludeEmptyChoice == false && String.IsNullOrWhiteSpace(textBox.Text))
+                    if (choices.IncludeEmptyChoice == false && string.IsNullOrWhiteSpace(textBox.Text))
                     {
                         // Can't have an empty default if the IncludeEmptyChoice is unselecteds
                         EditorDialogs.EditorDefaultChoiceValuesMustMatchNonEmptyChoiceListsDialog(this, textBox.Text);
@@ -1058,7 +1058,7 @@ namespace Timelapse.Editor
                         }
                         // Note: Undefined if we have an empty choice list with IncludeEmptyChoice of false!
                     }
-                    else if (String.IsNullOrWhiteSpace(textBox.Text) == false)
+                    else if (string.IsNullOrWhiteSpace(textBox.Text) == false)
                     {
                         List<string> choicesList = choices.ChoiceList;
                         if (choicesList.Contains(textBox.Text) == false)
@@ -1066,7 +1066,7 @@ namespace Timelapse.Editor
                             EditorDialogs.EditorDefaultChoiceValuesMustMatchChoiceListsDialog(this, textBox.Text);
                             if (choices.IncludeEmptyChoice)
                             {
-                                textBox.Text = String.Empty;
+                                textBox.Text = string.Empty;
                             }
                             else
                             {

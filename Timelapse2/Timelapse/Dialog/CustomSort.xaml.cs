@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Database;
@@ -19,9 +18,9 @@ namespace Timelapse.Dialog
 
         #region Private Variables
         private List<SortTerm> sortTermList;
-        private string fileDisplayLabel = String.Empty;
-        private string dateDisplayLabel = String.Empty;
-        private string relativePathDisplayLabel = String.Empty;
+        private string fileDisplayLabel = string.Empty;
+        private string dateDisplayLabel = string.Empty;
+        private string relativePathDisplayLabel = string.Empty;
         private readonly FileDatabase database;
         #endregion
 
@@ -76,9 +75,9 @@ namespace Timelapse.Dialog
             // By default, we select sort by ID unless its over-ridden
             this.PrimaryComboBox.SelectedIndex = 0;
             SortTerm sortTermDB = this.database.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
+            bool dateTimeAlreadyProcessed = false; 
             foreach (SortTerm sortTerm in this.sortTermList)
             {
-                bool dateTimeAlreadyProcessed = false;
                 // As there are two datetimes in the sort terms, just use the first one.
                 if (sortTerm.DisplayLabel == Constant.DatabaseColumn.DateTime && dateTimeAlreadyProcessed == false)
                 {
@@ -170,19 +169,19 @@ namespace Timelapse.Dialog
                 {
                     this.SortTerm1.DataLabel = Constant.DatabaseColumn.File;
                     this.SortTerm1.DisplayLabel = this.fileDisplayLabel;
-                    this.SortTerm1.ControlType = String.Empty;
+                    this.SortTerm1.ControlType = string.Empty;
                 }
                 else if (selectedPrimaryItem == this.dateDisplayLabel)
                 {
                     this.SortTerm1.DataLabel = Constant.DatabaseColumn.DateTime;
                     this.SortTerm1.DisplayLabel = this.dateDisplayLabel;
-                    this.SortTerm1.ControlType = String.Empty;
+                    this.SortTerm1.ControlType = string.Empty;
                 }
                 else if (selectedPrimaryItem == this.relativePathDisplayLabel)
                 {
                     this.SortTerm1.DataLabel = Constant.DatabaseColumn.RelativePath;
                     this.SortTerm1.DisplayLabel = this.relativePathDisplayLabel;
-                    this.SortTerm1.ControlType = String.Empty;
+                    this.SortTerm1.ControlType = string.Empty;
                 }
                 else if (selectedPrimaryItem == sortTerm.DisplayLabel)
                 {
@@ -201,21 +200,21 @@ namespace Timelapse.Dialog
                     {
                         this.SortTerm2.DataLabel = Constant.DatabaseColumn.File;
                         this.SortTerm2.DisplayLabel = this.fileDisplayLabel;
-                        this.SortTerm2.ControlType = String.Empty;
+                        this.SortTerm2.ControlType = string.Empty;
                         this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
                     }
                     else if (selectedSecondaryItem == this.dateDisplayLabel)
                     {
                         this.SortTerm2.DataLabel = Constant.DatabaseColumn.DateTime;
                         this.SortTerm2.DisplayLabel = this.dateDisplayLabel;
-                        this.SortTerm2.ControlType = String.Empty;
+                        this.SortTerm2.ControlType = string.Empty;
                         this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
                     }
                     else if (selectedSecondaryItem == this.dateDisplayLabel)
                     {
                         this.SortTerm2.DataLabel = Constant.DatabaseColumn.DateTime;
                         this.SortTerm2.DisplayLabel = this.dateDisplayLabel;
-                        this.SortTerm2.ControlType = String.Empty;
+                        this.SortTerm2.ControlType = string.Empty;
                         this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
                     }
                     else if (selectedSecondaryItem == sortTerm.DisplayLabel)

@@ -70,7 +70,7 @@ namespace UpdateCSVFile
                     // .csv files are ambiguous in the sense a trailing comma may or may not be present at the end of the line
                     // if the final field has a value this case isn't a concern, but if the final field has no value then there's
                     // no way for the parser to know the exact number of fields in the line
-                    row.Add(String.Empty);
+                    row.Add(string.Empty);
                 }
 
                 // For a single row, create a dictionary matching the CSV column Header and that row's recorded value for that column
@@ -149,7 +149,7 @@ namespace UpdateCSVFile
         #region Callbacks
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            this.FeedbackText.Text = String.Empty;
+            this.FeedbackText.Text = string.Empty;
 
             if (TryGetFileFromUser(
                                  "Select a .csv file to update",
@@ -230,7 +230,7 @@ namespace UpdateCSVFile
                         // promote null values to empty values to prevent the presence of SQNull objects in data tables
                         // much Timelapse code assumes data table fields can be blindly cast to string and breaks once the data table has been
                         // refreshed after null values are inserted
-                        parsedLine.Add(String.Empty);
+                        parsedLine.Add(string.Empty);
                         continue;
                     }
                     else
@@ -312,14 +312,14 @@ namespace UpdateCSVFile
                 Filter = filter
             })
             {
-                if (String.IsNullOrWhiteSpace(defaultFilePath))
+                if (string.IsNullOrWhiteSpace(defaultFilePath))
                 {
                     openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
                 else
                 {
-                    openFileDialog.InitialDirectory = String.Empty; // Path.GetDirectoryName(defaultFilePath);
-                    openFileDialog.FileName = String.Empty; // Path.GetFileName(defaultFilePath);
+                    openFileDialog.InitialDirectory = string.Empty; // Path.GetDirectoryName(defaultFilePath);
+                    openFileDialog.FileName = string.Empty; // Path.GetFileName(defaultFilePath);
                 }
 
                 if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -399,7 +399,7 @@ namespace UpdateCSVFile
         {
             int last = elements.Count - 1;
             int i = 0;
-            string line = String.Empty;
+            string line = string.Empty;
             foreach (string element in elements)
             {
                 line += element;
@@ -414,7 +414,7 @@ namespace UpdateCSVFile
         {
             int last = valuesDictionary.Count - 1;
             int i = 0;
-            string line = String.Empty;
+            string line = string.Empty;
             //foreach (string key in rowDictionary.Keys)
             foreach (string header in headers)
             {

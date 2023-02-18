@@ -250,7 +250,7 @@ namespace Timelapse.Database
             return control.Copyable;
         }
 
-        // Return String.Empty only if each control is of a known type,
+        // Return string.Empty only if each control is of a known type,
         // otherwise return the unknown type
         public string AreControlsOfKnownTypes()
         {
@@ -372,7 +372,7 @@ namespace Timelapse.Database
                 {
                     dataLabel = control.DataLabel;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
                     $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
@@ -396,7 +396,7 @@ namespace Timelapse.Database
                 {
                     dataLabel = control.Label;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
                     $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
@@ -475,7 +475,7 @@ namespace Timelapse.Database
         public void SyncControlToDatabase(ControlRow control)
         {
             // This form sync's by the ID
-            SyncControlToDatabase(control, String.Empty);
+            SyncControlToDatabase(control, string.Empty);
         }
 
         public void SyncControlToDatabase(ControlRow control, string dataLabel)
@@ -487,7 +487,7 @@ namespace Timelapse.Database
             // this.CreateBackupIfNeeded();
 
             // Create the where condition with the ID, but if the dataLabel is not empty, use the dataLabel as the where condition
-            ColumnTuplesWithWhere ctw = dataLabel == String.Empty
+            ColumnTuplesWithWhere ctw = dataLabel == string.Empty
                 ? control.CreateColumnTuplesWithWhereByID()
                 : new ColumnTuplesWithWhere(control.CreateColumnTuplesWithWhereByID().Columns, new ColumnTuple(Constant.Control.DataLabel, dataLabel));
             this.Database.Update(Constant.DBTables.Template, ctw);

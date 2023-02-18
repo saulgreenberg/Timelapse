@@ -198,7 +198,7 @@ namespace Timelapse.Dialog
                 Filter = filter
             })
             {
-                if (String.IsNullOrWhiteSpace(defaultFilePath))
+                if (string.IsNullOrWhiteSpace(defaultFilePath))
                 {
                     openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
@@ -224,7 +224,7 @@ namespace Timelapse.Dialog
         /// <returns>The selected path, otherwise null </returns>
         public static bool TryGetFolderFromUserUsingOpenFileDialog(string title, string initialFolder, out string selectedFolderPath)
         {
-            selectedFolderPath = String.Empty;
+            selectedFolderPath = string.Empty;
             using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog()
             {
                 Title = title,
@@ -258,7 +258,7 @@ namespace Timelapse.Dialog
         {
             if (initialFolder == null)
             {
-                return String.Empty;
+                return string.Empty;
             }
             using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog()
             {
@@ -273,7 +273,7 @@ namespace Timelapse.Dialog
                 if (folderSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     // Trim the root folder path from the folder name to produce a relative path. 
-                    return (folderSelectionDialog.FileName.Length > initialFolder.Length) ? folderSelectionDialog.FileName.Substring(initialFolder.Length + 1) : String.Empty;
+                    return (folderSelectionDialog.FileName.Length > initialFolder.Length) ? folderSelectionDialog.FileName.Substring(initialFolder.Length + 1) : string.Empty;
                 }
                 else
                 {
@@ -317,7 +317,7 @@ namespace Timelapse.Dialog
                 Filter = filter
             })
             {
-                if (String.IsNullOrWhiteSpace(defaultFilePath))
+                if (string.IsNullOrWhiteSpace(defaultFilePath))
                 {
                     saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
@@ -910,7 +910,7 @@ namespace Timelapse.Dialog
         /// </summary>
         public static bool? DataEntryConfirmCopyForwardDialog(Window owner, string text, int imagesAffected, bool checkForZero)
         {
-            text = string.IsNullOrEmpty(text) ? String.Empty : text.Trim();
+            text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
 
             MessageBox messageBox = new MessageBox("Please confirm 'Copy Forward' for this field...", owner, MessageBoxButton.YesNo)
             {
@@ -939,7 +939,7 @@ namespace Timelapse.Dialog
         /// </summary>
         public static bool? DataEntryConfirmCopyCurrentValueToAllDialog(Window owner, String text, int filesAffected, bool checkForZero)
         {
-            text = string.IsNullOrEmpty(text) ? String.Empty : text.Trim();
+            text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
 
             MessageBox messageBox = new MessageBox("Please confirm 'Copy to All' for this field...", owner, MessageBoxButton.YesNo)
             {
@@ -962,7 +962,7 @@ namespace Timelapse.Dialog
         /// </summary>
         public static bool? DataEntryConfirmPropagateFromLastValueDialog(Window owner, String text, int imagesAffected)
         {
-            text = string.IsNullOrEmpty(text) ? String.Empty : text.Trim();
+            text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
             return new MessageBox("Please confirm 'Propagate to Here' for this field.", owner, MessageBoxButton.YesNo)
             {
                 Message =
@@ -1278,7 +1278,7 @@ namespace Timelapse.Dialog
                         Icon = MessageBoxImage.Question
                     }
             };
-            if (String.IsNullOrWhiteSpace(samplePath))
+            if (string.IsNullOrWhiteSpace(samplePath))
             {
                 messageBox.Message.Hint = "The problem is that the recognition file contains no files!" + Environment.NewLine
                 + "You probably want to Cancel";
@@ -1921,11 +1921,11 @@ namespace Timelapse.Dialog
                 }
             };
 
-            if (!String.IsNullOrWhiteSpace(relativePathArgument))
+            if (!string.IsNullOrWhiteSpace(relativePathArgument))
             {
                 messageBox.Message.What += Environment.NewLine + "\u2022 the additional instruction to limit analysis to the subfolder " + "'" + relativePathArgument + "'" + " is also ignored ";
             }
-            if (!String.IsNullOrWhiteSpace(relativePathArgument))
+            if (!string.IsNullOrWhiteSpace(relativePathArgument))
             {
                 messageBox.Message.Reason += "and to limit analysis to a particular subfolder." + Environment.NewLine;
             }

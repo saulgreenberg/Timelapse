@@ -31,7 +31,7 @@ namespace Timelapse.Dialog
         private bool IsAnyDataUpdated;
 
         public ObservableCollection<ddbFileClass> ObservableddbFileList { get; set; }
-        public string DatabaseToLoad { get; set; } = String.Empty;
+        public string DatabaseToLoad { get; set; } = string.Empty;
         public bool FoundInvalidFiles { get; set; } = false;
         public MergeChooseDatabaseFiles(Window owner, string templatetdbFilePath) : base(owner)
         {

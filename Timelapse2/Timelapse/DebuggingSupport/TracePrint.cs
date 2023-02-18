@@ -24,12 +24,12 @@ namespace Timelapse.DebuggingSupport
         #region Specialized messages
         public static void NullException()
         {
-            NullException(String.Empty);
+            NullException(string.Empty);
         }
 
         public static void NullException(string nullVariableName)
         {
-            string message = String.IsNullOrWhiteSpace(nullVariableName)
+            string message = string.IsNullOrWhiteSpace(nullVariableName)
                 ? "Null Exception"
                 : "Null Exception: " + nullVariableName;
             Debug.Print(GetMethodNameStack(message, 2));
@@ -85,7 +85,7 @@ namespace Timelapse.DebuggingSupport
         [Conditional("TRACE")]
         public static void StackTrace(int level)
         {
-            Debug.Print(GetMethodNameStack(String.Empty, level));
+            Debug.Print(GetMethodNameStack(string.Empty, level));
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace Timelapse.DebuggingSupport
         private static string GetMethodNameStack(string message = "", int level = 1)
         {
             StackTrace st = new StackTrace(true);
-            string methodStack = String.Empty;
+            string methodStack = string.Empty;
             for (int i = 1; i <= level; i++)
             {
                 StackFrame sf = st.GetFrame(i);

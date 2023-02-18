@@ -96,7 +96,7 @@ namespace DialogUpgradeFiles.Util
         private static bool IsPathLengthTooLong(string filePath)
         {
             // Check the arguments for null 
-            if (String.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
                 return false;
             }

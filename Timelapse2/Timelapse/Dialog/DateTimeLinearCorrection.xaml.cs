@@ -134,7 +134,6 @@ namespace Timelapse.Dialog
                 // Collects feedback to display in a datagrid after the operation is done
                 ObservableCollection<DateTimeFeedbackTuple> feedbackRows = new ObservableCollection<DateTimeFeedbackTuple>();
 
-                int count = this.fileDatabase.FileTable.RowCount;
                 this.DatabaseUpdateFileDates(this.Progress, intervalFromOldestToNewestImage, newestImageAdjustment, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update

@@ -112,7 +112,7 @@ namespace Timelapse.Util
         // Creates a standard backup file
         public static bool TryCreateBackup(string folderPath, string sourceFileName, bool moveInsteadOfCopy)
         {
-            return TryCreateBackup(folderPath, sourceFileName, moveInsteadOfCopy, String.Empty);
+            return TryCreateBackup(folderPath, sourceFileName, moveInsteadOfCopy, string.Empty);
         }
 
         // Full version: Copy or move file to backup version with separated path/source file name
@@ -138,8 +138,8 @@ namespace Timelapse.Util
             // If there is a specialBackup term, then we modify anadd it before the timestamp
             string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
             string sourceFileExtension = Path.GetExtension(sourceFileName);
-            specialBackup = specialBackup == String.Empty
-                ? String.Empty
+            specialBackup = specialBackup == string.Empty
+                ? string.Empty
                 : Constant.File.BackupCheckpointIndicator + specialBackup;
             string destinationFileName = String.Concat(sourceFileNameWithoutExtension, specialBackup, ".", DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss"), sourceFileExtension);
             string destinationFilePath = Path.Combine(backupFolder.FullName, destinationFileName);

@@ -48,7 +48,7 @@ namespace Timelapse
                 if (this.DataHandler == null)
                 {
                     Debug.Print("Weird error in FolderPath - datahandler is null");
-                    return String.Empty;
+                    return string.Empty;
                 }
                 else
                 {
@@ -474,15 +474,13 @@ namespace Timelapse
             // The 'empty else' means don't check to see if a textbox or control has the focus, as we want to reset the focus elsewhere
         }
 
-        /// <summary>Preview callback for counters, to ensure that we only accept numbers</summary>
-        /// <param name="sender">the event source</param>
-        /// <param name="e">event information</param>
-        private void CounterCtl_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            e.Handled = !IsCondition.IsDigits(e.Text) && !String.IsNullOrWhiteSpace(e.Text);
-            this.OnPreviewTextInput(e);
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
-        }
+        //Preview callback for counters, to ensure that we only accept numbers</summary>
+        //private void CounterCtl_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        //{
+        //    e.Handled = !IsCondition.IsDigits(e.Text) && !string.IsNullOrWhiteSpace(e.Text);
+        //    this.OnPreviewTextInput(e);
+        //    this.FilePlayer_Stop(); // In case the FilePlayer is going
+        //}
 
         /// <summary>Click callback: When the user selects a counter, refresh the markers, which will also readjust the colors and emphasis</summary>
         /// <param name="sender">the event source</param>
