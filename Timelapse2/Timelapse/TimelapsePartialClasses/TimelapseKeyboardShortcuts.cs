@@ -139,10 +139,10 @@ namespace Timelapse
                             return;
                         }
                         long currentFileID = this.DataHandler.ImageCache.Current.ID;
-                        bool result = Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
+                        bool result = Episodes.Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
                         if (result)
                         {
-                            if (Episodes.ShowEpisodes == false)
+                            if (Episodes.Episodes.ShowEpisodes == false)
                             {
                                 // turn on Episode display if its not already on
                                 this.EpisodeShowHide(true);

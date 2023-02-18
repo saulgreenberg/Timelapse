@@ -100,12 +100,12 @@ namespace Timelapse
                 //
                 // Set up a progress handler that will update the progress bar for the remaining operations
                 //
-                Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
+                Progress<ProgressBarArguments> progressHandlerArgs = new Progress<ProgressBarArguments>(value =>
                 {
                     // Update the progress bar
                     FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
                 });
-                IProgress<ProgressBarArguments> progress = progressHandler;
+                IProgress<ProgressBarArguments> progress = progressHandlerArgs;
 
 
                 //

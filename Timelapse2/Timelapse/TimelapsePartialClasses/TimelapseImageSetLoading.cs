@@ -462,7 +462,7 @@ namespace Timelapse
         #endregion
 
         #region UpdateFolderLoadProgress
-        private void UpdateFolderLoadProgress(BusyCancelIndicator BusyCancelIndicator, BitmapSource bitmap, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
+        private void UpdateFolderLoadProgress(BusyCancelIndicator theBusyCancelIndicator, BitmapSource bitmap, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
         {
             if (bitmap != null)
             {
@@ -470,20 +470,20 @@ namespace Timelapse
             }
 
             // Check the arguments for null 
-            ThrowIf.IsNullArgument(BusyCancelIndicator, nameof(BusyCancelIndicator));
+            ThrowIf.IsNullArgument(theBusyCancelIndicator, nameof(theBusyCancelIndicator));
 
             // Set it as a progressive or indeterminate bar
-            BusyCancelIndicator.IsIndeterminate = isIndeterminate;
+           theBusyCancelIndicator.IsIndeterminate = isIndeterminate;
 
             // Set the progress bar position (only visible if determinate)
-            BusyCancelIndicator.Percent = percent;
+            theBusyCancelIndicator.Percent = percent;
 
             // Update the text message
-            BusyCancelIndicator.Message = message;
+            theBusyCancelIndicator.Message = message;
 
             // Update the cancel button to reflect the cancelEnabled argument
-            BusyCancelIndicator.CancelButtonIsEnabled = isCancelEnabled;
-            BusyCancelIndicator.CancelButtonText = isCancelEnabled ? "Cancel" : "Writing data...";
+            theBusyCancelIndicator.CancelButtonIsEnabled = isCancelEnabled;
+            theBusyCancelIndicator.CancelButtonText = isCancelEnabled ? "Cancel" : "Writing data...";
         }
         #endregion
 

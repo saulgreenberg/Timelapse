@@ -156,6 +156,7 @@ namespace Timelapse.Extensions
         /// <summary>
         /// Get a size from the registry
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public static Size GetSize(this RegistryKey registryKey, string subKeyPath, Size defaultValue)
         {
             string sizeAsString = registryKey.GetString(subKeyPath);

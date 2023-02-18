@@ -67,11 +67,6 @@ namespace Timelapse.Images
         }
 
         /// <summary>
-        /// The FilePlayer should be set from TimelapseWindow.cs, as we need a handle to it in order to manipulate it.
-        /// </summary>
-        public FilePlayer FilePlayer { get; set; }
-
-        /// <summary>
         /// Gets the image displayed across the MarkableCanvas for image files
         /// </summary>
         public Image ImageToDisplay { get; set; }
@@ -352,10 +347,10 @@ namespace Timelapse.Images
         /// <summary>
         /// Set a wholly new image.  Clears existing markers and syncs the magnifier image to the display image.
         /// </summary>
-        public void SetNewImage(BitmapSource bitmapSource, List<Marker> markers)
+        public void SetNewImage(BitmapSource bitmapSource, List<Marker> markersList)
         {
             // change to new markers
-            this.markers = markers;
+            this.markers = markersList;
 
             this.ImageToDisplay.Source = bitmapSource;
             // initiate render of magnified image
@@ -385,7 +380,7 @@ namespace Timelapse.Images
             }
         }
 
-        public void SetNewVideo(FileInfo videoFile, List<Marker> markers)
+        public void SetNewVideo(FileInfo videoFile, List<Marker> markersList)
         {
             // Check the arguments for null 
             if (videoFile == null || videoFile.Exists == false)
@@ -395,7 +390,7 @@ namespace Timelapse.Images
                 return;
             }
 
-            this.markers = markers;
+            this.markers = markersList;
             this.VideoPlayer.SetSource(new Uri(videoFile.FullName));
             this.displayingImage = false;
 
@@ -984,7 +979,8 @@ namespace Timelapse.Images
             }
         }
 
-        // Unused. Trigger a mouse move event. This is used to keep th emagnifying glass in view when switching files.
+        // Unused. Trigger a mouse move event. This is used to keep the emagnifying glass in view when switching files.
+        // ReSharper disable once UnusedMember.Global
         public void TriggerMouseMoveEvent()
         {
             MouseEventArgs e = new MouseEventArgs(Mouse.PrimaryDevice, 0)

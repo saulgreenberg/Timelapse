@@ -52,6 +52,7 @@ namespace Timelapse.Util
         }
 
         // Return true if the metadataDictionary includes a tag Name (i.e. excludes the directory) that matches tagName
+        // ReSharper disable once UnusedMember.Global
         public static bool ContainsMetadataName(Dictionary<string, ImageMetadata> metadataDictionary, string tagName)
         {
             foreach (KeyValuePair<string, ImageMetadata> kvp in metadataDictionary)

@@ -15,6 +15,7 @@ namespace Timelapse.DataTables
 
         public string DataLabel { get; }
 
+        // ReSharper disable once UnusedMember.Global
         public abstract bool IsContentValid(string content);
         #endregion
 

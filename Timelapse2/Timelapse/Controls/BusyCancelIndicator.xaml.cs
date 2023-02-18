@@ -60,6 +60,7 @@ namespace Timelapse.Controls
         public static readonly DependencyProperty IsBusyProperty =
             DependencyProperty.Register(nameof(IsBusy), typeof(bool), typeof(BusyCancelIndicator), new FrameworkPropertyMetadata(true));
 
+        // ReSharper disable once UnusedMember.Global
         public bool DisplayImmediately
         {
             set => this.Busy.DisplayAfter = value ? System.TimeSpan.FromSeconds(0) : System.TimeSpan.FromMilliseconds(100);

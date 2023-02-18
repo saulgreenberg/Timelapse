@@ -31,6 +31,7 @@ namespace Timelapse.ExifTool
         // Returns true if the exif tool is started and ready.
         // Note that its not foolproof: if we call it immediately after we try to stop the tool, it can still report it as started
         // This could actually be private, as other classes don't really have to test it, as invoking other methods will try to start or stop it as needed
+        // ReSharper disable once UnusedMember.Global
         public bool IsStarted
         {
             get

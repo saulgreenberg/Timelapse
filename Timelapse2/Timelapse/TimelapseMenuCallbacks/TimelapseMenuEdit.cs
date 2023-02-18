@@ -579,7 +579,7 @@ namespace Timelapse
             if (this.DataHandler.ImageCache.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
-                Dialogs.MenuEditPopulateDataFieldWithMetadataDialog(this);
+                Dialogs.MenuEditRereadDateTimesFromMetadataDialog(this);
                 return;
             }
 

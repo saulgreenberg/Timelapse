@@ -193,6 +193,7 @@ namespace Timelapse.Controls
 
         #region Hiding, visual Effects and Popup Previews
 
+        // ReSharper disable once UnusedMember.Global
         public void HideItems(List<String> itemsToHide)
         {
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse

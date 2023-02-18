@@ -1307,6 +1307,7 @@ namespace Timelapse.Database
         #region Update Markers
         // The id is the row to update, the datalabels are the labels of each control to updata, 
         // and the markers are the respective point lists for each of those labels
+        // ReSharper disable once UnusedMember.Global
         public void UpdateMarkers(List<ColumnTuplesWithWhere> markersToUpdate)
         {
             // update markers in database
@@ -1407,15 +1408,6 @@ namespace Timelapse.Database
             }
         }
 
-        // Update all the date fields by swapping the days and months.
-        // This should ONLY be called if such swapping across all dates (excepting corrupt ones) is possible
-        // as otherwise it will only swap those dates it can
-        // It also assumes that the data table is showing All images
-        public void UpdateExchangeDayAndMonthInFileDates()
-        {
-            this.UpdateExchangeDayAndMonthInFileDates(0, this.CountAllCurrentlySelectedFiles - 1);
-        }
-
         // Update all the date fields between the start and end index by swapping the days and months.
         public void UpdateExchangeDayAndMonthInFileDates(int startRow, int endRow)
         {
@@ -1492,6 +1484,7 @@ namespace Timelapse.Database
             return this.Database.SchemaGetColumnsAndDefaultValues(tableName);
         }
 
+        // ReSharper disable once UnusedMember.Global
         public List<string> SchemaGetColumns(string tableName)
         {
             return this.Database.SchemaGetColumns(tableName);
@@ -1766,6 +1759,7 @@ namespace Timelapse.Database
 
         // Find the next displayable file at or after the provided row in the current image set.
         // If there is no next displayable file, then find the closest previous file before the provided row that is displayable.
+        // ReSharper disable once UnusedMember.Global
         public int GetCurrentOrNextDisplayableFile(int startIndex)
         {
             int countAllCurrentlySelectedFiles = this.CountAllCurrentlySelectedFiles;
@@ -1935,6 +1929,7 @@ namespace Timelapse.Database
         }
 
         // Insert one or more rows into a table
+        // ReSharper disable once UnusedMember.Local
         private void InsertRows(string table, List<List<ColumnTuple>> insertionStatements)
         {
             this.CreateBackupIfNeeded();
@@ -2077,6 +2072,7 @@ namespace Timelapse.Database
         }
 
         // Try getting the version number as recorded in the ImageSet datatable.
+        // ReSharper disable once UnusedMember.Local
         private bool TryGetImageSetVersionNumber(out string versionNumber, bool forceUpdate)
         {
             versionNumber = string.Empty;

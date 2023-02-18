@@ -260,16 +260,16 @@ namespace Timelapse.Controls
                 this.TimeTextBlock.Visibility = Visibility.Hidden;
                 return;
             }
-            if (Episodes.ShowEpisodes)
+            if (Episodes.Episodes.ShowEpisodes)
             {
                 // Episode number
-                if (Episodes.EpisodesDictionary.ContainsKey(fileIndex) == false)
+                if (Episodes.Episodes.EpisodesDictionary.ContainsKey(fileIndex) == false)
                 {
-                    Episodes.EpisodeGetEpisodesInRange(fileTable, fileIndex);
+                    Episodes.Episodes.EpisodeGetEpisodesInRange(fileTable, fileIndex);
                 }
 
-                Tuple<int, int> episode = Episodes.EpisodesDictionary.ContainsKey(fileIndex)
-                ? Episodes.EpisodesDictionary[fileIndex]
+                Tuple<int, int> episode = Episodes.Episodes.EpisodesDictionary.ContainsKey(fileIndex)
+                ? Episodes.Episodes.EpisodesDictionary[fileIndex]
                 : new Tuple<int, int>(1, 1); // This is the (rare) error case that happened once ot a user - if for some reason the fileIndex is not in range. Could probably indicate this in the UI (which currently just marks it as single) but not sure why this error happens, so what to put there is unclear
 
                 if (episode.Item1 == int.MaxValue)
@@ -290,7 +290,7 @@ namespace Timelapse.Controls
                 //string timeInHHMM = (this.ImageRow.Time.Length > 3) ? this.ImageRow.Time.Remove(this.ImageRow.Time.Length - 3) : string.Empty;
                 this.TimeTextBlock.Text = " (" + timeInHHMM + ")";
             }
-            this.EpisodeTextBlock.Visibility = Episodes.ShowEpisodes ? Visibility.Visible : Visibility.Hidden;
+            this.EpisodeTextBlock.Visibility = Episodes.Episodes.ShowEpisodes ? Visibility.Visible : Visibility.Hidden;
             this.FileNameTextBlock.Visibility = this.EpisodeTextBlock.Visibility;
             this.TimeTextBlock.Visibility = this.EpisodeTextBlock.Visibility;
         }

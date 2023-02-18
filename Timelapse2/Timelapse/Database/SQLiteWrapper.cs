@@ -359,6 +359,7 @@ namespace Timelapse.Database
         // Note that this could also be done using ColumnTuplesWithWhere, but this is perhaps a simpler way to compose this
         // Form of each update query generated for each key/value dictionary pair (eg., key="Ok"' value="true" :
         // -- Update tableName Set columnName = 'true' where columnName = 'Ok'
+        // ReSharper disable once UnusedMember.Global
         public void UpdateParticularColumnValuesWithNewValues(string tableName, string columnName, Dictionary<string, string> currentValue_newValuePair)
         {
             List<string> queries = new List<string>();
@@ -374,6 +375,7 @@ namespace Timelapse.Database
         // Note: this is helpful for cases when the defaults were not set, as that could introduce null values. 
         // Form for each query generated for each provided column
         // -- UPDATE tablename SET columname = '' WHERE columnname IS NULL;
+        // ReSharper disable once UnusedMember.Global
         public void ChangeNullToEmptyString(string tableName, List<string> columnNames)
         {
             // Check the arguments for null 
@@ -1005,6 +1007,7 @@ namespace Timelapse.Database
         /// Add a column to the table named sourceTable at position columnNumber using the provided columnDefinition
         /// The value in columnDefinition is assumed to be the desired default value
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public void SchemaAddColumnToTable(string tableName, int columnNumber, SchemaColumnDefinition columnDefinition)
         {
             // Check the arguments for null 
@@ -1451,6 +1454,7 @@ namespace Timelapse.Database
 
         // PRAGMA Defer foreign keys. 
 #pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
         private static void PragmaSetDeferForeignKeys(SQLiteConnection connection, bool state)
         {
             // Syntax is: defer_foreign_keys = 1; True
@@ -1479,6 +1483,7 @@ namespace Timelapse.Database
         /// <param name="tableName">the name of the  table</param> 
         /// <param name="name">the name of the new column</param> 
         /// <param name="type">the type of the new column</param> 
+        // ReSharper disable once UnusedMember.Local
         private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type)
         {
             string columnDefinition = name + " " + type;
@@ -1494,6 +1499,7 @@ namespace Timelapse.Database
         /// <param name="name">the name of the new column</param> 
         /// <param name="type">the type of the new column</param> 
         /// <param name="otherOptions">space-separated options such as PRIMARY KEY AUTOINCREMENT, NULL or NOT NULL etc</param>
+        // ReSharper disable once UnusedMember.Local
         private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
         {
             string columnDefinition = name + " " + type;

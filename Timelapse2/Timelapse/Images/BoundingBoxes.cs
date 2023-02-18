@@ -257,6 +257,7 @@ namespace Timelapse.Images
         }
 
         // NOT USED AT THIS POINT AS WE ARE NO LONGER USING A MENU - BUT IF WE DECIDE TO...
+        // ReSharper disable once UnusedMember.Local
         private void ClassificationUIObject_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox cb)

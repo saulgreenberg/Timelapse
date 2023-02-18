@@ -508,38 +508,6 @@ namespace Timelapse.Util
             }
             return false;
         }
-
-        // Return a FileInfo List of files in the folderPath that are images or videos
-        public static List<FileInfo> GetAllImageOrVideoFilesFromFolder(string folderPath)
-        {
-            DirectoryInfo directoryInfo;
-            List<FileInfo> fileInfoList = new List<FileInfo>();
-            try
-            {
-                directoryInfo = new DirectoryInfo(folderPath);
-            }
-            catch
-            {
-                // The call may fail if the OS denies access because of an I/O error or a specific type of security error
-                return fileInfoList;
-            }
-
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
-            {
-                try
-                {
-                    fileInfoList.AddRange(directoryInfo.GetFiles("*" + extension));
-                }
-                catch (Exception exception)
-                {
-                    // The call may fail if the OS denies access because of an I/O error or a specific type of security error
-                    TracePrint.CatchException(exception.Message);
-                }
-            }
-            FilesRemoveAllButImagesAndVideos(fileInfoList);
-            return fileInfoList;
-        }
-
         #endregion
 
         #region Identify System folders, including the recycle bin

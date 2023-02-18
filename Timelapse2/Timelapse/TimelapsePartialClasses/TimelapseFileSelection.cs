@@ -119,7 +119,7 @@ namespace Timelapse
             this.DataEntryControlPanel.Title = "Data entry for " + status;
 
             // Reset the Episodes, as it may change based on the current selection
-            Episodes.Reset();
+            Episodes.Episodes.Reset();
 
             // Display the specified file or, if it's no longer selected, the next closest one
             // FileShow() handles empty image sets, so those don't need to be checked for here.

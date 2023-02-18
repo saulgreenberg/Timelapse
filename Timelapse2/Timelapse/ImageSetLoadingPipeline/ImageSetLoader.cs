@@ -192,8 +192,8 @@ namespace Timelapse.ImageSetLoadingPipeline
             this.pass2 = new Task(() =>
             {
                 // This pass2 starts after pass1 is fully complete
-                List<ImageRow> imagesToInsert = capturedDatabaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
-                dataHandler.FileDatabase.AddFiles(imagesToInsert,
+                List<ImageRow> imagesToInsertList = capturedDatabaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
+                dataHandler.FileDatabase.AddFiles(imagesToInsertList,
                                                   (file, fileIndex) =>
                                                   {
                                                       this.LastInsertComplete = file;

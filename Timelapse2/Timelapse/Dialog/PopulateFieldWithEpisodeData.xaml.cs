@@ -61,7 +61,7 @@ namespace Timelapse.Dialog
             this.IncludeAnEpisodeIDNumber = this.CheckBoxIncludeEpisodeID.IsChecked == true;
 
             // Show the current settings
-            this.RunCurrentSettings.Text = String.Format(Episodes.TimeThreshold.ToString("g"));
+            this.RunCurrentSettings.Text = String.Format(Episodes.Episodes.TimeThreshold.ToString("g"));
             this.ShowExampleFormat();
         }
 
@@ -114,8 +114,8 @@ namespace Timelapse.Dialog
                 int imageIndex = 0;
                 while (imageIndex < TotalImages)
                 {
-                    Episodes.Reset();
-                    Episodes.EpisodeGetEpisodesInRange(this.fileDatabase.FileTable, imageIndex, Int32.MaxValue);
+                    Episodes.Episodes.Reset();
+                    Episodes.Episodes.EpisodeGetEpisodesInRange(this.fileDatabase.FileTable, imageIndex, Int32.MaxValue);
 
                     // Provide feedback if the operation was cancelled during the database update
                     if (Token.IsCancellationRequested)
@@ -133,7 +133,7 @@ namespace Timelapse.Dialog
                     }
 
                     // Distinguish between single files vs and episode of files
-                    if (Episodes.EpisodesDictionary.Count <= 1)
+                    if (Episodes.Episodes.EpisodesDictionary.Count <= 1)
                     {
 
                         this.EpisodeCount++;
@@ -149,7 +149,7 @@ namespace Timelapse.Dialog
                     {
                         this.EpisodeCount++;
                         this.EpisodeNoSingletonsCount++;
-                        foreach (KeyValuePair<int, Tuple<int, int>> episode in Episodes.EpisodesDictionary)
+                        foreach (KeyValuePair<int, Tuple<int, int>> episode in Episodes.Episodes.EpisodesDictionary)
                         {
                             List<ColumnTuple> ctl = new List<ColumnTuple>() {
                                 new ColumnTuple(this.dataLabelByLabel[this.dataFieldLabel],

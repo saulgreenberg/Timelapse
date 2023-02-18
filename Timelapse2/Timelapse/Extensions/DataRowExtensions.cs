@@ -37,6 +37,7 @@ namespace Timelapse.Extensions
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static TEnum GetEnumField<TEnum>(this DataRow row, string column) where TEnum : struct, IComparable, IFormattable, IConvertible
         {
             string fieldAsString = row.GetStringField(column);
@@ -52,11 +53,9 @@ namespace Timelapse.Extensions
                 // The parse succeeded, where the TEnum result is in result
                 return result;
             }
-            else
-            {
-                // The parse did not succeeded. The TEnum result contains the default enum value, ie, the same as returning default(TEnum)
-                return result;
-            }
+            // The parse did not succeeded. The TEnum result contains the default enum value, ie, the same as returning default(TEnum)
+            return result;
+            
         }
 
         public static long GetID(this DataRow row)
@@ -145,6 +144,7 @@ namespace Timelapse.Extensions
             row[column] = value;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static void SetField<TEnum>(this DataRow row, string column, TEnum value) where TEnum : struct, IComparable, IFormattable, IConvertible
         {
             row.SetField(column, value.ToString());

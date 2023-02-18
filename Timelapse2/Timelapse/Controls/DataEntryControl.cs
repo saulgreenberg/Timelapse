@@ -25,6 +25,7 @@ namespace Timelapse.Controls
     {
         #region DataEntryControl Properties
         /// <summary>Gets the position of the content control</summary>
+        // ReSharper disable once UnusedMember.Global
         public abstract Point TopLeft { get; }
 
         /// <summary>Gets the position of the content control</summary>

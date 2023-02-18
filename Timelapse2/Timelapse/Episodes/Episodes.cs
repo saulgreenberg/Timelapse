@@ -4,7 +4,7 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 
-namespace Timelapse
+namespace Timelapse.Episodes
 {
     //
     // Episodes is a static class that calculates and saves state information in various static data structures. Notably, 

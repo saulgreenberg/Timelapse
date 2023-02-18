@@ -86,6 +86,7 @@ namespace Timelapse.Util
         /// </summary>
         /// <param name="maximumDegreeOfParallelismDesired"></param>
         /// <returns>ParallelOptions with MaxDegreeOfParallelism filled in</returns>
+        // ReSharper disable once UnusedMember.Global
         public static ParallelOptions GetParallelOptions(int maximumDegreeOfParallelismDesired)
         {
             ParallelOptions parallelOptions = new ParallelOptions()

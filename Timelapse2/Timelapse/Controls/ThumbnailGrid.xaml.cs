@@ -625,7 +625,7 @@ namespace Timelapse.Controls
         // as they have to be re-rendered to the new size anyways
         private List<ThumbnailInCell> GetThumbnailsAlreadyInGrid(double cellHeight, int fileTableCount)
         {
-            List<ThumbnailInCell> thumbnailsAlreadyInGrid = new List<ThumbnailInCell>();
+            List<ThumbnailInCell> thumbnailsAlreadyInGridList = new List<ThumbnailInCell>();
             int fileTableIndex = this.FileTableStartIndex;
             int cellsInGrid = this.AvailableColumns * this.AvailableRows;
 
@@ -633,7 +633,7 @@ namespace Timelapse.Controls
             {
                 // If The grid has nothing in it, or if the requested cell height isn't the same as the current one, return an empty list
                 // i.e., assumes this is a change in zoom level, thus we don't reuse thumbnails as we have to resize them anyways
-                return thumbnailsAlreadyInGrid;
+                return thumbnailsAlreadyInGridList;
             }
 
             // For each image row we want to display as a thumbnail, check if its thumbnail is already in the grid in a reusable form where:
@@ -647,13 +647,13 @@ namespace Timelapse.Controls
                     if (String.Equals(tic.Path, path) && tic.Image.Source != null)
                     {
                         // a reusuable thumbnail exists, so add it to the list
-                        thumbnailsAlreadyInGrid.Add(tic);
+                        thumbnailsAlreadyInGridList.Add(tic);
                         break;
                     }
                 }
                 fileTableIndex++;
             }
-            return thumbnailsAlreadyInGrid;
+            return thumbnailsAlreadyInGridList;
         }
         #endregion
 
@@ -919,6 +919,7 @@ namespace Timelapse.Controls
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public void RefreshDuplicateTextIfWarranted()
         {
             foreach (ThumbnailInCell thumbnailInCell in this.thumbnailInCells)

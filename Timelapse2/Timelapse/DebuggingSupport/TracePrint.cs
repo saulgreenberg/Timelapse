@@ -92,6 +92,7 @@ namespace Timelapse.DebuggingSupport
         /// Debug print the method name followed a message
         /// </summary>
         [Conditional("TRACE")]
+        // ReSharper disable once UnusedMember.Global
         public static void StackTrace(string message)
         {
             Debug.Print(GetMethodNameStack(message));

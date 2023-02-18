@@ -41,8 +41,6 @@ namespace Timelapse.DataTables
         // Get a version of the date/time suitable to display to the user 
         public string DateTimeAsDisplayable => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
 
-        public string DateTimeAsDisplayableDate => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
-
         // Get the date/time  - This version is a null op!
         public DateTime DateTimeIncorporatingOffsetPLAINVERSION => this.DateTime;
 

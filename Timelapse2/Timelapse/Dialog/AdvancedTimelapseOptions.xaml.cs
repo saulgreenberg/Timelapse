@@ -248,7 +248,7 @@ namespace Timelapse.Dialog
         {
             this.timelapseState.EpisodeMaxRangeToSearch = Convert.ToInt32(this.SliderSetEpisodeMaxRange.Value);
             this.SetSliderSetEpisodeMaxRangeFeedack(this.timelapseState.EpisodeMaxRangeToSearch);
-            Episodes.Reset();
+            Episodes.Episodes.Reset();
         }
 
         // Reset theEpisode searching threshold to the amount specified below;
@@ -256,7 +256,7 @@ namespace Timelapse.Dialog
         {
             // As a side effect, this will invoke the above ValueChanged method which sets the state and provides feedback
             this.SliderSetEpisodeMaxRange.Value = Constant.EpisodeDefaults.DefaultRangeToSearch;
-            Episodes.Reset();
+            Episodes.Episodes.Reset();
         }
 
         private void SetSliderSetEpisodeMaxRangeFeedack(int episodeThreshold)

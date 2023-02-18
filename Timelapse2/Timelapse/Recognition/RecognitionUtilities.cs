@@ -66,6 +66,7 @@ namespace Timelapse.Recognition
 
         #region Info-related utilities: Compare megadetector strings
         // Given two strings representing megadetector versions, return true if the destination appears to be the higher version number
+        // ReSharper disable once UnusedMember.Global
         public static bool IsMegadetectorVersionHigherInDestination(string source, string destination)
         {
             if (source == destination)

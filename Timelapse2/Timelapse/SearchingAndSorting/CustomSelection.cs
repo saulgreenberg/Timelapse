@@ -149,6 +149,7 @@ namespace Timelapse.SearchingAndSorting
             };
 
             // Add the unordered search terms into the dictionary, which will put them in the correct order
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (SearchTerm searchTerm in unorderedStandardSearchTerms)
             {
                 if (dictOrderedTerms.ContainsKey(searchTerm.DataLabel))
@@ -175,6 +176,7 @@ namespace Timelapse.SearchingAndSorting
             }
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
+            // ReSharper disable once PossibleMultipleEnumeration
             IEnumerable<SearchTerm> nonStandardSearchTerms = SearchTerms.Except(unorderedStandardSearchTerms).ToList();
             // Finally, concat the two lists together to collect all the correctly ordered search terms into a single list
             SearchTerms = standardSearchTerms.Concat(nonStandardSearchTerms).ToList();
@@ -244,9 +246,11 @@ namespace Timelapse.SearchingAndSorting
                term.DataLabel == Constant.DatabaseColumn.DeleteFlag));
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
+            // ReSharper disable once PossibleMultipleEnumeration
             IEnumerable<SearchTerm> nonstandardSearchTerms = this.SearchTerms.Where(term => term.UseForSearching).Except(standardSearchTerms);
 
             // Combine the standard terms using the AND operator
+            // ReSharper disable once PossibleMultipleEnumeration
             string standardWhere = CombineSearchTermsAndOperator(standardSearchTerms, CustomSelectionOperatorEnum.And);
 
             // Combine the non-standard terms using the operator defined by the user (either AND or OR)
@@ -357,9 +361,11 @@ namespace Timelapse.SearchingAndSorting
             // Special case on Time.
             // If there are two time terms and the select goes over midnight, we combine them with an OR instead of AND
             // This allows a select between (say) 10pm and 7am
+            // ReSharper disable once PossibleMultipleEnumeration
             bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(this.UseTimeInsteadOfDate, searchTerms, this.DetectionSelections.Enabled, out string combinedTimeTerm);
 
             bool timeHandled = false; // Allows us to track whether we are on the first or second time term
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (SearchTerm searchTerm in searchTerms)
             {
                 // Basic Form after the ForEach iteration should be:
@@ -474,13 +480,16 @@ namespace Timelapse.SearchingAndSorting
             }
 
             IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime && term.UseForSearching);
+            // ReSharper disable once PossibleMultipleEnumeration
             if (timeTerms.Count() != 2)
             {
                 // We don't have two Time terms to combine
                 return false;
             }
 
+            // ReSharper disable once PossibleMultipleEnumeration
             SearchTerm st1 = timeTerms.ElementAt(0);
+            // ReSharper disable once PossibleMultipleEnumeration
             SearchTerm st2 = timeTerms.ElementAt(1);
             TimeSpan ts1 = st1.GetDateTime().TimeOfDay;
             TimeSpan ts2 = st2.GetDateTime().TimeOfDay;
@@ -565,23 +574,6 @@ namespace Timelapse.SearchingAndSorting
             searchTerm.DatabaseValue = relativePath;
             searchTerm.Operator = Constant.SearchTermOperator.Equal;
             searchTerm.UseForSearching = true;
-        }
-
-        public SearchTerm GetDeleteFlagSearchTerm()
-        {
-            return this.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
-        }
-
-        public void SetDeleteFlagSearchTermValuesTo(SearchTerm searchTermValuesToCopy)
-        {
-            if (searchTermValuesToCopy == null)
-            {
-                return;
-            }
-            SearchTerm currentSearchTerm = this.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
-            currentSearchTerm.DatabaseValue = searchTermValuesToCopy.DatabaseValue;
-            currentSearchTerm.Operator = searchTermValuesToCopy.Operator;
-            currentSearchTerm.UseForSearching = searchTermValuesToCopy.UseForSearching;
         }
 
         public void SetAndUseDeleteFlagSearchTerm()

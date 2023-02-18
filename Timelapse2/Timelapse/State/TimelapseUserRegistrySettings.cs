@@ -253,6 +253,7 @@ namespace Timelapse.State
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public void WriteToRegistry(string key, double value)
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())

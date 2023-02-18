@@ -85,12 +85,12 @@ namespace Timelapse
         #region Episode ShowHide / AdjustThreshold
         private void MenuItemEpisodeShowHide_Click(object sender, RoutedEventArgs e)
         {
-            this.EpisodeShowHide(!Episodes.ShowEpisodes);
+            this.EpisodeShowHide(!Episodes.Episodes.ShowEpisodes);
         }
         public void EpisodeShowHide(bool show)
         {
-            Episodes.ShowEpisodes = show;
-            this.MenuItemEpisodeShowHide.IsChecked = Episodes.ShowEpisodes;
+            Episodes.Episodes.ShowEpisodes = show;
+            this.MenuItemEpisodeShowHide.IsChecked = Episodes.Episodes.ShowEpisodes;
 
             if (this.IsDisplayingMultipleImagesInOverview())
             {
@@ -110,8 +110,8 @@ namespace Timelapse
             {
                 // the time threshold has changed, so save its new state
                 this.State.EpisodeTimeThreshold = episodeOptions.EpisodeTimeThreshold;
-                Episodes.TimeThreshold = this.State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
-                Episodes.Reset();
+                Episodes.Episodes.TimeThreshold = this.State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
+                Episodes.Episodes.Reset();
             }
 
             if (this.IsDisplayingMultipleImagesInOverview())

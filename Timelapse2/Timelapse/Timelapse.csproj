@@ -218,9 +218,6 @@
     <Compile Include="Dialog\CustomSelectionWithEpisodes.xaml.cs">
       <DependentUpon>CustomSelectionWithEpisodes.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml.cs">
-      <DependentUpon>DateTimeRereadFromSelectedMetadataField.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml.cs">
       <DependentUpon>RecognitionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
     </Compile>
@@ -244,9 +241,6 @@
     </Compile>
     <Compile Include="Dialog\MissingFoldersLocateAllFolders.xaml.cs">
       <DependentUpon>MissingFoldersLocateAllFolders.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialog\MissingFoldersLocateFolders.xaml.cs">
-      <DependentUpon>MissingFoldersLocateFolders.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\PopulateFieldsWithMetadataOnLoad.xaml.cs">
       <DependentUpon>PopulateFieldsWithMetadataOnLoad.xaml</DependentUpon>
@@ -389,7 +383,7 @@
     <Compile Include="Util\Compare.cs" />
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\DragDropFile.cs" />
-    <Compile Include="Util\Episodes.cs" />
+    <Compile Include="Episodes\Episodes.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseFileShow.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseAvalonDock.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseCopyPreviousValues.cs" />
@@ -495,10 +489,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Dialog\DateTimeRereadFromSelectedMetadataField.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Dialog\PopulateFieldWithDetectionCounts.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -536,10 +526,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\MissingFoldersLocateAllFolders.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialog\MissingFoldersLocateFolders.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -876,9 +862,6 @@
     <Resource Include="Icons\MediaControl-Rewind-Speed1.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\FileAlreadyLoaded.jpg" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Icons\MediaControl-PageDown.png" />
   </ItemGroup>
   <ItemGroup>
@@ -929,9 +912,7 @@
     <Analyzer Include="..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.7.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
     <Analyzer Include="..\..\packages\Microsoft.CodeAnalysis.NetAnalyzers.7.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Episodes\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

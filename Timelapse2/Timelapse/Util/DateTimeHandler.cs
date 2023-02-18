@@ -44,6 +44,7 @@ namespace Timelapse.Util
         /// <summary>
         /// Parse a Date from its display format string representation "dd-MMM-yyyy". Return false on failure
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public static bool TryParseDisplayDateOnlyString(string dateTimeAsString, out DateTime dateTime)
         {
             if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
@@ -108,9 +109,10 @@ namespace Timelapse.Util
 
         #region Static Try Reading DateTimeOriginalFromMetadata
         // CURRENTLY UNUSED
-        // There is an issue with Reconyx cameras in how it stores the original 'Date / ime' metadata tag's value
+        // There is an issue with Reconyx cameras in how it stores the original 'Date / Time' metadata tag's value
         // To get around this, we first try to get that tag's value using the standard method. If it doesn't work,
         // we try again using the Reconyx-specific method.
+        // ReSharper disable once UnusedMember.Global
         public static bool TryReadDateTimeOriginalFromMetadata(string filePath, out DateTime dateTime)
         {
             dateTime = DateTime.MinValue;

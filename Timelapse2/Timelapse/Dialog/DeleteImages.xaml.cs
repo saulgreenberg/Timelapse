@@ -251,7 +251,7 @@ namespace Timelapse.Dialog
 
         #region Do the actual file deletion
         // The (bool, int return value: true if the operation has been cancelled, and if so how many images were deleted before the cancel event
-        private async Task<Tuple<bool, int>> DoDeleteFilesAsync(List<ImageRow> imagesToDelete, bool deleteFiles, bool deleteData)
+        private async Task<Tuple<bool, int>> DoDeleteFilesAsync(List<ImageRow> imagesToDelete, bool deleteFiles, bool deleteTheData)
         {
             List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
             List<long> imageIDsToDropFromDatabase = new List<long>();
@@ -288,7 +288,7 @@ namespace Timelapse.Dialog
                             filesDeleted++;
                         }
                     }
-                    if (deleteData)
+                    if (deleteTheData)
                     {
                         // mark the image row for dropping
                         imageIDsToDropFromDatabase.Add(image.ID);
@@ -315,7 +315,7 @@ namespace Timelapse.Dialog
                 this.Progress.Report(new ProgressBarArguments(100, $"Pass 2: Updating {count} files. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
 
-                if (deleteData)
+                if (deleteTheData)
                 {
                     // drop images
                     this.fileDatabase.DeleteFilesAndMarkers(imageIDsToDropFromDatabase);

@@ -53,6 +53,7 @@ namespace Timelapse.Util
         /// <param name="heightInPixels"></param>
         /// <param name="widthInDeviceIndependentPixels"></param>
         /// <param name="heightInDeviceIndependentPixels"></param>
+        // ReSharper disable once UnusedMember.Global
         public static void TransformPixelsToDeviceIndependentPixels(int widthInPixels,
                                       int heightInPixels,
                                       out double widthInDeviceIndependentPixels,

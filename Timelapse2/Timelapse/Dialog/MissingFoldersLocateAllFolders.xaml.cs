@@ -340,7 +340,8 @@ namespace Timelapse.Dialog
             public string FolderName { get; }
             public string ExpectedOldLocation { get; }
             public List<string> PossibleNewLocation { get; set; }
-            public bool Use { get; }
+            // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+            public bool Use { get; set; }
 
             public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use)
             {

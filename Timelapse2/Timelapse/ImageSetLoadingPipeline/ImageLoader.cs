@@ -46,6 +46,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
                 return this.bitmapSource;
             }
+            // ReSharper disable once UnusedMember.Local
             private set => this.bitmapSource = value;
         }
         #endregion

@@ -218,6 +218,7 @@ namespace Timelapse.Database
         }
 
         // Check if the database is valid. 
+        // ReSharper disable once UnusedMember.Global
         public bool IsDatabaseFileValid(string filePath, string tableNameToCheck)
         {
             // check if a database file exists, and if so that it is not corrupt
@@ -243,6 +244,7 @@ namespace Timelapse.Database
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public bool IsControlCopyable(string dataLabel)
         {
             long id = this.GetControlIDFromTemplateTable(dataLabel);

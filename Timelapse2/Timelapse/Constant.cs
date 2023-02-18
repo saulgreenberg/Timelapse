@@ -93,8 +93,7 @@ namespace Timelapse.Constant
         public static readonly SolidColorBrush BorderColorNormal = new SolidColorBrush(Colors.LightBlue);
         public static readonly SolidColorBrush BorderColorHighlight = new SolidColorBrush(Colors.Blue);
 
-        // a minty green
-        public static readonly SolidColorBrush CopyableFieldHighlightBrush = new SolidColorBrush(Color.FromArgb(255, 200, 251, 200));
+        // a minty green, same as Copyable field
         public static readonly SolidColorBrush QuickPasteFieldHighlightBrush = new SolidColorBrush(Color.FromArgb(255, 200, 251, 200));
 
         public static readonly ReadOnlyCollection<Type> KeyboardInputTypes = new List<Type>()
@@ -155,15 +154,8 @@ namespace Timelapse.Constant
         public const string DeleteFlagTooltip = "Mark a file as one to be deleted. You can then confirm deletion through the Edit Menu";
 
         public static readonly DateTime DateTimeDefaultValue = new DateTime(1900, 1,1,12,0,0);
-        public static readonly TimeSpan OffsetDefaultValue = TimeSpan.Zero;
     }
 
-
-    public static class ControlMiscellaneous
-    {
-        public const string EmptyChoiceItem = "<EMPTY>"; // Indicates an empty item included in the choice menu list
-
-    }
     public static class ControlDeprecated
     {
         public const string Folder = "Folder"; // Used in Custom Select instead of DateTime
@@ -179,12 +171,12 @@ namespace Timelapse.Constant
     {
         // default values
         public const long DefaultFileID = 1;
-        public const int DateTimePosition = 4;
+        //public const int DateTimePosition = 4;
         public const string ImageSetDefaultLog = "Add text here";
         public const long ImageSetRowID = 1;
         public const long InvalidID = -1;
         public const int InvalidRow = -1;
-        public const int RelativePathPosition = 2;
+        //public const int RelativePathPosition = 2;
         public const int RowsPerInsert = 5000;
         public const string VersionNumberMinimum = "2.3.0.0";
         public const string DefaultSortTerms = "[ { \"DataLabel\":\"RelativePath\", \"DisplayLabel\":\"RelativePath\", \"ControlType\":\"RelativePath\", \"IsAscending\":\"true\" }, { \"DataLabel\":\"DateTime\", \"DisplayLabel\":\"DateTime\", \"ControlType\":\"DateTime\", \"IsAscending\":\"true\" } ]";
@@ -218,7 +210,6 @@ namespace Timelapse.Constant
         public const string VersionCompatabily = "VersionCompatabily";      // The latest version of Timelapse that opened this database. Useful for cases when we want to check for backwards compatability
         public const string SortTerms = "SortTerms";                     // a comma-separated list that indicates the Primary 1st and 2nd sort terms and their attribute
         public const string QuickPasteTerms = "QuickPasteTerms";              // a JSON description that specifies the user's quickpaste entries and values.
-        public const string SelectedFolder = "SelectedFolder";              // a string identifying the folder selected by a user via the Select|Folders menu. Otherwise empty if another selection was done, or if its all files
         public const string SearchTerms = "SearchTerms";              // a JSON description storing the current search terms
         public const string BoundingBoxDisplayThreshold = "BBDisplayThreshold";
 
@@ -289,10 +280,8 @@ namespace Timelapse.Constant
         public const string DeletedFilesFolder = "DeletedFiles"; // Sub-folder that will contain backups of deleted images 
         public const string DefaultFileDatabaseFileName = DefaultFileDatabaseFileNameRoot + FileDatabaseFileExtension;
         public const string DefaultFileDatabaseFileNameRoot = "TimelapseData";
-        public const string DefaultTemplateDatabaseFileNamePre2dot3 = "TimelapseTemplate.tdb";
         public const string DefaultTemplateDatabaseFileName = "TimelapseTemplate.tdb";
         public const string FileDatabaseFileExtension = ".ddb";
-        public const string FileDatabaseFileExtensionPre2dot3 = ".ddb";
         public const string JpgFileExtension = ".jpg";
         public const string JsonFileExtension = ".json";
         public const string MergedFileName = DefaultFileDatabaseFileNameRoot + "_merged" + FileDatabaseFileExtension;
@@ -301,14 +290,11 @@ namespace Timelapse.Constant
         public const string ASFFileExtension = ".asf";
         public const string MacOSXHiddenFilePrefix = "._";
         public const int NumberOfBackupFilesToKeep = 8; // Maximum number of backup files to keep
-        public const string RecognitionDataFileName = "recognitionData.csv";
         public const string RecognitionJsonDataFileName = "recognitionData.json";
         public const string NetworkRecycleBin = "@Recycle";
         public const string TemplateDatabaseFileExtension = ".tdb";
-        public const string TemplateDatabaseFileExtensionPre2dot3 = ".tdb";
         public const string VideoThumbnailFolderName = ".vthumb";
         public const int MaxPathLength = 259; // One less than the permissable length of 260, as I'm not sure how the null at the end of as string is counted
-        public const int MaxAdditionalLengthOfBackupFiles = 29;
 
         public static readonly TimeSpan BackupInterval = TimeSpan.FromMinutes(30);
 
@@ -351,10 +337,8 @@ namespace Timelapse.Constant
         public const int LargeNumberOfDeletedImages = 30;
 
         // Image sizes
-        public const int PreviewWidth640 = 640;
         public const int PreviewWidth480 = 480;
         public const int PreviewWidth384 = 384;
-        public const int PreviewWidth300 = 300;
         public const int PreviewWidth128 = 128;
         public const int PreviewWidth32 = 32;
 
@@ -362,7 +346,6 @@ namespace Timelapse.Constant
         public static readonly Lazy<BitmapImage> FileNoLongerAvailable = ImageValues.Load("FileNoLongerAvailable.jpg");
         public static readonly Lazy<BitmapImage> NoFilesAvailable = ImageValues.Load("NoFilesAvailable.jpg");
         public static readonly Lazy<BitmapImage> BlankVideo = ImageValues.Load("BlankVideo.jpg");
-        public static readonly Lazy<BitmapImage> FileAlreadyLoaded = ImageValues.Load("FileAlreadyLoaded.jpg");
         public static readonly Lazy<BitmapImage> FilePathTooLong = ImageValues.Load("FilePathTooLong.jpg");
 
         private static Lazy<BitmapImage> Load(string fileName)
@@ -427,9 +410,6 @@ namespace Timelapse.Constant
         // Defines the KEY path under HKEY_CURRENT_USER where Timelapse registry information is stored
         public const string RootKey = @"Software\Greenberg Consulting\Timelapse\2.0";
 
-        // Avalon doc state
-        public const string AvalonDockSavedLayout = "AvalonDockSavedLayout";
-
         // Magnifying / Offset lens glass
         public const string MagnifyingGlassOffsetLensEnabled = "MagnifyingGlassOffsetLensEnabled";
         public const string MagnifyingGlassZoomFactor = "MagnifyingGlassZoomFactor";
@@ -439,16 +419,13 @@ namespace Timelapse.Constant
 
         public const string BoundingBoxAnnotate = "BoundingBoxAnnotate";
         public const string BoundingBoxColorBlindFriendlyColors = "BoundingBoxColorBlindFriendlyColors";
-        public const string SpeciesDetectedThreshold = "SpeciesDetectedThreshold";
         public const string UseDetections = "UseDetections";
 
         // whether audio feedback is enabled
         public const string AudioFeedback = "AudioFeedback";
 
         // key containing the top left location of the Timelapse Window, as a point
-        public const string TimelapseWindowLocation = "TimelapseWindowLocation";
         // key containing the size of the Timelapse Window, as a Height
-        public const string TimelapseWindowSize = "TimelapseWindowSize";
         public const string TimelapseWindowPosition = "TimelapseWindowPosition";
 
         // key containing the position of the QuickPaste window, as a rect
@@ -498,7 +475,6 @@ namespace Timelapse.Constant
         public const string SuppressAmbiguousDatesDialog = "SuppressAmbiguousDatesDialog";
         public const string SuppressCsvExportDialog = "SuppressCsvExportDialog";
         public const string SuppressCsvImportPrompt = "SuppressCsvImportPrompt";
-        public const string SuppressFileCountOnImportDialog = "SuppressFileCountOnImportDialog";
         public const string SuppressHowDuplicatesWorkDialog = "SuppressHowDuplicatesWorkDialog";
         public const string SuppressMergeDatabasesDialog = "SuppressMergeDatabasesDialog";
         public const string SuppressOpeningMessageDialog = "SuppressOpeningMessageDialog";
@@ -548,14 +524,11 @@ namespace Timelapse.Constant
         public const double DesiredMaximumImageRendersPerSecondDefault = 7.0;   // Default render rate - could exhibit stalls on poor machines
         public const double DesiredMaximumImageRendersPerSecondUpperBound = 15.0;    // Somewhat riskier render rate that I know works on high end machines without stuttering
         public const int MaximumRenderAttempts = 10;
-        public const int SleepForImageRenderInterval = 100;
-        public const int ShowOnlyEveryNthImageWhenLoading = 10;
 
         public static readonly TimeSpan PollIntervalForVideoLoad = TimeSpan.FromMilliseconds(1.0);
         public static readonly TimeSpan RenderingBackoffTime = TimeSpan.FromMilliseconds(25.0);
         public static readonly TimeSpan VideoRenderingBackoffTime = TimeSpan.FromMilliseconds(10.0);
         public static readonly TimeSpan DataGridTimerInterval = TimeSpan.FromMilliseconds(250);
-        public static readonly TimeSpan LoadingImageDisplayInterval = TimeSpan.FromMilliseconds(500);
         public static readonly TimeSpan ProgressBarRefreshInterval = TimeSpan.FromMilliseconds(100);
     }
 
@@ -580,7 +553,7 @@ namespace Timelapse.Constant
         public const string DateTimeCSVWithoutTSeparator = "yyyy-MM-dd' 'HH:mm:ss";
 
         // This is an SQL format for writing date/time, and is equivalent to the DateTimeDatabaseFormat
-        public static readonly string DateTimeSQLFormatForWritingTimelapseDB = "%Y-%m-%d %H:%M:%S";
+        //public static readonly string DateTimeSQLFormatForWritingTimelapseDB = "%Y-%m-%d %H:%M:%S";
 
         // known formats supported by Metadata Extractor. All these can be read without ambiguity
         public static readonly string[] DateTimeMetadataFormats =
@@ -607,7 +580,6 @@ namespace Timelapse.Constant
 
         public const int MonthsInYear = 12;
         public const string TimeFormat = "HH:mm:ss";
-        public const string TimeSpanDisplayFormat = @"hh\:mm\:ss";
 
         public const string VideoPositionFormat = @"mm\:ss";
     }
