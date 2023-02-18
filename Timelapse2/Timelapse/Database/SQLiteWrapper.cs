@@ -662,6 +662,7 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(statements, nameof(statements));
 
             const int MaxStatementCount = 50000;
+            // ReSharper disable once RedundantAssignment
             string mostRecentStatement = null;
             try
             {
@@ -693,6 +694,7 @@ namespace Timelapse.Database
 
                             }
                             // capture the most recent statement so it's available for debugging
+                            // ReSharper disable once RedundantAssignment
                             mostRecentStatement = statement;
                             statementsInQuery++;
 

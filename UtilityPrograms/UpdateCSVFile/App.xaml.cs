@@ -1,6 +1,4 @@
-﻿using System.Windows;
-
-namespace UpdateCSVFile
+﻿namespace UpdateCSVFile
 {
     /// <summary>
     /// Interaction logic for App.xaml

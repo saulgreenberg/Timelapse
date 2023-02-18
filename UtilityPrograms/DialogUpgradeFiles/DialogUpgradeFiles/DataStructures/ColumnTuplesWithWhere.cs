@@ -1,5 +1,4 @@
 ﻿using DialogUpgradeFiles.Util;
-using System;
 using System.Collections.Generic;
 namespace DialogUpgradeFiles.Database
 {

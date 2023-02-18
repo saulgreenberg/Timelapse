@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DialogUpgradeFiles.QuickPaste
+﻿namespace DialogUpgradeFiles.QuickPaste
 {
     // QuickPasteItem: Captures the essence of a single data control and its value
     public class QuickPasteItem

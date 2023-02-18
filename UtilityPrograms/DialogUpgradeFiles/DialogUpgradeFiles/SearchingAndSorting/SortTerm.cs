@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DialogUpgradeFiles.Database
+﻿namespace DialogUpgradeFiles.Database
 {
     /// <summary>
     /// A SortTerm is a tuple of 4 that indicates various aspects that may be considered when sorting 

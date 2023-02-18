@@ -614,6 +614,7 @@ namespace Timelapse.Controls
                 return false;
             }
 
+            // ReSharper disable once RedundantAssignment
             int currentIndex = 0; // So we can print the value in the catch
             bool checkCounter = control is DataEntryCounter;
             bool checkFlag = control is DataEntryFlag;
@@ -625,6 +626,7 @@ namespace Timelapse.Controls
                 int currentRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
                 for (int fileIndex = currentRow - 1; fileIndex >= 0; fileIndex--)
                 {
+                    // ReSharper disable once RedundantAssignment
                     currentIndex = fileIndex;
                     // Search for the row with some value in it, starting from the previous row
                     string valueToCopy = this.FileDatabase.FileTable[fileIndex].GetValueDatabaseString(control.DataLabel);
@@ -646,7 +648,7 @@ namespace Timelapse.Controls
             catch (IndexOutOfRangeException e)
             {
                 // I don't know why we get this occassional error, so this is an attempt to print out the result so we can debug it
-                Debug.Print(
+                TracePrint.PrintMessage(
                     $"IsCopyFromLastNonEmptyValuePossible: IndexOutOfRange Exception, where index is: {currentIndex}{Environment.NewLine}{e.Message}");
                 return (nearestRowWithCopyableValue >= 0);
             }

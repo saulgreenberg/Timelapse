@@ -29,6 +29,7 @@ namespace Timelapse.DebuggingSupport
 
         public static void NullException(string nullVariableName)
         {
+            // ReSharper disable once RedundantAssignment
             string message = string.IsNullOrWhiteSpace(nullVariableName)
                 ? "Null Exception"
                 : "Null Exception: " + nullVariableName;

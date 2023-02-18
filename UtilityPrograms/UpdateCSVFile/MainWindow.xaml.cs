@@ -11,6 +11,7 @@ namespace UpdateCSVFile
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public partial class MainWindow
     {
         readonly string jsonHeaderTranslationsFileName = "headerTranslations.json";
@@ -84,8 +85,10 @@ namespace UpdateCSVFile
                     // for each header
                     if (headerArray.Length != rowArray.Length)
                     {
-                        this.FeedbackText.Text += String.Format("Expected {0} fields in line {1} but found {2}.{3}", ListUpdatedHeaders.Count, row.Count, rowArray.Length, Environment.NewLine);
-                        this.FeedbackText.Text += String.Format("Could not update the data correctly due to the above reasons.{0}", Environment.NewLine);
+                        this.FeedbackText.Text +=
+                            $"Expected {ListUpdatedHeaders.Count} fields in line {row.Count} but found {rowArray.Length}.{Environment.NewLine}";
+                        this.FeedbackText.Text +=
+                            $"Could not update the data correctly due to the above reasons.{Environment.NewLine}";
                         this.CloseStreams();
                         return false;
                     }
@@ -334,7 +337,7 @@ namespace UpdateCSVFile
         #endregion
 
         #region Open and close streams / Write headers and values to the CSV file
-        private bool OpenStreamsAndLoadHeaderUpdates(string csvOriginalFilePath, string csvTranslatedFilePath, string jsonHeaderTranslationsFileName)
+        private bool OpenStreamsAndLoadHeaderUpdates(string csvOriginalFilePath, string csvTranslatedFilePath, string jsonHeaderTranslationsFileNameLocal)
         {
             try
             {
@@ -365,14 +368,16 @@ namespace UpdateCSVFile
             }
 
             // Load the dictionary from the json file 
-            string jsonFilePath = Path.Combine(Path.GetDirectoryName(csvOriginalFilePath) ?? string.Empty, jsonHeaderTranslationsFileName);
+            string jsonFilePath = Path.Combine(Path.GetDirectoryName(csvOriginalFilePath) ?? string.Empty, jsonHeaderTranslationsFileNameLocal);
             if (File.Exists(jsonFilePath) == false)
             {
-                this.FeedbackText.Text += String.Format("Warning: As the {0} file is not present, we assume that no headers need translating.{1}", jsonHeaderTranslationsFileName, Environment.NewLine);
+                this.FeedbackText.Text +=
+                    $"Warning: As the {jsonHeaderTranslationsFileNameLocal} file is not present, we assume that no headers need translating.{Environment.NewLine}";
             }
             else if (this.LoadJSon(jsonFilePath) == false)
             {
-                this.FeedbackText.Text += String.Format("Could not read the file: {0}.{1}Perhaps its open in another application?{1}", csvOriginalFilePath, Environment.NewLine);
+                this.FeedbackText.Text +=
+                    $"Could not read the file: {csvOriginalFilePath}.{Environment.NewLine}Perhaps its open in another application?{Environment.NewLine}";
                 return false;
             }
             return true;
@@ -395,7 +400,7 @@ namespace UpdateCSVFile
         }
 
         // Write the headers
-        private void WriteListAsCommaSeparatedLine(StreamWriter outstream, List<string> elements)
+        private void WriteListAsCommaSeparatedLine(StreamWriter thisOutstream, List<string> elements)
         {
             int last = elements.Count - 1;
             int i = 0;
@@ -406,11 +411,11 @@ namespace UpdateCSVFile
                 line += (i != last) ? "," : Environment.NewLine;
                 i++;
             }
-            outstream.Write(line);
+            thisOutstream.Write(line);
         }
 
         // Write the values
-        private void WriteListAsCommaSeparatedLine(StreamWriter outstream, List<string> headers, Dictionary<string, string> valuesDictionary)
+        private void WriteListAsCommaSeparatedLine(StreamWriter thisOutstream, List<string> headers, Dictionary<string, string> valuesDictionary)
         {
             int last = valuesDictionary.Count - 1;
             int i = 0;
@@ -423,7 +428,7 @@ namespace UpdateCSVFile
                 line += (i != last) ? "," : Environment.NewLine;
                 i++;
             }
-            outstream.Write(line);
+            thisOutstream.Write(line);
         }
         #endregion
     }

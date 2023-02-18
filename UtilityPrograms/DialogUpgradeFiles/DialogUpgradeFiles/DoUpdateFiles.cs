@@ -6,7 +6,6 @@ using DialogUpgradeFiles.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -388,7 +387,7 @@ namespace DialogUpgradeFiles
             // Remove Date from DataTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.Date))
             {
-                timelapse.DebugFeedback("Data Table: No Date column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Data Table: No Date column to delete: " + filePath);
             }
             else
             {
@@ -404,7 +403,7 @@ namespace DialogUpgradeFiles
             // Remove Time from DataTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.Time))
             {
-                timelapse.DebugFeedback("Data Table: No Time column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Data Table: No Time column to delete: " + filePath);
             }
             else
             {
@@ -422,7 +421,7 @@ namespace DialogUpgradeFiles
             // Remove UtcOffset from DataTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.UtcOffset))
             {
-                timelapse.DebugFeedback("Data Table: No UtcOffset column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Data Table: No UtcOffset column to delete: " + filePath);
             }
             else
             {
@@ -439,7 +438,7 @@ namespace DialogUpgradeFiles
             // Remove Folder from DataTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.Folder))
             {
-                timelapse.DebugFeedback("Data Table: No Folder column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Data Table: No Folder column to delete: " + filePath);
             }
             else
             {
@@ -479,7 +478,7 @@ namespace DialogUpgradeFiles
                 // Remove Folder from DataTable
                 if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.DatabaseColumn.ImageQuality))
                 {
-                    timelapse.DebugFeedback("Data Table: No ImageQuality column to delete: " + filePath); ;
+                    timelapse.DebugFeedback("Data Table: No ImageQuality column to delete: " + filePath);
                 }
                 else
                 {
@@ -550,7 +549,7 @@ namespace DialogUpgradeFiles
             // Remove WhiteSpaceTrimmed from ImageSetTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.WhiteSpaceTrimmed))
             {
-                timelapse.DebugFeedback("Image Set Table: No WhiteSpaceTrimmed column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Image Set Table: No WhiteSpaceTrimmed column to delete: " + filePath);
             }
             else
             {
@@ -575,7 +574,7 @@ namespace DialogUpgradeFiles
             // Remove Magnifier from ImageSetTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.MagnifyingGlass))
             {
-                timelapse.DebugFeedback("Image Set Table: No MagnifyingGlass column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Image Set Table: No MagnifyingGlass column to delete: " + filePath);
             }
             else
             {
@@ -613,7 +612,7 @@ namespace DialogUpgradeFiles
             // Delete the Filter and SelectedFOlder columns from the ImageSetTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.SelectedFolder))
             {
-                timelapse.DebugFeedback("Image Set Table: No SelectedFolder column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Image Set Table: No SelectedFolder column to delete: " + filePath);
             }
             else
             {
@@ -628,7 +627,7 @@ namespace DialogUpgradeFiles
 
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.Selection))
             {
-                timelapse.DebugFeedback("Image Set Table: No Selection column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Image Set Table: No Selection column to delete: " + filePath);
             }
             else
             {

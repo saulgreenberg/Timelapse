@@ -30,6 +30,7 @@ using VersionChecks = Timelapse.Util.VersionChecks;
 namespace Timelapse.Editor
 {
     [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1126:PrefixCallsCorrectly", Justification = "Reviewed.")]
+    // ReSharper disable once UnusedMember.Global
     public partial class EditorWindow
     {
         // state tracking

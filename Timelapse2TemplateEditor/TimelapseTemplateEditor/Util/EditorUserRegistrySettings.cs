@@ -3,7 +3,6 @@ using System;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 using Timelapse.State;
-using Timelapse.Util;
 
 namespace Timelapse.Editor.Util
 {

@@ -6,6 +6,7 @@ using Timelapse.Util;
 
 namespace Timelapse.Editor
 {
+    // ReSharper disable once UnusedMember.Global
     public partial class EditorWindow
     {
         // COPY EVERYTHING BETWEEEN BRACKETS FROM  TimelapseMenuCallbacks | TimelapseMenuHelp.cs file}
