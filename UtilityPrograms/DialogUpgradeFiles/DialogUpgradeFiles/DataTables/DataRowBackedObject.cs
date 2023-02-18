@@ -21,7 +21,7 @@ namespace DialogUpgradeFiles.Database
         // Get the Database ID associated with this row
         public long ID => this.Row.GetID();
 
-        protected DataRow Row { get; private set; }
+        protected DataRow Row { get;  }
         #endregion
 
         #region Constructor

@@ -1,10 +1,8 @@
 ﻿using DialogUpgradeFiles.Database;
 using DialogUpgradeFiles.Dialog;
 using DialogUpgradeFiles.Enums;
-using DialogUpgradeFiles.Util;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -118,8 +116,7 @@ namespace DialogUpgradeFiles
         // The radio button state either deletes the ImageQuality field (default) or replaces it with a Dark flag
         private void RadioButtonSetImageQualityRequest_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            RadioButton rb = sender as RadioButton;
-            if (rb == null)
+            if (!(sender is RadioButton rb))
             {
                 return;
             }
@@ -293,29 +290,29 @@ namespace DialogUpgradeFiles
 
         #endregion
 
-        #region Utilities
-        static List<string> CheckPathLengthsForBackups(List<string> filepaths)
-        {
-            List<string> longPaths = new List<string>();
-            string sampleDateTime = DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss");
-            foreach (string p in filepaths)
-            {
-                string sourceFileName = Path.GetFileName(p);
-                string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
-                string sourceFileExtension = Path.GetExtension(sourceFileName);
-                string destinationFileName = String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", sampleDateTime, sourceFileExtension);
-                string backupFolder = Path.Combine(Path.GetDirectoryName(p), Constant.File.BackupFolder);
-                string destinationFilePath = Path.Combine(backupFolder, destinationFileName);
-                System.Diagnostics.Debug.Print(destinationFilePath);
-                if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
-                {
-                    longPaths.Add(destinationFilePath);
-                    System.Diagnostics.Debug.Print(destinationFilePath.Length + "|" + destinationFilePath);
-                }
-            }
-            return longPaths;
-        }
-        #endregion
+        //#region Utilities
+        //static List<string> CheckPathLengthsForBackups(List<string> filepaths)
+        //{
+        //    List<string> longPaths = new List<string>();
+        //    string sampleDateTime = DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss");
+        //    foreach (string p in filepaths)
+        //    {
+        //        string sourceFileName = Path.GetFileName(p);
+        //        string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
+        //        string sourceFileExtension = Path.GetExtension(sourceFileName);
+        //        string destinationFileName = String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", sampleDateTime, sourceFileExtension);
+        //        string backupFolder = Path.Combine(Path.GetDirectoryName(p), Constant.File.BackupFolder);
+        //        string destinationFilePath = Path.Combine(backupFolder, destinationFileName);
+        //        System.Diagnostics.Debug.Print(destinationFilePath);
+        //        if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
+        //        {
+        //            longPaths.Add(destinationFilePath);
+        //            System.Diagnostics.Debug.Print(destinationFilePath.Length + "|" + destinationFilePath);
+        //        }
+        //    }
+        //    return longPaths;
+        //}
+        //#endregion
 
         #region AnimateProgressTimer feedback
         private void AnimateProgressTimer_Tick(object sender, EventArgs e)
@@ -359,11 +356,15 @@ namespace DialogUpgradeFiles
             }
         }
 
+#pragma warning disable CA1822
         public void DebugFeedback(bool success, string message)
+#pragma warning restore CA1822
         {
             bool trace = false; // Change to true to show the feedback
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (trace)
             {
+                // ReSharper disable once HeuristicUnreachableCode
                 message = success
                     ? "OK " + message
                     : "XX " + message;
@@ -371,11 +372,16 @@ namespace DialogUpgradeFiles
             }
         }
 
+#pragma warning disable CA1822
         public void DebugFeedback(string message)
+#pragma warning restore CA1822
         {
             bool trace = false; // Change to true to show the feedback
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (trace)
+
             {
+                // ReSharper disable once HeuristicUnreachableCode
                 System.Diagnostics.Debug.Print(message);
             }
         }

@@ -1176,63 +1176,6 @@ namespace DialogUpgradeFiles.Database
         /// <summary>
         /// Create a schema cloned from tableName, except with the column definition for columnName deleted
         /// </summary>
-        private static string SchemaCloneButRenameColumn(SQLiteConnection connection, string tableName, string existingColumnName, string newColumnName)
-        {
-            Debug.Print(SchemaAttributesEnum.Default.ToString());
-            string newSchema = string.Empty;
-            using (SQLiteDataReader reader = GetSchema(connection, tableName))
-            {
-                while (reader.Read())
-                {
-                    string existingColumnDefinition = string.Empty;
-
-                    // Copy the existing column definition unless its the column named columnNam
-                    for (int field = 0; field < reader.FieldCount; field++)
-                    {
-                        switch (field)
-                        {
-                            case 0:  // cid (Column Index)
-                                break;
-                            case 1:  // name (Column Name)
-                                     // Rename the column if it is the one to be renamed
-                                existingColumnDefinition += (reader[1].ToString() == existingColumnName) ? newColumnName : reader[1].ToString();
-                                existingColumnDefinition += " ";
-                                break;
-                            case 2:  // type (Column type)
-                                existingColumnDefinition += reader[field] + " ";
-                                break;
-                            case 3:  // notnull (Column has a NOT NULL constraint)
-                                if (reader[field].ToString() != "0")
-                                {
-                                    existingColumnDefinition += Sql.NotNull;
-                                }
-                                break;
-                            case 4:  // dflt_value (Column has a default value)
-                                if (false == string.IsNullOrEmpty(reader[field].ToString()))
-                                {
-                                    // Note that the default is already quoted, so we should not quote it again
-                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
-                                }
-                                break;
-                            case 5:  // pk (Column is part of the primary key)
-                                if (reader[field].ToString() != "0")
-                                {
-                                    existingColumnDefinition += Sql.PrimaryKey;
-                                }
-                                break;
-                        }
-                    }
-                    existingColumnDefinition = existingColumnDefinition.TrimEnd(' ');
-                    newSchema += existingColumnDefinition + ", ";
-                }
-            }
-            newSchema = newSchema.TrimEnd(',', ' '); // remove last comma
-            return newSchema;
-        }
-
-        /// <summary>
-        /// Create a schema cloned from tableName, except with the column definition for columnName deleted
-        /// </summary>
         private static string SchemaCloneButAlterColumn(SQLiteConnection connection, string tableName, string existingColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
             string newSchema = string.Empty;
@@ -1444,62 +1387,6 @@ namespace DialogUpgradeFiles.Database
                 command.ExecuteNonQuery();
             }
         }
-
-        // PRAGMA Defer foreign keys. 
-#pragma warning disable IDE0051 // Remove unused private members
-        private static void PragmaSetDeferForeignKeys(SQLiteConnection connection, bool state)
-        {
-            // Syntax is: defer_foreign_keys = 1; True
-            //            defer_foreign_keys = 0; False
-            string sql = "PRAGMA defer_foreign_keys = ";
-            sql += state ? "1;" : "0;";
-            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
-            {
-                command.ExecuteNonQuery();
-            }
-        }
-
-
-#pragma warning restore IDE0051 // Remove unused private members
-        #endregion
-
-        #region Unused methods
-#pragma warning disable IDE0051 // Remove unused private members
-        /// <summary>
-        /// CURRENTLY UNUSED
-        /// Add a column to the end of the database table 
-        /// This does NOT require the table to be cloned.
-        /// Note: Some of the AddColumnToEndOfTable methods are currently not referenced, but may be handy in the future.
-        /// </summary>
-        /// <param name="connection">the open and valid connection to the database</param> 
-        /// <param name="tableName">the name of the  table</param> 
-        /// <param name="name">the name of the new column</param> 
-        /// <param name="type">the type of the new column</param> 
-        private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type)
-        {
-            string columnDefinition = name + " " + type;
-            SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
-        }
-
-        /// <summary>
-        /// Add a column to the end of the database table. 
-        /// This does NOT require the table to be cloned.
-        /// </summary>
-        /// <param name="connection">the open and valid connection to the database</param> 
-        /// <param name="tableName">the name of the  table</param> 
-        /// <param name="name">the name of the new column</param> 
-        /// <param name="type">the type of the new column</param> 
-        /// <param name="otherOptions">space-separated options such as PRIMARY KEY AUTOINCREMENT, NULL or NOT NULL etc</param>
-        private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
-        {
-            string columnDefinition = name + " " + type;
-            if (string.IsNullOrEmpty(otherOptions))
-            {
-                columnDefinition += " " + otherOptions;
-            }
-            SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
-        }
-#pragma warning restore IDE0051 // Remove unused private members
-        #endregion
     }
+    #endregion
 }

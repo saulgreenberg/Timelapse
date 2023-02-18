@@ -102,8 +102,7 @@ namespace DialogUpgradeFiles.Database
         // and wants the empty item removed (usually because they will add it themselves to a menu
         public List<string> GetChoices(out bool includesEmptyChoice)
         {
-            bool removeEmptyChoiceItem = true;
-            return this.GetChoices(out includesEmptyChoice, removeEmptyChoiceItem);
+            return this.GetChoices(out includesEmptyChoice, true);
         }
 
         // Parce the choice string into a list of items. 

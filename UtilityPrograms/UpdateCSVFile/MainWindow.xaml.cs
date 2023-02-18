@@ -46,8 +46,8 @@ namespace UpdateCSVFile
             List<string> ListUpdatedHeaders = new List<string>();
             foreach (string header in ListOriginalHeadersInCSVFile)
             {
-                ListUpdatedHeaders.Add(HeaderUpdateDictionary.ContainsKey(header)
-                    ? HeaderUpdateDictionary[header]
+                ListUpdatedHeaders.Add(HeaderUpdateDictionary.TryGetValue(header, out string key)
+                    ? HeaderUpdateDictionary[key]
                     : header);
             }
 
@@ -58,7 +58,7 @@ namespace UpdateCSVFile
                 ListFinalHeaders.Add(Constant.DatabaseColumn.RelativePath);
             }
             // Write the headers to the CSV file
-            this.WriteListAsCommaSeparatedLine(outstream, ListFinalHeaders);
+            WriteListAsCommaSeparatedLine(outstream, ListFinalHeaders);
 
             // Repopulate each row, adjusting the file name and relative path as required
             int rowNumber = 0;
@@ -142,7 +142,7 @@ namespace UpdateCSVFile
                         rowDictionary.Add(headerArray[j], rowArray[j]);
                     }
                 }
-                this.WriteListAsCommaSeparatedLine(outstream, ListFinalHeaders, rowDictionary);
+                WriteListAsCommaSeparatedLine(outstream, ListFinalHeaders, rowDictionary);
             }
             this.FeedbackText.Text += $"Wrote {rowNumber} data rows.{Environment.NewLine}";
             this.CloseStreams();
@@ -385,22 +385,13 @@ namespace UpdateCSVFile
 
         private void CloseStreams()
         {
-            if (outstream != null)
-            {
-                outstream.Close();
-            }
-            if (instream != null)
-            {
-                instream.Close();
-            }
-            if (csvReader != null)
-            {
-                csvReader.Close();
-            }
+            outstream?.Close();
+            instream?.Close();
+            csvReader?.Close();
         }
 
         // Write the headers
-        private void WriteListAsCommaSeparatedLine(StreamWriter thisOutstream, List<string> elements)
+        private static void WriteListAsCommaSeparatedLine(StreamWriter thisOutstream, List<string> elements)
         {
             int last = elements.Count - 1;
             int i = 0;
@@ -415,7 +406,7 @@ namespace UpdateCSVFile
         }
 
         // Write the values
-        private void WriteListAsCommaSeparatedLine(StreamWriter thisOutstream, List<string> headers, Dictionary<string, string> valuesDictionary)
+        private static void WriteListAsCommaSeparatedLine(StreamWriter thisOutstream, List<string> headers, Dictionary<string, string> valuesDictionary)
         {
             int last = valuesDictionary.Count - 1;
             int i = 0;

@@ -86,8 +86,6 @@ namespace DialogUpgradeFiles.Util
                     // Note that the file name is already accounted for in the file path
                     filePath = Path.Combine(filePath, Constant.File.BackupFolder, ".2022-12-11.16-02-14");
                     break;
-                default:
-                    break;
             }
             return IsPathLengthTooLong(filePath);
         }

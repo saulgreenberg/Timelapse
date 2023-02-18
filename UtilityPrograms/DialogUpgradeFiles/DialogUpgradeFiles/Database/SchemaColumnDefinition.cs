@@ -11,9 +11,9 @@ namespace DialogUpgradeFiles.Database
         /// - Log Text "Add text here" ;
         /// </summary>
         #region Public Properties
-        public string Name { get; private set; }
-        public string DefaultValue { get; private set; }
-        public string Type { get; private set; }
+        public string Name { get; }
+        public string DefaultValue { get;  }
+        public string Type { get; }
         #endregion
 
         #region Constructors

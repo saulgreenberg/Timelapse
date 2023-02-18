@@ -61,9 +61,6 @@ namespace DialogUpgradeFiles.QuickPaste
                             row.Copyable,
                             row.Type));
                         break;
-                    default:
-                        // Standard controls are not used in quick pastes, as it is unlikely the user will want to alter their contents
-                        break;
                 }
             }
             return quickPasteEntry;

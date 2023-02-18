@@ -15,7 +15,7 @@ namespace DialogUpgradeFiles.Database
         public DataTableBackedList<ControlRow> Controls { get; private set; }
 
         /// <summary>Gets the file name of the image database on disk.</summary>
-        public string FilePath { get; private set; }
+        public string FilePath { get; }
 
         public SQLiteWrapper Database { get; set; }
         #endregion
@@ -514,6 +514,7 @@ namespace DialogUpgradeFiles.Database
                         maximumID = control.ID;
                     }
                 }
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 Debug.Assert((maximumID > 0) && (maximumID <= Int64.MaxValue),
                     $"Maximum ID found is {maximumID}, which is out of range.");
                 string jumpAmount = maximumID.ToString();

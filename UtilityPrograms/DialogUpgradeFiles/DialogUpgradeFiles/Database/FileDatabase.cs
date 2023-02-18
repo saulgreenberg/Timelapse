@@ -17,10 +17,10 @@ namespace DialogUpgradeFiles.Database
 
         #region Properties 
         public FileTable FileTable { get; private set; }
-        public string FileName { get; private set; }
-        public string FolderPath { get; private set; }
-        public Dictionary<string, string> DataLabelFromStandardControlType { get; private set; }
-        public Dictionary<string, FileTableColumn> FileTableColumnsByDataLabel { get; private set; }
+        public string FileName { get; }
+        public string FolderPath { get; }
+        public Dictionary<string, string> DataLabelFromStandardControlType { get; }
+        public Dictionary<string, FileTableColumn> FileTableColumnsByDataLabel { get; }
         public ImageSetRow ImageSet { get; private set; }
         public DataTableBackedList<MarkerRow> Markers { get; private set; }
 

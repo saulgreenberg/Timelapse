@@ -14,7 +14,7 @@ namespace DialogUpgradeFiles.Database
     public class DataTableBackedList<TRow> : IDisposable, IEnumerable<TRow> where TRow : DataRowBackedObject
     {
         #region Protected Properties
-        protected DataTable DataTable { get; private set; }
+        protected DataTable DataTable { get; }
         #endregion
 
         #region Private Properties

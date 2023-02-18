@@ -60,39 +60,13 @@ namespace DialogUpgradeFiles.Constant
     {
         // general defaults
         public const string Value = "";
-
-        // user defined controls
-        public const string CounterTooltip = "Click the counter button, then click on the image to count the entity. Or just type in a count";
-        public const string CounterValue = "0";              // Default for: counters
-        public const int CounterWidth = 30;
-        public const string FixedChoiceTooltip = "Choose an item from the menu";
-        public const int FixedChoiceWidth = 100;
-
-        public const string FlagTooltip = "Toggle between true and false";
         public const string FlagValue = BooleanValue.False;             // Default for: flags
         public const int FlagWidth = 20;
-        public const string NoteTooltip = "Write a textual note";
-        public const int NoteWidth = 100;
-
-        // standard controls
-        public const string DateTooltip = "Date taken";
-        public const string DateWidth = "85";
 
         public const string DateTimeTooltip = "Date and time taken (Year-Month-Day Hours:Minutes:Seconds:Milliseconds)";
         public const string DateTimeWidth = "160";
-
-        public const string FileTooltip = "The file name";
-        public const string FileWidth = "100";
         public const string RelativePathTooltip = "Path from the folder containing the template and image data files to the file";
         public const string RelativePathWidth = "100";
-        public const string FolderTooltip = "Name of the folder originally containing the template and image data files";
-        public const string FolderWidth = "100";
-
-        public const string ImageQualityTooltip = "System-determined image quality: Dark if mostly black, otherwise Ok";
-        public const string ImageQualityWidth = "85";
-
-        public const string TimeTooltip = "Time taken";
-        public const string TimeWidth = "60";
 
         public const string DeleteFlagLabel = "Delete?";    // a flag data type for marking deletion
         public const string DeleteFlagTooltip = "Mark a file as one to be deleted. You can then confirm deletion through the Edit Menu";
@@ -116,14 +90,9 @@ namespace DialogUpgradeFiles.Constant
     public static class DatabaseValues
     {
         // default values
-        public const long DefaultFileID = 1;
         public const int DateTimePosition = 4;
-        public const string ImageSetDefaultLog = "Add text here";
         public const long ImageSetRowID = 1;
-        public const long InvalidID = -1;
-        public const int InvalidRow = -1;
         public const int RelativePathPosition = 2;
-        public const int RowsPerInsert = 5000;
         public const int UtcOffsetPosition = 5;
         public const string VersionNumberMinimum = "2.3.0.0";
         public const string DefaultSortTerms = DatabaseColumn.RelativePath + "," + SortTermValues.RelativePathDisplayLabel + "," + DatabaseColumn.RelativePath + "," + BooleanValue.True + ","
@@ -134,9 +103,6 @@ namespace DialogUpgradeFiles.Constant
         public const string IndexFile = "IndexFile";
         public const string IndexID = "IndexDetectionID";
         public const string IndexDetectionID = "IndexDetectionID";
-
-        // Special characters
-        public const char MarkerBar = '|';              // Separator used to separate marker points in the database i.e. "2.3,5.6 | 7.1, 3.3"
     }
 
     // Names of standard database columns, always included but not always made visible in the user controls
@@ -189,8 +155,6 @@ namespace DialogUpgradeFiles.Constant
         public const string TemplateInfo = "TemplateInfo"; // the table containing info about the template
         public const string Markers = "MarkersTable";         // the table containing the marker data
         public const string Info = "Info";
-        public const string DetectionCategories = "DetectionCategories";
-        public const string ClassificationCategories = "ClassificationCategories";
         public const string Images = "Images";
         public const string Detections = "Detections";
         public const string Classifications = "Classifications";
@@ -208,32 +172,17 @@ namespace DialogUpgradeFiles.Constant
         public const string BackupCheckpointIndicator = ".Checkpoint-"; // string added to the backup file path for special backup files
         public const string BackupPre23Indicator = ".Pre2.3"; // string added to the backup file path for special backup files
 
-        public const string CsvFileExtension = ".csv";
         public const string DeletedFilesFolder = "DeletedFiles"; // Sub-folder that will contain backups of deleted images 
-        public const string DefaultFileDatabaseFileName = DefaultFileDatabaseFileNameRoot + FileDatabaseFileExtension;
         public const string DefaultFileDatabaseFileNameRoot = "TimelapseData";
-        public const string DefaultTemplateDatabaseFileName = "TimelapseTemplate.tdb";
         public const string FileDatabaseFileExtension = ".ddb";
         public const string JpgFileExtension = ".jpg";
-        public const string JsonFileExtension = ".json";
-        public const string MergedFileName = DefaultFileDatabaseFileNameRoot + "_merged" + FileDatabaseFileExtension;
         public const string MovFileExtension = ".mov";
         public const string Mp4FileExtension = ".mp4";
         public const string ASFFileExtension = ".asf";
         public const string MacOSXHiddenFilePrefix = "._";
-        public const int NumberOfBackupFilesToKeep = 8; // Maximum number of backup files to keep
-        public const string RecognitionDataFileName = "recognitionData.csv";
-        public const string RecognitionJsonDataFileName = "recognitionData.json";
         public const string NetworkRecycleBin = "@Recycle";
-        public const string TemplateDatabaseFileExtension = ".tdb";
         public const string VideoThumbnailFolderName = ".vthumb";
-        public const string XmlTemplateFileName = "CodeTemplate.xml";
-        public const string XmlDataFileName = "ImageData.xml";
         public const int MaxPathLength = 259; // One less than the permissable length of 260, as I'm not sure how the null at the end of as string is counted;
-        public const int MaxAdditionalLengthOfBackupFiles = 28;
-
-        public static readonly TimeSpan BackupInterval = TimeSpan.FromMinutes(30);
-
         public const string TraceFile = "Trace.txt"; // FIle name for file containing debug information. Usually written in the same folder containing the template.
     }
 
@@ -243,40 +192,7 @@ namespace DialogUpgradeFiles.Constant
         public const string Ok = "Ok";
         public const string Dark = "Dark";
         public const string Missing = "Missing";
-        public const string Corrupted = "Corrupted";
         public const string ListOfValues = "Ok|Dark|Corrupted|Missing";
-    }
-
-    public static class ImageValues
-    {
-        public const int BitmapCacheSize = 9;
-
-        // The default threshold where the ratio of pixels below a given darkness in an image is used to determine whether the image is classified as 'dark'
-        public const double DarkPixelRatioThresholdDefault = 0.9;
-        public const int DarkPixelSampleStrideDefault = 20;
-        // The default threshold where a pixel color should be considered as 'dark' when checking image darkness. The Range is 0  (black) - 255 (white)
-        public const int DarkPixelThresholdDefault = 60;
-
-        // The threshold to determine differences between images
-        public const int DifferenceThresholdDefault = 20;
-        public const byte DifferenceThresholdMax = 255;
-        public const byte DifferenceThresholdMin = 0;
-
-        // A greyscale image (given the above slop) will typically have about 90% of its pixels as grey scale
-        public const double GreyscaleImageThreshold = 0.9;
-        // A grey scale pixel has r = g = b. But we will allow some slop in here just in case a bit of color creeps in
-        public const int GreyscalePixelThreshold = 40;
-
-        // The number of images that are considered large enough to deserve special treatment on deletion
-        public const int LargeNumberOfDeletedImages = 30;
-
-        // Image sizes
-        public const int PreviewWidth640 = 640;
-        public const int PreviewWidth480 = 480;
-        public const int PreviewWidth384 = 384;
-        public const int PreviewWidth300 = 300;
-        public const int PreviewWidth128 = 128;
-        public const int PreviewWidth32 = 32;
     }
 
     public static class ImageXml
@@ -288,11 +204,8 @@ namespace DialogUpgradeFiles.Constant
         public const string Time = "_Time";
 
         // paths to standard elements, always included but not always made visible
-        public const string DatePath = "Codes/_Date";
         public const string FilePath = "Codes/_File";
         public const string FolderPath = "Codes/_Folder";
-        public const string ImageQualityPath = "Codes/_ImageQuality";
-        public const string TimePath = "Codes/_Time";
 
         // elements
         public const string Codes = "Codes";
@@ -300,23 +213,12 @@ namespace DialogUpgradeFiles.Constant
         public const string Images = "Images";
         public const string Item = "Item";             // and item in a list
         public const string Slash = "/";
-
-        // paths to notes, counters, and fixed choices
-        public const string CounterPath = Codes + Slash + Control.Counter;
-        public const string FixedChoicePath = Codes + Slash + Control.FixedChoice;
-        public const string NotePath = Codes + Slash + Control.Note;
     }
 
     public static class SortTermValues
     {
-        public const string NoneDisplayLabel = "-- None --";
-        public const string DateDisplayLabel = "Date/Time";
-        public const string FileDisplayLabel = "File Path (relative path + file name)";
-        public const string RelativePathDisplayLabel = "Relative Path (folder)";
 
-        public const string DateStatusBarLabel = "Date/Time{0}";
-        public const string FileStatusBarLabel = "File Path{0}";
-        public const string IDStatusBarLabel = "Id{0} (the order files were added to Timelapse)";
+        public const string RelativePathDisplayLabel = "Relative Path (folder)";
     }
 
     public static class Time
@@ -331,7 +233,6 @@ namespace DialogUpgradeFiles.Constant
         // DateTimes as stored in the database. The 2nd form is so it can read in from the DB both the legacy (UTC) format and current simpler format 
         public const string DateTimeDatabaseLegacyUTCFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";  // legacy DatabaseFormat
         public const string DateTimeDatabaseFormat = "yyyy-MM-dd HH:mm:ss";
-        public static readonly string[] DateTimeDatabaseFormats = { DateTimeDatabaseFormat, DateTimeDatabaseLegacyUTCFormat };
 
         public const string DateTimeDisplayFormat = "dd-MMM-yyyy HH:mm:ss";
         public const string DateTimeCSVWithTSeparator = "yyyy-MM-dd'T'HH:mm:ss";
@@ -371,9 +272,6 @@ namespace DialogUpgradeFiles.Constant
         public const string UtcOffsetDatabaseFormat = "0.00";
         public const string UtcOffsetDisplayFormat = @"hh\:mm";
 
-        public const string VideoPositionFormat = @"mm\:ss";
-
-        public static readonly TimeSpan DateTimeDatabaseResolution = TimeSpan.FromMilliseconds(1.0);
         public static readonly TimeSpan MaximumUtcOffset = TimeSpan.FromHours(14.0);
         public static readonly TimeSpan MinimumUtcOffset = TimeSpan.FromHours(-12.0);
         public static readonly TimeSpan UtcOffsetGranularity = TimeSpan.FromTicks(9000000000); // 15 minutes
@@ -383,11 +281,7 @@ namespace DialogUpgradeFiles.Constant
     #region Detection Constants.
     public static class InfoColumns
     {
-        public const string InfoID = "infoID";
         public const string Detector = "detector";
-        public const string DetectionCompletionTime = "detection_completion_time";
-        public const string Classifier = "classifier";
-        public const string ClassificationCompletionTime = "classification_completion_time";
         public const string DetectorVersion = "megadetector_version";
         public const string TypicalDetectionThreshold = "typical_detection_threshold";
         public const string ConservativeDetectionThreshold = "conservative_detection_threshold";
@@ -396,37 +290,23 @@ namespace DialogUpgradeFiles.Constant
 
     public static class DetectionCategoriesColumns
     {
-        public const string Category = "category";
         public const string Label = "label";
     }
 
     public static class ClassificationCategoriesColumns
     {
-        public const string Category = "classification";
         public const string Label = "label";
     }
 
     public static class DetectionColumns
     {
         public const string DetectionID = "detectionID";
-        public const string ImageID = DatabaseColumn.ID; // Foreign key
-        public const string Category = "category";
         public const string Conf = "conf";
         public const string BBox = "bbox";
     }
 
     public static class DetectionValues
     {
-        public const string NoDetectionCategory = "0";
-        public const string NoDetectionLabel = "Empty";
-        public const string AllDetectionLabel = "All";
-
-        // When a person selects an entity, we want the minimum lower boundt o be a titch above 0,
-        // as otherwise including '0' would also include all images with no detections. This way,
-        // an image must have at least one detection.
-        public const float MinimumDetectionValue = 0.00001F;
-        public const float MinimumRecognitionValue = 0.00001F;
-
         // Detector defaults. Different versions of Megadetector produce different confidence values.
         // The values below reflect  Megadetector v4, which is the likely detector if no overrides 
         // were set  in the Detection json file
@@ -440,9 +320,6 @@ namespace DialogUpgradeFiles.Constant
 
     public static class ClassificationColumns
     {
-        public const string ClassificationID = "classificationID";
-        public const string DetectionID = DetectionColumns.DetectionID; // Foreign key
-        public const string Category = "category";
         public const string Conf = "conf";
     }
     #endregion

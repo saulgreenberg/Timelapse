@@ -18,7 +18,7 @@ namespace DialogUpgradeFiles.Database
     public class ColumnTuplesWithWhere
     {
         #region Public Properties
-        public List<ColumnTuple> Columns { get; private set; }
+        public List<ColumnTuple> Columns { get; }
         public string Where { get; private set; }
         #endregion
 
