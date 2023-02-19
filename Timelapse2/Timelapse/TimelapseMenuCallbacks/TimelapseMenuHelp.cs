@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using Timelapse.Dialog;
 using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Help Menu Callbacks
@@ -21,12 +22,6 @@ namespace Timelapse
         private void MenuTimelapseWebPage_Click(object sender, RoutedEventArgs e)
         {
             ProcessExecution.TryProcessStart(new Uri("http://saul.cpsc.ucalgary.ca/timelapse"));
-        }
-
-        // Tutorial manual (via your browser) 
-        private void MenuTutorialManual_Click(object sender, RoutedEventArgs e)
-        {
-            ProcessExecution.TryProcessStart(new Uri("http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/Timelapse2/Timelapse2Manual.pdf"));
         }
 
         // Tutorial guides (via your browser) 

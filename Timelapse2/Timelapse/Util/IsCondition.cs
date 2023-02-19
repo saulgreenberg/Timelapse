@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 
 namespace Timelapse.Util
@@ -102,7 +103,7 @@ namespace Timelapse.Util
         private static bool IsPathLengthTooLong(string filePath)
         {
             // Check the arguments for null 
-            if (String.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
                 // this should not happen
                 TracePrint.StackTrace(1);

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DialogUpgradeFiles.Util
+namespace DialogUpgradeFiles.Extensions
 {
     /// <summary>
     /// DateTime Extensions

@@ -40,7 +40,7 @@ namespace Timelapse.Util
         /// <returns>True if an update is available, else false</returns>
         public bool TryCheckForNewVersionAndDisplayResultsAsNeeded(bool showNoUpdatesMessage)
         {
-            string url = String.Empty; // THE URL where the new version is located
+            string url = string.Empty; // THE URL where the new version is located
             Version latestVersionNumber = null;  // if a new version is available, store the new version number here  
 
             XmlReader reader = null;
@@ -54,7 +54,7 @@ namespace Timelapse.Util
 
                 // As the XmlTextReader moves only forward, we save current xml element name in elementName variable. 
                 // When we parse a  text node, we refer to elementName to check what was the node name  
-                string elementName = String.Empty;
+                string elementName = string.Empty;
                 // Check if the xml starts with a <timelapse> Element  
                 if ((reader.NodeType == XmlNodeType.Element) && (reader.Name == Constant.VersionXml.Timelapse))
                 {

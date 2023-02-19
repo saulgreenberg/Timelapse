@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace Timelapse.Util
+namespace Timelapse.State
 {
     /// <summary>
     /// Base class for manipulating application's user preferences and related information in the registry.

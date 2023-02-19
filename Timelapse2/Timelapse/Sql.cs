@@ -1,11 +1,11 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using Timelapse.Enums;
 
+// ReSharper disable UnusedMember.Global
 namespace Timelapse
 {
     // Create SQL commands using constants rather than typing the SQL keywords. 
-    // This really helps avoid typos, bugs due to spacing such as not having spaces inbetween keywords, etc.
+    // This really helps avoid typos, bugs due to spacing such as not having spaces in between keywords, etc.
     public static class Sql
     {
         public const string AddColumn = " ADD COLUMN ";
@@ -170,7 +170,7 @@ namespace Timelapse
         /// </returns>
         public static string SelectMissingDetections(SelectTypesEnum selectType)
         {
-            string phrase = String.Empty;
+            string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
                 phrase = Sql.SelectCount + Sql.OpenParenthesis + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.CloseParenthesis;
@@ -215,7 +215,7 @@ namespace Timelapse
         /// </returns>
         public static string SelectDetections(SelectTypesEnum selectType)
         {
-            string phrase = String.Empty;
+            string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
                 phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + Constant.DBTables.FileData + Sql.DotStar;
@@ -255,7 +255,7 @@ namespace Timelapse
         /// </returns>
         public static string SelectClassifications(SelectTypesEnum selectType)
         {
-            string phrase = String.Empty;
+            string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
                 phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct;
@@ -316,7 +316,7 @@ namespace Timelapse
         /// <returns>DataLabel operator "value", e.g., DataLabel > "5"</returns>
         public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value, bool castAsInteger)
         {
-            value = value == null ? String.Empty : value.Trim();
+            value = value == null ? string.Empty : value.Trim();
 
             return castAsInteger
                 ? Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsInteger + Sql.CloseParenthesis + mathOperator + Sql.Quote(value)
@@ -326,14 +326,14 @@ namespace Timelapse
         /// <returns>Match the Date portion only  by extracting the Date from the DateTime string value, e.g., DataLabel operator "value", e.g., Date(datetime)= Date('2016-08-19 19:08:22')</returns>
         public static string DataLabelDateTimeOperatorValue(string dataLabel, string mathOperator, string value)
         {
-            value = value == null ? String.Empty : value.Trim();
+            value = value == null ? string.Empty : value.Trim();
             return Sql.DateFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.DateFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
         }
 
         /// <returns>Match the Time portion only  by extracting the Time from the DateTime string value, e.g., DataLabel operator "value", e.g., Time (datetime) = '19:08:22'</returns>
         public static string DataLabelTimeOperatorValue(string dataLabel, string mathOperator, string value)
         {
-            value = value == null ? String.Empty : value.Trim();
+            value = value == null ? string.Empty : value.Trim();
             return Sql.TimeFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.TimeFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
         }
 
@@ -416,7 +416,7 @@ namespace Timelapse
                                 + Sql.Instr + Sql.OpenParenthesis + episodeNoteField + Sql.Comma + Sql.Quote(":") + Sql.CloseParenthesis + Sql.CloseParenthesis
                                 + Sql.From;
             frontwrapper += countOnly
-                ? String.Empty
+                ? string.Empty
                 : Sql.OpenParenthesis;
             return frontwrapper;
         }

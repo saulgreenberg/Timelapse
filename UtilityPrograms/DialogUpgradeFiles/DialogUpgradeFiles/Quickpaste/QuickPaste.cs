@@ -1,10 +1,11 @@
 ﻿using DialogUpgradeFiles.Database;
 using DialogUpgradeFiles.Util;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using DialogUpgradeFiles.DataTables;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.QuickPaste
 {
@@ -46,7 +47,7 @@ namespace DialogUpgradeFiles.QuickPaste
             };
             foreach (ControlRow row in fileDatabase.Controls)
             {
-                string value = fileDatabase.FileTable[rowIndex].GetValueDisplayString(row.DataLabel) ?? String.Empty;
+                string value = fileDatabase.FileTable[rowIndex].GetValueDisplayString(row.DataLabel) ?? string.Empty;
                 switch (row.Type)
                 {
                     // User defined control types are the potential items to paste
@@ -61,9 +62,6 @@ namespace DialogUpgradeFiles.QuickPaste
                             value,
                             row.Copyable,
                             row.Type));
-                        break;
-                    default:
-                        // Standard controls are not used in quick pastes, as it is unlikely the user will want to alter their contents
                         break;
                 }
             }
@@ -93,7 +91,7 @@ namespace DialogUpgradeFiles.QuickPaste
                         i.Items.Select(v => new XElement("Item",
                             new XElement("Label", v.Label),
                             new XElement("DataLabel", v.DataLabel),
-                            new XElement("Value", (v.Value == null) ? String.Empty : v.Value.ToString()),
+                            new XElement("Value", (v.Value == null) ? string.Empty : v.Value.ToString()),
                             new XElement("Use", v.Use.ToString()),
                             new XElement("ControlType", v.ControlType.ToString())))))));
             return xDocument.ToString();
@@ -194,11 +192,9 @@ namespace DialogUpgradeFiles.QuickPaste
                             // If we arrive here, it means that we have a control with no matching entry. So we should add that
                             if (noItemsMatch)
                             {
-                                string value = (row.Type == Constant.Control.Flag) ? "False" : String.Empty;
+                                string value = (row.Type == Constant.Control.Flag) ? "False" : string.Empty;
                                 newQuickPasteEntry.Items.Add(new QuickPasteItem(row.DataLabel, row.Label, value, false, row.Type));
                             }
-                            break;
-                        default:
                             break;
                     }
                 }

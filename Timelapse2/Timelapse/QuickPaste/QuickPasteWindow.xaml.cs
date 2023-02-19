@@ -4,8 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
-using Timelapse.Util;
 
 namespace Timelapse.QuickPaste
 {
@@ -86,7 +86,7 @@ namespace Timelapse.QuickPaste
             foreach (QuickPasteEntry quickPasteEntry in this.QuickPasteEntries)
             {
                 // Create the tooltip text for the QuickPaste control
-                string tooltipText = String.Empty;
+                string tooltipText = string.Empty;
                 foreach (QuickPasteItem item in quickPasteEntry.Items)
                 {
                     if (item.Use)

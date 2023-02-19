@@ -1,16 +1,15 @@
 ﻿using DialogUpgradeFiles.Database;
 using DialogUpgradeFiles.Dialog;
 using DialogUpgradeFiles.Enums;
-using DialogUpgradeFiles.Util;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using DragEventArgs = System.Windows.DragEventArgs;
+// ReSharper disable HeuristicUnreachableCode
 
 namespace DialogUpgradeFiles
 {
@@ -30,16 +29,16 @@ namespace DialogUpgradeFiles
 
         // Used to display updating status information per file 
         public Dictionary<string, string> DictFileUpdateStatus { get; set; } = new Dictionary<string, string>();
-        public string ShortFileName { get; set; } = String.Empty;
+        public string ShortFileName { get; set; } = string.Empty;
 
         // Used to animate a character-based spinner
         public DispatcherTimer AnimateProgressTimer { get; set; } = new DispatcherTimer();
-        public string ProgressCharacter { get; set; } = String.Empty;     // a character that is updated to represent a spinner that shows activity
+        public string ProgressCharacter { get; set; } = string.Empty;     // a character that is updated to represent a spinner that shows activity
         #endregion
 
         #region Private variables
         private TemplateDatabase templateDatabase; // The database that holds the template
-        private string previousFolderPath = String.Empty;   // so that OpenFile/Folder dialogs will begin at the last opened path
+        private string previousFolderPath = string.Empty;   // so that OpenFile/Folder dialogs will begin at the last opened path
         #endregion
 
         #region Initialization and opening
@@ -52,7 +51,7 @@ namespace DialogUpgradeFiles
 
             // If the folder path is not supplied, then this is invoked as a general update facility
             // Otherwise it is invoked on a specific file path
-            this.IsInvokedAsGeneralUpdateFacility = String.IsNullOrWhiteSpace(this.FolderPath);
+            this.IsInvokedAsGeneralUpdateFacility = string.IsNullOrWhiteSpace(this.FolderPath);
 
             this.RunFolderName.Text = this.FolderPath;
 
@@ -118,8 +117,7 @@ namespace DialogUpgradeFiles
         // The radio button state either deletes the ImageQuality field (default) or replaces it with a Dark flag
         private void RadioButtonSetImageQualityRequest_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            RadioButton rb = sender as RadioButton;
-            if (rb == null)
+            if (!(sender is RadioButton rb))
             {
                 return;
             }
@@ -182,7 +180,11 @@ namespace DialogUpgradeFiles
             {
                 string[] selectedPaths = (string[])e.Data.GetData(DataFormats.FileDrop);
                 await this.BeginUpgrading(selectedPaths);
-                this.SetPreviousFolderPath(selectedPaths[0]);
+                if (selectedPaths != null)
+                {
+                    // It should never be null
+                    this.SetPreviousFolderPath(selectedPaths[0]);
+                }
             }
         }
 
@@ -223,6 +225,7 @@ namespace DialogUpgradeFiles
             this.ButtonDone.Content = "Done";
             this.ButtonCancelUpgrades.Visibility = Visibility.Visible;
 
+            // ReSharper disable once UnusedVariable
             List<string> pathsTooLong = new List<string>();
             Dictionary<string, UpgradeResultsEnum> filePathsRequiringUpdating = await CollectFiles(selectedPaths);
 
@@ -293,29 +296,29 @@ namespace DialogUpgradeFiles
 
         #endregion
 
-        #region Utilities
-        static List<string> CheckPathLengthsForBackups(List<string> filepaths)
-        {
-            List<string> longPaths = new List<string>();
-            string sampleDateTime = DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss");
-            foreach (string p in filepaths)
-            {
-                string sourceFileName = Path.GetFileName(p);
-                string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
-                string sourceFileExtension = Path.GetExtension(sourceFileName);
-                string destinationFileName = String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", sampleDateTime, sourceFileExtension);
-                string backupFolder = Path.Combine(Path.GetDirectoryName(p), Constant.File.BackupFolder);
-                string destinationFilePath = Path.Combine(backupFolder, destinationFileName);
-                System.Diagnostics.Debug.Print(destinationFilePath);
-                if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
-                {
-                    longPaths.Add(destinationFilePath);
-                    System.Diagnostics.Debug.Print(destinationFilePath.Length + "|" + destinationFilePath);
-                }
-            }
-            return longPaths;
-        }
-        #endregion
+        //#region Utilities
+        //static List<string> CheckPathLengthsForBackups(List<string> filepaths)
+        //{
+        //    List<string> longPaths = new List<string>();
+        //    string sampleDateTime = DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss");
+        //    foreach (string p in filepaths)
+        //    {
+        //        string sourceFileName = Path.GetFileName(p);
+        //        string sourceFileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceFileName);
+        //        string sourceFileExtension = Path.GetExtension(sourceFileName);
+        //        string destinationFileName = String.Concat(sourceFileNameWithoutExtension, Constant.File.BackupPre23Indicator, ".", sampleDateTime, sourceFileExtension);
+        //        string backupFolder = Path.Combine(Path.GetDirectoryName(p), Constant.File.BackupFolder);
+        //        string destinationFilePath = Path.Combine(backupFolder, destinationFileName);
+        //        System.Diagnostics.Debug.Print(destinationFilePath);
+        //        if (IsCondition.IsPathLengthTooLong(destinationFilePath, FilePathTypeEnum.Pre23))
+        //        {
+        //            longPaths.Add(destinationFilePath);
+        //            System.Diagnostics.Debug.Print(destinationFilePath.Length + "|" + destinationFilePath);
+        //        }
+        //    }
+        //    return longPaths;
+        //}
+        //#endregion
 
         #region AnimateProgressTimer feedback
         private void AnimateProgressTimer_Tick(object sender, EventArgs e)
@@ -359,21 +362,26 @@ namespace DialogUpgradeFiles
             }
         }
 
+#pragma warning disable CA1822
         public void DebugFeedback(bool success, string message)
+#pragma warning restore CA1822
         {
             bool trace = false; // Change to true to show the feedback
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (trace)
             {
-                message = success
-                    ? "OK " + message
-                    : "XX " + message;
+                // ReSharper disable once RedundantAssignment
+                message = success ? "OK " + message : "XX " + message;
                 System.Diagnostics.Debug.Print(message);
             }
         }
 
+#pragma warning disable CA1822
         public void DebugFeedback(string message)
+#pragma warning restore CA1822
         {
             bool trace = false; // Change to true to show the feedback
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (trace)
             {
                 System.Diagnostics.Debug.Print(message);

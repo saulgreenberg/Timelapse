@@ -4,8 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -77,7 +77,7 @@ namespace Timelapse.Controls
 
                 cbi = new ComboBoxItem()
                 {
-                    Content = String.Empty
+                    Content = string.Empty
                 };
                 this.ContentControl.Items.Insert(0, new Separator());
                 this.ContentControl.Items.Insert(0, cbi);
@@ -193,8 +193,10 @@ namespace Timelapse.Controls
 
         #region Hiding, visual Effects and Popup Previews
 
+        // ReSharper disable once UnusedMember.Global
         public void HideItems(List<String> itemsToHide)
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (this.ContentControl == null || this.ContentControl.Items == null || itemsToHide == null)
             {
                 return;

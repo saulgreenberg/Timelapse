@@ -1,7 +1,8 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
+using DialogUpgradeFiles.Util;
+// ReSharper disable UnusedMember.Global
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableColumn: An abstract class that 
@@ -12,9 +13,9 @@ namespace DialogUpgradeFiles.Database
     public abstract class FileTableColumn
     {
         #region Public Properties
-        public string ControlType { get; private set; }
+        public string ControlType { get; }
 
-        public string DataLabel { get; private set; }
+        public string DataLabel { get; }
 
         public abstract bool IsContentValid(string content);
         #endregion

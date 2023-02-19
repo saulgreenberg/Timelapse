@@ -1,11 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
-using Timelapse.Database;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
+using Timelapse.SearchingAndSorting;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Sort Menu Callbacks
@@ -140,7 +140,7 @@ namespace Timelapse
             // If instructed to do so, Reset menu item checkboxes based on the current sort terms.
             if (updateMenuChecks == false)
             {
-                return String.Empty;
+                return string.Empty;
             }
 
             this.MenuItemSortByRelativPathDateTime.IsChecked = false;

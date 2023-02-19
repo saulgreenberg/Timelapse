@@ -7,8 +7,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Timelapse.Controls;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
+using Timelapse.Enums;
 using Timelapse.Util;
-using TimelapseUpgradeFiles.Enums;
 
 namespace Timelapse.Database
 {
@@ -276,7 +278,7 @@ namespace Timelapse.Database
         //      ('value1', 'value2', ... 'valueN');
         public void Insert(string tableName, List<List<ColumnTuple>> insertionStatements)
         {
-            Insert(tableName, insertionStatements, null, String.Empty);
+            Insert(tableName, insertionStatements, null, string.Empty);
         }
 
         public void Insert(string tableName, List<List<ColumnTuple>> insertionStatements, IProgress<ProgressBarArguments> progress, string progressString)
@@ -289,8 +291,8 @@ namespace Timelapse.Database
             {
                 Debug.Assert(columnsToUpdate != null && columnsToUpdate.Count > 0, "No column updates are specified.");
 
-                string columns = String.Empty;
-                string values = String.Empty;
+                string columns = string.Empty;
+                string values = string.Empty;
                 foreach (ColumnTuple column in columnsToUpdate)
                 {
                     columns += String.Format(" {0}" + Sql.Comma, column.Name);      // transform dictionary entries into a string "col1, col2, ... coln"
@@ -336,6 +338,7 @@ namespace Timelapse.Database
         // This allows us to trim data in the database after the fact.
         // Form:
         // -- UPDATE tablename SET columname = TRIM(columnname);
+        // ReSharper disable once UnusedMember.Global
         public void TrimWhitespace(string tableName, List<string> columnNames)
         {
             // Check the arguments for null 
@@ -356,6 +359,7 @@ namespace Timelapse.Database
         // Note that this could also be done using ColumnTuplesWithWhere, but this is perhaps a simpler way to compose this
         // Form of each update query generated for each key/value dictionary pair (eg., key="Ok"' value="true" :
         // -- Update tableName Set columnName = 'true' where columnName = 'Ok'
+        // ReSharper disable once UnusedMember.Global
         public void UpdateParticularColumnValuesWithNewValues(string tableName, string columnName, Dictionary<string, string> currentValue_newValuePair)
         {
             List<string> queries = new List<string>();
@@ -371,6 +375,7 @@ namespace Timelapse.Database
         // Note: this is helpful for cases when the defaults were not set, as that could introduce null values. 
         // Form for each query generated for each provided column
         // -- UPDATE tablename SET columname = '' WHERE columnname IS NULL;
+        // ReSharper disable once UnusedMember.Global
         public void ChangeNullToEmptyString(string tableName, List<string> columnNames)
         {
             // Check the arguments for null 
@@ -441,7 +446,7 @@ namespace Timelapse.Database
         {
             if (columnsToUpdate.Columns.Count < 1)
             {
-                return String.Empty;
+                return string.Empty;
             }
             // UPDATE tableName SET 
             // colname1 = value1, 
@@ -453,7 +458,7 @@ namespace Timelapse.Database
             string query = Sql.Update + tableName + Sql.Set;
             if (columnsToUpdate.Columns.Count < 0)
             {
-                return String.Empty;     // No data, so nothing to update. This isn't really an error, so...
+                return string.Empty;     // No data, so nothing to update. This isn't really an error, so...
             }
 
             // column_name = 'value'
@@ -471,7 +476,7 @@ namespace Timelapse.Database
             }
             query = query.Substring(0, query.Length - Sql.Comma.Length); // Remove the last comma
 
-            if (String.IsNullOrWhiteSpace(columnsToUpdate.Where) == false)
+            if (string.IsNullOrWhiteSpace(columnsToUpdate.Where) == false)
             {
                 query += Sql.Where;
                 query += columnsToUpdate.Where;
@@ -489,7 +494,7 @@ namespace Timelapse.Database
         {
             // DELETE FROM table_name WHERE where
             string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
-            if (!String.IsNullOrWhiteSpace(where))
+            if (!string.IsNullOrWhiteSpace(where))
             {
                 // Add the WHERE clause only when where is not empty
                 query += Sql.Where;                   // WHERE
@@ -540,7 +545,7 @@ namespace Timelapse.Database
             {
                 return;
             }
-            string queries = String.Empty;                      // A list of SQL queries
+            string queries = string.Empty;                      // A list of SQL queries
 
             // Turn pragma foreign_key off before the delete, as otherwise it takes forever on largish tables
             // Notice that we do not wrap this in a begin / end, as the pragma does not work within that.
@@ -648,7 +653,7 @@ namespace Timelapse.Database
 
         public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements)
         {
-            ExecuteNonQueryWrappedInBeginEnd(statements, null, String.Empty, 0);
+            ExecuteNonQueryWrappedInBeginEnd(statements, null, string.Empty, 0);
         }
 
         public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
@@ -657,6 +662,7 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(statements, nameof(statements));
 
             const int MaxStatementCount = 50000;
+            // ReSharper disable once RedundantAssignment
             string mostRecentStatement = null;
             try
             {
@@ -672,6 +678,7 @@ namespace Timelapse.Database
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
                         // Invoke each query in the queries list
+                        // ReSharper disable once NotAccessedVariable
                         int rowsUpdated = 0;
                         int statementsInQuery = 0;
                         int statementsCount = statements.Count;
@@ -687,6 +694,7 @@ namespace Timelapse.Database
 
                             }
                             // capture the most recent statement so it's available for debugging
+                            // ReSharper disable once RedundantAssignment
                             mostRecentStatement = statement;
                             statementsInQuery++;
 
@@ -727,6 +735,7 @@ namespace Timelapse.Database
                         {
                             command.CommandText = Sql.EndTransaction;
                             //Debug.Print(command.CommandText);
+                            // ReSharper disable once RedundantAssignment
                             rowsUpdated += command.ExecuteNonQuery();
                         }
                     }
@@ -776,7 +785,7 @@ namespace Timelapse.Database
                 List<string> columnDefinitions = new List<string>();
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
                     for (int field = 0; field < reader.FieldCount; field++)
                     {
                         switch (field)
@@ -955,7 +964,7 @@ namespace Timelapse.Database
                         Dictionary<string, string> columndefaultsDict = new Dictionary<string, string>();
                         while (reader.Read())
                         {
-                            columndefaultsDict.Add(reader[1].ToString(), reader[4] != null ? reader[4].ToString() : String.Empty);
+                            columndefaultsDict.Add(reader[1].ToString(), reader[4] != null ? reader[4].ToString() : string.Empty);
                         }
                         return columndefaultsDict;
                     }
@@ -1000,6 +1009,7 @@ namespace Timelapse.Database
         /// Add a column to the table named sourceTable at position columnNumber using the provided columnDefinition
         /// The value in columnDefinition is assumed to be the desired default value
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public void SchemaAddColumnToTable(string tableName, int columnNumber, SchemaColumnDefinition columnDefinition)
         {
             // Check the arguments for null 
@@ -1129,7 +1139,7 @@ namespace Timelapse.Database
         public void SchemaAlterColumn(string sourceTable, string currentColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
             // Some basic error checking to make sure we can do the operation
-            if (String.IsNullOrWhiteSpace(currentColumnName))
+            if (string.IsNullOrWhiteSpace(currentColumnName))
             {
                 throw new ArgumentOutOfRangeException(nameof(currentColumnName));
             }
@@ -1140,10 +1150,11 @@ namespace Timelapse.Database
             }
             try
             {
-                string newColumnName = String.Empty;
-                if (attributes.ContainsKey(SchemaAttributesEnum.Name))
+                string newColumnName = string.Empty;
+                if (attributes.TryGetValue(SchemaAttributesEnum.Name, out string key))
+                //if (attributes.ContainsKey(SchemaAttributesEnum.Name))
                 {
-                    newColumnName = attributes[SchemaAttributesEnum.Name].Trim();
+                    newColumnName = key.Trim();
                 }
                 using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
                 {
@@ -1190,13 +1201,13 @@ namespace Timelapse.Database
         /// </summary>
         private static string SchemaCloneButAlterColumn(SQLiteConnection connection, string tableName, string existingColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
-            string newSchema = String.Empty;
+            string newSchema = string.Empty;
             using (SQLiteDataReader reader = GetSchema(connection, tableName))
             {
-                string currentColumnName = String.Empty;
+                string currentColumnName = string.Empty;
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
 
                     // Copy the existing column definition unless its the column named columnNam
                     for (int field = 0; field < reader.FieldCount; field++)
@@ -1445,6 +1456,7 @@ namespace Timelapse.Database
 
         // PRAGMA Defer foreign keys. 
 #pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
         private static void PragmaSetDeferForeignKeys(SQLiteConnection connection, bool state)
         {
             // Syntax is: defer_foreign_keys = 1; True
@@ -1473,6 +1485,7 @@ namespace Timelapse.Database
         /// <param name="tableName">the name of the  table</param> 
         /// <param name="name">the name of the new column</param> 
         /// <param name="type">the type of the new column</param> 
+        // ReSharper disable once UnusedMember.Local
         private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type)
         {
             string columnDefinition = name + " " + type;
@@ -1488,6 +1501,7 @@ namespace Timelapse.Database
         /// <param name="name">the name of the new column</param> 
         /// <param name="type">the type of the new column</param> 
         /// <param name="otherOptions">space-separated options such as PRIMARY KEY AUTOINCREMENT, NULL or NOT NULL etc</param>
+        // ReSharper disable once UnusedMember.Local
         private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
         {
             string columnDefinition = name + " " + type;

@@ -6,6 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -49,7 +51,7 @@ namespace Timelapse.Dialog
             // Get the image filename and image and display them
             this.FileName.Content = this.ImageToCorrect.File;
             this.FileName.ToolTip = this.ImageToCorrect.File;
-            this.SampleImage.Source = this.ImageToCorrect.LoadBitmap(this.fileDatabase.FolderPath, out bool isCorruptOrMissing);
+            this.SampleImage.Source = this.ImageToCorrect.LoadBitmap(this.fileDatabase.FolderPath, out _);
 
             // Configure datetime picker to the initial date on the images plus callbacks
             this.initialDate = this.ImageToCorrect.DateTime;
@@ -89,7 +91,6 @@ namespace Timelapse.Dialog
                 // Collects feedback to display in a datagrid after the operation is done
                 ObservableCollection<DateTimeFeedbackTuple> feedbackRows = new ObservableCollection<DateTimeFeedbackTuple>();
 
-                int count = this.fileDatabase.FileTable.RowCount;
                 this.DatabaseUpdateFileDates(this.Progress, adjustment, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update

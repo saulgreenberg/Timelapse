@@ -7,7 +7,7 @@ namespace Timelapse_ViewOnly
     {
         // This program invokes Timelapse with a -viewonly argument,
         // where Timelapse starts in a mode where the user can view but not edit any data.
-        static void Main(string[] _)
+        static void Main()
         {
             ProcessStartInfo processStartInfo = new ProcessStartInfo()
             {

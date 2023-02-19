@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.DataTables;
 using DialogUpgradeFiles.Util;
 
 namespace DialogUpgradeFiles.Database
@@ -15,7 +17,7 @@ namespace DialogUpgradeFiles.Database
         public DataTableBackedList<ControlRow> Controls { get; private set; }
 
         /// <summary>Gets the file name of the image database on disk.</summary>
-        public string FilePath { get; private set; }
+        public string FilePath { get; }
 
         public SQLiteWrapper Database { get; set; }
         #endregion
@@ -274,8 +276,8 @@ namespace DialogUpgradeFiles.Database
                 {
                     // Check if various values are empty, and if so update the row and fill the dataline with appropriate defaults
                     ColumnTuplesWithWhere columnsToUpgrade = new ColumnTuplesWithWhere();    // holds columns which have changed for the current control
-                    bool noDataLabel = String.IsNullOrWhiteSpace(control.DataLabel);
-                    bool noLabel = String.IsNullOrWhiteSpace(control.Label);
+                    bool noDataLabel = string.IsNullOrWhiteSpace(control.DataLabel);
+                    bool noLabel = string.IsNullOrWhiteSpace(control.Label);
                     if (noDataLabel && noLabel)
                     {
                         string dataLabel = this.GetNextUniqueDataLabel(control.Type);
@@ -514,6 +516,7 @@ namespace DialogUpgradeFiles.Database
                         maximumID = control.ID;
                     }
                 }
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 Debug.Assert((maximumID > 0) && (maximumID <= Int64.MaxValue),
                     $"Maximum ID found is {maximumID}, which is out of range.");
                 string jumpAmount = maximumID.ToString();
@@ -652,7 +655,7 @@ namespace DialogUpgradeFiles.Database
         public void SyncControlToDatabase(ControlRow control)
         {
             // This form sync's by the ID
-            SyncControlToDatabase(control, String.Empty);
+            SyncControlToDatabase(control, string.Empty);
         }
 
         public void SyncControlToDatabase(ControlRow control, string dataLabel)
@@ -664,7 +667,7 @@ namespace DialogUpgradeFiles.Database
             // this.CreateBackupIfNeeded();
 
             // Create the where condition with the ID, but if the dataLabel is not empty, use the dataLabel as the where condition
-            ColumnTuplesWithWhere ctw = dataLabel == String.Empty
+            ColumnTuplesWithWhere ctw = dataLabel == string.Empty
                 ? control.CreateColumnTuplesWithWhereByID()
                 : new ColumnTuplesWithWhere(control.CreateColumnTuplesWithWhereByID().Columns, new ColumnTuple(Constant.Control.DataLabel, dataLabel));
             this.Database.Upgrade(Constant.DBTables.Template, ctw);
@@ -697,6 +700,7 @@ namespace DialogUpgradeFiles.Database
         // Upgrade the entire template database to match the in-memory template
         // Note that this version does this by recreating the entire table: 
         // We could likely be far more efficient by only updateding those entries that differ from the current entries.
+        // ReSharper disable once UnusedMember.Local
         private void SyncTemplateTableToDatabase(DataTableBackedList<ControlRow> newTable)
         {
             // Utilities.PrintMethodName("Called with arguments");

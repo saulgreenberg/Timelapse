@@ -7,10 +7,12 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
-using Timelapse.Dialog;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
-namespace Timelapse
+namespace Timelapse.Dialog
 {
     /// <summary>
     /// Interaction logic for DialogDateTimeLinearCorrection.xaml
@@ -132,7 +134,6 @@ namespace Timelapse
                 // Collects feedback to display in a datagrid after the operation is done
                 ObservableCollection<DateTimeFeedbackTuple> feedbackRows = new ObservableCollection<DateTimeFeedbackTuple>();
 
-                int count = this.fileDatabase.FileTable.RowCount;
                 this.DatabaseUpdateFileDates(this.Progress, intervalFromOldestToNewestImage, newestImageAdjustment, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update

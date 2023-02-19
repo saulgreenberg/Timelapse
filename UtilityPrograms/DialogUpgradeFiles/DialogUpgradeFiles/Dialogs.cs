@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
+// ReSharper disable once CheckNamespace
 namespace DialogUpgradeFiles.Dialog
 {
     public static class Dialogs
@@ -24,7 +25,7 @@ namespace DialogUpgradeFiles.Dialog
                 Filter = filter
             })
             {
-                if (String.IsNullOrWhiteSpace(defaultFilePath) || !(File.Exists(defaultFilePath) || Directory.Exists(defaultFilePath)))
+                if (string.IsNullOrWhiteSpace(defaultFilePath) || !(File.Exists(defaultFilePath) || Directory.Exists(defaultFilePath)))
                 {
                     openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
@@ -35,7 +36,7 @@ namespace DialogUpgradeFiles.Dialog
                     if (attr.HasFlag(FileAttributes.Directory))
                     {
                         openFileDialog.InitialDirectory = defaultFilePath;
-                        openFileDialog.FileName = String.Empty;
+                        openFileDialog.FileName = string.Empty;
                     }
                     else
                     {

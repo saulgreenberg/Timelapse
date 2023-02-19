@@ -7,11 +7,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
-using Timelapse.Util;
 using RowColumn = System.Drawing.Point;
 
 namespace Timelapse.Controls
@@ -152,7 +152,7 @@ namespace Timelapse.Controls
                     ? 0
                     : Convert.ToInt32(desiredCellHeight * this.thumbnailInCells[0].CellWidth / this.thumbnailInCells[0].CellHeight); // From the aspect ratio
 
-                if (gridWidth == this.oldGridWidth && gridHeight == this.oldGridHeight)
+                if (Math.Abs(gridWidth - this.oldGridWidth) < .0001 && Math.Abs(gridHeight - this.oldGridHeight) < .0001)
                 {
                     // If the grid size hasn't changed, we must be navigating
                     navigating = true;
@@ -625,15 +625,15 @@ namespace Timelapse.Controls
         // as they have to be re-rendered to the new size anyways
         private List<ThumbnailInCell> GetThumbnailsAlreadyInGrid(double cellHeight, int fileTableCount)
         {
-            List<ThumbnailInCell> thumbnailsAlreadyInGrid = new List<ThumbnailInCell>();
+            List<ThumbnailInCell> thumbnailsAlreadyInGridList = new List<ThumbnailInCell>();
             int fileTableIndex = this.FileTableStartIndex;
             int cellsInGrid = this.AvailableColumns * this.AvailableRows;
 
-            if (cellsInGrid <= 0 || this.Grid.RowDefinitions[0].ActualHeight != cellHeight)
+            if (cellsInGrid <= 0 || Math.Abs(this.Grid.RowDefinitions[0].ActualHeight - cellHeight) > .0001)
             {
                 // If The grid has nothing in it, or if the requested cell height isn't the same as the current one, return an empty list
                 // i.e., assumes this is a change in zoom level, thus we don't reuse thumbnails as we have to resize them anyways
-                return thumbnailsAlreadyInGrid;
+                return thumbnailsAlreadyInGridList;
             }
 
             // For each image row we want to display as a thumbnail, check if its thumbnail is already in the grid in a reusable form where:
@@ -647,13 +647,13 @@ namespace Timelapse.Controls
                     if (String.Equals(tic.Path, path) && tic.Image.Source != null)
                     {
                         // a reusuable thumbnail exists, so add it to the list
-                        thumbnailsAlreadyInGrid.Add(tic);
+                        thumbnailsAlreadyInGridList.Add(tic);
                         break;
                     }
                 }
                 fileTableIndex++;
             }
-            return thumbnailsAlreadyInGrid;
+            return thumbnailsAlreadyInGridList;
         }
         #endregion
 
@@ -919,6 +919,7 @@ namespace Timelapse.Controls
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public void RefreshDuplicateTextIfWarranted()
         {
             foreach (ThumbnailInCell thumbnailInCell in this.thumbnailInCells)

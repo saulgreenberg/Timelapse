@@ -10,15 +10,17 @@ using System.Windows.Media.Imaging;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
-using Timelapse.Images;
 using Timelapse.ImageSetLoadingPipeline;
 using Timelapse.QuickPaste;
 using Timelapse.Util;
 using ToastNotifications.Core;
 using ToastNotifications.Messages;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     /// <summary>
@@ -70,17 +72,17 @@ namespace Timelapse
                 // Notify the user the template couldn't be loaded rather than silently doing nothing
                 Mouse.OverrideCursor = null;
                 Dialogs.TemplateFileNotLoadedAsCorruptDialog(this, templateDatabasePath);
-                return new Tuple<bool, string>(false, String.Empty);
+                return new Tuple<bool, string>(false, string.Empty);
             }
 
             string unknownTypes = this.templateDatabase.AreControlsOfKnownTypes();
-            if (unknownTypes != String.Empty)
+            if (unknownTypes != string.Empty)
             {
                 // The template contains an item of an unknown type. 
                 // This could be because we are trying to open a template with an old version of Timelapse
                 // that doesn't know about newer types.
                 Dialogs.TemplateIncludesControlOfUnknownType(this, unknownTypes);
-                return new Tuple<bool, string>(false, String.Empty);
+                return new Tuple<bool, string>(false, string.Empty);
             }
 
             // The .tdb templateDatabase should now be loaded
@@ -89,7 +91,7 @@ namespace Timelapse
             if (this.TrySelectDatabaseFile(templateDatabasePath, out string fileDatabaseFilePath, out bool importImages) == false)
             {
                 // No image database file was selected
-                return new Tuple<bool, string>(false, String.Empty);
+                return new Tuple<bool, string>(false, string.Empty);
             }
             else
             {   // XXXX THIS IS WHERE WE SHOULD CHECK THE DATAFILE. CAN WE DO IT BEFORE OPENING THE TEMPLATE?
@@ -98,7 +100,7 @@ namespace Timelapse
                 {
                     // Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
                     // If we are trying to import images for the first time, return the newly created ddb file
-                    return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
+                    return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : string.Empty);
                 }
             }
 
@@ -107,7 +109,7 @@ namespace Timelapse
                 // There are no .ddb files in this folder, which means Timelapse would normally try to create one.
                 // But if Timelapse was started in a ReadOnly state, that is not allowed. Tell the user, and abort.
                 Dialogs.ViewOnlySoDatabaseCannotBeCreated(this);
-                return new Tuple<bool, string>(false, String.Empty);
+                return new Tuple<bool, string>(false, string.Empty);
             }
 
             // Check the file path length of the .ddb file and notify the user the ddb couldn't be loaded because its path is too long
@@ -115,7 +117,7 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.DatabasePathTooLongDialog(this, fileDatabaseFilePath);
-                return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : String.Empty);
+                return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : string.Empty);
                 //return false;
             }
 
@@ -124,7 +126,7 @@ namespace Timelapse
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.BackupPathTooLongDialog(this);
-                return new Tuple<bool, string>(false, String.Empty);
+                return new Tuple<bool, string>(false, string.Empty);
             }
 
             // Before fully loading an existing image database, 
@@ -148,7 +150,7 @@ namespace Timelapse
                         {
                             // user indicates exiting rather than continuing.
                             Application.Current.Shutdown();
-                            return new Tuple<bool, string>(false, String.Empty);
+                            return new Tuple<bool, string>(false, string.Empty);
                         }
                         else
                         {
@@ -182,7 +184,7 @@ namespace Timelapse
                     bool isEmpty = File.Exists(fileDatabaseFilePath) && new FileInfo(fileDatabaseFilePath).Length == 0;
                     Mouse.OverrideCursor = null;
                     Dialogs.DatabaseFileNotLoadedAsCorruptDialog(this, fileDatabaseFilePath, isEmpty);
-                    return new Tuple<bool, string>(false, String.Empty);
+                    return new Tuple<bool, string>(false, string.Empty);
                 }
             }
 
@@ -196,7 +198,7 @@ namespace Timelapse
             {
                 // This happens if there is an unrecognized control
                 Dialogs.TemplateIncludesControlOfUnknownType(this, "unknown control in the Timelapse .ddb data file.");
-                return new Tuple<bool, string>(false, String.Empty);
+                return new Tuple<bool, string>(false, string.Empty);
             }
 
             // The next test is to test and syncronize (if needed) the default values stored in the fileDB table schema to those stored in the template
@@ -258,7 +260,7 @@ namespace Timelapse
             {
                 await this.OnFolderLoadingCompleteAsync(false).ConfigureAwait(true);
             }
-            return new Tuple<bool, string>(true, String.Empty);
+            return new Tuple<bool, string>(true, string.Empty);
         }
         #endregion
 
@@ -340,7 +342,7 @@ namespace Timelapse
                 {
                     Dialogs.FilePathTooLongDialog(this, filesSkipped);
                 }
-                string message = String.Empty;
+                string message;
                 if (isCancelled)
                 {
                     // The user has cancelled the load
@@ -350,7 +352,7 @@ namespace Timelapse
                 else
                 {
                     message = (folderLoadProgress.TotalPasses > 1) ? $"Pass {folderLoadProgress.CurrentPass}/{folderLoadProgress.TotalPasses}{Environment.NewLine}"
-                        : String.Empty;
+                        : string.Empty;
                     if (folderLoadProgress.CurrentPass == 1 && folderLoadProgress.CurrentFile == folderLoadProgress.TotalFiles)
                     {
                         // I suspect this never gets displayed, but just in case.
@@ -406,9 +408,9 @@ namespace Timelapse
                         // - deleting the .ddb file (as its initial load was never completed)
 
                         // Get the .ddb file path as we will be deleting it.
-                        string filePathToDelete = isFirstTimeLoad && this.DataHandler?.FileDatabase != null && File.Exists(this.DataHandler.FileDatabase.FilePath)
+                        string filePathToDelete = this.DataHandler?.FileDatabase != null && File.Exists(this.DataHandler.FileDatabase.FilePath)
                         ? this.DataHandler.FileDatabase.FilePath
-                        : String.Empty;
+                        : string.Empty;
 
                         this.CloseImageSet();
                         this.State.ExifToolManager.Stop();
@@ -460,7 +462,7 @@ namespace Timelapse
         #endregion
 
         #region UpdateFolderLoadProgress
-        private void UpdateFolderLoadProgress(BusyCancelIndicator BusyCancelIndicator, BitmapSource bitmap, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
+        private void UpdateFolderLoadProgress(BusyCancelIndicator theBusyCancelIndicator, BitmapSource bitmap, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
         {
             if (bitmap != null)
             {
@@ -468,20 +470,20 @@ namespace Timelapse
             }
 
             // Check the arguments for null 
-            ThrowIf.IsNullArgument(BusyCancelIndicator, nameof(BusyCancelIndicator));
+            ThrowIf.IsNullArgument(theBusyCancelIndicator, nameof(theBusyCancelIndicator));
 
             // Set it as a progressive or indeterminate bar
-            BusyCancelIndicator.IsIndeterminate = isIndeterminate;
+           theBusyCancelIndicator.IsIndeterminate = isIndeterminate;
 
             // Set the progress bar position (only visible if determinate)
-            BusyCancelIndicator.Percent = percent;
+            theBusyCancelIndicator.Percent = percent;
 
             // Update the text message
-            BusyCancelIndicator.Message = message;
+            theBusyCancelIndicator.Message = message;
 
             // Update the cancel button to reflect the cancelEnabled argument
-            BusyCancelIndicator.CancelButtonIsEnabled = isCancelEnabled;
-            BusyCancelIndicator.CancelButtonText = isCancelEnabled ? "Cancel" : "Writing data...";
+            theBusyCancelIndicator.CancelButtonIsEnabled = isCancelEnabled;
+            theBusyCancelIndicator.CancelButtonText = isCancelEnabled ? "Cancel" : "Writing data...";
         }
         #endregion
 

@@ -22,12 +22,8 @@ namespace DialogUpgradeFiles.Util
             GetAllImageAndVideoFilesInFolderAndSubfolders(rootFolderPath, fileInfoList, 0);
         }
 
-        /// <summary>
-        /// Populate folderPaths with all the folders and subfolders (from the root folder) that contains at least one video or image file
-        /// If prefixPath is provided, it is stripped from the beginning of the matching folder paths, otherwise the full path is returned
-        /// </summary>
-        /// <param name="folderRoot"></param>
-        /// <param name="folderPaths"></param>
+        // Populate folderPaths with all the folders and subfolders (from the root folder) that contains at least one video or image file
+        // If prefixPath is provided, it is stripped from the beginning of the matching folder paths, otherwise the full path is returned
         public static void GetAllFoldersContainingAnImageOrVideo(string folderRoot, List<string> folderPaths, string prefixPath)
         {
             // Check the arguments for null 
@@ -121,8 +117,6 @@ namespace DialogUpgradeFiles.Util
 
         public static List<string> GetAllDDBandTDBFilesInFoldersAndSubfolders(string startFolder, List<string> foundFiles)
         {
-            bool ignoreBackupFolder = true;
-            bool ignoreDeletedFolder = true;
             string TDBpattern = "*.tdb";
             string DDBpattern = "*.ddb";
             if (foundFiles == null)
@@ -140,7 +134,7 @@ namespace DialogUpgradeFiles.Util
             try
             {
                 string foldername = startFolder.Split(Path.DirectorySeparatorChar).Last();
-                if ((ignoreBackupFolder && foldername == Constant.File.BackupFolder) || (ignoreDeletedFolder && foldername == Constant.File.DeletedFilesFolder))
+                if (foldername == Constant.File.BackupFolder || foldername == Constant.File.DeletedFilesFolder)
                 {
 
                 }
@@ -166,7 +160,7 @@ namespace DialogUpgradeFiles.Util
         // For each missingFolderPath, gets its folder name and search for its first counterpart in the subdirectory under rootPath.
         // Returns a dictionary where 
         // - key is each missing relativePath, 
-        // - value is the possible found relativePath, or String.Empty if there is no match
+        // - value is the possible found relativePath, or string.Empty if there is no match
         public static Dictionary<string, List<string>> TryGetMissingFolders(string rootPath, List<string> missingFolderPaths)
         {
             if (missingFolderPaths == null)
@@ -186,7 +180,6 @@ namespace DialogUpgradeFiles.Util
                     if (String.Equals(missingFolderName, allRelativePathName))
                     {
                         matches.Add(oneFolderPath);
-                        continue;
                     }
                 }
                 matchingFolders.Add(missingFolderPath, matches);
@@ -201,7 +194,7 @@ namespace DialogUpgradeFiles.Util
         /// </summary>
         /// <param name="rootFolder">the path to the root folder containing the template</param>
         /// <param name="fileName">the name of the file</param>
-        /// <returns>List<Tuple<string,string>>a list of tuples, each tuple comprising the RelativePath as Item1, and the File's name as Item2</returns>
+        /// <returns>List Tuple string, string a list of tuples, each tuple comprising the RelativePath as Item1, and the File's name as Item2</returns>
         public static List<Tuple<string, string>> SearchForFoldersContainingFileName(string rootFolder, string fileName)
         {
             List<string> foundFiles = new List<string>();
@@ -232,9 +225,9 @@ namespace DialogUpgradeFiles.Util
                 return null;
             }
             string fileName = Path.GetFileName(fullPath);
-            string directoryName = Path.GetDirectoryName(fullPath).TrimEnd('\\');
-
+            string directoryName = Path.GetDirectoryName(fullPath)?.TrimEnd('\\');
             //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
+            // ReSharper disable once PossibleNullReferenceException
             string relativePath = rootPath.Equals(directoryName) ? rootPath : directoryName.Substring(rootPath.Length + 1);
             //string relativePath = directoryName.Substring(rootPath.Length + 1);
             return new Tuple<string, string, string>(rootPath, relativePath, fileName);
@@ -382,6 +375,7 @@ namespace DialogUpgradeFiles.Util
                 FilesRemoveAllButImagesAndVideos(fileInfoList);
                 if (fileInfoList.Count != 0)
                 {
+                    // ReSharper disable once RedundantAssignment
                     fileInfoList = fileInfoList.OrderBy(file => file.FullName).ToList();
                 }
             }

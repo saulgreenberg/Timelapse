@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Resources;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Controls
@@ -174,9 +175,9 @@ namespace Timelapse.Controls
         #endregion
 
         #region Private: Activate all hyperlinks in the flow document
-        private void SubscribeToAllHyperlinks(FlowDocument flowDocument)
+        private void SubscribeToAllHyperlinks(FlowDocument myflowDocument)
         {
-            var hyperlinks = GetVisuals(flowDocument).OfType<Hyperlink>();
+            var hyperlinks = GetVisuals(myflowDocument).OfType<Hyperlink>();
             foreach (var link in hyperlinks)
             {
                 link.RequestNavigate += this.Link_RequestNavigate;

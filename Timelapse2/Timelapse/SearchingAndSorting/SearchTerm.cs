@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.SearchingAndSorting
 {
     /// <summary>
     /// A SearchTerm stores the search criteria for each column
@@ -22,12 +22,12 @@ namespace Timelapse.Database
         #region Constructors
         public SearchTerm()
         {
-            this.ControlType = String.Empty;
-            this.DatabaseValue = String.Empty;
-            this.DataLabel = String.Empty;
-            this.Label = String.Empty;
+            this.ControlType = string.Empty;
+            this.DatabaseValue = string.Empty;
+            this.DataLabel = string.Empty;
+            this.Label = string.Empty;
             this.List = null;
-            this.Operator = String.Empty;
+            this.Operator = string.Empty;
             this.UseForSearching = false;
         }
 

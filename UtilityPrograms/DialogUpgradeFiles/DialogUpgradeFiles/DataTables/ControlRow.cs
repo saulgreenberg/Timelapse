@@ -1,10 +1,12 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.Extensions;
+using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// ControlRow defines a single control as described in the Template.  
@@ -102,8 +104,7 @@ namespace DialogUpgradeFiles.Database
         // and wants the empty item removed (usually because they will add it themselves to a menu
         public List<string> GetChoices(out bool includesEmptyChoice)
         {
-            bool removeEmptyChoiceItem = true;
-            return this.GetChoices(out includesEmptyChoice, removeEmptyChoiceItem);
+            return this.GetChoices(out includesEmptyChoice, true);
         }
 
         // Parce the choice string into a list of items. 
@@ -130,13 +131,14 @@ namespace DialogUpgradeFiles.Database
         // Parce the choice string into a list of items. 
         // If it includes an empty choice item, remove the abstract <Empty> 
         // and insert an empty string as the first menu item
+        // ReSharper disable once UnusedMember.Global
         public List<string> GetChoicesForQuickPasteMenu()
         {
             List<string> list = this.List.Split(ControlRow.BarDelimiter).ToList();
             if (list.Contains(Constant.ControlMiscellaneous.EmptyChoiceItem))
             {
                 list.Remove(Constant.ControlMiscellaneous.EmptyChoiceItem);
-                list.Insert(0, String.Empty);
+                list.Insert(0, string.Empty);
             }
             return list;
         }

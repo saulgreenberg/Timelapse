@@ -7,6 +7,7 @@ namespace Timelapse.Util
     {
         // Returns true only if the two string-based dictionaries have the same keys, and each dictionaries key has the same value
         // regardless of order of the key/value pairs in the dictionary. 
+        // ReSharper disable once UnusedMember.Global
         public static bool AreKeysAndTheirStringValuesTheSame(Dictionary<string, string> dict1, Dictionary<string, string> dict2)
         {
             if (dict1 == null && dict2 == null)

@@ -5,11 +5,12 @@ using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Recognition;
-using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow
@@ -99,12 +100,12 @@ namespace Timelapse
                 //
                 // Set up a progress handler that will update the progress bar for the remaining operations
                 //
-                Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
+                Progress<ProgressBarArguments> progressHandlerArgs = new Progress<ProgressBarArguments>(value =>
                 {
                     // Update the progress bar
                     FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
                 });
-                IProgress<ProgressBarArguments> progress = progressHandler;
+                IProgress<ProgressBarArguments> progress = progressHandlerArgs;
 
 
                 //
@@ -145,7 +146,7 @@ namespace Timelapse
                     }
                     else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
-                        string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
+                        string sampleFile = jsonRecognitions.images.Count == 0 ? string.Empty : jsonRecognitions.images[0].file;
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
@@ -170,7 +171,7 @@ namespace Timelapse
 
                     if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
-                        string sampleFile = jsonRecognitions.images.Count == 0 ? String.Empty : jsonRecognitions.images[0].file;
+                        string sampleFile = jsonRecognitions.images.Count == 0 ? string.Empty : jsonRecognitions.images[0].file;
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
@@ -271,7 +272,7 @@ namespace Timelapse
         // Return a string that will be included in the message box invoked above that details the match (or mismatch) between the image set folder and recognition data folders
         private static string ComposeFolderDetails(List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth)
         {
-            string folderDetails = String.Empty;
+            string folderDetails = string.Empty;
             if (foldersInDBListButNotInJSon.Count == 0 && foldersInJsonButNotInDB.Count == 0)
             {
                 // All folders match, so don't show any details.

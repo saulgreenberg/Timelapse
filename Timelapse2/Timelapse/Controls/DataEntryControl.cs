@@ -6,8 +6,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
@@ -25,6 +25,7 @@ namespace Timelapse.Controls
     {
         #region DataEntryControl Properties
         /// <summary>Gets the position of the content control</summary>
+        // ReSharper disable once UnusedMember.Global
         public abstract Point TopLeft { get; }
 
         /// <summary>Gets the position of the content control</summary>
@@ -42,10 +43,10 @@ namespace Timelapse.Controls
         public bool Copyable { get; set; }
 
         /// <summary>Gets the container that holds the control.</summary>
-        public StackPanel Container { get; private set; }
+        public StackPanel Container { get; }
 
         /// <summary>Gets the data label which corresponds to this control.</summary>
-        public string DataLabel { get; private set; }
+        public string DataLabel { get; }
 
         public abstract IInputElement Focus(DependencyObject focusScope);
 
@@ -104,12 +105,12 @@ namespace Timelapse.Controls
         where TLabel : ContentControl, new()
     {
         #region DataEntryControl<TContent, TLabel> Properties
-        public TContent ContentControl { get; private set; }
+        public TContent ContentControl { get; }
 
         /// <summary>Gets the control label's value</summary>
         public string Label => (string)this.LabelControl.Content;
 
-        public TLabel LabelControl { get; private set; }
+        public TLabel LabelControl { get; }
 
         /// <summary>Gets or sets the width of the content control</summary>
         public int Width
@@ -216,7 +217,7 @@ namespace Timelapse.Controls
             // Note that the null check for control (which should not happen) gives it an auto value 'just in case'
             TextBlock popupText = new TextBlock
             {
-                Text = String.Empty,
+                Text = string.Empty,
                 Width = width < 20 ? 80 : width,
                 Height = control?.Height ?? Double.NaN,
                 Padding = padding,
@@ -267,7 +268,7 @@ namespace Timelapse.Controls
             }
             Border border = (Border)this.PopupPreview.Child;
             TextBlock popupText = (TextBlock)border.Child;
-            popupText.Text = String.Empty;
+            popupText.Text = string.Empty;
             this.PopupPreview.IsOpen = false;
         }
 

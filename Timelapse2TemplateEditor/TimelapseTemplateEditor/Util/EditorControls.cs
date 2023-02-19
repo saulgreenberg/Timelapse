@@ -2,8 +2,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
 
@@ -188,7 +189,7 @@ namespace Timelapse.Editor.Util
             Choices choices = Choices.ChoicesFromJson(control.List);
             if (choices.IncludeEmptyChoice)
             {
-                comboBox.Items.Add(String.Empty);
+                comboBox.Items.Add(string.Empty);
                 comboBox.Items.Add(new Separator());
             }
             foreach (string choice in choices.ChoiceList)
@@ -211,7 +212,7 @@ namespace Timelapse.Editor.Util
             }
             else
             {
-                Timelapse.Util.TracePrint.StackTraceToOutput("Unexpected null");
+                TracePrint.StackTraceToOutput("Unexpected null");
             }
         }
 
@@ -224,7 +225,7 @@ namespace Timelapse.Editor.Util
             }
             else
             {
-                Timelapse.Util.TracePrint.StackTraceToOutput("Unexpected null");
+                TracePrint.StackTraceToOutput("Unexpected null");
             }
         }
     }

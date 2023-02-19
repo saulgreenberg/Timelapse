@@ -79,13 +79,23 @@
                     <DataGridTemplateColumn Width="Auto" Header="Use?"  >
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                
+
                                 <!-- It seems to work, and all my efforts to figure out how to resolve this didn't work-->
                                 <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
-                                <CheckBox Name="Part_Checkbox" VerticalAlignment="Center" IsChecked="{Binding Path=Use, UpdateSourceTrigger=PropertyChanged}" Checked="Checkbox_CheckChanged" Unchecked="Checkbox_CheckChanged"/>
+                                <CheckBox Name="Part_Checkbox" VerticalAlignment="Center" IsChecked="{Binding Use, UpdateSourceTrigger=PropertyChanged}" Checked="Checkbox_CheckChanged" Unchecked="Checkbox_CheckChanged"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+                    <!--<DataGridTemplateColumn Width="Auto" Header="Use?"  >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                
+                                --><!-- It seems to work, and all my efforts to figure out how to resolve this didn't work-->
+                                <!-- ReSharper disable once Xaml.BindingWithContextNotResolved --><!--
+                                <CheckBox Name="Part_Checkbox" VerticalAlignment="Center" IsChecked="{Binding Path=Use, UpdateSourceTrigger=PropertyChanged}" Checked="Checkbox_CheckChanged" Unchecked="Checkbox_CheckChanged"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>-->
 
                     <!-- Locate button column -->
                     <DataGridTemplateColumn Width="Auto">

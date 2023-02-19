@@ -1,6 +1,6 @@
 ﻿using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// FileTableDateTimeColumn - A FileTable Column holding DateTime values

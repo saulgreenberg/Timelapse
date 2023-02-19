@@ -5,6 +5,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for TestingDialog.xaml
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public partial class TestSomeCodeDialog
     {
         public TestSomeCodeDialog(Window owner)

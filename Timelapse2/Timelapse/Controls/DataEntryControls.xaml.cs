@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Timelapse.Database;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -14,8 +15,8 @@ namespace Timelapse.Controls
     public partial class DataEntryControls
     {
         #region Public properties and Private Variables
-        public List<DataEntryControl> Controls { get; private set; }
-        public Dictionary<string, DataEntryControl> ControlsByDataLabel { get; private set; }
+        public List<DataEntryControl> Controls { get; }
+        public Dictionary<string, DataEntryControl> ControlsByDataLabel { get; }
 
         private DataEntryHandler dataEntryHandler;
         #endregion
@@ -147,7 +148,7 @@ namespace Timelapse.Controls
                     string value = note.ContentControl.Text;
                     if (note.ContentControl.Autocompletions.ContainsKey(value) == false)
                     {
-                        note.ContentControl.Autocompletions.Add(value, String.Empty);
+                        note.ContentControl.Autocompletions.Add(value, string.Empty);
                     }
                 }
             }
@@ -223,9 +224,8 @@ namespace Timelapse.Controls
                         // Notes: When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
                         string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(note.DataLabel);
-                        if (control is DataEntryNote &&
-                            (control.DataLabel == Constant.DatabaseColumn.File ||
-                             control.DataLabel == Constant.DatabaseColumn.RelativePath))
+                        if (control.DataLabel == Constant.DatabaseColumn.File ||
+                             control.DataLabel == Constant.DatabaseColumn.RelativePath)
                         {
                             note.IsEnabled = imagesSelected == 1;
                         }

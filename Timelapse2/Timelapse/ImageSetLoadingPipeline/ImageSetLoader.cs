@@ -7,9 +7,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Controls;
-using Timelapse.Database;
 using Timelapse.DataStructures;
-using Timelapse.Images;
+using Timelapse.DataTables;
 using Timelapse.Util;
 
 namespace Timelapse.ImageSetLoadingPipeline
@@ -43,7 +42,6 @@ namespace Timelapse.ImageSetLoadingPipeline
         public int ImagesToLoad
         {
             get;
-            private set;
         }
 
         public List<string> ImagesSkippedAsFilePathTooLong { get; set; }
@@ -76,10 +74,10 @@ namespace Timelapse.ImageSetLoadingPipeline
                 existingPaths = new HashSet<string>(from file in filetable
                                                     select Path.Combine(imageSetFolderPath, Path.Combine(file.RelativePath, file.File)).ToLowerInvariant());
             }
-            FileInfo[] filesToAddInfoArray;
-            filesToAddInfoArray = (from fileInfo in fileInfos
-                                   where existingPaths.Contains(fileInfo.FullName.ToLowerInvariant()) == false
-                                   select fileInfo).OrderBy(f => f.FullName).ToArray();
+
+            FileInfo[] filesToAddInfoArray = (from fileInfo in fileInfos
+                where existingPaths.Contains(fileInfo.FullName.ToLowerInvariant()) == false
+                select fileInfo).OrderBy(f => f.FullName).ToArray();
 
             this.ImagesToLoad = filesToAddInfoArray.Length;
 
@@ -106,9 +104,10 @@ namespace Timelapse.ImageSetLoadingPipeline
                     if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                     {
                         // User requested we cancel the task. So stop going through files and adding any further tasks.
-                        // Although I am unsure about this, clearing the task lisk may help inhibit additional tasks being added
-                        // The caller will check the cancelation token again, and will stop further actions and clean up as needed.
+                        // Although I am unsure about this, clearing the task list may help inhibit additional tasks being added
+                        // The caller will check the cancellation token again, and will stop further actions and clean up as needed.
                         // Debug.Print("Cancelled from ImageSetLoader: this.pass1");
+                        // ReSharper disable once RedundantAssignment
                         loadTasks = new List<Task>();
                         return;
                     }
@@ -136,9 +135,9 @@ namespace Timelapse.ImageSetLoadingPipeline
                     // The null portion shouldn't happen
                     string relativePath = directoryName != null
                         ? directoryName.Replace(absolutePathPart, string.Empty).TrimEnd(Path.DirectorySeparatorChar)
-                        : String.Empty;
+                        : string.Empty;
 
-                    ImageLoader loader = new ImageLoader(imageSetFolderPath, relativePath, fileInfo, dataHandler);
+                    ImageLoader loader = new ImageLoader(relativePath, fileInfo, dataHandler);
 
                     Task loaderTask = loader.LoadImageAsync(() =>
                     {
@@ -193,8 +192,8 @@ namespace Timelapse.ImageSetLoadingPipeline
             this.pass2 = new Task(() =>
             {
                 // This pass2 starts after pass1 is fully complete
-                List<ImageRow> imagesToInsert = capturedDatabaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
-                dataHandler.FileDatabase.AddFiles(imagesToInsert,
+                List<ImageRow> imagesToInsertList = capturedDatabaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
+                dataHandler.FileDatabase.AddFiles(imagesToInsertList,
                                                   (file, fileIndex) =>
                                                   {
                                                       this.LastInsertComplete = file;

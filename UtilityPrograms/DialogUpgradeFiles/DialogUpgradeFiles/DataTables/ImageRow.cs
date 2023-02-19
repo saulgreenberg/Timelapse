@@ -1,16 +1,21 @@
 ﻿//using MetadataExtractor;
 //using MetadataExtractor.Formats.Exif;
 //using MetadataExtractor.Formats.Exif.Makernotes;
-using DialogUpgradeFiles.Enums;
-//using DialogUpgradeFiles.Images;
-using DialogUpgradeFiles.Util;
+
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.Enums;
+using DialogUpgradeFiles.Extensions;
+using DialogUpgradeFiles.Util;
+//using DialogUpgradeFiles.Images;
+using DataRowExtensions = DialogUpgradeFiles.Extensions.DataRowExtensions;
+
 //using MetadataDirectory = MetadataExtractor.Directory;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// Represents the data in a row in the file database describing a single image or video.
@@ -38,6 +43,7 @@ namespace DialogUpgradeFiles.Database
         // Get the date/time with the UTC offset added into it
         public DateTimeOffset DateTimeIncorporatingOffset => DateTimeHandler.FromDatabaseDateTimeIncorporatingOffset(this.DateTime, this.UtcOffset);
 
+        // ReSharper disable once UnusedMember.Global
         public bool DeleteFlag
         {
             get => this.Row.GetBooleanField(Constant.DatabaseColumn.DeleteFlag);
@@ -61,7 +67,7 @@ namespace DialogUpgradeFiles.Database
                     case FileSelectionEnum.Missing:
                     case FileSelectionEnum.Ok:
                     case FileSelectionEnum.Dark:
-                        this.Row.SetField(Constant.DatabaseColumn.ImageQuality, value);
+                        DataRowExtensions.SetField(this.Row, Constant.DatabaseColumn.ImageQuality, value);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(ParamName,
@@ -273,19 +279,6 @@ namespace DialogUpgradeFiles.Database
             this.DateTime = dto.UtcDateTime;
             this.UtcOffset = TimeSpan.Zero;
             this.Time = DateTimeHandler.ToStringDisplayTime(dateTime);
-        }
-
-        public void SetDateTimeOffsetFromFileInfo(string folderPath)
-        {
-            // populate new image's default date and time
-            // Typically the creation time is the time a file was created in the local file system and the last write time when it was
-            // last modified ever in any file system.  So, for example, copying an image from a camera's SD card to a computer results
-            // in the image file on the computer having a write time which is before its creation time.  Check both and take the lesser 
-            // of the two to provide a best effort default.  In most cases it's desirable to see if a more accurate time can be obtained
-            // from the image's EXIF metadata.
-            FileInfo fileInfo = this.GetFileInfo(folderPath);
-            DateTime earliestTimeLocal = fileInfo.CreationTime < fileInfo.LastWriteTime ? fileInfo.CreationTime : fileInfo.LastWriteTime;
-            this.SetDateTimeOffset(new DateTimeOffset(earliestTimeLocal));
         }
         #endregion
     }

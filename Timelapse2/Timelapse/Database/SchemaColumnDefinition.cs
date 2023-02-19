@@ -12,8 +12,8 @@ namespace Timelapse.Database
         /// </summary>
         #region Public Properties
         public string Name { get; }
-        public string DefaultValue { get; private set; }
-        public string Type { get; private set; }
+        public string DefaultValue { get; }
+        public string Type { get; }
         #endregion
 
         #region Constructors
@@ -35,11 +35,11 @@ namespace Timelapse.Database
         // Full form
         public SchemaColumnDefinition(string name, string type, string defaultValue)
         {
-            if (String.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentOutOfRangeException(nameof(name));
             }
-            if (String.IsNullOrWhiteSpace(type))
+            if (string.IsNullOrWhiteSpace(type))
             {
                 throw new ArgumentOutOfRangeException(nameof(type));
             }

@@ -32,6 +32,7 @@ namespace Timelapse.Util
         /// Get the latest version of Dot Net running on this system
         /// </summary>
         /// <returns>a string indicating a message with the latest version number</returns>
+        // ReSharper disable once UnusedMember.Global
         public static string GetDotNetVersion()
         {
             // adapted from https://msdn.microsoft.com/en-us/library/hh925568.aspx.
@@ -85,6 +86,7 @@ namespace Timelapse.Util
         /// </summary>
         /// <param name="maximumDegreeOfParallelismDesired"></param>
         /// <returns>ParallelOptions with MaxDegreeOfParallelism filled in</returns>
+        // ReSharper disable once UnusedMember.Global
         public static ParallelOptions GetParallelOptions(int maximumDegreeOfParallelismDesired)
         {
             ParallelOptions parallelOptions = new ParallelOptions()

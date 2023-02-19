@@ -1,10 +1,13 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
+using Microsoft.Win32;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
+using Timelapse.Util;
 
-namespace Timelapse.Util
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// Read and Write particular data types into the registry
@@ -153,6 +156,7 @@ namespace Timelapse.Util
         /// <summary>
         /// Get a size from the registry
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public static Size GetSize(this RegistryKey registryKey, string subKeyPath, Size defaultValue)
         {
             string sizeAsString = registryKey.GetString(subKeyPath);

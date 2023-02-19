@@ -38,7 +38,7 @@ namespace Timelapse.Dialog
                     ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (comboBox == null) continue;
 
-                    if (row.Use && false == String.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                    if (row.Use && false == string.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
                     {
                         finalFolderLocations.Add(row.ExpectedOldLocation, (string)comboBox.SelectedItem);
                     }
@@ -49,7 +49,7 @@ namespace Timelapse.Dialog
         }
 
         //private readonly ObservableCollection<MissingFolderRow> observableCollection; // A tuple defining the contents of the datagrid
-        private ObservableCollection<MissingFolderRow> observableCollection { get; set; } // A tuple defining the contents of the datagrid
+        private ObservableCollection<MissingFolderRow> observableCollection { get; } // A tuple defining the contents of the datagrid
 
         #endregion
 
@@ -134,7 +134,7 @@ namespace Timelapse.Dialog
             int rowIndex = 0;
             MissingFolderRow rowValues = (MissingFolderRow)this.selectedRowValues[0].Item;
             string newLocation = Dialogs.LocateRelativePathUsingOpenFileDialog(this.RootPath, missingFolderName);
-            if (String.IsNullOrWhiteSpace(newLocation)) return;
+            if (string.IsNullOrWhiteSpace(newLocation)) return;
 
             // Find the selected row
             foreach (MissingFolderRow row in this.observableCollection)
@@ -191,7 +191,7 @@ namespace Timelapse.Dialog
             if (sender is ComboBox comboBoxSender)
             {
                 int rowIndex = 0;
-                foreach (MissingFolderRow mfr in this.observableCollection)
+                foreach (MissingFolderRow unused in this.observableCollection)
                 {
                     DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                        .ContainerFromIndex(rowIndex++);
@@ -224,7 +224,7 @@ namespace Timelapse.Dialog
         private void SetInitialCheckboxValue()
         {
             int rowIndex = 0;
-            foreach (MissingFolderRow mfr in this.observableCollection)
+            foreach (MissingFolderRow unused in this.observableCollection)
             {
                 DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                    .ContainerFromIndex(rowIndex);
@@ -251,7 +251,7 @@ namespace Timelapse.Dialog
         private void EnsureCheckboxValue()
         {
             int rowIndex = 0;
-            foreach (MissingFolderRow mfr in this.observableCollection)
+            foreach (MissingFolderRow unused in this.observableCollection)
             {
                 DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                    .ContainerFromIndex(rowIndex);
@@ -279,14 +279,14 @@ namespace Timelapse.Dialog
         private string GetFolderNameFromSelection()
         {
             MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
-            return (mfr == null) ? String.Empty : mfr.FolderName;
+            return (mfr == null) ? string.Empty : mfr.FolderName;
         }
 
         private string GetPossibleLocationFromSelection()
         {
-            string location = String.Empty;
+            string location = string.Empty;
             MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
-            // return (mfr == null || mfr.PossibleNewLocation.Count == 0) ? String.Empty : mfr.PossibleNewLocation[0];
+            // return (mfr == null || mfr.PossibleNewLocation.Count == 0) ? string.Empty : mfr.PossibleNewLocation[0];
             int rowIndex = 0;
             foreach (MissingFolderRow row in this.observableCollection)
             {
@@ -302,7 +302,7 @@ namespace Timelapse.Dialog
                 }
                 rowIndex++;
             }
-            return string.IsNullOrEmpty(location) ? String.Empty : location;
+            return string.IsNullOrEmpty(location) ? string.Empty : location;
         }
         #endregion
 
@@ -337,9 +337,10 @@ namespace Timelapse.Dialog
         // An internal class used to store the contents of a datagrid row
         private class MissingFolderRow
         {
-            public string FolderName { get; set; }
-            public string ExpectedOldLocation { get; set; }
+            public string FolderName { get; }
+            public string ExpectedOldLocation { get; }
             public List<string> PossibleNewLocation { get; set; }
+            // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
             public bool Use { get; set; }
 
             public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use)

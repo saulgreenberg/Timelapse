@@ -1,7 +1,9 @@
 ﻿using System.Data;
+using Timelapse.DataStructures;
+using Timelapse.Extensions;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// A DataRowBackedObject is a DataRow in a DataTable, which also has a Database ID. 
@@ -21,7 +23,7 @@ namespace Timelapse.Database
         // Get the Database ID associated with this row
         public long ID => this.Row.GetID();
 
-        protected DataRow Row { get; private set; }
+        protected DataRow Row { get; }
         #endregion
 
         #region Constructor
@@ -33,6 +35,7 @@ namespace Timelapse.Database
 
         #region Public / Protected Methods
         // Return a ColumnTuples data structure, where the 'Where' is the ID
+        // ReSharper disable once UnusedMemberInSuper.Global
         public abstract ColumnTuplesWithWhere CreateColumnTuplesWithWhereByID();
 
         // Return the index of this row in the dataTable

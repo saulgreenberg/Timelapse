@@ -3,8 +3,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Timelapse.Controls;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 
 namespace Timelapse.ImageSetLoadingPipeline
@@ -46,6 +46,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
                 return this.bitmapSource;
             }
+            // ReSharper disable once UnusedMember.Local
             private set => this.bitmapSource = value;
         }
         #endregion
@@ -54,15 +55,13 @@ namespace Timelapse.ImageSetLoadingPipeline
         private readonly FileInfo fileInfo;
         private readonly DataEntryHandler dataHandler;
         private readonly string relativePath;
-        private readonly string imageSetFolderPath;
         #endregion
 
         #region Constructor
-        public ImageLoader(string imageSetFolderPath, string relativePath, FileInfo fileInfo, DataEntryHandler dataHandler)
+        public ImageLoader(string relativePath, FileInfo fileInfo, DataEntryHandler dataHandler)
         {
             this.fileInfo = fileInfo;
             this.dataHandler = dataHandler;
-            this.imageSetFolderPath = imageSetFolderPath;
             this.relativePath = relativePath;
         }
         #endregion

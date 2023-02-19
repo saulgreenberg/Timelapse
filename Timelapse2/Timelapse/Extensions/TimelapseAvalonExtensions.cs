@@ -6,10 +6,12 @@ using System.Text;
 using System.Windows;
 using System.Windows.Forms;
 using System.Xml;
+using Timelapse.DebuggingSupport;
+using Timelapse.Util;
 using Xceed.Wpf.AvalonDock.Layout;
 using Xceed.Wpf.AvalonDock.Layout.Serialization;
 
-namespace Timelapse.Util
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// These extensions save and restore the Avalon layouts (including main window and floating windows positions and sizes).
@@ -90,7 +92,7 @@ namespace Timelapse.Util
                 // Eve so, we check to see if the window position and size were saved; if they aren't there, it defaults to a reasonable size and position.
                 timelapse.AvalonLayout_LoadWindowPositionAndSizeFromRegistry(layoutName + Constant.AvalonDockValues.WindowRegistryKeySuffix);
                 timelapse.AvalonLayout_LoadWindowMaximizeStateFromRegistry(layoutName + Constant.AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
-                return result;
+                return false;
             }
 
             // After deserializing, a completely new LayoutRoot object is created.
@@ -153,7 +155,7 @@ namespace Timelapse.Util
                     TracePrint.NullException(nameof(source));
                     return windowRect;
                 }
-                // The screen contiaing the window
+                // The screen containing the window
                 Screen screenContainingWindow = null;
 
                 // WPF Coordinates of the screen that contains the window
@@ -223,7 +225,7 @@ namespace Timelapse.Util
                     screenTopLeft = source.CompositionTarget.TransformFromDevice.Transform(screenTopLeft);
                     screenBottomRight = source.CompositionTarget.TransformFromDevice.Transform(screenBottomRight);
 
-                    screenContainingWindow = primaryScreen;
+                    // screenContainingWindow = primaryScreen;
                 }
 
                 // We allow some space for the task bar, assuming its visible at the screen's bottom
@@ -351,10 +353,8 @@ namespace Timelapse.Util
 
                 // Serialize the layout into a string
                 XmlLayoutSerializer serializer = new XmlLayoutSerializer(timelapse.DockingManager);
-                using (StringWriter stream = new StringWriter())
-                {
-                    serializer.Serialize(xmlWriter);
-                }
+                serializer.Serialize(xmlWriter);
+
                 if (!string.IsNullOrEmpty(xmlText.ToString().Trim()))
                 {
                     // Write the string to the registry under the given key name

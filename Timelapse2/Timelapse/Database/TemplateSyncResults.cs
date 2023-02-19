@@ -21,8 +21,8 @@ namespace Timelapse.Database
         public List<KeyValuePair<string, string>> DataLabelsToRename { get; set; }
 
         // These lists collect error messages and warnings concerning control synchronization between the templates
-        public List<string> ControlSynchronizationErrors { get; private set; }
-        public List<string> ControlSynchronizationWarnings { get; private set; }
+        public List<string> ControlSynchronizationErrors { get; }
+        public List<string> ControlSynchronizationWarnings { get; }
 
         // Signals whether or not to use the template found in the Image database instead of the Template database
         public bool UseTemplateDBTemplate { get; set; }

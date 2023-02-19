@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
-using Timelapse.Util;
+using Timelapse.DataStructures;
+using Timelapse.Extensions;
+using Timelapse.State;
 
 namespace Timelapse.Editor.Util
 {

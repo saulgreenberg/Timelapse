@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Timelapse.Enums;
 
-namespace Timelapse
+namespace Timelapse.DataStructures
 {
     // State data.
     // This data structure is filled in only when the user has specified metadata / data field pairs

@@ -6,13 +6,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Controls;
-using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.QuickPaste;
+using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
 
 // Edit Menu Callbacks
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow
@@ -188,9 +192,9 @@ namespace Timelapse
             SortTerm sortTermDB1 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
             SortTerm sortTermDB2 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
             bool sortTermsOk = (sortTermDB1.DataLabel == Constant.DatabaseColumn.RelativePath && Constant.BooleanValue.True == sortTermDB1.IsAscending && sortTermDB2.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending)
-                               || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending && String.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+                               || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
 
-            if (!noteControlOk || !searchTermsOk || !sortTermsOk)
+            if (!searchTermsOk || !sortTermsOk)
             {
                 if (false == Dialogs.MenuOptionsCantPopulateDataFieldWithEpisodeAsSortIsWrong(this, searchTermsOk, sortTermsOk))
                 {
@@ -227,7 +231,7 @@ namespace Timelapse
             SortTerm sortTermDB2 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
             bool sortTermsOKForDuplicateOrdering =
                      (sortTermDB1.DataLabel == Constant.DatabaseColumn.RelativePath && sortTermDB2.DataLabel == Constant.DatabaseColumn.DateTime)
-                  || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && String.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+                  || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
 
             if (this.State.SuppressHowDuplicatesWork == false || sortTermsOKForDuplicateOrdering == false)
             {
@@ -392,7 +396,7 @@ namespace Timelapse
                             {
                                 // Its not a deleted file, so we have a valid next file to display!
                                 currentFileID = this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID;
-                                allDone = true;
+                                //allDone = true;
                                 break;
                             }
                         }
@@ -575,7 +579,7 @@ namespace Timelapse
             if (this.DataHandler.ImageCache.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
-                Dialogs.MenuEditPopulateDataFieldWithMetadataDialog(this);
+                Dialogs.MenuEditRereadDateTimesFromMetadataDialog(this);
                 return;
             }
 

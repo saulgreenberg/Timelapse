@@ -9,7 +9,7 @@ namespace Timelapse.Dialog
     public partial class RecognitionsAddSubfolderToFilePaths
     {
         public bool AddSubFolderPrefix;
-        private string Prefix;
+        private readonly string Prefix;
 
         public RecognitionsAddSubfolderToFilePaths(Window owner, string prefix)
         {

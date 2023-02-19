@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.Extensions;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     // A MarkerRow is a table comprising 
     // - Id column which matches to the ID of the FileData (DataTable)

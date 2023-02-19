@@ -3,7 +3,7 @@ using System.Windows.Input;
 using Timelapse.DataStructures;
 using Timelapse.ExifTool;
 
-namespace Timelapse.Util
+namespace Timelapse.State
 {
     /// <summary>
     /// A class that tracks various states and flags. 

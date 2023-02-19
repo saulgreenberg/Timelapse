@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.ExifTool;
+using Timelapse.Extensions;
 using Timelapse.Util;
 
 namespace Timelapse.Controls
@@ -54,7 +55,7 @@ namespace Timelapse.Controls
                 _dictDataLabel_Label = value;
                 // Note labels are a list of labels, with an Empty slot in the beginning to allow labels to be deselected
                 this.viewModel.NoteLabels = new ObservableCollection<string>(_dictDataLabel_Label.Values);
-                this.viewModel.NoteLabels.Insert(0, String.Empty);
+                this.viewModel.NoteLabels.Insert(0, string.Empty);
             }
         }
 
@@ -149,7 +150,7 @@ namespace Timelapse.Controls
             // If there is no metadata, this is an easy way to inform the user
             if (this.metadataDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
             }
 
             ObservableCollection<DataContents> temp = new ObservableCollection<DataContents>();
@@ -166,7 +167,7 @@ namespace Timelapse.Controls
                 if (false == this.UseDateMetadataOnly
                     || (metadata.Value?.Value != null && DateTimeHandler.TryParseMetadataDateTaken(metadata.Value.Value, out DateTime _)))
                 {
-                    temp.Add(new DataContents(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value, String.Empty));
+                    temp.Add(new DataContents(metadata.Key, metadata.Value.Directory, metadata.Value.Name, metadata.Value.Value, string.Empty));
                 }
             }
             this.viewModel.MetadataList = temp;
@@ -189,7 +190,7 @@ namespace Timelapse.Controls
             // If there is no metadata, inform the user by setting bogus dictionary values which will appear on the grid
             if (exifDictionary.Count == 0)
             {
-                this.metadataDictionary.Add("Empty", new Util.ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
+                this.metadataDictionary.Add("Empty", new ImageMetadata("Empty", "No metadata found in the currently displayed image", "Navigate to a displayable image"));
             }
 
             // In order to populate the metadataDictionary and datagrid , we have to unpack the ExifTool dictionary, recreate the dictionary, and create a list containing four values
@@ -200,7 +201,7 @@ namespace Timelapse.Controls
                 if (false == this.UseDateMetadataOnly
                     || DateTimeHandler.TryParseMetadataDateTaken(metadata.Value, out DateTime _))
                 {
-                    temp.Add(new DataContents(metadata.Key, String.Empty, metadata.Key, metadata.Value, ""));
+                    temp.Add(new DataContents(metadata.Key, string.Empty, metadata.Key, metadata.Value, ""));
                 }
             }
             this.viewModel.MetadataList = temp;
@@ -256,7 +257,7 @@ namespace Timelapse.Controls
                     return kvp.Key;
                 }
             }
-            return String.Empty;
+            return string.Empty;
         }
         // Return a collection of keyvalue pairs comprised only of matching metadata fields and a non-empty data label
         private ObservableCollection<KeyValuePair<string, string>> GetSelectedFromMetadataList(ObservableCollection<DataContents> metadataList, ObservableCollection<KeyValuePair<string, string>> selectedMetadata)
@@ -268,7 +269,7 @@ namespace Timelapse.Controls
             selectedMetadata.Clear();
             foreach (DataContents dc in metadataList)
             {
-                if (false == String.IsNullOrWhiteSpace(dc.AssignedLabel))
+                if (false == string.IsNullOrWhiteSpace(dc.AssignedLabel))
                 {
                     // We have a non-empty data label, so add it.
                     selectedMetadata.Add(new KeyValuePair<string, string>(dc.MetadataKey, this.GetDataLabelFromLabel(dc.AssignedLabel)));
@@ -303,7 +304,7 @@ namespace Timelapse.Controls
                     //Debug.Print(cb.Text + "|" + (string)chosenComboBox.SelectedValue);
                     if (cb != selectedComboBox && cb.Text == (string)selectedComboBox.SelectedValue)
                     {
-                        cb.Text = String.Empty;
+                        cb.Text = string.Empty;
                     }
                 }
             }

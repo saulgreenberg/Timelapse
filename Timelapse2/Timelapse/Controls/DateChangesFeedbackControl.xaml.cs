@@ -2,8 +2,8 @@
 using System.Collections.ObjectModel;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Timelapse.Database;
-using Timelapse.Dialog;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 
 namespace Timelapse.Controls
 {
@@ -40,7 +40,7 @@ namespace Timelapse.Controls
 
             this.feedbackRows = new ObservableCollection<FeedbackRowTuple>();
             this.feedbackGrid.ItemsSource = this.feedbackRows;
-            this.FolderPath = String.Empty;
+            this.FolderPath = string.Empty;
         }
 
         // Label the datagrid feedback columns with the appropriate headers

@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace DialogUpgradeFiles.Util
+﻿namespace DialogUpgradeFiles.Util
 {
     // Collects a single argument. A valid argument is a valid folder path.
     public class Arguments
     {
         // The full Timelape template path
-        public string FolderPath { get; set; } = String.Empty;
+        public string FolderPath { get; set; } = string.Empty;
 
         public Arguments(string[] arguments)
         {

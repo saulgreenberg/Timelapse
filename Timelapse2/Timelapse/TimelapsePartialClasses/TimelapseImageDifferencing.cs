@@ -2,6 +2,7 @@
 using Timelapse.Controls;
 using Timelapse.Enums;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Image Differencing 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace DialogUpgradeFiles.QuickPaste
 {
     // QuickPasteEntry Data Structure: collects all the data controls and their values as a single potential quickpaste entry
@@ -13,7 +12,7 @@ namespace DialogUpgradeFiles.QuickPaste
         #region Constructor
         public QuickPasteEntry()
         {
-            this.Title = String.Empty;
+            this.Title = string.Empty;
             this.Items = new List<QuickPasteItem>();
         }
         #endregion

@@ -1,7 +1,8 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
-using System.Collections.Generic;
-namespace DialogUpgradeFiles.Database
+﻿using System.Collections.Generic;
+using DialogUpgradeFiles.Util;
+// ReSharper disable UnusedMember.Global
+
+namespace DialogUpgradeFiles.DataStructures
 {
     /// <summary>
     /// A tuple comprising:
@@ -14,12 +15,12 @@ namespace DialogUpgradeFiles.Database
     /// ...
     /// colnameN = valueN
     /// WHERE
-    /// <condition> e.g., ID=1;
+    /// condition e.g., ID=1;
     /// </summary>
     public class ColumnTuplesWithWhere
     {
         #region Public Properties
-        public List<ColumnTuple> Columns { get; private set; }
+        public List<ColumnTuple> Columns { get; }
         public string Where { get; private set; }
         #endregion
 

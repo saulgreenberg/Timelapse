@@ -7,6 +7,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -26,7 +27,7 @@ namespace Timelapse.Dialog
         private readonly List<ComboBox> comboBoxes = new List<ComboBox>();
         private readonly List<int> actionRows = new List<int>();
 
-        private TemplateSyncResults TemplateSyncResults { get; set; }
+        private TemplateSyncResults TemplateSyncResults { get; }
         #endregion
 
         #region Constructor, Loaded, Closing
@@ -306,7 +307,7 @@ namespace Timelapse.Dialog
                     if (uiComboBox is ComboBox cb && cb.IsEnabled)
                     {
                         // The combobox is enabled, thus it's a renume
-                        if (cb.SelectedItem == null || cb.SelectedItem.ToString() == String.Empty)
+                        if (cb.SelectedItem == null || cb.SelectedItem.ToString() == string.Empty)
                         {
                             // Retrieve the data label and add it as an problem 
                             if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
@@ -349,7 +350,7 @@ namespace Timelapse.Dialog
                 }
 
                 // Retrieve the data label
-                string datalabel = String.Empty;
+                string datalabel = string.Empty;
                 if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
                 {
                     datalabel = textblockDataLabel.Text;

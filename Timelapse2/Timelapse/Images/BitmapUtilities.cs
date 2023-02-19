@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;

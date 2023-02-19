@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Util
 {
@@ -52,6 +53,7 @@ namespace Timelapse.Util
         /// <param name="heightInPixels"></param>
         /// <param name="widthInDeviceIndependentPixels"></param>
         /// <param name="heightInDeviceIndependentPixels"></param>
+        // ReSharper disable once UnusedMember.Global
         public static void TransformPixelsToDeviceIndependentPixels(int widthInPixels,
                                       int heightInPixels,
                                       out double widthInDeviceIndependentPixels,

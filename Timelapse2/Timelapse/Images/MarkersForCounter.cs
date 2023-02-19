@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Images
 {
@@ -13,10 +13,10 @@ namespace Timelapse.Images
     {
         #region Public Properties
         // The counter's data label
-        public string DataLabel { get; private set; }
+        public string DataLabel { get; }
 
         // the list of markers associated with the counter
-        public List<Marker> Markers { get; private set; }
+        public List<Marker> Markers { get; }
         #endregion
 
         #region Constructor

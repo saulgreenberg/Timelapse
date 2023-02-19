@@ -20,7 +20,7 @@ namespace Timelapse.Controls
         // Clear the message portion of the status bar
         public static void ClearMessage(this StatusBar statusBar)
         {
-            statusBar.SetMessage(String.Empty);
+            statusBar.SetMessage(string.Empty);
         }
 
         // Set the sequence number of the current file in the number portion of the status bar
@@ -51,7 +51,7 @@ namespace Timelapse.Controls
             StatusBarItem item = (StatusBarItem)statusBar.Items[9];
             TextBlock message = new TextBlock
             {
-                Text = String.Empty
+                Text = string.Empty
             };
 
             // If there is no primary sort string, then we don't know what the sorting criteria is.

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Windows.Controls;
+using Timelapse.DebuggingSupport;
+using Timelapse.Util;
 
-namespace Timelapse.Util
+namespace Timelapse.Extensions
 {
     // Methods to manipulate a datagrid. 
     public static class DataGridExtensions

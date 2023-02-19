@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataTables;
 
 namespace Timelapse.Dialog
 {
@@ -108,10 +109,9 @@ namespace Timelapse.Dialog
             {
                 fileNamePrefix = renameFileWithPrefix
                 ? ir.RelativePath.Replace('\\', '.')
-                : String.Empty;
+                : string.Empty;
 
-                sourceFile = Path.Combine(FileDatabase.FolderPath, ir.RelativePath, ir.File);
-                destFile = String.IsNullOrWhiteSpace(fileNamePrefix)
+                destFile = string.IsNullOrWhiteSpace(fileNamePrefix)
                 ? Path.Combine(path, fileNamePrefix + ir.File)
                 : Path.Combine(path, fileNamePrefix + '.' + ir.File);
 
@@ -124,7 +124,7 @@ namespace Timelapse.Dialog
             {
                 if (Dialogs.OverwriteExistingFiles(this, existingFiles) != true)
                 {
-                    copiedFiles = -2; // indicates the duplicate file condition
+                    // copiedFiles = -2; // indicates the duplicate file condition
                     return "Export aborted to avoid overwriting files.";
                 }
             }
@@ -138,12 +138,10 @@ namespace Timelapse.Dialog
                     HashSet<string> testForDuplicates = new HashSet<string>();
                     foreach (ImageRow ir in FileDatabase.FileTable)
                     {
-                        if (!testForDuplicates.Add(ir.File))
-                        {
-                            cancelled = true;
-                            copiedFiles = -1; // indicates the duplicate file condition
-                            return;
-                        }
+                        if (testForDuplicates.Add(ir.File)) continue;
+                        cancelled = true;
+                        copiedFiles = -1; // indicates the duplicate file condition
+                        return;
                     }
                 }
 
@@ -157,10 +155,10 @@ namespace Timelapse.Dialog
 
                     fileNamePrefix = renameFileWithPrefix
                     ? ir.RelativePath.Replace('\\', '.')
-                    : String.Empty;
+                    : string.Empty;
 
                     sourceFile = Path.Combine(FileDatabase.FolderPath, ir.RelativePath, ir.File);
-                    destFile = String.IsNullOrWhiteSpace(fileNamePrefix)
+                    destFile = string.IsNullOrWhiteSpace(fileNamePrefix)
                     ? Path.Combine(path, fileNamePrefix + ir.File)
                     : Path.Combine(path, fileNamePrefix + '.' + ir.File);
 
@@ -173,13 +171,13 @@ namespace Timelapse.Dialog
                     {
                         skippedFiles++;
                     }
-                    if (this.ReadyToRefresh())
-                    {
-                        int percentDone = Convert.ToInt32((copiedFiles + skippedFiles) / Convert.ToDouble(totalFiles) * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone,
-                            $"Copying {copiedFiles} / {totalFiles} files", true, false));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
-                    }
+
+                    if (!this.ReadyToRefresh()) continue;
+
+                    int percentDone = Convert.ToInt32((copiedFiles + skippedFiles) / Convert.ToDouble(totalFiles) * 100.0);
+                    this.Progress.Report(new ProgressBarArguments(percentDone,
+                        $"Copying {copiedFiles} / {totalFiles} files", true, false));
+                    Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
                 }
             }).ConfigureAwait(true);
 
@@ -189,9 +187,9 @@ namespace Timelapse.Dialog
                 {
                     return $"Export cancelled after copying {copiedFiles} files";
                 }
-                else if (copiedFiles == -1)
+                if (copiedFiles == -1)
                 {
-                    return String.Format("Export aborted, as duplicate file names exist." + Environment.NewLine + "Try using the Rename option to guarantee unique file names.");
+                    return string.Format("Export aborted, as duplicate file names exist." + Environment.NewLine + "Try using the Rename option to guarantee unique file names.");
                 }
 
             }
@@ -211,16 +209,16 @@ namespace Timelapse.Dialog
             path = (this.CBPutInSubFolder.IsChecked == true)
                 ? Path.Combine(this.FolderLocation.Text, this.TextBoxPutInSubFolder.Text)
                 : this.FolderLocation.Text;
-            if (Directory.Exists(path) == false)
+
+            if (Directory.Exists(path)) return true;
+
+            try
             {
-                try
-                {
-                    DirectoryInfo dir = Directory.CreateDirectory(path);
-                }
-                catch
-                {
-                    return false;
-                }
+                Directory.CreateDirectory(path);
+            }
+            catch
+            {
+                return false;
             }
             return true;
         }

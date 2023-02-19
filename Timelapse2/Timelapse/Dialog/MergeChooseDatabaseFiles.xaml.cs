@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using File = Timelapse.Constant.File;
@@ -30,7 +31,7 @@ namespace Timelapse.Dialog
         private bool IsAnyDataUpdated;
 
         public ObservableCollection<ddbFileClass> ObservableddbFileList { get; set; }
-        public string DatabaseToLoad { get; set; } = String.Empty;
+        public string DatabaseToLoad { get; set; } = string.Empty;
         public bool FoundInvalidFiles { get; set; } = false;
         public MergeChooseDatabaseFiles(Window owner, string templatetdbFilePath) : base(owner)
         {
@@ -182,7 +183,7 @@ namespace Timelapse.Dialog
                 this.TextBlockFinalMessage.Text += Environment.NewLine + Environment.NewLine;
                 if (errorMessages.MergedFiles.Count == 0)
                 {
-                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}{"No files were left to merge"}";
+                    this.TextBlockFinalMessage.Text += $"{Environment.NewLine}No files were left to merge";
                     // already has this value: merged = false;
                 }
                 else

@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Images;
 using Timelapse.Util;
@@ -160,7 +162,7 @@ namespace Timelapse.Controls
             // Its in a try / catch as one user reported an unusual error: OpenClipboardFailed
             try
             {
-                Clipboard.SetText(String.Empty);
+                Clipboard.SetText(string.Empty);
             }
             catch
             {
@@ -286,7 +288,7 @@ namespace Timelapse.Controls
             bool isFlag = control is DataEntryFlag;
             int indexToCopyFrom = -1;
             ImageRow valueSource = null;
-            string valueToCopy = checkForZero ? "0" : String.Empty;
+            string valueToCopy = checkForZero ? "0" : string.Empty;
 
             // Search for the row with some value in it, starting from the previous row
             int currentRowIndex = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
@@ -495,7 +497,7 @@ namespace Timelapse.Controls
 
             // Enable Copy menu if
             // - its not empty / white space and not in the overview with different contents (i.e., ellipsis is showing)
-            menuItemCopyToClipboard.IsEnabled = !(String.IsNullOrWhiteSpace(control.Content) || control.Content == Constant.Unicode.Ellipsis);
+            menuItemCopyToClipboard.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Constant.Unicode.Ellipsis);
 
             // Enable Paste menu only if
             // - the clipboard is not empty or white space, 
@@ -509,7 +511,7 @@ namespace Timelapse.Controls
             }
             catch
             {
-                clipboardText = String.Empty;
+                clipboardText = string.Empty;
                 Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
             }
             if (string.IsNullOrEmpty(clipboardText))
@@ -612,6 +614,7 @@ namespace Timelapse.Controls
                 return false;
             }
 
+            // ReSharper disable once RedundantAssignment
             int currentIndex = 0; // So we can print the value in the catch
             bool checkCounter = control is DataEntryCounter;
             bool checkFlag = control is DataEntryFlag;
@@ -623,10 +626,11 @@ namespace Timelapse.Controls
                 int currentRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
                 for (int fileIndex = currentRow - 1; fileIndex >= 0; fileIndex--)
                 {
+                    // ReSharper disable once RedundantAssignment
                     currentIndex = fileIndex;
                     // Search for the row with some value in it, starting from the previous row
                     string valueToCopy = this.FileDatabase.FileTable[fileIndex].GetValueDatabaseString(control.DataLabel);
-                    if (String.IsNullOrWhiteSpace(valueToCopy) == false)
+                    if (string.IsNullOrWhiteSpace(valueToCopy) == false)
                     {
                         // for flags, we skip over falses
                         // for counters, we skip over 0
@@ -644,7 +648,7 @@ namespace Timelapse.Controls
             catch (IndexOutOfRangeException e)
             {
                 // I don't know why we get this occassional error, so this is an attempt to print out the result so we can debug it
-                Debug.Print(
+                TracePrint.PrintMessage(
                     $"IsCopyFromLastNonEmptyValuePossible: IndexOutOfRange Exception, where index is: {currentIndex}{Environment.NewLine}{e.Message}");
                 return (nearestRowWithCopyableValue >= 0);
             }
@@ -909,7 +913,7 @@ namespace Timelapse.Controls
 
                 // If the values of success imagerows (as defined by the fileIDs) are the same as the first one,
                 // then return that as they all have a common value. Otherwise return an empty string.
-                int fileIdsCount = (fileIds == null) ? 0 : fileIds.Count;
+                int fileIdsCount = fileIds.Count;
                 for (int i = 1; i < fileIdsCount; i++)
                 {
                     imageRow = this.FileDatabase.FileTable[fileIds[i]];
@@ -935,7 +939,7 @@ namespace Timelapse.Controls
 
         #region Static public methods
         // Get a file path from the global datahandler. 
-        // If we can't, or if it does not exist, return String.Empty
+        // If we can't, or if it does not exist, return string.Empty
         public static string TryGetFilePathFromGlobalDataHandler()
         {
             // If anything is null, we defer resetting anything. Note that we may get an update later (e.g., via the timer)

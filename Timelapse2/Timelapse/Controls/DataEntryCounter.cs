@@ -1,9 +1,8 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
 
@@ -45,7 +44,7 @@ namespace Timelapse.Controls
         public bool IsSelected => this.LabelControl.IsChecked.HasValue && (bool)this.LabelControl.IsChecked;
 
         // Holds the DataLabel of the previously clicked counter control across all counters
-        private static string previousControlDataLabel = String.Empty;
+        private static string previousControlDataLabel = string.Empty;
         #endregion
 
         #region Constructor
@@ -99,7 +98,7 @@ namespace Timelapse.Controls
             else if (previousControlDataLabel == this.DataLabel)
             {
                 this.LabelControl.IsChecked = false;
-                previousControlDataLabel = String.Empty;
+                previousControlDataLabel = string.Empty;
             }
             else
             {
@@ -133,7 +132,7 @@ namespace Timelapse.Controls
             {
                 if ((string)textBox.Watermark == Constant.Unicode.Ellipsis)
                 {
-                    textBox.Text = String.Empty;
+                    textBox.Text = string.Empty;
                 }
             }
         }
@@ -167,8 +166,8 @@ namespace Timelapse.Controls
                 this.ContentControl.AllowSpin = false;
                 if (textBox != null)
                 {
-                    textBox.Watermark = !string.IsNullOrEmpty(textBox.Text) ? Constant.Unicode.Ellipsis : String.Empty;
-                    textBox.Text = String.Empty;
+                    textBox.Watermark = !string.IsNullOrEmpty(textBox.Text) ? Constant.Unicode.Ellipsis : string.Empty;
+                    textBox.Text = string.Empty;
                 }
             }
             else
@@ -177,7 +176,7 @@ namespace Timelapse.Controls
                 this.ContentControl.AllowSpin = true;
                 if (textBox != null)
                 {
-                    textBox.Watermark = String.Empty;
+                    textBox.Watermark = string.Empty;
                 }
 
                 value = value.Trim();
@@ -194,7 +193,7 @@ namespace Timelapse.Controls
                 else
                 {
                     // If its not a number, blank out the text
-                    this.ContentControl.Text = String.Empty;
+                    this.ContentControl.Text = string.Empty;
                     if (textBox != null)
                     {
                         textBox.Text = value;

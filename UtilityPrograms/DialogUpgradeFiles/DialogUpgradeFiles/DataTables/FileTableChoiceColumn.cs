@@ -1,7 +1,7 @@
-﻿using DialogUpgradeFiles.Util;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableChoiceColumn - A FileTable Column holding a list of chices as well as a default value.

@@ -73,6 +73,7 @@ namespace Timelapse.Extensions
         // at or higher than the given darkPercent.
         // We also check to see if the image is predominantly color. We do this by checking to see if pixels are grey scale
         // (where r=g=b, with a bit of slop added) and then check that against a threshold.
+        // ReSharper disable once UnusedMember.Global
         public static bool ClassifyImageDarkness(this WriteableBitmap image, int darkPixelThreshold, double darkPixelRatio)
         {
             return image.IsDark(darkPixelThreshold, darkPixelRatio, out _, out _);

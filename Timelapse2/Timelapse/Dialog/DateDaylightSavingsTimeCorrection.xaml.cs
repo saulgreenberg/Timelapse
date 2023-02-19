@@ -6,6 +6,9 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -90,7 +93,6 @@ namespace Timelapse.Dialog
                 // Collects feedback to display in a datagrid after the operation is done
                 ObservableCollection<DateTimeFeedbackTuple> feedbackRows = new ObservableCollection<DateTimeFeedbackTuple>();
 
-                int count = this.fileDatabase.FileTable.RowCount;
                 this.DatabaseUpdateFileDates(this.Progress, adjustment, startRow, endRow, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update

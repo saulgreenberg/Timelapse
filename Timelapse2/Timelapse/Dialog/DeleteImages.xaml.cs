@@ -8,6 +8,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Images;
 using Timelapse.Util;
 
@@ -200,7 +202,7 @@ namespace Timelapse.Dialog
                 this.Message.Title = $"Delete {numberOfImagesToDelete.ToString()} files(s) ";
                 this.Message.What =
                     $"Delete {numberOfImagesToDelete.ToString()} image and/or video(s) - if they exist - marked for deletion.";
-                this.Message.Result = String.Empty;
+                this.Message.Result = string.Empty;
                 this.Message.Hint = "\u2022 Restore deleted files by manually moving them ";
                 this.Message.Result +=
                     $"\u2022 The deleted file will be backed up in a sub-folder named {Constant.File.DeletedFilesFolder}.{Environment.NewLine}";
@@ -249,7 +251,7 @@ namespace Timelapse.Dialog
 
         #region Do the actual file deletion
         // The (bool, int return value: true if the operation has been cancelled, and if so how many images were deleted before the cancel event
-        private async Task<Tuple<bool, int>> DoDeleteFilesAsync(List<ImageRow> imagesToDelete, bool deleteFiles, bool deleteData)
+        private async Task<Tuple<bool, int>> DoDeleteFilesAsync(List<ImageRow> imagesToDelete, bool deleteFiles, bool deleteTheData)
         {
             List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
             List<long> imageIDsToDropFromDatabase = new List<long>();
@@ -286,7 +288,7 @@ namespace Timelapse.Dialog
                             filesDeleted++;
                         }
                     }
-                    if (deleteData)
+                    if (deleteTheData)
                     {
                         // mark the image row for dropping
                         imageIDsToDropFromDatabase.Add(image.ID);
@@ -313,7 +315,7 @@ namespace Timelapse.Dialog
                 this.Progress.Report(new ProgressBarArguments(100, $"Pass 2: Updating {count} files. Please wait...", false, true));
                 Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
 
-                if (deleteData)
+                if (deleteTheData)
                 {
                     // drop images
                     this.fileDatabase.DeleteFilesAndMarkers(imageIDsToDropFromDatabase);

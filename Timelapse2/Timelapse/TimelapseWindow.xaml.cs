@@ -16,11 +16,14 @@ using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
+using Timelapse.Extensions;
 using Timelapse.Images;
 using Timelapse.QuickPaste;
+using Timelapse.State;
 using Timelapse.Util;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
@@ -45,7 +48,7 @@ namespace Timelapse
                 if (this.DataHandler == null)
                 {
                     Debug.Print("Weird error in FolderPath - datahandler is null");
-                    return String.Empty;
+                    return string.Empty;
                 }
                 else
                 {
@@ -115,7 +118,7 @@ namespace Timelapse
             // Recall user's state from prior sessions
             this.State = new TimelapseState();
             this.State.ReadSettingsFromRegistry();
-            Episodes.TimeThreshold = this.State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
+            Episodes.Episodes.TimeThreshold = this.State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
             this.MarkableCanvas.SetBookmark(this.State.BookmarkScale, this.State.BookmarkTranslation);
             this.MenuItemAudioFeedback.IsChecked = this.State.AudioFeedback;
 
@@ -471,15 +474,13 @@ namespace Timelapse
             // The 'empty else' means don't check to see if a textbox or control has the focus, as we want to reset the focus elsewhere
         }
 
-        /// <summary>Preview callback for counters, to ensure that we only accept numbers</summary>
-        /// <param name="sender">the event source</param>
-        /// <param name="e">event information</param>
-        private void CounterCtl_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            e.Handled = !IsCondition.IsDigits(e.Text) && !String.IsNullOrWhiteSpace(e.Text);
-            this.OnPreviewTextInput(e);
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
-        }
+        //Preview callback for counters, to ensure that we only accept numbers</summary>
+        //private void CounterCtl_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        //{
+        //    e.Handled = !IsCondition.IsDigits(e.Text) && !string.IsNullOrWhiteSpace(e.Text);
+        //    this.OnPreviewTextInput(e);
+        //    this.FilePlayer_Stop(); // In case the FilePlayer is going
+        //}
 
         /// <summary>Click callback: When the user selects a counter, refresh the markers, which will also readjust the colors and emphasis</summary>
         /// <param name="sender">the event source</param>

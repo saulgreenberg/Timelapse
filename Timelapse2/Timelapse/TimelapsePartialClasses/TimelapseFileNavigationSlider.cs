@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // File Navigation Slider (including Timer) callbacks and related

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.ExifTool
@@ -31,7 +32,7 @@ namespace Timelapse.ExifTool
                 // throw new ArgumentNullException(nameof(response));
                 // Treat it as a failure case?
                 this.IsSuccess = false;
-                this.Result = String.Empty;
+                this.Result = string.Empty;
                 return;
             }
 
@@ -344,6 +345,7 @@ namespace Timelapse.ExifTool
             return resp;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public ExifToolResponse SetExifInto(string path, string key, string val, bool overwriteOriginal = true) =>
             this.SetExifInto(path, new Dictionary<string, string> { [key] = val }, overwriteOriginal);
 
@@ -424,6 +426,7 @@ namespace Timelapse.ExifTool
             return res;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public List<string> FetchExifToListFrom(string path, IEnumerable<string> tagsToKeep = null, bool keepKeysWithEmptyValues = true, string separator = ": ")
         {
             var res = new List<string>();
@@ -457,6 +460,7 @@ namespace Timelapse.ExifTool
             return res;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public ExifToolResponse CloneExif(string source, string dest, bool backup = false)
         {
             if (!File.Exists(source) || !File.Exists(dest))
@@ -467,6 +471,7 @@ namespace Timelapse.ExifTool
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public ExifToolResponse ClearExif(string path, bool backup = false)
         {
             if (!File.Exists(path))
@@ -477,6 +482,7 @@ namespace Timelapse.ExifTool
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public DateTime? GetCreationTime(string path)
         {
             if (!File.Exists(path))
@@ -511,6 +517,7 @@ namespace Timelapse.ExifTool
             return 1;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public int GetOrientationDeg(string path) => OrientationPos2Deg(this.GetOrientation(path));
 
         public ExifToolResponse SetOrientation(string path, int ori, bool overwriteOriginal = true)
@@ -530,6 +537,7 @@ namespace Timelapse.ExifTool
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public ExifToolResponse SetOrientationDeg(string path, int ori, bool overwriteOriginal = true) =>
             this.SetOrientation(path, OrientationDeg2Pos(ori), overwriteOriginal);
 
@@ -585,6 +593,7 @@ namespace Timelapse.ExifTool
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static int OrientationString2Deg(string pos)
         {
             switch (pos)
@@ -600,6 +609,7 @@ namespace Timelapse.ExifTool
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static string OrientationDeg2String(int deg)
         {
             switch (deg)
@@ -617,6 +627,7 @@ namespace Timelapse.ExifTool
 
         private static readonly int[] OrientationPositions = { 1, 6, 3, 8 };
 
+        // ReSharper disable once UnusedMember.Global
         public static int RotateOrientation(int crtOri, bool clockwise, int steps = 1)
         {
             int newOri = 1;

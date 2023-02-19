@@ -4,10 +4,10 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Timelapse.DataStructures;
 
-namespace Timelapse.Util
+namespace Timelapse.DebuggingSupport
 {
     /// <summary>
-    /// Debugging: Various forms of printing out trace infromation containing a message and a stack trace of the method names 
+    /// Debugging: Various forms of printing out trace information containing a message and a stack trace of the method names 
     /// Only active when the TRACE flag is set in the Project properties
     /// </summary>
     public static class TracePrint
@@ -24,12 +24,13 @@ namespace Timelapse.Util
         #region Specialized messages
         public static void NullException()
         {
-            NullException(String.Empty);
+            NullException(string.Empty);
         }
 
         public static void NullException(string nullVariableName)
         {
-            string message = String.IsNullOrWhiteSpace(nullVariableName)
+            // ReSharper disable once RedundantAssignment
+            string message = string.IsNullOrWhiteSpace(nullVariableName)
                 ? "Null Exception"
                 : "Null Exception: " + nullVariableName;
             Debug.Print(GetMethodNameStack(message, 2));
@@ -53,6 +54,7 @@ namespace Timelapse.Util
         /// Print a message and stack trace to a file
         /// </summary>
         /// <param name="message"></param>
+        // ReSharper disable once UnusedMember.Global
         public static void StackTraceToFile(string message)
         {
             using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
@@ -84,13 +86,14 @@ namespace Timelapse.Util
         [Conditional("TRACE")]
         public static void StackTrace(int level)
         {
-            Debug.Print(GetMethodNameStack(String.Empty, level));
+            Debug.Print(GetMethodNameStack(string.Empty, level));
         }
 
         /// <summary>
         /// Debug print the method name followed a message
         /// </summary>
         [Conditional("TRACE")]
+        // ReSharper disable once UnusedMember.Global
         public static void StackTrace(string message)
         {
             Debug.Print(GetMethodNameStack(message));
@@ -115,7 +118,7 @@ namespace Timelapse.Util
         private static string GetMethodNameStack(string message = "", int level = 1)
         {
             StackTrace st = new StackTrace(true);
-            string methodStack = String.Empty;
+            string methodStack = string.Empty;
             for (int i = 1; i <= level; i++)
             {
                 StackFrame sf = st.GetFrame(i);

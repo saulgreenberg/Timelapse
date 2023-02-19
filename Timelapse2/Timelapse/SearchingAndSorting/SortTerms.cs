@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.SearchingAndSorting
 {
     public static class SortTerms
     {

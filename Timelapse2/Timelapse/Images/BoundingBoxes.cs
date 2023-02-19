@@ -19,7 +19,7 @@ namespace Timelapse.Images
     {
         #region Public Properties
         // List of Bounding Boxes associated with the image
-        public List<BoundingBox> Boxes { get; private set; }
+        public List<BoundingBox> Boxes { get; }
         public float MaxConfidence { get; set; }
         #endregion
 
@@ -168,7 +168,7 @@ namespace Timelapse.Images
                     : bbox.Classifications[0].Key + " " + ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Classifications[0].Value)
                                                   + "(" + ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence) + ")";
 
-                string bboxTextBlock = String.Empty;
+                string bboxTextBlock = string.Empty;
                 if (bbox.Classifications.Count > 0)
                 {
                     foreach (KeyValuePair<string, string> classification in bbox.Classifications)
@@ -257,6 +257,7 @@ namespace Timelapse.Images
         }
 
         // NOT USED AT THIS POINT AS WE ARE NO LONGER USING A MENU - BUT IF WE DECIDE TO...
+        // ReSharper disable once UnusedMember.Local
         private void ClassificationUIObject_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox cb)
@@ -275,7 +276,7 @@ namespace Timelapse.Images
         {
             return float.TryParse(value, out float result)
                 ? ReformatFloatToTwoDecimalPlacesAndEpsilon(result)
-                : String.Empty;
+                : string.Empty;
         }
         private static string ReformatFloatToTwoDecimalPlacesAndEpsilon(float value)
         {

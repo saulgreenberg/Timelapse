@@ -1,4 +1,4 @@
-﻿namespace TimelapseUpgradeFiles.Enums
+﻿namespace Timelapse.Enums
 {
     public enum SchemaAttributesEnum
     {

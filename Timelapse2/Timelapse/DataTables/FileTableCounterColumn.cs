@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// FileTableCounterCollumn - A FileTable Column holding Counter values

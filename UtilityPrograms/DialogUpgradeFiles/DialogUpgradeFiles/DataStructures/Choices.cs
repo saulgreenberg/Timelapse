@@ -46,7 +46,7 @@ namespace DialogUpgradeFiles.DataStructures
         }
         public string GetAsJson =>
             this.ChoiceList.Count == 0
-                ? String.Empty
+                ? string.Empty
                 : JsonConvert.SerializeObject(ChoicesInternal);
 
         public string GetAsTextboxList => String.Join(Environment.NewLine, this.ChoiceList);
@@ -68,7 +68,7 @@ namespace DialogUpgradeFiles.DataStructures
         {
             string[] NewLineDelimiter = { Environment.NewLine };
             choiceText = TrimLinesAndRemoveEmptyLines(choiceText);
-            List<string> choiceList = String.IsNullOrWhiteSpace(choiceText)
+            List<string> choiceList = string.IsNullOrWhiteSpace(choiceText)
                 ? new List<string>()
                 : choiceText.Split(NewLineDelimiter, StringSplitOptions.None).ToList();
             this.ChoicesInternal = new ChoicesInternalPart();
@@ -119,7 +119,7 @@ namespace DialogUpgradeFiles.DataStructures
             if (this.IncludeEmptyChoice)
             {
                 // Add an empty choice followed by a separator
-                comboBox.Items.Add(String.Empty);
+                comboBox.Items.Add(string.Empty);
                 comboBox.Items.Add(new Separator());
             }
             foreach (string choice in this.ChoiceList)
@@ -155,12 +155,12 @@ namespace DialogUpgradeFiles.DataStructures
             foreach (string choice in choices)
             {
                 string trimmedchoice = choice.Trim();
-                if (String.IsNullOrWhiteSpace(choice) == false && trimmedchoices.Contains(trimmedchoice) == false)
+                if (string.IsNullOrWhiteSpace(choice) == false && trimmedchoices.Contains(trimmedchoice) == false)
                 {
                     trimmedchoices.Add(trimmedchoice);
                 }
             }
-            return string.Join(string.Join(String.Empty, NewLineDelimiter), trimmedchoices);
+            return string.Join(string.Join(string.Empty, NewLineDelimiter), trimmedchoices);
         }
         #endregion
 

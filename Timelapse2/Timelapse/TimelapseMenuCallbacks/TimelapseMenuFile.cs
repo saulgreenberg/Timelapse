@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -17,6 +18,7 @@ using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 
 // File Menu Callbacks
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow
@@ -70,7 +72,7 @@ namespace Timelapse
             if (results.Item1 == false)
             {
                 this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
-                if (false == String.IsNullOrWhiteSpace(results.Item2))
+                if (false == string.IsNullOrWhiteSpace(results.Item2))
                 {
                     // This is a first time load of a ddb, as indicated by the non-empty returned result of the ddb file path to delete.
                     // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
@@ -119,7 +121,7 @@ namespace Timelapse
         // Invoke the Update Timelapse files program
         private void MenuItemUpgradeTimelapseFiles_Click(object sender, RoutedEventArgs e)
         {
-            DialogUpgradeFiles.DialogUpgradeFilesAndFolders dialogUpdateFiles = new DialogUpgradeFiles.DialogUpgradeFilesAndFolders(this, String.Empty, VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+            DialogUpgradeFiles.DialogUpgradeFilesAndFolders dialogUpdateFiles = new DialogUpgradeFiles.DialogUpgradeFilesAndFolders(this, string.Empty, VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
             dialogUpdateFiles.ShowDialog();
         }
         #endregion
@@ -154,7 +156,7 @@ namespace Timelapse
                 bool? result = mergeChooseDatabaseFiles.ShowDialog();
                 this.StatusBar.SetMessage(result == true ? "Merged database created" : "Aborted creation of merged database");
                 this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
-                if (result == true && mergeChooseDatabaseFiles.DatabaseToLoad != String.Empty)
+                if (result == true && mergeChooseDatabaseFiles.DatabaseToLoad != string.Empty)
                 {
                     Mouse.OverrideCursor = Cursors.Wait;
                     this.StatusBar.SetMessage("Loading images, please wait...");

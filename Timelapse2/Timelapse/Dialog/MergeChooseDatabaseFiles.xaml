@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
        xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Merge Databases..." Height="550" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded">
+        Title="Merge Databases..." Height="550" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />

@@ -36,6 +36,7 @@ namespace Timelapse.Recognition
 
         #region Public Set Defaults
         // Defaults are just used when reading in current csv files, as that file does not includese the category definitions
+        // ReSharper disable once UnusedMember.Global
         public void SetDetectionCategoryDefaults()
         {
             this.detection_categories = new Dictionary<string, string>
@@ -47,6 +48,7 @@ namespace Timelapse.Recognition
         }
 
         // Defaults are just used when reading in current csv files, as that file does not include the category definitions
+        // ReSharper disable once UnusedMember.Global
         public void SetDetectionClassificationDefaults()
         {
             this.classification_categories = new Dictionary<string, string>
@@ -163,7 +165,7 @@ namespace Timelapse.Recognition
         #region Constructor
         public image()
         {
-            this.file = String.Empty;
+            this.file = string.Empty;
             this.max_detection_conf = 0;
             this.detections = new List<detection>();
         }
@@ -191,7 +193,7 @@ namespace Timelapse.Recognition
         #region Constructor
         public detection()
         {
-            this.category = String.Empty;
+            this.category = string.Empty;
             this.conf = 0;
             this.classifications = new List<Object[]>();
             this.bbox = new double[4];

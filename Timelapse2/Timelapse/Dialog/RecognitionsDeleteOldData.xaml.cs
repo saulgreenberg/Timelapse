@@ -10,7 +10,7 @@ namespace Timelapse.Dialog
     public partial class RecognitionsDeleteOldData
     {
         public bool IsDeleteAllSelected;
-        private RecognizerImportResultEnum ImportError;
+        private readonly RecognizerImportResultEnum ImportError;
         public RecognitionsDeleteOldData(Window owner, RecognizerImportResultEnum importError)
         {
             InitializeComponent();

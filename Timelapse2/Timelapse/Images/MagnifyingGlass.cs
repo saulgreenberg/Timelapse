@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Images
@@ -34,7 +35,7 @@ namespace Timelapse.Images
 
         #region private properties and variables
         // This hides the actual parent, which is why we set it as a property
-        private new MarkableCanvas Parent { get; set; }
+        private new MarkableCanvas Parent { get; }
 
         // The lens is constructed within a canvas
         private readonly Canvas lensCanvas;
@@ -252,18 +253,18 @@ namespace Timelapse.Images
 
             // If the angle has changed, animate the magnifying glass and its contained image to the new angle
             double lensDiameter = this.magnifierLens.Width;
-            if (this.magnifyingGlassAngle != newMagnifyingGlassAngle)
+            if (Math.Abs(this.magnifyingGlassAngle - newMagnifyingGlassAngle) > .0001)
             {
                 // Correct the rotation in those cases where it would turn the long way around. 
                 // Note that the new lens angle correction is hard coded rather than calculated, as it works. 
                 double newLensAngle;
                 double uncorrectedNewLensAngle = -newMagnifyingGlassAngle;
-                if (this.magnifyingGlassAngle == 270 && newMagnifyingGlassAngle == 0)
+                if (Math.Abs(this.magnifyingGlassAngle - 270) < .0001 && newMagnifyingGlassAngle == 0)
                 {
                     this.magnifyingGlassAngle = -90;
                     newLensAngle = -360; // subtract the rotation of the magnifying glass to counter that rotational effect
                 }
-                else if (this.magnifyingGlassAngle == 0 && newMagnifyingGlassAngle == 270)
+                else if (this.magnifyingGlassAngle == 0 && Math.Abs(newMagnifyingGlassAngle - 270) < .0001)
                 {
                     this.magnifyingGlassAngle = 360;
                     newLensAngle = 90;
@@ -307,7 +308,7 @@ namespace Timelapse.Images
         // return the current angle if it matches one of the desired angle, or the the desired angle that is closest to the angle in degrees
         private static double AdjustAngle(double currentAngle, double angle1, double angle2)
         {
-            if (currentAngle == angle2)
+            if (Math.Abs(currentAngle - angle2) < .0001)
             {
                 return angle2;
             }

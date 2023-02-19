@@ -2,7 +2,7 @@
 using System.Globalization;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataStructures
 {
     /// <summary>
     /// A column name and a value to assign (or assigned) to that column. 
@@ -22,8 +22,8 @@ namespace Timelapse.Database
     public class ColumnTuple
     {
         #region Public Properties
-        public string Name { get; private set; }
-        public string Value { get; private set; }
+        public string Name { get; }
+        public string Value { get; }
         #endregion
 
         #region Constructors - different forms for different types

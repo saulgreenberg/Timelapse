@@ -12,6 +12,7 @@ using System.Windows.Threading;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
 using Timelapse.Util;
@@ -49,7 +50,7 @@ namespace Timelapse.Images
         /// <summary>
         /// Gets the grid containing a multitude of zoomed out images
         /// </summary>
-        public ThumbnailGrid ThumbnailGrid { get; private set; }
+        public ThumbnailGrid ThumbnailGrid { get; }
 
         /// <summary>
         /// We need a reference to the DataEntry Controls so we can enable and disable some of them
@@ -66,11 +67,6 @@ namespace Timelapse.Images
         }
 
         /// <summary>
-        /// The FilePlayer should be set from TimelapseWindow.cs, as we need a handle to it in order to manipulate it.
-        /// </summary>
-        public FilePlayer FilePlayer { get; set; }
-
-        /// <summary>
         /// Gets the image displayed across the MarkableCanvas for image files
         /// </summary>
         public Image ImageToDisplay { get; set; }
@@ -78,7 +74,7 @@ namespace Timelapse.Images
         /// <summary>
         /// Gets the image displayed in the magnifying glass
         /// </summary>
-        public Image ImageToMagnify { get; private set; }
+        public Image ImageToMagnify { get; }
 
         /// <summary>
         /// Whether the thumbnail grid is visible or not
@@ -119,7 +115,7 @@ namespace Timelapse.Images
         /// <summary>
         /// The VideoPlayer displayed by the markable canvasewhen a video is selected
         /// </summary>
-        public VideoPlayer VideoPlayer { get; private set; }
+        public VideoPlayer VideoPlayer { get; }
 
         /// <summary>
         /// Gets or sets the maximum zoom of the display image
@@ -351,10 +347,10 @@ namespace Timelapse.Images
         /// <summary>
         /// Set a wholly new image.  Clears existing markers and syncs the magnifier image to the display image.
         /// </summary>
-        public void SetNewImage(BitmapSource bitmapSource, List<Marker> markers)
+        public void SetNewImage(BitmapSource bitmapSource, List<Marker> markersList)
         {
             // change to new markers
-            this.markers = markers;
+            this.markers = markersList;
 
             this.ImageToDisplay.Source = bitmapSource;
             // initiate render of magnified image
@@ -384,7 +380,7 @@ namespace Timelapse.Images
             }
         }
 
-        public void SetNewVideo(FileInfo videoFile, List<Marker> markers)
+        public void SetNewVideo(FileInfo videoFile, List<Marker> markersList)
         {
             // Check the arguments for null 
             if (videoFile == null || videoFile.Exists == false)
@@ -394,7 +390,7 @@ namespace Timelapse.Images
                 return;
             }
 
-            this.markers = markers;
+            this.markers = markersList;
             this.VideoPlayer.SetSource(new Uri(videoFile.FullName));
             this.displayingImage = false;
 
@@ -456,7 +452,7 @@ namespace Timelapse.Images
                 this.imageToDisplayScale.ScaleY = Math.Max(Constant.MarkableCanvas.ImageZoomMinimum, this.imageToDisplayScale.ScaleY);
 
                 // if there is no scaling, reset translations
-                if (this.imageToDisplayScale.ScaleX == 1.0 && this.imageToDisplayScale.ScaleY == 1.0)
+                if (Math.Abs(this.imageToDisplayScale.ScaleX - 1.0) < .0001 && Math.Abs(this.imageToDisplayScale.ScaleY - 1.0) < .0001)
                 {
                     this.imageToDisplayTranslation.X = 0.0;
                     this.imageToDisplayTranslation.Y = 0.0;
@@ -522,7 +518,7 @@ namespace Timelapse.Images
         {
             // a user may want to flip between completely zoomed out / normal pan settings and a saved zoom / pan setting that focuses in on a particular region
             // To do this, we save / restore the zoom pan settings of a particular view, or return to the default zoom/pan.
-            if (this.imageToDisplayScale.ScaleX == 1 && this.imageToDisplayScale.ScaleY == 1)
+            if (Math.Abs(this.imageToDisplayScale.ScaleX - 1) < .0001 && Math.Abs(this.imageToDisplayScale.ScaleY - 1) < .0001)
             {
                 // If the scale is unzoomed, then don't bother saving it as it may just be the result of an unintended key press. 
                 return;
@@ -793,7 +789,7 @@ namespace Timelapse.Images
                 lock (this.VideoPlayer)
                 {
                     // Request Zoom out on a zoomed-in Video
-                    if (zoomIn || (zoomIn == false && this.VideoPlayer.IsUnScaled == false))
+                    if (zoomIn || this.VideoPlayer.IsUnScaled == false)
                     {
                         this.VideoPlayer.ScaleVideo(videoMousePosition, zoomIn);
                         this.SetMagnifiersAccordingToCurrentState(false, true);
@@ -805,7 +801,7 @@ namespace Timelapse.Images
             {
                 // Request Zoom out on either an unscaled image or the thumbnail grid. 
                 // Note on why this is ambiguous: if the thumbnail grid is visible, it means the (hidden) image is also unscaled
-                if (zoomIn == false && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
+                if (zoomIn == false && Math.Abs(this.imageToDisplayScale.ScaleX - Constant.MarkableCanvas.ImageZoomMinimum) < .0001)
                 {
                     // Option 1. Request zoom out on Thumbnail Grid,
                     //           Aborted as we are already at the maximum allowable steps on ThumbnailGrid
@@ -820,10 +816,10 @@ namespace Timelapse.Images
 
                     // Option 2a. We tried to refresh, but there isn't enough space available on the thumbnail grid.
                     //            Thus try to zoom out again at the next zoom-out level
-                    ThumbnailGridRefreshStatus status = this.RefreshThumbnailGrid(zoomIn);
+                    ThumbnailGridRefreshStatus status = this.RefreshThumbnailGrid(false);
                     if (status == ThumbnailGridRefreshStatus.NotEnoughSpaceForEvenOneCell)
                     {
-                        this.TryZoomInOrOut(zoomIn, imageMousePosition, videoMousePosition); // STOPPING CONDITION AT MINIMUM???
+                        this.TryZoomInOrOut(false, imageMousePosition, videoMousePosition); // STOPPING CONDITION AT MINIMUM???
                         return;
                     }
                     // Option 2b: Zoom out request denied.
@@ -983,7 +979,8 @@ namespace Timelapse.Images
             }
         }
 
-        // Unused. Trigger a mouse move event. This is used to keep th emagnifying glass in view when switching files.
+        // Unused. Trigger a mouse move event. This is used to keep the emagnifying glass in view when switching files.
+        // ReSharper disable once UnusedMember.Global
         public void TriggerMouseMoveEvent()
         {
             MouseEventArgs e = new MouseEventArgs(Mouse.PrimaryDevice, 0)
@@ -1029,7 +1026,7 @@ namespace Timelapse.Images
                     if (this.displayingImage)
                     {
                         // Translation is possible only if the image isn't already scaled
-                        if (this.imageToDisplayScale.ScaleX != 1.0 || this.imageToDisplayScale.ScaleY != 1.0)
+                        if (Math.Abs(this.imageToDisplayScale.ScaleX - 1.0) > .0001 || Math.Abs(this.imageToDisplayScale.ScaleY - 1.0) > .0001)
                         {
                             this.Cursor = Cursors.ScrollAll;    // Change the cursor to a panning cursor
                             mousePosition = this.transformGroup.Transform(mousePosition);
@@ -1138,7 +1135,7 @@ namespace Timelapse.Images
             if (timeDifference < TimeSpan.FromMilliseconds(500)) // At least a 500 msecs delay in use of the scroll wheel is needed between transitions
             {
                 if (zoomIn &&
-                    ((this.ImageToDisplay.Visibility == Visibility.Visible && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
+                    ((this.ImageToDisplay.Visibility == Visibility.Visible && Math.Abs(this.imageToDisplayScale.ScaleX - Constant.MarkableCanvas.ImageZoomMinimum) < .0001)
                      || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled)))
                 {
                     // Pause on the transition from unzoomed image/video to zoomed image/video
@@ -1146,7 +1143,7 @@ namespace Timelapse.Images
                 }
 
                 if (zoomIn == false &&
-                    ((this.ImageToDisplay.Visibility == Visibility.Visible && this.imageToDisplayScale.ScaleX == Constant.MarkableCanvas.ImageZoomMinimum)
+                    ((this.ImageToDisplay.Visibility == Visibility.Visible && Math.Abs(this.imageToDisplayScale.ScaleX - Constant.MarkableCanvas.ImageZoomMinimum) < .0001)
                       || (this.VideoPlayer.Visibility == Visibility.Visible && this.VideoPlayer.IsUnScaled)))
                 {
                     // Pause on the transition from unscaled image/video to thumbnail Grid

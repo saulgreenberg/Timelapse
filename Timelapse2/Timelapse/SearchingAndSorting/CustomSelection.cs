@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.SearchingAndSorting
 {
     /// <summary>
     /// Class CustomSelection holds a list search term particles, each reflecting criteria for a given field
@@ -27,7 +28,7 @@ namespace Timelapse.Database
 
         // Episode-specific data
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
-        public string EpisodeNoteField { get; set; } = String.Empty;
+        public string EpisodeNoteField { get; set; } = string.Empty;
         #endregion
 
         #region Constructor
@@ -78,7 +79,7 @@ namespace Timelapse.Database
                 if (searchTerm.List.Count > 0)
                 {
                     // Add the empty string to the beginning of the search list, which allows the option of searching for empty items
-                    searchTerm.List.Insert(0, String.Empty);
+                    searchTerm.List.Insert(0, string.Empty);
                 }
                 this.SearchTerms.Add(searchTerm);
 
@@ -148,7 +149,7 @@ namespace Timelapse.Database
             };
 
             // Add the unordered search terms into the dictionary, which will put them in the correct order
-            List<SearchTerm> orderedSearchTerms = new List<SearchTerm>();
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (SearchTerm searchTerm in unorderedStandardSearchTerms)
             {
                 if (dictOrderedTerms.ContainsKey(searchTerm.DataLabel))
@@ -175,6 +176,7 @@ namespace Timelapse.Database
             }
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
+            // ReSharper disable once PossibleMultipleEnumeration
             IEnumerable<SearchTerm> nonStandardSearchTerms = SearchTerms.Except(unorderedStandardSearchTerms).ToList();
             // Finally, concat the two lists together to collect all the correctly ordered search terms into a single list
             SearchTerms = standardSearchTerms.Concat(nonStandardSearchTerms).ToList();
@@ -235,7 +237,7 @@ namespace Timelapse.Database
         // Create and return the query composed from the search term list
         public string GetFilesWhere()
         {
-            string where = String.Empty;
+            string where = string.Empty;
 
             // Collect all the standard search terms which the user currently selected as UseForSearching
             IEnumerable<SearchTerm> standardSearchTerms = this.SearchTerms.Where(term => term.UseForSearching
@@ -244,16 +246,18 @@ namespace Timelapse.Database
                term.DataLabel == Constant.DatabaseColumn.DeleteFlag));
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
+            // ReSharper disable once PossibleMultipleEnumeration
             IEnumerable<SearchTerm> nonstandardSearchTerms = this.SearchTerms.Where(term => term.UseForSearching).Except(standardSearchTerms);
 
             // Combine the standard terms using the AND operator
+            // ReSharper disable once PossibleMultipleEnumeration
             string standardWhere = CombineSearchTermsAndOperator(standardSearchTerms, CustomSelectionOperatorEnum.And);
 
             // Combine the non-standard terms using the operator defined by the user (either AND or OR)
             string nonStandarWhere = CombineSearchTermsAndOperator(nonstandardSearchTerms, this.TermCombiningOperator);
 
             // Combine the standardWhere and nonStandardWhere clauses, depending if one or both of them exists
-            if (false == String.IsNullOrWhiteSpace(standardWhere) && false == String.IsNullOrWhiteSpace(nonStandarWhere))
+            if (false == string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We have both standard and non-standard clauses, so surround them with parenthesis and combine them with an AND
                 // Form: WHERE (standardWhere clauses) AND (nonStandardWhere clauses)
@@ -261,13 +265,13 @@ namespace Timelapse.Database
                           + Sql.And
                           + Sql.OpenParenthesis + nonStandarWhere + Sql.CloseParenthesis;
             }
-            else if (false == String.IsNullOrWhiteSpace(standardWhere) && String.IsNullOrWhiteSpace(nonStandarWhere))
+            else if (false == string.IsNullOrWhiteSpace(standardWhere) && string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We only have a standard clause
                 // Form: WHERE (standardWhere clauses)
                 where += Sql.Where + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis;
             }
-            else if (String.IsNullOrWhiteSpace(standardWhere) && false == String.IsNullOrWhiteSpace(nonStandarWhere))
+            else if (string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We only have a non-standard clause
                 // Form: WHERE nonStandardWhere clauses
@@ -352,14 +356,16 @@ namespace Timelapse.Database
         // Combine the search terms in searchTemrs using the termCombiningOperator (i.e. And or OR), and special cases in as needed.
         private string CombineSearchTermsAndOperator(IEnumerable<SearchTerm> searchTerms, CustomSelectionOperatorEnum termCombiningOperator)
         {
-            string where = String.Empty;
+            string where = string.Empty;
 
             // Special case on Time.
             // If there are two time terms and the select goes over midnight, we combine them with an OR instead of AND
             // This allows a select between (say) 10pm and 7am
+            // ReSharper disable once PossibleMultipleEnumeration
             bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(this.UseTimeInsteadOfDate, searchTerms, this.DetectionSelections.Enabled, out string combinedTimeTerm);
 
             bool timeHandled = false; // Allows us to track whether we are on the first or second time term
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (SearchTerm searchTerm in searchTerms)
             {
                 // Basic Form after the ForEach iteration should be:
@@ -367,7 +373,7 @@ namespace Timelapse.Database
                 // a=b for the first term
                 // ... AND/OR c=d ... for subsequent terms (AND/OR defined in termCombiningOperator
                 // variations are special cases for relative path and datetime
-                string whereForTerm = String.Empty;
+                string whereForTerm = string.Empty;
 
                 if (areTimeTermsCombined)
                 {
@@ -466,7 +472,7 @@ namespace Timelapse.Database
         // The combined expression will be surrounded by brackets and combined with OR
         private static bool CombineTimeSearchTermsIfNeeded(bool useTimeInsteadOfDate, IEnumerable<SearchTerm> searchTerms, bool useFullyQualifiedDataLabel, out string expression)
         {
-            expression = String.Empty;
+            expression = string.Empty;
             if (useTimeInsteadOfDate == false)
             {
                 // We aren't using Time
@@ -474,13 +480,16 @@ namespace Timelapse.Database
             }
 
             IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime && term.UseForSearching);
+            // ReSharper disable once PossibleMultipleEnumeration
             if (timeTerms.Count() != 2)
             {
                 // We don't have two Time terms to combine
                 return false;
             }
 
+            // ReSharper disable once PossibleMultipleEnumeration
             SearchTerm st1 = timeTerms.ElementAt(0);
+            // ReSharper disable once PossibleMultipleEnumeration
             SearchTerm st2 = timeTerms.ElementAt(1);
             TimeSpan ts1 = st1.GetDateTime().TimeOfDay;
             TimeSpan ts2 = st2.GetDateTime().TimeOfDay;
@@ -551,7 +560,7 @@ namespace Timelapse.Database
                         return searchTerm.DatabaseValue;
                     }
                 }
-                return String.Empty;
+                return string.Empty;
             }
         }
         #endregion
@@ -565,23 +574,6 @@ namespace Timelapse.Database
             searchTerm.DatabaseValue = relativePath;
             searchTerm.Operator = Constant.SearchTermOperator.Equal;
             searchTerm.UseForSearching = true;
-        }
-
-        public SearchTerm GetDeleteFlagSearchTerm()
-        {
-            return this.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
-        }
-
-        public void SetDeleteFlagSearchTermValuesTo(SearchTerm searchTermValuesToCopy)
-        {
-            if (searchTermValuesToCopy == null)
-            {
-                return;
-            }
-            SearchTerm currentSearchTerm = this.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
-            currentSearchTerm.DatabaseValue = searchTermValuesToCopy.DatabaseValue;
-            currentSearchTerm.Operator = searchTermValuesToCopy.Operator;
-            currentSearchTerm.UseForSearching = searchTermValuesToCopy.UseForSearching;
         }
 
         public void SetAndUseDeleteFlagSearchTerm()
@@ -635,7 +627,7 @@ namespace Timelapse.Database
         {
             if (string.IsNullOrEmpty(relativePath))
             {
-                return String.Empty;
+                return string.Empty;
             }
 
             // Form: ( DataTable.RelativePath='relpathValue' OR DataTable.RelativePath GLOB 'relpathValue\*' )
@@ -668,7 +660,7 @@ namespace Timelapse.Database
                 case Constant.SearchTermOperator.NotGlob:
                     return " NOT GLOB ";
                 default:
-                    return String.Empty;
+                    return string.Empty;
             }
         }
         #endregion

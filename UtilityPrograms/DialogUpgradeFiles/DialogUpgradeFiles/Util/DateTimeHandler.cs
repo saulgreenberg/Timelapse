@@ -3,6 +3,8 @@
 //using MetadataExtractor.Formats.Exif.Makernotes;
 using System;
 using System.Globalization;
+using DialogUpgradeFiles.Extensions;
+
 //using MetadataDirectory = MetadataExtractor.Directory;
 namespace DialogUpgradeFiles.Util
 {

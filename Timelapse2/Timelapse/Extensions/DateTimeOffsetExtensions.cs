@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Timelapse.Util
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// DateTimeOffset Extensions

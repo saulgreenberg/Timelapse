@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Extensions;
-using Timelapse.Util;
 
 namespace Timelapse.Images
 {
@@ -274,7 +276,7 @@ namespace Timelapse.Images
                         {
                             if (this.mostRecentlyUsedIDs.TryGetLeastRecent(out long fileIDToRemove))
                             {
-                                this.unalteredBitmapsByID.TryRemove(fileIDToRemove, out BitmapSource ignored);
+                                this.unalteredBitmapsByID.TryRemove(fileIDToRemove, out _);
                             }
                         }
 
@@ -317,7 +319,7 @@ namespace Timelapse.Images
                     // Force update clears the caches, which in turn always forces synchronous loading of the requested bitmap 
                     // from disk as it cannot cached. This is necessary, in case (for example)  a 'missing' placeholder image was used and the image
                     // was later restored. If we don't clear the cache, the placeholder image would be used instead.
-                    bitmap = fileRow.LoadBitmap(this.Database.FolderPath, out bool isCorruptOrMissing);
+                    bitmap = fileRow.LoadBitmap(this.Database.FolderPath, out _);
                     this.prefetechesByID.Clear();
                     this.unalteredBitmapsByID.Clear();
                     this.CacheBitmap(fileRow.ID, bitmap);
@@ -419,27 +421,26 @@ namespace Timelapse.Images
             return this.TryGetBitmapAsWriteable(this.CurrentRow - 1, out previousBitmap);
         }
 
-        private bool TryInitiateBitmapPrefetch(int fileIndex)
+        private void TryInitiateBitmapPrefetch(int fileIndex)
         {
             if (this.Database.IsFileRowInRange(fileIndex) == false)
             {
-                return false;
+                return;
             }
 
             ImageRow nextFile = this.Database.FileTable[fileIndex];
             if (this.unalteredBitmapsByID.ContainsKey(nextFile.ID) || this.prefetechesByID.ContainsKey(nextFile.ID))
             {
-                return false;
+                return;
             }
 
             Task prefetch = Task.Run(() => //Task.Factory.StartNew(() => SEE CA2008. Replacing this with Task.Run is recommended
             {
-                BitmapSource nextBitmap = nextFile.LoadBitmap(this.Database.FolderPath, out bool isCorruptOrMissing);
+                BitmapSource nextBitmap = nextFile.LoadBitmap(this.Database.FolderPath, out _);
                 this.CacheBitmap(nextFile.ID, nextBitmap);
-                this.prefetechesByID.TryRemove(nextFile.ID, out Task ignored);
+                this.prefetechesByID.TryRemove(nextFile.ID, out _);
             });
             this.prefetechesByID.AddOrUpdate(nextFile.ID, prefetch, (id, newPrefetch) => newPrefetch);
-            return true;
         }
         #endregion
     }

@@ -2,9 +2,10 @@
 using System.Data;
 using System.IO;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     public class FileTable : DataTableBackedList<ImageRow>
     {

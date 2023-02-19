@@ -155,22 +155,22 @@ namespace Timelapse.Util
         /// <summary>
         /// The number of bytes that were read/written to/from the stream.
         /// </summary>
-        public int BytesMoved { get; private set; }
+        public int BytesMoved { get; }
 
         /// <summary>
         /// The total length of the stream in bytes.
         /// </summary>
-        public long StreamLength { get; private set; }
+        public long StreamLength { get; }
 
         /// <summary>
         /// The current position in the stream.
         /// </summary>
-        public long StreamPosition { get; private set; }
+        public long StreamPosition { get; }
 
         /// <summary>
         /// True if the bytes were read from the stream, false if they were written.
         /// </summary>
-        public bool WasRead { get; private set; }
+        public bool WasRead { get; }
         #endregion
 
         #region Constructor - Various Forms

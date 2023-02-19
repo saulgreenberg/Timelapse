@@ -1,21 +1,23 @@
-﻿using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using MetadataExtractor.Formats.Exif.Makernotes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.Exif.Makernotes;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.Images;
 using Timelapse.Util;
 using Directory = System.IO.Directory;
 using MetadataDirectory = MetadataExtractor.Directory;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// Represents the data in a row in the file database describing a single image or video.
@@ -28,8 +30,8 @@ namespace Timelapse.Database
         // Set/Get the raw datetime value
         public DateTime DateTime
         {
-            // There was still a UTCOffset conversionissues, so this kinda fixes it.
-            // Orignal code is in commentss
+            // There was still a UTCOffset conversion issues, so this kinda fixes it.
+            // Original code is in comments
             //get { return (this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime)); }
             //private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
             get => DateTime.SpecifyKind(this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime), DateTimeKind.Unspecified);
@@ -38,8 +40,6 @@ namespace Timelapse.Database
 
         // Get a version of the date/time suitable to display to the user 
         public string DateTimeAsDisplayable => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
-
-        public string DateTimeAsDisplayableDate => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
 
         // Get the date/time  - This version is a null op!
         public DateTime DateTimeIncorporatingOffsetPLAINVERSION => this.DateTime;
@@ -242,7 +242,6 @@ namespace Timelapse.Database
         {
             try
             {
-                Dictionary<string, string> validatedDictMetadataDatalabel = new Dictionary<string, string>();
                 Dictionary<string, ImageMetadata> metadata = new Dictionary<string, ImageMetadata>();
 
                 if (metadataOnLoad.MetadataToolSelected == MetadataToolEnum.MetadataExtractor)
@@ -258,7 +257,7 @@ namespace Timelapse.Database
 
                     foreach (KeyValuePair<string, string> kvp in exifData)
                     {
-                        metadata.Add(kvp.Key, new ImageMetadata(String.Empty, kvp.Key, kvp.Value));
+                        metadata.Add(kvp.Key, new ImageMetadata(string.Empty, kvp.Key, kvp.Value));
                     }
                 }
 
@@ -284,7 +283,7 @@ namespace Timelapse.Database
             // Use only on images, as video files don't contain the desired metadata. 
             try
             {
-                IReadOnlyList<MetadataDirectory> metadataDirectories = null;
+                IReadOnlyList<MetadataDirectory> metadataDirectories;
 
                 // Performance tweaks. Reading in sequential scan, does this speed up? Under the covers, the MetadataExtractor is using a sequential read, allowing skip forward but not random access.
                 // Exif is small, do we need a big block?

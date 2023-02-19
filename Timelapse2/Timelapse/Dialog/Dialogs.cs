@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Clipboard = System.Windows.Clipboard;
@@ -197,7 +198,7 @@ namespace Timelapse.Dialog
                 Filter = filter
             })
             {
-                if (String.IsNullOrWhiteSpace(defaultFilePath))
+                if (string.IsNullOrWhiteSpace(defaultFilePath))
                 {
                     openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
@@ -223,7 +224,7 @@ namespace Timelapse.Dialog
         /// <returns>The selected path, otherwise null </returns>
         public static bool TryGetFolderFromUserUsingOpenFileDialog(string title, string initialFolder, out string selectedFolderPath)
         {
-            selectedFolderPath = String.Empty;
+            selectedFolderPath = string.Empty;
             using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog()
             {
                 Title = title,
@@ -257,7 +258,7 @@ namespace Timelapse.Dialog
         {
             if (initialFolder == null)
             {
-                return String.Empty;
+                return string.Empty;
             }
             using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog()
             {
@@ -272,7 +273,7 @@ namespace Timelapse.Dialog
                 if (folderSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     // Trim the root folder path from the folder name to produce a relative path. 
-                    return (folderSelectionDialog.FileName.Length > initialFolder.Length) ? folderSelectionDialog.FileName.Substring(initialFolder.Length + 1) : String.Empty;
+                    return (folderSelectionDialog.FileName.Length > initialFolder.Length) ? folderSelectionDialog.FileName.Substring(initialFolder.Length + 1) : string.Empty;
                 }
                 else
                 {
@@ -316,7 +317,7 @@ namespace Timelapse.Dialog
                 Filter = filter
             })
             {
-                if (String.IsNullOrWhiteSpace(defaultFilePath))
+                if (string.IsNullOrWhiteSpace(defaultFilePath))
                 {
                     saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
@@ -835,46 +836,6 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region MessageBox: Not a template
-        // notify the user the template couldn't be loaded rather than silently doing nothing
-        public static void TemplateFileNotATDB(Window owner, string templateDatabasePath)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            new MessageBox("Could not load the Timelapse Template file.", owner)
-            {
-                Message =
-                 {
-                     Problem = "The file does not appear to be a template file:"
-                               + Environment.NewLine
-                               + "\u2022 " + templateDatabasePath,
-                     Reason = $"Template files are identifed by the suffix {Constant.File.TemplateDatabaseFileExtension} .",
-                     Solution = $"Load a valid template file ending in {Constant.File.TemplateDatabaseFileExtension} .",
-                     Icon = MessageBoxImage.Error
-                 }
-            }.ShowDialog();
-        }
-        #endregion
-
-        #region MessageBox: Not a data file
-        // notify the user the database couldn't be loaded rather than silently doing nothing
-        public static void DatabaseFileNotADDB(Window owner, string databasePath)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            new MessageBox("Could not load the Timelapse Database file.", owner)
-            {
-                Message =
-                 {
-                     Problem = "The file does not appear to be a database file:"
-                               + Environment.NewLine
-                               + "\u2022 " + databasePath,
-                     Reason = $"Database files are identifed by the suffix {Constant.File.FileDatabaseFileExtension} .",
-                     Solution = $"Load a valid database file ending in {Constant.File.FileDatabaseFileExtension} .",
-                     Icon = MessageBoxImage.Error
-                 }
-            }.ShowDialog();
-        }
-        #endregion
-
         #region MessageBox: DataEntryHandler Confirmations / Warnings for Propagate, Copy Forward, Propagate to here
         // Display a dialog box saying there is nothing to propagate. 
         public static void DataEntryNothingToPropagateDialog(Window owner)
@@ -909,7 +870,7 @@ namespace Timelapse.Dialog
         /// </summary>
         public static bool? DataEntryConfirmCopyForwardDialog(Window owner, string text, int imagesAffected, bool checkForZero)
         {
-            text = string.IsNullOrEmpty(text) ? String.Empty : text.Trim();
+            text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
 
             MessageBox messageBox = new MessageBox("Please confirm 'Copy Forward' for this field...", owner, MessageBoxButton.YesNo)
             {
@@ -938,7 +899,7 @@ namespace Timelapse.Dialog
         /// </summary>
         public static bool? DataEntryConfirmCopyCurrentValueToAllDialog(Window owner, String text, int filesAffected, bool checkForZero)
         {
-            text = string.IsNullOrEmpty(text) ? String.Empty : text.Trim();
+            text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
 
             MessageBox messageBox = new MessageBox("Please confirm 'Copy to All' for this field...", owner, MessageBoxButton.YesNo)
             {
@@ -961,7 +922,7 @@ namespace Timelapse.Dialog
         /// </summary>
         public static bool? DataEntryConfirmPropagateFromLastValueDialog(Window owner, String text, int imagesAffected)
         {
-            text = string.IsNullOrEmpty(text) ? String.Empty : text.Trim();
+            text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
             return new MessageBox("Please confirm 'Propagate to Here' for this field.", owner, MessageBoxButton.YesNo)
             {
                 Message =
@@ -1277,7 +1238,7 @@ namespace Timelapse.Dialog
                         Icon = MessageBoxImage.Question
                     }
             };
-            if (String.IsNullOrWhiteSpace(samplePath))
+            if (string.IsNullOrWhiteSpace(samplePath))
             {
                 messageBox.Message.Hint = "The problem is that the recognition file contains no files!" + Environment.NewLine
                 + "You probably want to Cancel";
@@ -1573,53 +1534,6 @@ namespace Timelapse.Dialog
             }
             return messageBox.DialogResult;
         }
-
-        /// <summary>
-        /// Merge databases: Show errors and/or warnings, if any.
-        /// </summary>
-        public static void MenuFileMergeDatabasesErrorsAndWarningsDialog(Window owner, ErrorsAndWarnings errorMessages)
-        {
-            if (errorMessages == null)
-            {
-                return;
-            }
-            MessageBox messageBox = new MessageBox("Merge Databases Results.", owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Error
-                }
-            };
-
-            if (errorMessages.Errors.Count != 0)
-            {
-                messageBox.Message.Title = "Merge Databases Failed.";
-                messageBox.Message.What = "The merged database could not be created for the following reasons:";
-            }
-            else if (errorMessages.Warnings.Count != 0)
-            {
-                messageBox.Message.Title = "Merge Databases Left Out Some Files.";
-                messageBox.Message.What = "The merged database left out some files for the following reasons:";
-            }
-
-            if (errorMessages.Errors.Count != 0)
-            {
-                messageBox.Message.What += $"{Environment.NewLine}{Environment.NewLine}Errors:";
-                foreach (string error in errorMessages.Errors)
-                {
-                    messageBox.Message.What += $"{Environment.NewLine}\u2022 {error},";
-                }
-            }
-            if (errorMessages.Warnings.Count != 0)
-            {
-                messageBox.Message.What += $"{Environment.NewLine}{Environment.NewLine}Warnings:";
-            }
-            foreach (string warning in errorMessages.Warnings)
-            {
-                messageBox.Message.What += $"{Environment.NewLine}\u2022 {warning},";
-            }
-            messageBox.ShowDialog();
-        }
         #endregion
 
         #region MessageBox: MenuEdit
@@ -1821,47 +1735,6 @@ namespace Timelapse.Dialog
                 + " - DateTime only  (in ascending order)";
             return messageBox.ShowDialog() == true;
         }
-
-        public static void MenuOptionsCantPopulateDataFieldWithEpisodeAsSortIsWrongOriginal(Window owner, bool searchTermsOk, bool sortTermsOk)
-        {
-            MessageBox messageBox = new MessageBox("Cannot populate a field with Episode data", owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Error,
-                    Problem = "Timelapse cannot currently populate any fields with Episode data." + Environment.NewLine
-                }
-            };
-            if (!searchTermsOk)
-            {
-                if (!sortTermsOk)
-                {
-                    messageBox.Message.Reason += "1. ";
-                }
-                messageBox.Message.Reason += "Your current file selection includes search terms that may omit files in an Episode.";
-                messageBox.Message.Hint += "Use the Select menu to select either:" + Environment.NewLine
-                                        + " - All files, or " + Environment.NewLine
-                                        + " - All files in a folder and its subfolders";
-                if (!sortTermsOk)
-                {
-                    messageBox.Message.Reason += Environment.NewLine;
-                    messageBox.Message.Hint += Environment.NewLine;
-                }
-            }
-
-            if (!sortTermsOk)
-            {
-                if (!searchTermsOk)
-                {
-                    messageBox.Message.Reason += "2. ";
-                }
-                messageBox.Message.Reason += "Your files must be sorted in ascending date order for this to make sense.";
-                messageBox.Message.Hint += "Use the Sort menu to sort either by:" + Environment.NewLine
-                                        + " - RelativePath then DateTime (both in ascending order), or " + Environment.NewLine
-                                        + " - DateTime only  (in ascending order)";
-            }
-            messageBox.ShowDialog();
-        }
         #endregion
 
         #region MessageBox: related to DateTime
@@ -1920,11 +1793,11 @@ namespace Timelapse.Dialog
                 }
             };
 
-            if (!String.IsNullOrWhiteSpace(relativePathArgument))
+            if (!string.IsNullOrWhiteSpace(relativePathArgument))
             {
                 messageBox.Message.What += Environment.NewLine + "\u2022 the additional instruction to limit analysis to the subfolder " + "'" + relativePathArgument + "'" + " is also ignored ";
             }
-            if (!String.IsNullOrWhiteSpace(relativePathArgument))
+            if (!string.IsNullOrWhiteSpace(relativePathArgument))
             {
                 messageBox.Message.Reason += "and to limit analysis to a particular subfolder." + Environment.NewLine;
             }
@@ -1962,8 +1835,9 @@ namespace Timelapse.Dialog
 
         #region MessageBox: opening messages when Timelapse is started
         /// <summary>
-        /// Give the user various opening mesages
+        /// Give the user various opening messages
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public static void OpeningMessage(Window owner)
         {
             MessageBox openingMessage = new MessageBox("Opening Message ...", owner)
@@ -2124,6 +1998,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Testing messages for development
+        // ReSharper disable once UnusedMember.Global
         public static void RandomMessage(Window owner, string message)
         {
             // since the exported file isn't shown give the user some feedback about the export operation

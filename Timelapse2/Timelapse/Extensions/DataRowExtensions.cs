@@ -3,7 +3,7 @@ using System.Data;
 using System.Diagnostics;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.Extensions
 {
     /// <summary>
     /// Various methods to get / set data row fields by type
@@ -37,6 +37,7 @@ namespace Timelapse.Database
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static TEnum GetEnumField<TEnum>(this DataRow row, string column) where TEnum : struct, IComparable, IFormattable, IConvertible
         {
             string fieldAsString = row.GetStringField(column);
@@ -52,11 +53,9 @@ namespace Timelapse.Database
                 // The parse succeeded, where the TEnum result is in result
                 return result;
             }
-            else
-            {
-                // The parse did not succeeded. The TEnum result contains the default enum value, ie, the same as returning default(TEnum)
-                return result;
-            }
+            // The parse did not succeeded. The TEnum result contains the default enum value, ie, the same as returning default(TEnum)
+            return result;
+            
         }
 
         public static long GetID(this DataRow row)
@@ -99,7 +98,7 @@ namespace Timelapse.Database
             // throws ArgumentException if column is not present in table
             object field = row[columnName];
 
-            // SQLite assigns both String.Empty and null to DBNull on input
+            // SQLite assigns both string.Empty and null to DBNull on input
             if (field is DBNull)
             {
                 return null;
@@ -145,6 +144,7 @@ namespace Timelapse.Database
             row[column] = value;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static void SetField<TEnum>(this DataRow row, string column, TEnum value) where TEnum : struct, IComparable, IFormattable, IConvertible
         {
             row.SetField(column, value.ToString());

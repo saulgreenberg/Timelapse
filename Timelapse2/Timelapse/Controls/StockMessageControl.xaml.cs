@@ -1,8 +1,7 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Timelapse.Util;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Controls
 {

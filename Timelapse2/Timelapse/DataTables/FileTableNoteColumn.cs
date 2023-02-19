@@ -1,4 +1,4 @@
-﻿namespace Timelapse.Database
+﻿namespace Timelapse.DataTables
 {
     /// <summary>
     /// FileTableNoteColumn - A FileTable Column holding strings

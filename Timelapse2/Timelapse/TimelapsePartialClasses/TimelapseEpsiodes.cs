@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Media;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     public partial class TimelapseWindow
@@ -12,13 +13,13 @@ namespace Timelapse
         /// </summary>
         private void DisplayEpisodeTextInImageIfWarranted(int fileIndex)
         {
-            if (Episodes.ShowEpisodes && this.IsDisplayingSingleImage())
+            if (Episodes.Episodes.ShowEpisodes && this.IsDisplayingSingleImage())
             {
-                if (Episodes.EpisodesDictionary.ContainsKey(fileIndex) == false)
+                if (Episodes.Episodes.EpisodesDictionary.ContainsKey(fileIndex) == false)
                 {
-                    Episodes.EpisodeGetEpisodesInRange(this.DataHandler.FileDatabase.FileTable, this.DataHandler.ImageCache.CurrentRow);
+                    Episodes.Episodes.EpisodeGetEpisodesInRange(this.DataHandler.FileDatabase.FileTable, this.DataHandler.ImageCache.CurrentRow);
                 }
-                Tuple<int, int> episode = Episodes.EpisodesDictionary[fileIndex];
+                Tuple<int, int> episode = Episodes.Episodes.EpisodesDictionary[fileIndex];
                 if (episode.Item1 == int.MaxValue)
                 {
                     this.EpisodeText.Text = "Episode \u221E";

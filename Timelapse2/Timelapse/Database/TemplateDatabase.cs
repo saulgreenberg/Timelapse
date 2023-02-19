@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Database
@@ -19,7 +22,7 @@ namespace Timelapse.Database
         public DataTableBackedList<ControlRow> Controls { get; private set; }
 
         /// <summary>Gets the file name of the image database on disk.</summary>
-        public string FilePath { get; private set; }
+        public string FilePath { get; }
 
         public SQLiteWrapper Database { get; set; }
         #endregion
@@ -61,10 +64,7 @@ namespace Timelapse.Database
                 // We do this by checking the database integrity (which may raise an internal exception) and if that is ok, by checking if it has a TemplateTable. 
                 if (templateDatabase.Database.PragmaGetQuickCheck() == false || templateDatabase.TableExists(Constant.DBTables.Template) == false)
                 {
-                    if (templateDatabase != null)
-                    {
-                        templateDatabase.Dispose();
-                    }
+                    templateDatabase.Dispose();
                     return null;
                 }
 
@@ -218,6 +218,7 @@ namespace Timelapse.Database
         }
 
         // Check if the database is valid. 
+        // ReSharper disable once UnusedMember.Global
         public bool IsDatabaseFileValid(string filePath, string tableNameToCheck)
         {
             // check if a database file exists, and if so that it is not corrupt
@@ -243,6 +244,7 @@ namespace Timelapse.Database
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public bool IsControlCopyable(string dataLabel)
         {
             long id = this.GetControlIDFromTemplateTable(dataLabel);
@@ -250,7 +252,7 @@ namespace Timelapse.Database
             return control.Copyable;
         }
 
-        // Return String.Empty only if each control is of a known type,
+        // Return string.Empty only if each control is of a known type,
         // otherwise return the unknown type
         public string AreControlsOfKnownTypes()
         {
@@ -372,7 +374,7 @@ namespace Timelapse.Database
                 {
                     dataLabel = control.DataLabel;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
                     $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
@@ -396,7 +398,7 @@ namespace Timelapse.Database
                 {
                     dataLabel = control.Label;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
                     $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
@@ -475,7 +477,7 @@ namespace Timelapse.Database
         public void SyncControlToDatabase(ControlRow control)
         {
             // This form sync's by the ID
-            SyncControlToDatabase(control, String.Empty);
+            SyncControlToDatabase(control, string.Empty);
         }
 
         public void SyncControlToDatabase(ControlRow control, string dataLabel)
@@ -487,7 +489,7 @@ namespace Timelapse.Database
             // this.CreateBackupIfNeeded();
 
             // Create the where condition with the ID, but if the dataLabel is not empty, use the dataLabel as the where condition
-            ColumnTuplesWithWhere ctw = dataLabel == String.Empty
+            ColumnTuplesWithWhere ctw = dataLabel == string.Empty
                 ? control.CreateColumnTuplesWithWhereByID()
                 : new ColumnTuplesWithWhere(control.CreateColumnTuplesWithWhereByID().Columns, new ColumnTuple(Constant.Control.DataLabel, dataLabel));
             this.Database.Update(Constant.DBTables.Template, ctw);

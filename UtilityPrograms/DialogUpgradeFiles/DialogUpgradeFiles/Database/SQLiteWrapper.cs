@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
+using DialogUpgradeFiles.DataStructures;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -220,8 +221,8 @@ namespace DialogUpgradeFiles.Database
             {
                 Debug.Assert(columnsToUpgrade != null && columnsToUpgrade.Count > 0, "No column updates are specified.");
 
-                string columns = String.Empty;
-                string values = String.Empty;
+                string columns = string.Empty;
+                string values = string.Empty;
                 foreach (ColumnTuple column in columnsToUpgrade)
                 {
                     columns += String.Format(" {0}" + Sql.Comma, column.Name);      // transform dictionary entries into a string "col1, col2, ... coln"
@@ -374,7 +375,7 @@ namespace DialogUpgradeFiles.Database
         {
             if (columnsToUpgrade.Columns.Count < 1)
             {
-                return String.Empty;
+                return string.Empty;
             }
             // UPDATE tableName SET 
             // colname1 = value1, 
@@ -386,7 +387,7 @@ namespace DialogUpgradeFiles.Database
             string query = Sql.Update + tableName + Sql.Set;
             if (columnsToUpgrade.Columns.Count < 0)
             {
-                return String.Empty;     // No data, so nothing to update. This isn't really an error, so...
+                return string.Empty;     // No data, so nothing to update. This isn't really an error, so...
             }
 
             // column_name = 'value'
@@ -404,7 +405,7 @@ namespace DialogUpgradeFiles.Database
             }
             query = query.Substring(0, query.Length - Sql.Comma.Length); // Remove the last comma
 
-            if (String.IsNullOrWhiteSpace(columnsToUpgrade.Where) == false)
+            if (string.IsNullOrWhiteSpace(columnsToUpgrade.Where) == false)
             {
                 query += Sql.Where;
                 query += columnsToUpgrade.Where;
@@ -422,7 +423,7 @@ namespace DialogUpgradeFiles.Database
         {
             // DELETE FROM table_name WHERE where
             string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
-            if (!String.IsNullOrWhiteSpace(where))
+            if (!string.IsNullOrWhiteSpace(where))
             {
                 // Add the WHERE clause only when where is not empty
                 query += Sql.Where;                   // WHERE
@@ -473,7 +474,7 @@ namespace DialogUpgradeFiles.Database
             {
                 return;
             }
-            string queries = String.Empty;                      // A list of SQL queries
+            string queries = string.Empty;                      // A list of SQL queries
 
             // Turn pragma foreign_key off before the delete, as otherwise it takes forever on largish tables
             // Notice that we do not wrap this in a begin / end, as the pragma does not work within that.
@@ -658,7 +659,7 @@ namespace DialogUpgradeFiles.Database
                 List<string> columnDefinitions = new List<string>();
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
                     for (int field = 0; field < reader.FieldCount; field++)
                     {
                         switch (field)
@@ -847,7 +848,7 @@ namespace DialogUpgradeFiles.Database
                         Dictionary<string, string> columndefaultsDict = new Dictionary<string, string>();
                         while (reader.Read())
                         {
-                            columndefaultsDict.Add(reader[1].ToString(), reader[4] != null ? reader[4].ToString() : String.Empty);
+                            columndefaultsDict.Add(reader[1].ToString(), reader[4] != null ? reader[4].ToString() : string.Empty);
                         }
                         return columndefaultsDict;
                     }
@@ -1011,11 +1012,11 @@ namespace DialogUpgradeFiles.Database
             SchemaAlterColumn(sourceTable, currentColumnName, attributes);
 
             ////// Some basic error checking to make sure we can do the operation
-            ////if (String.IsNullOrWhiteSpace(currentColumnName))
+            ////if (string.IsNullOrWhiteSpace(currentColumnName))
             ////{
             ////    throw new ArgumentOutOfRangeException(nameof(currentColumnName));
             ////}
-            ////if (String.IsNullOrWhiteSpace(newColumnName))
+            ////if (string.IsNullOrWhiteSpace(newColumnName))
             ////{
             ////    throw new ArgumentOutOfRangeException(nameof(newColumnName));
             ////}
@@ -1069,7 +1070,7 @@ namespace DialogUpgradeFiles.Database
         public bool SchemaAlterColumn(string sourceTable, string currentColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
             // Some basic error checking to make sure we can do the operation
-            if (String.IsNullOrWhiteSpace(currentColumnName))
+            if (string.IsNullOrWhiteSpace(currentColumnName))
             {
                 throw new ArgumentOutOfRangeException(nameof(currentColumnName));
             }
@@ -1080,7 +1081,7 @@ namespace DialogUpgradeFiles.Database
             }
             try
             {
-                string newColumnName = String.Empty;
+                string newColumnName = string.Empty;
                 if (attributes.ContainsKey(SchemaAttributesEnum.Name))
                 {
                     newColumnName = attributes[SchemaAttributesEnum.Name].Trim();
@@ -1127,16 +1128,6 @@ namespace DialogUpgradeFiles.Database
             }
         }
 
-
-
-        private static void SchemaAddColumnToEndOfTable(SQLiteConnection connection, string tableName, string columnDefinition)
-        {
-            string sql = Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition;
-            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
-            {
-                command.ExecuteNonQuery();
-            }
-        }
         /// <summary>
         /// Add a column definition into the provided schema at the given column location
         /// </summary>
@@ -1176,72 +1167,15 @@ namespace DialogUpgradeFiles.Database
         /// <summary>
         /// Create a schema cloned from tableName, except with the column definition for columnName deleted
         /// </summary>
-        private static string SchemaCloneButRenameColumn(SQLiteConnection connection, string tableName, string existingColumnName, string newColumnName)
-        {
-            Debug.Print(SchemaAttributesEnum.Default.ToString());
-            string newSchema = String.Empty;
-            using (SQLiteDataReader reader = GetSchema(connection, tableName))
-            {
-                while (reader.Read())
-                {
-                    string existingColumnDefinition = String.Empty;
-
-                    // Copy the existing column definition unless its the column named columnNam
-                    for (int field = 0; field < reader.FieldCount; field++)
-                    {
-                        switch (field)
-                        {
-                            case 0:  // cid (Column Index)
-                                break;
-                            case 1:  // name (Column Name)
-                                     // Rename the column if it is the one to be renamed
-                                existingColumnDefinition += (reader[1].ToString() == existingColumnName) ? newColumnName : reader[1].ToString();
-                                existingColumnDefinition += " ";
-                                break;
-                            case 2:  // type (Column type)
-                                existingColumnDefinition += reader[field] + " ";
-                                break;
-                            case 3:  // notnull (Column has a NOT NULL constraint)
-                                if (reader[field].ToString() != "0")
-                                {
-                                    existingColumnDefinition += Sql.NotNull;
-                                }
-                                break;
-                            case 4:  // dflt_value (Column has a default value)
-                                if (false == string.IsNullOrEmpty(reader[field].ToString()))
-                                {
-                                    // Note that the default is already quoted, so we should not quote it again
-                                    existingColumnDefinition += Sql.Default + reader[field] + " ";
-                                }
-                                break;
-                            case 5:  // pk (Column is part of the primary key)
-                                if (reader[field].ToString() != "0")
-                                {
-                                    existingColumnDefinition += Sql.PrimaryKey;
-                                }
-                                break;
-                        }
-                    }
-                    existingColumnDefinition = existingColumnDefinition.TrimEnd(' ');
-                    newSchema += existingColumnDefinition + ", ";
-                }
-            }
-            newSchema = newSchema.TrimEnd(',', ' '); // remove last comma
-            return newSchema;
-        }
-
-        /// <summary>
-        /// Create a schema cloned from tableName, except with the column definition for columnName deleted
-        /// </summary>
         private static string SchemaCloneButAlterColumn(SQLiteConnection connection, string tableName, string existingColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
-            string newSchema = String.Empty;
+            string newSchema = string.Empty;
             using (SQLiteDataReader reader = GetSchema(connection, tableName))
             {
-                string currentColumnName = String.Empty;
+                string currentColumnName = string.Empty;
                 while (reader.Read())
                 {
-                    string existingColumnDefinition = String.Empty;
+                    string existingColumnDefinition = string.Empty;
 
                     // Copy the existing column definition unless its the column named columnNam
                     for (int field = 0; field < reader.FieldCount; field++)
@@ -1444,62 +1378,6 @@ namespace DialogUpgradeFiles.Database
                 command.ExecuteNonQuery();
             }
         }
-
-        // PRAGMA Defer foreign keys. 
-#pragma warning disable IDE0051 // Remove unused private members
-        private static void PragmaSetDeferForeignKeys(SQLiteConnection connection, bool state)
-        {
-            // Syntax is: defer_foreign_keys = 1; True
-            //            defer_foreign_keys = 0; False
-            string sql = "PRAGMA defer_foreign_keys = ";
-            sql += state ? "1;" : "0;";
-            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
-            {
-                command.ExecuteNonQuery();
-            }
-        }
-
-
-#pragma warning restore IDE0051 // Remove unused private members
-        #endregion
-
-        #region Unused methods
-#pragma warning disable IDE0051 // Remove unused private members
-        /// <summary>
-        /// CURRENTLY UNUSED
-        /// Add a column to the end of the database table 
-        /// This does NOT require the table to be cloned.
-        /// Note: Some of the AddColumnToEndOfTable methods are currently not referenced, but may be handy in the future.
-        /// </summary>
-        /// <param name="connection">the open and valid connection to the database</param> 
-        /// <param name="tableName">the name of the  table</param> 
-        /// <param name="name">the name of the new column</param> 
-        /// <param name="type">the type of the new column</param> 
-        private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type)
-        {
-            string columnDefinition = name + " " + type;
-            SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
-        }
-
-        /// <summary>
-        /// Add a column to the end of the database table. 
-        /// This does NOT require the table to be cloned.
-        /// </summary>
-        /// <param name="connection">the open and valid connection to the database</param> 
-        /// <param name="tableName">the name of the  table</param> 
-        /// <param name="name">the name of the new column</param> 
-        /// <param name="type">the type of the new column</param> 
-        /// <param name="otherOptions">space-separated options such as PRIMARY KEY AUTOINCREMENT, NULL or NOT NULL etc</param>
-        private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
-        {
-            string columnDefinition = name + " " + type;
-            if (string.IsNullOrEmpty(otherOptions))
-            {
-                columnDefinition += " " + otherOptions;
-            }
-            SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
-        }
-#pragma warning restore IDE0051 // Remove unused private members
-        #endregion
     }
+    #endregion
 }

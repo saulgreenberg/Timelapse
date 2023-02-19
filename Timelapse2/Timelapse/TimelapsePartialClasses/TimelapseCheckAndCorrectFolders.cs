@@ -4,8 +4,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Util;
+
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     /// <summary>

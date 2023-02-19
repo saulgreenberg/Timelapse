@@ -1,4 +1,4 @@
-﻿namespace DialogUpgradeFiles.Database
+﻿namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableNoteColumn - A FileTable Column holding strings

@@ -5,6 +5,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for SkipHiddenFiles.xaml
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public partial class SkipHiddenFiles
     {
         #region Constructor, Loaded

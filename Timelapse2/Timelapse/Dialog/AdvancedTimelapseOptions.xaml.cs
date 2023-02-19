@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Enums;
 using Timelapse.Images;
+using Timelapse.State;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -12,15 +13,13 @@ namespace Timelapse.Dialog
         #region Private Variables
         private readonly MarkableCanvas markableCanvas;
         private readonly TimelapseState timelapseState;
-        //private readonly bool detectionsLoaded;
         #endregion
 
         #region Constructor and Loaded
-        public AdvancedTimelapseOptions(TimelapseState timelapseState, MarkableCanvas markableCanvas, Window owner, bool detectionsLoaded)
+        public AdvancedTimelapseOptions(TimelapseState timelapseState, MarkableCanvas markableCanvas, Window owner)
         {
             this.InitializeComponent();
             this.Owner = owner;
-            //this.detectionsLoaded = detectionsLoaded;
 
             // Check the arguments for null 
             ThrowIf.IsNullArgument(timelapseState, nameof(timelapseState));
@@ -249,7 +248,7 @@ namespace Timelapse.Dialog
         {
             this.timelapseState.EpisodeMaxRangeToSearch = Convert.ToInt32(this.SliderSetEpisodeMaxRange.Value);
             this.SetSliderSetEpisodeMaxRangeFeedack(this.timelapseState.EpisodeMaxRangeToSearch);
-            Episodes.Reset();
+            Episodes.Episodes.Reset();
         }
 
         // Reset theEpisode searching threshold to the amount specified below;
@@ -257,7 +256,7 @@ namespace Timelapse.Dialog
         {
             // As a side effect, this will invoke the above ValueChanged method which sets the state and provides feedback
             this.SliderSetEpisodeMaxRange.Value = Constant.EpisodeDefaults.DefaultRangeToSearch;
-            Episodes.Reset();
+            Episodes.Episodes.Reset();
         }
 
         private void SetSliderSetEpisodeMaxRangeFeedack(int episodeThreshold)

@@ -1,9 +1,12 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Windows;
+using Microsoft.Win32;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
+using Timelapse.Extensions;
+using Timelapse.Util;
 
-namespace Timelapse.Util
+namespace Timelapse.State
 {
     /// 
     /// Save the state of various things in the Registry.
@@ -50,7 +53,7 @@ namespace Timelapse.Util
         public bool SuppressSelectedPopulateFieldFromMetadataPrompt { get; set; }
         public bool SuppressSelectedRereadDatesFromFilesPrompt { get; set; }
         public bool SuppressWarningToUpdateDBFilesToSQLPrompt { get; set; }
-        public Throttles Throttles { get; private set; }
+        public Throttles Throttles { get; }
         public bool TabOrderIncludeDateTime { get; set; }
         public bool TabOrderIncludeDeleteFlag { get; set; }
         public Size TimelapseWindowSize { get; set; }
@@ -139,7 +142,7 @@ namespace Timelapse.Util
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())
             {
-                return !string.IsNullOrEmpty(registryKey.GetString(key, String.Empty));
+                return !string.IsNullOrEmpty(registryKey.GetString(key, string.Empty));
             }
         }
 
@@ -150,7 +153,7 @@ namespace Timelapse.Util
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())
             {
-                return registryKey.GetString(key, String.Empty);
+                return registryKey.GetString(key, string.Empty);
             }
         }
 
@@ -250,6 +253,7 @@ namespace Timelapse.Util
             }
         }
 
+        // ReSharper disable once UnusedMember.Global
         public void WriteToRegistry(string key, double value)
         {
             using (RegistryKey registryKey = this.OpenRegistryKey())

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 
 namespace Timelapse.Images
@@ -58,7 +57,7 @@ namespace Timelapse.Images
             this.LabelShownPreviously = true;
             this.Position = point;
             this.ShowLabel = false;
-            this.Tooltip = String.Empty;
+            this.Tooltip = string.Empty;
         }
         #endregion
 

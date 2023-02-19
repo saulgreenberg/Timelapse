@@ -3,10 +3,10 @@ using DialogUpgradeFiles.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace DialogUpgradeFiles
 {
@@ -37,9 +37,9 @@ namespace DialogUpgradeFiles
 
             foreach (string file in filesDictionary.Keys.OrderBy(q => q).ToList())
             {
-                this.ShortFileName = String.IsNullOrWhiteSpace(commonPath)
+                this.ShortFileName = string.IsNullOrWhiteSpace(commonPath)
                     ? file
-                    : file.Replace(commonPath, String.Empty).TrimStart(Path.DirectorySeparatorChar);
+                    : file.Replace(commonPath, string.Empty).TrimStart(Path.DirectorySeparatorChar);
                 DictFileUpdateStatus.Add(this.ShortFileName, "Waiting:          ");
             }
             this.RefreshFileUpdateStatusDisplay(DictFileUpdateStatus, 0);
@@ -53,16 +53,17 @@ namespace DialogUpgradeFiles
             foreach (KeyValuePair<string, UpgradeResultsEnum> filekvp in filesDictionary.OrderBy(q => q.Key))
             {
                 string file = filekvp.Key;
-                string backupFilePath = String.Empty;
+                string backupFilePath = string.Empty;
 
                 // Feedback
                 this.LineFeedback($"Processing {i + 1} of {filesDictionary.Count} files");
                 await Task.Delay(Constant.BusyState.SleepTime);
 
                 // Extract the short file name
-                this.ShortFileName = String.IsNullOrWhiteSpace(commonPath)
+                this.ShortFileName = string.IsNullOrWhiteSpace(commonPath)
                         ? file
-                        : file.Replace(commonPath, String.Empty).TrimStart(Path.DirectorySeparatorChar);
+                        : file.Replace(commonPath, string.Empty).TrimStart(Path.DirectorySeparatorChar);
+                // ReSharper disable once UnusedVariable
                 string shortFilePathWithoutExtension = Path.Combine(Path.GetDirectoryName(this.ShortFileName), Path.GetFileNameWithoutExtension(ShortFileName));
 
                 // Check if this file has been cancelled before continuing
@@ -110,7 +111,7 @@ namespace DialogUpgradeFiles
                     this.AnimateProgressTimer.Stop();
 
                     // Feedback based on result
-                    this.ProgressCharacter = String.Empty;
+                    this.ProgressCharacter = string.Empty;
                     switch (result)
                     {
                         case UpgradeResultsEnum.Upgraded:
@@ -186,6 +187,7 @@ namespace DialogUpgradeFiles
             Dictionary<string, UpgradeResultsEnum> foundFilesDictionary = new Dictionary<string, UpgradeResultsEnum>();
             List<string> pathsTooLongList = new List<string>();
             List<string> foundFilesList = new List<string>();
+            // ReSharper disable once UnusedVariable
             List<string> foundNonUpdatedFilesList = new List<string>();
             await Task.Run(() =>
             {
@@ -210,6 +212,7 @@ namespace DialogUpgradeFiles
                     catch (System.IO.PathTooLongException)
                     {
                         pathsTooLongList.Add(fileFolder);
+                        // ReSharper disable once RedundantJumpStatement
                         continue;
                     }
                     catch
@@ -307,8 +310,10 @@ namespace DialogUpgradeFiles
 
         string GetCommonPrefix(IEnumerable<string> strings)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             return strings.Count() <= 1
-            ? String.Empty
+            ? string.Empty
+            // ReSharper disable once PossibleMultipleEnumeration
             : strings.Aggregate(GetCommonPrefix);
         }
 
@@ -324,7 +329,7 @@ namespace DialogUpgradeFiles
             }
             catch
             {
-
+                Debug.Print("In SetPreviousFolderPath Catch");
             }
         }
         #endregion

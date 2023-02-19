@@ -2,7 +2,7 @@
 using Timelapse.DataStructures;
 using Timelapse.Util;
 
-namespace Timelapse.Database
+namespace Timelapse.DataTables
 {
     /// <summary>
     /// FileTableChoiceColumn - A FileTable Column holding a list of chices as well as a default value.

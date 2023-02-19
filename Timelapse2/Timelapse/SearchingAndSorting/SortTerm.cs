@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Timelapse.Database
+﻿namespace Timelapse.SearchingAndSorting
 {
     /// <summary>
     /// A SortTerm is a tuple of 4 that indicates various aspects that may be considered when sorting 
@@ -22,9 +20,9 @@ namespace Timelapse.Database
         #region Constructors
         public SortTerm()
         {
-            this.DataLabel = String.Empty;
-            this.DisplayLabel = String.Empty;
-            this.ControlType = String.Empty;
+            this.DataLabel = string.Empty;
+            this.DisplayLabel = string.Empty;
+            this.ControlType = string.Empty;
             this.IsAscending = Constant.BooleanValue.True;
         }
 

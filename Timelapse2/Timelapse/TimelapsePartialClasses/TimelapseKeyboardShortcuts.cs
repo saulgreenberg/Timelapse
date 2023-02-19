@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 
+// ReSharper disable once CheckNamespace
 namespace Timelapse
 {
     // Keyboard shortcuts
@@ -137,10 +139,10 @@ namespace Timelapse
                             return;
                         }
                         long currentFileID = this.DataHandler.ImageCache.Current.ID;
-                        bool result = Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
+                        bool result = Episodes.Episodes.GetIncrementToNextEpisode(this.DataHandler.FileDatabase.FileTable, this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID), direction, out increment);
                         if (result)
                         {
-                            if (Episodes.ShowEpisodes == false)
+                            if (Episodes.Episodes.ShowEpisodes == false)
                             {
                                 // turn on Episode display if its not already on
                                 this.EpisodeShowHide(true);
@@ -232,11 +234,8 @@ namespace Timelapse
                 default:
                     return;
             }
-
-            if (currentKey != null)
-            {
-                currentKey.Handled = true;
-            }
+            currentKey.Handled = true;
+            
         }
         #endregion
     }

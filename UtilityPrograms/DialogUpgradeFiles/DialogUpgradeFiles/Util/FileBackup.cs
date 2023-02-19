@@ -81,7 +81,7 @@ namespace DialogUpgradeFiles.Util
             if (File.Exists(sourceFilePath) == false)
             {
                 // nothing to do
-                return String.Empty;
+                return string.Empty;
             }
 
             // create backup folder if needed
@@ -126,7 +126,7 @@ namespace DialogUpgradeFiles.Util
                 // Old code: We just don't create the backup now. While we previously threw an exception, we now test and warn the user earlier on in the code that a backup can't be made 
                 // System.Diagnostics.Debug.Print("Did not back up" + destinationFilePath);
                 // throw new PathTooLongException("Backup failure: Could not create backups as the file path is too long", e);
-                return String.Empty;
+                return string.Empty;
             }
             return destinationFilePath;
         }

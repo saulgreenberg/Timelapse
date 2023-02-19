@@ -5,8 +5,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.Enums;
 
 namespace Timelapse.Controls
@@ -163,7 +163,7 @@ namespace Timelapse.Controls
             if (value == null)
             {
                 // This should not happen
-                value = String.Empty;
+                value = string.Empty;
             }
 
             // Create the popup overlay

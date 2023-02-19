@@ -3,7 +3,7 @@ using System.Data;
 using System.Diagnostics;
 using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.Extensions
 {
     /// <summary>
     /// Various methods to get / set data row fields by type
@@ -99,7 +99,7 @@ namespace DialogUpgradeFiles.Database
             // throws ArgumentException if column is not present in table
             object field = row[columnName];
 
-            // SQLite assigns both String.Empty and null to DBNull on input
+            // SQLite assigns both string.Empty and null to DBNull on input
             if (field is DBNull)
             {
                 return null;

@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.DataTables;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -16,11 +18,11 @@ namespace DialogUpgradeFiles.Database
         #endregion
 
         #region Properties 
-        public FileTable FileTable { get; private set; }
-        public string FileName { get; private set; }
-        public string FolderPath { get; private set; }
-        public Dictionary<string, string> DataLabelFromStandardControlType { get; private set; }
-        public Dictionary<string, FileTableColumn> FileTableColumnsByDataLabel { get; private set; }
+        public FileTable FileTable { get; set; }
+        public string FileName { get; }
+        public string FolderPath { get; }
+        public Dictionary<string, string> DataLabelFromStandardControlType { get; }
+        public Dictionary<string, FileTableColumn> FileTableColumnsByDataLabel { get; }
         public ImageSetRow ImageSet { get; private set; }
         public DataTableBackedList<MarkerRow> Markers { get; private set; }
 
@@ -61,9 +63,9 @@ namespace DialogUpgradeFiles.Database
                 // avoid using hours for readability when working with the database directly.
                 return new SchemaColumnDefinition(control.DataLabel, "REAL", DateTimeHandler.ToStringDatabaseUtcOffset(Constant.ControlDefault.DateTimeValue.Offset));
             }
-            if (String.IsNullOrWhiteSpace(control.DefaultValue))
+            if (string.IsNullOrWhiteSpace(control.DefaultValue))
             {
-                return new SchemaColumnDefinition(control.DataLabel, Sql.Text, String.Empty);
+                return new SchemaColumnDefinition(control.DataLabel, Sql.Text, string.Empty);
             }
             return new SchemaColumnDefinition(control.DataLabel, Sql.Text, control.DefaultValue);
         }
@@ -136,6 +138,7 @@ namespace DialogUpgradeFiles.Database
                 // this is likely the most typical case
                 this.Database.SchemaRenameColumn(Constant.DBTables.FileData, Constant.ControlsDeprecated.MarkForDeletion, Constant.DatabaseColumn.DeleteFlag);
             }
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             else if (hasMarkForDeletion && hasDeleteFlag)
             {
                 // if both MarkForDeletion and DeleteFlag are present drop MarkForDeletion
@@ -261,7 +264,7 @@ namespace DialogUpgradeFiles.Database
                 if (!selectedFolderColumnExists)
                 {
                     // create the sortCriteria column and update the image set. Syncronization happens later
-                    this.Database.SchemaAddColumnToEndOfTable(Constant.DBTables.ImageSet, new SchemaColumnDefinition(Constant.DatabaseColumn.SelectedFolder, Sql.Text, String.Empty));
+                    this.Database.SchemaAddColumnToEndOfTable(Constant.DBTables.ImageSet, new SchemaColumnDefinition(Constant.DatabaseColumn.SelectedFolder, Sql.Text, string.Empty));
                     this.ImageSetLoadFromDatabase();
                     await Task.Delay(Constant.BusyState.SleepTime);
                 }
@@ -355,7 +358,7 @@ namespace DialogUpgradeFiles.Database
                 {
                     dataLabel = control.DataLabel;
                 }
-                Debug.Assert(String.IsNullOrWhiteSpace(dataLabel) == false,
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
                     $"Encountered empty data label and label at ID {control.ID} in template table.");
 
                 // get a list of datalabels so we can add columns in the order that matches the current template table order
@@ -421,7 +424,7 @@ namespace DialogUpgradeFiles.Database
                 }
                 // We must have a bounding box string with commas as decimal separators
                 // Reconstruct it with decimal separators and in the expected bounding box format 
-                string newBboxAsString = String.Empty;
+                string newBboxAsString = string.Empty;
                 long id = (long)row[0];
                 for (int i = 0; i < coords.Length; i++)
                 {
@@ -469,7 +472,7 @@ namespace DialogUpgradeFiles.Database
             if (sqliteWrapper.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.QuickPasteXML) == false)
             {
                 // The column isn't in the table, so give up
-                return String.Empty;
+                return string.Empty;
             }
 
             List<object> listOfObjects = sqliteWrapper.GetDistinctValuesInColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.QuickPasteXML);
@@ -477,7 +480,7 @@ namespace DialogUpgradeFiles.Database
             {
                 return (string)listOfObjects[0];
             }
-            return String.Empty;
+            return string.Empty;
         }
         #endregion
 

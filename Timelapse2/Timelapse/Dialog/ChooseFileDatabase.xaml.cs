@@ -23,7 +23,7 @@ namespace Timelapse.Dialog
 
             this.InitializeComponent();
             this.Owner = owner;
-            this.SelectedFile = String.Empty;
+            this.SelectedFile = string.Empty;
 
             // file_names contains an array of .ddb files. We add each to the listbox.
             // by default, the first item in the listbox is shown selected.
