@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
+// ReSharper disable once CheckNamespace
 namespace DialogUpgradeFiles.Dialog
 {
     public static class Dialogs

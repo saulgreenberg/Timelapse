@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.DataTables;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -16,7 +18,7 @@ namespace DialogUpgradeFiles.Database
         #endregion
 
         #region Properties 
-        public FileTable FileTable { get; private set; }
+        public FileTable FileTable { get; set; }
         public string FileName { get; }
         public string FolderPath { get; }
         public Dictionary<string, string> DataLabelFromStandardControlType { get; }
@@ -136,6 +138,7 @@ namespace DialogUpgradeFiles.Database
                 // this is likely the most typical case
                 this.Database.SchemaRenameColumn(Constant.DBTables.FileData, Constant.ControlsDeprecated.MarkForDeletion, Constant.DatabaseColumn.DeleteFlag);
             }
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             else if (hasMarkForDeletion && hasDeleteFlag)
             {
                 // if both MarkForDeletion and DeleteFlag are present drop MarkForDeletion

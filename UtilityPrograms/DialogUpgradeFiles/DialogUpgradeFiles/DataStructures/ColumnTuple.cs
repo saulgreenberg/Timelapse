@@ -1,10 +1,9 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
 using System.Globalization;
+using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataStructures
 {
-    /// <summary>
     /// A column name and a value to assign (or assigned) to that column. 
     /// Typically used 
     /// - as a list element in ColumnTuples, 
@@ -17,9 +16,7 @@ namespace DialogUpgradeFiles.Database
     /// ...
     /// colnameN = valueN
     /// WHERE
-    /// <condition> e.g., ID=1;
-    /// </summary>
-    /// </summary>
+    /// condition e.g., ID=1;
     public class ColumnTuple
     {
         #region Public Properties

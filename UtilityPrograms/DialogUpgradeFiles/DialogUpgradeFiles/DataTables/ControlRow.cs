@@ -1,10 +1,12 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.Extensions;
+using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// ControlRow defines a single control as described in the Template.  
@@ -129,6 +131,7 @@ namespace DialogUpgradeFiles.Database
         // Parce the choice string into a list of items. 
         // If it includes an empty choice item, remove the abstract <Empty> 
         // and insert an empty string as the first menu item
+        // ReSharper disable once UnusedMember.Global
         public List<string> GetChoicesForQuickPasteMenu()
         {
             List<string> list = this.List.Split(ControlRow.BarDelimiter).ToList();

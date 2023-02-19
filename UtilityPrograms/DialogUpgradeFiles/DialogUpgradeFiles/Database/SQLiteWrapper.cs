@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
+using DialogUpgradeFiles.DataStructures;
 
 namespace DialogUpgradeFiles.Database
 {
@@ -1127,16 +1128,6 @@ namespace DialogUpgradeFiles.Database
             }
         }
 
-
-
-        private static void SchemaAddColumnToEndOfTable(SQLiteConnection connection, string tableName, string columnDefinition)
-        {
-            string sql = Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition;
-            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
-            {
-                command.ExecuteNonQuery();
-            }
-        }
         /// <summary>
         /// Add a column definition into the provided schema at the given column location
         /// </summary>

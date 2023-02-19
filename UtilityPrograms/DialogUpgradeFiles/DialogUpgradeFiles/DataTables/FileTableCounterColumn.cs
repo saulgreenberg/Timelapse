@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableCounterCollumn - A FileTable Column holding Counter values

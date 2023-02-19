@@ -1,4 +1,4 @@
-﻿namespace DialogUpgradeFiles.Database
+﻿namespace DialogUpgradeFiles.DataTables
 {
     public class FileTableUtcOffsetColumn : FileTableColumn
     {

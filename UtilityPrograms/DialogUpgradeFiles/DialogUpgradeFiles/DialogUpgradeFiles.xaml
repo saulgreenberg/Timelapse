@@ -310,7 +310,7 @@
                 </FlowDocument>
             </FlowDocumentScrollViewer>
 
-            <Border Name="RadioButtonPanel3" BorderBrush="Gray" BorderThickness="1" Margin="10,0,10,0" Background="LightGoldenrodYellow" Padding="5" Grid.Row="2" Visibility="Collapsed">
+            <Border Name="RadioButtonPanel3" BorderBrush="Gray" BorderThickness="1" Margin="10,0,10,0" Background="LightGoldenrodYellow" Padding="5" Grid.Row="2" Grid.Column ="0" Visibility="Collapsed">
                 <StackPanel Orientation="Vertical" Background="LightGoldenrodYellow" >
                     <RadioButton Name="RadioButtonDeleteImageQuality3"   Foreground="Black" FontWeight="Normal"   GroupName="ImageQualitySetting3"
                                   VerticalAlignment="Center" IsChecked="True" >
@@ -329,7 +329,7 @@
             </ListBox>
 
             <!--Button panel-->
-            <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3">
+            <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
 
                 <Button Name="ButtonUpgradeSelectAFile" FontSize="14"  Margin="10" Padding="10" Click="ButtonUpgradeSelectedFiles_Click" Visibility="Visible" DockPanel.Dock="Left">
                     <TextBlock TextAlignment="Center">

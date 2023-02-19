@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using DialogUpgradeFiles.DataTables;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.QuickPaste
 {
@@ -193,8 +195,6 @@ namespace DialogUpgradeFiles.QuickPaste
                                 string value = (row.Type == Constant.Control.Flag) ? "False" : string.Empty;
                                 newQuickPasteEntry.Items.Add(new QuickPasteItem(row.DataLabel, row.Label, value, false, row.Type));
                             }
-                            break;
-                        default:
                             break;
                     }
                 }

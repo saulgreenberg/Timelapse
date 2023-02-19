@@ -3,6 +3,7 @@ using DialogUpgradeFiles.Util;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -62,6 +63,7 @@ namespace DialogUpgradeFiles
                 this.ShortFileName = string.IsNullOrWhiteSpace(commonPath)
                         ? file
                         : file.Replace(commonPath, string.Empty).TrimStart(Path.DirectorySeparatorChar);
+                // ReSharper disable once UnusedVariable
                 string shortFilePathWithoutExtension = Path.Combine(Path.GetDirectoryName(this.ShortFileName), Path.GetFileNameWithoutExtension(ShortFileName));
 
                 // Check if this file has been cancelled before continuing
@@ -185,6 +187,7 @@ namespace DialogUpgradeFiles
             Dictionary<string, UpgradeResultsEnum> foundFilesDictionary = new Dictionary<string, UpgradeResultsEnum>();
             List<string> pathsTooLongList = new List<string>();
             List<string> foundFilesList = new List<string>();
+            // ReSharper disable once UnusedVariable
             List<string> foundNonUpdatedFilesList = new List<string>();
             await Task.Run(() =>
             {
@@ -209,6 +212,7 @@ namespace DialogUpgradeFiles
                     catch (System.IO.PathTooLongException)
                     {
                         pathsTooLongList.Add(fileFolder);
+                        // ReSharper disable once RedundantJumpStatement
                         continue;
                     }
                     catch
@@ -306,8 +310,10 @@ namespace DialogUpgradeFiles
 
         string GetCommonPrefix(IEnumerable<string> strings)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             return strings.Count() <= 1
             ? string.Empty
+            // ReSharper disable once PossibleMultipleEnumeration
             : strings.Aggregate(GetCommonPrefix);
         }
 
@@ -323,7 +329,7 @@ namespace DialogUpgradeFiles
             }
             catch
             {
-
+                Debug.Print("In SetPreviousFolderPath Catch");
             }
         }
         #endregion

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableFlagColumn - A FileTable Column holding Boolean true/false values

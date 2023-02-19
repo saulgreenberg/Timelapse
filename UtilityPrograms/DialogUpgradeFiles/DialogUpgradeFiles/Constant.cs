@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 
 //using Timelapse.Controls;
 
+// ReSharper disable once CheckNamespace
 namespace DialogUpgradeFiles.Constant
 {
     public static class BusyState

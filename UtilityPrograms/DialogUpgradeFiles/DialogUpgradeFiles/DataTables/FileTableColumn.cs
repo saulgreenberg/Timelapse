@@ -1,7 +1,8 @@
-﻿using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
+using DialogUpgradeFiles.Util;
+// ReSharper disable UnusedMember.Global
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableColumn: An abstract class that 

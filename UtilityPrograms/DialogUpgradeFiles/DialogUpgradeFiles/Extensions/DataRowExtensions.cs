@@ -3,7 +3,7 @@ using System.Data;
 using System.Diagnostics;
 using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.Extensions
 {
     /// <summary>
     /// Various methods to get / set data row fields by type

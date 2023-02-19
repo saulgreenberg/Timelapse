@@ -5,7 +5,7 @@ using System.Data;
 using System.Windows.Controls;
 using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// DataTableBackedList is a list of DataRowBackedObjects associated with a DataTable
@@ -32,6 +32,7 @@ namespace DialogUpgradeFiles.Database
         #endregion
 
         #region Public Methods - Modify the DataTable: NewRow, RemoveAt
+        // ReSharper disable once UnusedMember.Global
         public TRow NewRow()
         {
             DataRow row = this.DataTable.NewRow();
@@ -48,6 +49,7 @@ namespace DialogUpgradeFiles.Database
         /// <summary>
         /// Return a IEnumerable list of ColumnNames found in the DataTable
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public IEnumerable<string> ColumnNames
         {
             get

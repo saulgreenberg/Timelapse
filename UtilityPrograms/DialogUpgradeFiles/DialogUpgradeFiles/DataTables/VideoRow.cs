@@ -1,6 +1,7 @@
 ﻿using System.Data;
+
 //using DialogUpgradeFiles.Images;
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     // A VideoRow is an ImageRow specialized to videos instead of images.
     // In particular, it knows how to retrieve a bitmap from a video file

@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.DataTables;
 using DialogUpgradeFiles.Util;
 
 namespace DialogUpgradeFiles.Database
@@ -698,6 +700,7 @@ namespace DialogUpgradeFiles.Database
         // Upgrade the entire template database to match the in-memory template
         // Note that this version does this by recreating the entire table: 
         // We could likely be far more efficient by only updateding those entries that differ from the current entries.
+        // ReSharper disable once UnusedMember.Local
         private void SyncTemplateTableToDatabase(DataTableBackedList<ControlRow> newTable)
         {
             // Utilities.PrintMethodName("Called with arguments");

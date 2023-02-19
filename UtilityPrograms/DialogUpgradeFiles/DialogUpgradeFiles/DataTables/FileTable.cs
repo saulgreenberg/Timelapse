@@ -1,10 +1,11 @@
-﻿using DialogUpgradeFiles.Enums;
-using DialogUpgradeFiles.Util;
-using System;
+﻿using System;
 using System.Data;
 using System.IO;
+using DialogUpgradeFiles.Enums;
+using DialogUpgradeFiles.Extensions;
+using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     public class FileTable : DataTableBackedList<ImageRow>
     {

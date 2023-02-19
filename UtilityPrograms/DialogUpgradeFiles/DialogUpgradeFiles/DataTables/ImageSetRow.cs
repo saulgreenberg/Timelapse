@@ -1,11 +1,14 @@
-﻿using DialogUpgradeFiles.Enums;
-using DialogUpgradeFiles.Util;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using DialogUpgradeFiles.DataStructures;
+using DialogUpgradeFiles.Enums;
+using DialogUpgradeFiles.Extensions;
+using DialogUpgradeFiles.SearchingAndSorting;
+using DialogUpgradeFiles.Util;
+using Newtonsoft.Json;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     ///  An ImageSet Row defines the contents of the (single) row in the ImageSet DataTable

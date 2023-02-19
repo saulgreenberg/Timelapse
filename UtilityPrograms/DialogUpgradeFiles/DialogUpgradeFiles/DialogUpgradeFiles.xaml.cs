@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using DragEventArgs = System.Windows.DragEventArgs;
+// ReSharper disable HeuristicUnreachableCode
 
 namespace DialogUpgradeFiles
 {
@@ -179,7 +180,11 @@ namespace DialogUpgradeFiles
             {
                 string[] selectedPaths = (string[])e.Data.GetData(DataFormats.FileDrop);
                 await this.BeginUpgrading(selectedPaths);
-                this.SetPreviousFolderPath(selectedPaths[0]);
+                if (selectedPaths != null)
+                {
+                    // It should never be null
+                    this.SetPreviousFolderPath(selectedPaths[0]);
+                }
             }
         }
 
@@ -220,6 +225,7 @@ namespace DialogUpgradeFiles
             this.ButtonDone.Content = "Done";
             this.ButtonCancelUpgrades.Visibility = Visibility.Visible;
 
+            // ReSharper disable once UnusedVariable
             List<string> pathsTooLong = new List<string>();
             Dictionary<string, UpgradeResultsEnum> filePathsRequiringUpdating = await CollectFiles(selectedPaths);
 
@@ -364,10 +370,8 @@ namespace DialogUpgradeFiles
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (trace)
             {
-                // ReSharper disable once HeuristicUnreachableCode
-                message = success
-                    ? "OK " + message
-                    : "XX " + message;
+                // ReSharper disable once RedundantAssignment
+                message = success ? "OK " + message : "XX " + message;
                 System.Diagnostics.Debug.Print(message);
             }
         }
@@ -379,9 +383,7 @@ namespace DialogUpgradeFiles
             bool trace = false; // Change to true to show the feedback
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (trace)
-
             {
-                // ReSharper disable once HeuristicUnreachableCode
                 System.Diagnostics.Debug.Print(message);
             }
         }

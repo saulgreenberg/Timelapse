@@ -1,6 +1,6 @@
 ﻿using DialogUpgradeFiles.Util;
 
-namespace DialogUpgradeFiles.Database
+namespace DialogUpgradeFiles.DataTables
 {
     /// <summary>
     /// FileTableDateTimeColumn - A FileTable Column holding DateTime values

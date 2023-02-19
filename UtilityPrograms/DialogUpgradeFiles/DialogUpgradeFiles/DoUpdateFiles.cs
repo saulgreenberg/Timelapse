@@ -6,11 +6,13 @@ using DialogUpgradeFiles.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using DialogUpgradeFiles.Constant;
+using DialogUpgradeFiles.DataTables;
 using File = System.IO.File;
 
 namespace DialogUpgradeFiles
@@ -199,6 +201,7 @@ namespace DialogUpgradeFiles
             {
                 foreach (ControlRow control in templateDB.Controls)
                 {
+                    // ReSharper disable once NotAccessedVariable
                     string defaultToUse = string.Empty;
                     if (control.Type == Constant.Control.FixedChoice || control.Type == Constant.Control.Choice)
                     {
@@ -209,6 +212,7 @@ namespace DialogUpgradeFiles
                             // when we don't allow an empty choice, Cant have an empty default or a non-matching default value
                             if (choices.Count > 0)
                             {
+                                // ReSharper disable once RedundantAssignment
                                 defaultToUse = choices[0];
                             }
                             // undefined if  choice list is empty!
@@ -216,6 +220,7 @@ namespace DialogUpgradeFiles
                         else if (includesEmptyChoice && (false == string.IsNullOrEmpty(control.DefaultValue) || false == choices.Contains(control.DefaultValue)))
                         {
                             // when we allow an empty choice, we can only have an empty default or a non-matching default value
+                            // ReSharper disable once RedundantAssignment
                             defaultToUse = string.Empty;
                         }
                     }
@@ -223,7 +228,7 @@ namespace DialogUpgradeFiles
             }
             catch
             {
-               
+               Debug.Print("In catch in DoUpdateFiles");
             }
         }
         #endregion
@@ -286,6 +291,7 @@ namespace DialogUpgradeFiles
             if (templateDB.Controls.Any(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset))
             {
                 ControlRow control = templateDB.Controls.First(x => x.DataLabel == Constant.DatabaseColumn.UtcOffset);
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 if (null != control)
                 {
                     templateDB.UpgradeTemplateRemoveControl(control);
@@ -339,11 +345,11 @@ namespace DialogUpgradeFiles
                 timelapse.DebugFeedback(success, "Data Table: Timezone schema and data deleted: " + filePath);
                 if (!success)
                 {
-                    timelapse.DebugFeedback(success, "Data Table: Timezone schema and data not in table: " + filePath);
+                    timelapse.DebugFeedback(false, "Data Table: Timezone schema and data not in table: " + filePath);
                 }
                 else
                 {
-                    timelapse.DebugFeedback(success, "Data Table: Timezone schema and data deleted " + filePath);
+                    timelapse.DebugFeedback(true, "Data Table: Timezone schema and data deleted " + filePath);
                 }
                 await Task.Delay(Constant.BusyState.SleepTime);
 
@@ -351,11 +357,11 @@ namespace DialogUpgradeFiles
                 success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.WhiteSpaceTrimmed);
                 if (!success)
                 {
-                    timelapse.DebugFeedback(success, "Data Table: WhiteSpaceTrimmed schema and data not in table: " + filePath);
+                    timelapse.DebugFeedback(false, "Data Table: WhiteSpaceTrimmed schema and data not in table: " + filePath);
                 }
                 else
                 {
-                    timelapse.DebugFeedback(success, "Data Table: WhiteSpaceTrimmed schema and data deleted " + filePath);
+                    timelapse.DebugFeedback(true, "Data Table: WhiteSpaceTrimmed schema and data deleted " + filePath);
                 }
                 await Task.Delay(Constant.BusyState.SleepTime);
 
@@ -363,11 +369,11 @@ namespace DialogUpgradeFiles
                 success = fileDatabase.Database.SchemaDeleteColumn(Constant.DBTables.ImageSet, Constant.DatabaseColumn.QuickPasteXML);
                 if (!success)
                 {
-                    timelapse.DebugFeedback(success, "Data Table: QuickPasteXML schema and data not in table: " + filePath);
+                    timelapse.DebugFeedback(false, "Data Table: QuickPasteXML schema and data not in table: " + filePath);
                 }
                 else
                 {
-                    timelapse.DebugFeedback(success, "Data Table: QuickPasteXML schema and data deleted " + filePath);
+                    timelapse.DebugFeedback(true, "Data Table: QuickPasteXML schema and data deleted " + filePath);
                 }
                 await Task.Delay(Constant.BusyState.SleepTime);
                 return UpgradeResultsEnum.Upgraded;
@@ -531,7 +537,7 @@ namespace DialogUpgradeFiles
             // Remove Timezone from ImageSetTable
             if (false == fileDatabase.Database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.TimeZone))
             {
-                timelapse.DebugFeedback("Image Set Table: No TimeZone column to delete: " + filePath); ;
+                timelapse.DebugFeedback("Image Set Table: No TimeZone column to delete: " + filePath);
             }
             else
             {
@@ -675,7 +681,7 @@ namespace DialogUpgradeFiles
             string sortTermAsJson = fileDatabase.ImageSet.SortTermsAsJson;
             fileDatabase.Database.Upgrade(Constant.DBTables.ImageSet, new ColumnTuple(Constant.DatabaseColumn.SortTerms, sortTermAsJson));
 
-            /// Convert QuickPaste to JSON
+            // Convert QuickPaste to JSON
             // Get the QuickPasteXML from the database, populate the QuickPaste datastructure with it, and 
             // write it out to the (renamed from QuickPasteXML column) QuickPasteTerms column
             string quickPasteEntriesAsJson = "[]"; // The empty quickpaste structure
