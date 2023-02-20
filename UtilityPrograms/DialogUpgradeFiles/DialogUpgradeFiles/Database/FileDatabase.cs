@@ -493,6 +493,7 @@ namespace DialogUpgradeFiles.Database
         #endregion
 
         #region Index creation and dropping
+        // ReSharper disable once UnusedMember.Global
         public void IndexCreateForDetectionsAndClassificationsIfNotExists()
         {
             this.Database.IndexCreateIfNotExists(Constant.DatabaseValues.IndexID, Constant.DBTables.Detections, Constant.DatabaseColumn.ID);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Windows.Controls;
 using DialogUpgradeFiles.Util;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.DataTables
 {

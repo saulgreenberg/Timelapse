@@ -1,4 +1,5 @@
-﻿namespace DialogUpgradeFiles
+﻿// ReSharper disable UnusedMember.Global
+namespace DialogUpgradeFiles
 {
     // Create SQL commands using constants rather than typing the SQL keywords. 
     // This really helps avoid typos, bugs due to spacing such as not having spaces inbetween keywords, etc.

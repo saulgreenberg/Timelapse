@@ -30,6 +30,7 @@ namespace DialogUpgradeFiles.Database
         // Signals whether a silent update of the Image database template should be performed at the minimum
         public bool SyncRequiredAsNonCriticalFieldsDiffer { get; set; }
 
+        // ReSharper disable once UnusedMember.Global
         public bool SyncRequiredAsDataLabelsDiffer => this.DataLabelsInTemplateButNotImageDatabase.Count > 0 || this.DataLabelsInImageButNotTemplateDatabase.Count > 0;
 
         public bool SyncRequiredAsChoiceMenusDiffer { get; set; }

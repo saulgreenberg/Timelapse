@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.Util
 {

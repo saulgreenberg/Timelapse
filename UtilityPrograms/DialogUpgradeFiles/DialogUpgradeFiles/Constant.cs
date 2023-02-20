@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+// ReSharper disable UnusedMember.Global
 
 //using Timelapse.Controls;
 
@@ -43,6 +44,7 @@ namespace DialogUpgradeFiles.Constant
         // default data labels
         public const string Choice = "Choice";         // Label for a fixed choice
 
+        // ReSharper disable once UnusedMember.Global
         public static readonly ReadOnlyCollection<string> StandardTypes = new List<string>
         {
             DatabaseColumn.Date,

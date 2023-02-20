@@ -8,6 +8,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using DialogUpgradeFiles.DataStructures;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.Database
 {

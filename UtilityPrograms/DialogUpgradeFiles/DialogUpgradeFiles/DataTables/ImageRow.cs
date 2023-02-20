@@ -12,6 +12,7 @@ using DialogUpgradeFiles.Extensions;
 using DialogUpgradeFiles.Util;
 //using DialogUpgradeFiles.Images;
 using DataRowExtensions = DialogUpgradeFiles.Extensions.DataRowExtensions;
+// ReSharper disable UnusedMember.Global
 
 //using MetadataDirectory = MetadataExtractor.Directory;
 

@@ -4,6 +4,7 @@
 using System;
 using System.Globalization;
 using DialogUpgradeFiles.Extensions;
+// ReSharper disable UnusedMember.Global
 
 //using MetadataDirectory = MetadataExtractor.Directory;
 namespace DialogUpgradeFiles.Util

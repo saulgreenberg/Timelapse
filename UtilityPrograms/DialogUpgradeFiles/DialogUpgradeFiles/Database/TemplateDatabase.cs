@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using DialogUpgradeFiles.DataStructures;
 using DialogUpgradeFiles.DataTables;
 using DialogUpgradeFiles.Util;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.Database
 {

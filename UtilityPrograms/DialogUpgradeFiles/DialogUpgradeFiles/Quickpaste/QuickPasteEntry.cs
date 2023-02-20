@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+// ReSharper disable UnusedMember.Global
 namespace DialogUpgradeFiles.QuickPaste
 {
     // QuickPasteEntry Data Structure: collects all the data controls and their values as a single potential quickpaste entry

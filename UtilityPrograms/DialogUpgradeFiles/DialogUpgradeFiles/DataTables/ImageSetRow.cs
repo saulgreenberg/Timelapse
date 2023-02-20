@@ -7,6 +7,7 @@ using DialogUpgradeFiles.Extensions;
 using DialogUpgradeFiles.SearchingAndSorting;
 using DialogUpgradeFiles.Util;
 using Newtonsoft.Json;
+// ReSharper disable UnusedMember.Global
 
 namespace DialogUpgradeFiles.DataTables
 {
