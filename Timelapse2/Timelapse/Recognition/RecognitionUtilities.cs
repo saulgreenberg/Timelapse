@@ -277,12 +277,9 @@ namespace Timelapse.Recognition
                 // file is outside of root folder and its subfolders
                 return string.Empty;
             }
-            else if (string.IsNullOrEmpty(splitPath.Item2))
-            {
-                // Don't add prefix: file is in the root folder
-                return string.Empty;
-            }
-            return splitPath.Item2;
+            return string.IsNullOrEmpty(splitPath.Item2) 
+                ? string.Empty // Don't add prefix: file is in the root folder
+                : splitPath.Item2;
         }
         #endregion
 

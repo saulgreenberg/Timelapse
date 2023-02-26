@@ -353,7 +353,7 @@ namespace Timelapse.SearchingAndSorting
             return where;
         }
 
-        // Combine the search terms in searchTemrs using the termCombiningOperator (i.e. And or OR), and special cases in as needed.
+        // Combine the search terms in searchTerms using the termCombiningOperator (i.e. And or OR), and special cases in as needed.
         private string CombineSearchTermsAndOperator(IEnumerable<SearchTerm> searchTerms, CustomSelectionOperatorEnum termCombiningOperator)
         {
             string where = string.Empty;

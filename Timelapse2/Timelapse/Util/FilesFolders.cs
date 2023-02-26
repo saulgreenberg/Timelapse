@@ -361,25 +361,24 @@ namespace Timelapse.Util
             {
                 return null;
             }
-            if (false == fullPath.StartsWith(rootPath))
-            {
-                return null;
-            }
-            string fileName = Path.GetFileName(fullPath);
 
             string directoryName = Path.GetDirectoryName(fullPath);
             if (directoryName == null)
             {
+                // Should not happen, as only occurs when a path is in the root drive.
                 // Shouldn't normally happen, i.e., Only happens if its a drive e.g., C:
                 // NOt sure if this workaround works
-                TracePrint.NullException(nameof(fileName));
+                TracePrint.NullException(nameof(directoryName));
                 directoryName = Path.GetPathRoot(fullPath);
             }
-            directoryName = directoryName.TrimEnd('\\');
 
-            //string relativePath = fullPath.Substring(rootPath.Length + 1, fullPath.Length - fileName.Length - rootPath.Length - 1);
+            if (false == directoryName.StartsWith(rootPath))
+            {
+                return null;
+            }
+            string fileName = Path.GetFileName(fullPath);
+            directoryName = directoryName.TrimEnd('\\');
             string relativePath = rootPath.Equals(directoryName) ? string.Empty : directoryName.Substring(rootPath.Length + 1);
-            //string relativePath = directoryName.Substring(rootPath.Length + 1);
             return new Tuple<string, string, string>(rootPath, relativePath, fileName);
         }
         #endregion
