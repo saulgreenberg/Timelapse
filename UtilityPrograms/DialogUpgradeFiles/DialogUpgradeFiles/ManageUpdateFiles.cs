@@ -154,7 +154,7 @@ namespace DialogUpgradeFiles
 
                 // If we failed, restore the original file from the backup file
                 // unless no backup was made due to the path being too long
-                if (result != UpgradeResultsEnum.Upgraded && result != UpgradeResultsEnum.PathTooLong && result != UpgradeResultsEnum.AlternateBackupMade)
+                if (result != UpgradeResultsEnum.Upgraded && result != UpgradeResultsEnum.PathTooLong && result != UpgradeResultsEnum.AlternateBackupMade && backupFilePath != string.Empty && File.Exists(backupFilePath))
                 {
                     Util.FileBackup.TryRestoreBackup(file, backupFilePath);
                 }

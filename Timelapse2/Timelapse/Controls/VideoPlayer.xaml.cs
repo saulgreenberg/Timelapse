@@ -321,7 +321,7 @@ namespace Timelapse.Controls
 
             // start over from beginning if at end of video
             // Technote: The natural duration default value is Automatic if you query this property before MediaOpened.
-            if (this.Video.NaturalDuration.HasTimeSpan && (this.Video.NaturalDuration != Duration.Automatic || this.Video.Position == this.Video.NaturalDuration.TimeSpan)))
+            if (this.Video.NaturalDuration.HasTimeSpan && (this.Video.NaturalDuration != Duration.Automatic || this.Video.Position == this.Video.NaturalDuration.TimeSpan))
             {
                 this.Video.Position = TimeSpan.Zero;
                 this.ShowPosition();
