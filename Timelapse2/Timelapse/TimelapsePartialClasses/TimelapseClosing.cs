@@ -133,10 +133,11 @@ namespace Timelapse
             }
             this.State.TimelapseWindowSize = new Size(this.Width, this.Height);
 
-            // Save the layout only if we are really closing Timelapse and the DataEntryControlPanel is visible, as otherwise it would be hidden
-            // the next time Timelapse is started
-            if (isCompleteShutdown && this.DataEntryControlPanel.IsVisible)
+            //if (isCompleteShutdown && this.DataEntryControlPanel.IsVisible) // using the isCompleteShutdown flag wasn't working...
+            if (this.DataEntryControlPanel.IsVisible)
             {
+                // Save the layout only when we close an image set and the DataEntryControlPanel is visible, 
+                // as otherwise it would be hidden the next time Timelapse is started
                 this.AvalonLayout_TrySave(Constant.AvalonLayoutTags.LastUsed);
             }
             else if (isCompleteShutdown)
