@@ -1515,6 +1515,7 @@ namespace Timelapse.Dialog
                           + "\u2022 search for other database (.ddb) files in that folder's sub-folders, " + Environment.NewLine
                           + "\u2022 try to merge all data found in those found databases into the new database.",
                      Details = "\u2022 All databases must be based on the same template, otherwise the merge will fail." + Environment.NewLine
+                         +$"\u2022 While a root folder containing the to-be-merged .ddb  can be moved to a new location under the merged root folder,{Environment.NewLine}   its sub-folder structure should not be altered. If it is, Timelapse may not be able to find the images.{Environment.NewLine}"
                          +"\u2022 Databases found in the Backup folders are ignored." + Environment.NewLine
                          + "\u2022 Detections and Classifications (if any) are merged; categories are taken from the first database found with detections." + Environment.NewLine
                          + "\u2022 The merged database is independent of the found databases: updates will not propagate between them." + Environment.NewLine

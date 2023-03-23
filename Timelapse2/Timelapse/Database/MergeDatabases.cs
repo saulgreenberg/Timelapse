@@ -506,6 +506,11 @@ namespace Timelapse.Database
         //Form:  UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) EMD
         private static string QueryAddPrefixToRelativePathInTable(string tableName, string pathPrefixToAdd)
         {
+            if (string.IsNullOrWhiteSpace(pathPrefixToAdd))
+            {
+                // No need to construct a new relative path if there is nothing to add to it
+                return string.Empty;
+            }
             // A longer query, so split into three lines
             // Note that tableName must be a DataTable for this to work
             string query = Sql.Update + tableName + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.CaseWhen + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(string.Empty);
