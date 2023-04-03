@@ -202,6 +202,7 @@
     <Compile Include="Controls\ProgressBarArguments.cs" />
     <Compile Include="Controls\EpisodePopup.cs" />
     <Compile Include="Database\MergeDatabases.cs" />
+    <Compile Include="Database\MergeDatabasesNew.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
     <Compile Include="Dialog\PopulateFieldWithDetectionCounts.xaml.cs">
@@ -372,6 +373,7 @@
     <Compile Include="Images\ZoomBookmark.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="DataStructures\MetadataOnLoad.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuMerge.cs" />
     <Compile Include="TimelapseMenuCallbacks\TimelapseMenuRecognitions.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseDuplicates.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseCheckAndCorrectFolders.cs" />

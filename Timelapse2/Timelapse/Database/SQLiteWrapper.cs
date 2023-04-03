@@ -47,7 +47,6 @@ namespace Timelapse.Database
         }
         #endregion
 
-
         #region Create Table
         // A simplified table creation routine. It expects the column definitions to be supplied
         // as a column_name, data type key value pair. 
@@ -500,7 +499,24 @@ namespace Timelapse.Database
                 query += Sql.Where;                   // WHERE
                 query += where;                                 // where
             }
+            DataTable dt = this.GetDataTableFromSelect(query);
             this.ExecuteNonQuery(query);
+        }
+
+        public DataTable DeleteRowsReturningIds(string tableName, string where, string whatToReturn)
+        {
+            // DELETE FROM table_name WHERE where RETURNING Id
+            string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
+            if (!string.IsNullOrWhiteSpace(where))
+            {
+                // Add the WHERE clause only when where is not empty
+                query += Sql.Where;                   // WHERE
+                query += where;                                 // where
+            }
+
+            //query += Sql.Returning + Sql.Quote(whatToReturn);
+            query += Sql.Returning + whatToReturn;
+            return this.GetDataTableFromSelect(query);
         }
 
         /// <summary>
@@ -606,6 +622,7 @@ namespace Timelapse.Database
             }
             return Convert.ToSingle(obj);
         }
+
         #endregion
 
         #region Execute Non-Queries: one statement, list of statements 

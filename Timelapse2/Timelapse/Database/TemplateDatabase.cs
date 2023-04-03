@@ -93,10 +93,7 @@ namespace Timelapse.Database
             }
             finally
             {
-                if (disposableTemplateDB != null)
-                {
-                    disposableTemplateDB.Dispose();
-                }
+                disposableTemplateDB?.Dispose();
             }
         }
 
@@ -794,10 +791,7 @@ namespace Timelapse.Database
 
             if (disposing)
             {
-                if (this.Controls != null)
-                {
-                    this.Controls.Dispose();
-                }
+                this.Controls?.Dispose();
             }
 
             this.disposed = true;

@@ -1,9 +1,12 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -12,6 +15,7 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using Clipboard = System.Windows.Clipboard;
 using Cursor = System.Windows.Input.Cursor;
 using Rectangle = System.Drawing.Rectangle;
@@ -242,6 +246,53 @@ namespace Timelapse.Dialog
                     return true;
                 }
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// File dialog where the user can only select a file within a sub-folder of the root folder path
+        /// It returns the path to the selected folder
+        /// If fileNameToLocate is not empty, it displays that a desired folder to select in the dialog title.
+        /// </summary>
+        /// <param name="initialFolder">The path to the root folder containing the template</param>
+        /// <param name="extensionInUsersLanguage">The file type using the user's language, usually something like "Timelapse data (ddb) files"</param>
+        /// <param name="extension">The file type, usually a .tdb or .ddb extension</param>
+        /// <returns></returns>
+        public static string LocateFileUsingOpenFileDialog(string initialFolder, string title, string extensionInUsersLanguage, string extension)
+        {
+            if (initialFolder == null)
+            {
+                return string.Empty;
+            }
+
+            CommonFileDialogFilter filter = new CommonFileDialogFilter(extensionInUsersLanguage, extension)
+            {
+                ShowExtensions = true
+            };
+
+            using (CommonOpenFileDialog fileSelectionDialog = new CommonOpenFileDialog()
+                   {
+                       Title = title,
+                       DefaultDirectory = initialFolder,
+                       IsFolderPicker = false,
+                       Multiselect = false,
+                       DefaultExtension = extension,
+                       EnsureFileExists = true,
+                       EnsurePathExists = true,
+                   })
+            {
+                fileSelectionDialog.Filters.Add(filter);
+                fileSelectionDialog.InitialDirectory = fileSelectionDialog.DefaultDirectory;
+                fileSelectionDialog.FolderChanging += FolderSelectionDialog_FolderChanging;
+                if (fileSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    // Trim the root folder path from the folder name to produce a relative path. 
+                    return fileSelectionDialog.FileName;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -783,6 +834,31 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region MessageBox: Incompatable templates
+        public static void TemplateFilesNotCompatableDialog(Window owner, string sourceDdbPath, string destinationDdbPath)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            // notify the user the template couldn't be loaded rather than silently doing nothing
+            MessageBox messageBox = new MessageBox("Cannot merge the databases", owner)
+            {
+                Message =
+                {
+                    Problem = "Timelapse could not merge your selected database into the parent database."
+                              + Environment.NewLine
+                              + "\u2022 " + sourceDdbPath,
+                    Reason = "The templates used by both databases differ from one another.",
+                    Solution = "Try the following:"
+                    + Environment.NewLine
+                    + $"\u2022 update the template used by the above .ddb file so that it matches the parent template{Environment.NewLine} "
+                    + $"\u2022 reopen the above database ({Constant.File.FileDatabaseFileExtension}) file to complete the update.",
+                    Icon = MessageBoxImage.Error,
+                    Hint = $"If you plan to merge database ({Constant.File.FileDatabaseFileExtension}) files, try to base those files on a common template ({Constant.File.TemplateDatabaseFileExtension}) file."
+                }
+            };
+            messageBox.ShowDialog();
+        }
+        #endregion
+
         #region MessageBox: Corrupted .ddb file (no primary key)
         public static void DatabaseFileNotLoadedAsCorruptDialog(Window owner, string ddbDatabasePath, bool isEmpty)
         {
@@ -812,6 +888,30 @@ namespace Timelapse.Dialog
                 + "\u2022 some other unkown reason.";
             messageBox.ShowDialog();
         }
+
+        public static void DatabaseFileAppearsCorruptDialog(Window owner, string ddbDatabasePath)
+        {
+            // notify the user the database appears corrupt
+             new MessageBox("Timelapse could not open your database file", owner)
+            {
+                Message =
+                {
+                    Problem = "Timelapse could not open your .ddb database file:"
+                              + Environment.NewLine
+                              + "\u2022 " + ddbDatabasePath,
+                    Reason = "There are various possibilities:" +  Environment.NewLine
+                            + "\u2022 your database file is corrupt, or" +  Environment.NewLine
+                            + "\u2022 system, security or network  restrictions prevent reading or writing the file, or," + Environment.NewLine
+                            + "\u2022 some other unknown reason.",
+                     Solution = $"\u2022 Check for valid backups of your database in your {Constant.File.BackupFolder} folder that you can reuse,"
+                                + Environment.NewLine
+                                + "\u2022 Or, delete that file and then recreate it.",
+                    Hint = "If you are stuck, send an explanatory note to saul@ucalgary.ca." + Environment.NewLine
+                        + "He will check those files to see if they can be repaired."
+                }
+            }.ShowDialog();
+        }
+
         #endregion
 
         #region MessageBox: Not a Timelapse File
@@ -833,6 +933,44 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Error
                 }
             }.ShowDialog();
+        }
+        #endregion
+
+        #region MessageBox: Merge database must be in a subfolder
+        // Notify the user that the source file to be merged must be different from the destination file and in a sub folder of the destination root folder
+        public static void MergeSourceFileMustBeInASubfolder(Window owner, string databasePath, bool sameFile)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            
+            string errorMessage = "The file you chose is ";
+            errorMessage += sameFile
+                ? "the same as the currently opened timelapse database."
+                : "in the same folder as your currently opened file";
+
+            string errorTitle = "Could not merge this file ";
+            errorTitle += sameFile
+                ? "into itself"
+                : "as its not in a subfolder";
+            MessageBox msgBox = new MessageBox(errorTitle, owner)
+            {
+                Message =
+                {
+                    Problem = errorMessage
+                              + Environment.NewLine
+                              + "\u2022 " + databasePath,
+                    Reason = "The file to merge into the currently opened database must be:" + Environment.NewLine
+                              + $"\u2022 located in a sub-folder underneath the current database's folder",
+                    Solution = $"Choose a database ({Constant.File.FileDatabaseFileExtension}) file located in a subfolder underneath the current database's folder",
+                    Icon = MessageBoxImage.Error
+                }
+            };
+
+            if (sameFile)
+            {
+                msgBox.Message.Reason +=
+                    $",{Environment.NewLine}\u2022 different from the current database ({Constant.File.FileDatabaseFileExtension}) file";
+            }
+            msgBox.ShowDialog();
         }
         #endregion
 
@@ -1507,8 +1645,8 @@ namespace Timelapse.Dialog
                 Message =
                 {
                      Icon = MessageBoxImage.Question,
-                     Title = "Merge Databases Explained.",
-                     What = "Merging databases works as follows. Timelapse will:"
+                     Title = "Merge all databases explained",
+                     What = "Merging all databases works as follows. Timelapse will:"
                           + Environment.NewLine
                           + "\u2022 ask you to locate a root folder containing a template (a.tdb file)," + Environment.NewLine
                           + $"\u2022 create a new database (.ddb) file in that folder, called {Constant.File.MergedFileName},{Environment.NewLine}"
@@ -1530,7 +1668,46 @@ namespace Timelapse.Dialog
 
             if (messageBox.DontShowAgain.IsChecked.HasValue)
             {
-                GlobalReferences.TimelapseState.SuppressMergeDatabasesPrompt = messageBox.DontShowAgain.IsChecked.Value;
+                GlobalReferences.TimelapseState.SuppressMergeASingleDatabasePrompt = messageBox.DontShowAgain.IsChecked.Value;
+            }
+            return messageBox.DialogResult;
+        }
+
+        /// <summary>
+        /// Show a message that explains how merging databases works and its constraints. Give the user an opportunity to abort
+        /// </summary>
+        public static bool? MenuFileMergeASingleDatabaseExplainedDialog(Window owner)
+        {
+
+            MessageBox messageBox = new MessageBox("Merge a database into a parent", owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                     Icon = MessageBoxImage.Information,
+                     Title = "Merge a database into a parent database explained.",
+                     What = "We strongly suggest you read the merging section in the Timelapse Reference Guide." + Environment.NewLine
+                         + "It describes the relationship between the parent and child databases and how the child" + Environment.NewLine
+                         + "should be located in its own root sub-folder under the parent." + Environment.NewLine
+                         + "If the databases are not correctly located, the merged results will not be what you intended.",
+                     Result = "After asking you to locate the child database, Timelapse will:" + Environment.NewLine
+                         + "\u2022 check the databases to make sure merging is possible, " + Environment.NewLine
+                         + "\u2022 delete any data in the parent database that refers to the child's folder location," + Environment.NewLine
+                         + "\u2022 insert the child's data into the parent database.",
+                     Details = "\u2022 All databases must be based on the same template, otherwise the merge will fail." + Environment.NewLine
+                         + "\u2022 After merging, both databases are independent of each other. Updates to one will not propagate to the other." + Environment.NewLine
+                         + "\u2022 The merged database is a normal Timelapse database, which you can open and use as expected.",
+                     Hint = "Press Ok to continue with the merge, otherwise Cancel."
+                },
+                DontShowAgain =
+                {
+                    Visibility = Visibility.Visible
+                }
+            };
+            messageBox.ShowDialog();
+
+            if (messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                GlobalReferences.TimelapseState.SuppressMergeASingleDatabasePrompt = messageBox.DontShowAgain.IsChecked.Value;
             }
             return messageBox.DialogResult;
         }
@@ -1989,8 +2166,8 @@ namespace Timelapse.Dialog
                 case DatabaseFileErrorsEnum.DoesNotExist:
                 case DatabaseFileErrorsEnum.TemplateElementsDiffer:
                 case DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent:
-                case DatabaseFileErrorsEnum.DetectionCategoriesDiffers:
-                case DatabaseFileErrorsEnum.ClassificationDictionaryDiffers:
+                case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
+                case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
                 default:
                     return true;
             }

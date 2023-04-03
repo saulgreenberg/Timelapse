@@ -134,6 +134,13 @@
                             <Image Source="Icons/Exit_22x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemCreateEmptyDatabase" Header="Create empty master database" Click="MenuItemCreateEmptyDatabase_Click" ToolTip="Create an empty database from a template">
+                    </MenuItem>
+                    <MenuItem Name="MenuItemAddDatabase" Header="Add or replace a database into the master" Click="MenuItemAddDatabase_Click" ToolTip="Add a database to an exising database">
+                    </MenuItem>
                 </MenuItem>
 
                 <!-- Edit Menu -->

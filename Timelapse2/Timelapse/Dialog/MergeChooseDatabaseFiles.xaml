@@ -18,11 +18,11 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
-                            Title="Merge Databases"
+                            Title="Merge all databases into a parent"
                             What="Timelapse will:
                                    &#10;&#x2022; search for all database (.ddb) files in the current folder and its sub-folders,
                                    &#10;&#x2022; check that all database files are based on the same template,
-                                   &#10;&#x2022; merge those databases into a new database file,
+                                   &#10;&#x2022; merge those databases into a new parent database file,
                                    &#10;&#x2022; warn you about database files that cannot be merged."   
                             Result="The new database:
                                       &#10;&#x2022; will have a _merged.ddb suffix.

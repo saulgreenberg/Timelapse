@@ -41,7 +41,6 @@ namespace Timelapse.Database
             // At this point, we have one or more databases  in the source sourceddbFilePaths that we can try merging
             // Check to see if we can actually open the template. 
             // As we can't have out parameters in an async method, we return the state and the desired templateDatabase as a tuple
-            // Original form: if (!(await TemplateDatabase.TryCreateOrOpenAsync(templateDatabasePath, out this.templateDatabase).ConfigureAwait(true))
             Tuple<bool, TemplateDatabase> tupleResult = await TemplateDatabase.TryCreateOrOpenAsync(templateddbFilePath).ConfigureAwait(true);
             TemplateDatabase templateDatabase = tupleResult.Item2;
             if (!tupleResult.Item1)
@@ -65,6 +64,10 @@ namespace Timelapse.Database
             fd.Dispose();
             // ReSharper disable once RedundantAssignment
             fd = null;
+
+            //
+            // At this point, we should have an empty merge database
+            // 
 
             // Open the database
             SQLiteWrapper destinationddb = new SQLiteWrapper(destinationddbFilePath);
@@ -114,10 +117,10 @@ namespace Timelapse.Database
                         case DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent:
                             message = "Its template has the same data labels, but in a different order from other just-merged databases";
                             break;
-                        case DatabaseFileErrorsEnum.ClassificationDictionaryDiffers:
+                        case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
                             message = "Image recognition classification categories differ from other just-merged databases";
                             break;
-                        case DatabaseFileErrorsEnum.DetectionCategoriesDiffers:
+                        case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
                             message = "Image recognition detection categories differ from other just-merged databases";
                             break;
                         case DatabaseFileErrorsEnum.InvalidDatabase:
@@ -412,7 +415,7 @@ namespace Timelapse.Database
                     else
                     {
                         // Debug.Print("merged failed for detection categories");
-                        return DatabaseFileErrorsEnum.DetectionCategoriesDiffers;
+                        return DatabaseFileErrorsEnum.DetectionCategoriesDiffer;
                     }
                 }
                 // D: Generate a new classification category db if the categories in the current and to be merged dictionary can be merged together. 
@@ -440,7 +443,7 @@ namespace Timelapse.Database
                     else
                     {
                         // Debug.Print("merged failed for classification categories");
-                        return DatabaseFileErrorsEnum.ClassificationDictionaryDiffers;
+                        return DatabaseFileErrorsEnum.ClassificationCategoriesDiffer;
                     }
                 }
             }

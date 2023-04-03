@@ -33,6 +33,7 @@ namespace Timelapse.Dialog
             this.SuppressHowDuplicatesWorkPrompt.IsChecked = this.state.SuppressHowDuplicatesWork;
             this.SuppressImportantMessagePrompt.IsChecked = this.state.SuppressOpeningMessageDialog;
             this.SuppressMergeDatabasesPrompt.IsChecked = this.state.SuppressMergeDatabasesPrompt;
+            this.SuppressMergeASingleDatabasePrompt.IsChecked = this.state.SuppressMergeASingleDatabasePrompt;
             this.SuppressSelectedAmbiguousDatesPrompt.IsChecked = this.state.SuppressSelectedAmbiguousDatesPrompt;
             this.SuppressSelectedCsvExportPrompt.IsChecked = this.state.SuppressSelectedCsvExportPrompt;
             this.SuppressSelectedDarkThresholdPrompt.IsChecked = this.state.SuppressSelectedDarkThresholdPrompt;
@@ -86,6 +87,13 @@ namespace Timelapse.Dialog
             CheckBox cb = (CheckBox)sender;
             this.state.SuppressMergeDatabasesPrompt = cb.IsChecked == true;
         }
+
+        private void SuppressMergeASingleDatabasePrompt_Click(object sender, RoutedEventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            this.state.SuppressMergeASingleDatabasePrompt = cb.IsChecked == true;
+        }
+        
 
         private void SuppressSelectedCsvExportPrompt_Click(object sender, RoutedEventArgs e)
         {
@@ -149,7 +157,5 @@ namespace Timelapse.Dialog
         }
 
         #endregion
-
-
     }
 }
