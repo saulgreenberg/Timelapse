@@ -205,6 +205,9 @@
     <Compile Include="Database\MergeDatabasesNew.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
+    <Compile Include="Dialog\MergeSelectedDatabaseFiles.xaml.cs">
+      <DependentUpon>MergeSelectedDatabaseFiles.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\PopulateFieldWithDetectionCounts.xaml.cs">
       <DependentUpon>PopulateFieldWithDetectionCounts.xaml</DependentUpon>
     </Compile>
@@ -414,6 +417,7 @@
     <Compile Include="Enums\DeletiionManagementEnum.cs" />
     <Compile Include="DataStructures\ErrorsAndWarnings.cs" />
     <Compile Include="Util\IsCondition.cs" />
+    <Compile Include="Util\Numbers.cs" />
     <Compile Include="Util\ViewModelBase.cs" />
     <Compile Include="Util\ProcessExecution.cs" />
     <Compile Include="Util\ProgressStream.cs" />
@@ -488,6 +492,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialog\CustomSelectionWithEpisodes.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\MergeSelectedDatabaseFiles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

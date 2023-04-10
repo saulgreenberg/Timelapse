@@ -75,6 +75,15 @@
                     <Separator />
 
                     <!-- Merge -->
+
+                    <MenuItem Name="MenuItemCreateEmptyDatabase" Header="Create an empty database" Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
+                              ToolTip="Asks for the template location, and then creates an empty image set database.
+                              &#10;Usually used as a master database where other databases are merged into it.">
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemAddDatabase" Header="Add or replace a database into the master" Click="MenuItemAddDatabase_Click" ToolTip="Add a database to an exising database">
+                    </MenuItem>
+
                     <MenuItem Name="MenuItemMergeDatabases" Header="Merge data (.ddb) files into a single file..." IsEnabled="true" ToolTip="Asks for a location, searches its sub-folders for databases (.ddb files) and merges their contents into a new database file."  Click="MenuItemMergeDatabases_Click" />
 
                     <Separator />
@@ -137,10 +146,6 @@
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemCreateEmptyDatabase" Header="Create empty master database" Click="MenuItemCreateEmptyDatabase_Click" ToolTip="Create an empty database from a template">
-                    </MenuItem>
-                    <MenuItem Name="MenuItemAddDatabase" Header="Add or replace a database into the master" Click="MenuItemAddDatabase_Click" ToolTip="Add a database to an exising database">
-                    </MenuItem>
                 </MenuItem>
 
                 <!-- Edit Menu -->

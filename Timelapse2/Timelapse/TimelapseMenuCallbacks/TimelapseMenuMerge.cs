@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -21,32 +22,46 @@ namespace Timelapse
         //private readonly string sourceDdbPath = @"C:\Users\saulg\Desktop\TestSets\MergeTest\SubFolder\TimelapseData.ddb";
 
 
-        // Create an empty Timelapse database based upon the template.
-        // Abort if the template does not exist or cannot be opened, generating the various error messages as needed.
-        private async void MenuItemCreateEmptyDatabase_Click(object sender, RoutedEventArgs e)
-        {
-        string destinationDdbPathToCreate = @"C:\Users\saulg\Desktop\TestSets\MergeTest\MasterDatabase.ddb";
-        ErrorsAndWarnings errorMessages;
+        //// Create an empty Timelapse database based upon the template.
+        //// Abort if the template does not exist or cannot be opened, generating the various error messages as needed.
+        //private async void MenuItemCreateEmptyDatabaseForMerging_Click(object sender, RoutedEventArgs e)
+        //{
+        //string destinationDdbPathToCreate = @"C:\Users\saulg\Desktop\TestSets\MergeTest\MasterDatabase.ddb";
+        //ErrorsAndWarnings errorMessages;
 
-            if (File.Exists(this.templateTdbPath))
-            {
-                // The template exists, so try to create the empty ddb
-                errorMessages = await MergeDatabasesNew.TryCreateEmptyDatabaseFromTemplateAsync(
-                    this.templateTdbPath,
-                    destinationDdbPathToCreate).ConfigureAwait(true);
-            }
-            else
-            {
-                // The template does not exist, so don't try to create an empty database
-                // Also generate an error message
-                errorMessages = new ErrorsAndWarnings();
-                errorMessages.Errors.Add($"Database not created, as the template file {this.templateTdbPath} does not exist");
-            }
-            DisplayMergeResults(errorMessages);
-        }
+        //    if (File.Exists(this.templateTdbPath))
+        //    {
+        //        // The template exists, so try to create the empty ddb
+        //        errorMessages = await MergeDatabasesNew.TryCreateEmptyDatabaseFromTemplateAsync(
+        //            this.templateTdbPath,
+        //            destinationDdbPathToCreate).ConfigureAwait(true);
+        //        await GlobalReferences.MainWindow.DoLoadImages(this.templateTdbPath);
+        //    }
+        //    else
+        //    {
+        //        // The template does not exist, so don't try to create an empty database
+        //        // Also generate an error message
+        //        errorMessages = new ErrorsAndWarnings();
+        //        errorMessages.Errors.Add($"Database not created, as the template file {this.templateTdbPath} does not exist");
+        //    }
+        //    DisplayMergeResults(errorMessages);
+        //}
 
-        private void MenuItemAddDatabase_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemAddDatabase_Click(object sender, RoutedEventArgs e)
         {
+            Dialog.MergeSelectedDatabaseFiles mergeSelectedDatabaseFiles = new Dialog.MergeSelectedDatabaseFiles(this, this.DataHandler.FileDatabase.FilePath, this.DataHandler.FileDatabase.Database);
+            if (mergeSelectedDatabaseFiles.FoundInvalidFiles)
+            {
+                // some of the found ddb files are invalid, so abort.
+                return;
+            }
+
+            bool? result = mergeSelectedDatabaseFiles.ShowDialog();
+            this.MenuFileCloseImageSet_Click(null, null);
+            await this.DoLoadImages(templateTdbPath);
+            //await this.FilesSelectAndShowAsync();
+            //this.EnableOrDisableMenusAndControls();
+            return;
             // Show an explanation dialog
             if (this.State.SuppressMergeASingleDatabasePrompt == false)
             {

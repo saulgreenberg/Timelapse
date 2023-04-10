@@ -30,7 +30,7 @@ namespace Timelapse.Dialog
         // Tracks whether any changes to the database was made
         private bool IsAnyDataUpdated;
 
-        public ObservableCollection<ddbFileClass> ObservableddbFileList { get; set; }
+        public ObservableCollection<DdbFileClass> ObservableddbFileList { get; set; }
         public string DatabaseToLoad { get; set; } = string.Empty;
         public bool FoundInvalidFiles { get; set; } = false;
         public MergeChooseDatabaseFiles(Window owner, string templatetdbFilePath) : base(owner)
@@ -38,7 +38,7 @@ namespace Timelapse.Dialog
             InitializeComponent();
 
             this.TemplatetdbFilePath = templatetdbFilePath;
-            this.ObservableddbFileList = new ObservableCollection<ddbFileClass>();
+            this.ObservableddbFileList = new ObservableCollection<DdbFileClass>();
             this.RootFolderPath = Path.GetDirectoryName(templatetdbFilePath);
             if (this.RootFolderPath == null)
             {
@@ -96,7 +96,7 @@ namespace Timelapse.Dialog
             // We have at least one or more valid .ddb files. Load them up into the list
             foreach (string ddbFile in SourceddbFilePaths)
             {
-                ObservableddbFileList.Add(new ddbFileClass
+                ObservableddbFileList.Add(new DdbFileClass
                 {
                     IsSelected = true,
                     FullPath = ddbFile,
@@ -112,7 +112,7 @@ namespace Timelapse.Dialog
 
         private void Selector_CheckChanged(object sender, RoutedEventArgs e)
         {
-            foreach (ddbFileClass ddbObject in ObservableddbFileList)
+            foreach (DdbFileClass ddbObject in ObservableddbFileList)
             {
                 if (ddbObject.IsSelected)
                 {
@@ -125,7 +125,7 @@ namespace Timelapse.Dialog
         private async void MergeButton_Click(object sender, RoutedEventArgs e)
         {
             List<string> sourceddbFilePaths = new List<string>();
-            foreach (ddbFileClass fileObject in ObservableddbFileList)
+            foreach (DdbFileClass fileObject in ObservableddbFileList)
             {
 
                 if (fileObject.IsSelected)
@@ -257,7 +257,7 @@ namespace Timelapse.Dialog
         #endregion
 
     }
-    public class ddbFileClass
+    public class DdbFileClass
     {
         public bool IsSelected { get; set; }
         public string FullPath { get; set; }

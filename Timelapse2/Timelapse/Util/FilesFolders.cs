@@ -391,34 +391,26 @@ namespace Timelapse.Util
         // return     "foo"
         public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
         {
-            if (String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0
-                || String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0)
+            // If its a file, strip the file name off the path
+            path1 = File.GetAttributes(path1).HasFlag(FileAttributes.Directory)
+                ? path1
+                : Path.GetDirectoryName(path1);
+            // If its a file, strip the file name off the path
+            path2 = File.GetAttributes(path2).HasFlag(FileAttributes.Directory)
+                ? path2
+                : Path.GetDirectoryName(path2);
+
+
+            if (String.CompareOrdinal(path1, path2) == 0)
             {
-                // both paths are identical, but one path contains a file 
+                // both paths are identical 
                 return string.Empty;
             }
-            if (path1.Length > path2.Length)
-            {
-                string dir1 = Path.GetDirectoryName(path1);
-                if (dir1 == null)
-                {
-                    // Shouldn't happen. Empty workaround likely does not work.
-                    TracePrint.NullException(nameof(dir1));
-                    return string.Empty;
-                }
-                return dir1.Replace(path2 + "\\", "");
-            }
-            else
-            {
-                string dir2 = Path.GetDirectoryName(path2);
-                if (dir2 == null)
-                {
-                    // Shouldn't happen. Empty workaround likely does not work.
-                    TracePrint.NullException(nameof(dir2));
-                    return string.Empty;
-                }
-                return dir2.Replace(path1 + "\\", "");
-            }
+
+            return (path1.Length > path2.Length)
+            ? path1.Replace(path2 + "\\", "")
+            : path2.Replace(path1 + "\\", "");
+
         }
         #endregion
 

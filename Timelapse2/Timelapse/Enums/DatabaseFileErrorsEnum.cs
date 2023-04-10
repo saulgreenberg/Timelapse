@@ -13,6 +13,7 @@
         FileInRootDriveFolder,
         DoesNotExist,
         PathTooLong,
+        UnknownError,
 
         // These results are used during merge testing for incompatabilities
         TemplateElementsDiffer,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Timelapse.DataStructures;
@@ -41,17 +42,18 @@ namespace Timelapse.Database
             }
 
             // if the merge file exists, move it to the backup folder as we will be overwriting it.
-            errorsAndWarnings.BackupMade = false;
-            if (File.Exists(destinationDdbPath))
-            {
-                // Backup the old merge file by moving it to the backup folder 
-                // Note that we do the move instead of copy as we will be overwriting the file anyways
-                errorsAndWarnings.BackupMade = FileBackup.TryCreateBackup(destinationDdbPath, true);
-                FilesFolders.TryDeleteFileIfExists(destinationDdbPath);
-            }
+            //errorsAndWarnings.BackupMade = false;
+            //if (File.Exists(destinationDdbPath))
+            //{
+            //    // Backup the old merge file by moving it to the backup folder 
+            //    // Note that we do the move instead of copy as we will be overwriting the file anyways
+            //    errorsAndWarnings.BackupMade = FileBackup.TryCreateBackup(destinationDdbPath, true);
+            //    FilesFolders.TryDeleteFileIfExists(destinationDdbPath);
+            //}
 
             FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationDdbPath, templateDatabase)
                 .ConfigureAwait(true);
+            await GlobalReferences.MainWindow.DoLoadImages(templateTdbPath);
             fd.Dispose();
             // ReSharper disable once RedundantAssignment
             fd = null;
@@ -60,43 +62,6 @@ namespace Timelapse.Database
             // At this point, we should have an empty merge database
             // 
             return errorsAndWarnings;
-        }
-
-        #endregion
-
-        #region Check: CheckSourceAndDestinationDdbs
-
-        // Check the two databases for their integrity. 
-        // If they aren't generate appropriate error messages
-        public static bool CheckSourceAndDestinationDdbs(string sourceDdbPath, string destinationDdbPath,
-            ErrorsAndWarnings errorsAndWarnings)
-        {
-            // Check the two databases for their integrity
-            DatabaseFileErrorsEnum sourceDdbErrorsEnum = FilesFolders.QuickCheckDatabaseFile(sourceDdbPath);
-            DatabaseFileErrorsEnum destinationDdbErrorsEnum = FilesFolders.QuickCheckDatabaseFile(destinationDdbPath);
-            bool sourceInvalid = sourceDdbErrorsEnum != DatabaseFileErrorsEnum.Ok &&
-                                 sourceDdbErrorsEnum != DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
-            bool destinationInvalid = destinationDdbErrorsEnum != DatabaseFileErrorsEnum.Ok &&
-                                      destinationDdbErrorsEnum !=
-                                      DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
-
-            if (sourceInvalid || destinationInvalid)
-            {
-                if (sourceInvalid)
-                {
-                    errorsAndWarnings.Errors.Add("The source database appears to be invalid: " + sourceDdbPath);
-                }
-
-                if (destinationInvalid)
-                {
-                    errorsAndWarnings.Errors.Add(
-                        "The destination database appears to be invalid: " + destinationDdbPath);
-                }
-
-                return false;
-            }
-
-            return true;
         }
 
         #endregion
@@ -111,7 +76,6 @@ namespace Timelapse.Database
         public static DatabaseFileErrorsEnum CheckIfDatabaseTemplatesAreMergeCompatable(string sourceDdbPath,
             string destinationDdbPath)
         {
-
             SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceDdbPath);
             SQLiteWrapper destinationDdb = new SQLiteWrapper(destinationDdbPath);
             return MergeDatabasesNew.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
@@ -172,6 +136,50 @@ namespace Timelapse.Database
         // XXX CHECK IF RECOGNITIONS ARE REMOVED WITH EACH ENTRY
         // Before calling this, these checks should have been done :
         // - the database is a valid SQL database
+        // - the templates match
+        public static DatabaseFileErrorsEnum RemoveEntriesFromDestinationDdbMatchingPath(
+            SQLiteWrapper destinationDdb,
+            string sourceDdbPath,
+            string relativePathDifference)
+        {
+            // Find the relative path difference between the destination and source paths
+            //string pathToRootFolder = Path.GetDirectoryName(destinationDdbPath);
+            //if (pathToRootFolder == null)
+            //{
+            //    // Shouldn't happen
+            //    return DatabaseFileErrorsEnum.UnknownError;
+            //}
+            //string relativePathDifference = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceDdbPath);
+
+            // Delete entries from the DataTable whose RelativePath begins with the (folder) path from the root folder.
+            // This returns the Ids of all deleted entries
+            string where = Constant.DatabaseColumn.RelativePath
+                           + Sql.Like
+                           + Sql.Quote(relativePathDifference + @"\" + "%") // like root/*
+                           + Sql.Or
+                           + Constant.DatabaseColumn.RelativePath + Sql.Equal
+                           + Sql.Quote(relativePathDifference); // or equals root 
+            DataTable dtDeletedIds = destinationDdb.DeleteRowsReturningIds(Constant.DBTables.FileData, where, Constant.DatabaseColumn.ID);
+
+            // Use the Ids of the deleted entries to remove corresponding entries (if they exist) from the Markers table
+            if (dtDeletedIds.Rows.Count > 0)
+            {
+                List<string> idClauses = new List<string>();
+                foreach (DataRow row in dtDeletedIds.Rows)
+                {
+                    idClauses.Add(Constant.DatabaseColumn.ID + " = " + row[0]);
+                }
+                // XXX WHAT IF THERE ARE A HUGE NUMBER? WRAP IN BEGIN END?
+                destinationDdb.Delete(Constant.DBTables.Markers, idClauses);
+                Debug.Print($"Ddb deleted {idClauses.Count} entries in the folder {relativePathDifference}");
+            }
+            else
+            {
+                Debug.Print($"Ddb does not reference the folder: {relativePathDifference}. Nothing deleted");
+            }
+            return DatabaseFileErrorsEnum.Ok;
+        }
+
         public static DataTable RemoveEntriesFromDdbContainingThisPathReturningDeletedIds(
             SQLiteWrapper ddb,
             string pathFromRootSubFolder)
@@ -200,17 +208,17 @@ namespace Timelapse.Database
         {
             string query = string.Empty; // The Sql query to be built
 
-            Dictionary<string, string> detectionCategories = new Dictionary<string, string>();
-            Dictionary<string, string> classificationCategories = new Dictionary<string, string>();
-            Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
+            //Dictionary<string, string> detectionCategories = new Dictionary<string, string>();
+            //Dictionary<string, string> classificationCategories = new Dictionary<string, string>();
+            //Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
 
             // a. We need several temporary tables 
             string attachedSourceDB = "attachedSourceDB";
             string tempDataTable = "tempDataTable";
             string tempMarkersTable = "tempMarkersTable";
-            string tempInfoTable = "tempInfoTable";
-            string tempDetectionCategoriesTable = "tempDetectionCategoriesTable";
-            string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
+            //string tempInfoTable = "tempInfoTable";
+            //string tempDetectionCategoriesTable = "tempDetectionCategoriesTable";
+            //string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
 
 
             // Part 1. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
@@ -234,13 +242,13 @@ namespace Timelapse.Database
                 destinationDdb,
                 sourceDdbPath,
                 attachedSourceDB,
-                destinationRecognitionsExist,
-                tempInfoTable,
-                tempDetectionCategoriesTable,
-                tempClassificationCategoriesTable,
-                infoDictionary,
-                detectionCategories,
-                classificationCategories);
+                destinationRecognitionsExist);
+                //tempInfoTable,
+                //tempDetectionCategoriesTable,
+                //tempClassificationCategoriesTable,
+                //infoDictionary,
+                //detectionCategories,
+                //classificationCategories);
 
             if (resultTuple.Item1 != DatabaseFileErrorsEnum.Ok)
             {
@@ -348,7 +356,6 @@ namespace Timelapse.Database
         }
 
         #endregion
-
 
         #region Query phrases
 
@@ -541,44 +548,56 @@ namespace Timelapse.Database
             SQLiteWrapper destinationDdb,
             string sourceDdbPath,
             string attachedSourceDB,
-            bool destinationDetectionsExists,
-            string tempInfoTable, string tempDetectionCategoriesTable, string tempClassificationCategoriesTable,
-            Dictionary<string, object> infoDictionary,
-            Dictionary<string, string> detectionCategories,
-            Dictionary<string, string> classificationCategories)
+            bool destinationDetectionsExists)
+            //string tempInfoTable, string tempDetectionCategoriesTable, string tempClassificationCategoriesTable,
+            //Dictionary<string, object> infoDictionary,
+            //Dictionary<string, string> detectionCategories,
+            //Dictionary<string, string> classificationCategories)
         {
+            string tempInfoTable = "tempInfoTable";
+            string tempDetectionCategoriesTable = "tempDetectionCategoriesTable";
+            string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
 
-            // Now we need to see if we have to handle detection table updates.
-            // Check to see if the destinationDdb file and the sourceDdb file each have a Detections table.
-            bool sourceDetectionsExists = TemplateDatabase.TableExists(Constant.DBTables.Detections, sourceDdbPath);
-            // Condition 1. The sourceDdb  doesn't have recognitions. So no need to update detections
+            Dictionary<string, string> detectionCategories = new Dictionary<string, string>();
+            Dictionary<string, string> classificationCategories = new Dictionary<string, string>();
+            Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
+
+            // Create a connection to the sourceDdbPath
+            // and check if the sourceDdb file has any recognitions (by seeing if a Detections table exists)
+            SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceDdbPath);
+            bool sourceDetectionsExists = sourceDdb.TableExists(Constant.DBTables.Detections);
+
+            // Condition 1. The sourceDdb doesn't have recognitions. So no need to update detections
             //              regardless of whether the destination has or doesn't have recognitions.
             if (false == sourceDetectionsExists)
             {
                 // Don't need to do anything with the varous recognition tables as
                 // either neither have them, or the one to be merged in doesn't have them
-                // triggerUpdate remains false
                 return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, false);
             }
 
-            // A. Generate several dictionaries reflecting the contents of the info and category tables as held in the source database
+            // A. Generate several dictionaries reflecting the contents of the info and category tables as held in the source and destination database
             Dictionary<string, string> sourceDetectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> sourceClassificationCategories = new Dictionary<string, string>();
             Dictionary<string, object> sourceInfoDictionary = new Dictionary<string, object>();
             RecognitionUtilities.GenerateRecognitionDictionariesFromDB(sourceDdbPath, sourceInfoDictionary,
                 sourceDetectionCategories, sourceClassificationCategories);
 
-            // Condition 2. The destinationDdb doesn't have detections, but we now know that the sourceDdb does,
+            // B. Generate several dictionaries reflecting the contents of the info and category tables as held in the destination database
+            Dictionary<string, string> destinationDetectionCategories = new Dictionary<string, string>();
+            Dictionary<string, string> destinationClassificationCategories = new Dictionary<string, string>();
+            Dictionary<string, object> destinationInfoDictionary = new Dictionary<string, object>();
+            RecognitionUtilities.GenerateRecognitionDictionariesFromDB(destinationDdb, destinationInfoDictionary,
+                destinationDetectionCategories, destinationClassificationCategories);
+
+            // Condition 1. The destinationDdb doesn't have detections, but we now know that the sourceDdb does,
             // Thus we need to create the detection tables in the destination database.
             if (false == destinationDetectionsExists)
             {
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
 
-                // As its the first time we see a database with detections, import the Detection Categories, Classification Categories and Info 
-                // This becomes the base comparison against which future databases will be compared to,
-                // in terms of generating best fit info, and whether detection/classification categories conflict or can be merged together.
-
-                // To do this, we first create temporary tables from the toBeMerged db 
+                // Import the Detection Categories, Classification Categories and Info from the sourceDdb
+                // To do this, we first create temporary tables from the sourceDdb 
                 query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedSourceDB, Constant.DBTables.Info) + Environment.NewLine;
                 query += QueryCreateTemporaryTableFromExistingTable(tempDetectionCategoriesTable, attachedSourceDB,
                     Constant.DBTables.DetectionCategories) + Environment.NewLine;
@@ -590,12 +609,12 @@ namespace Timelapse.Database
                 query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.ClassificationCategories, attachedSourceDB) + Environment.NewLine;
                 query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.Info, attachedSourceDB) + Environment.NewLine;
 
-                // Update the various dictionaries to reflect their current values
-                DictionaryReplaceSecondDictWithFirstDictElements(sourceInfoDictionary, infoDictionary);
-                DictionaryReplaceSecondDictWithFirstDictElements(sourceDetectionCategories,
-                    detectionCategories);
-                DictionaryReplaceSecondDictWithFirstDictElements(sourceClassificationCategories,
-                    classificationCategories);
+                //// Update the various dictionaries to reflect their current values
+                //DictionaryReplaceSecondDictWithFirstDictElements(sourceInfoDictionary, infoDictionary);
+                //DictionaryReplaceSecondDictWithFirstDictElements(sourceDetectionCategories,
+                //    detectionCategories);
+                //DictionaryReplaceSecondDictWithFirstDictElements(sourceClassificationCategories,
+                //    classificationCategories);
 
                 // At this point,we have 
                 // - created the recognition database tables in the destination, 
@@ -609,10 +628,7 @@ namespace Timelapse.Database
             //    and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight
 
             Dictionary<string, object> mergedInfoDictionary =
-                RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(infoDictionary, sourceInfoDictionary);
-
-            // Clear the info table as we will be completely replacing it
-            // query += Sql.DeleteFrom + Constant.DBTables.Info + Sql.Semicolon;
+                RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(destinationInfoDictionary, sourceInfoDictionary);
 
             query += UpdateInfoTableWithValues(
                 (string)mergedInfoDictionary[Constant.InfoColumns.Detector],
@@ -620,19 +636,19 @@ namespace Timelapse.Database
                 (string)mergedInfoDictionary[Constant.InfoColumns.DetectionCompletionTime],
                 (string)mergedInfoDictionary[Constant.InfoColumns.Classifier],
                 (string)mergedInfoDictionary[Constant.InfoColumns.ClassificationCompletionTime],
-                (double)mergedInfoDictionary[Constant.InfoColumns.TypicalDetectionThreshold],
-                (double)mergedInfoDictionary[Constant.InfoColumns.ConservativeDetectionThreshold],
-                (double)mergedInfoDictionary[Constant.InfoColumns.TypicalClassificationThreshold]);
+                Convert.ToDouble(mergedInfoDictionary[Constant.InfoColumns.TypicalDetectionThreshold]),
+                Convert.ToDouble(mergedInfoDictionary[Constant.InfoColumns.ConservativeDetectionThreshold]),
+                Convert.ToDouble(mergedInfoDictionary[Constant.InfoColumns.TypicalClassificationThreshold]));
             query += UpdateImageSetTableWithUndefinedBoundingBox();
 
             // Update the various dictionaries to reflect their current values
-            DictionaryReplaceSecondDictWithFirstDictElements(mergedInfoDictionary, infoDictionary);
+            // DictionaryReplaceSecondDictWithFirstDictElements(mergedInfoDictionary, infoDictionary);
 
             // B: Generate a new detection category db if the categories in the current and to be merged dictionary can be merged together. 
             if (sourceDetectionCategories.Count > 0 || detectionCategories.Count > 0)
             {
                 // There is something to add
-                if (Util.Dictionaries.MergeDictionaries(sourceDetectionCategories, detectionCategories,
+                if (Util.Dictionaries.MergeDictionaries(sourceDetectionCategories, destinationDetectionCategories,
                         out Dictionary<string, string> mergedDetectionCategories))
                 {
                     // Clear the DetectionCategories table as we will be completely replacing it
@@ -665,7 +681,7 @@ namespace Timelapse.Database
             }
 
             // C: Generate a new classification category db if the categories in the destination and source dictionary can be merged together. 
-            if (sourceClassificationCategories.Count > 0 || classificationCategories.Count > 0)
+            if (sourceClassificationCategories.Count > 0 || destinationClassificationCategories.Count > 0)
             {
                 // There is something to add
                 if (Util.Dictionaries.MergeDictionaries(sourceClassificationCategories,

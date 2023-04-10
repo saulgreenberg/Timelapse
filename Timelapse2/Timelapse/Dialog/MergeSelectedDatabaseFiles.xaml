@@ -1,0 +1,67 @@
+<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.MergeSelectedDatabaseFiles"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+       xmlns:controls="clr-namespace:Timelapse.Controls"
+        mc:Ignorable="d"
+        Title="Merge Databases..." Height="550" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
+                            Title="Merge a database into the opened database"
+                            What="Select one of the available database (.ddb) files below and click 'Merge'. Timelapse will:
+                                   &#10;&#x2022; merge that database into the the parent (the currently opened database file),
+                                   &#10;&#x2022; warn you if merging could not be done."   
+                            Details="Merging replaces all data whose file locations are within the selected database's folder.
+                                &#10;&#x2022; the parent deletes all data entries (if any) that share a common relative path with the selected database
+                                &#10;&#x2022; the parent inserts all data entries found in the selected database."
+                            Hint="Database files must be located under the currently opened database's root folder. Only those are listed."/>
+        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
+        <Label Name="LabelBanner" FontWeight="Bold" Content="Select a database and click Merge."  Grid.Row="2" Margin="5,0,0,0"/>
+        <ListBox Name="ListboxFileDatabases" Grid.Row="3"  ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10,0,10,5" 
+                 ItemsSource="{Binding ObservableDdbFileList}" >
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <!--<RadioButton IsChecked="{Binding IsSelected}" Content="{Binding RelativePathIncludingFileName}" GroupName="RadioButtonDDBFiles" Checked="Selector_CheckChanged" Unchecked="Selector_CheckChanged">
+                        <d:CheckBox.DataContext>
+                            <d:DesignInstance />
+                        </d:CheckBox.DataContext>
+                    </RadioButton>-->
+                    <CheckBox IsChecked="{Binding IsSelected}" 
+                              Content="{Binding ShortPathDisplayName}" 
+                              ToolTip="{Binding RelativePathIncludingFileName }" 
+                              Checked="Selector_CheckChanged" Unchecked="Selector_CheckChanged">
+                        <d:CheckBox.DataContext>
+                            <d:DesignInstance />
+                        </d:CheckBox.DataContext>
+                    </CheckBox>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <ScrollViewer Name="ScrollerTextBlockFinalMessage" Visibility="Collapsed"  Grid.Row="3" Margin="10,0,10,5">
+            <TextBlock Name="TextBlockFinalMessage" Margin="5"/>
+        </ScrollViewer>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+            <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+            <Button Name="MergeButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="MergeButton_Click">_Merge</Button>
+            <Button Name="DoneButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
+            <Button Name="DoneWithLoadButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneWithLoadButton_Click">_Load the merged database</Button>
+        </StackPanel>
+
+        <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" CancelClick="CancelAsyncOperationButton_Click" Grid.Row="0"/>
+    </Grid>
+</controls:BusyableDialogWindow>
+
