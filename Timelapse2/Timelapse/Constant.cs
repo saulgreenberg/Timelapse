@@ -473,6 +473,7 @@ namespace Timelapse.Constant
 
         // dialog opt outs
         public const string SuppressAmbiguousDatesDialog = "SuppressAmbiguousDatesDialog";
+        public const string SuppressCreateAnEmptyDatabaseDialog = "SuppressCreateAnEmptyDatabaseDialog";
         public const string SuppressCsvExportDialog = "SuppressCsvExportDialog";
         public const string SuppressCsvImportPrompt = "SuppressCsvImportPrompt";
         public const string SuppressHowDuplicatesWorkDialog = "SuppressHowDuplicatesWorkDialog";

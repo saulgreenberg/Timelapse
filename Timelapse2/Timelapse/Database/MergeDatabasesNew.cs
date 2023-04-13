@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Recognition;
@@ -21,47 +22,36 @@ namespace Timelapse.Database
         // - a path to the ddb File we want to create
         // Create an empty .ddb File in the root folder 
         // If fatal error occurs, abort 
-        // Return the relevant error messages in the ErrorsAndWarnings object.
-        // Note: if the destination ddb file already exists in that root folder, it will be backed up and then over-written
-        public static async Task<ErrorsAndWarnings> TryCreateEmptyDatabaseFromTemplateAsync(
+        // Preconditions:
+        // - the template file should exist
+        // - the destinationDdbPath should be tested to make sure it doesn't already exists.
+        public static async Task<bool> TryCreateEmptyDatabaseFromTemplateAsync(
             string templateTdbPath,
             string destinationDdbPath)
         {
-            ErrorsAndWarnings errorsAndWarnings = new ErrorsAndWarnings();
-
             // Check to see if we can actually open the template. 
             // As we can't have out parameters in an async method, we return the state and the desired templateDatabase as a tuple
-            Tuple<bool, TemplateDatabase> tupleResult =
-                await TemplateDatabase.TryCreateOrOpenAsync(templateTdbPath).ConfigureAwait(true);
-            TemplateDatabase templateDatabase = tupleResult.Item2;
+            Tuple<bool, TemplateDatabase> tupleResult = await TemplateDatabase.TryCreateOrOpenAsync(templateTdbPath).ConfigureAwait(true);
+
             if (!tupleResult.Item1)
             {
                 // notify the user the template couldn't be loaded rather than silently doing nothing
-                errorsAndWarnings.Errors.Add("Could not open the template .tdb file: " + templateTdbPath);
-                return errorsAndWarnings;
+                return false;
             }
 
-            // if the merge file exists, move it to the backup folder as we will be overwriting it.
-            //errorsAndWarnings.BackupMade = false;
-            //if (File.Exists(destinationDdbPath))
-            //{
-            //    // Backup the old merge file by moving it to the backup folder 
-            //    // Note that we do the move instead of copy as we will be overwriting the file anyways
-            //    errorsAndWarnings.BackupMade = FileBackup.TryCreateBackup(destinationDdbPath, true);
-            //    FilesFolders.TryDeleteFileIfExists(destinationDdbPath);
-            //}
-
+            // Create the empty database based on the provided template
+            TemplateDatabase templateDatabase = tupleResult.Item2;
             FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationDdbPath, templateDatabase)
                 .ConfigureAwait(true);
-            await GlobalReferences.MainWindow.DoLoadImages(templateTdbPath);
+
             fd.Dispose();
             // ReSharper disable once RedundantAssignment
             fd = null;
 
             //
-            // At this point, we should have an empty merge database
+            // At this point, we should have an empty database
             // 
-            return errorsAndWarnings;
+            return true;
         }
 
         #endregion
@@ -147,7 +137,7 @@ namespace Timelapse.Database
             //if (pathToRootFolder == null)
             //{
             //    // Shouldn't happen
-            //    return DatabaseFileErrorsEnum.UnknownError;
+            //    return DatabaseFileError.UnknownError;
             //}
             //string relativePathDifference = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceDdbPath);
 
@@ -206,28 +196,19 @@ namespace Timelapse.Database
             string sourceDdbPath,
             string relativePathDifference)
         {
-            string query = string.Empty; // The Sql query to be built
-
-            //Dictionary<string, string> detectionCategories = new Dictionary<string, string>();
-            //Dictionary<string, string> classificationCategories = new Dictionary<string, string>();
-            //Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
 
             // a. We need several temporary tables 
             string attachedSourceDB = "attachedSourceDB";
             string tempDataTable = "tempDataTable";
             string tempMarkersTable = "tempMarkersTable";
-            //string tempInfoTable = "tempInfoTable";
-            //string tempDetectionCategoriesTable = "tempDetectionCategoriesTable";
-            //string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
 
+            // Part 1. Initiate the query phrase with a transaction
+            string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
 
-            // Part 1. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
+            // Part 2. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
             //    This will guarantee that there are no duplicate primary keys.
             //    Note: if there are no entries in the database, this function returns 0 
             long offsetId = destinationDdb.ScalarGetMaxIntValue(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
-
-            // Part 2. Initiate the query phrase with a transaction
-            query += Sql.BeginTransactionSemiColon + Environment.NewLine;
 
             // Part 3. Handle the DataTable portion
             query = QueryPhraseMergeDataTable(query, offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference);
@@ -243,12 +224,6 @@ namespace Timelapse.Database
                 sourceDdbPath,
                 attachedSourceDB,
                 destinationRecognitionsExist);
-                //tempInfoTable,
-                //tempDetectionCategoriesTable,
-                //tempClassificationCategoriesTable,
-                //infoDictionary,
-                //detectionCategories,
-                //classificationCategories);
 
             if (resultTuple.Item1 != DatabaseFileErrorsEnum.Ok)
             {
@@ -256,10 +231,10 @@ namespace Timelapse.Database
                 return resultTuple.Item1;
             }
 
+            // Part 6. If the sourceDdb has recognitions, the SQL query should update the destination recognition tables as needed
             bool updateRecognitions = resultTuple.Item3;
             if (updateRecognitions)
             {
-                // Part 6. The sourceDdb has recognitions, so the SQL query should update the destination detections table and (if needed) the recognition table.
                 query = resultTuple.Item2;
                 query = QueryPhraseMergeRecognitionTables(query, offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist);
             }
@@ -267,6 +242,16 @@ namespace Timelapse.Database
             // Part 7. The query is now done, so end the transaction and execute it
             query += Sql.EndTransactionSemiColon;
             destinationDdb.ExecuteNonQuery(query);
+
+            // Part 8. Check if there are any Detections. If not, delete all the recognition tables as they are no longer relevant
+            if (false == destinationDdb.TableExistsAndNotEmpty(Constant.DBTables.Detections))
+            {
+                destinationDdb.DropTable(Constant.DBTables.Detections);
+                destinationDdb.DropTable(Constant.DBTables.Classifications);
+                destinationDdb.DropTable(Constant.DBTables.DetectionCategories);
+                destinationDdb.DropTable(Constant.DBTables.ClassificationCategories);
+                destinationDdb.DropTable(Constant.DBTables.Info);
+            }
             return DatabaseFileErrorsEnum.Ok;
         }
 

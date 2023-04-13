@@ -74,19 +74,7 @@
 
                     <Separator />
 
-                    <!-- Merge -->
 
-                    <MenuItem Name="MenuItemCreateEmptyDatabase" Header="Create an empty database" Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
-                              ToolTip="Asks for the template location, and then creates an empty image set database.
-                              &#10;Usually used as a master database where other databases are merged into it.">
-                    </MenuItem>
-
-                    <MenuItem Name="MenuItemAddDatabase" Header="Add or replace a database into the master" Click="MenuItemAddDatabase_Click" ToolTip="Add a database to an exising database">
-                    </MenuItem>
-
-                    <MenuItem Name="MenuItemMergeDatabases" Header="Merge data (.ddb) files into a single file..." IsEnabled="true" ToolTip="Asks for a location, searches its sub-folders for databases (.ddb files) and merges their contents into a new database file."  Click="MenuItemMergeDatabases_Click" />
-
-                    <Separator />
 
                     <!-- Export data for selected images as a .csv file... -->
                     <MenuItem Name="MenuItemExportAsCsv" Header="Export data in the current selection as a .csv file..." IsEnabled="false" Click="MenuItemExportCsv_Click" ToolTip="Exports data for the selected files into a .csv (comma separated value) file">
@@ -110,7 +98,6 @@
 
                     <Separator />
 
-
                     <!-- Export the current image or video file...-->
                     <MenuItem Name="MenuItemExportThisImage" Header="Export (copy) the current image or video _file..." Click="MenuItemExportThisImage_Click" IsEnabled="false" ToolTip="Exports (copies) the displayed image or video file into a location of your choosing">
                         <MenuItem.Icon>
@@ -122,6 +109,18 @@
                         <MenuItem.Icon>
                             <Image Source="Icons/ImageExport_32x.png" />
                         </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator />
+
+                    <!-- Merge -->
+
+                    <MenuItem Name="MenuItemCreateEmptyDatabase" Header="Create an empty database (to merge other databases into it)" Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
+                              ToolTip="Asks for the template location, and then creates an empty image set database.
+                              &#10;Usually used as a master database where other databases are merged into it.">
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemAddDatabase" Header="Merge selected databases into the master database" IsEnabled="false" Click="MenuItemAddDatabase_Click" ToolTip="Merge one or more databases into an existing master database">
                     </MenuItem>
 
                     <Separator />

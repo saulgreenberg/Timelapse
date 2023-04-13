@@ -208,6 +208,9 @@
     <Compile Include="Dialog\MergeSelectedDatabaseFiles.xaml.cs">
       <DependentUpon>MergeSelectedDatabaseFiles.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml.cs">
+      <DependentUpon>MergingDatabaseWarningAsDuplicateEntriesPossible.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\PopulateFieldWithDetectionCounts.xaml.cs">
       <DependentUpon>PopulateFieldWithDetectionCounts.xaml</DependentUpon>
     </Compile>
@@ -498,6 +501,10 @@
     <Page Include="Dialog\MergeSelectedDatabaseFiles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialog\PopulateFieldWithDetectionCounts.xaml">
       <SubType>Designer</SubType>

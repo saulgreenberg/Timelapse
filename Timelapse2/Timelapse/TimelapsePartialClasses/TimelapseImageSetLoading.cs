@@ -60,6 +60,11 @@ namespace Timelapse
         // Returns the second tuple of the ddb file if it has to be deleted on failure
         private async Task<Tuple<bool, string>> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath)
         {
+            return await TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath, string.Empty);
+        }
+
+        private async Task<Tuple<bool, string>> TryOpenTemplateAndBeginLoadFoldersAsync(string templateDatabasePath, string fileDatabaseFilePath)
+        {
             this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
             this.RecentFileSets_Refresh();
 
@@ -86,22 +91,28 @@ namespace Timelapse
             }
 
             // The .tdb templateDatabase should now be loaded
-            // Try to get the image database file path 
-            // importImages will be true if its a new image database file, (meaning we should later ask the user to try to import some images)
-            if (this.TrySelectDatabaseFile(templateDatabasePath, out string fileDatabaseFilePath, out bool importImages) == false)
+
+            // If the fileDatabaseFilepath is empty, then ask the user which of the several available data database they should use.
+            bool importImages = false;
+            if (string.IsNullOrEmpty(fileDatabaseFilePath))
             {
-                // No image database file was selected
-                return new Tuple<bool, string>(false, string.Empty);
-            }
-            else
-            {   // XXXX THIS IS WHERE WE SHOULD CHECK THE DATAFILE. CAN WE DO IT BEFORE OPENING THE TEMPLATE?
-                // THE IMPORTIMAGES FLAG DOESN"T SEEM TO DO WHAT THE ABOVE SUGGESTS... LOOK INTO IT
-                if (false == Dialogs.DialogIsFileValid(this, fileDatabaseFilePath))
+                // Try to get the image database file path 
+                // importImages will be true if its a new image database file, (meaning we should later ask the user to try to import some images)
+                if (this.TrySelectDatabaseFile(templateDatabasePath, out string selectedFileDatabaseFilePath, out importImages) == false)
                 {
-                    // Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
-                    // If we are trying to import images for the first time, return the newly created ddb file
-                    return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : string.Empty);
+                    // No image database file was selected
+                    return new Tuple<bool, string>(false, string.Empty);
                 }
+
+                fileDatabaseFilePath = selectedFileDatabaseFilePath;
+            }
+            // XXXX THIS IS WHERE WE SHOULD CHECK THE DATAFILE. CAN WE DO IT BEFORE OPENING THE TEMPLATE?
+            // THE IMPORTIMAGES FLAG DOESN"T SEEM TO DO WHAT THE ABOVE SUGGESTS... LOOK INTO IT
+            if (false == Dialogs.DialogIsFileValid(this, fileDatabaseFilePath))
+            {
+                // Debug.Print(Util.FilesFolders.QuickCheckDatabaseFile("Oops: " + fileDatabaseFilePath).ToString());
+                // If we are trying to import images for the first time, return the newly created ddb file
+                return new Tuple<bool, string>(false, importImages ? fileDatabaseFilePath : string.Empty);
             }
 
             if (this.State.IsViewOnly && importImages)
@@ -507,7 +518,7 @@ namespace Timelapse
             this.FilePlayer.Visibility = Visibility.Visible;
 
             // Set whether detections actually exist at this point.
-            GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
+            GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists(true);
 
             // Sets the default bounding box threshold, either by using a default or reading it from the detection database table (if it exists)
             this.State.BoundingBoxDisplayThresholdResetToValueInDataBase();

@@ -24,6 +24,8 @@ namespace Timelapse
             this.MenuItemExportSelectedImages.IsEnabled = filesSelected;
             this.MenuItemExportAsCsvAndPreview.IsEnabled = filesSelected;
             this.MenuItemExportAsCsv.IsEnabled = filesSelected;
+            this.MenuItemCreateEmptyDatabase.IsEnabled = !imageSetAvailable;
+            this.MenuItemAddDatabase.IsEnabled = imageSetAvailable;
             this.MenuItemImportFromCsv.IsEnabled = filesSelected;
             this.MenuItemRenameFileDatabaseFile.IsEnabled = filesSelected;
             this.MenuFileCloseImageSet.IsEnabled = imageSetAvailable;
@@ -88,7 +90,6 @@ namespace Timelapse
                 this.MenuItemImportDetectionData.Visibility = Visibility.Collapsed;
                 this.MenuItemImportFromCsv.Visibility = Visibility.Collapsed;
                 this.MenuItemRenameFileDatabaseFile.Visibility = Visibility.Collapsed;
-                this.MenuItemMergeDatabases.Visibility = Visibility.Collapsed;
                 this.MenuItemImportDetectionData.Visibility = Visibility.Collapsed;
                 this.MenuItemImportDetectionData.Visibility = Visibility.Collapsed;
                 this.MenuItemDeleteCurrentFile.Visibility = Visibility.Collapsed;

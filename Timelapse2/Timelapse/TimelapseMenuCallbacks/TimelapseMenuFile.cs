@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -66,7 +65,7 @@ namespace Timelapse
             }
         }
 
-        public async Task<bool> DoLoadImages(string templateDatabasePath)
+        private async Task<bool> DoLoadImages(string templateDatabasePath)
         {
             Mouse.OverrideCursor = Cursors.Wait;
             this.StatusBar.SetMessage("Loading images, please wait...");
@@ -128,41 +127,54 @@ namespace Timelapse
         }
         #endregion
 
-        #region Merging databases
-
+        #region Merging: Create an empty database
         // Create an empty Timelapse database based upon the template.
         // Abort if the template does not exist or cannot be opened, generating the various error messages as needed.
         // The empty file is normally used for merging.
         private async void MenuItemCreateEmptyDatabaseForMerging_Click(object sender, RoutedEventArgs e)
         {
+            string abortMessage = "Aborted. Empty database was not created.";
+            string successMessage = "Empty database created.";
+
+            // Show an optional explanatory dialog
+            if (this.State.SuppressCreateAnEmptyDatabaseDialog == false)
+            {
+                if (Dialogs.MenuFileCreateEmptyDatabaseExplainedDialog(this) == false)
+                {
+                    return;
+                }
+            }
+
+            // Get the template path from the user
             if (this.TryGetTemplatePath(out string templateDatabasePath) == false)
             {
                 return;
             }
 
+            // Add the template to the recency list
+            this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
+            this.RecentFileSets_Refresh();
+
             // If its not a valid template, display a dialog and abort
             if (false == Dialogs.DialogIsFileValid(this, templateDatabasePath))
             {
-                // Add it to the recency list. Note that while its originally invalid,
-                // the user could have updated it as part of the above dialog.
-                this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
-                this.RecentFileSets_Refresh();
                 return;
             }
 
+            // Generate a pathname for the DDB file we want to create in the template folder
+            // It generates a unique name from the name of the template but with the word 'Data' substituted for 'Template' (if possible) and with the .ddb suffix
+            // If a file with that name already exists, it tries again by adding (0), then (1) etc.
             string rootFolder = Path.GetDirectoryName(templateDatabasePath);
             if (rootFolder == null)
             {
                 // This shouldn't happen
                 MessageBox.Show("Something went wrong. Database was not created, likely because its in a root directory (e.g., 'C:'.");
+                this.StatusBar.SetMessage(abortMessage);
                 return;
             }
-
-            // Generate a name for the DDB file we want to create, normally the name of the template but with the word 'Data' substituted for Template
             string ddbFileNameBase = Path.GetFileNameWithoutExtension(templateDatabasePath).Replace("Template", "Data");
             string ddbFileName = ddbFileNameBase + Constant.File.FileDatabaseFileExtension;
             string destinationDdbPath = Path.Combine(rootFolder, ddbFileName);
-
             int index = 0;
             while (File.Exists(destinationDdbPath))
             {
@@ -171,24 +183,46 @@ namespace Timelapse
                 destinationDdbPath = Path.Combine(rootFolder, ddbFileName);
             }
 
-            // Try to create the empty ddb
-            ErrorsAndWarnings  errorMessages = await MergeDatabasesNew.TryCreateEmptyDatabaseFromTemplateAsync(
+            // We have a unique ddb path. Try to create the empty ddb file
+            bool result = await MergeDatabasesNew.TryCreateEmptyDatabaseFromTemplateAsync(
                 templateDatabasePath, destinationDdbPath).ConfigureAwait(true);
+
+            if (result == false)
+            {
+                // This is rare, don't bother trying to figure out what went wrong.
+                MessageBox.Show("Could not create an empty database",
+                    "Something went wrong. The empty database could not be created.");
+                this.StatusBar.SetMessage(abortMessage);
+                return;
+            }
+
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            // Because a non-empty destination Ddb path was provided, it will just load that Ddb even if other Ddb's are available in that folder
+            Tuple<bool, string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath, destinationDdbPath).ConfigureAwait(true);
+            if (results.Item1 == false)
+            {
+                this.StatusBar.SetMessage(abortMessage);
+                if (false == string.IsNullOrWhiteSpace(results.Item2))
+                {
+                    // This is a first time load of a ddb, as indicated by the non-empty returned result of the ddb file path to delete.
+                    // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
+                    FilesFolders.TryDeleteFileIfExists(results.Item2);
+                }
+            }
 
             if (Directory.GetFiles(rootFolder, "*" + Constant.File.FileDatabaseFileExtension).Length > 1)
             {
                 // Since there is more than 1 ddb file, tell the user what the newly created file is called.
-                MessageBox.Show($"Multiple Timelapse data (.ddb) databases exist", "Your folder already had one or more Timelapse Data (.ddb) files in it. You will find the just-created empty database in '{ddbFileName}'");
+                Dialogs.NewFileNameAsOldFileNameExistsDialog(this, ddbFileName);
             }
-
-            //await GlobalReferences.MainWindow.DoLoadImages(this.templateTdbPath);
-
-            // DisplayMergeResults(errorMessages);
+            this.StatusBar.SetMessage(successMessage);
             Mouse.OverrideCursor = null;
-
         }
+        #endregion
 
-        private async void MenuItemMergeDatabases_Click(object sender, RoutedEventArgs e)
+        #region Merging: Add or Replace one or more databases into the master
+        private async void MenuItemAddDatabase_Click(object sender, RoutedEventArgs e)
         {
             if (this.State.SuppressMergeDatabasesPrompt == false)
             {
@@ -197,40 +231,33 @@ namespace Timelapse
                     return;
                 }
             }
-            // Get the location of the template, which also determines the root folder
-            if (this.TryGetTemplatePath(out string templateDatabasePath))
+
+            Dialog.MergeSelectedDatabaseFiles mergeSelectedDatabaseFiles =
+                new Dialog.MergeSelectedDatabaseFiles(this,
+                    this.DataHandler.FileDatabase.FilePath,
+                    this.DataHandler.FileDatabase.Database);
+            bool? result = mergeSelectedDatabaseFiles.ShowDialog();
+            if (result == false)
             {
-                // If its not a valid template, display a dialog and abort
-                if (false == Dialogs.DialogIsFileValid(this, templateDatabasePath))
-                {
-                    return;
-                }
-
-                // If an invalid file is found when trying to merge, it will raise a dialog box as well.
-                Dialog.MergeChooseDatabaseFiles mergeChooseDatabaseFiles = new Dialog.MergeChooseDatabaseFiles(this, templateDatabasePath);
-                if (mergeChooseDatabaseFiles.FoundInvalidFiles)
-                {
-                    // some of the found ddb files are invalid, so abort.
-                    return;
-                }
-
-                bool? result = mergeChooseDatabaseFiles.ShowDialog();
-                this.StatusBar.SetMessage(result == true ? "Merged database created" : "Aborted creation of merged database");
-                this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
-                if (result == true && mergeChooseDatabaseFiles.DatabaseToLoad != string.Empty)
-                {
-                    Mouse.OverrideCursor = Cursors.Wait;
-                    this.StatusBar.SetMessage("Loading images, please wait...");
-                    Tuple<bool, string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
-                    if (false == results.Item1)
-                    {
-                        // SAULXXX: SHOULD BAIL HERE AS THERE WAS A PROBLEM OPENING THE TEMPLATE OR DATABASE
-                    }
-                    this.StatusBar.SetMessage("Image set is now loaded.");
-
-                    Mouse.OverrideCursor = null;
-                }
+                return;
             }
+
+            // Only reset these if we actually imported some detections, as otherwise nothing has changed.
+            if (this.DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
+            {
+                this.DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
+            }
+            GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists(true);
+            if (GlobalReferences.DetectionsExists)
+            {
+                this.DataHandler.FileDatabase.RefreshDetectionsDataTable();
+                this.DataHandler.FileDatabase.RefreshClassificationsDataTable();
+            }
+            // Reset the BoundingBox threshold to its new values.
+            this.State.BoundingBoxDisplayThresholdResetToValueInDataBase();
+            await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+            this.EnableOrDisableMenusAndControls();
+            return;
         }
         #endregion
 
@@ -385,7 +412,6 @@ namespace Timelapse
             }
         }
         #endregion
-
 
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)

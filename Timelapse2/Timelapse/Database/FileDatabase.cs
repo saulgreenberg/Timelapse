@@ -91,12 +91,13 @@ namespace Timelapse.Database
             this.FileTableColumnsByDataLabel = new Dictionary<string, FileTableColumn>();
         }
 
-        public static async Task<FileDatabase> CreateEmptyDatabase(string filePath, TemplateDatabase templateDatabase)
+        public static async Task<FileDatabase> CreateEmptyDatabase(string ddbFilePath, TemplateDatabase templateDatabase)
         {
-            FilesFolders.TryDeleteFileIfExists(filePath);
+            // The ddbFilePath
+            FilesFolders.TryDeleteFileIfExists(ddbFilePath);
 
             // initialize the database if it's newly created
-            FileDatabase fileDatabase = new FileDatabase(filePath);
+            FileDatabase fileDatabase = new FileDatabase(ddbFilePath);
             await fileDatabase.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
             return fileDatabase;
         }

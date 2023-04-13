@@ -1,0 +1,46 @@
+﻿<Window x:Class="Timelapse.Dialog.MergingDatabaseWarningAsDuplicateEntriesPossible"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        Title="Some of the databases you want to merge may contain duplicate entries"
+        MinHeight="470" MinWidth="700"
+        Height="570" Width="768"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded">
+    <DockPanel>
+        <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" 
+                            Margin="15,0,15,0" Icon="Warning"
+                            Title="Some of the databases you want to merge may contain duplicate entries"
+
+                            What="Some of the databases you want to merge may contain duplicate entries"
+
+                            Reason = "Several of your databases are nested in a single folder structure.
+                            &#10;Each database normally contains entries for all the images found in its sub-folders
+                            &#10;This means that a database in a sub-folder will likely contain entries duplicating those that exist
+                            &#10;(possibly with different values) in a database found in a parent folder."
+
+                            Result = "While the merge can still happen, the results may not be what you want.
+                            &#10;Select Ok to merge anyways, otherwise Cancel"
+
+                            Hint="Read the 'Merging files' section in the Timelapse Reference manual to understand how to best use merging."/>
+        <DockPanel HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"  Margin="0,0,0,10">
+                <Button Margin="0,0,10,10" x:Name="CancelButton" Padding="10" Content="Cancel" IsDefault="True" Height="40" Click="CancelButton_Click" />
+                <Button Margin="0,0,20,10" x:Name="OkButton" Padding="10" Content="Do the merge anyways" IsDefault="False" Height="40" Click="DoMergeButton_Click" />
+            </StackPanel>
+
+            <Rectangle Fill="#FF868686" Height="2"  DockPanel.Dock="Top" Margin="5"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="95"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock   FontWeight="Bold" FontSize="14" Text="Details:" Margin="25,0,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="1" Name="TBDetails" Margin="0,0,20,0" Text="The following folders contain nested databases.&#10;"
+                         MinHeight="80" HorizontalAlignment="Stretch" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+            </Grid>
+        </DockPanel>
+    </DockPanel>
+</Window>

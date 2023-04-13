@@ -1,38 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
-using ToastNotifications.Messages.Error;
-using File = Timelapse.Constant.File;
 using Path = System.IO.Path;
 
 namespace Timelapse.Dialog
 {
     /// <summary>
-    /// Interaction logic for MergeSelectedDatabaseFiles.xaml
+    /// MergeSelectedDatabaseFiles
+    /// - Raises a dialog box showing all databases under the root folder but not in it,
+    ///   where the user can select some of them to merge into the currently opened (destination) database 
     /// </summary>
     public partial class MergeSelectedDatabaseFiles
     {
-        private readonly string destinationDdbPath;
-        private readonly SQLiteWrapper destinationDdb;
+        // Tracks the found ddb files and their selection state
+        public ObservableCollection<SourceFileInfo> ObservableDdbFileList { get; }
 
-        private readonly List<string> sourceDdbFilePaths;
-
+        // Returns the currently selected files and info about them
         private List<SourceFileInfo> selectedDdbFiles
         {
             get
@@ -42,26 +36,22 @@ namespace Timelapse.Dialog
                 {
                     if (ddbObject.IsSelected)
                     {
-                       _selectedDdbFile.Add(ddbObject);
+                        _selectedDdbFile.Add(ddbObject);
                     }
                 }
+
                 return _selectedDdbFile;
             }
         }
 
+        private readonly string destinationDdbPath;
+        private readonly SQLiteWrapper destinationDdb;
+        public List<string> sourceDdbFilePaths;
         private readonly string rootFolderPath;
-        //private readonly string rootFolderName;
-
-        // Tracks whether any changes to the database was made
-        private bool IsAnyDataUpdated;
-
-        public ObservableCollection<SourceFileInfo> ObservableDdbFileList { get; set; }
-        public string DatabaseToLoad { get; set; } = string.Empty;
-        public bool FoundInvalidFiles { get; set; } = false;
+        private bool IsAnyDataUpdated = false;
 
         #region Constructor, Loaded, Closing
-        public MergeSelectedDatabaseFiles(Window owner, string destinationDdbPath, SQLiteWrapper destinationDdb) :
-            base(owner)
+        public MergeSelectedDatabaseFiles(Window owner, string destinationDdbPath, SQLiteWrapper destinationDdb) : base(owner)
         {
             InitializeComponent();
 
@@ -75,9 +65,8 @@ namespace Timelapse.Dialog
                 TracePrint.NullException(nameof(rootFolderPath));
                 return;
             }
-            //this.rootFolderName = this.rootFolderPath.Split(Path.DirectorySeparatorChar).Last();
 
-            // Each object in this list represents a file and its selection state
+            // Each object in this list represents a file, its selection state, and other related info about the fil
             this.ObservableDdbFileList = new ObservableCollection<SourceFileInfo>();
 
             // Get all the ddb files contained by subfolders under the rootFolder, excluding those directly in the root folder
@@ -108,6 +97,7 @@ namespace Timelapse.Dialog
                 });
             }
             DataContext = this;
+            this.EnableOrDisableMergeButton();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -118,12 +108,25 @@ namespace Timelapse.Dialog
         #endregion
 
         #region MergeButton Callback
+        // Start the merge process
         private async void MergeButton_Click(object sender, RoutedEventArgs e)
         {
-            TryGenerateErrorIfAnySourceDdbFilesAreProblematic();
+            // Before doing the merge, check if one or more databases are nested in a common folder/subfolder.
+            // If so, warn the user and give them the option to abort.
+            string warningMessage = GenerateTextMessageIfDatabasesAreInNestedFolders();
+            
+            if (false == string.IsNullOrWhiteSpace(warningMessage))
+            {
+                MergingDatabaseWarningAsDuplicateEntriesPossible messageBox =
+                    new MergingDatabaseWarningAsDuplicateEntriesPossible(this, warningMessage);
+                if (false == messageBox.ShowDialog())
+                {
+                    // The user has decided not to merge the databases
+                    return;
+                }
+            }
 
-
-            // Set up progress indicators
+            // Start the merge process by first setting up progress indicators
             Mouse.OverrideCursor = Cursors.Wait;
             this.BusyCancelIndicator.EnableForMerging(true);
 
@@ -142,14 +145,17 @@ namespace Timelapse.Dialog
             // Show the result;
             this.ListboxFileDatabases.Visibility = Visibility.Collapsed;
             this.ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
-            this.TextBlockFinalMessage.Text = "The merge operation was XXX";
-            this.LabelBanner.Content = "Merge Databases XXX.";
+            this.ButtonSelectAll.Visibility = Visibility.Collapsed;
+            this.ButtonSelectNone.Visibility = Visibility.Collapsed;
+            this.LabelBanner.Content = "Merge results";
 
+            // As part of the above merge attempt, each SourceFileInfo records if the merge
+            // was successful, or if the merge failed as well as why it failed.
             List<SourceFileInfo> mergedSourceFileInfos = new List<SourceFileInfo>();
             List<SourceFileInfo> unmergedSourceFileInfos = new List<SourceFileInfo>();
             foreach (SourceFileInfo sourceFileInfo in sourceFileInfos)
             {
-                if (HasError(sourceFileInfo.DatabaseFileErrorsEnum))
+                if (HasError(sourceFileInfo.DatabaseFileError))
                 {
                     unmergedSourceFileInfos.Add(sourceFileInfo);
                 }
@@ -157,6 +163,7 @@ namespace Timelapse.Dialog
                 {
                     mergedSourceFileInfos.Add(sourceFileInfo);
                 }
+                this.IsAnyDataUpdated = mergedSourceFileInfos.Any();
             }
 
             int totalFiles = sourceFileInfos.Count;
@@ -168,89 +175,35 @@ namespace Timelapse.Dialog
                 : $"{mergedFiles} / {totalFiles} files were merged:{Environment.NewLine}{GenerateMergeFeedbackMessage(mergedSourceFileInfos)}";
             if (unmergedFiles > 0)
             {
-                this.TextBlockFinalMessage.Text += $"{Environment.NewLine}{unmergedFiles} / {totalFiles} files were not merged for the indicated reasons:{Environment.NewLine}{GenerateMergeFeedbackMessage(unmergedSourceFileInfos)}";
+                this.TextBlockFinalMessage.Text +=
+                    $"{Environment.NewLine}{unmergedFiles} / {totalFiles} files were not merged for the indicated reasons:{Environment.NewLine}{GenerateMergeFeedbackMessage(unmergedSourceFileInfos)}";
             }
 
-            // Show the Done button and hide the others
+            // Show the Done button and hide the other buttons
             this.MergeButton.Visibility = Visibility.Collapsed;
             this.CancelButton.Visibility = Visibility.Collapsed;
             this.DoneButton.Visibility = Visibility.Visible;
-
-
-            //bool merged = false;
-
-            //if (errorMessages.Warnings.Count == 1 && errorMessages.Warnings[0] == "Merge cancelled.")
-            //{
-            //    this.LabelBanner.Content = "Merge Cancelled.";
-            //    this.TextBlockFinalMessage.Text = "The merge operation was cancelled";
-            //}
-            //else if (errorMessages.Errors.Count != 0)
-            //{
-            //    this.LabelBanner.Content = "Merge Databases Failed.";
-            //    this.TextBlockFinalMessage.Text = "The merged database could not be created for the following reasons:";
-            //    foreach (string error in errorMessages.Errors)
-            //    {
-            //        this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {error},";
-            //    }
-            //}
-            //else if (errorMessages.Warnings.Count != 0)
-            //{
-            //    this.LabelBanner.Content = "Merge Databases Left Out Some Files.";
-            //    this.TextBlockFinalMessage.Text = "The merged database left out some files for the following reasons:";
-            //    foreach (string warning in errorMessages.Warnings)
-            //    {
-            //        this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {warning}";
-            //    }
-
-            //    this.TextBlockFinalMessage.Text += Environment.NewLine + Environment.NewLine;
-            //    if (errorMessages.MergedFiles.Count == 0)
-            //    {
-            //        this.TextBlockFinalMessage.Text += $"{Environment.NewLine}No files were left to merge";
-            //        // already has this value: merged = false;
-            //    }
-            //    else
-            //    {
-            //        merged = true;
-            //    }
-            //}
-            //else
-            //{
-            //    this.LabelBanner.Content = "Databases merged.";
-            //    merged = true;
-            //}
-
-            //if (merged)
-            //{
-            //    this.TextBlockFinalMessage.Text += "These database files were merged:";
-            //    foreach (string file in errorMessages.MergedFiles)
-            //    {
-            //        this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {file}";
-            //    }
-
-            //    //this.TextBlockFinalMessage.Text += String.Format("{0}{0}The merged database is located in:", Environment.NewLine);
-            //    //this.TextBlockFinalMessage.Text += $"{Environment.NewLine}\u2022 {this.DestinationddbFilePath}";
-            //    this.DoneWithLoadButton.Visibility = Visibility.Visible;
-            //    this.IsAnyDataUpdated = true;
-            //}
-
-            //if (errorMessages.BackupMessages.Any())
-            //{
-            //    foreach (string file in errorMessages.BackupMessages)
-            //    {
-            //        this.TextBlockFinalMessage.Text += $"{Environment.NewLine}{Environment.NewLine}{file}";
-            //    }
-            //}
-
         }
         #endregion
-        private static async Task<List<SourceFileInfo>> MergeDatabasesAsync(SQLiteWrapper destinationDdb, string destinationDdbPath, List<SourceFileInfo> selectedSourceDdbFiles, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
+
+        // Actually do the merge of each of the selected files
+        // Update whether it succeeded or failed in the sourceFileInfo.DatabaseFileError structure
+        private static async Task<List<SourceFileInfo>> MergeDatabasesAsync(SQLiteWrapper destinationDdb,
+            string destinationDdbPath, List<SourceFileInfo> selectedSourceDdbFiles,
+            IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             int sourceDdbCount = selectedSourceDdbFiles.Count;
             int i = 0;
+            bool cancelled = false;
             return await Task.Run(() =>
             {
-                foreach (SourceFileInfo sourceFileInfo in selectedSourceDdbFiles) 
+                foreach (SourceFileInfo sourceFileInfo in selectedSourceDdbFiles)
                 {
+                    if (cancelled)
+                    {
+                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
+                    }
+
                     // Show progress and check for cancel
                     progress.Report(new ProgressBarArguments((int)(i++ / (double)sourceDdbCount * 100.0),
                         $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
@@ -258,23 +211,27 @@ namespace Timelapse.Dialog
                         true, false));
                     if (cancelTokenSource.IsCancellationRequested)
                     {
-                        return selectedSourceDdbFiles;
-                    }
-                    Task.Delay(1000);
+                        cancelled = true;
+                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
+                        continue;
+                    } 
 
                     // A. Checks to see if we can merge the file
 
                     // Check if its a valid readable database ddb file
-                    sourceFileInfo.DatabaseFileErrorsEnum = FilesFolders.QuickCheckDatabaseFile(sourceFileInfo.FullPath);
-                    if (HasError(sourceFileInfo.DatabaseFileErrorsEnum))
+                    sourceFileInfo.DatabaseFileError =
+                        FilesFolders.QuickCheckDatabaseFile(sourceFileInfo.FullPath);
+                    if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if it is problematic
                         continue;
                     }
+
                     // Now check if the templates are compatable
                     SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
-                    sourceFileInfo.DatabaseFileErrorsEnum = MergeDatabasesNew.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
-                    if (HasError(sourceFileInfo.DatabaseFileErrorsEnum))
+                    sourceFileInfo.DatabaseFileError =
+                        MergeDatabasesNew.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
+                    if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if the templates are problematic
                         continue;
@@ -282,14 +239,17 @@ namespace Timelapse.Dialog
 
                     string relativePathDifference =
                         FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
-                    sourceFileInfo.DatabaseFileErrorsEnum = MergeDatabasesNew.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb, sourceFileInfo.FullPath, relativePathDifference);
-                    if (HasError(sourceFileInfo.DatabaseFileErrorsEnum))
+                    sourceFileInfo.DatabaseFileError =
+                        MergeDatabasesNew.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb,
+                            sourceFileInfo.FullPath, relativePathDifference);
+                    if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if the templates are problematic
                         continue;
                     }
+
                     // e. Do the merge
-                    sourceFileInfo.DatabaseFileErrorsEnum = MergeDatabasesNew.MergeSourceIntoDestinationDdb(
+                    sourceFileInfo.DatabaseFileError = MergeDatabasesNew.MergeSourceIntoDestinationDdb(
                         destinationDdb, sourceFileInfo.FullPath, relativePathDifference);
                 }
                 return selectedSourceDdbFiles;
@@ -298,19 +258,29 @@ namespace Timelapse.Dialog
         }
 
         #region Callbacks: Buttons and Checkboxes
-
         private void Selector_CheckChanged(object sender, RoutedEventArgs e)
         {
-            foreach (SourceFileInfo ddbObject in ObservableDdbFileList)
-            {
-                if (ddbObject.IsSelected)
-                {
-                    this.MergeButton.IsEnabled = true;
-                    return;
-                }
-            }
+            EnableOrDisableMergeButton();
+        }
 
-            this.MergeButton.IsEnabled = false;
+        private void ButtonSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (SourceFileInfo ddbObject in this.ObservableDdbFileList)
+            {
+                ddbObject.IsSelected = true;
+            }
+            this.ListboxFileDatabases.Items.Refresh();
+            this.EnableOrDisableMergeButton();
+        }
+
+        private void ButtonSelectNone_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (SourceFileInfo ddbObject in this.ObservableDdbFileList)
+            {
+                ddbObject.IsSelected = false;
+            }
+            this.ListboxFileDatabases.Items.Refresh();
+            this.EnableOrDisableMergeButton();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -325,50 +295,28 @@ namespace Timelapse.Dialog
 
         private void DoneWithLoadButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DatabaseToLoad = this.destinationDdbPath;
             this.DialogResult = true;
         }
-
-        #endregion
-
-        #region Private: Utilities
-
-        // Return the relative path (including file name) to the ddb file. 
-        // For example if the template is in C:\foo\template.tdb and the ddb file is in C:\foo\bar\data.ddb,
-        // it will return bar\data.ddb
-        private static string GetRelativePathAndFileName(string tdbPath, string ddbFilePath)
-        {
-            string tdbPathWithoutFileName = Path.GetDirectoryName(tdbPath);
-            if (tdbPathWithoutFileName == null)
-            {
-                // Shouldn't happen, i.e., Only occurs if its the drive e.g., C://
-                // Not sure if setting the tdbPath to the drive letter will work, though.
-                TracePrint.NullException(nameof(tdbPathWithoutFileName));
-                tdbPathWithoutFileName = Path.GetPathRoot(tdbPath);
-            }
-
-            string relativePathAndFileName =
-                ddbFilePath.Replace(tdbPathWithoutFileName.TrimEnd(Path.DirectorySeparatorChar) + "\\", "");
-            return relativePathAndFileName;
-        }
-
         #endregion
 
         #region Private: Error management, including error messages
-
-        private static bool HasError(DatabaseFileErrorsEnum databaseFileErrorsEnum)
+        // Return true iff databaseFileError indicates the presence of an error
+        private static bool HasError(DatabaseFileErrorsEnum databaseFileError)
         {
-            return databaseFileErrorsEnum != DatabaseFileErrorsEnum.Ok 
-                   && databaseFileErrorsEnum != DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
+            return databaseFileError != DatabaseFileErrorsEnum.Ok
+                   && databaseFileError != DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
         }
-        
+
+        // Generate a displayable message listing the merge results,
+        // separated into successfuly merged files vs failed merges and the reason why it failed
         private string GenerateMergeFeedbackMessage(List<SourceFileInfo> sourceFileInfos)
         {
             string message = string.Empty;
             foreach (SourceFileInfo sourceFileInfo in sourceFileInfos)
             {
-                if (sourceFileInfo.DatabaseFileErrorsEnum == DatabaseFileErrorsEnum.Ok ||
-                    sourceFileInfo.DatabaseFileErrorsEnum == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
+                if (sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.Ok ||
+                    sourceFileInfo.DatabaseFileError ==
+                    DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
                 {
                     message += $" \u2713 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}";
                 }
@@ -376,15 +324,16 @@ namespace Timelapse.Dialog
                 {
                     message += $" \u2717 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}";
                     message +=
-                        $"       \u2022 {GenerateMessageFromDatabaseFileErrorsEnum(sourceFileInfo.DatabaseFileErrorsEnum)}{Environment.NewLine}";
+                        $"       \u2022 {GenerateMessageFromDatabaseFileErrorsEnum(sourceFileInfo.DatabaseFileError)}{Environment.NewLine}";
                 }
             }
             return message;
         }
 
-        private string GenerateMessageFromDatabaseFileErrorsEnum(DatabaseFileErrorsEnum databaseFileErrorsEnum)
+        // See above: this generates the actual text for each databaseFileError type
+        private string GenerateMessageFromDatabaseFileErrorsEnum(DatabaseFileErrorsEnum databaseFileError)
         {
-            switch (databaseFileErrorsEnum)
+            switch (databaseFileError)
             {
                 case DatabaseFileErrorsEnum.Ok:
                 case DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion:
@@ -394,24 +343,26 @@ namespace Timelapse.Dialog
                     return "The file does not contain a valid .ddb database.";
                 case DatabaseFileErrorsEnum.PreVersion2300:
                 case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
-                    return "The database needs to be updated.";
+                    return "The file needs to be updated. Select File|Upgrade Timelapse files... to upgrade it.";
                 case DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder:
-                    return "The file cannot be located in a system or hidden folder.";
+                    return "The file cannot be located in a system or hidden folder. Move it elsewhere.";
                 case DatabaseFileErrorsEnum.FileInRootDriveFolder:
-                    return "The file cannot be located in a top level root drive.";
+                    return "The file cannot be located in a top level root drive. Move it elsewhere.";
+                case DatabaseFileErrorsEnum.Cancelled:
+                    return "The merging operation was cancelled by the user.";
                 case DatabaseFileErrorsEnum.DoesNotExist:
                     return "The file does not exist.";
                 case DatabaseFileErrorsEnum.PathTooLong:
-                    return "The file path length exceeds the Windows maximum size.";
+                    return "The file path length exceeds the Windows maximum size. Shorten the path name.";
                 // These results are used during merge testing for incompatabilities
                 case DatabaseFileErrorsEnum.TemplateElementsDiffer:
                     return "The file's template is not compatable with the destination database (their data fields differ).";
                 case DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent:
                     return "The templates differ (data fields are the same but their order differs).";
                 case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
-                    return "Recognition data differs (detection categories differ).";
+                    return "The file's recognition data has different detection categories.";
                 case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
-                    return "Recognition data differs (classification categories differ).";
+                    return "The file's recognition data has different classification categories.";
                 default:
                     return "Unknown error";
             }
@@ -427,100 +378,129 @@ namespace Timelapse.Dialog
                 // Show error message
                 ListboxFileDatabases.Visibility = Visibility.Collapsed;
                 ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
+                this.ButtonSelectAll.Visibility = Visibility.Collapsed;
+                this.ButtonSelectNone.Visibility = Visibility.Collapsed;
                 LabelBanner.Content = "Warning: No database (.ddb) files are available to merge.";
                 TextBlockFinalMessage.Text =
-                    $"Potential database files must be located in sub-folders contained by this root folder:{Environment.NewLine}";
+                    $"Potential database files must be located in sub-folders contained within this root folder:{Environment.NewLine}";
                 TextBlockFinalMessage.Text += $"    \u2022 {rootFolderPath}{Environment.NewLine}{Environment.NewLine}";
                 TextBlockFinalMessage.Text += "Timelapse searched those sub-folders, and no database files were found.";
                 MergeButton.IsEnabled = false;
                 return true;
             }
+
             return false;
         }
 
-
-
-        // Check if the path of the potential source.ddb file is too long.
-        // If so, display an error message and return true
-        private bool TryGenerateErrorIfLongDdbFileNamesSelected()
+        // Generate a displayable text list showing which of the selected databases, if any, are located in nested folders.
+        // This is done because nested folders will likely have duplicate entires.
+        // This can be used as a test method: If the returned message is empty, then no folders are nested.
+        private string GenerateTextMessageIfDatabasesAreInNestedFolders()
         {
-            List<string> filesWhosePathsAreTooLong = new List<string>();
-            foreach (SourceFileInfo fileObject in this.ObservableDdbFileList)
-            {
-                if (fileObject.IsSelected && fileObject.PathTooLong)
-                {
-                    filesWhosePathsAreTooLong.Add(fileObject.ShortPathDisplayName);
-                }
-            }
+            string matchingMessage = String.Empty;
+            // Collect the relative paths of the selected Ddbs
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+            var descendingComparer = Comparer<string>.Create((x, y) => comparer.Compare(y, x));
 
-            if (filesWhosePathsAreTooLong.Count == 0)
-            {
-                return false;
-            }
-
-            // We have some long files paths. Generate an error message.
-            this.ListboxFileDatabases.Visibility = Visibility.Collapsed;
-            ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
-            LabelBanner.Content = "Warning: Merge not done. Some of your database (.ddb) file paths are too long.";
-            TextBlockFinalMessage.Text =
-                $"Your selection includes files whose paths too long (this is a Windows restriction):{Environment.NewLine}";
-            foreach (string shortenedPath in filesWhosePathsAreTooLong)
-            {
-                TextBlockFinalMessage.Text += $"    \u2022 {shortenedPath}{Environment.NewLine}";
-            }
-
-            TextBlockFinalMessage.Text +=
-                $"{Environment.NewLine}Try again after shortening those file paths by:{Environment.NewLine}";
-            TextBlockFinalMessage.Text +=
-                $"    \u2022 moving your root folder higher up the folder hierarchy,{Environment.NewLine}"
-                + $"    \u2022 shortening your folder names,{Environment.NewLine}"
-                + $"    \u2022 removing unneeded sub-folders from the path.{Environment.NewLine}";
-            TextBlockFinalMessage.Text +=
-                $"Note: Path name changes may result in Timelapse not being able to locate your images.{Environment.NewLine}";
-            TextBlockFinalMessage.Text +=
-                "          If that happens, you can locate them using Timelapse's 'Edit|Try to find...' facility.";
-            MergeButton.IsEnabled = false;
-            return true;
-        }
-
-        private bool TryGenerateErrorIfAnySourceDdbFilesAreProblematic()
-        {
+            SortedList<string, string> relativePaths = new SortedList<string, string>(descendingComparer);
             foreach (SourceFileInfo fileObject in this.ObservableDdbFileList)
             {
                 if (fileObject.IsSelected)
                 {
-                    DatabaseFileErrorsEnum sourceDdbErrorsEnum = FilesFolders.QuickCheckDatabaseFile(fileObject.FullPath);
-                    Debug.Print(fileObject.ShortPathDisplayName + ": " + sourceDdbErrorsEnum);
+                    relativePaths.Add(fileObject.RelativePathIncludingFileName,
+                        Path.GetDirectoryName(fileObject.RelativePathIncludingFileName));
                 }
             }
-            return true;
+
+            bool addLine = false;
+            // Iterate through the list
+            for (int i = 0; i < relativePaths.Count; i++)
+            {
+                KeyValuePair<string, string> relativePath = relativePaths.ElementAt(i);
+
+                List<KeyValuePair<string, string>> matches = relativePaths
+                    .Where(kvp => kvp.Value.StartsWith(relativePath.Value + "\\"))
+                    .ToList<KeyValuePair<string, string>>();
+                int matchCount = matches.Count();
+                if (matchCount > 0)
+                {
+                    if (addLine)
+                    {
+                        matchingMessage += Environment.NewLine + Environment.NewLine;
+                    }
+                    addLine = true;
+                    matchingMessage += $"'{relativePath.Value}':";
+                    matchingMessage += $"{Environment.NewLine} - {relativePath.Key}";
+                    foreach (KeyValuePair<string, string> match in matches)
+                    {
+                        matchingMessage += $"{Environment.NewLine} - {match.Key}";
+                    }
+                }
+
+                i += matchCount;
+            }
+            return matchingMessage;
         }
         #endregion
+        
+        #region Utilities
+        // Enable or Disable the merge button, depending upon whether any databases are selected
+        private void EnableOrDisableMergeButton()
+        {
+            foreach (SourceFileInfo ddbObject in ObservableDdbFileList)
+            {
+                if (ddbObject.IsSelected)
+                {
+                    this.MergeButton.IsEnabled = true;
+                    return;
+                }
+            }
+            this.MergeButton.IsEnabled = false;
+        }
+        
+        // Return the relative path (including file name) to the ddb file. 
+        // For example if the template is in C:\foo\template.tdb and the ddb file is in C:\foo\bar\data.ddb,
+        // it will return bar\data.ddb
+        private static string GetRelativePathAndFileName(string tdbPath, string ddbFilePath)
+        {
+            string tdbPathWithoutFileName = Path.GetDirectoryName(tdbPath);
+            if (tdbPathWithoutFileName == null)
+            {
+                // Shouldn't happen, i.e., Only occurs if its the drive e.g., C://
+                // Not sure if setting the tdbPath to the drive letter will work, though.
+                TracePrint.NullException(nameof(tdbPathWithoutFileName));
+                tdbPathWithoutFileName = Path.GetPathRoot(tdbPath);
+            }
+            return ddbFilePath.Replace(tdbPathWithoutFileName.TrimEnd(Path.DirectorySeparatorChar) + "\\", "");
+        }
+        #endregion
+
+        #region Class: SourceFileInfo
+        // Information about each DDB Source File is kept here, including whether it selected
+        public class SourceFileInfo
+        {
+            public bool IsSelected { get; set; }
+            public string FullPath { get; set; }
+            public string RelativePathIncludingFileName { get; set; }
+
+            public DatabaseFileErrorsEnum DatabaseFileError { get; set; }
+
+            private const int maxLength = 92;
+            private const int prefixLength = 38;
+            private const int suffixLength = 53;
+
+            // Check for very long file names
+            public bool PathTooLong => IsCondition.IsPathLengthTooLong(this.FullPath, FilePathTypeEnum.DDB);
+
+            // Generate a shortened version of the file name to display in the available space
+            public string ShortPathDisplayName =>
+                RelativePathIncludingFileName.Length < maxLength
+                    ? this.RelativePathIncludingFileName
+                    : this.RelativePathIncludingFileName.Substring(0, prefixLength) + " \u2026 "
+                    + this.RelativePathIncludingFileName.Substring(this.RelativePathIncludingFileName.Length -
+                                                                   suffixLength);
+        }
+
+        #endregion
     }
-
-    #region Class: SourceFileInfo
-    public class SourceFileInfo
-    {
-        public bool IsSelected { get; set; }
-        public string FullPath { get; set; }
-        public string RelativePathIncludingFileName { get; set; }
-
-        public DatabaseFileErrorsEnum DatabaseFileErrorsEnum { get; set; }
-
-        private const int maxLength = 92;
-
-        private const int prefixLength = 38;
-
-        private const int suffixLength = 53;
-
-
-        // Check for very long file names, and generate a shortened version of it
-        public bool PathTooLong => IsCondition.IsPathLengthTooLong(this.FullPath, FilePathTypeEnum.DDB);
-        public string ShortPathDisplayName =>
-            RelativePathIncludingFileName.Length < maxLength
-                ? this.RelativePathIncludingFileName
-                : this.RelativePathIncludingFileName.Substring(0, prefixLength) + " \u2026 "
-                + this.RelativePathIncludingFileName.Substring(this.RelativePathIncludingFileName.Length - suffixLength);
-    }
-    #endregion
 }

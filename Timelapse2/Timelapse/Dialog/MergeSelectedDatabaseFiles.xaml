@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
        xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Merge Databases..." Height="550" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded" Closing="Window_Closing">
+        Title="Merge Databases..." Height="650" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -16,27 +16,29 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
                             Title="Merge a database into the opened database"
-                            What="Select one of the available database (.ddb) files below and click 'Merge'. Timelapse will:
-                                   &#10;&#x2022; merge that database into the the parent (the currently opened database file),
-                                   &#10;&#x2022; warn you if merging could not be done."   
+                            What="Select one or more of the available database (.ddb) files below and click 'Merge'. Timelapse will:
+                                   &#10;&#x2022; merge those databases into the master database (i.e., the currently opened database file),
+                                   &#10;&#x2022; generate warnings for databases that could not be merged."   
                             Details="Merging replaces all data whose file locations are within the selected database's folder.
-                                &#10;&#x2022; the parent deletes all data entries (if any) that share a common relative path with the selected database
-                                &#10;&#x2022; the parent inserts all data entries found in the selected database."
-                            Hint="Database files must be located under the currently opened database's root folder. Only those are listed."/>
+                                &#10;&#x2022; the master database deletes all data entries (if any) that share a common relative path 
+                                &#10;   with the selected database
+                                &#10;&#x2022; the master database inserts all data entries found in the selected database."
+                            Hint="Database files must be located under the currently opened database's root folder.
+                                      &#10;Only those are listed."/>
         <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
-        <Label Name="LabelBanner" FontWeight="Bold" Content="Select a database and click Merge."  Grid.Row="2" Margin="5,0,0,0"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5,0,0,0">
+            <Label Name="LabelBanner" FontWeight="Bold" Content="Choose one or more databases and click Merge."/>
+            <Button Name="ButtonSelectAll" Content="Select all databases" Margin="10,0,10,0" Click="ButtonSelectAll_Click" />
+            <Button Name="ButtonSelectNone" Content="Unselect the databases" Margin="0,0,10,0" Click="ButtonSelectNone_Click"/>
+        </StackPanel>
         <ListBox Name="ListboxFileDatabases" Grid.Row="3"  ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10,0,10,5" 
                  ItemsSource="{Binding ObservableDdbFileList}" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <!--<RadioButton IsChecked="{Binding IsSelected}" Content="{Binding RelativePathIncludingFileName}" GroupName="RadioButtonDDBFiles" Checked="Selector_CheckChanged" Unchecked="Selector_CheckChanged">
-                        <d:CheckBox.DataContext>
-                            <d:DesignInstance />
-                        </d:CheckBox.DataContext>
-                    </RadioButton>-->
                     <CheckBox IsChecked="{Binding IsSelected}" 
                               Content="{Binding ShortPathDisplayName}" 
                               ToolTip="{Binding RelativePathIncludingFileName }" 
@@ -50,10 +52,12 @@
         </ListBox>
 
         <ScrollViewer Name="ScrollerTextBlockFinalMessage" Visibility="Collapsed"  Grid.Row="3" Margin="10,0,10,5">
-            <TextBlock Name="TextBlockFinalMessage" Margin="5"/>
+                <TextBlock Name="TextBlockFinalMessage" Margin="5"/>
         </ScrollViewer>
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+        <Separator Grid.Row="4" BorderBrush="Gainsboro" BorderThickness="10"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="5">
+           
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
             <Button Name="MergeButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="MergeButton_Click">_Merge</Button>
             <Button Name="DoneButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
