@@ -48,7 +48,7 @@ namespace Timelapse.Dialog
         private readonly SQLiteWrapper destinationDdb;
         public List<string> sourceDdbFilePaths;
         private readonly string rootFolderPath;
-        private bool IsAnyDataUpdated = false;
+        private bool IsAnyDataUpdated;
 
         #region Constructor, Loaded, Closing
         public MergeSelectedDatabaseFiles(Window owner, string destinationDdbPath, SQLiteWrapper destinationDdb) : base(owner)
@@ -420,8 +420,8 @@ namespace Timelapse.Dialog
 
                 List<KeyValuePair<string, string>> matches = relativePaths
                     .Where(kvp => kvp.Value.StartsWith(relativePath.Value + "\\"))
-                    .ToList<KeyValuePair<string, string>>();
-                int matchCount = matches.Count();
+                    .ToList();
+                int matchCount = matches.Count;
                 if (matchCount > 0)
                 {
                     if (addLine)

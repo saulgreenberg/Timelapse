@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Timelapse.Util
 {
@@ -12,7 +8,7 @@ namespace Timelapse.Util
         {
             return (Double.TryParse(value.ToString(), out double parsedValue ))
                 ? (float?) parsedValue
-                : (float?)defaultValue;
+                : defaultValue;
         }
     }
 }

@@ -391,6 +391,11 @@ namespace Timelapse.Util
         // return     "foo"
         public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
         {
+            if (path1 == null || path2 == null)
+            {
+                return string.Empty;
+            }
+
             // If its a file, strip the file name off the path
             path1 = File.GetAttributes(path1).HasFlag(FileAttributes.Directory)
                 ? path1
@@ -407,9 +412,10 @@ namespace Timelapse.Util
                 return string.Empty;
             }
 
-            return (path1.Length > path2.Length)
+
+            return path1?.Length > path2?.Length
             ? path1.Replace(path2 + "\\", "")
-            : path2.Replace(path1 + "\\", "");
+            : path2?.Replace(path1 + "\\", "");
 
         }
         #endregion

@@ -5,7 +5,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Interaction logic for MergingDatabaseWarningAsDuplicateEntriesPossible.xaml
     /// </summary>
-    public partial class MergingDatabaseWarningAsDuplicateEntriesPossible : Window
+    public partial class MergingDatabaseWarningAsDuplicateEntriesPossible
     {
         public MergingDatabaseWarningAsDuplicateEntriesPossible(Window owner, string details) 
         {

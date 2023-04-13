@@ -284,7 +284,6 @@ namespace Timelapse.Constant
         public const string FileDatabaseFileExtension = ".ddb";
         public const string JpgFileExtension = ".jpg";
         public const string JsonFileExtension = ".json";
-        public const string MergedFileName = DefaultFileDatabaseFileNameRoot + "_merged" + FileDatabaseFileExtension;
         public const string MovFileExtension = ".mov";
         public const string Mp4FileExtension = ".mp4";
         public const string ASFFileExtension = ".asf";
@@ -477,8 +476,7 @@ namespace Timelapse.Constant
         public const string SuppressCsvExportDialog = "SuppressCsvExportDialog";
         public const string SuppressCsvImportPrompt = "SuppressCsvImportPrompt";
         public const string SuppressHowDuplicatesWorkDialog = "SuppressHowDuplicatesWorkDialog";
-        public const string SuppressMergeDatabasesDialog = "SuppressMergeDatabasesDialog";
-        public const string SuppressMergeASingleDatabaseDialog = "SuppressMergeASingleDatabase";
+        public const string SuppressMergeDatabasesExplainedDialog = "SuppressMergeDatabasesExplainedDialog";
         public const string SuppressOpeningMessageDialog = "SuppressOpeningMessageDialog";
         public const string SuppressOpeningWithOlderTimelapseVersionDialog = "SuppressOpeningWithOlderTimelapseVersionDialog";
         public const string SuppressSelectedAmbiguousDatesPrompt = "SuppressSelectedAmbiguousDatesPrompt";

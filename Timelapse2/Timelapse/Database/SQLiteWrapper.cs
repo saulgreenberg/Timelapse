@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Threading;
 using Timelapse.Controls;
@@ -499,7 +500,7 @@ namespace Timelapse.Database
                 query += Sql.Where;                   // WHERE
                 query += where;                                 // where
             }
-            DataTable dt = this.GetDataTableFromSelect(query);
+            this.GetDataTableFromSelect(query);
             this.ExecuteNonQuery(query);
         }
 
@@ -1368,7 +1369,7 @@ namespace Timelapse.Database
             SQLiteWrapper.PragmaSetForeignKeys(connection, false);
 
             // Drop the table
-            string sql = Sql.DropTable + tableName;
+            string sql = Sql.DropTable + Sql.IfExists + tableName;
             using (SQLiteCommand command = new SQLiteCommand(sql, connection))
             {
                 command.ExecuteNonQuery();
@@ -1407,10 +1408,29 @@ namespace Timelapse.Database
             {
                 if (datatable.Rows.Count == 0)
                 {
+                    // The table does not exists
                     return false;
                 }
                 query = $"SELECT COUNT(*)_ FROM {tableName}";
+                // If > 0 elements, then it both exists and has content so return true otherwise false
                 return this.ScalarGetCountFromSelect(query) != 0;
+            }
+        }
+
+        // Return true iff the table exists, but is empty
+        public bool TableExistsAndEmpty(string tableName)
+        {
+            string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
+            using (DataTable datatable = this.GetDataTableFromSelect(query))
+            {
+                if (datatable.Rows.Count == 0)
+                {
+                    // Table does not exist
+                    return false;
+                }
+                query = $"SELECT COUNT(*)_ FROM {tableName}";
+                // If 0 elements, then its empty so return true otherwise false
+                return this.ScalarGetCountFromSelect(query) == 0;
             }
         }
         #endregion

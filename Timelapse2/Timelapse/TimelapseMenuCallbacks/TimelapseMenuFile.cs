@@ -224,7 +224,7 @@ namespace Timelapse
         #region Merging: Add or Replace one or more databases into the master
         private async void MenuItemAddDatabase_Click(object sender, RoutedEventArgs e)
         {
-            if (this.State.SuppressMergeDatabasesPrompt == false)
+            if (this.State.SuppressMergeDatabasesExplainedDialog == false)
             {
                 if (Dialogs.MenuFileMergeDatabasesExplainedDialog(this) == false)
                 {
@@ -242,22 +242,24 @@ namespace Timelapse
                 return;
             }
 
+            // Reset a bunch of stuff here, as I am not sure if its handled in the OnFolderLoadingComplete method
             // Only reset these if we actually imported some detections, as otherwise nothing has changed.
             if (this.DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
             {
                 this.DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
             }
-            GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists(true);
-            if (GlobalReferences.DetectionsExists)
+            if (this.DataHandler?.FileDatabase != null)
             {
-                this.DataHandler.FileDatabase.RefreshDetectionsDataTable();
-                this.DataHandler.FileDatabase.RefreshClassificationsDataTable();
+                this.DataHandler.FileDatabase.RefreshMarkers();
+                if (this.DataHandler.FileDatabase.DetectionsExists(true))
+                {
+                    this.DataHandler.FileDatabase.RefreshDetectionsDataTable();
+                    this.DataHandler.FileDatabase.RefreshClassificationsDataTable();
+                }
             }
-            // Reset the BoundingBox threshold to its new values.
-            this.State.BoundingBoxDisplayThresholdResetToValueInDataBase();
-            await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-            this.EnableOrDisableMenusAndControls();
-            return;
+
+            // Since we are effectively doing a new image load, invoke this as it resets alot of things
+            await this.OnFolderLoadingCompleteAsync(true);
         }
         #endregion
 

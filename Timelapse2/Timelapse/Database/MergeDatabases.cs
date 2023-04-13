@@ -4,7 +4,6 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Recognition;
@@ -62,23 +61,9 @@ namespace Timelapse.Database
         // This is not a robust way of checking the templates. E.g., does not check for differences in defaults, choice lists, etc.
         // Note that we already have robust template-checking code. Just have to check to see how we can use it.
 
-        // Open the source and destination database from their paths, and then invoke this method again
-        public static DatabaseFileErrorsEnum CheckIfDatabaseTemplatesAreMergeCompatable(string sourceDdbPath,
-            string destinationDdbPath)
-        {
-            SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceDdbPath);
-            SQLiteWrapper destinationDdb = new SQLiteWrapper(destinationDdbPath);
-            return MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
-        }
-
         public static DatabaseFileErrorsEnum CheckIfDatabaseTemplatesAreMergeCompatable(SQLiteWrapper sourceDdb,
             SQLiteWrapper destinationDdb)
         {
-            ErrorsAndWarnings errorsAndWarnings = new ErrorsAndWarnings();
-            Dictionary<string, string> detectionCategories = new Dictionary<string, string>();
-            Dictionary<string, string> classificationCategories = new Dictionary<string, string>();
-            Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
-
             // Retrieve the soure cand destination dataLabel columns
             List<string> dataLabelsFromDestinationDdb = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
             List<string> dataLabelsFromsourceddb = sourceDdb.SchemaGetColumns(Constant.DBTables.FileData);
@@ -244,7 +229,7 @@ namespace Timelapse.Database
             destinationDdb.ExecuteNonQuery(query);
 
             // Part 8. Check if there are any Detections. If not, delete all the recognition tables as they are no longer relevant
-            if (false == destinationDdb.TableExistsAndNotEmpty(Constant.DBTables.Detections))
+            if (true == destinationDdb.TableExistsAndEmpty(Constant.DBTables.Detections))
             {
                 destinationDdb.DropTable(Constant.DBTables.Detections);
                 destinationDdb.DropTable(Constant.DBTables.Classifications);
@@ -751,5 +736,4 @@ namespace Timelapse.Database
         }
     }
     #endregion
-
 }

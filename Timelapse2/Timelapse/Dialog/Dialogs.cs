@@ -1,14 +1,11 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Printing;
 using System.IO;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Markup;
 using System.Windows.Media;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -255,6 +252,7 @@ namespace Timelapse.Dialog
         /// If fileNameToLocate is not empty, it displays that a desired folder to select in the dialog title.
         /// </summary>
         /// <param name="initialFolder">The path to the root folder containing the template</param>
+        /// <param name="title">The title to be displayed in the dialog</param>
         /// <param name="extensionInUsersLanguage">The file type using the user's language, usually something like "Timelapse data (ddb) files"</param>
         /// <param name="extension">The file type, usually a .tdb or .ddb extension</param>
         /// <returns></returns>
@@ -978,7 +976,7 @@ namespace Timelapse.Dialog
                               + Environment.NewLine
                               + "\u2022 " + databasePath,
                     Reason = "The file to merge into the currently opened database must be:" + Environment.NewLine
-                              + $"\u2022 located in a sub-folder underneath the current database's folder",
+                              + "\u2022 located in a sub-folder underneath the current database's folder",
                     Solution = $"Choose a database ({Constant.File.FileDatabaseFileExtension}) file located in a subfolder underneath the current database's folder",
                     Icon = MessageBoxImage.Error
                 }
@@ -1005,12 +1003,12 @@ namespace Timelapse.Dialog
                 {
                     Icon = MessageBoxImage.Warning,
                     
-                    What = $"Some of the databases you want to merge may contain duplicate entries.",
+                    What = "Some of the databases you want to merge may contain duplicate entries.",
                            
                     Reason = $"Several of your databases are nested in a single folder structure. {Environment.NewLine}"
                            + $"Each database normally contains entries for all the images found in its sub-folders.{Environment.NewLine}"
                            + $"This means that a database in a sub-folder will likely contain entries duplicating those that exist{Environment.NewLine}"
-                           + $"(possibly with different values) in a database found in a parent folder.",
+                           + "(possibly with different values) in a database found in a parent folder.",
                     Result = $"While the merge can still happen, the results may not be what you want.{Environment.NewLine}"
                              + "Select Ok to merge anyways, otherwise Cancel",
                     Hint = "Read the 'Merging files' section in the Timelapse Reference manual to understand how to best use merging.",
@@ -1697,7 +1695,7 @@ namespace Timelapse.Dialog
                             + $"\u2022 search for other database (.ddb) files in that folder's sub-folders,{Environment.NewLine}"
                           + $"\u2022 let you select one or more of them,{Environment.NewLine}"
                           + $"\u2022 merge all data found in the selected databases into the currently opened database,{Environment.NewLine}"
-                          + $"\u2022 warn you about databases that cannot be merged.",
+                          + "\u2022 warn you about databases that cannot be merged.",
 
                      Result = $"Merging works as follows:{Environment.NewLine}"
                             + $"1. All current entries that share a common relative path with each selected database are deleted. {Environment.NewLine}"
@@ -1717,7 +1715,7 @@ namespace Timelapse.Dialog
 
             if (messageBox.DontShowAgain.IsChecked.HasValue)
             {
-                GlobalReferences.TimelapseState.SuppressMergeASingleDatabasePrompt = messageBox.DontShowAgain.IsChecked.Value;
+                GlobalReferences.TimelapseState.SuppressMergeDatabasesExplainedDialog = messageBox.DontShowAgain.IsChecked.Value;
             }
             return messageBox.DialogResult;
         }
@@ -1737,7 +1735,7 @@ namespace Timelapse.Dialog
 
                      Details = $"Timelapse will do the following when creating an empty database file:{Environment.NewLine}"
                           + $"\u2022 ask you to locate a root folder containing a template (a.tdb file),{Environment.NewLine}"
-                          + $"\u2022 create a new empty database (.ddb) file in that folder with an appropriate name.",
+                          + "\u2022 create a new empty database (.ddb) file in that folder with an appropriate name.",
                      Hint = "Press Ok to continue creating an empty database file, otherwise Cancel."
                 },
                 DontShowAgain =
