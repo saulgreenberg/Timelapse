@@ -184,7 +184,7 @@ namespace Timelapse
             }
 
             // We have a unique ddb path. Try to create the empty ddb file
-            bool result = await MergeDatabasesNew.TryCreateEmptyDatabaseFromTemplateAsync(
+            bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
                 templateDatabasePath, destinationDdbPath).ConfigureAwait(true);
 
             if (result == false)

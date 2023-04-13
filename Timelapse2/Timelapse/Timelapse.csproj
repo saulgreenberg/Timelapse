@@ -201,10 +201,9 @@
     <Compile Include="Controls\OffsetLens.cs" />
     <Compile Include="Controls\ProgressBarArguments.cs" />
     <Compile Include="Controls\EpisodePopup.cs" />
-    <Compile Include="Database\MergeDatabases.cs" />
-    <Compile Include="Database\MergeDatabasesNew.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
+    <Compile Include="Database\MergeDatabases.cs" />
     <Compile Include="Dialog\MergeSelectedDatabaseFiles.xaml.cs">
       <DependentUpon>MergeSelectedDatabaseFiles.xaml</DependentUpon>
     </Compile>
@@ -242,9 +241,6 @@
     </Compile>
     <Compile Include="Dialog\ImageAdjuster.xaml.cs">
       <DependentUpon>ImageAdjuster.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialog\MergeChooseDatabaseFiles.xaml.cs">
-      <DependentUpon>MergeChooseDatabaseFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\MissingFoldersLocateAllFolders.xaml.cs">
       <DependentUpon>MissingFoldersLocateAllFolders.xaml</DependentUpon>
@@ -379,7 +375,6 @@
     <Compile Include="Images\ZoomBookmark.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="DataStructures\MetadataOnLoad.cs" />
-    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuMerge.cs" />
     <Compile Include="TimelapseMenuCallbacks\TimelapseMenuRecognitions.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseDuplicates.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseCheckAndCorrectFolders.cs" />
@@ -537,10 +532,6 @@
     <Page Include="Dialog\ImageAdjuster.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialog\MergeChooseDatabaseFiles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\MissingFoldersLocateAllFolders.xaml">
       <SubType>Designer</SubType>

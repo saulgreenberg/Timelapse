@@ -230,7 +230,7 @@ namespace Timelapse.Dialog
                     // Now check if the templates are compatable
                     SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
                     sourceFileInfo.DatabaseFileError =
-                        MergeDatabasesNew.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
+                        MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
                     if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if the templates are problematic
@@ -240,7 +240,7 @@ namespace Timelapse.Dialog
                     string relativePathDifference =
                         FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
                     sourceFileInfo.DatabaseFileError =
-                        MergeDatabasesNew.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb,
+                        MergeDatabases.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb,
                             sourceFileInfo.FullPath, relativePathDifference);
                     if (HasError(sourceFileInfo.DatabaseFileError))
                     {
@@ -249,7 +249,7 @@ namespace Timelapse.Dialog
                     }
 
                     // e. Do the merge
-                    sourceFileInfo.DatabaseFileError = MergeDatabasesNew.MergeSourceIntoDestinationDdb(
+                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(
                         destinationDdb, sourceFileInfo.FullPath, relativePathDifference);
                 }
                 return selectedSourceDdbFiles;
