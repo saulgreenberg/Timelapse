@@ -469,7 +469,7 @@ namespace Timelapse.Database
             this.GetControlsSortedByControlOrder();
         }
         #endregion
-
+        
         #region Public /Private Methods Sync - ControlToDatabase, TemplateTableCOntrolAndSpreadsheetOrderToDatabase
         public void SyncControlToDatabase(ControlRow control)
         {
@@ -540,16 +540,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Public Methods - Misc: BindToEditorDataGrid, CreateBackupIfNeeded, Update DisplayOrder
-
-        public void BindToEditorDataGrid(DataGrid dataGrid, DataRowChangeEventHandler onRowChanged)
-        {
-            this.editorDataGrid = dataGrid;
-            this.onTemplateTableRowChanged = onRowChanged;
-            this.GetControlsSortedByControlOrder();
-        }
-
-
-        protected void CreateBackupIfNeeded()
+        public void CreateBackupIfNeeded()
         {
             if (DateTime.Now - this.mostRecentBackup < Constant.File.BackupInterval)
             {
@@ -558,6 +549,13 @@ namespace Timelapse.Database
             }
             FileBackup.TryCreateBackup(this.FilePath);
             this.mostRecentBackup = DateTime.Now;
+        }
+
+        public void BindToEditorDataGrid(DataGrid dataGrid, DataRowChangeEventHandler onRowChanged)
+        {
+            this.editorDataGrid = dataGrid;
+            this.onTemplateTableRowChanged = onRowChanged;
+            this.GetControlsSortedByControlOrder();
         }
 
         public void UpdateDisplayOrder(string orderColumnName, Dictionary<string, long> newOrderByDataLabel)

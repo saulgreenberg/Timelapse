@@ -101,7 +101,13 @@ namespace Timelapse.Database
 
             return relativePathsInDdb.Count > 0;
         }
+        #endregion
 
+        #region Checkout a relative path database
+        public static void CheckoutRelativePath(SQLiteWrapper sourceDdb, string destinationDdbPath, string RelativePath)
+        {
+            // TO DO
+        }
         #endregion
 
         #region Remove: Remove all entries in the database whose RelativePath matches the given folder or its subfolders

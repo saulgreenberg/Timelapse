@@ -235,7 +235,8 @@ namespace Timelapse
             Dialog.MergeSelectedDatabaseFiles mergeSelectedDatabaseFiles =
                 new Dialog.MergeSelectedDatabaseFiles(this,
                     this.DataHandler.FileDatabase.FilePath,
-                    this.DataHandler.FileDatabase.Database);
+                    this.DataHandler.FileDatabase.Database,
+                    this.DataHandler.FileDatabase);
             bool? result = mergeSelectedDatabaseFiles.ShowDialog();
             if (result == false)
             {

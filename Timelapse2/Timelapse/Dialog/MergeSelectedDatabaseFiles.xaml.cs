@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -46,17 +47,19 @@ namespace Timelapse.Dialog
 
         private readonly string destinationDdbPath;
         private readonly SQLiteWrapper destinationDdb;
+        private readonly FileDatabase fileDatabase;
         public List<string> sourceDdbFilePaths;
         private readonly string rootFolderPath;
         private bool IsAnyDataUpdated;
 
         #region Constructor, Loaded, Closing
-        public MergeSelectedDatabaseFiles(Window owner, string destinationDdbPath, SQLiteWrapper destinationDdb) : base(owner)
+        public MergeSelectedDatabaseFiles(Window owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
         {
             InitializeComponent();
 
             this.destinationDdbPath = destinationDdbPath;
             this.destinationDdb = destinationDdb;
+            this.fileDatabase = fileDatabase;
 
             this.rootFolderPath = Path.GetDirectoryName(this.destinationDdbPath);
             if (this.rootFolderPath == null)
@@ -114,7 +117,7 @@ namespace Timelapse.Dialog
             // Before doing the merge, check if one or more databases are nested in a common folder/subfolder.
             // If so, warn the user and give them the option to abort.
             string warningMessage = GenerateTextMessageIfDatabasesAreInNestedFolders();
-            
+
             if (false == string.IsNullOrWhiteSpace(warningMessage))
             {
                 MergingDatabaseWarningAsDuplicateEntriesPossible messageBox =
@@ -129,6 +132,9 @@ namespace Timelapse.Dialog
             // Start the merge process by first setting up progress indicators
             Mouse.OverrideCursor = Cursors.Wait;
             this.BusyCancelIndicator.EnableForMerging(true);
+
+            // Create a backup if needed before attempting doing the merge;
+            this.fileDatabase.CreateBackupIfNeeded();
 
             // Try to merge the selected databases into destination ddb file.
             // .ddb files found in a Backup folder are ignored
@@ -214,7 +220,7 @@ namespace Timelapse.Dialog
                         cancelled = true;
                         sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
                         continue;
-                    } 
+                    }
 
                     // A. Checks to see if we can merge the file
 
@@ -442,7 +448,7 @@ namespace Timelapse.Dialog
             return matchingMessage;
         }
         #endregion
-        
+
         #region Utilities
         // Enable or Disable the merge button, depending upon whether any databases are selected
         private void EnableOrDisableMergeButton()
@@ -457,7 +463,7 @@ namespace Timelapse.Dialog
             }
             this.MergeButton.IsEnabled = false;
         }
-        
+
         // Return the relative path (including file name) to the ddb file. 
         // For example if the template is in C:\foo\template.tdb and the ddb file is in C:\foo\bar\data.ddb,
         // it will return bar\data.ddb

@@ -91,7 +91,7 @@ namespace Timelapse.Util
 
         #region Public Static Methods -TryCreateBackup, various versions
 
-        // Copy to backup version with with full path to source file
+        // Copy to backup version with full path to source file
         public static bool TryCreateBackup(string sourceFilePath)
         {
             return FileBackup.TryCreateBackup(Path.GetDirectoryName(sourceFilePath), Path.GetFileName(sourceFilePath), false);
