@@ -205,15 +205,6 @@ namespace Timelapse.Database
             return this.Database.TableExists(dataTable);
         }
 
-        // Check if the database table specified in the path has a detections table
-        public static bool TableExists(string dataTable, string dbPath)
-        {
-            // Note that no error checking is done - I assume, perhaps unwisely, that the file is a valid database
-            // On tedting, it does return 'false' on an invalid ddb file, so I suppose that's ok.
-            SQLiteWrapper db = new SQLiteWrapper(dbPath);
-            return db.TableExists(dataTable);
-        }
-
         // Check if the database is valid. 
         // ReSharper disable once UnusedMember.Global
         public bool IsDatabaseFileValid(string filePath, string tableNameToCheck)

@@ -204,6 +204,9 @@
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
     <Compile Include="Database\MergeDatabases.cs" />
+    <Compile Include="Dialog\MergeCheckoutChooseSubfolder.xaml.cs">
+      <DependentUpon>MergeCheckoutChooseSubfolder.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\MergeSelectedDatabaseFiles.xaml.cs">
       <DependentUpon>MergeSelectedDatabaseFiles.xaml</DependentUpon>
     </Compile>
@@ -492,6 +495,10 @@
     <Page Include="Dialog\CustomSelectionWithEpisodes.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\MergeCheckoutChooseSubfolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialog\MergeSelectedDatabaseFiles.xaml">
       <Generator>MSBuild:Compile</Generator>

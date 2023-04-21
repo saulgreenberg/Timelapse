@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.TextFormatting;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -13,6 +14,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
+using ToastNotifications.Position;
 using DialogResult = System.Windows.Forms.DialogResult;
 using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
@@ -172,16 +174,15 @@ namespace Timelapse
                 this.StatusBar.SetMessage(abortMessage);
                 return;
             }
+
             string ddbFileNameBase = Path.GetFileNameWithoutExtension(templateDatabasePath).Replace("Template", "Data");
             string ddbFileName = ddbFileNameBase + Constant.File.FileDatabaseFileExtension;
-            string destinationDdbPath = Path.Combine(rootFolder, ddbFileName);
-            int index = 0;
-            while (File.Exists(destinationDdbPath))
+            if (FilesFolders.GenerateFileNameIfNeeded(rootFolder, ddbFileName, out string newDdbFileName))
             {
-                // A ddb with that name already exists, so generate a new DDD file name
-                ddbFileName = $"{ddbFileNameBase}({++index}){Constant.File.FileDatabaseFileExtension}";
-                destinationDdbPath = Path.Combine(rootFolder, ddbFileName);
+                // if needed, generate a unique file name
+                ddbFileName = newDdbFileName;
             }
+            string destinationDdbPath = Path.Combine(rootFolder, ddbFileName);
 
             // We have a unique ddb path. Try to create the empty ddb file
             bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
@@ -211,10 +212,10 @@ namespace Timelapse
                 }
             }
 
-            if (Directory.GetFiles(rootFolder, "*" + Constant.File.FileDatabaseFileExtension).Length > 1)
+            if (FilesFolders.CountFilesInFolderWithExtension(rootFolder, Constant.File.FileDatabaseFileExtension) > 1)
             {
-                // Since there is more than 1 ddb file, tell the user what the newly created file is called.
-                Dialogs.NewFileNameAsOldFileNameExistsDialog(this, ddbFileName);
+                // There is more than one file with that extension, so tell the user the name of the created file
+                Dialogs.NewFileNameGeneratedDialog(this, null, ddbFileName);
             }
             this.StatusBar.SetMessage(successMessage);
             Mouse.OverrideCursor = null;
@@ -222,7 +223,7 @@ namespace Timelapse
         #endregion
 
         #region Merging: Add or Replace one or more databases into the master
-        private async void MenuItemAddDatabase_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemMergeDatabases_Click(object sender, RoutedEventArgs e)
         {
             if (this.State.SuppressMergeDatabasesExplainedDialog == false)
             {
@@ -262,6 +263,99 @@ namespace Timelapse
             // Since we are effectively doing a new image load, invoke this as it resets alot of things
             await this.OnFolderLoadingCompleteAsync(true);
         }
+        #endregion
+
+        #region Merging: Checkout a database
+        private async void MenuItemCheckoutDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            //if (this.State.SuppressMergeCheckoutExplainedDialog == false)
+            //{
+            //    if (Dialogs.MenuFileMergeCheckoutExplainedDialog(this) == false)
+            //    {
+            //        return;
+            //    }
+            //}
+
+            //// Get the relative and full path to the desired sub-folder location 
+            //Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder = new Dialog.MergeCheckoutChooseSubfolder(this, this.DataHandler.FileDatabase.FolderPath);
+            //if (false == mergeCheckoutChooseSubfolder.ShowDialog())
+            //{
+            //    return;
+            //}
+
+            //string fullPathToChosenFolder = mergeCheckoutChooseSubfolder.FullFolderPath;
+            //string relativePathToChosenFolder = mergeCheckoutChooseSubfolder.RelativeFolderPath;
+
+            string fullPathToChosenFolder = @"C:\Users\saulg\Desktop\TestSets\MergeTest\SubFolder";
+            fullPathToChosenFolder = @"C:\Users\saulg\Desktop\TestSets\WithClassifications\Station2";
+            string relativePathToChosenFolder = @"Station2";
+
+            // Copy the template to that folder, generating a unique name if needed
+            string tdbFileName = Constant.File.DefaultTemplateDatabaseFileName;
+            bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(fullPathToChosenFolder, tdbFileName, out string newTdbFileName);
+            if (tdbFileNameChanged)
+            {
+                tdbFileName = newTdbFileName;
+            }
+
+            // Copy the main template into that folder, perhaps renaming it
+            string destinationTdbPath = Path.Combine(fullPathToChosenFolder, tdbFileName);
+            try
+            {
+                File.Copy(this.templateDatabase.FilePath, destinationTdbPath);
+            }
+            catch
+            {
+                MessageBox.Show(
+                    "Could not complete this operation, as the template could not be copied into the desired folder",
+                    "Could not copy the template", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // Create an empty database in that folder
+            string ddbFileName = Constant.File.DefaultFileDatabaseFileName;
+            bool ddbFileNameChanged =
+                FilesFolders.GenerateFileNameIfNeeded(fullPathToChosenFolder, ddbFileName, out string newDdbFileName);
+            if (ddbFileNameChanged)
+            {
+                // if needed, generate a unique file name
+                ddbFileName = newDdbFileName;
+            }
+            string destinationDdbPath = Path.Combine(fullPathToChosenFolder, ddbFileName);
+
+            // We have a unique ddb path. Try to create the empty ddb file
+            bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
+                destinationTdbPath, destinationDdbPath).ConfigureAwait(true);
+
+            if (result == false)
+            {
+                // This is rare, don't bother trying to figure out what went wrong.
+                MessageBox.Show("Could not create the database",
+                    "Something went wrong. The database could not be created.");
+                this.StatusBar.SetMessage("Could not check out the database ");
+                return;
+            }
+
+            if (FilesFolders.CountFilesInFolderWithExtension(fullPathToChosenFolder, Constant.File.TemplateDatabaseFileExtension) > 1 
+                ||  FilesFolders.CountFilesInFolderWithExtension(fullPathToChosenFolder, Constant.File.FileDatabaseFileExtension) > 1)
+            {
+                // As there is more than one file with a .tdb or .ddb extension,  tell the user the name(s) of the created file
+                string shortDestinationTdbPath = tdbFileNameChanged 
+                    ? Path.Combine(relativePathToChosenFolder, newTdbFileName)
+                    : string.Empty;
+                string shortDestinationDdbPath = ddbFileNameChanged
+                    ? Path.Combine(relativePathToChosenFolder, newDdbFileName)
+                    : string.Empty;
+                Dialogs.NewFileNameGeneratedDialog(this, shortDestinationTdbPath, shortDestinationDdbPath);
+            }
+
+            // We now have a template and an empty database in the destination folder.
+            // Populate it with the data from the source database.
+            MergeDatabases.CheckoutDatabaseWithRelativePath(this.DataHandler.FileDatabase, this.DataHandler.FileDatabase.FilePath, destinationDdbPath,
+                relativePathToChosenFolder);
+        }
+        
+
         #endregion
 
         #region Export/Import CSV file

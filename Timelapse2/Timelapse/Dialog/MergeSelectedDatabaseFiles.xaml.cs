@@ -5,8 +5,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Shapes;
+using System.Windows.Media;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -28,7 +30,7 @@ namespace Timelapse.Dialog
         public ObservableCollection<SourceFileInfo> ObservableDdbFileList { get; }
 
         // Returns the currently selected files and info about them
-        private List<SourceFileInfo> selectedDdbFiles
+        private List<SourceFileInfo> SelectedDdbFiles
         {
             get
             {
@@ -49,20 +51,19 @@ namespace Timelapse.Dialog
         private readonly SQLiteWrapper destinationDdb;
         private readonly FileDatabase fileDatabase;
         public List<string> sourceDdbFilePaths;
-        private readonly string rootFolderPath;
         private bool IsAnyDataUpdated;
 
         #region Constructor, Loaded, Closing
-        public MergeSelectedDatabaseFiles(Window owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
+        public MergeSelectedDatabaseFiles(TimelapseWindow owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
         {
             InitializeComponent();
-
+            this.Owner = owner;
             this.destinationDdbPath = destinationDdbPath;
             this.destinationDdb = destinationDdb;
             this.fileDatabase = fileDatabase;
 
-            this.rootFolderPath = Path.GetDirectoryName(this.destinationDdbPath);
-            if (this.rootFolderPath == null)
+            string rootFolderPath = Path.GetDirectoryName(this.destinationDdbPath);
+            if (rootFolderPath == null)
             {
                 // Shouldn't happen
                 TracePrint.NullException(nameof(rootFolderPath));
@@ -73,13 +74,15 @@ namespace Timelapse.Dialog
             this.ObservableDdbFileList = new ObservableCollection<SourceFileInfo>();
 
             // Get all the ddb files contained by subfolders under the rootFolder, excluding those directly in the root folder
-            this.sourceDdbFilePaths = FilesFolders.GetAllFilesInFoldersAndSubfoldersMatchingPattern(this.rootFolderPath,
+            this.sourceDdbFilePaths = FilesFolders.GetAllFilesInFoldersAndSubfoldersMatchingPattern(rootFolderPath,
                 "*" + Constant.File.FileDatabaseFileExtension, true, true, null);
-            this.sourceDdbFilePaths.RemoveAll(Item => Path.GetDirectoryName(Item) == this.rootFolderPath);
+            this.sourceDdbFilePaths.RemoveAll(Item => Path.GetDirectoryName(Item) == rootFolderPath);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Dialogs.TryPositionAndFitDialogIntoWindow(this);
+
             // Abort if no candidate source ddb files were found
             if (TryGenerateErrorIfNoDdbSourceFilesExists())
             {
@@ -140,7 +143,7 @@ namespace Timelapse.Dialog
             // .ddb files found in a Backup folder are ignored
             List<SourceFileInfo> sourceFileInfos = await MergeDatabasesAsync(
                 this.destinationDdb, this.destinationDdbPath,
-                this.selectedDdbFiles,
+                this.SelectedDdbFiles,
                 this.Progress, GlobalReferences.CancelTokenSource).ConfigureAwait(true);
 
             // Turn off progress indicators
@@ -150,10 +153,10 @@ namespace Timelapse.Dialog
 
             // Show the result;
             this.ListboxFileDatabases.Visibility = Visibility.Collapsed;
-            this.ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
+            this.FinalMessageScrollViewer.Visibility = Visibility.Visible;
             this.ButtonSelectAll.Visibility = Visibility.Collapsed;
             this.ButtonSelectNone.Visibility = Visibility.Collapsed;
-            this.LabelBanner.Content = "Merge results";
+            this.ResultsBanner.Text = "Results";
 
             // As part of the above merge attempt, each SourceFileInfo records if the merge
             // was successful, or if the merge failed as well as why it failed.
@@ -176,13 +179,37 @@ namespace Timelapse.Dialog
             int mergedFiles = mergedSourceFileInfos.Count;
             int unmergedFiles = unmergedSourceFileInfos.Count;
 
-            this.TextBlockFinalMessage.Text = mergedFiles == 0
-                ? $"No files were merged.{Environment.NewLine}"
-                : $"{mergedFiles} / {totalFiles} files were merged:{Environment.NewLine}{GenerateMergeFeedbackMessage(mergedSourceFileInfos)}";
+            this.FlowDocument.FontFamily = new FontFamily("SeguiUI");
+            this.FlowDocument.FontSize = 12;
+
+            Paragraph p1 = new Paragraph()
+            {
+                Margin = new Thickness(0)
+            };
+            if (mergedFiles != 0)
+            {
+                p1.Inlines.Add(new Run
+                {
+                    FontWeight = FontWeights.Bold,
+                    Text = $"{mergedFiles} / {totalFiles} files were merged:"
+                });
+                this.FlowDocument.Blocks.Add(p1);
+                this.FlowDocument.Blocks.Add(GenerateMergeFeedbackMessage(mergedSourceFileInfos));
+            }
+
             if (unmergedFiles > 0)
             {
-                this.TextBlockFinalMessage.Text +=
-                    $"{Environment.NewLine}{unmergedFiles} / {totalFiles} files were not merged for the indicated reasons:{Environment.NewLine}{GenerateMergeFeedbackMessage(unmergedSourceFileInfos)}";
+                Paragraph p2 = new Paragraph()
+                {
+                    Margin = new Thickness(0)
+                };
+                p2.Inlines.Add(new Run
+                {
+                    FontWeight = FontWeights.Bold,
+                    Text = $"{unmergedFiles} / {totalFiles} files were not merged for the indicated reasons:"
+                });
+                this.FlowDocument.Blocks.Add(p2);
+                this.FlowDocument.Blocks.Add(GenerateMergeFeedbackMessage(unmergedSourceFileInfos));
             }
 
             // Show the Done button and hide the other buttons
@@ -315,62 +342,156 @@ namespace Timelapse.Dialog
 
         // Generate a displayable message listing the merge results,
         // separated into successfuly merged files vs failed merges and the reason why it failed
-        private string GenerateMergeFeedbackMessage(List<SourceFileInfo> sourceFileInfos)
+        private Paragraph GenerateMergeFeedbackMessage(List<SourceFileInfo> sourceFileInfos)
         {
-            string message = string.Empty;
+            Paragraph p1 = new Paragraph()
+            {
+                Margin = new Thickness(0)
+            };
             foreach (SourceFileInfo sourceFileInfo in sourceFileInfos)
             {
                 if (sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.Ok ||
-                    sourceFileInfo.DatabaseFileError ==
-                    DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion)
+                    sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion ||
+                    sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent)
                 {
-                    message += $" \u2713 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}";
+                    p1.Inlines.Add($"   \u2713 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}");
                 }
                 else
                 {
-                    message += $" \u2717 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}";
-                    message +=
-                        $"       \u2022 {GenerateMessageFromDatabaseFileErrorsEnum(sourceFileInfo.DatabaseFileError)}{Environment.NewLine}";
+                    p1.Inlines.Add($"   \u2717 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}");
+                    Tuple<string, Button> tuple = GenerateMessageFromDatabaseFileErrorsEnum(sourceFileInfo.DatabaseFileError);
+                    p1.Inlines.Add($"         \u2022 {tuple.Item1}");
+                    if (tuple.Item2 != null)
+                    {
+                        p1.Inlines.Add(tuple.Item2);
+                    }
+                    p1.Inlines.Add(Environment.NewLine);
                 }
             }
-            return message;
+            return p1;
         }
 
         // See above: this generates the actual text for each databaseFileError type
-        private string GenerateMessageFromDatabaseFileErrorsEnum(DatabaseFileErrorsEnum databaseFileError)
+        private Tuple<string, Button> GenerateMessageFromDatabaseFileErrorsEnum(DatabaseFileErrorsEnum databaseFileError)
         {
+            Button b1 = new Button
+            {
+                BorderThickness = new Thickness(0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Padding = new Thickness(-1),
+                Margin = new Thickness(4, 0, 4, 0),
+                Content = " Click to explain "
+            };
+
             switch (databaseFileError)
             {
+                // All is good
                 case DatabaseFileErrorsEnum.Ok:
                 case DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion:
-                    return "Merge succeeded";
-                case DatabaseFileErrorsEnum.NotATimelapseFile:
+                case DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent:
+                    return new Tuple<string, Button>("Merge succeeded", null);
+
+                // Cancelled
+                case DatabaseFileErrorsEnum.Cancelled:
+                    return new Tuple<string, Button>("The merging operation was cancelled by the user before this file was processed.", null);
+
+                // Invalid file
+                case DatabaseFileErrorsEnum.NotATimelapseFile: // This shouldn't be invoked, as we only see it if a file does not end with .ddb or .tdb. Still...
                 case DatabaseFileErrorsEnum.InvalidDatabase:
-                    return "The file does not contain a valid .ddb database.";
+                    b1.Tag = DatabaseFileErrorsEnum.InvalidDatabase;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file does not contain a valid .ddb database.", b1);
+
+                // Old .ddb version
                 case DatabaseFileErrorsEnum.PreVersion2300:
                 case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
-                    return "The file needs to be updated. Select File|Upgrade Timelapse files... to upgrade it.";
+                    b1.Tag = DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file needs to be updated.", b1);
+
+                // File in a non-permitted place
                 case DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder:
-                    return "The file cannot be located in a system or hidden folder. Move it elsewhere.";
                 case DatabaseFileErrorsEnum.FileInRootDriveFolder:
-                    return "The file cannot be located in a top level root drive. Move it elsewhere.";
-                case DatabaseFileErrorsEnum.Cancelled:
-                    return "The merging operation was cancelled by the user.";
-                case DatabaseFileErrorsEnum.DoesNotExist:
-                    return "The file does not exist.";
+                    b1.Tag = DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file cannot be located in a system or hidden folder or in a top-level root folder.", b1);
+
+                // File path is too long
                 case DatabaseFileErrorsEnum.PathTooLong:
-                    return "The file path length exceeds the Windows maximum size. Shorten the path name.";
-                // These results are used during merge testing for incompatabilities
+                    b1.Tag = DatabaseFileErrorsEnum.PathTooLong;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file path length exceeds the Windows maximum size.", b1);
+
+                // Incompatable Template
                 case DatabaseFileErrorsEnum.TemplateElementsDiffer:
-                    return "The file's template is not compatable with the destination database (their data fields differ).";
-                case DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent:
-                    return "The templates differ (data fields are the same but their order differs).";
+                    b1.Tag = DatabaseFileErrorsEnum.TemplateElementsDiffer;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file's template is incompatable.", b1);
+
+                // File does not exist
+                case DatabaseFileErrorsEnum.DoesNotExist:
+                    b1.Tag = DatabaseFileErrorsEnum.DoesNotExist;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file does not exist.", b1);
+
+
+                // Recognizer categories differ
                 case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
-                    return "The file's recognition data has different detection categories.";
                 case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
-                    return "The file's recognition data has different classification categories.";
+                    b1.Tag = DatabaseFileErrorsEnum.DetectionCategoriesDiffer;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file's recognition data has different detection and/or classification categories.", b1);
+
                 default:
-                    return "Unknown error";
+                    return new Tuple<string, Button>("Unknown error", null);
+            }
+        }
+
+        private void InvokeErrorExplanation_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button b)
+            {
+                switch ((DatabaseFileErrorsEnum)b.Tag)
+                {
+                    // Invalid file
+                    case DatabaseFileErrorsEnum.NotATimelapseFile: // This shouldn't be invoked, as we only see it if a file does not end with .ddb or .tdb. Still...
+                    case DatabaseFileErrorsEnum.InvalidDatabase:
+                        Dialogs.MergeErrorDatabaseFileAppearsCorruptDialog(this);
+                        break;
+
+                    // Old .ddb version
+                    case DatabaseFileErrorsEnum.PreVersion2300:
+                    case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
+                        Dialogs.MergeErrorDatabaseFileNeedsToBeUpdatedDialog(this);
+                        break;
+
+                    // File in a non-permitted place
+                    case DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder:
+                    case DatabaseFileErrorsEnum.FileInRootDriveFolder:
+                        Dialogs.TemplateInDisallowedFolder(this);
+                        break;
+
+                    // File path is too long
+                    case DatabaseFileErrorsEnum.PathTooLong:
+                        Dialogs.MergeErrorFilePathTooLongDialog(this);
+                        break;
+
+                    // Incompatable Template
+                    case DatabaseFileErrorsEnum.TemplateElementsDiffer:
+                        Dialogs.MergeErrorTemplateFilesNotCompatableDialog(this);
+                        break;
+
+                    // File does not exist
+                    case DatabaseFileErrorsEnum.DoesNotExist:
+                        Dialogs.MergeErrorFileDoesNotExist(this);
+                        break;
+
+                    // Recognizer categories differ
+                    case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
+                    case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
+                        Dialogs.MergeErrorRecognitionCategoriesDiffer(this);
+                        break;
+                }
             }
         }
 
@@ -383,14 +504,10 @@ namespace Timelapse.Dialog
             {
                 // Show error message
                 ListboxFileDatabases.Visibility = Visibility.Collapsed;
-                ScrollerTextBlockFinalMessage.Visibility = Visibility.Visible;
+                FinalMessageScrollViewer.Visibility = Visibility.Visible;
                 this.ButtonSelectAll.Visibility = Visibility.Collapsed;
                 this.ButtonSelectNone.Visibility = Visibility.Collapsed;
-                LabelBanner.Content = "Warning: No database (.ddb) files are available to merge.";
-                TextBlockFinalMessage.Text =
-                    $"Potential database files must be located in sub-folders contained within this root folder:{Environment.NewLine}";
-                TextBlockFinalMessage.Text += $"    \u2022 {rootFolderPath}{Environment.NewLine}{Environment.NewLine}";
-                TextBlockFinalMessage.Text += "Timelapse searched those sub-folders, and no database files were found.";
+                ResultsBanner.Text = "Warning: No database (.ddb) files are available to merge.";
                 MergeButton.IsEnabled = false;
                 return true;
             }
@@ -494,9 +611,6 @@ namespace Timelapse.Dialog
             private const int maxLength = 92;
             private const int prefixLength = 38;
             private const int suffixLength = 53;
-
-            // Check for very long file names
-            public bool PathTooLong => IsCondition.IsPathLengthTooLong(this.FullPath, FilePathTypeEnum.DDB);
 
             // Generate a shortened version of the file name to display in the available space
             public string ShortPathDisplayName =>

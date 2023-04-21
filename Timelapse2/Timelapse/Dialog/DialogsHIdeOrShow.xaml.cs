@@ -33,8 +33,8 @@ namespace Timelapse.Dialog
             this.SuppressCsvImportPrompt.IsChecked = this.state.SuppressCsvImportPrompt;
             this.SuppressHowDuplicatesWorkPrompt.IsChecked = this.state.SuppressHowDuplicatesWork;
             this.SuppressImportantMessagePrompt.IsChecked = this.state.SuppressOpeningMessageDialog;
-            this.SuppressMergeDatabasesPrompt.IsChecked = this.state.SuppressMergeDatabasesExplainedDialog;
-            this.SuppressMergeASingleDatabasePrompt.IsChecked = this.state.SuppressMergeASingleDatabasePrompt;
+            this.SuppressMergeDatabasesDialog.IsChecked = this.state.SuppressMergeDatabasesExplainedDialog;
+            this.SuppressMergeCheckoutExplainedDialog.IsChecked = this.state.SuppressMergeCheckoutExplainedDialog;
             this.SuppressSelectedAmbiguousDatesPrompt.IsChecked = this.state.SuppressSelectedAmbiguousDatesPrompt;
             this.SuppressSelectedCsvExportPrompt.IsChecked = this.state.SuppressSelectedCsvExportPrompt;
             this.SuppressSelectedDarkThresholdPrompt.IsChecked = this.state.SuppressSelectedDarkThresholdPrompt;
@@ -88,10 +88,16 @@ namespace Timelapse.Dialog
             this.state.SuppressOpeningMessageDialog = cb.IsChecked == true;
         }
 
-        private void SuppressMergeDatabasesPrompt_Click(object sender, RoutedEventArgs e)
+        private void SuppressMergeDatabasesDialog_Click(object sender, RoutedEventArgs e)
         {
             CheckBox cb = (CheckBox)sender;
             this.state.SuppressMergeDatabasesExplainedDialog = cb.IsChecked == true;
+        }
+
+        private void SuppressMergeCheckoutExplainedDialog_Click(object sender, RoutedEventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            this.state.SuppressMergeCheckoutExplainedDialog = cb.IsChecked == true;
         }
 
         private void SuppressMergeASingleDatabasePrompt_Click(object sender, RoutedEventArgs e)

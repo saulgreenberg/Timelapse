@@ -120,7 +120,10 @@
                               &#10;Usually used as a master database where other databases are merged into it.">
                     </MenuItem>
 
-                    <MenuItem Name="MenuItemAddDatabase" Header="Merge selected databases into the master database" IsEnabled="false" Click="MenuItemAddDatabase_Click" ToolTip="Merge one or more databases into an existing master database">
+                    <MenuItem Name="MenuItemMergeDatabases" Header="Merge selected databases into the master database" IsEnabled="false" Click="MenuItemMergeDatabases_Click" ToolTip="Merge one or more databases into an existing master database">
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemCheckoutDatabase" Header="Check out a database from the master database" IsEnabled="false" Click="MenuItemCheckoutDatabase_Click" ToolTip="Creates a database in a subfolder that contains only the entries for that subfolder">
                     </MenuItem>
 
                     <Separator />

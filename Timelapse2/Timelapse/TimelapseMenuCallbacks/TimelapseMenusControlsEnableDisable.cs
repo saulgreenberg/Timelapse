@@ -25,7 +25,8 @@ namespace Timelapse
             this.MenuItemExportAsCsvAndPreview.IsEnabled = filesSelected;
             this.MenuItemExportAsCsv.IsEnabled = filesSelected;
             this.MenuItemCreateEmptyDatabase.IsEnabled = !imageSetAvailable;
-            this.MenuItemAddDatabase.IsEnabled = imageSetAvailable;
+            this.MenuItemMergeDatabases.IsEnabled = imageSetAvailable;
+            this.MenuItemCheckoutDatabase.IsEnabled = imageSetAvailable;
             this.MenuItemImportFromCsv.IsEnabled = filesSelected;
             this.MenuItemRenameFileDatabaseFile.IsEnabled = filesSelected;
             this.MenuFileCloseImageSet.IsEnabled = imageSetAvailable;

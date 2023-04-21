@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Timelapse.DataStructures;
+using System.Web.UI.WebControls;
+using System.Windows.Forms;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.Util;
@@ -77,7 +79,6 @@ namespace Timelapse.Database
                 ? DatabaseFileErrorsEnum.TemplateElementsDiffer
                 : DatabaseFileErrorsEnum.Ok;
         }
-
         #endregion
 
         #region Check: CheckIfDdbContainsThisPath
@@ -104,9 +105,181 @@ namespace Timelapse.Database
         #endregion
 
         #region Checkout a relative path database
-        public static void CheckoutRelativePath(SQLiteWrapper sourceDdb, string destinationDdbPath, string RelativePath)
+        public static void CheckoutDatabaseWithRelativePath(FileDatabase sourceDdbFileDatabase, string sourceDdbPath, string destinationDdbPath, string relativePath)
         {
-            // TO DO
+
+            SQLiteWrapper destinationDdb = new SQLiteWrapper(destinationDdbPath);
+            SQLiteWrapper sourceDdb = sourceDdbFileDatabase.Database;
+
+            // a. We need several temporary tables 
+            string attachedSourceDB = "attachedSourceDB";
+            string tempDataTable = "tempDataTable";
+            string tempMarkersTable = "tempMarkersTable";
+
+            // Part 1. Initiate the query phrase with a transaction
+            string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
+
+            // Part 2. Create the DataTable in the destination, where it contains only those entries that match the relative path folder and subfolder
+            query += QueryCheckoutMergeDataTable(query, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePath) + Environment.NewLine;
+
+            // Part 3. Create the Markers table, where where it contains only those entries that match the entries in the datatable
+            query += QueryCheckoutMarkersTable(attachedSourceDB, tempMarkersTable, relativePath) + Environment.NewLine;
+
+            // Part 4. Handle the various Recognition Tables portion
+            if (sourceDdb.TableExists(Constant.DBTables.Detections))
+            {
+                query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine;
+                RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
+                query += QueryCheckoutRecognitionTable(attachedSourceDB, relativePath) + Environment.NewLine;
+                query += Sql.PragmaForeignKeysOn + Sql.Semicolon + Environment.NewLine;
+            }
+            query += Sql.EndTransactionSemiColon;
+            destinationDdb.ExecuteNonQuery(query);
+        }
+        #endregion
+
+        #region QueryPhrases used to checkout a database subset (based on a relative path) from a source database
+        // DataTable Checkout create merge query
+        //  Create the first part of the query to:
+        //  - Attach the ddbFile
+        //  - Create a temporary DataTable mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
+        //  - Update the DataTable with the modified Ids
+        //  - Update the DataTable with the path prefix
+        //  - Insert the DataTable  into the main db's DataTable
+        // Form example: 
+        // ATTACH DATABASE '<sourceDdbPath>' AS attachedSourceDB;
+        // CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM dataBaseName.tableName
+        //    WHERE RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>\%' 
+        // INSERT INTO Constant.DBTables.FileData SELECT <comma separated data labels> FROM tempDataTable
+        private static string QueryCheckoutMergeDataTable(string query, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePath)
+        {
+            string queryPhrase = string.Empty;
+            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
+            queryPhrase += QueryAttachDatabaseAs(sourceDdbPath, attachedSourceDB) + Environment.NewLine;
+            queryPhrase += QueryCheckoutCreateTemporaryTableFromRelativePathInExistingTable(tempDataTable, attachedSourceDB, Constant.DBTables.FileData, relativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutTrimRelativePath(tempDataTable, relativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutInsertTable2DataIntoTable1(tempDataTable, Constant.DBTables.FileData, currentDataLabels, relativePath) + Environment.NewLine;
+            return queryPhrase;
+        }
+
+        // Form (see above):
+        // CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM dataBaseName.tableName
+        //    WHERE RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>\%' ; 
+        private static string QueryCheckoutCreateTemporaryTableFromRelativePathInExistingTable(string tempDataTable, string dataBaseName, string tableName, string relativePath)
+        {
+            return Sql.CreateTemporaryTable + tempDataTable + Sql.As + Sql.SelectStarFrom + dataBaseName + Sql.Dot +
+                   tableName + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                   + Sql.Or
+                   + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                   + Sql.Semicolon;
+        }
+
+        // Insert columns from one table where rows must match only the relative paths
+        // Form (see above): 
+        // INSERT INTO table2 SELECT <comma separated data labels> FROM table1
+        private static string QueryCheckoutInsertTable2DataIntoTable1(string table1, string table2, List<string> listDataLabels, string relativePath)
+        {
+            //// Turn the list into a comma-separated string
+            //string dataLabels = String.Join(",", listDataLabels);
+            //dataLabels = dataLabels.TrimEnd(',');
+
+            return Sql.InsertInto + table2 + Sql.Select + String.Join(",", listDataLabels) + Sql.From + table1 + Sql.Semicolon;
+        }
+        // Form:
+        // Update DataTable Set RelativePath = '' where RelativePath = '<relativePath';
+        private static string QueryCheckoutTrimRelativePath(string table, string relativePath)
+        {
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.Update + table + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + "''" 
+                + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath) + Sql.Semicolon;
+
+            queryPhrase += Sql.Update + table + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal 
+                + Sql.Substr + Sql.OpenParenthesis + Constant.DatabaseColumn.RelativePath + Sql.Comma
+                + Sql.Length + Sql.OpenParenthesis + Sql.Quote(relativePath + "\\") + Sql.CloseParenthesis + Sql.Plus + "1" + Sql.CloseParenthesis
+                + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                + Sql.Semicolon;
+            return queryPhrase;
+        }
+
+        // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
+        //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
+        private static string QueryCheckoutMarkersTable(string attachedSourceDB, string tempMarkersTable, string relativePath)
+        {
+            string attachedMarkersTable = attachedSourceDB + Sql.Dot + Constant.DBTables.Markers;
+            string attachedDataTable = attachedSourceDB + Sql.Dot + Constant.DBTables.FileData;
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As
+                + Sql.Select + Constant.DBTables.Markers + Sql.DotStar + Sql.From + attachedMarkersTable
+                + Sql.Join + attachedDataTable + Sql.On 
+                + attachedMarkersTable + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.ID
+                + Sql.And + Sql.OpenParenthesis
+                + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                + Sql.Or
+                + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%") 
+                + Sql.CloseParenthesis + Sql.Semicolon;
+            queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable) + Environment.NewLine;
+            return queryPhrase;
+        }
+
+        // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
+        //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
+        private static string QueryCheckoutRecognitionTable(string attachedSourceDB, string relativePath)
+        {
+            string attachedDataTable = attachedSourceDB + Sql.Dot + Constant.DBTables.FileData;
+
+            // Copy the Detections table matching the ids and relative paths
+            string tmpDetections = "tmpDetections"; 
+            string attachedDetections = attachedSourceDB + Sql.Dot + Constant.DBTables.Detections;
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.CreateTemporaryTable + tmpDetections + Sql.As
+                           + Sql.Select + Constant.DBTables.Detections + Sql.DotStar + Sql.From + attachedDetections
+                           + Sql.Join + attachedDataTable + Sql.On
+                           + attachedDetections + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.ID
+                           + Sql.And + Sql.OpenParenthesis
+                           + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                           + Sql.Or
+                           + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                           + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
+            queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Detections, tmpDetections) + Environment.NewLine;
+
+            // Copy the Classifications table matching the detection ids of the just copied detection table
+            string tmpClassifications = "tmpClassifications";
+            string attachedClassifications = attachedSourceDB + Sql.Dot + Constant.DBTables.Classifications;
+
+            //queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
+            //               + Sql.Select + Constant.DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
+            //               + Sql.Where
+            //               + attachedClassifications + Sql.Dot + Constant.ClassificationColumns.DetectionID
+            //               + Sql.Equal + Constant.DBTables.Detections + Sql.Dot + Constant.DetectionColumns.DetectionID
+            //               + Sql.Semicolon + Environment.NewLine;
+
+            queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
+                           + Sql.Select + Constant.DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
+                           + Sql.Join + tmpDetections + Sql.On
+                           + attachedClassifications + Sql.Dot + Constant.ClassificationColumns.DetectionID
+                           + Sql.Equal + tmpDetections + Sql.Dot + Constant.DetectionColumns.DetectionID
+                           + Sql.Semicolon + Environment.NewLine;
+
+            queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Classifications, tmpClassifications) + Environment.NewLine;
+
+            // Copy the Detection Categories table
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpDetectionCategories", Constant.DBTables.DetectionCategories, attachedSourceDB);
+
+            // Copy the Classification Categories table 
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpClassificationCategories", Constant.DBTables.ClassificationCategories, attachedSourceDB);
+
+            // Copy the Info table 
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpInfo", Constant.DBTables.Info, attachedSourceDB);
+            return queryPhrase;
+        }
+
+        private static string QueryCheckoutCopyCompleteTable(string tmpTableName, string TableName, string attachedSourceDB)
+        {
+            string queryPhrase = Sql.CreateTemporaryTable + tmpTableName + Sql.As
+                           + Sql.Select + TableName + Sql.DotStar 
+                           + Sql.From + attachedSourceDB + Sql.Dot + TableName + Sql.Semicolon + Environment.NewLine;
+            queryPhrase += QueryInsertTable2DataIntoTable1(TableName, tmpTableName) + Environment.NewLine;
+            return queryPhrase;
         }
         #endregion
 
@@ -119,19 +292,10 @@ namespace Timelapse.Database
         // - the database is a valid SQL database
         // - the templates match
         public static DatabaseFileErrorsEnum RemoveEntriesFromDestinationDdbMatchingPath(
-            SQLiteWrapper destinationDdb,
-            string sourceDdbPath,
-            string relativePathDifference)
+        SQLiteWrapper destinationDdb,
+        string sourceDdbPath,
+        string relativePathDifference)
         {
-            // Find the relative path difference between the destination and source paths
-            //string pathToRootFolder = Path.GetDirectoryName(destinationDdbPath);
-            //if (pathToRootFolder == null)
-            //{
-            //    // Shouldn't happen
-            //    return DatabaseFileError.UnknownError;
-            //}
-            //string relativePathDifference = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceDdbPath);
-
             // Delete entries from the DataTable whose RelativePath begins with the (folder) path from the root folder.
             // This returns the Ids of all deleted entries
             string where = Constant.DatabaseColumn.RelativePath
@@ -160,21 +324,6 @@ namespace Timelapse.Database
             }
             return DatabaseFileErrorsEnum.Ok;
         }
-
-        public static DataTable RemoveEntriesFromDdbContainingThisPathReturningDeletedIds(
-            SQLiteWrapper ddb,
-            string pathFromRootSubFolder)
-        {
-
-            string where = Constant.DatabaseColumn.RelativePath
-                           + Sql.Like
-                           + Sql.Quote(pathFromRootSubFolder + @"\" + "%") // like root/*
-                           + Sql.Or
-                           + Constant.DatabaseColumn.RelativePath + Sql.Equal
-                           + Sql.Quote(pathFromRootSubFolder); // or equals root 
-            return ddb.DeleteRowsReturningIds(Constant.DBTables.FileData, where, Constant.DatabaseColumn.ID);
-        }
-
         #endregion
 
         #region Merge a source database into the destinaton database
@@ -235,7 +384,7 @@ namespace Timelapse.Database
             destinationDdb.ExecuteNonQuery(query);
 
             // Part 8. Check if there are any Detections. If not, delete all the recognition tables as they are no longer relevant
-            if (true == destinationDdb.TableExistsAndEmpty(Constant.DBTables.Detections))
+            if (destinationDdb.TableExistsAndEmpty(Constant.DBTables.Detections))
             {
                 destinationDdb.DropTable(Constant.DBTables.Detections);
                 destinationDdb.DropTable(Constant.DBTables.Classifications);
@@ -292,45 +441,6 @@ namespace Timelapse.Database
 
             return relativePathRoots;
         }
-
-        // Return a list ids whose RelativePath matches the pathPrefix or its subfolders 
-        // Form: SELECT Id from DataTable WHERE RelativePath = 
-        //public static List<long> GetIDsOfEntriesInThisFolder(SQLiteWrapper ddb, string folderPathFromRoot)
-        //{
-        //    // Get the relative paths
-        //    DataTable dtMatchingIdsInDdb =
-        //        ddb.GetDataTableFromSelect(Sql.Select + Constant.DatabaseColumn.ID + Sql.From + Constant.DBTables.FileData
-        //                                   + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(folderPathFromRoot)
-        //                                   + Sql.Or + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(folderPathFromRoot + @"\%"));
-
-        //    List<long> matchingIDs = new List<long>();
-        //    foreach (DataRow row in dtMatchingIdsInDdb.Rows)
-        //    {
-        //        matchingIDs.Add((long)row[0]);
-        //    }
-        //    return matchingIDs;
-        //}
-
-        private static DatabaseFileErrorsEnum CheckIfSourceAndDestinationDdbTemplatesAreCompatable(string sourceDdbPath,
-            string destinationDdbPath, ErrorsAndWarnings errorsAndWarnings)
-        {
-            // Check to see if the datalabels in the sourceDdbPath matches those in the destinationDdbPath.
-            // If not, generate a warning and abort the merge
-            SQLiteWrapper destinationDdb = new SQLiteWrapper(destinationDdbPath);
-            SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceDdbPath);
-            List<string> sourceDataLabels = sourceDdb.SchemaGetColumns(Constant.DBTables.FileData);
-            List<string> destinationDataLabels = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
-
-            ListComparisonEnum listComparisonEnum = Compare.CompareLists(sourceDataLabels, destinationDataLabels);
-
-            // Both IdenticalToSet2 and different ordered lists are ok. 
-            // If the order differs, it uses the order in the primary template. 
-            // We could, perhaps, make this more robust by creating a union of elements if they don't have name/value conflicts. However, this would introduce other issues 
-            return (listComparisonEnum == ListComparisonEnum.ElementsDiffer)
-                ? DatabaseFileErrorsEnum.TemplateElementsDiffer
-                : DatabaseFileErrorsEnum.Ok;
-        }
-
         #endregion
 
         #region Query phrases
@@ -424,16 +534,6 @@ namespace Timelapse.Database
                    Constant.RecognizerValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
         }
 
-        private static void DictionaryReplaceSecondDictWithFirstDictElements(Dictionary<string, object> first,
-            Dictionary<string, object> second)
-        {
-            second.Clear();
-            foreach (KeyValuePair<string, object> kvp in first)
-            {
-                second.Add(kvp.Key, kvp.Value);
-            }
-        }
-
         private static void DictionaryReplaceSecondDictWithFirstDictElements(Dictionary<string, string> first,
             Dictionary<string, string> second)
         {
@@ -525,10 +625,6 @@ namespace Timelapse.Database
             string sourceDdbPath,
             string attachedSourceDB,
             bool destinationDetectionsExists)
-            //string tempInfoTable, string tempDetectionCategoriesTable, string tempClassificationCategoriesTable,
-            //Dictionary<string, object> infoDictionary,
-            //Dictionary<string, string> detectionCategories,
-            //Dictionary<string, string> classificationCategories)
         {
             string tempInfoTable = "tempInfoTable";
             string tempDetectionCategoriesTable = "tempDetectionCategoriesTable";
@@ -536,7 +632,6 @@ namespace Timelapse.Database
 
             Dictionary<string, string> detectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> classificationCategories = new Dictionary<string, string>();
-            Dictionary<string, object> infoDictionary = new Dictionary<string, object>();
 
             // Create a connection to the sourceDdbPath
             // and check if the sourceDdb file has any recognitions (by seeing if a Detections table exists)
@@ -716,8 +811,8 @@ namespace Timelapse.Database
             {
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DatabaseColumn.ID, offsetId) + Environment.NewLine;
             }
-            if (offsetDetectionId > 0) 
-            { 
+            if (offsetDetectionId > 0)
+            {
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
             query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Detections, tempDetectionsTable) + Environment.NewLine;

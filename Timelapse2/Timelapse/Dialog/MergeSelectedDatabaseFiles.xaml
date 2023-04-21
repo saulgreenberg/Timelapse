@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
        xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Merge Databases..." Height="650" Width="650" MinHeight="450" MinWidth="650" Loaded="Window_Loaded" Closing="Window_Closing">
+        Title="Merge Databases..." Height="650" Width="680" MinHeight="450" MinWidth="680" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -31,7 +31,7 @@
                                       &#10;Only those are listed."/>
         <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
         <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5,0,0,0">
-            <Label Name="LabelBanner" FontWeight="Bold" Content="Choose one or more databases and click Merge."/>
+            <TextBlock Name="ResultsBanner" FontWeight="Bold" FontSize="14" Text="Choose one or more databases and click Merge." Margin="5,5,10,0"/>
             <Button Name="ButtonSelectAll" Content="Select all databases" Margin="10,0,10,0" Click="ButtonSelectAll_Click" />
             <Button Name="ButtonSelectNone" Content="Unselect the databases" Margin="0,0,10,0" Click="ButtonSelectNone_Click"/>
         </StackPanel>
@@ -51,9 +51,9 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <ScrollViewer Name="ScrollerTextBlockFinalMessage" Visibility="Collapsed"  Grid.Row="3" Margin="10,0,10,5">
-                <TextBlock Name="TextBlockFinalMessage" Margin="5"/>
-        </ScrollViewer>
+        <FlowDocumentScrollViewer Name="FinalMessageScrollViewer" Visibility="Collapsed"  Grid.Row="3" Margin="10,0,10,5" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+            <FlowDocument Name="FlowDocument"/>
+        </FlowDocumentScrollViewer>
 
         <Separator Grid.Row="4" BorderBrush="Gainsboro" BorderThickness="10"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="5">

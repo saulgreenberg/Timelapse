@@ -60,6 +60,7 @@ namespace Timelapse.Util
             }
         }
         #endregion
+
         #region Public static methods - Check if the database is valid, and return error status reports if it isn't
         // Only invoke this on a .tdb or .ddb file
         public static DatabaseFileErrorsEnum QuickCheckDatabaseFile(string filePath)
@@ -505,6 +506,12 @@ namespace Timelapse.Util
             }
             return false;
         }
+
+        // Return true if a file with the given extension exists in the provided folder path
+        public static int CountFilesInFolderWithExtension(string folderPath, string extension)
+        {
+            return Directory.GetFiles(folderPath, "*"+ extension).Length;
+        }
         #endregion
 
         #region Identify System folders, including the recycle bin
@@ -523,6 +530,26 @@ namespace Timelapse.Util
         public static bool IsFolderPathADriveLetter(string path)
         {
             return Path.GetPathRoot(path) == path;
+        }
+        #endregion
+
+        #region Generate file names
+        // Generate a unique name if the file name already exists,
+        // where it appends it with a number e.g., filename_1.extension
+        // return true if the fileNname was changed
+        public static bool GenerateFileNameIfNeeded(string path, string fileName, out string newFileName)
+        {
+            newFileName = fileName;
+            string baseFileName = Path.GetFileNameWithoutExtension(newFileName);
+            string completeFilePath = Path.Combine(path, newFileName);
+            int index = 0;
+            while (File.Exists(completeFilePath))
+            {
+                // A file with that name already exists, so generate a new file name
+                newFileName = $"{baseFileName}_{++index}{Constant.File.FileDatabaseFileExtension}";
+                completeFilePath = Path.Combine(path, newFileName);
+            }
+            return index > 0;
         }
         #endregion
 

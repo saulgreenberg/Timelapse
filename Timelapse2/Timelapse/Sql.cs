@@ -66,7 +66,9 @@ namespace Timelapse
         public const string Instr = " INSTR ";
         public const string IntegerType = " INTEGER ";
         public const string IsNull = " IS NULL ";
+        public const string Join = " JOIN ";
         public const string LeftJoin = " LEFT JOIN ";
+        public const string Length = " LENGTH ";
         public const string LessThanEqual = " <= ";
         public const string LessThan = " < ";
         public const string Like = " LIKE ";

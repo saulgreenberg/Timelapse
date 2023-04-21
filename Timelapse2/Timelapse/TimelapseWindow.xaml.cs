@@ -47,7 +47,7 @@ namespace Timelapse
             {
                 if (this.DataHandler == null)
                 {
-                    Debug.Print("Weird error in FolderPath - datahandler is null");
+                    Debug.Print("Weird error in FullFolderPath - datahandler is null");
                     return string.Empty;
                 }
                 else
@@ -602,7 +602,7 @@ namespace Timelapse
         }
         /// <summary>
         /// File menu helper function.
-        /// Note that it accesses this.FolderPath
+        /// Note that it accesses this.FullFolderPath
         /// </summary>
         private void FolderSelectionDialog_FolderChanging(object sender, CommonFileDialogFolderChangeEventArgs e)
         {
@@ -886,6 +886,5 @@ namespace Timelapse
             }
         }
         #endregion
-
     }
 }
