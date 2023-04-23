@@ -27,7 +27,6 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             this.SuppressAmbiguousDatesDialog.IsChecked = this.state.SuppressAmbiguousDatesDialog;
-            this.SuppressCreateAnEmptyDatabaseDialog.IsChecked = this.state.SuppressCreateAnEmptyDatabaseDialog;
             this.SuppressCsvExportDialog.IsChecked = this.state.SuppressCsvExportDialog;
             this.SuppressCsvExportDialog.IsChecked = this.state.SuppressCsvExportDialog;
             this.SuppressCsvImportPrompt.IsChecked = this.state.SuppressCsvImportPrompt;
@@ -53,11 +52,6 @@ namespace Timelapse.Dialog
         {
             CheckBox cb = (CheckBox)sender;
             this.state.SuppressAmbiguousDatesDialog = (cb.IsChecked == true);
-        }
-        private void SuppressCreateAnEmptyDatabaseDialog_Click(object sender, RoutedEventArgs e)
-        {
-            CheckBox cb = (CheckBox)sender;
-            this.state.SuppressCreateAnEmptyDatabaseDialog = cb.IsChecked == true;
         }
 
         private void SuppressCsvExportDialog_Click(object sender, RoutedEventArgs e)
@@ -99,13 +93,6 @@ namespace Timelapse.Dialog
             CheckBox cb = (CheckBox)sender;
             this.state.SuppressMergeCheckoutExplainedDialog = cb.IsChecked == true;
         }
-
-        private void SuppressMergeASingleDatabasePrompt_Click(object sender, RoutedEventArgs e)
-        {
-            CheckBox cb = (CheckBox)sender;
-            this.state.SuppressMergeASingleDatabasePrompt = cb.IsChecked == true;
-        }
-        
 
         private void SuppressSelectedCsvExportPrompt_Click(object sender, RoutedEventArgs e)
         {

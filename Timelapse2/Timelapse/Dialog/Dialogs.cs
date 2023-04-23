@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Windows;
 using System.Windows.Forms;
@@ -1092,13 +1091,13 @@ namespace Timelapse.Dialog
 
         public static void CheckUpdatesTimedOutDialog(Window owner)
         {
-            new MessageBox($"Could not check for newer versions.", owner)
+            new MessageBox("Could not check for newer versions.", owner)
             {
                 Message =
                 {
-                    What = $"Could not check to see if a newer Timelapse version is available.",
-                    Reason = $"The request timed out. Either the network is slow or the server is down.",
-                    Hint = $"Try again later.",
+                    What = "Could not check to see if a newer Timelapse version is available.",
+                    Reason = "The request timed out. Either the network is slow or the server is down.",
+                    Hint = "Try again later.",
                     Icon = MessageBoxImage.Information
                 }
             }.ShowDialog();
@@ -1766,40 +1765,6 @@ namespace Timelapse.Dialog
             }
             return messageBox.DialogResult;
         }
-
-        public static bool? MenuFileCreateEmptyDatabaseExplainedDialog(Window owner)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Create an empty database explained";
-            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Information,
-                    Title = "Create an empty database explained",
-                    What =  $"Empty databases are usually used to create an initial 'master' database, {Environment.NewLine}"
-                             + $"where its contents are added or updated by merging other database files into it. {Environment.NewLine}"
-                             + $"We suggest you read 'Merging files' in the Timelapse Reference Guide to understand its use.{Environment.NewLine}{Environment.NewLine}"
-                             + $"Even so, an empty database is just a normal Timelapse database.{Environment.NewLine}For example, you can add content by {Environment.NewLine} 'File|Add images and videos to this image set...'.",
-
-                     Details = $"Timelapse will do the following when creating an empty database file:{Environment.NewLine}"
-                          + $"\u2022 ask you to locate a root folder containing a template (a.tdb file),{Environment.NewLine}"
-                          + "\u2022 create a new empty database (.ddb) file in that folder with an appropriate name.",
-                     Hint = "Press Ok to continue creating an empty database file, otherwise Cancel."
-                },
-                DontShowAgain =
-                {
-                    Visibility = Visibility.Visible
-                }
-            };
-            messageBox.ShowDialog();
-
-            if (messageBox.DontShowAgain.IsChecked.HasValue)
-            {
-                GlobalReferences.TimelapseState.SuppressCreateAnEmptyDatabaseDialog = messageBox.DontShowAgain.IsChecked.Value;
-            }
-            return messageBox.DialogResult;
-        }
         #endregion
 
         #region MessageBox: MenuEdit
@@ -2356,6 +2321,29 @@ namespace Timelapse.Dialog
                                 + "\u2022 If not, you may have to delete your database file and then recreate it.",
                     Hint = $"If you are stuck, send an explanatory note to saul@ucalgary.ca.{Environment.NewLine}"
                            + "He will check those files to see if they can be repaired."
+                }
+            }.ShowDialog();
+        }
+
+        // DDb file exists
+        public static bool? MergeWarningCreateEmptyDdbFileExists(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"Do you really want to create an empty database in this folder?";
+            // notify the user the database appears corrupt
+            return new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Question,
+                    Problem = $"A database {Constant.File.FileDatabaseFileExtension} file already exists in that folder.",
+                    Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
+                     + "as to which one to use and which one has the most up to date data.",
+                    Solution =  $"You can continue to create the empty database. However, you may want to {Environment.NewLine}"
+                                + $"\u2022 reconsider, revisit and/or clean up that folder before doing so, or{Environment.NewLine}"
+                                + "\u2022 create a folder above this one, and use that as the root folder instead.",
+                    Hint = $"This is just a warning, as having multiple databases in a folder goes against best practices.{Environment.NewLine}"
+                        + "You may want to read about 'Merging files' in the Timelapse Reference Guide."
                 }
             }.ShowDialog();
         }

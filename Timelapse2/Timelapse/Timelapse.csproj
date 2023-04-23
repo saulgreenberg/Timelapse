@@ -207,6 +207,9 @@
     <Compile Include="Dialog\MergeCheckoutChooseSubfolder.xaml.cs">
       <DependentUpon>MergeCheckoutChooseSubfolder.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialog\MergeCreateEmptyDatabase.xaml.cs">
+      <DependentUpon>MergeCreateEmptyDatabase.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\MergeSelectedDatabaseFiles.xaml.cs">
       <DependentUpon>MergeSelectedDatabaseFiles.xaml</DependentUpon>
     </Compile>
@@ -497,6 +500,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\MergeCheckoutChooseSubfolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MergeCreateEmptyDatabase.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

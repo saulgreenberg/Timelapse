@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using System.Web.UI.WebControls;
-using System.Windows.Forms;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.Util;
@@ -120,19 +117,25 @@ namespace Timelapse.Database
             string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
 
             // Part 2. Create the DataTable in the destination, where it contains only those entries that match the relative path folder and subfolder
-            query += QueryCheckoutMergeDataTable(query, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePath) + Environment.NewLine;
+            query += QueryCheckoutMergeDataTable(destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePath) + Environment.NewLine;
 
             // Part 3. Create the Markers table, where where it contains only those entries that match the entries in the datatable
             query += QueryCheckoutMarkersTable(attachedSourceDB, tempMarkersTable, relativePath) + Environment.NewLine;
 
             // Part 4. Handle the various Recognition Tables portion
+            // Nate that the two classification tables are only included in the checkout process if there is something in them
             if (sourceDdb.TableExists(Constant.DBTables.Detections))
             {
                 query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine;
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
-                query += QueryCheckoutRecognitionTable(attachedSourceDB, relativePath) + Environment.NewLine;
+                
+                bool checkoutClassificationsTable = sourceDdb.TableExistsAndNotEmpty(Constant.DBTables.Classifications);
+                bool checkoutClassificationCategoriesTable = sourceDdb.TableExistsAndNotEmpty(Constant.DBTables.Classifications);
+                query += QueryCheckoutRecognitionTables(attachedSourceDB, relativePath, checkoutClassificationsTable, checkoutClassificationCategoriesTable) + Environment.NewLine;
                 query += Sql.PragmaForeignKeysOn + Sql.Semicolon + Environment.NewLine;
             }
+
+            // Part 5. We are done.
             query += Sql.EndTransactionSemiColon;
             destinationDdb.ExecuteNonQuery(query);
         }
@@ -151,14 +154,14 @@ namespace Timelapse.Database
         // CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM dataBaseName.tableName
         //    WHERE RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>\%' 
         // INSERT INTO Constant.DBTables.FileData SELECT <comma separated data labels> FROM tempDataTable
-        private static string QueryCheckoutMergeDataTable(string query, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePath)
+        private static string QueryCheckoutMergeDataTable(SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePath)
         {
             string queryPhrase = string.Empty;
             List<string> currentDataLabels = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
             queryPhrase += QueryAttachDatabaseAs(sourceDdbPath, attachedSourceDB) + Environment.NewLine;
             queryPhrase += QueryCheckoutCreateTemporaryTableFromRelativePathInExistingTable(tempDataTable, attachedSourceDB, Constant.DBTables.FileData, relativePath) + Environment.NewLine;
             queryPhrase += QueryCheckoutTrimRelativePath(tempDataTable, relativePath) + Environment.NewLine;
-            queryPhrase += QueryCheckoutInsertTable2DataIntoTable1(tempDataTable, Constant.DBTables.FileData, currentDataLabels, relativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutInsertTable2DataIntoTable1(tempDataTable, Constant.DBTables.FileData, currentDataLabels) + Environment.NewLine;
             return queryPhrase;
         }
 
@@ -177,12 +180,8 @@ namespace Timelapse.Database
         // Insert columns from one table where rows must match only the relative paths
         // Form (see above): 
         // INSERT INTO table2 SELECT <comma separated data labels> FROM table1
-        private static string QueryCheckoutInsertTable2DataIntoTable1(string table1, string table2, List<string> listDataLabels, string relativePath)
+        private static string QueryCheckoutInsertTable2DataIntoTable1(string table1, string table2, List<string> listDataLabels)
         {
-            //// Turn the list into a comma-separated string
-            //string dataLabels = String.Join(",", listDataLabels);
-            //dataLabels = dataLabels.TrimEnd(',');
-
             return Sql.InsertInto + table2 + Sql.Select + String.Join(",", listDataLabels) + Sql.From + table1 + Sql.Semicolon;
         }
         // Form:
@@ -190,10 +189,10 @@ namespace Timelapse.Database
         private static string QueryCheckoutTrimRelativePath(string table, string relativePath)
         {
             string queryPhrase = string.Empty;
-            queryPhrase += Sql.Update + table + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + "''" 
+            queryPhrase += Sql.Update + table + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + "''"
                 + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath) + Sql.Semicolon;
 
-            queryPhrase += Sql.Update + table + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal 
+            queryPhrase += Sql.Update + table + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal
                 + Sql.Substr + Sql.OpenParenthesis + Constant.DatabaseColumn.RelativePath + Sql.Comma
                 + Sql.Length + Sql.OpenParenthesis + Sql.Quote(relativePath + "\\") + Sql.CloseParenthesis + Sql.Plus + "1" + Sql.CloseParenthesis
                 + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
@@ -210,12 +209,12 @@ namespace Timelapse.Database
             string queryPhrase = string.Empty;
             queryPhrase += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As
                 + Sql.Select + Constant.DBTables.Markers + Sql.DotStar + Sql.From + attachedMarkersTable
-                + Sql.Join + attachedDataTable + Sql.On 
+                + Sql.Join + attachedDataTable + Sql.On
                 + attachedMarkersTable + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.ID
                 + Sql.And + Sql.OpenParenthesis
                 + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
                 + Sql.Or
-                + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%") 
+                + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
                 + Sql.CloseParenthesis + Sql.Semicolon;
             queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable) + Environment.NewLine;
             return queryPhrase;
@@ -223,12 +222,12 @@ namespace Timelapse.Database
 
         // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
         //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
-        private static string QueryCheckoutRecognitionTable(string attachedSourceDB, string relativePath)
+        private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationsTable, bool checkoutClassificationCategoriesTable)
         {
             string attachedDataTable = attachedSourceDB + Sql.Dot + Constant.DBTables.FileData;
 
             // Copy the Detections table matching the ids and relative paths
-            string tmpDetections = "tmpDetections"; 
+            string tmpDetections = "tmpDetections";
             string attachedDetections = attachedSourceDB + Sql.Dot + Constant.DBTables.Detections;
             string queryPhrase = string.Empty;
             queryPhrase += Sql.CreateTemporaryTable + tmpDetections + Sql.As
@@ -242,41 +241,43 @@ namespace Timelapse.Database
                            + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
             queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Detections, tmpDetections) + Environment.NewLine;
 
-            // Copy the Classifications table matching the detection ids of the just copied detection table
-            string tmpClassifications = "tmpClassifications";
-            string attachedClassifications = attachedSourceDB + Sql.Dot + Constant.DBTables.Classifications;
-
-            //queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
-            //               + Sql.Select + Constant.DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
-            //               + Sql.Where
-            //               + attachedClassifications + Sql.Dot + Constant.ClassificationColumns.DetectionID
-            //               + Sql.Equal + Constant.DBTables.Detections + Sql.Dot + Constant.DetectionColumns.DetectionID
-            //               + Sql.Semicolon + Environment.NewLine;
-
-            queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
-                           + Sql.Select + Constant.DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
-                           + Sql.Join + tmpDetections + Sql.On
-                           + attachedClassifications + Sql.Dot + Constant.ClassificationColumns.DetectionID
-                           + Sql.Equal + tmpDetections + Sql.Dot + Constant.DetectionColumns.DetectionID
-                           + Sql.Semicolon + Environment.NewLine;
-
-            queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Classifications, tmpClassifications) + Environment.NewLine;
 
             // Copy the Detection Categories table
             queryPhrase += QueryCheckoutCopyCompleteTable("tmpDetectionCategories", Constant.DBTables.DetectionCategories, attachedSourceDB);
 
-            // Copy the Classification Categories table 
-            queryPhrase += QueryCheckoutCopyCompleteTable("tmpClassificationCategories", Constant.DBTables.ClassificationCategories, attachedSourceDB);
-
             // Copy the Info table 
             queryPhrase += QueryCheckoutCopyCompleteTable("tmpInfo", Constant.DBTables.Info, attachedSourceDB);
+
+            // Copy the Classifications table matching the detection ids of the just copied detection table if not empty
+            if (checkoutClassificationsTable)
+            {
+                string tmpClassifications = "tmpClassifications";
+                string attachedClassifications = attachedSourceDB + Sql.Dot + Constant.DBTables.Classifications;
+                queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
+                               + Sql.Select + Constant.DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
+                               + Sql.Join + tmpDetections + Sql.On
+                               + attachedClassifications + Sql.Dot + Constant.ClassificationColumns.DetectionID
+                               + Sql.Equal + tmpDetections + Sql.Dot + Constant.DetectionColumns.DetectionID
+                               + Sql.Semicolon + Environment.NewLine;
+
+                queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Classifications, tmpClassifications) + Environment.NewLine;
+            }
+
+            // Copy the Classification Categories table if not empty
+            if (checkoutClassificationCategoriesTable)
+            {
+               
+                queryPhrase += QueryCheckoutCopyCompleteTable("tmpClassificationCategories", Constant.DBTables.ClassificationCategories, attachedSourceDB);
+            }
             return queryPhrase;
+
+
         }
 
         private static string QueryCheckoutCopyCompleteTable(string tmpTableName, string TableName, string attachedSourceDB)
         {
             string queryPhrase = Sql.CreateTemporaryTable + tmpTableName + Sql.As
-                           + Sql.Select + TableName + Sql.DotStar 
+                           + Sql.Select + TableName + Sql.DotStar
                            + Sql.From + attachedSourceDB + Sql.Dot + TableName + Sql.Semicolon + Environment.NewLine;
             queryPhrase += QueryInsertTable2DataIntoTable1(TableName, tmpTableName) + Environment.NewLine;
             return queryPhrase;

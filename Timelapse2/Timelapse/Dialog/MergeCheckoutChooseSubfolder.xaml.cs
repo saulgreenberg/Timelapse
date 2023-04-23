@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using ToastNotifications.Position;
 
 namespace Timelapse.Dialog
 {
@@ -19,7 +8,7 @@ namespace Timelapse.Dialog
     /// Get a folder that is a subfolder of the initial folder,
     /// This will be used (as the text messsage indicates) for a checked out database location
     /// </summary>
-    public partial class MergeCheckoutChooseSubfolder : Window
+    public partial class MergeCheckoutChooseSubfolder
     {
         // The full folder path to the selected folder
         public string FullFolderPath { get; private set; }

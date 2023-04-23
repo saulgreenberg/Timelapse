@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Windows;
 using System.Xml;
 using Timelapse.Dialog;
-using MessageBox = System.Windows.MessageBox;
 
 namespace Timelapse.Util
 {
@@ -98,7 +97,7 @@ namespace Timelapse.Util
                     }
                 }
             }
-            catch (System.Net.WebException exception)
+            catch (WebException)
             {
                 // Put message in saying we can't connect
                 if (showNoUpdatesMessage)

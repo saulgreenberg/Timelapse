@@ -38,13 +38,11 @@ namespace Timelapse.State
         public RecencyOrderedList<string> MostRecentImageSets { get; private set; }
         public Rect QuickPasteWindowPosition { get; set; }
         public bool SuppressAmbiguousDatesDialog { get; set; }
-        public bool SuppressCreateAnEmptyDatabaseDialog { get; set; }
         public bool SuppressCsvExportDialog { get; set; }
         public bool SuppressCsvImportPrompt { get; set; }
         public bool SuppressHowDuplicatesWork { get; set; }
         public bool SuppressMergeCheckoutExplainedDialog { get; set; }
         public bool SuppressMergeDatabasesExplainedDialog { get; set; }
-        public bool SuppressMergeASingleDatabasePrompt { get; set; }
         public bool SuppressOpeningMessageDialog { get; set; }
         public bool SuppressOpeningWithOlderTimelapseVersionDialog { get; set; }
         public bool SuppressSelectedAmbiguousDatesPrompt { get; set; }
@@ -89,7 +87,6 @@ namespace Timelapse.State
                 this.BookmarkTranslation = new Point(registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkTranslationX, 1.0), registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkTranslationY, 1.0));
                 this.BoundingBoxAnnotate = registryKey.GetBoolean(Constant.WindowRegistryKeys.BoundingBoxAnnotate, false);
                 this.BoundingBoxColorBlindFriendlyColors = registryKey.GetBoolean(Constant.WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, false);
-                this.SuppressCreateAnEmptyDatabaseDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressCreateAnEmptyDatabaseDialog, false);
                 this.CSVDateTimeOptions = registryKey.GetEnum(Constant.WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn);
                 if (this.CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeUTCWithOffset)
                 {
@@ -204,7 +201,6 @@ namespace Timelapse.State
                 registryKey.Write(Constant.WindowRegistryKeys.BookmarkTranslationY, this.BookmarkTranslation.Y);
                 registryKey.Write(Constant.WindowRegistryKeys.BoundingBoxAnnotate, this.BoundingBoxAnnotate);
                 registryKey.Write(Constant.WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, this.BoundingBoxColorBlindFriendlyColors);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressCreateAnEmptyDatabaseDialog, this.SuppressCreateAnEmptyDatabaseDialog);
                 registryKey.Write(Constant.WindowRegistryKeys.CSVDateTimeOptions, this.CSVDateTimeOptions.ToString());
                 registryKey.Write(Constant.WindowRegistryKeys.CSVIncludeFolderColumn, this.CSVIncludeFolderColumn.ToString());
                 registryKey.Write(Constant.WindowRegistryKeys.CSVInsertSpaceBeforeDates, this.CSVInsertSpaceBeforeDates);
