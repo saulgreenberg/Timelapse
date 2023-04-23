@@ -13,8 +13,7 @@ namespace Timelapse.Database
     // This static class will try to merge various .ddb database files into a single database.
     public static class MergeDatabases
     {
-        #region Public Static Method - TryMergeDatabasesAsync
-
+        #region Public Static Method - TryCreateEmptyDatabaseFromTemplateAsync
         // Given 
         // - a path to a .tdb file  (specifying the root folder)
         // - a path to the ddb File we want to create
@@ -104,7 +103,6 @@ namespace Timelapse.Database
         #region Checkout a relative path database
         public static void CheckoutDatabaseWithRelativePath(FileDatabase sourceDdbFileDatabase, string sourceDdbPath, string destinationDdbPath, string relativePath)
         {
-
             SQLiteWrapper destinationDdb = new SQLiteWrapper(destinationDdbPath);
             SQLiteWrapper sourceDdb = sourceDdbFileDatabase.Database;
 

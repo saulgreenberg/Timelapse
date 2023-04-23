@@ -1721,50 +1721,6 @@ namespace Timelapse.Dialog
             }
             return messageBox.DialogResult;
         }
-
-
-        /// <summary>
-        /// Show a message that explains how merging databases works and its constraints. Give the user an opportunity to abort
-        /// </summary>
-        public static bool? MenuFileMergeCheckoutExplainedDialog(Window owner)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Check out a database explained...";
-            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
-            {
-                Message =
-                {
-                     Icon = MessageBoxImage.Information,
-                     Title = title,
-                     What = $"Create a subset of the currently opened database that only contains entries pertaining to a particular sub-folder. {Environment.NewLine}"
-                            + $"You can then give that sub-folder to someone else, where they can independently analyze that sub-folder's images. {Environment.NewLine}"
-                              + "When that subset database is returned, you can merge it back into the main database",
-                     
-                     Result = $"Checking out a database does the following. {Environment.NewLine}"
-                            + $"\u2022 asks you to locate a sub-folder under your root folder,{Environment.NewLine}"
-                            + $"\u2022 copies the template {Constant.File.TemplateDatabaseFileExtension} file in that sub-folder,{Environment.NewLine}"
-                            + $"\u2022 creates a database {Constant.File.FileDatabaseFileExtension} file in that sub-folder,{Environment.NewLine}"
-                            + $"\u2022 populates that database with only those entries from the master database that match{Environment.NewLine}" 
-                            + "    the relative path (including other sub-folders) of that sub-folder",
-
-                     Details = $"\u2022 All existing data, including recognition data (if any) are included.{Environment.NewLine}"
-                               + $"\u2022 The checked out database is independent of the main databases: updates will not automotically propagate between them.{Environment.NewLine}"
-                               + "\u2022 The checked out database is a normal Timelapse database, which you can open and use as expected.",
-                     Hint = "To use merging effectively, we recommend you read the 'Merging Databases' section in the Timelape Reference Guide."
-                },
-                DontShowAgain =
-                {
-                    Visibility = Visibility.Visible
-                }
-            };
-            messageBox.ShowDialog();
-
-            if (messageBox.DontShowAgain.IsChecked.HasValue)
-            {
-                GlobalReferences.TimelapseState.SuppressMergeCheckoutExplainedDialog = messageBox.DontShowAgain.IsChecked.Value;
-            }
-            return messageBox.DialogResult;
-        }
         #endregion
 
         #region MessageBox: MenuEdit
@@ -2331,7 +2287,7 @@ namespace Timelapse.Dialog
             ThrowIf.IsNullArgument(owner, nameof(owner));
             string title = $"Do you really want to create an empty database in this folder?";
             // notify the user the database appears corrupt
-            return new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            return new MessageBox(title, owner, MessageBoxButton.YesNo)
             {
                 Message =
                 {
@@ -2344,6 +2300,28 @@ namespace Timelapse.Dialog
                                 + "\u2022 create a folder above this one, and use that as the root folder instead.",
                     Hint = $"This is just a warning, as having multiple databases in a folder goes against best practices.{Environment.NewLine}"
                         + "You may want to read about 'Merging files' in the Timelapse Reference Guide."
+                }
+            }.ShowDialog();
+        }
+
+        // DDb file exists
+        public static bool? MergeWarningCheckOutDdbFileExists(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"Do you really want to check out a database into this folder?";
+            // notify the user the database appears corrupt
+            return new MessageBox(title, owner, MessageBoxButton.YesNo)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Question,
+                    Problem = $"A database {Constant.File.FileDatabaseFileExtension} file already exists in that folder.",
+                    Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
+                             + "as to which one to use and which one has the most up to date data.",
+                    Solution =  $"You can continue to check out a database. However, you may want to {Environment.NewLine}"
+                                + $" reconsider, revisit and/or clean up that folder before doing so.",
+                    Hint = $"This is just a warning, as having multiple databases in a folder goes against best practices.{Environment.NewLine}"
+                           + "You may want to read 'Merging files' in the Timelapse Reference Guide."
                 }
             }.ShowDialog();
         }

@@ -5,21 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
- 		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Height="365" Width="600" MinHeight="330" MinWidth="550">
+ 		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Height="430" Width="600" MinHeight="330" MinWidth="550">
     <DockPanel>
         <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" 
                             Icon="Question"
-                            Title="Choose a folder for the checked out database?"
-                            What="Choose a folder to contain the checked out database. That database will then &#10;contain only those entries that match the relative path for that folder and its sub-folders"
-                            Result="In that folder, Timelapse will create: 
-                                      &#10;&#x2022; a database .ddb file,
-                                      &#10;&#x2022; a copy  the currently open database's template."/>
+                            Title="Check out (copy) a database subset into a sub-folder"
+                            What="Check out (copy) a subset of the master database into a sub-folder of your choice.
+                                   &#10;The checked out database will only include entries matching that sub-folder."
+                            Result="Checking out a database from the currently opened master database does the following: 
+                                      &#10;&#x2022; copies the master's template .tdb file into the chosen sub-folder,
+                                      &#10;&#x2022; creates a new database .ddb file in that sub-folder, populated by copying 
+                                      &#10;   a portion of the master database whose entries contain that sub-folder's relative path."
+                            Hint = "&#x2022; Give that sub-folder to others to analyze. Once done, check in that sub-folder's  
+                                      &#10;   database back into the master, which updates the data.
+                                      &#10;&#x2022; Recommended reading: 'Merging Databases' in the Timelape Reference Guide."/>
         <StackPanel Name="StackPanelCorrect" Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" >
             <Rectangle Fill="#FF868686" Height="2" />
             <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                <TextBlock HorizontalAlignment="Left" Margin="10,10,10,10"  Height="15" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="12" FontWeight="Bold">Folder:</TextBlock>
+                <TextBlock HorizontalAlignment="Left" Margin="10,10,10,10"  Height="15" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="12" FontWeight="Bold">Destination:</TextBlock>
                 <TextBox Name="txtboxNewFolderName"  Text="" IsReadOnly="True" Margin="0,0,10,0" Height="25" Width="300" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
-                <Button Name="ButtonChooseFolder" Padding="5,0,5,0" Height="25" Content ="Choose folder" Click="ButtonChooseFolder_OnClick"/>
+                <Button Name="ButtonChooseFolder" Padding="5,0,5,0" Height="25" Content ="Choose sub-folder" Click="ButtonChooseFolder_OnClick"/>
 
             </StackPanel>
             <Rectangle Fill="#FF868686" Height="1" Margin="0,0,0,10"/>
@@ -27,7 +32,8 @@
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click" IsEnabled="False">_Okay</Button>
+                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click" IsEnabled="False">_Check out the database</Button>
+                <Button Name="DoneButton" IsDefault="True"  VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
             </StackPanel>
         </DockPanel>
     </DockPanel>

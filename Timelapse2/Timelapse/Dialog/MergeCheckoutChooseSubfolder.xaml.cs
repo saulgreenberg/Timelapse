@@ -11,10 +11,10 @@ namespace Timelapse.Dialog
     public partial class MergeCheckoutChooseSubfolder
     {
         // The full folder path to the selected folder
-        public string FullFolderPath { get; private set; }
+        public string FullSubFolderPath { get; private set; }
 
         // The relative sub folder path under the initial folder to the selected folder
-        public string RelativeFolderPath { get; private set; }
+        public string RelativeSubFolderPath { get; private set; }
 
         private readonly string InitialFolder;
 
@@ -35,27 +35,35 @@ namespace Timelapse.Dialog
         #region Callbacks
         private void ButtonChooseFolder_OnClick(object sender, RoutedEventArgs e)
         {
-            this.RelativeFolderPath = Dialogs.LocateRelativePathUsingOpenFileDialog(this.InitialFolder, String.Empty);
-            if (this.RelativeFolderPath == null)
+            this.RelativeSubFolderPath = Dialogs.LocateRelativePathUsingOpenFileDialog(this.InitialFolder, String.Empty);
+            if (this.RelativeSubFolderPath == null)
             {
                 // User cancelled
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(this.RelativeFolderPath))
+            if (string.IsNullOrWhiteSpace(this.RelativeSubFolderPath))
             {
                 this.txtboxNewFolderName.Text = string.Empty;
-                this.FullFolderPath = string.Empty;
+                this.FullSubFolderPath = string.Empty;
             }
             else
             {
-                this.txtboxNewFolderName.Text = this.RelativeFolderPath;
-                this.FullFolderPath = Path.Combine(this.InitialFolder, this.RelativeFolderPath);
+                this.txtboxNewFolderName.Text = this.RelativeSubFolderPath;
+                this.FullSubFolderPath = Path.Combine(this.InitialFolder, this.RelativeSubFolderPath);
             }
-            this.OkButton.IsEnabled = !string.IsNullOrWhiteSpace(this.RelativeFolderPath); // Enable the button only if a folder was specified
+            this.OkButton.IsEnabled = !string.IsNullOrWhiteSpace(this.RelativeSubFolderPath); // Enable the button only if a folder was specified
         }
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
+            // ReSharper disable once AssignNullToNotNullAttribute
+            if (Directory.GetFiles(Path.GetDirectoryName(this.FullSubFolderPath), "*" + Constant.File.FileDatabaseFileExtension).Length > 0)
+            {
+                if (false == Dialogs.MergeWarningCheckOutDdbFileExists(this))
+                {
+                    return;
+                }
+            }
             this.DialogResult = true;
         }
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -63,5 +71,10 @@ namespace Timelapse.Dialog
             this.DialogResult = false;
         }
         #endregion
+
+        private void DoneButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

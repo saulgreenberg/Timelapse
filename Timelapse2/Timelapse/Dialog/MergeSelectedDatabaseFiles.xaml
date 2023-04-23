@@ -19,19 +19,22 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Question"
-                            Title="Merge a database into the opened database"
-                            What="Select one or more of the available database (.ddb) files below and click 'Merge'. Timelapse will:
-                                   &#10;&#x2022; merge those databases into the master database (i.e., the currently opened database file),
-                                   &#10;&#x2022; generate warnings for databases that could not be merged."   
-                            Details="Merging replaces all data whose file locations are within the selected database's folder.
-                                &#10;&#x2022; the master database deletes all data entries (if any) that share a common relative path 
-                                &#10;   with the selected database
-                                &#10;&#x2022; the master database inserts all data entries found in the selected database."
-                            Hint="Database files must be located under the currently opened database's root folder.
-                                      &#10;Only those are listed."/>
+                            Title="Check in (merge) a database into the master database"
+                            What="Check in (merge) data into the master database by selecting one or more
+                                &#10;database (.ddb) files that were found in its sub-folders. Timelapse will:
+                                   &#10;&#x2022; merge data from the selected databases into the currently opened master database file,
+                                   &#10;&#x2022; warn you about databases that cannot be merged."   
+                            Result="Timelapse replaces the portion of the master database matching the selected database's  
+                                    &#10;sub-folder with that database's data. Recognition data (if any) are included."
+                            Details = "&#x2022; All databases must be based on the same template.
+                            &#10;&#x2022; All databases are normal Timelapse databases, and are otherwise independent of each other."
+                            Hint="&#x2022; All databases must be based on the same template, otherwise the merge will fail.
+                                  &#10;&#x2022; Databases must be located in the sub-folder matching the desired relative path in the master database,
+                                    &#10;  as otherwise the merged data will be incorrect.
+                                      &#10;&#x2022; Recommended reading: 'Merging Databases' in the Timelape Reference Guide."/>
         <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
         <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5,0,0,0">
-            <TextBlock Name="ResultsBanner" FontWeight="Bold" FontSize="14" Text="Choose one or more databases and click Merge." Margin="5,5,10,0"/>
+            <TextBlock Name="ResultsBanner" FontWeight="Bold" FontSize="14" Text="Choose one or more databases and click 'Check in...'" Margin="5,5,10,0"/>
             <Button Name="ButtonSelectAll" Content="Select all databases" Margin="10,0,10,0" Click="ButtonSelectAll_Click" />
             <Button Name="ButtonSelectNone" Content="Unselect the databases" Margin="0,0,10,0" Click="ButtonSelectNone_Click"/>
         </StackPanel>
@@ -59,9 +62,8 @@
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="5">
            
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-            <Button Name="MergeButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="MergeButton_Click">_Merge</Button>
-            <Button Name="DoneButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
-            <Button Name="DoneWithLoadButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneWithLoadButton_Click">_Load the merged database</Button>
+            <Button Name="CheckInButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CheckInButton_Click">_Check in database(s)</Button>
+            <Button Name="DoneButton" IsDefault="True"  VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
         </StackPanel>
 
         <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->

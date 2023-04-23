@@ -541,12 +541,13 @@ namespace Timelapse.Util
         {
             newFileName = fileName;
             string baseFileName = Path.GetFileNameWithoutExtension(newFileName);
+            string extension = Path.GetExtension(fileName);
             string completeFilePath = Path.Combine(path, newFileName);
             int index = 0;
             while (File.Exists(completeFilePath))
             {
                 // A file with that name already exists, so generate a new file name
-                newFileName = $"{baseFileName}_{++index}{Constant.File.FileDatabaseFileExtension}";
+                newFileName = $"{baseFileName}_{++index}{extension}";
                 completeFilePath = Path.Combine(path, newFileName);
             }
             return index > 0;

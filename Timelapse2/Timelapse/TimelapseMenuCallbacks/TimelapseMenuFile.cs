@@ -215,17 +215,9 @@ namespace Timelapse
         }
         #endregion
 
-        #region Merging: Add or Replace one or more databases into the master
+        #region Merging: Check in one or more databases into the master
         private async void MenuItemCheckInDatabases_Click(object sender, RoutedEventArgs e)
         {
-            if (this.State.SuppressMergeDatabasesExplainedDialog == false)
-            {
-                if (Dialogs.MenuFileMergeDatabasesExplainedDialog(this) == false)
-                {
-                    return;
-                }
-            }
-
             Dialog.MergeSelectedDatabaseFiles mergeSelectedDatabaseFiles =
                 new Dialog.MergeSelectedDatabaseFiles(this,
                     this.DataHandler.FileDatabase.FilePath,
@@ -261,14 +253,6 @@ namespace Timelapse
         #region Merging: Checkout a database
         private async void MenuItemCheckOutDatabase_Click(object sender, RoutedEventArgs e)
         {
-            if (this.State.SuppressMergeCheckoutExplainedDialog == false)
-            {
-                if (Dialogs.MenuFileMergeCheckoutExplainedDialog(this) == false)
-                {
-                    return;
-                }
-            }
-
             // Get the relative and full path to the desired sub-folder location 
             Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder = new Dialog.MergeCheckoutChooseSubfolder(this, this.DataHandler.FileDatabase.FolderPath);
             if (false == mergeCheckoutChooseSubfolder.ShowDialog())
@@ -276,12 +260,8 @@ namespace Timelapse
                 return;
             }
 
-            string fullPathToChosenFolder = mergeCheckoutChooseSubfolder.FullFolderPath;
-            string relativePathToChosenFolder = mergeCheckoutChooseSubfolder.RelativeFolderPath;
-
-            //string fullPathToChosenFolder = @"C:\Users\saulg\Desktop\TestSets\MergeTest\SubFolder";
-            //fullPathToChosenFolder = @"C:\Users\saulg\Desktop\TestSets\WithClassifications\Station2";
-            //string relativePathToChosenFolder = @"Station2";
+            string fullPathToChosenFolder = mergeCheckoutChooseSubfolder.FullSubFolderPath;
+            string relativePathToChosenFolder = mergeCheckoutChooseSubfolder.RelativeSubFolderPath;
 
             // Copy the template to that folder, generating a unique name if needed
             string tdbFileName = Constant.File.DefaultTemplateDatabaseFileName;

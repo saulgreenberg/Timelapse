@@ -26,6 +26,7 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class MergeSelectedDatabaseFiles
     {
+        #region Variables
         // Tracks the found ddb files and their selection state
         public ObservableCollection<SourceFileInfo> ObservableDdbFileList { get; }
 
@@ -52,6 +53,7 @@ namespace Timelapse.Dialog
         private readonly FileDatabase fileDatabase;
         public List<string> sourceDdbFilePaths;
         private bool IsAnyDataUpdated;
+        #endregion
 
         #region Constructor, Loaded, Closing
         public MergeSelectedDatabaseFiles(TimelapseWindow owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
@@ -103,7 +105,7 @@ namespace Timelapse.Dialog
                 });
             }
             DataContext = this;
-            this.EnableOrDisableMergeButton();
+            this.EnableOrDisableCheckInButton();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -113,9 +115,82 @@ namespace Timelapse.Dialog
 
         #endregion
 
-        #region MergeButton Callback
+        #region Do the Merge
+        // Actually do the merge of each of the selected files
+        // Update whether it succeeded or failed in the sourceFileInfo.DatabaseFileError structure
+        private static async Task<List<SourceFileInfo>> MergeDatabasesAsync(SQLiteWrapper destinationDdb,
+            string destinationDdbPath, List<SourceFileInfo> selectedSourceDdbFiles,
+            IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
+        {
+            int sourceDdbCount = selectedSourceDdbFiles.Count;
+            int i = 0;
+            bool cancelled = false;
+            return await Task.Run(() =>
+            {
+                foreach (SourceFileInfo sourceFileInfo in selectedSourceDdbFiles)
+                {
+                    if (cancelled)
+                    {
+                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
+                    }
+
+                    // Show progress and check for cancel
+                    progress.Report(new ProgressBarArguments((int)(i++ / (double)sourceDdbCount * 100.0),
+                        $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
+                        "Merging...",
+                        true, false));
+                    if (cancelTokenSource.IsCancellationRequested)
+                    {
+                        cancelled = true;
+                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
+                        continue;
+                    }
+
+                    // A. Checks to see if we can merge the file
+
+                    // Check if its a valid readable database ddb file
+                    sourceFileInfo.DatabaseFileError =
+                        FilesFolders.QuickCheckDatabaseFile(sourceFileInfo.FullPath);
+                    if (HasError(sourceFileInfo.DatabaseFileError))
+                    {
+                        // Skip the merge on this file if it is problematic
+                        continue;
+                    }
+
+                    // Now check if the templates are compatable
+                    SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
+                    sourceFileInfo.DatabaseFileError =
+                        MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
+                    if (HasError(sourceFileInfo.DatabaseFileError))
+                    {
+                        // Skip the merge on this file if the templates are problematic
+                        continue;
+                    }
+
+                    string relativePathDifference =
+                        FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
+                    sourceFileInfo.DatabaseFileError =
+                        MergeDatabases.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb,
+                            sourceFileInfo.FullPath, relativePathDifference);
+                    if (HasError(sourceFileInfo.DatabaseFileError))
+                    {
+                        // Skip the merge on this file if the templates are problematic
+                        continue;
+                    }
+
+                    // e. Do the merge
+                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(
+                        destinationDdb, sourceFileInfo.FullPath, relativePathDifference);
+                }
+                return selectedSourceDdbFiles;
+
+            }).ConfigureAwait(true);
+        }
+        #endregion
+
+        #region CheckInButton Callback
         // Start the merge process
-        private async void MergeButton_Click(object sender, RoutedEventArgs e)
+        private async void CheckInButton_Click(object sender, RoutedEventArgs e)
         {
             // Before doing the merge, check if one or more databases are nested in a common folder/subfolder.
             // If so, warn the user and give them the option to abort.
@@ -213,87 +288,16 @@ namespace Timelapse.Dialog
             }
 
             // Show the Done button and hide the other buttons
-            this.MergeButton.Visibility = Visibility.Collapsed;
+            this.CheckInButton.Visibility = Visibility.Collapsed;
             this.CancelButton.Visibility = Visibility.Collapsed;
             this.DoneButton.Visibility = Visibility.Visible;
         }
         #endregion
 
-        // Actually do the merge of each of the selected files
-        // Update whether it succeeded or failed in the sourceFileInfo.DatabaseFileError structure
-        private static async Task<List<SourceFileInfo>> MergeDatabasesAsync(SQLiteWrapper destinationDdb,
-            string destinationDdbPath, List<SourceFileInfo> selectedSourceDdbFiles,
-            IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
-        {
-            int sourceDdbCount = selectedSourceDdbFiles.Count;
-            int i = 0;
-            bool cancelled = false;
-            return await Task.Run(() =>
-            {
-                foreach (SourceFileInfo sourceFileInfo in selectedSourceDdbFiles)
-                {
-                    if (cancelled)
-                    {
-                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
-                    }
-
-                    // Show progress and check for cancel
-                    progress.Report(new ProgressBarArguments((int)(i++ / (double)sourceDdbCount * 100.0),
-                        $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
-                        "Merging...",
-                        true, false));
-                    if (cancelTokenSource.IsCancellationRequested)
-                    {
-                        cancelled = true;
-                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
-                        continue;
-                    }
-
-                    // A. Checks to see if we can merge the file
-
-                    // Check if its a valid readable database ddb file
-                    sourceFileInfo.DatabaseFileError =
-                        FilesFolders.QuickCheckDatabaseFile(sourceFileInfo.FullPath);
-                    if (HasError(sourceFileInfo.DatabaseFileError))
-                    {
-                        // Skip the merge on this file if it is problematic
-                        continue;
-                    }
-
-                    // Now check if the templates are compatable
-                    SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
-                    sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb);
-                    if (HasError(sourceFileInfo.DatabaseFileError))
-                    {
-                        // Skip the merge on this file if the templates are problematic
-                        continue;
-                    }
-
-                    string relativePathDifference =
-                        FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
-                    sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb,
-                            sourceFileInfo.FullPath, relativePathDifference);
-                    if (HasError(sourceFileInfo.DatabaseFileError))
-                    {
-                        // Skip the merge on this file if the templates are problematic
-                        continue;
-                    }
-
-                    // e. Do the merge
-                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(
-                        destinationDdb, sourceFileInfo.FullPath, relativePathDifference);
-                }
-                return selectedSourceDdbFiles;
-
-            }).ConfigureAwait(true);
-        }
-
-        #region Callbacks: Buttons and Checkboxes
+        #region Other Callbacks: Buttons and Checkboxes
         private void Selector_CheckChanged(object sender, RoutedEventArgs e)
         {
-            EnableOrDisableMergeButton();
+            EnableOrDisableCheckInButton();
         }
 
         private void ButtonSelectAll_Click(object sender, RoutedEventArgs e)
@@ -303,7 +307,7 @@ namespace Timelapse.Dialog
                 ddbObject.IsSelected = true;
             }
             this.ListboxFileDatabases.Items.Refresh();
-            this.EnableOrDisableMergeButton();
+            this.EnableOrDisableCheckInButton();
         }
 
         private void ButtonSelectNone_Click(object sender, RoutedEventArgs e)
@@ -313,7 +317,7 @@ namespace Timelapse.Dialog
                 ddbObject.IsSelected = false;
             }
             this.ListboxFileDatabases.Items.Refresh();
-            this.EnableOrDisableMergeButton();
+            this.EnableOrDisableCheckInButton();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -322,11 +326,6 @@ namespace Timelapse.Dialog
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = true;
-        }
-
-        private void DoneWithLoadButton_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
         }
@@ -508,7 +507,7 @@ namespace Timelapse.Dialog
                 this.ButtonSelectAll.Visibility = Visibility.Collapsed;
                 this.ButtonSelectNone.Visibility = Visibility.Collapsed;
                 ResultsBanner.Text = "Warning: No database (.ddb) files are available to merge.";
-                MergeButton.IsEnabled = false;
+                CheckInButton.IsEnabled = false;
                 return true;
             }
 
@@ -568,17 +567,17 @@ namespace Timelapse.Dialog
 
         #region Utilities
         // Enable or Disable the merge button, depending upon whether any databases are selected
-        private void EnableOrDisableMergeButton()
+        private void EnableOrDisableCheckInButton()
         {
             foreach (SourceFileInfo ddbObject in ObservableDdbFileList)
             {
                 if (ddbObject.IsSelected)
                 {
-                    this.MergeButton.IsEnabled = true;
+                    this.CheckInButton.IsEnabled = true;
                     return;
                 }
             }
-            this.MergeButton.IsEnabled = false;
+            this.CheckInButton.IsEnabled = false;
         }
 
         // Return the relative path (including file name) to the ddb file. 

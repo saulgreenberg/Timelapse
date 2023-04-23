@@ -115,8 +115,6 @@ namespace Timelapse.State
                 this.SuppressCsvExportDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressCsvExportDialog, false);
                 this.SuppressCsvImportPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressCsvImportPrompt, false);
                 this.SuppressHowDuplicatesWork = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressHowDuplicatesWorkDialog, false);
-                this.SuppressMergeCheckoutExplainedDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressMergeCheckoutExplainedDialog, false);
-                this.SuppressMergeDatabasesExplainedDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressMergeDatabasesExplainedDialog, false);
                 this.SuppressOpeningMessageDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressOpeningMessageDialog, false);
                 this.SuppressOpeningWithOlderTimelapseVersionDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressOpeningWithOlderTimelapseVersionDialog, false);
                 this.SuppressSelectedAmbiguousDatesPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedAmbiguousDatesPrompt, false);
@@ -224,8 +222,6 @@ namespace Timelapse.State
                 registryKey.Write(Constant.WindowRegistryKeys.SuppressCsvExportDialog, this.SuppressCsvExportDialog);
                 registryKey.Write(Constant.WindowRegistryKeys.SuppressCsvImportPrompt, this.SuppressCsvImportPrompt);
                 registryKey.Write(Constant.WindowRegistryKeys.SuppressHowDuplicatesWorkDialog, this.SuppressHowDuplicatesWork);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressMergeCheckoutExplainedDialog, this.SuppressMergeCheckoutExplainedDialog);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressMergeDatabasesExplainedDialog, this.SuppressMergeDatabasesExplainedDialog);
                 registryKey.Write(Constant.WindowRegistryKeys.SuppressOpeningMessageDialog, this.SuppressOpeningMessageDialog);
                 registryKey.Write(Constant.WindowRegistryKeys.SuppressOpeningWithOlderTimelapseVersionDialog, this.SuppressOpeningWithOlderTimelapseVersionDialog);
                 registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedAmbiguousDatesPrompt, this.SuppressSelectedAmbiguousDatesPrompt);
