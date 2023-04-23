@@ -1678,51 +1678,7 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
-
-        /// <summary>
-        /// Show a message that explains how merging databases works and its constraints. Give the user an opportunity to abort
-        /// </summary>
-        public static bool? MenuFileMergeDatabasesExplainedDialog(Window owner)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Merge selected databases explained";
-            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
-            {
-                Message =
-                {
-                     Icon = MessageBoxImage.Information,
-                     Title = title,
-                     What = $"Selected databases are merged into the currently open database file. Timelapse will:{Environment.NewLine}"
-                            + $"\u2022 search for other database (.ddb) files in that folder's sub-folders,{Environment.NewLine}"
-                          + $"\u2022 let you select one or more of them,{Environment.NewLine}"
-                          + $"\u2022 merge all data found in the selected databases into the currently opened database,{Environment.NewLine}"
-                          + "\u2022 warn you about databases that cannot be merged.",
-
-                     Result = $"Merging works as follows:{Environment.NewLine}"
-                            + $"1. All current entries that share a common relative path with each selected database are deleted. {Environment.NewLine}"
-                            + "2. All entries in the selected database(s) are added to the current database. ",
-                     Details = $"\u2022 All databases must be based on the same template, otherwise the merge will fail.{Environment.NewLine}"
-                         + $"\u2022 Databases found in the Backup folders are ignored.{Environment.NewLine}"
-                         + $"\u2022 Recognition data (if any) are merged.{Environment.NewLine}"
-                         + $"\u2022 The merged database is independent of the selected databases: updates will not propagate between them.{Environment.NewLine}"
-                         + "\u2022 The merged database is a normal Timelapse database, which you can open and use as expected.",
-                     Hint = "To use merging effectively, we recommend you read the 'Merging Databases' section in the Timelape Reference Guide."
-                },
-                DontShowAgain =
-                {
-                    Visibility = Visibility.Visible
-                }
-            };
-            messageBox.ShowDialog();
-
-            if (messageBox.DontShowAgain.IsChecked.HasValue)
-            {
-                GlobalReferences.TimelapseState.SuppressMergeDatabasesExplainedDialog = messageBox.DontShowAgain.IsChecked.Value;
-            }
-            return messageBox.DialogResult;
-        }
         #endregion
-
         #region MessageBox: MenuEdit
         /// <summary>
         /// Tell the user how duplicates work, including showing a problem statement if the sort order isn't optimal. Give them the opportunity to abort.

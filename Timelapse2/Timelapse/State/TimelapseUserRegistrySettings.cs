@@ -41,8 +41,6 @@ namespace Timelapse.State
         public bool SuppressCsvExportDialog { get; set; }
         public bool SuppressCsvImportPrompt { get; set; }
         public bool SuppressHowDuplicatesWork { get; set; }
-        public bool SuppressMergeCheckoutExplainedDialog { get; set; }
-        public bool SuppressMergeDatabasesExplainedDialog { get; set; }
         public bool SuppressOpeningMessageDialog { get; set; }
         public bool SuppressOpeningWithOlderTimelapseVersionDialog { get; set; }
         public bool SuppressSelectedAmbiguousDatesPrompt { get; set; }

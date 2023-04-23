@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -250,85 +251,22 @@ namespace Timelapse
         }
         #endregion
 
-        #region Merging: Checkout a database
+        #region Merging: Check out a database
         private async void MenuItemCheckOutDatabase_Click(object sender, RoutedEventArgs e)
         {
             // Get the relative and full path to the desired sub-folder location 
-            Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder = new Dialog.MergeCheckoutChooseSubfolder(this, this.DataHandler.FileDatabase.FolderPath);
+            Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder = 
+                new Dialog.MergeCheckoutChooseSubfolder(this, this.DataHandler.FileDatabase.FolderPath, this.templateDatabase.FilePath, this.DataHandler);
+           
             if (false == mergeCheckoutChooseSubfolder.ShowDialog())
             {
-                return;
+                this.StatusBar.SetMessage("Check out database aborted."); ;
             }
-
-            string fullPathToChosenFolder = mergeCheckoutChooseSubfolder.FullSubFolderPath;
-            string relativePathToChosenFolder = mergeCheckoutChooseSubfolder.RelativeSubFolderPath;
-
-            // Copy the template to that folder, generating a unique name if needed
-            string tdbFileName = Constant.File.DefaultTemplateDatabaseFileName;
-            bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(fullPathToChosenFolder, tdbFileName, out string newTdbFileName);
-            if (tdbFileNameChanged)
+            else
             {
-                tdbFileName = newTdbFileName;
+                this.StatusBar.SetMessage("Check out database succeeded."); ;
             }
-
-            // Copy the main template into that folder, perhaps renaming it
-            string destinationTdbPath = Path.Combine(fullPathToChosenFolder, tdbFileName);
-            try
-            {
-                File.Copy(this.templateDatabase.FilePath, destinationTdbPath);
-            }
-            catch
-            {
-                MessageBox.Show(
-                    "Could not complete this operation, as the template could not be copied into the desired folder",
-                    "Could not copy the template", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            // Create an empty database in that folder
-            string ddbFileName = Constant.File.DefaultFileDatabaseFileName;
-            bool ddbFileNameChanged =
-                FilesFolders.GenerateFileNameIfNeeded(fullPathToChosenFolder, ddbFileName, out string newDdbFileName);
-            if (ddbFileNameChanged)
-            {
-                // if needed, generate a unique file name
-                ddbFileName = newDdbFileName;
-            }
-            string destinationDdbPath = Path.Combine(fullPathToChosenFolder, ddbFileName);
-
-            // We have a unique ddb path. Try to create the empty ddb file
-            bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
-                destinationTdbPath, destinationDdbPath).ConfigureAwait(true);
-
-            if (result == false)
-            {
-                // This is rare, don't bother trying to figure out what went wrong.
-                MessageBox.Show("Could not create the database",
-                    "Something went wrong. The database could not be created.");
-                this.StatusBar.SetMessage("Could not check out the database ");
-                return;
-            }
-
-            if (FilesFolders.CountFilesInFolderWithExtension(fullPathToChosenFolder, Constant.File.TemplateDatabaseFileExtension) > 1 
-                ||  FilesFolders.CountFilesInFolderWithExtension(fullPathToChosenFolder, Constant.File.FileDatabaseFileExtension) > 1)
-            {
-                // As there is more than one file with a .tdb or .ddb extension,  tell the user the name(s) of the created file
-                string shortDestinationTdbPath = tdbFileNameChanged 
-                    ? Path.Combine(relativePathToChosenFolder, newTdbFileName)
-                    : string.Empty;
-                string shortDestinationDdbPath = ddbFileNameChanged
-                    ? Path.Combine(relativePathToChosenFolder, newDdbFileName)
-                    : string.Empty;
-                Dialogs.NewFileNameGeneratedDialog(this, shortDestinationTdbPath, shortDestinationDdbPath);
-            }
-
-            // We now have a template and an empty database in the destination folder.
-            // Populate it with the data from the source database.
-            MergeDatabases.CheckoutDatabaseWithRelativePath(this.DataHandler.FileDatabase, this.DataHandler.FileDatabase.FilePath, destinationDdbPath,
-                relativePathToChosenFolder);
         }
-        
-
         #endregion
 
         #region Export/Import CSV file
