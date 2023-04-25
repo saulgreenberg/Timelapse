@@ -66,9 +66,12 @@ namespace Timelapse
         public const string Instr = " INSTR ";
         public const string IntegerType = " INTEGER ";
         public const string IsNull = " IS NULL ";
+        public const string Join = " JOIN ";
         public const string LeftJoin = " LEFT JOIN ";
+        public const string Length = " LENGTH ";
         public const string LessThanEqual = " <= ";
         public const string LessThan = " < ";
+        public const string Like = " LIKE ";
         public const string Limit = " LIMIT ";
         public const string LimitOne = Limit + " 1 ";
         public const string Max = " MAX ";
@@ -78,6 +81,7 @@ namespace Timelapse
         public const string Not = " NOT ";
         public const string NotEqual = " <> ";
         public const string NotNull = " NOT NULL ";
+        public const string NotLike = Sql.Not + Sql.Like;
         public const string Null = " NULL ";
         public const string NullAs = Null + " " + As;
         public const string Ok = "ok";
@@ -98,6 +102,7 @@ namespace Timelapse
         public const string PrimaryKey = " PRIMARY KEY ";
         public const string RenameTo = " RENAME TO ";
         public const string Replace = " REPLACE ";
+        public const string Returning = " RETURNING ";
         public const string QuotedEmptyString = " '' ";
         public const string Select = " SELECT ";
         public const string SelectDistinct = " SELECT DISTINCT ";
@@ -419,6 +424,14 @@ namespace Timelapse
                 ? string.Empty
                 : Sql.OpenParenthesis;
             return frontwrapper;
+        }
+
+        // Create a query that returns the maximum value in the provided table
+        // For example, if the column is Id, it will get the maximum Id
+        // Form: "Select Max(columnName) from tableName"
+        public static string GetMaxColumnValue(string columnName, string tableName)
+        {
+            return Sql.Select + Sql.Max + Sql.OpenParenthesis + columnName + Sql.CloseParenthesis + Sql.From + tableName;
         }
     }
 }

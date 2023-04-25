@@ -47,7 +47,6 @@ namespace Timelapse.Database
         }
         #endregion
 
-
         #region Create Table
         // A simplified table creation routine. It expects the column definitions to be supplied
         // as a column_name, data type key value pair. 
@@ -500,7 +499,24 @@ namespace Timelapse.Database
                 query += Sql.Where;                   // WHERE
                 query += where;                                 // where
             }
+            this.GetDataTableFromSelect(query);
             this.ExecuteNonQuery(query);
+        }
+
+        public DataTable DeleteRowsReturningIds(string tableName, string where, string whatToReturn)
+        {
+            // DELETE FROM table_name WHERE where RETURNING Id
+            string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
+            if (!string.IsNullOrWhiteSpace(where))
+            {
+                // Add the WHERE clause only when where is not empty
+                query += Sql.Where;                   // WHERE
+                query += where;                                 // where
+            }
+
+            //query += Sql.Returning + Sql.Quote(whatToReturn);
+            query += Sql.Returning + whatToReturn;
+            return this.GetDataTableFromSelect(query);
         }
 
         /// <summary>
@@ -606,6 +622,7 @@ namespace Timelapse.Database
             }
             return Convert.ToSingle(obj);
         }
+
         #endregion
 
         #region Execute Non-Queries: one statement, list of statements 
@@ -1351,7 +1368,7 @@ namespace Timelapse.Database
             SQLiteWrapper.PragmaSetForeignKeys(connection, false);
 
             // Drop the table
-            string sql = Sql.DropTable + tableName;
+            string sql = Sql.DropTable + Sql.IfExists + tableName;
             using (SQLiteCommand command = new SQLiteCommand(sql, connection))
             {
                 command.ExecuteNonQuery();
@@ -1390,10 +1407,29 @@ namespace Timelapse.Database
             {
                 if (datatable.Rows.Count == 0)
                 {
+                    // The table does not exists
                     return false;
                 }
                 query = $"SELECT COUNT(*)_ FROM {tableName}";
+                // If > 0 elements, then it both exists and has content so return true otherwise false
                 return this.ScalarGetCountFromSelect(query) != 0;
+            }
+        }
+
+        // Return true iff the table exists, but is empty
+        public bool TableExistsAndEmpty(string tableName)
+        {
+            string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
+            using (DataTable datatable = this.GetDataTableFromSelect(query))
+            {
+                if (datatable.Rows.Count == 0)
+                {
+                    // Table does not exist
+                    return false;
+                }
+                query = $"SELECT COUNT(*)_ FROM {tableName}";
+                // If 0 elements, then its empty so return true otherwise false
+                return this.ScalarGetCountFromSelect(query) == 0;
             }
         }
         #endregion

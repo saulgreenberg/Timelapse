@@ -60,6 +60,7 @@ namespace Timelapse.Util
             }
         }
         #endregion
+
         #region Public static methods - Check if the database is valid, and return error status reports if it isn't
         // Only invoke this on a .tdb or .ddb file
         public static DatabaseFileErrorsEnum QuickCheckDatabaseFile(string filePath)
@@ -391,34 +392,32 @@ namespace Timelapse.Util
         // return     "foo"
         public static string GetDifferenceBetweenPathAndSubPath(string path1, string path2)
         {
-            if (String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0
-                || String.CompareOrdinal(Path.GetDirectoryName(path1), path2) == 0)
+            if (path1 == null || path2 == null)
             {
-                // both paths are identical, but one path contains a file 
                 return string.Empty;
             }
-            if (path1.Length > path2.Length)
+
+            // If its a file, strip the file name off the path
+            path1 = File.GetAttributes(path1).HasFlag(FileAttributes.Directory)
+                ? path1
+                : Path.GetDirectoryName(path1);
+            // If its a file, strip the file name off the path
+            path2 = File.GetAttributes(path2).HasFlag(FileAttributes.Directory)
+                ? path2
+                : Path.GetDirectoryName(path2);
+
+
+            if (String.CompareOrdinal(path1, path2) == 0)
             {
-                string dir1 = Path.GetDirectoryName(path1);
-                if (dir1 == null)
-                {
-                    // Shouldn't happen. Empty workaround likely does not work.
-                    TracePrint.NullException(nameof(dir1));
-                    return string.Empty;
-                }
-                return dir1.Replace(path2 + "\\", "");
+                // both paths are identical 
+                return string.Empty;
             }
-            else
-            {
-                string dir2 = Path.GetDirectoryName(path2);
-                if (dir2 == null)
-                {
-                    // Shouldn't happen. Empty workaround likely does not work.
-                    TracePrint.NullException(nameof(dir2));
-                    return string.Empty;
-                }
-                return dir2.Replace(path1 + "\\", "");
-            }
+
+
+            return path1?.Length > path2?.Length
+            ? path1.Replace(path2 + "\\", "")
+            : path2?.Replace(path1 + "\\", "");
+
         }
         #endregion
 
@@ -507,6 +506,12 @@ namespace Timelapse.Util
             }
             return false;
         }
+
+        // Return true if a file with the given extension exists in the provided folder path
+        public static int CountFilesInFolderWithExtension(string folderPath, string extension)
+        {
+            return Directory.GetFiles(folderPath, "*"+ extension).Length;
+        }
         #endregion
 
         #region Identify System folders, including the recycle bin
@@ -525,6 +530,27 @@ namespace Timelapse.Util
         public static bool IsFolderPathADriveLetter(string path)
         {
             return Path.GetPathRoot(path) == path;
+        }
+        #endregion
+
+        #region Generate file names
+        // Generate a unique name if the file name already exists,
+        // where it appends it with a number e.g., filename_1.extension
+        // return true if the fileNname was changed
+        public static bool GenerateFileNameIfNeeded(string path, string fileName, out string newFileName)
+        {
+            newFileName = fileName;
+            string baseFileName = Path.GetFileNameWithoutExtension(newFileName);
+            string extension = Path.GetExtension(fileName);
+            string completeFilePath = Path.Combine(path, newFileName);
+            int index = 0;
+            while (File.Exists(completeFilePath))
+            {
+                // A file with that name already exists, so generate a new file name
+                newFileName = $"{baseFileName}_{++index}{extension}";
+                completeFilePath = Path.Combine(path, newFileName);
+            }
+            return index > 0;
         }
         #endregion
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using System.Windows;
 using System.Xml;
@@ -42,61 +44,79 @@ namespace Timelapse.Util
         {
             string url = string.Empty; // THE URL where the new version is located
             Version latestVersionNumber = null;  // if a new version is available, store the new version number here  
-
             XmlReader reader = null;
             try
             {
-                // This pattern follows recommended correction to CA3075: Insecure DTD Processing
-                // provide the XmlReader with the URL of our xml document  
-                XmlReaderSettings settings = new XmlReaderSettings() { XmlResolver = null };
-                reader = XmlReader.Create(this.latestVersionAddress.AbsoluteUri, settings);
-                reader.MoveToContent(); // skip the junk at the beginning  
-
-                // As the XmlTextReader moves only forward, we save current xml element name in elementName variable. 
-                // When we parse a  text node, we refer to elementName to check what was the node name  
-                string elementName = string.Empty;
-                // Check if the xml starts with a <timelapse> Element  
-                if ((reader.NodeType == XmlNodeType.Element) && (reader.Name == Constant.VersionXml.Timelapse))
+                // Set a timeout for the web request
+                // If its timed out, it will go to the catch
+                WebRequest request = WebRequest.Create(this.latestVersionAddress.AbsoluteUri);
+                request.Timeout = 5000;
+                using (WebResponse response = request.GetResponse())
                 {
-                    // Read the various elements and their associated contents
-                    while (reader.Read())
+                    // This pattern follows recommended correction to CA3075: Insecure DTD Processing
+                    // provide the XmlReader with the URL of our xml document  
+                    XmlReaderSettings settings = new XmlReaderSettings() { XmlResolver = null };
+                    //reader = XmlReader.Create(this.latestVersionAddress.AbsoluteUri, settings);
+                    // ReSharper disable once AssignNullToNotNullAttribute
+                    reader = XmlReader.Create(response.GetResponseStream(), settings);
+                    reader.MoveToContent(); // skip the junk at the beginning  
+                    Debug.Print("Ok");
+                    // As the XmlTextReader moves only forward, we save current xml element name in elementName variable. 
+                    // When we parse a  text node, we refer to elementName to check what was the node name  
+                    string elementName = string.Empty;
+                    // Check if the xml starts with a <timelapse> Element  
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == Constant.VersionXml.Timelapse)
                     {
-                        // when we find an element node, we remember its name  
-                        if (reader.NodeType == XmlNodeType.Element)
+                        // Read the various elements and their associated contents
+                        while (reader.Read())
                         {
-                            elementName = reader.Name;
-                        }
-                        else
-                        {
-                            // for text nodes...  
-                            if ((reader.NodeType == XmlNodeType.Text) && reader.HasValue)
+                            // when we find an element node, we remember its name  
+                            if (reader.NodeType == XmlNodeType.Element)
                             {
-                                // we check what the name of the node was  
-                                switch (elementName)
+                                elementName = reader.Name;
+                            }
+                            else
+                            {
+                                // for text nodes...  
+                                if (reader.NodeType == XmlNodeType.Text && reader.HasValue)
                                 {
-                                    case Constant.VersionXml.Version:
-                                        // we keep the version info in xxx.xxx.xxx.xxx format as the Version class does the  parsing for us  
-                                        latestVersionNumber = new Version(reader.Value);
-                                        break;
-                                    case Constant.VersionXml.Url:
-                                        url = reader.Value;
-                                        break;
+                                    // we check what the name of the node was  
+                                    switch (elementName)
+                                    {
+                                        case Constant.VersionXml.Version:
+                                            // we keep the version info in xxx.xxx.xxx.xxx format as the Version class does the  parsing for us  
+                                            latestVersionNumber = new Version(reader.Value);
+                                            break;
+                                        case Constant.VersionXml.Url:
+                                            url = reader.Value;
+                                            break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            catch (WebException)
+            {
+                // Put message in saying we can't connect
+                if (showNoUpdatesMessage)
+                {
+                    Dialogs.CheckUpdatesTimedOutDialog(Application.Current.MainWindow);
+                }
+                return false;
+            }
             catch (Exception)
             {
+                if (showNoUpdatesMessage)
+                {
+                    Dialogs.CheckUpdatesTimedOutDialog(Application.Current.MainWindow);
+                }
                 return false;
             }
             finally
             {
-                if (reader != null)
-                {
-                    reader.Close();
-                }
+                reader?.Close();
             }
 
             // get the running version  
@@ -106,9 +126,7 @@ namespace Timelapse.Util
             if (currentVersionNumber < latestVersionNumber)
             {
                 NewVersionNotification newVersionNotification = new NewVersionNotification(this.window, this.applicationName, currentVersionNumber, latestVersionNumber);
-
-                bool? result = newVersionNotification.ShowDialog();
-                if (result == true)
+                if (newVersionNotification.ShowDialog() == true)
                 {
                     // navigate the default web browser to our app homepage (the url comes from the xml content)  
                     ProcessExecution.TryProcessStart(new Uri(url));

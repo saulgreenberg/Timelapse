@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Hide or Show Various Informational Dialogs" Height="465" Width="680" Loaded="Window_Loaded">
+        Title="Hide or Show Various Informational Dialogs" Height="515" Width="680" Loaded="Window_Loaded">
     <Grid Margin="10,0,10,10">
         <Grid.RowDefinitions >
             <RowDefinition Height="Auto"/>
@@ -33,7 +33,6 @@
                 <CheckBox FontWeight="Normal" Content="Fixed date/time correction selection" Name="SuppressSelectedDateTimeFixedCorrectionPrompt" Click="SuppressSelectedDateTimeFixedCorrectionPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when fixed date/time correction is performed with over selected files" />
                 <CheckBox FontWeight="Normal" Content="How duplicates work" Name="SuppressHowDuplicatesWorkPrompt" Click="SuppressHowDuplicatesWorkPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when you select the 'Duplicate this record' menu option" />
                 <CheckBox FontWeight="Normal" Content="Important message about this update" Name="SuppressImportantMessagePrompt" Click="SuppressImportantMessagePrompt_Click" ToolTip="Turn on or off the informational dialog about updates that may be displayed when you start Timelapse" Visibility="Collapsed"/>
-                <CheckBox FontWeight="Normal" Content="Merged database" Name="SuppressMergeDatabasesPrompt" Click="SuppressMergeDatabasesPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when you select the 'Merge databases' menu option" />
                 <CheckBox FontWeight="Normal" Content="Metadata selection" Name="SuppressSelectedPopulateFieldFromMetadataPrompt" Click="SuppressSelectedPopulateFieldFromMetadataPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when metadata is read from over selected files" />
                 <CheckBox FontWeight="Normal" Content="Reread dates selection" Name="SuppressSelectedRereadDatesFromFilesPrompt" Click="SuppressSelectedRereadDatesFromFilesPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when dates are reloaded from files over selected files" />
                 <CheckBox FontWeight="Normal" Content="Very important message concerning this update" Name="SuppressWarningToUpdateDBFilesToSQL" Click="SuppressWarningToUpdateDBFilesToSQL_Click" ToolTip="Turn on or off the informational dialog displayed about this update" />

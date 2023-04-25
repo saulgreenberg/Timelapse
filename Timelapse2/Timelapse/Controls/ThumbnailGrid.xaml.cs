@@ -39,7 +39,7 @@ namespace Timelapse.Controls
         // FileTableStartIndex needs to be set externally
         public int FileTableStartIndex { get; set; }
 
-        // FolderPath needs to be set externally
+        // FullSubFolderPath needs to be set externally
         // The root folder containing the template
         public string FolderPath { get; set; }
 

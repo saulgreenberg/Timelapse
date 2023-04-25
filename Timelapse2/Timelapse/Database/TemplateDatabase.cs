@@ -93,10 +93,7 @@ namespace Timelapse.Database
             }
             finally
             {
-                if (disposableTemplateDB != null)
-                {
-                    disposableTemplateDB.Dispose();
-                }
+                disposableTemplateDB?.Dispose();
             }
         }
 
@@ -206,15 +203,6 @@ namespace Timelapse.Database
         public bool TableExists(string dataTable)
         {
             return this.Database.TableExists(dataTable);
-        }
-
-        // Check if the database table specified in the path has a detections table
-        public static bool TableExists(string dataTable, string dbPath)
-        {
-            // Note that no error checking is done - I assume, perhaps unwisely, that the file is a valid database
-            // On tedting, it does return 'false' on an invalid ddb file, so I suppose that's ok.
-            SQLiteWrapper db = new SQLiteWrapper(dbPath);
-            return db.TableExists(dataTable);
         }
 
         // Check if the database is valid. 
@@ -472,7 +460,7 @@ namespace Timelapse.Database
             this.GetControlsSortedByControlOrder();
         }
         #endregion
-
+        
         #region Public /Private Methods Sync - ControlToDatabase, TemplateTableCOntrolAndSpreadsheetOrderToDatabase
         public void SyncControlToDatabase(ControlRow control)
         {
@@ -543,16 +531,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Public Methods - Misc: BindToEditorDataGrid, CreateBackupIfNeeded, Update DisplayOrder
-
-        public void BindToEditorDataGrid(DataGrid dataGrid, DataRowChangeEventHandler onRowChanged)
-        {
-            this.editorDataGrid = dataGrid;
-            this.onTemplateTableRowChanged = onRowChanged;
-            this.GetControlsSortedByControlOrder();
-        }
-
-
-        protected void CreateBackupIfNeeded()
+        public void CreateBackupIfNeeded()
         {
             if (DateTime.Now - this.mostRecentBackup < Constant.File.BackupInterval)
             {
@@ -561,6 +540,13 @@ namespace Timelapse.Database
             }
             FileBackup.TryCreateBackup(this.FilePath);
             this.mostRecentBackup = DateTime.Now;
+        }
+
+        public void BindToEditorDataGrid(DataGrid dataGrid, DataRowChangeEventHandler onRowChanged)
+        {
+            this.editorDataGrid = dataGrid;
+            this.onTemplateTableRowChanged = onRowChanged;
+            this.GetControlsSortedByControlOrder();
         }
 
         public void UpdateDisplayOrder(string orderColumnName, Dictionary<string, long> newOrderByDataLabel)
@@ -794,10 +780,7 @@ namespace Timelapse.Database
 
             if (disposing)
             {
-                if (this.Controls != null)
-                {
-                    this.Controls.Dispose();
-                }
+                this.Controls?.Dispose();
             }
 
             this.disposed = true;

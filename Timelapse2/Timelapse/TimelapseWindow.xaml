@@ -46,7 +46,7 @@
 
                     <!-- Test some code here - should only be enabled when developing code -->
                     <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Collapsed" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
-                  
+
                     <!-- Load template, images, and video files... -->
                     <MenuItem Name="MenuItemLoadFiles" Header="_Load template, images, and video files..." Click="MenuItemLoadImages_Click" ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">
                         <MenuItem.Icon>
@@ -62,9 +62,9 @@
                             <Image Source="Icons/NewFile_40x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    
+
                     <Separator />
-                    
+
                     <!-- Upgrade Timelapse Files -->
                     <MenuItem Name="MenuItemUpgradeTimelapseFiles" Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version..." Click="MenuItemUpgradeTimelapseFiles_Click" IsEnabled="true" ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
                         <MenuItem.Icon>
@@ -74,10 +74,7 @@
 
                     <Separator />
 
-                    <!-- Merge -->
-                    <MenuItem Name="MenuItemMergeDatabases" Header="Merge data (.ddb) files into a single file..." IsEnabled="true" ToolTip="Asks for a location, searches its sub-folders for databases (.ddb files) and merges their contents into a new database file."  Click="MenuItemMergeDatabases_Click" />
 
-                    <Separator />
 
                     <!-- Export data for selected images as a .csv file... -->
                     <MenuItem Name="MenuItemExportAsCsv" Header="Export data in the current selection as a .csv file..." IsEnabled="false" Click="MenuItemExportCsv_Click" ToolTip="Exports data for the selected files into a .csv (comma separated value) file">
@@ -101,7 +98,6 @@
 
                     <Separator />
 
-
                     <!-- Export the current image or video file...-->
                     <MenuItem Name="MenuItemExportThisImage" Header="Export (copy) the current image or video _file..." Click="MenuItemExportThisImage_Click" IsEnabled="false" ToolTip="Exports (copies) the displayed image or video file into a location of your choosing">
                         <MenuItem.Icon>
@@ -113,6 +109,22 @@
                         <MenuItem.Icon>
                             <Image Source="Icons/ImageExport_32x.png" />
                         </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator />
+
+                    <!-- Merge -->
+                    <MenuItem Name="MenuItemMerging" Header="_Merging Databases..." ToolTip="Merge a sub-folder's databases in /out of a master database">
+
+                        <MenuItem Name="MenuItemCreateEmptyDatabase" Header="Create and load an empty master database (for merging databases in sub-folders)..." Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
+                              ToolTip="Asks for the template location, and then creates an empty image set database.
+                              &#10;Usually used as a master database, where we can check in / out sub-folder specific databases that only contains that sub-folder's data."/>
+
+                        <MenuItem Name="MenuItemCheckOutDatabase" Header="Check out (copy) a sub-folder database from the master database..." IsEnabled="false" 
+                                  Click="MenuItemCheckOutDatabase_Click" ToolTip="Creates a database in a subfolder that contains only the entries for that subfolder"/>
+
+                        <MenuItem Name="MenuItemCheckInDatabases" Header="Check in (merge) a sub-folder's database into the master database..." IsEnabled="false" 
+                                  Click="MenuItemCheckInDatabases_Click" ToolTip="Merge one or more databases into an existing master database"/>
                     </MenuItem>
 
                     <Separator />
@@ -134,6 +146,9 @@
                             <Image Source="Icons/Exit_22x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
+
+                    <Separator/>
+
                 </MenuItem>
 
                 <!-- Edit Menu -->
@@ -208,12 +223,12 @@
 
                     <MenuItem Name="MenuItemImageAdjuster" Header="_Temporarily adjust image appearance..." Click="MenuItemImageAdjuster_Click" IsEnabled="False" ToolTip="Temporarily adjust the brightness, contrast, gamma, sharpness or edging of the displayed image"/>
                     <MenuItem Name="MenuItemFilePlayerOptions" Header="_Adjust FilePlayer playback speeds..." Click="MenuItemFilePlayerOptions_Click" IsEnabled="True" ToolTip="File Player options to adjust the image display speed"/>
-    
+
                     <Separator/>
-                    
+
                     <MenuItem Name="MenuItemEpisodeShowHide" Header="_Show episode information" IsCheckable="True" Click="MenuItemEpisodeShowHide_Click" IsEnabled="False" ToolTip="Show or hide information that groups files separated by brief time periods into episodes"/>
                     <MenuItem Name="MenuItemEpisodeOptions" Header="_Adjust episode time threshold..." Click="MenuItemEpisodeOptions_Click" IsEnabled="False" ToolTip="Adjust the time threshold for determining how files are grouped into episodes"/>
-                    
+
                     <Separator/>
 
                     <MenuItem Name="MenuItemAudioFeedback" IsCheckable="True" IsChecked="False" IsEnabled="False" Header="_Audio feedback" Click="MenuItemAudioFeedback_Click" ToolTip="Toggles the audio that speaks the count whenever you add a counting mark to the image"/>
@@ -287,22 +302,22 @@
 
                 <!-- Recognition Menu -->
                 <MenuItem Name="MenuItemRecognitions" Header="_Recognitions" IsEnabled="False" IsTabStop="false" SubmenuOpened="MenuItemRecognitions_SubmenuOpening">
-                    
+
                     <MenuItem Name="MenuBoundingBoxSetOptions" Header="Set bounding box options..." Visibility="Visible"
                               Click="MenuBoundingBoxSetOptions_Click" ToolTip="Set various options for displaying image recognition bounding boxes" />
-                    
+
                     <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="Populate a data field with detection counts..." Visibility="Visible"
                               Click="MenuItemPopulateDataFieldWithDetectionCounts_Click" ToolTip="Populates a data field in your currently selected files with detection counts over a given confidence values" />
 
                     <Separator />
-                    
+
                     <!-- Import Detections -->
                     <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set..." IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
                         <MenuItem.Icon>
                             <Image Source="Icons/JSONImport_32x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    
+
                 </MenuItem>
 
 
@@ -435,9 +450,9 @@
                             <MenuItem.Icon>
                                 <Image Source="Icons/MediaControl-PlayButton.png" />
                             </MenuItem.Icon>
-                        </MenuItem>          
+                        </MenuItem>
                     </MenuItem>
-                    
+
                     <MenuItem Name="MenuItemVideoOverviews" Header="Videos: Introductory overviews (you should watch these!)..." Click="MenuVideoPlay_Click" ToolTip="Open a page in your browser listing video tutorials illustrating particular Timelapse features.">
                         <MenuItem.Icon>
                             <Image Source="Icons/MediaControl-PlayButton.png" />

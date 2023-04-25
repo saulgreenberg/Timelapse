@@ -201,9 +201,21 @@
     <Compile Include="Controls\OffsetLens.cs" />
     <Compile Include="Controls\ProgressBarArguments.cs" />
     <Compile Include="Controls\EpisodePopup.cs" />
-    <Compile Include="Database\MergeDatabases.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
+    <Compile Include="Database\MergeDatabases.cs" />
+    <Compile Include="Dialog\MergeCheckoutChooseSubfolder.xaml.cs">
+      <DependentUpon>MergeCheckoutChooseSubfolder.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MergeCreateEmptyDatabase.xaml.cs">
+      <DependentUpon>MergeCreateEmptyDatabase.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MergeCheckinDatabaseFiles.xaml.cs">
+      <DependentUpon>MergeCheckinDatabaseFiles.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml.cs">
+      <DependentUpon>MergingDatabaseWarningAsDuplicateEntriesPossible.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\PopulateFieldWithDetectionCounts.xaml.cs">
       <DependentUpon>PopulateFieldWithDetectionCounts.xaml</DependentUpon>
     </Compile>
@@ -235,9 +247,6 @@
     </Compile>
     <Compile Include="Dialog\ImageAdjuster.xaml.cs">
       <DependentUpon>ImageAdjuster.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialog\MergeChooseDatabaseFiles.xaml.cs">
-      <DependentUpon>MergeChooseDatabaseFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\MissingFoldersLocateAllFolders.xaml.cs">
       <DependentUpon>MissingFoldersLocateAllFolders.xaml</DependentUpon>
@@ -412,6 +421,7 @@
     <Compile Include="Enums\DeletiionManagementEnum.cs" />
     <Compile Include="DataStructures\ErrorsAndWarnings.cs" />
     <Compile Include="Util\IsCondition.cs" />
+    <Compile Include="Util\Numbers.cs" />
     <Compile Include="Util\ViewModelBase.cs" />
     <Compile Include="Util\ProcessExecution.cs" />
     <Compile Include="Util\ProgressStream.cs" />
@@ -489,6 +499,22 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Dialog\MergeCheckoutChooseSubfolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MergeCreateEmptyDatabase.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MergeCheckinDatabaseFiles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialog\PopulateFieldWithDetectionCounts.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -520,10 +546,6 @@
     <Page Include="Dialog\ImageAdjuster.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialog\MergeChooseDatabaseFiles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\MissingFoldersLocateAllFolders.xaml">
       <SubType>Designer</SubType>

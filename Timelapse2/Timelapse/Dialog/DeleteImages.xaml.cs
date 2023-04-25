@@ -199,9 +199,9 @@ namespace Timelapse.Dialog
             // Populate the information pane
             if (this.deleteImage)
             {
-                this.Message.Title = $"Delete {numberOfImagesToDelete.ToString()} files(s) ";
+                this.Message.Title = $"Delete {numberOfImagesToDelete} files(s) ";
                 this.Message.What =
-                    $"Delete {numberOfImagesToDelete.ToString()} image and/or video(s) - if they exist - marked for deletion.";
+                    $"Delete {numberOfImagesToDelete} image and/or video(s) - if they exist - marked for deletion.";
                 this.Message.Result = string.Empty;
                 this.Message.Hint = "\u2022 Restore deleted files by manually moving them ";
                 this.Message.Result +=
@@ -225,7 +225,7 @@ namespace Timelapse.Dialog
                 if (numberOfImagesToDelete > Constant.ImageValues.LargeNumberOfDeletedImages)
                 {
                     this.Message.Result +=
-                        $"{Environment.NewLine}\u2022 Deleting {numberOfImagesToDelete.ToString()} files takes time. Please be patient.";
+                        $"{Environment.NewLine}\u2022 Deleting {numberOfImagesToDelete} files takes time. Please be patient.";
                 }
                 this.Message.Hint +=
                     $"\u2022 See Options|Preferences to manage how files in {Constant.File.DeletedFilesFolder} are permanently deleted.";

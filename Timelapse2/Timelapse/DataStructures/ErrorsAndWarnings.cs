@@ -20,6 +20,8 @@ namespace Timelapse.DataStructures
         public List<string> BackupMessages { get; set; }
 
         public List<string> MergedFiles { get; set; }
+
+        public bool BackupMade { get; set; }
         #endregion
 
         #region Constructor
@@ -32,6 +34,7 @@ namespace Timelapse.DataStructures
             this.Warnings = new List<string>();
             this.MergedFiles = new List<string>();
             this.BackupMessages = new List<string>();
+            this.BackupMade = false;
         }
         #endregion
     }

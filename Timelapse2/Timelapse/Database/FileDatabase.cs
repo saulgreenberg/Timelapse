@@ -91,12 +91,13 @@ namespace Timelapse.Database
             this.FileTableColumnsByDataLabel = new Dictionary<string, FileTableColumn>();
         }
 
-        public static async Task<FileDatabase> CreateEmptyDatabase(string filePath, TemplateDatabase templateDatabase)
+        public static async Task<FileDatabase> CreateEmptyDatabase(string ddbFilePath, TemplateDatabase templateDatabase)
         {
-            FilesFolders.TryDeleteFileIfExists(filePath);
+            // The ddbFilePath
+            FilesFolders.TryDeleteFileIfExists(ddbFilePath);
 
             // initialize the database if it's newly created
-            FileDatabase fileDatabase = new FileDatabase(filePath);
+            FileDatabase fileDatabase = new FileDatabase(ddbFilePath);
             await fileDatabase.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
             return fileDatabase;
         }
@@ -1314,8 +1315,28 @@ namespace Timelapse.Database
             this.CreateBackupIfNeeded();
             this.Database.Update(Constant.DBTables.Markers, markersToUpdate);
 
-            // update markers in marker data table
+            // Refresh the markers data table
+            this.RefreshMarkers();
+        }
+        #endregion
+
+        #region Refresh various datatables (markers,detections, classifications)
+        // Refresh the Markers DataTable
+        public void RefreshMarkers()
+        {
             this.MarkersLoadRowsFromDatabase();
+        }
+
+        // Refresh the Detections DataTable
+        public void RefreshDetectionsDataTable()
+        {
+            this.detectionDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Detections);
+        }
+
+        // Refresh the Classifications DataTable
+        public void RefreshClassificationsDataTable()
+        {
+            this.classificationsDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Classifications);
         }
         #endregion
 
@@ -2585,15 +2606,6 @@ namespace Timelapse.Database
             return foldersInBoth.Count > 0;
         }
 
-        public void RefreshDetectionsDataTable()
-        {
-            this.detectionDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Detections);
-        }
-
-        public void RefreshClassificationsDataTable()
-        {
-            this.classificationsDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Classifications);
-        }
         // Get the detections associated with the current file, if any
         // As part of the, create a DetectionTable in memory that mirrors the database table
         public DataRow[] GetDetectionsFromFileID(long fileID)

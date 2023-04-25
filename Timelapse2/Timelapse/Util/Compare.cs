@@ -28,6 +28,7 @@ namespace Timelapse.Util
             {
                 dictionaryDifferences.Add(key, dictionary1[key]);
             }
+
             return dictionaryDifferences;
         }
 

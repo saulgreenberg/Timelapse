@@ -13,12 +13,13 @@
         FileInRootDriveFolder,
         DoesNotExist,
         PathTooLong,
+        Cancelled,
 
         // These results are used during merge testing for incompatabilities
         TemplateElementsDiffer,
         TemplateElementsSameButOrderDifferent,
-        DetectionCategoriesDiffers,
-        ClassificationDictionaryDiffers,
+        DetectionCategoriesDiffer,
+        ClassificationCategoriesDiffer,
 
     }
 }
