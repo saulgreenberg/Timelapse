@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,7 +14,6 @@ using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 using DialogResult = System.Windows.Forms.DialogResult;
-using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 
@@ -143,53 +141,14 @@ namespace Timelapse
                 new Dialog.MergeCreateEmptyDatabase(this, initialFolder);
             if (false == mergeCreateEmptyDatabase.ShowDialog())
             {
+                this.StatusBar.SetMessage(abortMessage);
                 return;
             }
-            string templateDatabasePath = mergeCreateEmptyDatabase.TemplateFilePath;
-
+            string templateDatabasePath = mergeCreateEmptyDatabase.TemplateTdbPath;
+            string destinationDdbPath = mergeCreateEmptyDatabase.EmptyDatabaseDdbPath;
             // Add the template to the recency list
             this.State.MostRecentImageSets.SetMostRecent(templateDatabasePath);
             this.RecentFileSets_Refresh();
-
-            // If its not a valid template, display a dialog and abort
-            if (false == Dialogs.DialogIsFileValid(this, templateDatabasePath))
-            {
-                this.StatusBar.SetMessage(abortMessage);
-                return;
-            }
-
-            // Generate a pathname for the DDB file we want to create in the template folder
-            // It generates a unique name from the name of the template but with the word 'Data' substituted for 'Template' (if possible) and with the .ddb suffix
-            // If a file with that name already exists, it tries again by adding (0), then (1) etc.
-            string rootFolder = Path.GetDirectoryName(templateDatabasePath);
-            if (rootFolder == null)
-            {
-                // This shouldn't happen
-                MessageBox.Show("Something went wrong. Database was not created, likely because its in a root directory (e.g., 'C:'.");
-                this.StatusBar.SetMessage(abortMessage);
-                return;
-            }
-            string ddbFileNameBase = Path.GetFileNameWithoutExtension(templateDatabasePath).Replace("Template", "Data_Master");
-            string ddbFileName = ddbFileNameBase + Constant.File.FileDatabaseFileExtension;
-            if (FilesFolders.GenerateFileNameIfNeeded(rootFolder, ddbFileName, out string newDdbFileName))
-            {
-                // if needed, generate a unique file name
-                ddbFileName = newDdbFileName;
-            }
-            string destinationDdbPath = Path.Combine(rootFolder, ddbFileName);
-
-            // We have a unique ddb path. Try to create the empty ddb file
-            bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
-                templateDatabasePath, destinationDdbPath).ConfigureAwait(true);
-
-            if (result == false)
-            {
-                // This is rare, don't bother trying to figure out what went wrong.
-                MessageBox.Show("Could not create an empty database",
-                    "Something went wrong. The empty database could not be created.");
-                this.StatusBar.SetMessage(abortMessage);
-                return;
-            }
 
             // Because a non-empty destination Ddb path was provided, it will just load that Ddb even if other Ddb's are available in that folder
             Mouse.OverrideCursor = Cursors.Wait; 
@@ -204,23 +163,16 @@ namespace Timelapse
                     FilesFolders.TryDeleteFileIfExists(results.Item2);
                 }
             }
-
             this.StatusBar.SetMessage(successMessage);
             Mouse.OverrideCursor = null;
-
-            // If there is more than one file with that extension, so tell the user the name of the created file
-            if (FilesFolders.CountFilesInFolderWithExtension(rootFolder, Constant.File.FileDatabaseFileExtension) > 1)
-            {
-                Dialogs.NewFileNameGeneratedDialog(this, null, ddbFileName);
-            }
         }
         #endregion
 
         #region Merging: Check in one or more databases into the master
         private async void MenuItemCheckInDatabases_Click(object sender, RoutedEventArgs e)
         {
-            Dialog.MergeSelectedDatabaseFiles mergeSelectedDatabaseFiles =
-                new Dialog.MergeSelectedDatabaseFiles(this,
+            Dialog.MergeCheckinDatabaseFiles mergeSelectedDatabaseFiles =
+                new Dialog.MergeCheckinDatabaseFiles(this,
                     this.DataHandler.FileDatabase.FilePath,
                     this.DataHandler.FileDatabase.Database,
                     this.DataHandler.FileDatabase);
@@ -252,20 +204,15 @@ namespace Timelapse
         #endregion
 
         #region Merging: Check out a database
-        private async void MenuItemCheckOutDatabase_Click(object sender, RoutedEventArgs e)
+        private void MenuItemCheckOutDatabase_Click(object sender, RoutedEventArgs e)
         {
             // Get the relative and full path to the desired sub-folder location 
             Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder = 
                 new Dialog.MergeCheckoutChooseSubfolder(this, this.DataHandler.FileDatabase.FolderPath, this.templateDatabase.FilePath, this.DataHandler);
-           
-            if (false == mergeCheckoutChooseSubfolder.ShowDialog())
-            {
-                this.StatusBar.SetMessage("Check out database aborted."); ;
-            }
-            else
-            {
-                this.StatusBar.SetMessage("Check out database succeeded."); ;
-            }
+
+            this.StatusBar.SetMessage(false == mergeCheckoutChooseSubfolder.ShowDialog()
+                ? "Check out database aborted."
+                : "Check out database succeeded.");
         }
         #endregion
 

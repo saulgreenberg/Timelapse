@@ -108,16 +108,16 @@ namespace Timelapse.Dialog
             MergeDatabases.CheckoutDatabaseWithRelativePath(this.DataHandler.FileDatabase, this.DataHandler.FileDatabase.FilePath, destinationDdbPath,
                 this.RelativeSubFolderPath);
             this.SetFeedbackAndDoneVisibility();
+            this.DataHandler.FileDatabase.ImageSet.Log +=
+                $"{Environment.NewLine}{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Checked out:  {shortDestinationDdbPath}";
             this.RedoMessageBoxWithResults(shortDestinationTdbPath, shortDestinationDdbPath);
         }
         #endregion
 
         private void RedoMessageBoxWithResults(string tdbFileName, string ddbFileName)
         {
-            string what;
             string fileList;
             string pluralityText = "s are";
-            string fileTypeText;
 
             if (false == string.IsNullOrWhiteSpace(tdbFileName) && false == string.IsNullOrWhiteSpace(ddbFileName))
             {

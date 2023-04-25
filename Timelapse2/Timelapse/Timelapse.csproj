@@ -210,8 +210,8 @@
     <Compile Include="Dialog\MergeCreateEmptyDatabase.xaml.cs">
       <DependentUpon>MergeCreateEmptyDatabase.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dialog\MergeSelectedDatabaseFiles.xaml.cs">
-      <DependentUpon>MergeSelectedDatabaseFiles.xaml</DependentUpon>
+    <Compile Include="Dialog\MergeCheckinDatabaseFiles.xaml.cs">
+      <DependentUpon>MergeCheckinDatabaseFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml.cs">
       <DependentUpon>MergingDatabaseWarningAsDuplicateEntriesPossible.xaml</DependentUpon>
@@ -507,7 +507,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialog\MergeSelectedDatabaseFiles.xaml">
+    <Page Include="Dialog\MergeCheckinDatabaseFiles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

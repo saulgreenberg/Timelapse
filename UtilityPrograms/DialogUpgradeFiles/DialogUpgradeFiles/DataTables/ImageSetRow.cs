@@ -108,8 +108,6 @@ namespace DialogUpgradeFiles.DataTables
         }
         #endregion
 
-
-
         #region Public Methods - Create ColumnTuplesWithWhere 
         // Construct a ColumnTuplesWithWhere containing the entire row contents 
         // Where is the current (and only?) imageset ID
@@ -132,7 +130,6 @@ namespace DialogUpgradeFiles.DataTables
             return new ColumnTuplesWithWhere(columnTuples, this.ID);
         }
         #endregion
-
 
         #region SortTerms helper functions: setting and getting individual terms in the sort term list
         // The sort term is stored in the database as a string (as a comma-separated list) 

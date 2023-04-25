@@ -29,16 +29,17 @@
             <Rectangle Fill="#FF868686" Height="2" />
             <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
                 <TextBlock HorizontalAlignment="Left" Margin="10,10,10,10"  Height="15" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="12" FontWeight="Bold">File:</TextBlock>
-                <TextBox Name="txtboxTemplateFileName"  Text="" IsReadOnly="True" Margin="0,0,0,0" Height="25" Width="300" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
-                <TextBlock HorizontalAlignment="Left" Margin="0,10,10,10"  Height="15" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="12" FontWeight="Bold">.tdb</TextBlock>
-                <Button Name="ButtonChooseFolder" Padding="5,0,5,0" Height="25" Content ="Choose a template" Click="ButtonChooseTemplate_OnClick"/>
+                <TextBox Name="txtboxTemplateFileName"  Text="" IsReadOnly="True" Margin="0,0,0,0" Height="25" Width="423" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+                <TextBlock HorizontalAlignment="Left" Margin="0,10,10,10" Height="15" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="12" FontWeight="Bold">.tdb</TextBlock>
+                <Button Name="ButtonChooseFolder" Padding="5,0,5,0" Height="25" Content ="Choose a template" Click="ChooseTemplateButton_Click"/>
             </StackPanel>
             <Rectangle Fill="#FF868686" Height="1" Margin="0,0,0,10"/>
         </StackPanel>
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click" IsEnabled="False">_Create an empty database</Button>
+                <Button Name="CreateEmptyButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CreateEmptyButton_Click" IsEnabled="False">_Create an empty database</Button>
+                <Button Name="DoneButton" IsDefault="True"  VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility ="Collapsed" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
             </StackPanel>
         </DockPanel>
     </DockPanel>

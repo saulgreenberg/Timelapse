@@ -2241,7 +2241,7 @@ namespace Timelapse.Dialog
         public static bool? MergeWarningCreateEmptyDdbFileExists(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            string title = $"Do you really want to create an empty database in this folder?";
+            string title = "Do you really want to create an empty database in this folder?";
             // notify the user the database appears corrupt
             return new MessageBox(title, owner, MessageBoxButton.YesNo)
             {
@@ -2264,7 +2264,7 @@ namespace Timelapse.Dialog
         public static bool? MergeWarningCheckOutDdbFileExists(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            string title = $"Do you really want to check out a database into this folder?";
+            string title = "Do you really want to check out a database into this folder?";
             // notify the user the database appears corrupt
             return new MessageBox(title, owner, MessageBoxButton.YesNo)
             {
@@ -2275,7 +2275,7 @@ namespace Timelapse.Dialog
                     Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
                              + "as to which one to use and which one has the most up to date data.",
                     Solution =  $"You can continue to check out a database. However, you may want to {Environment.NewLine}"
-                                + $" reconsider, revisit and/or clean up that folder before doing so.",
+                                + " reconsider, revisit and/or clean up that folder before doing so.",
                     Hint = $"This is just a warning, as having multiple databases in a folder goes against best practices.{Environment.NewLine}"
                            + "You may want to read 'Merging files' in the Timelapse Reference Guide."
                 }

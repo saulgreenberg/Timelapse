@@ -1,11 +1,11 @@
-<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.MergeSelectedDatabaseFiles"
+<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.MergeCheckinDatabaseFiles"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
        xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Merge Databases..." Height="650" Width="680" MinHeight="450" MinWidth="680" Loaded="Window_Loaded" Closing="Window_Closing">
+        Title="Check in Databases..." Height="650" Width="680" MinHeight="450" MinWidth="680" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />

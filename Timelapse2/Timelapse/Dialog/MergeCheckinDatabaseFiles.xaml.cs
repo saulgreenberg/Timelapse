@@ -20,11 +20,11 @@ using Path = System.IO.Path;
 namespace Timelapse.Dialog
 {
     /// <summary>
-    /// MergeSelectedDatabaseFiles
+    /// MergeCheckinDatabaseFiles
     /// - Raises a dialog box showing all databases under the root folder but not in it,
     ///   where the user can select some of them to merge into the currently opened (destination) database 
     /// </summary>
-    public partial class MergeSelectedDatabaseFiles
+    public partial class MergeCheckinDatabaseFiles
     {
         #region Variables
         // Tracks the found ddb files and their selection state
@@ -56,7 +56,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Constructor, Loaded, Closing
-        public MergeSelectedDatabaseFiles(TimelapseWindow owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
+        public MergeCheckinDatabaseFiles(TimelapseWindow owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
         {
             InitializeComponent();
             this.Owner = owner;
@@ -246,6 +246,8 @@ namespace Timelapse.Dialog
                 else
                 {
                     mergedSourceFileInfos.Add(sourceFileInfo);
+                    this.fileDatabase.ImageSet.Log +=
+                        $"{Environment.NewLine}{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Checked in:     {sourceFileInfo.RelativePathIncludingFileName}";
                 }
                 this.IsAnyDataUpdated = mergedSourceFileInfos.Any();
             }
