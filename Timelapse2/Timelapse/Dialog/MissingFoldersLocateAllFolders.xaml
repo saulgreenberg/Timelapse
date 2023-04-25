@@ -131,9 +131,14 @@
             </DataGrid>
         </ScrollViewer>
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3">
+        <DockPanel DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Grid.Row="3">
+            <CheckBox Name="CheckBoxStringentMatch" DockPanel.Dock="Left" Margin="5,0,0,0" 
+                      Content="Use a more stringent criteria for suggestion possible new locations" VerticalAlignment="Center" 
+                      Checked="CheckBoxStringentMatch_CheckChanged" Unchecked="CheckBoxStringentMatch_CheckChanged" Visibility="Collapsed"/>
+            <StackPanel HorizontalAlignment="Right" DockPanel.Dock="Right" Orientation="Horizontal">
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="Cancel_Click">_Cancel</Button>
-            <Button Name="UseNewLocationsButton" IsDefault="True"  IsEnabled="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewLocations_Click">_Use new locations</Button>
-        </StackPanel>
+            <Button Name="UseNewLocationsButton" IsDefault="True"  IsEnabled="True" VerticalAlignment="Bottom"  HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewLocations_Click">_Use new locations</Button>
+            </StackPanel>
+        </DockPanel>
     </Grid>
 </Window>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DialogUpgradeFiles.Database;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -6,6 +7,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using Timelapse.Database;
+using Timelapse.Util;
+using FileDatabase = Timelapse.Database.FileDatabase;
 
 namespace Timelapse.Dialog
 {
@@ -49,19 +53,21 @@ namespace Timelapse.Dialog
         }
 
         //private readonly ObservableCollection<MissingFolderRow> observableCollection; // A tuple defining the contents of the datagrid
-        private ObservableCollection<MissingFolderRow> observableCollection { get; } // A tuple defining the contents of the datagrid
+        private ObservableCollection<MissingFolderRow> observableCollection { get; set; } // A tuple defining the contents of the datagrid
 
         #endregion
 
         #region Private variables
         private readonly string useLocateButtonText = "0 matches. Try [Locate]";
         private readonly string RootPath;
+        private readonly FileDatabase FileDatabase;
+        private readonly List<string> MissingRelativePaths;
 
         private IList<DataGridCellInfo> selectedRowValues; // Will contain the tuple of the row corresponding to the selected cell
         #endregion
 
         #region Constructor, Loaded 
-        public MissingFoldersLocateAllFolders(Window owner, string rootPath, Dictionary<string, List<string>> missingFoldersAndLikelyLocations)
+        public MissingFoldersLocateAllFolders(Window owner, string rootPath, List<string> missingRelativePaths, Dictionary<string, List<string>> missingFoldersAndLikelyLocations, FileDatabase fileDatabase)
         {
             InitializeComponent();
 
@@ -74,6 +80,25 @@ namespace Timelapse.Dialog
 
             this.Owner = owner;
             this.RootPath = rootPath;
+            this.FileDatabase = fileDatabase;
+            this.MissingRelativePaths = missingRelativePaths;
+            this.CreateDataTable(missingFoldersAndLikelyLocations);
+
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            Dialogs.TryPositionAndFitDialogIntoWindow(this);
+
+            // Get rid of those ugly empty cell headers atop the Locate/View columns
+            this.DataGrid.Columns[4].HeaderStyle = CreateEmptyHeaderStyle();
+            this.DataGrid.Columns[5].HeaderStyle = CreateEmptyHeaderStyle();
+            this.PopulateDataGridRow();
+        }
+        #endregion
+
+        private void CreateDataTable(Dictionary<string, List<string>> missingFoldersAndLikelyLocations)
+        {
             this.observableCollection = new ObservableCollection<MissingFolderRow>();
             this.EnsureCheckboxValue();
             foreach (KeyValuePair<string, List<string>> pair in missingFoldersAndLikelyLocations)
@@ -89,20 +114,14 @@ namespace Timelapse.Dialog
             this.DataGrid.ItemsSource = this.observableCollection;
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void PopulateDataGridRow()
         {
-            Dialogs.TryPositionAndFitDialogIntoWindow(this);
-
-            // Get rid of those ugly empty cell headers atop the Locate/View columns
-            this.DataGrid.Columns[4].HeaderStyle = CreateEmptyHeaderStyle();
-            this.DataGrid.Columns[5].HeaderStyle = CreateEmptyHeaderStyle();
-
             // Bind each combobox, and select the first item in each Combobox
             int rowIndex = 0;
             foreach (MissingFolderRow mfr in this.observableCollection)
             {
                 DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
-                                               .ContainerFromIndex(rowIndex);
+                    .ContainerFromIndex(rowIndex);
                 ComboBox cb = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 cb.ItemsSource = mfr.PossibleNewLocation;
                 cb.SelectedIndex = 0;
@@ -110,8 +129,6 @@ namespace Timelapse.Dialog
             }
             this.SetInitialCheckboxValue();
         }
-        #endregion
-
         #region Button callbacks
         private void Cancel_Click(object sender, RoutedEventArgs e) => this.DialogResult = false;
 
@@ -352,5 +369,19 @@ namespace Timelapse.Dialog
             }
         }
         #endregion
+
+        private void CheckBoxStringentMatch_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb)
+            {
+                Dictionary<string, List<string>> missingFoldersAndLikelyLocations = cb.IsChecked == true
+                     ? FilesFolders.TryGetMissingFoldersStringent(this.FileDatabase.FolderPath, this.MissingRelativePaths, this.FileDatabase)
+                     : FilesFolders.TryGetMissingFolders(this.FileDatabase.FolderPath, this.MissingRelativePaths);
+
+                //this.DataGrid.ItemsSource = missingFoldersAndLikelyLocations;
+                this.CreateDataTable(missingFoldersAndLikelyLocations);
+                this.PopulateDataGridRow();
+            }
+        }
     }
 }
