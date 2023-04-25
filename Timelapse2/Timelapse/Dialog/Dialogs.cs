@@ -1678,49 +1678,6 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
-<<<<<<< HEAD
-
-        /// <summary>
-        /// Show a message that explains how merging databases works and its constraints. Give the user an opportunity to abort
-        /// </summary>
-        public static bool? MenuFileMergeDatabasesExplainedDialog(Window owner)
-        {
-
-            MessageBox messageBox = new MessageBox("Merge Databases.", owner, MessageBoxButton.OKCancel)
-            {
-                Message =
-                {
-                     Icon = MessageBoxImage.Question,
-                     Title = "Merge Databases Explained.",
-                     What = "Merging databases works as follows. Timelapse will:"
-                          + Environment.NewLine
-                          + "\u2022 ask you to locate a root folder containing a template (a.tdb file)," + Environment.NewLine
-                          + $"\u2022 create a new database (.ddb) file in that folder, called {Constant.File.MergedFileName},{Environment.NewLine}"
-                          + "\u2022 search for other database (.ddb) files in that folder's sub-folders, " + Environment.NewLine
-                          + "\u2022 try to merge all data found in those found databases into the new database.",
-                     Details = "\u2022 All databases must be based on the same template, otherwise the merge will fail." + Environment.NewLine
-                         +$"\u2022 While a root folder containing the to-be-merged .ddb  can be moved to a new location under the merged root folder,{Environment.NewLine}   its sub-folder structure should not be altered. If it is, Timelapse may not be able to find the images.{Environment.NewLine}"
-                         +"\u2022 Databases found in the Backup folders are ignored." + Environment.NewLine
-                         + "\u2022 Detections and Classifications (if any) are merged; categories are taken from the first database found with detections." + Environment.NewLine
-                         + "\u2022 The merged database is independent of the found databases: updates will not propagate between them." + Environment.NewLine
-                         + "\u2022 The merged database is a normal Timelapse database, which you can open and use as expected.",
-                     Hint = "Press Ok to continue with the merge, otherwise Cancel."
-                },
-                DontShowAgain =
-                {
-                    Visibility = Visibility.Visible
-                }
-            };
-            messageBox.ShowDialog();
-
-            if (messageBox.DontShowAgain.IsChecked.HasValue)
-            {
-                GlobalReferences.TimelapseState.SuppressMergeDatabasesPrompt = messageBox.DontShowAgain.IsChecked.Value;
-            }
-            return messageBox.DialogResult;
-        }
-=======
->>>>>>> feature/Factor_method_to_create_empty_database
         #endregion
         #region MessageBox: MenuEdit
         /// <summary>
