@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -323,6 +326,57 @@ namespace Timelapse.Util
             }
             return matchingFolders;
         }
+
+        public static Dictionary<string, List<string>> TryGetMissingFoldersStringent(string rootPath, List<string> missingFolderPaths, FileDatabase fileDatabase)
+        {
+            if (missingFolderPaths == null || fileDatabase == null)
+            {
+                return null;
+            }
+
+            List<string> allFolderPaths = new List<string>();
+            Util.FilesFolders.GetAllFoldersContainingAnImageOrVideo(rootPath, allFolderPaths, rootPath);
+            Dictionary<string, List<string>> matchingFolders = new Dictionary<string, List<string>>();
+            foreach (string missingFolderPath in missingFolderPaths)
+            {
+                // Count the number of entries in the database matching this relative path
+                int countInDatabase = fileDatabase.CountAllFilesMatchingRelativePath(missingFolderPath);
+
+                string missingFolderName = Path.GetFileName(missingFolderPath);
+                List<string> matches = new List<string>();
+                foreach (string oneFolderPath in allFolderPaths)
+                {
+                    string allRelativePathName = Path.GetFileName(oneFolderPath);
+                    if (String.Equals(missingFolderName, allRelativePathName))
+                    {
+                        string[] extensions =
+                        {
+                            Constant.File.JpgFileExtension,
+                            Constant.File.AviFileExtension,
+                            Constant.File.ASFFileExtension,
+                            Constant.File.Mp4FileExtension,
+                            Constant.File.MovFileExtension,
+                        };
+                        List<string> filesInFolder =
+                            Directory.EnumerateFiles(Path.Combine(rootPath, oneFolderPath)).ToList<string>();
+                        int fileCount = 0;
+                        foreach (string extension in extensions)
+                        {
+                            fileCount += filesInFolder.Count(f =>
+                                f.EndsWith(extension, StringComparison.CurrentCultureIgnoreCase));
+                        }
+                        // Only add the folder if it has the same number of images/videos in it.
+                        if (fileCount == countInDatabase)
+                        {
+                            matches.Add(oneFolderPath);
+                        }
+                        //Debug.Print(countInDatabase.ToString() + " | " + fileCount + " | " + missingFolderName + " | " + oneFolderPath);
+                    }
+                }
+                matchingFolders.Add(missingFolderPath, matches);
+            }
+            return matchingFolders;
+        }
         #endregion
 
         #region Public Static Methods - Search Folders
@@ -510,7 +564,7 @@ namespace Timelapse.Util
         // Return true if a file with the given extension exists in the provided folder path
         public static int CountFilesInFolderWithExtension(string folderPath, string extension)
         {
-            return Directory.GetFiles(folderPath, "*"+ extension).Length;
+            return Directory.GetFiles(folderPath, "*" + extension).Length;
         }
         #endregion
 

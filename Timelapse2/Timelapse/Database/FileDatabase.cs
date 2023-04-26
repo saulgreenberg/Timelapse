@@ -1660,6 +1660,15 @@ namespace Timelapse.Database
 
         #endregion
 
+        #region Counts entries with the given relative path
+
+        public int CountAllFilesMatchingRelativePath(string RelativePath)
+        {
+            string query = Sql.SelectCountStarFrom + Constant.DBTables.FileData + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(RelativePath);
+            return this.Database.ScalarGetCountFromSelect(query);
+        }
+        #endregion
+
         #region Exists matching files  
         // Return true if there is at least one file matching the fileSelection condition in the entire database
         // Form examples
