@@ -357,8 +357,8 @@ namespace Timelapse.Util
                             Constant.File.Mp4FileExtension,
                             Constant.File.MovFileExtension,
                         };
-                        IEnumerable<string> filesInFolder =
-                            Directory.EnumerateFiles(Path.Combine(rootPath, oneFolderPath));
+                        List<string> filesInFolder =
+                            Directory.EnumerateFiles(Path.Combine(rootPath, oneFolderPath)).ToList<string>();
                         int fileCount = 0;
                         foreach (string extension in extensions)
                         {

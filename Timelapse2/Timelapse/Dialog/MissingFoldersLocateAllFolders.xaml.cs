@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -52,7 +53,6 @@ namespace Timelapse.Dialog
             }
         }
 
-        //private readonly ObservableCollection<MissingFolderRow> observableCollection; // A tuple defining the contents of the datagrid
         private ObservableCollection<MissingFolderRow> observableCollection { get; set; } // A tuple defining the contents of the datagrid
 
         #endregion
@@ -83,7 +83,6 @@ namespace Timelapse.Dialog
             this.FileDatabase = fileDatabase;
             this.MissingRelativePaths = missingRelativePaths;
             this.CreateDataTable(missingFoldersAndLikelyLocations);
-
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -91,8 +90,10 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Get rid of those ugly empty cell headers atop the Locate/View columns
-            this.DataGrid.Columns[4].HeaderStyle = CreateEmptyHeaderStyle();
             this.DataGrid.Columns[5].HeaderStyle = CreateEmptyHeaderStyle();
+            this.DataGrid.Columns[6].HeaderStyle = CreateEmptyHeaderStyle();
+
+            // Add the missing folders
             this.PopulateDataGridRow();
         }
         #endregion
@@ -101,16 +102,21 @@ namespace Timelapse.Dialog
         {
             this.observableCollection = new ObservableCollection<MissingFolderRow>();
             this.EnsureCheckboxValue();
+            ;
             foreach (KeyValuePair<string, List<string>> pair in missingFoldersAndLikelyLocations)
             {
+                bool isEmpty = false;
                 List<string> possibleNewLocations = missingFoldersAndLikelyLocations[pair.Key];
                 if (possibleNewLocations.Count == 0)
                 {
                     possibleNewLocations.Add(this.useLocateButtonText);
+                    isEmpty = true;
                 }
-                MissingFolderRow row = new MissingFolderRow(Path.GetFileName(pair.Key), pair.Key, possibleNewLocations, false);
+                MissingFolderRow row = new MissingFolderRow(Path.GetFileName(pair.Key), pair.Key, possibleNewLocations, false, isEmpty);
                 this.observableCollection.Add(row);
             }
+
+            this.DataGrid.ItemsSource = null;
             this.DataGrid.ItemsSource = this.observableCollection;
         }
 
@@ -122,6 +128,12 @@ namespace Timelapse.Dialog
             {
                 DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
                     .ContainerFromIndex(rowIndex);
+                if (dataGridRow == null)
+                {
+                    this.DataGrid.UpdateLayout();
+                    this.DataGrid.ScrollIntoView(this.DataGrid.Items[rowIndex]);
+                    dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                };
                 ComboBox cb = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 cb.ItemsSource = mfr.PossibleNewLocation;
                 cb.SelectedIndex = 0;
@@ -290,6 +302,21 @@ namespace Timelapse.Dialog
                 rowIndex++;
             }
         }
+
+        // Toggles a more selective match 
+        private void CheckBoxStringentMatch_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is CheckBox cb))
+            {
+                return;
+            }
+            Dictionary<string, List<string>> missingFoldersAndLikelyLocations = cb.IsChecked == true
+                ? FilesFolders.TryGetMissingFoldersStringent(this.FileDatabase.FolderPath, this.MissingRelativePaths, this.FileDatabase)
+                : FilesFolders.TryGetMissingFolders(this.FileDatabase.FolderPath, this.MissingRelativePaths);
+
+            this.CreateDataTable(missingFoldersAndLikelyLocations);
+            this.PopulateDataGridRow();
+        }
         #endregion
 
         #region Helper methods
@@ -359,29 +386,21 @@ namespace Timelapse.Dialog
             public List<string> PossibleNewLocation { get; set; }
             // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
             public bool Use { get; set; }
+            // ReSharper disable once MemberCanBePrivate.Local
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
+            public int Count { get; set; } // The count of the possible matching folders
 
-            public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use)
+            public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use, bool isEmpty)
             {
                 this.FolderName = folderName;
                 this.ExpectedOldLocation = expectedOldLocation;
                 this.PossibleNewLocation = possibleNewLocation;
                 this.Use = use;
+                this.Count = isEmpty ? possibleNewLocation.Count - 1 : possibleNewLocation.Count;
             }
         }
         #endregion
 
-        private void CheckBoxStringentMatch_CheckChanged(object sender, RoutedEventArgs e)
-        {
-            if (sender is CheckBox cb)
-            {
-                Dictionary<string, List<string>> missingFoldersAndLikelyLocations = cb.IsChecked == true
-                     ? FilesFolders.TryGetMissingFoldersStringent(this.FileDatabase.FolderPath, this.MissingRelativePaths, this.FileDatabase)
-                     : FilesFolders.TryGetMissingFolders(this.FileDatabase.FolderPath, this.MissingRelativePaths);
-
-                //this.DataGrid.ItemsSource = missingFoldersAndLikelyLocations;
-                this.CreateDataTable(missingFoldersAndLikelyLocations);
-                this.PopulateDataGridRow();
-            }
-        }
+ 
     }
 }
