@@ -53,9 +53,10 @@ namespace Timelapse.Images
 
             // Remove existing bounding boxes, if any.
             // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
-            if (GlobalReferences.DetectionsExists == false || Keyboard.IsKeyDown(Key.H))
+            if (GlobalReferences.DetectionsExists == false || GlobalReferences.HideBoundingBoxes|| Keyboard.IsKeyDown(Key.H))
             {
                 // As detection don't exist, there won't be any bounding boxes to draw.
+                // Or, if the user doesn't want them displayed, we don't show them. 
                 return false;
             }
 

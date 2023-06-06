@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Set bounding box options" Height="530" MinHeight="530" Width="800" Loaded="Window_Loaded">
+        Title="Set bounding box options" Height="550" MinHeight="550" Width="800" Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
@@ -25,7 +25,7 @@
                                   &#10;When the image recognizer detects an entity in an image, it can draw a bounding box around it. "
                             Solution="&#x2022; Annotate bounding box:  Title each bounding box with the type of entity detected. 
                                      &#10;&#x2022; Use color-blind friendly colors: The bounding box colors, which reflect the type of entity detected, are made more perceptable
-                                     &#10;&#x2022; Display bounding box slider: Bounding boxes are displayed only if their confidence value is above the chosen threshold  
+                                     &#10;&#x2022; Hide bounding boxes: Don't display bounding boxes during this Timelapse session
                                      &#10;&#x2022; Reset: Restore default values "         
                             Hint="While the default confidence value is a good starting point, you may want to adjust it to better fit your images.
                                   &#10;&#x2022; too low confidence values may result in spurious bounding boxes.
@@ -41,8 +41,9 @@
                     </TextBlock>
                     <StackPanel Orientation="Vertical" DockPanel.Dock="Top" Margin="0,10,0,0" >
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,0" >
-                            <CheckBox Name="CheckBoxBoundingBoxAnnotate" Content="Annotate bounding box" Margin="27,0,0,0" FontWeight="Normal"  IsChecked ="True" ToolTip="Annotate each bounding box with a label or menu containing the recognizer's classification.&#x0a;This adds information at the expense of some clutter." Click="CheckBoxBounidngBoxAnnotate_Click"/>
-                            <CheckBox Name="CheckBoxBoundingBoxColorBlindFriendlyColors" Content="Use color-blind friendly colors" Margin="15,0,0,0" ToolTip="Apply a bounding box color without transparency that is somewhat better for color-blind people" FontWeight="Normal" Click="CheckBoxBounidngBoxColorBlindRinedlyColors_Click"/>
+                            <CheckBox Name="CheckBoxBoundingBoxAnnotate" Content="Annotate bounding box" Margin="27,0,0,0" FontWeight="Normal"  IsChecked ="True" ToolTip="Annotate each bounding box with a label or menu containing the recognizer's classification.&#x0a;This adds information at the expense of some clutter." Click="CheckBoxBoundingBoxAnnotate_Click"/>
+                            <CheckBox Name="CheckBoxBoundingBoxColorBlindFriendlyColors" Content="Use color-blind friendly colors" Margin="15,0,0,0" ToolTip="Apply a bounding box color without transparency that is somewhat better for color-blind people" FontWeight="Normal" Click="CheckBoxBoundingBoxColorBlindRinedlyColors_Click"/>
+                            <CheckBox Name="CheckBoxBoundingBoxHideInThisSession" Content="Hide bounding boxes" Margin="15,0,0,0" ToolTip="Hide the bounding boxes for this session" FontWeight="Normal" Click="CheckBoxBoundingBoxHideBoundingBoxes_Click"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top"  Margin="30,10,0,0">

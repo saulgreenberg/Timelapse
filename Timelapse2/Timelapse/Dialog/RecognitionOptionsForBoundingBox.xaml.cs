@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using Timelapse.DataStructures;
 using Timelapse.State;
 
 namespace Timelapse.Dialog
@@ -21,6 +22,7 @@ namespace Timelapse.Dialog
             // Detections
             this.CheckBoxBoundingBoxAnnotate.IsChecked = this.timelapseState.BoundingBoxAnnotate;
             this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = this.timelapseState.BoundingBoxColorBlindFriendlyColors;
+            this.CheckBoxBoundingBoxHideInThisSession.IsChecked = GlobalReferences.HideBoundingBoxes;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -34,9 +36,12 @@ namespace Timelapse.Dialog
         {
             this.CheckBoxBoundingBoxAnnotate.IsChecked = true;
             this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = false;
+            this.CheckBoxBoundingBoxHideInThisSession.IsChecked = false;
             this.BoundingBoxDisplayThresholdSlider.IsEnabled = true;
             this.timelapseState.BoundingBoxDisplayThresholdResetToDefault();
             this.BoundingBoxDisplayThresholdSlider.Value = this.timelapseState.BoundingBoxDisplayThreshold;
+            GlobalReferences.HideBoundingBoxes = CheckBoxBoundingBoxHideInThisSession.IsChecked == true;
+
         }
 
         private void BoundingBoxDisplayThreshold_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -52,12 +57,12 @@ namespace Timelapse.Dialog
             this.timelapseState.BoundingBoxDisplayThreshold = slider.Value;
         }
 
-        private void CheckBoxBounidngBoxColorBlindRinedlyColors_Click(object sender, RoutedEventArgs e)
+        private void CheckBoxBoundingBoxColorBlindRinedlyColors_Click(object sender, RoutedEventArgs e)
         {
             this.timelapseState.BoundingBoxColorBlindFriendlyColors = this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked == true;
         }
 
-        private void CheckBoxBounidngBoxAnnotate_Click(object sender, RoutedEventArgs e)
+        private void CheckBoxBoundingBoxAnnotate_Click(object sender, RoutedEventArgs e)
         {
             this.timelapseState.BoundingBoxAnnotate = this.CheckBoxBoundingBoxAnnotate.IsChecked == true;
         }
@@ -69,5 +74,10 @@ namespace Timelapse.Dialog
             this.DialogResult = true;
         }
         #endregion
+
+        private void CheckBoxBoundingBoxHideBoundingBoxes_Click(object sender, RoutedEventArgs e)
+        {
+            GlobalReferences.HideBoundingBoxes = CheckBoxBoundingBoxHideInThisSession.IsChecked == true;
+        }
     }
 }

@@ -128,7 +128,6 @@ namespace Timelapse.State
         }
         #endregion;
 
-
         #region Key Repeat methods
         /// <summary>
         /// Key Repeat: Reset 
