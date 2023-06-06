@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Images;
 
@@ -195,7 +198,30 @@ namespace Timelapse.Controls
                 // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
                 this.bboxCanvas.Children.Clear();
                 this.Cell.Children.Remove(this.bboxCanvas);
-                this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.Image.Width, this.ImageHeight);
+                try
+                {
+                    // Checking if this thread has access to the object.
+                    if (this.Dispatcher.CheckAccess())
+                    {
+                        // This sometimes fails (but not on my machine) with a System.InvalidOperationException: The calling thread cannot access this object because a different thread owns it. 
+                        this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.Image.Width,
+                            this.ImageHeight);
+                    }
+                    else
+                    {
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            TracePrint.PrintMessage("In RefreshBoundingBoxes: using the displatcher to avoid the 'calling thread cannot access this object' exception.");
+                            this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.Image.Width,
+                                this.ImageHeight);
+                        });
+                    }
+                }
+                catch
+                {
+                    return;
+                }
+
                 this.Cell.Children.Add(this.bboxCanvas);
             }
             else
