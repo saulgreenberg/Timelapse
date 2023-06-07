@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -358,7 +355,7 @@ namespace Timelapse.Util
                             Constant.File.MovFileExtension,
                         };
                         List<string> filesInFolder =
-                            Directory.EnumerateFiles(Path.Combine(rootPath, oneFolderPath)).ToList<string>();
+                            Directory.EnumerateFiles(Path.Combine(rootPath, oneFolderPath)).ToList();
                         int fileCount = 0;
                         foreach (string extension in extensions)
                         {

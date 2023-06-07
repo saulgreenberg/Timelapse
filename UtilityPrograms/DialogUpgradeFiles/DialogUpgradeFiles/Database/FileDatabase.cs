@@ -419,7 +419,7 @@ namespace DialogUpgradeFiles.Database
                 string[] coords = bboxString.Split(' ');
                 if (coords.Length != 4)
                 {
-                    Debug.Print("In UpgradeDetectionConfFromCommasToDecimalsIfNeeded - the bbox coordinates are wrong", coords.Length);
+                    Debug.Print("In UpgradeDetectionConfFromCommasToDecimalsIfNeeded - the bbox coordinates are wrong" + coords.Length);
                     continue;
                 }
                 // We must have a bounding box string with commas as decimal separators

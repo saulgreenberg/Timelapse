@@ -1,14 +1,11 @@
-﻿using DialogUpgradeFiles.Database;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using Timelapse.Database;
 using Timelapse.Util;
 using FileDatabase = Timelapse.Database.FileDatabase;
 
@@ -102,7 +99,7 @@ namespace Timelapse.Dialog
         {
             this.observableCollection = new ObservableCollection<MissingFolderRow>();
             this.EnsureCheckboxValue();
-            ;
+            
             foreach (KeyValuePair<string, List<string>> pair in missingFoldersAndLikelyLocations)
             {
                 bool isEmpty = false;
@@ -133,7 +130,7 @@ namespace Timelapse.Dialog
                     this.DataGrid.UpdateLayout();
                     this.DataGrid.ScrollIntoView(this.DataGrid.Items[rowIndex]);
                     dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
-                };
+                }
                 ComboBox cb = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 cb.ItemsSource = mfr.PossibleNewLocation;
                 cb.SelectedIndex = 0;
@@ -388,7 +385,7 @@ namespace Timelapse.Dialog
             public bool Use { get; set; }
             // ReSharper disable once MemberCanBePrivate.Local
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
-            public int Count { get; set; } // The count of the possible matching folders
+            public int Count { get;} // The count of the possible matching folders
 
             public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use, bool isEmpty)
             {
