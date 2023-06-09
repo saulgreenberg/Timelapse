@@ -172,7 +172,7 @@ namespace Timelapse.Constant
         // default values
         public const long DefaultFileID = 1;
         //public const int DateTimePosition = 4;
-        public const string ImageSetDefaultLog = "Add text here";
+        public const string ImageSetDefaultLog = "";
         public const long ImageSetRowID = 1;
         public const long InvalidID = -1;
         public const int InvalidRow = -1;

@@ -8,7 +8,7 @@ namespace DialogUpgradeFiles.Database
         /// <summary>
         /// ColumnDefinition defines a single column in a SQL Database Schema. 
         /// For example the column definition for Image set log would be stored as
-        /// - Log Text "Add text here" ;
+        /// - Log Text "Some text" ;
         /// </summary>
         #region Public Properties
         public string Name { get; }
