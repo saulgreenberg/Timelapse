@@ -336,12 +336,12 @@ namespace Timelapse.Database
                 }
                 // XXX WHAT IF THERE ARE A HUGE NUMBER? WRAP IN BEGIN END?
                 destinationDdb.Delete(Constant.DBTables.Markers, idClauses);
-                Debug.Print($"Ddb deleted {idClauses.Count} entries in the folder {relativePathDifference}");
+                // Debug.Print($"Ddb deleted {idClauses.Count} entries in the folder {relativePathDifference}");
             }
-            else
-            {
-                Debug.Print($"Ddb does not reference the folder: {relativePathDifference}. Nothing deleted");
-            }
+            //else
+            //{
+            //    Debug.Print($"Ddb does not reference the folder: {relativePathDifference}. Nothing deleted");
+            //}
             return DatabaseFileErrorsEnum.Ok;
         }
         #endregion
@@ -371,10 +371,10 @@ namespace Timelapse.Database
             long offsetId = destinationDdb.ScalarGetMaxIntValue(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
 
             // Part 3. Handle the DataTable portion
-            query = QueryPhraseMergeDataTable(query, offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference);
+            query += QueryPhraseMergeDataTable(offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference);
 
             // Part 4. Handle the Markers Table portion
-            query = QueryPhraseMergeMarkersTable(query, offsetId, destinationDdb, attachedSourceDB, tempMarkersTable);
+            query += QueryPhraseMergeMarkersTable(offsetId, destinationDdb, attachedSourceDB, tempMarkersTable);
 
             // Part 5. Handle the various Recognition Tables portion
             bool destinationRecognitionsExist = destinationDdb.TableExists(Constant.DBTables.Detections);
@@ -396,7 +396,7 @@ namespace Timelapse.Database
             if (updateRecognitions)
             {
                 query = resultTuple.Item2;
-                query = QueryPhraseMergeRecognitionTables(query, offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist);
+                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist);
             }
 
             // Part 7. The query is now done, so end the transaction and execute it
@@ -585,8 +585,9 @@ namespace Timelapse.Database
         //       UPDATE tempDataTable SET Id = (offsetID + tempDataTable.Id);  // This line only inserted if offset > 0
         //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) END
         //       INSERT INTO DataTable SELECT * FROM tempDataTable;
-        private static string QueryPhraseMergeDataTable(string query, long offsetId, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePathDifference)
+        private static string QueryPhraseMergeDataTable(long offsetId, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePathDifference)
         {
+            string query = string.Empty;
             List<string> currentDataLabels = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
             query += QueryAttachDatabaseAs(sourceDdbPath, attachedSourceDB) + Environment.NewLine;
             query += QueryCreateTemporaryTableFromExistingTable(tempDataTable, attachedSourceDB, Constant.DBTables.FileData) + Environment.NewLine;
@@ -612,9 +613,10 @@ namespace Timelapse.Database
         //  CREATE TEMPORARY TABLE tempMarkers AS SELECT <comma-spearated column list> FROM attachedSourceDB.Markers;
         //       UPDATE tempMarkers SET Id = (offsetID + tempMarkers.Id); // This line only inserted if offset > 0
         //       INSERT INTO Markers SELECT * FROM tempMarkers;
-        private static string QueryPhraseMergeMarkersTable(string query, long offsetId, SQLiteWrapper destinationDdb,
+        private static string QueryPhraseMergeMarkersTable(long offsetId, SQLiteWrapper destinationDdb,
             string attachedSourceDB, string tempMarkersTable)
         {
+            string query = string.Empty;
             // Get the columns in order
             // Form: select name from pragma_table_info('MarkersTable')  as tblInfo 
             string queryGetColumnName = Sql.SelectNameFromPragmaTableInfo + Sql.OpenParenthesis +
@@ -819,9 +821,10 @@ namespace Timelapse.Database
         }
 
         // The database to merge in has recognitions, so the SQL query should update the detections table and (if needed) the recognition table.
-        private static string QueryPhraseMergeRecognitionTables(string query, long offsetId, SQLiteWrapper destinationDdb,
+        private static string QueryPhraseMergeRecognitionTables(long offsetId, SQLiteWrapper destinationDdb,
             string attachedSourceDB, bool destinationRecognitionsExist)
         {
+            string query = string.Empty;
             string tempDetectionsTable = "tempDetectionsTable";
             string tempClassificationsTable = "tempClassificationsTable";
 
