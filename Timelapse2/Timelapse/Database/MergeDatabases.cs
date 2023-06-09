@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -110,6 +111,7 @@ namespace Timelapse.Database
             string attachedSourceDB = "attachedSourceDB";
             string tempDataTable = "tempDataTable";
             string tempMarkersTable = "tempMarkersTable";
+            string tempImageSetTable = "tempImageSetTable";
 
             // Part 1. Initiate the query phrase with a transaction
             string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
@@ -120,7 +122,10 @@ namespace Timelapse.Database
             // Part 3. Create the Markers table, where where it contains only those entries that match the entries in the datatable
             query += QueryCheckoutMarkersTable(attachedSourceDB, tempMarkersTable, relativePath) + Environment.NewLine;
 
-            // Part 4. Handle the various Recognition Tables portion
+            // Part 4. Update the ImageSetTable by importing the values for Quickpaste and BBDisplayThreshold
+            query += QueryCheckoutImageSetTable(attachedSourceDB, tempImageSetTable) + Environment.NewLine;
+
+            // Part 5. Handle the various Recognition Tables portion
             // Nate that the two classification tables are only included in the checkout process if there is something in them
             if (sourceDdb.TableExists(Constant.DBTables.Detections))
             {
@@ -218,9 +223,25 @@ namespace Timelapse.Database
             return queryPhrase;
         }
 
+        // Update the ImageSetTable by importing the values for Quickpaste and BBDisplayThreshold
+        private static string QueryCheckoutImageSetTable(string attachedSourceDB, string tempImageSetTable)
+        {
+            string attachedImageSetTable = attachedSourceDB + Sql.Dot + Constant.DBTables.ImageSet;
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.QuickPasteTerms + Sql.Equal 
+                                      + Sql.OpenParenthesis + Sql.Select + Constant.DatabaseColumn.QuickPasteTerms +
+                                      Sql.From + attachedSourceDB + Sql.Dot + Constant.DBTables.ImageSet + Sql.Where +
+                                      Constant.DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
+            queryPhrase += Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal
+                           + Sql.OpenParenthesis + Sql.Select + Constant.DatabaseColumn.BoundingBoxDisplayThreshold +
+                           Sql.From + attachedSourceDB + Sql.Dot + Constant.DBTables.ImageSet + Sql.Where +
+                           Constant.DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
+            return queryPhrase;
+        }
+
         // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
-        //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
-        private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationsTable, bool checkoutClassificationCategoriesTable)
+            //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
+            private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationsTable, bool checkoutClassificationCategoriesTable)
         {
             string attachedDataTable = attachedSourceDB + Sql.Dot + Constant.DBTables.FileData;
 
