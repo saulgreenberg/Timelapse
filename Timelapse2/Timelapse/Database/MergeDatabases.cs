@@ -1,8 +1,7 @@
-﻿using Microsoft.VisualBasic;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Timelapse.Enums;
@@ -111,7 +110,6 @@ namespace Timelapse.Database
             string attachedSourceDB = "attachedSourceDB";
             string tempDataTable = "tempDataTable";
             string tempMarkersTable = "tempMarkersTable";
-            string tempImageSetTable = "tempImageSetTable";
 
             // Part 1. Initiate the query phrase with a transaction
             string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
@@ -123,7 +121,7 @@ namespace Timelapse.Database
             query += QueryCheckoutMarkersTable(attachedSourceDB, tempMarkersTable, relativePath) + Environment.NewLine;
 
             // Part 4. Update the ImageSetTable by importing the values for Quickpaste and BBDisplayThreshold
-            query += QueryCheckoutImageSetTable(attachedSourceDB, tempImageSetTable) + Environment.NewLine;
+            query += QueryCheckoutImageSetTable(attachedSourceDB) + Environment.NewLine;
 
             // Part 5. Handle the various Recognition Tables portion
             // Nate that the two classification tables are only included in the checkout process if there is something in them
@@ -224,9 +222,8 @@ namespace Timelapse.Database
         }
 
         // Update the ImageSetTable by importing the values for Quickpaste and BBDisplayThreshold
-        private static string QueryCheckoutImageSetTable(string attachedSourceDB, string tempImageSetTable)
+        private static string QueryCheckoutImageSetTable(string attachedSourceDB)
         {
-            string attachedImageSetTable = attachedSourceDB + Sql.Dot + Constant.DBTables.ImageSet;
             string queryPhrase = string.Empty;
             queryPhrase += Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.QuickPasteTerms + Sql.Equal 
                                       + Sql.OpenParenthesis + Sql.Select + Constant.DatabaseColumn.QuickPasteTerms +
