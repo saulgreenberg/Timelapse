@@ -7,6 +7,8 @@
         Delete,
         MouseEnter,
         MouseLeave,
+        MoveUp,
+        MoveDown,
         Paste,
         ShortcutPaste,
         PositionChanged

@@ -100,6 +100,10 @@ namespace Timelapse
                 case QuickPasteEventIdentifierEnum.MouseLeave:
                     this.QuickPasteDataControlsUnHighlight(e.QuickPasteEntry);
                     break;
+                case QuickPasteEventIdentifierEnum.MoveUp:
+                case QuickPasteEventIdentifierEnum.MoveDown:
+                    this.QuickPasteEntryMove(e.QuickPasteEntry, e.EventType);
+                    break;
                 case QuickPasteEventIdentifierEnum.Paste:
                     this.QuickPasteEntryPasteIntoDataControls(e.QuickPasteEntry, FlashEnum.FlashPreview);
                     break;
@@ -160,7 +164,14 @@ namespace Timelapse
             this.QuickPasteRefreshWindowAndJSON();
         }
 
-        // Open the quickPaste Editor window
+        // Move the item up or down the quickpaste list
+        private void QuickPasteEntryMove(QuickPasteEntry quickPasteEntry, QuickPasteEventIdentifierEnum quickPasteEventIdentifier)
+        {
+            bool moveUp = quickPasteEventIdentifier == QuickPasteEventIdentifierEnum.MoveUp;
+            this.quickPasteEntries = QuickPasteOperations.MoveQuickPasteEntry(this.quickPasteEntries, quickPasteEntry, moveUp);
+            this.QuickPasteRefreshWindowAndJSON();
+        }
+        // Open the quickPaste Editor window 
         private void QuickPasteEntryEdit(QuickPasteEntry quickPasteEntry)
         {
             if (quickPasteEntry == null)

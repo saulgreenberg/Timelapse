@@ -72,6 +72,24 @@ namespace Timelapse.QuickPaste
         }
         #endregion
 
+        #region Public Method MoveQuickPasteEntry
+        // Move the quickPasteEntry up or down the quickPasteEntries list
+        public static List<QuickPasteEntry> MoveQuickPasteEntry(List<QuickPasteEntry> quickPasteEntries, QuickPasteEntry quickPasteEntry, bool moveUp)
+        {
+            // Check the arguments for null 
+            ThrowIf.IsNullArgument(quickPasteEntries, nameof(quickPasteEntries));
+
+            int index = quickPasteEntries.FindIndex(a => a.Equals(quickPasteEntry));
+            quickPasteEntries.RemoveAt(index);
+            int newIndex = moveUp
+                ? index - 1
+                : index + 1;
+
+            quickPasteEntries.Insert(newIndex, quickPasteEntry);
+            return quickPasteEntries;
+        }
+        #endregion
+
         #region Public Methods - Decode quickpaste entries into JSON
         // Transform the JSON string (stored in the ImageSetTable) into a QuickPasteEntries data structure robustly
         // Compare it to the actual controls, and alter the data structure as needed, where quickpaste entries only

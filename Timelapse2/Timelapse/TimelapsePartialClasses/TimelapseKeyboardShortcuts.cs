@@ -80,6 +80,11 @@ namespace Timelapse
                     }
                     if (Int32.TryParse(key, out int shortcutIndex) && shortcutIndex != 0)
                     {
+                        if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                        {
+                            // if Shift is pressed, this specifies the quickkey range 10 - 18, so we add 9 to it.
+                            shortcutIndex += 9;
+                        }
                         this.quickPasteWindow.TryQuickPasteShortcut(shortcutIndex);
                         currentKey.Handled = true;
                     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -112,10 +113,14 @@ namespace Timelapse.QuickPaste
                     HorizontalAlignment = HorizontalAlignment.Right
                 };
 
-                // We can't have more than 9 shortcut keys... one for each digit (except 0)
+                // We can't have more than 19 shortcut keys... one for each digit (except 0) with ctl and shift-ctl
                 if (shortcutKey < 10)
                 {
                     textblockShortcut.Inlines.Add("ctrl-" + shortcutKey++);
+                }
+                else if (shortcutKey < 19)
+                {
+                    textblockShortcut.Inlines.Add("shift-ctrl-" + (shortcutKey++ - 9));
                 }
                 DockPanel dockPanel = new DockPanel();
                 DockPanel.SetDock(textblockTitle, Dock.Left);
@@ -156,6 +161,26 @@ namespace Timelapse.QuickPaste
                 };
                 deleteItem.Click += this.DeleteItem_Click;
                 contextMenu.Items.Add(deleteItem);
+
+                // Move item up the quickpaste list
+                MenuItem moveUpItem = new MenuItem()
+                {
+                    Header = "Move up",
+                    Tag = quickPasteEntry,
+                    IsEnabled = this.QuickPasteEntries.First() != quickPasteEntry
+                };
+                moveUpItem.Click += this.MoveUpItem_Click;
+                contextMenu.Items.Add(moveUpItem);
+
+                // Move item down the quickpaste list
+                MenuItem moveDownItem = new MenuItem()
+                {
+                    Header = "Move down",
+                    Tag = quickPasteEntry,
+                    IsEnabled = this.QuickPasteEntries.Last() != quickPasteEntry
+                };
+                moveDownItem.Click += this.MoveDownItem_Click;
+                contextMenu.Items.Add(moveDownItem);
 
                 quickPasteControl.Click += this.QuickPasteControl_Click;
                 quickPasteControl.MouseEnter += this.QuickPasteControl_MouseEnter;
@@ -225,7 +250,7 @@ namespace Timelapse.QuickPaste
             this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Edit));
         }
 
-        // Generate Event: Delete the quickpaste emtru
+        // Generate Event: Delete the quickpaste entry
         private void DeleteItem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem menuItem == false)
@@ -236,6 +261,32 @@ namespace Timelapse.QuickPaste
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
             this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Delete));
+        }
+
+        // Generate Event: Move the quickpaste entry up the list
+        private void MoveUpItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+            QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
+            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MoveUp));
+        }
+
+        // Generate Event: Move the quickpaste entry down the list
+        private void MoveDownItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem == false)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(sender));
+                return;
+            }
+            QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
+            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MoveDown));
         }
 
         // Generate Event: MouseEnter on the quickpaste control
