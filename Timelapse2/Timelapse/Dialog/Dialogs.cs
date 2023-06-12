@@ -1726,7 +1726,7 @@ namespace Timelapse.Dialog
 
                 messageBox.Message.Hint = "Duplicates come with several caveats." + Environment.NewLine
                     + "\u2022 Use 'Sort | Relative Path + Date Time (default)' to ensure that duplicates appear in sequence." + Environment.NewLine
-                    + "\u2022 Duplicates can only be created in the main view, not in the overview." + Environment.NewLine
+                    + "\u2022 Duplicates can only be created in the main view when displaying a single image, not in the overview." + Environment.NewLine
                     + "\u2022 Duplicates in the exported CSV file are identifiable as rows with the same relative path and file name.";
             }
             bool? result = messageBox.ShowDialog();

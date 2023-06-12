@@ -175,7 +175,7 @@
                     <MenuItem Name="MenuItemEpisodePopulateField" Header="_Populate a field with episode data..." Click="MenuItemEditPopulateFieldWithEpisodeData_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
 
                     <Separator Name="MenuS3" />
-                    <MenuItem Name="MenuItemDuplicateRecord" Header="_Duplicate this record..." Click="MenuItemEditDuplicateRecord_Click" IsEnabled="True" ToolTip="Create a duplicate of this record, which you can use to fill in additional information"/>
+                    <MenuItem Name="MenuItemDuplicateRecord" Header="_Duplicate this record..." Click="MenuItemEditDuplicateRecord_Click" InputGestureText="Ctl-D" IsEnabled="True" ToolTip="Create a duplicate of this record, which you can use to fill in additional information"/>
                     <Separator Name="MenuS4" />
 
                     <!-- Delete submenu-->

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.DebuggingSupport;
@@ -127,8 +128,18 @@ namespace Timelapse
                     this.MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomIn);
                     break;
                 case Key.D:                 // Decrease the magnifing glass zoom level
-                    this.FilePlayer_Stop();      // In case the FilePlayer is going
-                    this.MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomOut);
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                    {
+                        if (!currentKey.IsRepeat)
+                        {
+                            this.MenuItemEditDuplicateRecord_Click(null, null);
+                        }
+                    }
+                    else
+                    {
+                        this.FilePlayer_Stop();      // In case the FilePlayer is going
+                        this.MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomOut);
+                    }
                     break;
                 case Key.Right:             // next /previous image
                 case Key.Left:              // previous image

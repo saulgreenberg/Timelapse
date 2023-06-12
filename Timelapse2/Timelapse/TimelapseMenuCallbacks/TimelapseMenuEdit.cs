@@ -225,6 +225,12 @@ namespace Timelapse
         #region Dupicate the record
         private async void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
         {
+            if (this.IsDisplayingSingleImage() == false)
+            {
+                // We only allow duplication if we are displaying a single image in the main view
+                return;
+            }
+
             // Check: ideally the sort terms will be RelativePath x DateTime, as otherwise the duplicates may not be in sorted order.
             // The various flags determine whether we show only a problem message, a duplicate info message, or both.
             SortTerm sortTermDB1 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
