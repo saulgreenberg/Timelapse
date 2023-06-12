@@ -318,15 +318,13 @@ namespace Timelapse.Controls
         private void Play()
         {
             this.PlayOrPause.IsChecked = true;
-
             // start over from beginning if at end of video
-            // Technote: The natural duration default value is Automatic if you query this property before MediaOpened.
-            if (this.Video.NaturalDuration.HasTimeSpan && (this.Video.NaturalDuration != Duration.Automatic || this.Video.Position == this.Video.NaturalDuration.TimeSpan))
+            // Technote: The natural duration default value is Automatic if you query this property before MediaOpened. So we just reset the position if its a new video.
+            if (this.Video.NaturalDuration == Duration.Automatic || (this.Video.NaturalDuration.HasTimeSpan && this.Video.Position == this.Video.NaturalDuration.TimeSpan))
             {
                 this.Video.Position = TimeSpan.Zero;
                 this.ShowPosition();
             }
-
             this.positionUpdateTimer.Start();
             this.Video.Play();
         }
