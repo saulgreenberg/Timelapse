@@ -228,6 +228,7 @@
     <Compile Include="Dialog\RelativePathEditor.xaml.cs">
       <DependentUpon>RelativePathEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Enums\CreateSubfolderResultEnum.cs" />
     <Compile Include="Enums\MoveFolderResultEnum.cs" />
     <Compile Include="Recognition\RecognitionDatabases.cs" />
     <Compile Include="Recognition\Recognizer.cs" />

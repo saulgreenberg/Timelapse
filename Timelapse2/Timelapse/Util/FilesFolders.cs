@@ -92,6 +92,37 @@ namespace Timelapse.Util
                 return MoveFolderResultEnum.FailDueToSystemMoveException;
             }
         }
+
+        // Try to create a subfolder iwth the given name in the indicated folder
+        public static CreateSubfolderResultEnum TryCreateSubfolderInFolder(string sourceFolderPath, string destinationSubfolderName)
+        {
+            try
+            {
+                string destinationPath = Path.Combine(sourceFolderPath,destinationSubfolderName);
+
+                if (Directory.Exists(sourceFolderPath))
+                {
+                    // Ensure the destination directory doesn't already exist
+                    if (Directory.Exists(destinationPath) == false)
+                    {
+                        // Create the destination subFolder
+                        Directory.CreateDirectory(destinationPath);
+                        return CreateSubfolderResultEnum.Success;
+                    }
+                    TracePrint.PrintMessage($"Subfolder '{destinationSubfolderName}' not created: '{destinationPath}' already exists.");
+                    return CreateSubfolderResultEnum.FailAsDestinationFolderExists;
+                }
+                TracePrint.PrintMessage($"Subfolder '{destinationSubfolderName}' not created: the parent folder '{sourceFolderPath}' does not exist.");
+                return CreateSubfolderResultEnum.FailAsSourceFolderDoesNotExist;
+            }
+            catch (Exception exception)
+            {
+                TracePrint.PrintMessage(
+                    $"Subfolder '{destinationSubfolderName}' was not created in '{sourceFolderPath}'  as an exception was raised{Environment.NewLine}{exception.Message}: {exception}");
+                return CreateSubfolderResultEnum.FailDueToSystemCreateException;
+            }
+        }
+
         #endregion
 
         #region Public static methods - Check if the database is valid, and return error status reports if it isn't

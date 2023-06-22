@@ -2419,8 +2419,7 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region Moving folder errors
-        /// Give the user various opening mesages
+        #region Moving and Creating folder errors (used by the RelativePathEditor)
         public static void RenameRelativePathError(Window owner, MoveFolderResultEnum result, string sourceFolderPath, string destinationFolderPath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -2457,6 +2456,45 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
+        public static void RenameRelativePathError(Window owner, CreateSubfolderResultEnum result, string sourceFolderPath, string destinationName)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"Could not create the folder {destinationName}";
+
+            string reason;
+            switch (result)
+            {
+                case CreateSubfolderResultEnum.Success:
+                    // This should not have been passed in
+                    return;
+                case CreateSubfolderResultEnum.FailAsSourceFolderDoesNotExist:
+                    reason = $"The folder '{sourceFolderPath}' does not exist as a Windows folder." + Environment.NewLine +
+                             $"Because of that, Timelapse could not create the subfolder '{destinationName}' within it.";
+                    break;
+                case CreateSubfolderResultEnum.FailAsDestinationFolderExists:
+                    reason = $"The destination subfolder '{destinationName}' already exists as a Windows subfolder in '{sourceFolderPath}'." + Environment.NewLine +
+                             "Because of that, Timelapse did not have to create the subfolder.";
+                    break;
+                case CreateSubfolderResultEnum.FailDueToSystemCreateException:
+                default:
+                    reason = "Windows tried to create the subfolder '{destinationName}' in '{sourceFolderPath}'," + Environment.NewLine +
+                             " but for some reason couldn't do it.";
+                    break;
+            }
+
+            new Dialog.MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    What = $"Timelapse could not create the folder {destinationName} in {sourceFolderPath}",
+                    Reason = reason,
+                    Icon = MessageBoxImage.Error
+                }
+            }.ShowDialog();
+        }
+
         #endregion
 
     }

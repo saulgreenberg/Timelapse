@@ -627,6 +627,11 @@ namespace Timelapse.Controls
                 this.DisplayFeedback("The new folder was not created", $"A folder called {newFolderPath} already exists.");
                 return;
             }
+
+            // Create a deep copy of the current path list in case there is an error, as this will let us restore 
+            // things to their original state
+            PathList originalPathList = this.MyPathList.DeepClone();
+
             if (string.IsNullOrWhiteSpace(node.Path))
             {
                 // We are adding it to the Root Folder, so insert it at the beginning
@@ -654,8 +659,15 @@ namespace Timelapse.Controls
                 }
             }
             this.MyPathList = newPathList;
+
+            CreateSubfolderResultEnum result = ExternalCreateNewFolder(node.Path, this.NewFolder);
+            if (result != CreateSubfolderResultEnum.Success && result != CreateSubfolderResultEnum.FailAsDestinationFolderExists)
+            {
+                Dialog.Dialogs.RenameRelativePathError(this.ParentDialogWindow, result, node.Path, this.NewFolder);
+                // Restore the tree etc to its pre-renamed form
+                this.MyPathList = originalPathList;
+            }
             this.RebuildTree();
-            bool result = ExternalCreateNewFolder(newFolderPath, this.NewFolder);
         }
         #endregion
 
@@ -832,10 +844,15 @@ namespace Timelapse.Controls
         #endregion
 
         #region External: CreateNewFolder
-        bool ExternalCreateNewFolder(string FolderPath, string folderName)
+        private CreateSubfolderResultEnum ExternalCreateNewFolder(string folderPath, string folderName)
         {
-            Debug.Print($"Create: {folderName} as {FolderPath}");
-            return true;
+            CreateSubfolderResultEnum result = FilesFolders.TryCreateSubfolderInFolder(Path.Combine(FileDatabase.FolderPath, folderPath), folderName);
+            if (result == CreateSubfolderResultEnum.Success)
+            {
+                // No need to update the database, as Timelapse will not have a record of images associated with it
+                this.WereEditsMade = true;
+            }
+            return result;
         }
         #endregion
 
@@ -996,7 +1013,6 @@ namespace Timelapse.Controls
         #endregion
 
         #region Dialogs
-
         private void DisplayFeedback(string title, string reason)
         {
            new Dialog.MessageBox(title, this.ParentDialogWindow)
