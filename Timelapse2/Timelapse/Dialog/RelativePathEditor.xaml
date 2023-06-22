@@ -12,14 +12,18 @@
     <DockPanel>
         <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" Icon="Asterisk"
                                       Title="Folder Editor"
-                                      What="Rename, move, and create new Timelapse folders, similar to how you do it in Windows Explorer "
+                                      What="Rename, move, and create new Timelapse folders, similar to how you do it in Windows Explorer."
                                       Solution="&#x2022; Rename a folder by: 
                                       &#10;   - select 'Rename' on the folder's context menu, or
-                                      &#10;   - left-mouse down on the folder name holding for a second or so 
-                                      &#10;&#x2022; Create a new folder within an existing folder by selecting 'New folder' on the folder's context
-                                      &#10;&#x2022; Move a folder to another folder by dragging and dropping it on another folder. "
-                                      Hint="&#x2022; The folder icons indicate whether Timelapse associates any images or videos with that folder"
-                                      Result="&#x2022; Doing any of the above actions will change the folder"/>
+                                      &#10;   - left-mouse down on the folder name holding for a second or so; 
+                                      &#10;&#x2022; Move a folder to another folder by dragging and dropping it on another folder;
+                                      &#10;&#x2022; Create a new folder within an existing folder by selecting 'New folder' on the folder's context menu
+                                      "
+                                      Result="Timelapse will rename, move or create the folder as directed within the database and the Windows subfolder structure."
+                                      Hint="Folder icons indicate whether Timelapse:
+                                      &#10;&#x2022; currently records any images or videos in that folder,
+                                      &#10;&#x2022; whether the folder is actually present or missing in your sub-folder structure"
+                                     />
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>

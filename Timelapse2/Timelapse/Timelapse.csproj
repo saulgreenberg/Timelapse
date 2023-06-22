@@ -937,8 +937,10 @@
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Icons\FolderEmpty_16.png" />
-    <Resource Include="Icons\FolderPhotos_16.png" />
+    <Resource Include="Icons\FolderEmpty.png" />
+    <Resource Include="Icons\FolderEmpty_Missing.png" />
+    <Resource Include="Icons\FolderPhotos.png" />
+    <Resource Include="Icons\FolderPhotos_Missing.png" />
     <Resource Include="Resources\FilePathTooLong.jpg" />
     <Resource Include="Icons\MediaControl-PlaySpeed1.png" />
     <Resource Include="Icons\MediaControl-PlayButton.png" />

@@ -2437,7 +2437,7 @@ namespace Timelapse.Dialog
                              "Because of that, Timelapse could not rename the actual folder.";
                     break;
                 case MoveFolderResultEnum.FailAsDestinationFolderExists:
-                    reason = $"The destination folder '{destinationFolderPath}' already exists." + Environment.NewLine +
+                    reason = $"The destination folder '{destinationFolderPath}' already exists as a Windows subfolder." + Environment.NewLine +
                              "Windows does not allow a folder to be renamed if a folder with the desired name already exists.";
                     break;
                 case MoveFolderResultEnum.FailDueToSystemMoveException:
@@ -2451,7 +2451,7 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Title = title,
-                    What = $"Timelapse could not rename {sourceFolderPath} as {destinationFolderPath}",
+                    What = $"Timelapse could not rename {sourceFolderPath} tos {destinationFolderPath}",
                     Reason = reason,
                     Icon = MessageBoxImage.Error
                 }

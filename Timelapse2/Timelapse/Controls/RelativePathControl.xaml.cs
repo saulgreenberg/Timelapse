@@ -78,7 +78,11 @@ namespace Timelapse.Controls
 
         private void RelativePathControl_OnLoaded(object sender, RoutedEventArgs e)
         {
-            this.RebuildTree();
+            if (null != FileDatabase)
+            {
+                // The above test is so that something can be displayed at design time
+                this.RebuildTree();
+            }
         }
         #endregion
 
@@ -87,6 +91,12 @@ namespace Timelapse.Controls
         // Given a list of relative paths, build the tree from it and display it.
         public void Initialize(List<string> relativePaths)
         {
+            if (null == FileDatabase)
+            {
+                TreeViewItem tvi = new TreeViewItem { Header = "No files appear to be loaded" };
+                TreeView.Items.Add(tvi);
+                return;
+            }
             this.RelativePaths = relativePaths;
 
             foreach (string path in this.RelativePaths)
@@ -124,6 +134,10 @@ namespace Timelapse.Controls
         // Populate the data structure and the treeView with the items in the relativePath
         private void RebuildTree()
         {
+            if (null == FileDatabase)
+            {
+                return;
+            }
             Node rootNode = new Node();
 
             foreach (PathItem nodePathItem in this.MyPathList.Items)
@@ -133,7 +147,9 @@ namespace Timelapse.Controls
                 rootNode.AddPath(nodePathItem);
             }
 
-            StackPanel sp = CreateStackPanel(this.RootFolder, false);
+            // Check if the root folder exits (it should always exist)
+            bool folderExists = Directory.Exists(this.FileDatabase.FolderPath);
+            StackPanel sp = CreateStackPanel(this.RootFolder, false, folderExists);
             // Create an expanded treeview item representing the Root folder
             // and add the nodes to it, where it places them correctly as children as needed
             TreeViewItem tvi = new TreeViewItem
@@ -148,7 +164,8 @@ namespace Timelapse.Controls
             MenuItem menuCreateNewFolderAfterItem = new MenuItem
             {
                 Header = "New folder...",
-                Tag = tvi
+                Tag = tvi,
+                IsEnabled = folderExists
             };
             menuCreateNewFolderAfterItem.Click += MenuItemNewFolder_Click;
             contextMenu.Items.Add(menuCreateNewFolderAfterItem);
@@ -173,7 +190,10 @@ namespace Timelapse.Controls
                 // This node is a child item as the path isn't empty
                 // So we need to create a new TreeViewItem representing that path, which will be added as a child the existing TreeViewItem
                 // The tag is used to associate a node with its respective TreeViewItem
-                StackPanel sp = this.CreateStackPanel(node.Name, node.ContainsPhotos);
+                bool folderExists = Directory.Exists(Path.Combine(this.FileDatabase.FolderPath, node.Path));
+                node.FolderExists = folderExists;
+                StackPanel sp = this.CreateStackPanel(node.Name, node.ContainsPhotos, folderExists);
+                
                 tvi = new TreeViewItem
                 {
                     Header = sp,
@@ -185,7 +205,8 @@ namespace Timelapse.Controls
                 MenuItem menuItemRename = new MenuItem
                 {
                     Header = "Rename...",
-                    Tag = tvi
+                    Tag = tvi,
+                    IsEnabled = folderExists
                 };
                 menuItemRename.Click += MenuItemRename_Click;
                 contextMenu.Items.Add(menuItemRename);
@@ -193,7 +214,8 @@ namespace Timelapse.Controls
                 MenuItem menuCreateNewFolderAfterItem = new MenuItem
                 {
                     Header = "New folder...",
-                    Tag = tvi
+                    Tag = tvi,
+                    IsEnabled = folderExists
                 };
                 menuCreateNewFolderAfterItem.Click += MenuItemNewFolder_Click;
                 contextMenu.Items.Add(menuCreateNewFolderAfterItem);
@@ -215,19 +237,31 @@ namespace Timelapse.Controls
             tvi.IsExpanded = true;
         }
 
-        private StackPanel CreateStackPanel(string text, bool containsPhotos)
+        private StackPanel CreateStackPanel(string text, bool containsPhotos, bool folderExists)
         {
             StackPanel sp = new StackPanel
             {
                 Name = "StackPanel",
                 Orientation = Orientation.Horizontal
             };
+            BitmapImage bi;
+            if (containsPhotos)
+            {
+                bi = folderExists
+                    ? new BitmapImage(new Uri(@"/Icons/FolderPhotos.png", UriKind.Relative))
+                    : new BitmapImage(new Uri(@"/Icons/FolderPhotos_Missing.png", UriKind.Relative));
+            }
+            else
+            {
+                bi = folderExists
+                    ? new BitmapImage(new Uri(@"/Icons/FolderEmpty.png", UriKind.Relative))
+                    : new BitmapImage(new Uri(@"/Icons/FolderEmpty_Missing.png", UriKind.Relative));
+            }
             Image image = new Image
             {
-                Source = containsPhotos
-                    ? new BitmapImage(new Uri(@"/Icons/FolderPhotos_16.png", UriKind.Relative))
-                    : new BitmapImage(new Uri(@"/Icons/FolderEmpty_16.png", UriKind.Relative))
+                Source = bi
             };
+
             TextBlock tb = new TextBlock
             {
                 Name = "TextBlock",
@@ -305,6 +339,21 @@ namespace Timelapse.Controls
                 return;
             }
             Node node = (Node)tvi.Tag;
+
+            if (false == node.FolderExists)
+            {
+                // If the folder doesn't exists, flash the node and don't start the editing operation
+                StackPanel sp = (StackPanel)tvi.Header;
+                foreach (UIElement child in sp.Children)
+                {
+                    if (child is TextBlock headerTextBlock)
+                    {
+                        this.Flash(headerTextBlock);
+                        break;
+                    }
+                }
+                return;
+            }
 
             GeneralTransform myTransform = tvi.TransformToAncestor(this.Canvas);
             Point myOffset = myTransform.Transform(new Point(0, 0));
@@ -704,7 +753,7 @@ namespace Timelapse.Controls
             }
 
             // Rebuild the tree by populating it.
-            this.RebuildTree();
+            //this.RebuildTree();
 
             // Now try to actually rename the folder, both in the folder structure and the database
             MoveFolderResultEnum result = ExternalRenameFolder(node.Path, newString, isInteriorNode);
@@ -713,8 +762,9 @@ namespace Timelapse.Controls
                 Dialog.Dialogs.RenameRelativePathError(this.ParentDialogWindow, result, node.Path, newString);
                 // Restore the tree etc to its pre-renamed form
                 this.MyPathList = originalPathList;
-                this.RebuildTree();
+                // this.RebuildTree();
             }
+            this.RebuildTree();
         }
         #endregion
 
@@ -789,7 +839,7 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        #region External:RenameFolde
+        #region External:RenameFolder
         private MoveFolderResultEnum ExternalRenameFolder(string oldFolderPath, string newFolderPath, bool isInteriorNode)
         { ;
             MoveFolderResultEnum result = FilesFolders.TryMoveFolderIfExists(
@@ -985,6 +1035,7 @@ namespace Timelapse.Controls
             public string Name { get; private set; } = string.Empty;
             public string Path { get; private set; } = string.Empty;
             public bool ContainsPhotos { get; private set; }
+            public bool FolderExists { get; set; }
 
             private readonly char[] charSeparators = new char[] { '\\' };
             public void AddPath(PathItem pathItem)
