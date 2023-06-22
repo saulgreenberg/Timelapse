@@ -36,8 +36,15 @@ namespace Timelapse
         #endregion
 
         #region Menu stub to test some code
-        private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
+            RelativePathEditor relativePathEditor = new RelativePathEditor(this, this.DataHandler?.FileDatabase);
+            if (true == relativePathEditor.ShowDialog())
+            {
+                // true is returned if any edits were actually made by the user that led to changes
+                // So reselect/display the files to show those changes
+                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+            }
         }
         #endregion
 
@@ -151,7 +158,7 @@ namespace Timelapse
             this.RecentFileSets_Refresh();
 
             // Because a non-empty destination Ddb path was provided, it will just load that Ddb even if other Ddb's are available in that folder
-            Mouse.OverrideCursor = Cursors.Wait; 
+            Mouse.OverrideCursor = Cursors.Wait;
             Tuple<bool, string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath, destinationDdbPath).ConfigureAwait(true);
             if (results.Item1 == false)
             {
@@ -207,7 +214,7 @@ namespace Timelapse
         private void MenuItemCheckOutDatabase_Click(object sender, RoutedEventArgs e)
         {
             // Get the relative and full path to the desired sub-folder location 
-            Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder = 
+            Dialog.MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder =
                 new Dialog.MergeCheckoutChooseSubfolder(this, this.DataHandler.FileDatabase.FolderPath, this.templateDatabase.FilePath, this.DataHandler);
 
             this.StatusBar.SetMessage(false == mergeCheckoutChooseSubfolder.ShowDialog()
@@ -449,7 +456,7 @@ namespace Timelapse
                     Dialogs.FileExistsDialog(this, renameFileDatabase.NewFilename);
                     return;
                 }
-                this.DataHandler.FileDatabase.RenameFile(renameFileDatabase.NewFilename);
+                this.DataHandler.FileDatabase.RenameFileDatabase(renameFileDatabase.NewFilename);
                 this.StatusBar.SetMessage("Database file renamed");
                 this.Title = $"{Constant.Defaults.MainWindowBaseTitle} ({renameFileDatabase.NewFilename})";
                 if (IsCondition.IsPathLengthTooLong(Path.Combine(this.FolderPath, renameFileDatabase.NewFilename), FilePathTypeEnum.Backup))

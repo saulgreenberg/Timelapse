@@ -16,6 +16,7 @@ namespace Timelapse
         public const string AsReal = " AS REAL ";
         public const string Ascending = " ASC ";
         public const string AttachDatabase = " ATTACH DATABASE ";
+        public const string BooleanEquals = " == ";
         public const string Concatenate = " || ";
         public const string Descending = " DESC ";
         public const string Dot = ".";
@@ -76,6 +77,7 @@ namespace Timelapse
         public const string LimitOne = Limit + " 1 ";
         public const string Max = " MAX ";
         public const string MasterTableList = "sqlite_master";
+        public const string Minus = " - ";
         public const string Name = " NAME ";
         public const string NameFromSqliteMaster = " NAME FROM SQLITE_MASTER ";
         public const string Not = " NOT ";

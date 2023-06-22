@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Dialog
 {
@@ -62,7 +64,16 @@ namespace Timelapse.Dialog
         #region Callbacks - Dialog buttons
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            try
+            {
+                // The RelativePathControl seems to be invoking this twice, which generates and error
+                // Not sure why, so that is why there is a try catch here.
+                this.DialogResult = true;
+            }
+            catch
+            {
+                TracePrint.PrintMessage("Caught this.DialogResult issue in MessageBox");
+            }
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)

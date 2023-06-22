@@ -893,8 +893,6 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-
-
         #region MessageBox: Corrupted .ddb file (no primary key)
         public static void DatabaseFileNotLoadedAsCorruptDialog(Window owner, string ddbDatabasePath, bool isEmpty)
         {
@@ -1679,6 +1677,7 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
         #endregion
+
         #region MessageBox: MenuEdit
         /// <summary>
         /// Tell the user how duplicates work, including showing a problem statement if the sort order isn't optimal. Give them the opportunity to abort.
@@ -2419,5 +2418,46 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
         #endregion
+
+        #region Moving folder errors
+        /// Give the user various opening mesages
+        public static void RenameRelativePathError(Window owner, MoveFolderResultEnum result, string sourceFolderPath, string destinationFolderPath)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"Could not rename the folder {sourceFolderPath}";
+
+            string reason;
+            switch (result)
+            {
+                case MoveFolderResultEnum.Success:
+                    // This should not have been passed in
+                    return;
+                case MoveFolderResultEnum.FailAsSourceFolderDoesNotExist:
+                    reason = $"The source folder '{sourceFolderPath}' does not exist." + Environment.NewLine +
+                             "Because of that, Timelapse could not rename the actual folder.";
+                    break;
+                case MoveFolderResultEnum.FailAsDestinationFolderExists:
+                    reason = $"The destination folder '{destinationFolderPath}' already exists." + Environment.NewLine +
+                             "Windows does not allow a folder to be renamed if a folder with the desired name already exists.";
+                    break;
+                case MoveFolderResultEnum.FailDueToSystemMoveException:
+                default:
+                    reason = "Windows tried to rename your folder, but for some reason couldn't do it.";
+                    break;
+            }
+
+            new Dialog.MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    What = $"Timelapse could not rename {sourceFolderPath} as {destinationFolderPath}",
+                    Reason = reason,
+                    Icon = MessageBoxImage.Error
+                }
+            }.ShowDialog();
+        }
+        #endregion
+
     }
 }

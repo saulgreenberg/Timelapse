@@ -1114,6 +1114,19 @@ namespace Timelapse.Database
             allPaths.Sort();
             return allPaths;
         }
+
+        // Get only the distinct and complete relative paths associated with images
+        public List<string> GetRelativePaths()
+        {
+            List<object> relativePathList = this.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
+            List<string> allPaths = new List<string>();
+            foreach (string relativePath in relativePathList.Cast<String>())
+            {
+                allPaths.Add(relativePath);
+            }
+            allPaths.Sort();
+            return allPaths;
+        }
         #endregion 
 
         #region Get Distinct Values
@@ -1474,6 +1487,47 @@ namespace Timelapse.Database
         }
         #endregion
 
+        #region Update RelativePaths (used mostly by RelativePathEditor)
+        // This method will rename all relative paths matching a prefix. The Query is different depending upon
+        // whether its an interior node (i.e., a prefix matching any relative paths with a following path) or a leaf (i.e., no subfolders are under it) 
+        // Form:Update DataTable
+        // Interior nodes:
+        //      Update DataTable SET RelativePath =
+        //      'newPrefixPath' || Substr(RelativePath, Length(oldPrefixPath) + 1) where Instr (RelativePath, oldPrefixPath\) == 1
+        // Leaf nodes:
+        //      Update DataTable SET RelativePath = 'newPrefixPath' where RelativePath = 'oldPrefixPath'
+        public void RelativePathReplacePrefix(string oldPrefixPath, string newPrefixPath, bool isInteriorNode)
+        {
+            string query;
+            if (isInteriorNode)
+            {
+                query = Sql.Update + Constant.DBTables.FileData
+                                   + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal
+                                   + Sql.Quote(newPrefixPath) + Sql.Concatenate
+                                   + Sql.Substr
+                                   + Sql.OpenParenthesis
+                                   + Constant.DatabaseColumn.RelativePath + Sql.Comma
+                                   + Sql.Length + Sql.OpenParenthesis + Sql.Quote(oldPrefixPath) +
+                                   Sql.CloseParenthesis + Sql.Plus + "1"
+                                   + Sql.CloseParenthesis
+                                   + Sql.Where
+                                   + Sql.Instr
+                                   + Sql.OpenParenthesis
+                                   + Constant.DatabaseColumn.RelativePath + Sql.Comma
+                                   + Sql.Quote(oldPrefixPath + '\\')
+                                   + Sql.CloseParenthesis
+                                   + Sql.BooleanEquals + "1";
+            }
+            else
+            {
+                query = Sql.Update + Constant.DBTables.FileData
+                                   + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(newPrefixPath) 
+                                   + Sql.Where
+                                   + Constant.DatabaseColumn.RelativePath  + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
+            }
+            this.Database.ExecuteNonQuery(query);
+        }
+        #endregion
         #region Deletions
         // Delete the data (including markers associated with the images identified by the list of IDs.
         public void DeleteFilesAndMarkers(List<long> fileIDs)
@@ -1945,7 +1999,7 @@ namespace Timelapse.Database
         #endregion
 
         #region File retrieval and manipulation
-        public void RenameFile(string newFileName)
+        public void RenameFileDatabase(string newFileName)
         {
             if (File.Exists(Path.Combine(this.FolderPath, this.FileName)))
             {

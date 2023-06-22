@@ -191,6 +191,9 @@
     <Compile Include="Controls\MetadataGrid.xaml.cs">
       <DependentUpon>MetadataGrid.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\RelativePathControl.xaml.cs">
+      <DependentUpon>RelativePathControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ThumbnailInCell.xaml.cs">
       <DependentUpon>ThumbnailInCell.xaml</DependentUpon>
     </Compile>
@@ -222,6 +225,10 @@
     <Compile Include="Dialog\RecognitionOptionsForBoundingBox.xaml.cs">
       <DependentUpon>RecognitionOptionsForBoundingBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialog\RelativePathEditor.xaml.cs">
+      <DependentUpon>RelativePathEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\MoveFolderResultEnum.cs" />
     <Compile Include="Recognition\RecognitionDatabases.cs" />
     <Compile Include="Recognition\Recognizer.cs" />
     <Compile Include="Recognition\RecognitionSelections.cs" />
@@ -479,6 +486,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\RelativePathControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\ThumbnailInCell.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -560,6 +571,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\RandomSampleSelection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RelativePathEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -922,6 +937,8 @@
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Icons\FolderEmpty_16.png" />
+    <Resource Include="Icons\FolderPhotos_16.png" />
     <Resource Include="Resources\FilePathTooLong.jpg" />
     <Resource Include="Icons\MediaControl-PlaySpeed1.png" />
     <Resource Include="Icons\MediaControl-PlayButton.png" />

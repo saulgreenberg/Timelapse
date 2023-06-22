@@ -59,6 +59,39 @@ namespace Timelapse.Util
                 return false;
             }
         }
+
+        public static MoveFolderResultEnum TryMoveFolderIfExists(string sourceFolderPath, string destinationFolderPath)
+        {
+            try
+            {
+                if (Directory.Exists(sourceFolderPath))
+                {
+                    // Ensure the destination directory doesn't already exist
+                    if (Directory.Exists(destinationFolderPath) == false)
+                    {
+                        // Perform the move
+                        Directory.Move(sourceFolderPath, destinationFolderPath);
+                    }
+                    else
+                    {
+                        TracePrint.PrintMessage($"Move not done: destination folder '{destinationFolderPath} already exists.");
+                        return MoveFolderResultEnum.FailAsDestinationFolderExists;
+                    }
+                    return MoveFolderResultEnum.Success;
+                }
+                else
+                {
+                    TracePrint.PrintMessage($"Move not done: the source folder '{sourceFolderPath} does not exists.");
+                    return MoveFolderResultEnum.FailAsSourceFolderDoesNotExist;
+                }
+            }
+            catch (Exception exception)
+            {
+                TracePrint.PrintMessage(
+                    $"Move not done of {sourceFolderPath} to {destinationFolderPath} as an exception was raised{Environment.NewLine}{exception.Message}: {exception}");
+                return MoveFolderResultEnum.FailDueToSystemMoveException;
+            }
+        }
         #endregion
 
         #region Public static methods - Check if the database is valid, and return error status reports if it isn't

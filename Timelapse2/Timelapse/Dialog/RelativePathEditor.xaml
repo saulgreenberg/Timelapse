@@ -1,0 +1,34 @@
+﻿<Window x:Class="Timelapse.Dialog.RelativePathEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        Title="Relative Path Editor" 
+        MinHeight="200" MinWidth="768"
+        Height="600" Width="768"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded"
+        >
+    <DockPanel>
+        <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" Icon="Asterisk"
+                                      Title="Folder Editor"
+                                      What="Rename, move, and create new Timelapse folders, similar to how you do it in Windows Explorer "
+                                      Solution="&#x2022; Rename a folder by: 
+                                      &#10;   - select 'Rename' on the folder's context menu, or
+                                      &#10;   - left-mouse down on the folder name holding for a second or so 
+                                      &#10;&#x2022; Create a new folder within an existing folder by selecting 'New folder' on the folder's context
+                                      &#10;&#x2022; Move a folder to another folder by dragging and dropping it on another folder. "
+                                      Hint="&#x2022; The folder icons indicate whether Timelapse associates any images or videos with that folder"
+                                      Result="&#x2022; Doing any of the above actions will change the folder"/>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>
+                <Button Name="DoneButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
+            </StackPanel>
+            <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Top"/>
+            <Grid DockPanel.Dock="Top" >
+                <controls:RelativePathControl x:Name="RelativePathControl"/>
+            </Grid>
+        </DockPanel>
+    </DockPanel>
+</Window>
