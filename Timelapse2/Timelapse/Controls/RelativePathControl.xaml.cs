@@ -795,12 +795,28 @@ namespace Timelapse.Controls
             }
         }
 
-        private void MoveRelativePath(string sourcePath, string sourceName, string targetPath)
+        private void MoveRelativePath(string sourcePath, string sourceName, string destinationPath)
         {
-            string newPath = Path.Combine(targetPath, sourceName);
+            string newPath = Path.Combine(destinationPath, sourceName);
             List<PathItem> newRelativePathItemList = new List<PathItem>();
             List<PathItem> alteredPathItemList = new List<PathItem>();
             List<PathItem> unalteredPathItemList = new List<PathItem>();
+
+            bool isSourceInteriorNode = false;
+            // Create a deep copy of the current path list in case there is an error, as this will let us restore 
+            // things to their original state
+            PathList originalPathList = this.MyPathList.DeepClone();
+
+            // Check to see if the original node was an interior node (i.e., path prefix). If its a '/' terminating prefix for even one of the paths, then it must be
+            // This could be done in one of the other existing loops for efficiencys, but its easier this way
+            foreach (PathItem item in originalPathList.Items)
+            {
+                if (item.Path.StartsWith(sourcePath + this.charSeparator))
+                {
+                    isSourceInteriorNode = true;
+                    break;
+                }
+            }
 
             // Create two lists:
             // - alteredPathItemList is a list containing only those paths that were altered
@@ -822,7 +838,7 @@ namespace Timelapse.Controls
             bool alteredPathItemListAdded = false;
             foreach (PathItem item in unalteredPathItemList)
             {
-                if (alteredPathItemListAdded == false && item.Path.StartsWith(targetPath, StringComparison.OrdinalIgnoreCase))
+                if (alteredPathItemListAdded == false && item.Path.StartsWith(destinationPath, StringComparison.OrdinalIgnoreCase))
                 {
                     newRelativePathItemList.AddRange(alteredPathItemList);
                     alteredPathItemListAdded = true;
@@ -839,7 +855,17 @@ namespace Timelapse.Controls
             }
 
             this.MyPathList.Items = newRelativePathItemList;
-            bool result = this.ExternalMoveFolder(sourcePath, targetPath);
+            // To move a folder into a destination folder: create a new destination folder path comprising the destination path and the source folder name
+            string destinationFolderPathAndFolderName = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
+            MoveFolderResultEnum result = this.ExternalMoveFolderIntoFolder(sourcePath, destinationFolderPathAndFolderName, isSourceInteriorNode);
+            if (result != MoveFolderResultEnum.Success)
+            {
+                Dialog.Dialogs.RenameRelativePathError(this.ParentDialogWindow, result, sourcePath, destinationPath);
+                // Restore the tree etc to its pre-renamed form
+                this.MyPathList = originalPathList;
+                // this.RebuildTree();
+            }
+            this.RebuildTree();
         }
         #endregion
 
@@ -874,10 +900,19 @@ namespace Timelapse.Controls
         #endregion
 
         #region External:MoveFolder
-        bool ExternalMoveFolder(string oldFolderPath, string newfolderPath)
+        MoveFolderResultEnum ExternalMoveFolderIntoFolder(string sourceFolderPath, string destinationFolderPath, bool isInteriorNode)
         {
-            Debug.Print($"Rename: {oldFolderPath} to {newfolderPath}");
-            return true;
+            MoveFolderResultEnum result = FilesFolders.TryMoveFolderIfExists(
+                Path.Combine(FileDatabase.FolderPath, sourceFolderPath),
+                Path.Combine(FileDatabase.FolderPath, destinationFolderPath));
+            if (result == MoveFolderResultEnum.Success)
+            {
+                // We assume we can always update the database with no errors. 
+                // It would be good if we could get an error code back!
+                this.FileDatabase.RelativePathReplacePrefix(sourceFolderPath, destinationFolderPath, isInteriorNode);
+                this.WereEditsMade = true;
+            }
+            return result;
         }
         #endregion
 
