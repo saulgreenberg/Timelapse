@@ -98,7 +98,7 @@ namespace Timelapse.Util
         {
             try
             {
-                string destinationPath = Path.Combine(sourceFolderPath,destinationSubfolderName);
+                string destinationPath = Path.Combine(sourceFolderPath, destinationSubfolderName);
 
                 if (Directory.Exists(sourceFolderPath))
                 {
@@ -354,6 +354,69 @@ namespace Timelapse.Util
                 return null;
             }
             return foundFiles;
+        }
+        #endregion
+
+        #region public static Method - GetFolders
+        /// <summary>
+        /// Populate folderPaths with all the folders and subfolders (from the root folder) excepting the Backup and Deleted folders
+        /// </summary>
+        /// <param name="folderRoot"></param>
+        /// <param name="folderPaths"></param>
+        /// <param name="prefixPath"></param>
+        public static void GetAllFoldersExceptBackupAndDeletedFolders(string folderRoot, List<string> folderPaths, string prefixPath)
+        {
+            // Check the arguments for null 
+            if (folderPaths == null || folderRoot == null)
+            {
+                // this should not happen
+                TracePrint.StackTrace(1);
+                // throw new ArgumentNullException(nameof(folderPaths));
+                // Not sure what happens if we have a null folderPaths, but we may as well try it.
+                return;
+            }
+
+            if (!Directory.Exists(folderRoot))
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(prefixPath) == false)
+            {
+                int index = folderRoot.Length > prefixPath.Length + 1 ? prefixPath.Length + 1 : prefixPath.Length;
+                string newPath = folderRoot.Substring(index);
+                if (false == string.IsNullOrWhiteSpace(newPath))
+                {
+                    folderPaths.Add(newPath);
+                }
+            }
+            else
+            {
+                folderPaths.Add(folderRoot);
+            }
+
+            DirectoryInfo[] subDirs;
+            // Recursively descend subfolders, collecting directory info on the way
+            // Note that while folders without images are also collected, these will eventually be skipped when it is later scanned for images to load
+            try
+            {
+                DirectoryInfo dirInfo = new DirectoryInfo(folderRoot);
+                subDirs = dirInfo.GetDirectories();
+            }
+            catch
+            {
+                // It may fail if there is a permissions issue
+                return;
+            }
+            foreach (DirectoryInfo subDir in subDirs)
+            {
+                // Skip the following folders
+                if (subDir.Name == Constant.File.BackupFolder || subDir.Name == Constant.File.DeletedFilesFolder || subDir.Name == Constant.File.VideoThumbnailFolderName)
+                {
+                    continue;
+                }
+                GetAllFoldersExceptBackupAndDeletedFolders(subDir.FullName, folderPaths, prefixPath);
+            }
         }
         #endregion
 

@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using DialogUpgradeFiles.Database;
-using ToastNotifications.Position;
+using Timelapse.Database;
 
 namespace Timelapse.Dialog
 {
@@ -21,38 +10,18 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class RelativePathEditor : Window
     {
-        private List<string> RelativePathList = new List<string>
-        {
-            @"Sales\Training",
-            @"Offices\Pune\HR",
-            @"Offices\Pune\PMO",
-            @"Offices\London\DEV\JAVA",
-            @"Offices\London\DEV\DOTNET",
-            @"Offices\London\QA",
-            @"Offices\Mumbai",
-            @"Finances",
-            @"HR",
-            @"Sales",
-            @"Foo",
-        };
-
+        private readonly FileDatabase FileDatabase;
         public RelativePathEditor(Window owner, Timelapse.Database.FileDatabase fileDatabase)
         {
             InitializeComponent();
             this.Owner = owner;
-
-            this.RelativePathControl.FileDatabase = fileDatabase;
-            this.RelativePathControl.ParentDialogWindow = this;
-            if (fileDatabase != null)
-            {
-                this.RelativePathList = fileDatabase.GetRelativePaths();
-            }
+            this.FileDatabase = fileDatabase;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.RelativePathControl.Initialize(this.RelativePathList);
+            this.RelativePathControl.Initialize(this, this.FileDatabase, new List<Button> { SortButton, DoneButton });
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
@@ -62,7 +31,7 @@ namespace Timelapse.Dialog
 
         private void SortButton_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.RefreshAsSortedRelativePaths();
+            this.RelativePathControl.RebuildTree(true);
         }
     }
 }

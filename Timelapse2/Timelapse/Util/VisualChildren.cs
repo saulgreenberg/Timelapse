@@ -69,7 +69,6 @@ namespace Timelapse.Util
             }
             return foundChild;
         }
-
         #endregion
     }
 }
