@@ -355,6 +355,28 @@ namespace Timelapse.Util
             }
             return foundFiles;
         }
+
+        /// <summary>
+        /// Populate foundFiles with files matching the patternfound by recursively descending the folder path.
+        /// </summary>
+        public static List<string> GetAllImageAndVideoFilesInASingleFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || false == Directory.Exists(folder))
+            {
+                // This should not happen, but just in case
+                return null;
+            }
+
+            try
+            {
+                List<string> foundFiles = Directory.GetFiles(folder).ToList();
+                return FilesRemoveAllButImagesAndVideos(foundFiles);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
         #endregion
 
         #region public static Method - GetFolders
@@ -722,9 +744,9 @@ namespace Timelapse.Util
             string extension = Path.GetExtension(fileName);
             string completeFilePath = Path.Combine(path, newFileName);
             int index = 0;
-            while (File.Exists(completeFilePath))
+            while (File.Exists(completeFilePath) || Directory.Exists(completeFilePath))
             {
-                // A file with that name already exists, so generate a new file name
+                // A file or folder with that name already exists, so generate a new file or folder name
                 newFileName = $"{baseFileName}_{++index}{extension}";
                 completeFilePath = Path.Combine(path, newFileName);
             }
@@ -748,6 +770,17 @@ namespace Timelapse.Util
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
         }
 
+        private static List<string> FilesRemoveAllButImagesAndVideos(List<string> fileList)
+        {
+            fileList.RemoveAll(x => !(x.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase))
+                                          || x.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
+            return fileList;
+        }
+
         private static void GetAllImageAndVideoFilesInFolderAndSubfolders(string rootFolderPath, List<FileInfo> fileInfoList, int recursionLevel)
         {
             // Check the arguments for null 
@@ -755,7 +788,7 @@ namespace Timelapse.Util
             {
                 // this should not happen
                 TracePrint.StackTrace(1);
-                // Not show what happens if we return with a null fileInfoList, but its worth a shot
+                // Not show what happens if we return with a null fileList, but its worth a shot
                 // throw new ArgumentNullException(nameof(control));
                 return;
             }
