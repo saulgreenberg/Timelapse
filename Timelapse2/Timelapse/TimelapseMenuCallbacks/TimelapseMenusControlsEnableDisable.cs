@@ -39,6 +39,7 @@ namespace Timelapse
             this.MenuItemRestoreDefaults.IsEnabled = filesSelected;
             this.MenuItemPopulateFieldFromMetadata.IsEnabled = filesSelected;
             this.MenuItemEpisodePopulateField.IsEnabled = filesSelected;
+            this.MenuItemFolderEditor.IsEnabled = filesSelected;
 
             // Options menu
             // always enable at top level when an image set exists so that image set advanced options are accessible
@@ -105,6 +106,7 @@ namespace Timelapse
                 this.MenuItemDuplicateRecord.Visibility = Visibility.Collapsed;
                 this.MenuItemDelete.Visibility = Visibility.Collapsed;
                 this.MenuItemDateCorrection.Visibility = Visibility.Collapsed;
+                this.MenuItemFolderEditor.Visibility = Visibility.Collapsed;
                 this.MenuItemFindMissingImage.Visibility = Visibility.Collapsed;
                 this.MenuItemFindMissingFolder.Visibility = Visibility.Collapsed;
                 this.MenuItemOptionsDarkImages.Visibility = Visibility.Collapsed;

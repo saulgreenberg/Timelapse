@@ -612,6 +612,21 @@ namespace Timelapse
         }
         #endregion
 
+        #region Folder editor
+
+        // Raise the folder editor
+        private async void MenuItemFolderEditr_Click(object sender, RoutedEventArgs e)
+        {
+            RelativePathEditor relativePathEditor = new RelativePathEditor(this, this.DataHandler?.FileDatabase);
+            if (true == relativePathEditor.ShowDialog())
+            {
+                // true is returned if any edits were actually made by the user that led to changes
+                // So reselect/display the files to show those changes
+                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+            }
+        }
+        #endregion
+
         #region Find Missing Files and Folders
         //Try to find a missing image
         private async void MenuItemEditFindMissingImage_Click(object sender, RoutedEventArgs e)

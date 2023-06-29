@@ -98,7 +98,7 @@ namespace Timelapse.Util
         {
             try
             {
-                string destinationPath = Path.Combine(sourceFolderPath,destinationSubfolderName);
+                string destinationPath = Path.Combine(sourceFolderPath, destinationSubfolderName);
 
                 if (Directory.Exists(sourceFolderPath))
                 {
@@ -355,6 +355,91 @@ namespace Timelapse.Util
             }
             return foundFiles;
         }
+
+        /// <summary>
+        /// Populate foundFiles with files matching the patternfound by recursively descending the folder path.
+        /// </summary>
+        public static List<string> GetAllImageAndVideoFilesInASingleFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || false == Directory.Exists(folder))
+            {
+                // This should not happen, but just in case
+                return null;
+            }
+
+            try
+            {
+                List<string> foundFiles = Directory.GetFiles(folder).ToList();
+                return FilesRemoveAllButImagesAndVideos(foundFiles);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        #endregion
+
+        #region public static Method - GetFolders
+        /// <summary>
+        /// Populate folderPaths with all the folders and subfolders (from the root folder) excepting the Backup and Deleted folders
+        /// </summary>
+        /// <param name="folderRoot"></param>
+        /// <param name="folderPaths"></param>
+        /// <param name="prefixPath"></param>
+        public static void GetAllFoldersExceptBackupAndDeletedFolders(string folderRoot, List<string> folderPaths, string prefixPath)
+        {
+            // Check the arguments for null 
+            if (folderPaths == null || folderRoot == null)
+            {
+                // this should not happen
+                TracePrint.StackTrace(1);
+                // throw new ArgumentNullException(nameof(folderPaths));
+                // Not sure what happens if we have a null folderPaths, but we may as well try it.
+                return;
+            }
+
+            if (!Directory.Exists(folderRoot))
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(prefixPath) == false)
+            {
+                int index = folderRoot.Length > prefixPath.Length + 1 ? prefixPath.Length + 1 : prefixPath.Length;
+                string newPath = folderRoot.Substring(index);
+                if (false == string.IsNullOrWhiteSpace(newPath))
+                {
+                    folderPaths.Add(newPath);
+                }
+            }
+            else
+            {
+                folderPaths.Add(folderRoot);
+            }
+
+            DirectoryInfo[] subDirs;
+            // Recursively descend subfolders, collecting directory info on the way
+            // Note that while folders without images are also collected, these will eventually be skipped when it is later scanned for images to load
+            try
+            {
+                DirectoryInfo dirInfo = new DirectoryInfo(folderRoot);
+                subDirs = dirInfo.GetDirectories();
+            }
+            catch
+            {
+                // It may fail if there is a permissions issue
+                return;
+            }
+            foreach (DirectoryInfo subDir in subDirs)
+            {
+                // Skip the following folders
+                if (subDir.Name == Constant.File.BackupFolder || subDir.Name == Constant.File.DeletedFilesFolder || subDir.Name == Constant.File.VideoThumbnailFolderName)
+                {
+                    continue;
+                }
+                GetAllFoldersExceptBackupAndDeletedFolders(subDir.FullName, folderPaths, prefixPath);
+            }
+        }
         #endregion
 
         #region Public Static Methods - Get Missing Folders
@@ -499,7 +584,7 @@ namespace Timelapse.Util
         }
         #endregion
 
-        #region Find the difference between two paths
+        #region Public Static Methods - Find the difference between two paths
         // Find the difference between two paths (ignoring the file name, if any) and return it
         // For example, given:
         // path1 =    "C:\\Users\\Owner\\Desktop\\Test sets\\MergeLarge\\foo\\TimelapseData.ddb"
@@ -659,9 +744,9 @@ namespace Timelapse.Util
             string extension = Path.GetExtension(fileName);
             string completeFilePath = Path.Combine(path, newFileName);
             int index = 0;
-            while (File.Exists(completeFilePath))
+            while (File.Exists(completeFilePath) || Directory.Exists(completeFilePath))
             {
-                // A file with that name already exists, so generate a new file name
+                // A file or folder with that name already exists, so generate a new file or folder name
                 newFileName = $"{baseFileName}_{++index}{extension}";
                 completeFilePath = Path.Combine(path, newFileName);
             }
@@ -685,6 +770,17 @@ namespace Timelapse.Util
                                    || x.Name.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
         }
 
+        private static List<string> FilesRemoveAllButImagesAndVideos(List<string> fileList)
+        {
+            fileList.RemoveAll(x => !(x.EndsWith(Constant.File.JpgFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.AviFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.Mp4FileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.MovFileExtension, StringComparison.InvariantCultureIgnoreCase)
+                                          || x.EndsWith(Constant.File.ASFFileExtension, StringComparison.InvariantCultureIgnoreCase))
+                                          || x.IndexOf(Constant.File.MacOSXHiddenFilePrefix, StringComparison.Ordinal) == 0);
+            return fileList;
+        }
+
         private static void GetAllImageAndVideoFilesInFolderAndSubfolders(string rootFolderPath, List<FileInfo> fileInfoList, int recursionLevel)
         {
             // Check the arguments for null 
@@ -692,7 +788,7 @@ namespace Timelapse.Util
             {
                 // this should not happen
                 TracePrint.StackTrace(1);
-                // Not show what happens if we return with a null fileInfoList, but its worth a shot
+                // Not show what happens if we return with a null fileList, but its worth a shot
                 // throw new ArgumentNullException(nameof(control));
                 return;
             }

@@ -4,30 +4,32 @@
         xmlns:controls="clr-namespace:Timelapse.Controls"
         Title="Relative Path Editor" 
         MinHeight="200" MinWidth="768"
-        Height="600" Width="768"
+        Height="700" Width="768"
         ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded"
         >
     <DockPanel>
         <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" Icon="Asterisk"
-                                      Title="Folder Editor"
-                                      What="Rename, move, and create new Timelapse folders, similar to how you do it in Windows Explorer."
-                                      Solution="&#x2022; Rename a folder by: 
-                                      &#10;   - select 'Rename' on the folder's context menu, or
-                                      &#10;   - left-mouse down on the folder name holding for a second or so; 
-                                      &#10;&#x2022; Move a folder to another folder by dragging and dropping it on another folder;
-                                      &#10;&#x2022; Create a new folder within an existing folder by selecting 'New folder' on the folder's context menu
-                                      "
-                                      Result="Timelapse will rename, move or create the folder as directed within the database and the Windows subfolder structure."
+                                      Title="Timelapse Folder Editor"
+                                      What="Rename, move, and delete sub-folders already loaded into Timelapse, and create new subfolders as desired.
+                                        &#10;&#x2022; Timelapse will update both its RelativePath data and the Windows subfolder structure as needed.
+                                        &#10;&#x2022; The interface will not let you to do certain operations if they could lead to errors or problems. "
+                                       
+                                      Solution="Using the Folder Editor is similar to how you edit folders in Windows Explorer: 
+                                        &#10;&#x2022; move a folder to another folder by dragging and dropping;
+                                        &#10;&#x2022; right click to raise a context menu for all other operations;
+                                        &#10;&#x2022; rename shortcut: left-mouse down on the folder name and hold for a second or so. "
+                                      
                                       Hint="Folder icons indicate whether Timelapse:
-                                      &#10;&#x2022; currently records any images or videos in that folder,
-                                      &#10;&#x2022; whether the folder is actually present or missing in your sub-folder structure"
-                                     />
+                                        &#10;&#x2022; currently records data associated with the images or videos found in that folder ,
+                                        &#10;&#x2022; whether the folder is actually present or missing in your sub-folder structure.
+                                        &#10; If a folder is shown as missing, use  'Edit | Try to find any missing folders...' to locate it."
+                                      />
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>
-                <Button Name="DoneButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
+                <Button Name="RefreshCompletely" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="RefreshCompletelyButton_Click">_Refresh completely</Button>                <Button Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>
+                <Button Name="DoneButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
             </StackPanel>
             <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Top"/>
             <Grid DockPanel.Dock="Top" >
