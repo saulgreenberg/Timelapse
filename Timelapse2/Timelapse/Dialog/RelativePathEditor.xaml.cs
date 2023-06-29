@@ -31,7 +31,7 @@ namespace Timelapse.Dialog
 
         private void SortButton_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.RebuildTree(true);
+            this.RelativePathControl.RebuildTreeAndNodes(true);
         }
 
         private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
