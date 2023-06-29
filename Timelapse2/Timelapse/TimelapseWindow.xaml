@@ -45,7 +45,7 @@
                 <MenuItem Header="_File" IsTabStop="false" SubmenuOpened="File_SubmenuOpening">
 
                     <!-- Test some code here - should only be enabled when developing code -->
-                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Visible" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Collapsed" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
 
                     <!-- Load template, images, and video files... -->
                     <MenuItem Name="MenuItemLoadFiles" Header="_Load template, images, and video files..." Click="MenuItemLoadImages_Click" ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">
@@ -200,7 +200,10 @@
                     </MenuItem>
 
                     <Separator Name="MenuS5"/>
-                    <!-- Missing folders  or files -->
+                    <!-- Folder editor, missing folders, missingfiles -->
+                    <!-- Test some code here - should only be enabled when developing code -->
+                    <MenuItem Name="MenuItemFolderEditor" Header="_Folder editor (move, rename etc)..." IsEnabled="True" Click="MenuItemFolderEditr_Click" ToolTip="Used internally to test some could. Should not be visible." />
+
                     <MenuItem Name="MenuItemFindMissingImage" Header="Try to find this (and other) missing files ..." IsEnabled="True" Click="MenuItemEditFindMissingImage_Click" ToolTip="Try to find the currently displayed missing file, as well as other missing images in the same folder as this one "  />
                     <MenuItem Name="MenuItemFindMissingFolder" Header="Try to find any missing folders ..." IsEnabled="True" Click="MenuItemEditFindMissingFolder_Click" ToolTip="Check to see if any folders are missing. If so, try to find them."  />
                     <Separator Name="MenuS6"/>

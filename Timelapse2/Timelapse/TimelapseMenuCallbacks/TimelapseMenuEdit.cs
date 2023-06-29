@@ -14,6 +14,7 @@ using Timelapse.Enums;
 using Timelapse.QuickPaste;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
+using MessageBox = System.Windows.MessageBox;
 
 // Edit Menu Callbacks
 // ReSharper disable once CheckNamespace
@@ -608,6 +609,21 @@ namespace Timelapse
                 {
                     await this.FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
+            }
+        }
+        #endregion
+
+        #region Folder editor
+
+        // Raise the folder editor
+        private async void MenuItemFolderEditr_Click(object sender, RoutedEventArgs e)
+        {
+            RelativePathEditor relativePathEditor = new RelativePathEditor(this, this.DataHandler?.FileDatabase);
+            if (true == relativePathEditor.ShowDialog())
+            {
+                // true is returned if any edits were actually made by the user that led to changes
+                // So reselect/display the files to show those changes
+                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
             }
         }
         #endregion

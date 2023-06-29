@@ -38,13 +38,6 @@ namespace Timelapse
         #region Menu stub to test some code
         private async void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            RelativePathEditor relativePathEditor = new RelativePathEditor(this, this.DataHandler?.FileDatabase);
-            if (true == relativePathEditor.ShowDialog())
-            {
-                // true is returned if any edits were actually made by the user that led to changes
-                // So reselect/display the files to show those changes
-                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
-            }
         }
         #endregion
 

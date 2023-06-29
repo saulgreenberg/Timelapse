@@ -12,19 +12,19 @@
     <DockPanel>
         <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" Icon="Asterisk"
                                       Title="Timelapse Folder Editor"
-                                      What="Folders can be renamed, moved, deleted, and created. Images from a folder can be moved into a new sub-folder.
-                                        &#10;&#x2022; Timelapse updates both its data and the Windows subfolder structure.
+                                      What="Rename, move, and delete sub-folders already loaded into Timelapse, and create new subfolders as desired.
+                                        &#10;&#x2022; Timelapse will update both its RelativePath data and the Windows subfolder structure as needed.
                                         &#10;&#x2022; The interface will not let you to do certain operations if they could lead to errors or problems. "
                                        
-                                      Solution="The interface is similar to how you manipulate folders in Windows Explorer. 
-                                        &#10;&#x2022; Move a folder to another folder by dragging and dropping it on another folder;
-                                        &#10;&#x2022; Right click to raise a context menu for all other operations
-                                        &#10;&#x2022; Rename shortcut: left-mouse down on the folder name holding for a second or so. "
+                                      Solution="Using the Folder Editor is similar to how you edit folders in Windows Explorer: 
+                                        &#10;&#x2022; move a folder to another folder by dragging and dropping;
+                                        &#10;&#x2022; right click to raise a context menu for all other operations;
+                                        &#10;&#x2022; rename shortcut: left-mouse down on the folder name and hold for a second or so. "
                                       
                                       Hint="Folder icons indicate whether Timelapse:
-                                        &#10;&#x2022; currently records any images or videos in that folder,
+                                        &#10;&#x2022; currently records data associated with the images or videos found in that folder ,
                                         &#10;&#x2022; whether the folder is actually present or missing in your sub-folder structure.
-                                        &#10; If a folder is shown as missing, use  'Edit | Try to find any missing folders...' to try to find it."
+                                        &#10; If a folder is shown as missing, use  'Edit | Try to find any missing folders...' to locate it."
                                       />
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
