@@ -14,7 +14,6 @@ using Timelapse.Enums;
 using Timelapse.QuickPaste;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
-using MessageBox = System.Windows.MessageBox;
 
 // Edit Menu Callbacks
 // ReSharper disable once CheckNamespace

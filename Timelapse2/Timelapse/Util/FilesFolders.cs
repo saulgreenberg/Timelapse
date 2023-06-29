@@ -584,7 +584,7 @@ namespace Timelapse.Util
         }
         #endregion
 
-        #region Find the difference between two paths
+        #region Public Static Methods - Find the difference between two paths
         // Find the difference between two paths (ignoring the file name, if any) and return it
         // For example, given:
         // path1 =    "C:\\Users\\Owner\\Desktop\\Test sets\\MergeLarge\\foo\\TimelapseData.ddb"

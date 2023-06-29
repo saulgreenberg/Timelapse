@@ -12,6 +12,7 @@ using System.Windows.Threading;
 using Timelapse.Database;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.Util;
 // ReSharper disable EmptyGeneralCatchClause
 
@@ -344,7 +345,7 @@ namespace Timelapse.Controls
                     // We could not position the textbox, so make this a no-op.
                     this.Flash(tvi);
                     return;
-                };
+                }
                 this.TextBoxEditNode.Visibility = Visibility.Visible;
                 this.TextBoxEditNode.Text = node.Name;
                 this.TextBoxEditNode.Tag = tvi;
@@ -505,7 +506,7 @@ namespace Timelapse.Controls
             // In case of error, this will let us restore things to their original state 
             PathList originalPathList = this.MyPathList.DeepClone();
 
-            string newString = ReplaceLastOccurrence(node.Path, node.Name, newName);
+            string newString = node.Path.ReplaceLastOccurrence(node.Name, newName);
 
             // We don't allow renaming if:
             // - the new path portion (as delimited with a \) matches an existing path portion, as that would be a duplicate
@@ -547,7 +548,9 @@ namespace Timelapse.Controls
                         item.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase))
                     {
                         // this is a renamed item
-                        newPathList.Items.Add(new PathItem(this.ReplaceFirstOccurrence(item.Path, node.Path, newString),
+                        //newPathList.Items.Add(new PathItem(this.ReplaceFirstOccurrence(item.Path, node.Path, newString),
+                        //    item.ContainsImages));
+                        newPathList.Items.Add(new PathItem(item.Path.ReplaceFirstOccurrence(node.Path, newString),
                             item.ContainsImages));
                     }
                     else
@@ -836,7 +839,8 @@ namespace Timelapse.Controls
                     (item.Path.StartsWith(sourcePath + this.charSeparator, StringComparison.OrdinalIgnoreCase))
                     || (item.Path.Equals(sourcePath, StringComparison.OrdinalIgnoreCase)))
                 {
-                    string newEntry = this.ReplaceFirstOccurrence(item.Path, sourcePath, newPath);
+                    //string newEntry = this.ReplaceFirstOccurrence(item.Path, sourcePath, newPath);
+                    string newEntry = item.Path.ReplaceFirstOccurrence(sourcePath, newPath);
                     alteredPathItemList.Add(new PathItem(newEntry, item.ContainsImages));
                 }
                 else
@@ -1171,7 +1175,6 @@ namespace Timelapse.Controls
         private ContextMenu TreeViewItemCreateContextMenu(TreeViewItem tvi, bool folderExists, bool photosExists, bool includeDeleteItem, bool isRootFolder)
         {
             ContextMenu contextMenu = new ContextMenu();
-
             // New folder item
             MenuItem menuCreateNewFolderAfterItem = new MenuItem
             {
@@ -1444,27 +1447,7 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        #region String manipulations
-
-        // Utility: Replace the last occurrence the oldSubstring with the newSubString in the source string
-        // eg., ReplaceLastOccurence(@"Foo\Bar\Butt\Bar", "Bar", "XXX") -> FooBarButtXXX
-        private string ReplaceLastOccurrence(string sourceString, string oldSubString, string newSubString)
-        {
-            int place = sourceString.LastIndexOf(oldSubString, StringComparison.OrdinalIgnoreCase);
-            if (place == -1)
-                return sourceString;
-            // TODO: MAKE CASE INSENSITIVE
-            return sourceString.Remove(place, oldSubString.Length).Insert(place, newSubString);
-        }
-
-        private string ReplaceFirstOccurrence(string sourceString, string oldSubString, string newSubString)
-        {
-            int place = sourceString.IndexOf(oldSubString, StringComparison.InvariantCulture);
-            if (place == -1)
-                return sourceString;
-            // TODO: MAKE CASE INSENSITIVE
-            return sourceString.Remove(place, oldSubString.Length).Insert(place, newSubString);
-        }
+        #region Path manipulations
 
         private string GetParent(string path)
         {
