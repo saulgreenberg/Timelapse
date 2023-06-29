@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using System.IO;
 using System.Windows.Threading;
 using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 // ReSharper disable EmptyGeneralCatchClause
@@ -17,7 +18,19 @@ using Timelapse.Util;
 namespace Timelapse.Controls
 {
     /// <summary>
-    /// Interaction logic for RelativePathControl.xaml
+    /// Create a treeview that displays
+    /// - the relative paths held in the database
+    /// - the actual folder/subfolder structure in the file system, including subfolders that may not be represented in the database
+    /// - indicate relatives paths in the database that appear to be missing from the file system (by icon)
+    /// - indicate relative paths that are associated with images (by icon)
+    /// Also build a 'node' hierarchy that contains all the data in the above. This should have been done as an MVVM model,
+    /// but I couldn't really figure out the best way to do that when I started.
+    /// Essentially, any change needs to be reflected in the following:
+    /// - the RelativePaths in the database needs to be updated
+    /// - the TreeView needs to be updated and rebuilt with modified TreeViewItems
+    /// - the Nodes structure needs to be rebuilt
+    /// - the actual file system needs to be updated
+    /// Likely way more complex than if I were using MVVM, but it works.
     /// </summary>
     public partial class RelativePathControl
     {
@@ -73,20 +86,19 @@ namespace Timelapse.Controls
         private List<Button> Buttons;
         #endregion
 
-        #region Constructors and Loading
+        #region Constructors
         public RelativePathControl()
         {
             InitializeComponent();
             TimerRenameItemAfterExtendedMousePress.Tick += TimerRenameItemAfterExtendedMousePress_Tick;
         }
-
-        private void RelativePathControl_OnLoaded(object sender, RoutedEventArgs e)
-        {
-        }
         #endregion
 
         #region Public Methods
-        // Given a list of relative paths, build the tree from it and display it.
+        // Initialize everything.  Retrieve a list of relative paths from the database and the actual file subfolders under the root folder,
+        // then build the tree and corresponding node data structure from it and display it.
+        // Needs to be invoked externally, usually immediately after the control is created. However, it can be re-invoked 
+        // any time, which is usually used for testing purposes (e.g., to see if the changes to the treeview mirror the changes in the database)
         public void Initialize(Window owner, FileDatabase fileDatabase, List<Button> buttons)
         {
             if (null == fileDatabase)
@@ -105,14 +117,16 @@ namespace Timelapse.Controls
             this.RelativePaths = this.FileDatabase.GetRelativePaths();
 
             // Build the initial relative path list from the relative paths
-            // These are the ones that Timelapse associates with images, so containsImages will be true.
+            // Because they are in the database, these RelativePaths indicate that Timelapse associates that path with images, so containsImages will be true.
             foreach (string path in this.RelativePaths)
             {
                 this.MyPathList.Items.Add(new PathItem(path, true));
             }
 
             // Now build addition paths based on the parent subfolders found in each relativePath.
-            // If they are not present in the path list, then we know that these are folders that Timelapse does not associate with photos
+            // If they are not present in the path list, then we know that these are folders that Timelapse does not associate with photos.
+            // For example, if a/b/c is in the database, we know that a/b/c has images. However, unless they are also represented
+            // by a RelativePath, we also need to  add a and a/b in the path list. 
             PathList pathListKnownToTimelapse = new PathList();
             foreach (PathItem item in this.MyPathList.Items)
             {
@@ -125,24 +139,24 @@ namespace Timelapse.Controls
                     {
                         pathListKnownToTimelapse.Items.Add(new PathItem(parent, false));
                     }
-
                     parent = this.GetParent(parent);
                 }
             }
-
             this.MyPathList.Items.AddRange(pathListKnownToTimelapse.Items);
-            // Remove duplicate entries by path
+
+            // The above could create duplicate entries. So remove duplicate entries by path
             this.MyPathList.Items = this.MyPathList.Items.GroupBy(x => x).Select(d => d.First()).ToList();
 
             // At this point, we should have a pathlist that distinguishes :
             // - all relative paths and their component paths that are somehow covered in the Timelapse Database 
-            // - whether a particular complete path contains or does not contain images known to Timelapse
+            // - whether a particular path contains or does not contain images known to Timelapse
 
-            // Now, lets add those folders (if any) that are under the root folder but not currently known to the Timelapse Database
-            // We do this by getting all folders, and adding those that are not in the my PathList.
+            // Now, we need to match these against the actual existing sub-folders in the file system, and include those missing from the PathList structure.
+            // Add sub-folders (if any) that are under the root folder but not currently represented in our Path List (which currently is generated only
+            // from the relativePaths in the database). We do this by getting all sub-folders under the root folder, and adding those that are not in the my PathList.
+            // Note that we set containsImages to false. While the physical folders may actually contain images, they are not known to Timelapse.
             List<string> physicalFolders = new List<string>();
-            FilesFolders.GetAllFoldersExceptBackupAndDeletedFolders(this.RootFolder, physicalFolders,
-                this.FileDatabase.FolderPath);
+            FilesFolders.GetAllFoldersExceptBackupAndDeletedFolders(this.RootFolder, physicalFolders, this.FileDatabase.FolderPath);
             foreach (string folder in physicalFolders)
             {
                 if (this.MyPathList.Items.Any(s => s.Path.Equals(folder, StringComparison.OrdinalIgnoreCase)))
@@ -152,14 +166,14 @@ namespace Timelapse.Controls
                 MyPathList.Items.Add(new PathItem(folder, false));
             }
 
-            // Finally, ensure that we sort the paths, as otherwise edited items will appear in the wrong place
-            this.RebuildTree(true);
+            // Finally, sort and rebuild the tree and node structure from these paths. 
+            this.RebuildTreeAndNodes(true);
         }
         #endregion
 
         #region Build the Node and TreeView structures
-        // Rebuild everything from scratch. This populates the node structure and the treeView with the items in the MyPathList
-        public void RebuildTree(bool sortTree = false)
+        // Rebuild everything from the PathList, which populates / displays the treeView and the node structure with the items in the MyPathList
+        public void RebuildTreeAndNodes(bool sortTree = false)
         {
             if (null == FileDatabase)
             {
@@ -178,11 +192,11 @@ namespace Timelapse.Controls
             // - if it containsImages (indicated by an "" in the list) 
             //bool rootNodeContainsPhotos = this.MyPathList.Items.Any(s => string.IsNullOrWhiteSpace(s.Path));
             PathItem rootPathItem = this.MyPathList.Items.FirstOrDefault(s => string.IsNullOrWhiteSpace(s.Path));
-            bool rootNodeContainsPhotos = rootPathItem != null && rootPathItem.ContainsImages;
+            bool rootNodeContainsImages = rootPathItem != null && rootPathItem.ContainsImages;
             Node rootNode = new Node
             {
                 FolderExists = Directory.Exists(this.RootFolder),
-                ContainsPhotos = rootNodeContainsPhotos,
+                ContainsImages = rootNodeContainsImages,
             };
 
             // Add the nodes to it to mirror the PathList correctly as children as needed
@@ -196,9 +210,7 @@ namespace Timelapse.Controls
             }
 
             // Create the initial TreeViewItem representing the root folder.
-            StackPanel sp =
-                CreateTreeViewItemHeaderAsStackPanel(this.RootFolderName, rootNodeContainsPhotos,
-                    rootNode.FolderExists);
+            StackPanel sp = CreateTreeViewItemHeaderAsStackPanel(this.RootFolderName, rootNodeContainsImages, rootNode.FolderExists);
             TreeViewItem tvi = new TreeViewItem
             {
                 Header = sp,
@@ -208,7 +220,7 @@ namespace Timelapse.Controls
 
             // Create a special context menu for the Root folder that doesn't include the Rename item,
             // as we don't allow the root folder to be renamed
-            tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, rootNode.FolderExists, rootNode.ContainsPhotos, false, true);
+            tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, rootNode.FolderExists, rootNode.ContainsImages, false, true);
 
             // Add children to the root TreeViewItem to match the node structure hierarchy
             this.TraverseNodeAndAddToTreeViewItem(tvi, rootNode);
@@ -231,13 +243,13 @@ namespace Timelapse.Controls
                 // The tag is used to associate a node with its respective TreeViewItem
                 node.FolderExists = Directory.Exists(Path.Combine(this.RootFolder, node.Path));
                 StackPanel sp =
-                    this.CreateTreeViewItemHeaderAsStackPanel(node.Name, node.ContainsPhotos, node.FolderExists);
+                    this.CreateTreeViewItemHeaderAsStackPanel(node.Name, node.ContainsImages, node.FolderExists);
                 tvi = new TreeViewItem
                 {
                     Header = sp,
                     Tag = node
                 };
-                tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, node.FolderExists, true, true, false);
+                tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, node.FolderExists, node.ContainsImages, true, false);
                 currentTvi.Items.Add(tvi);
             }
             else
@@ -303,48 +315,65 @@ namespace Timelapse.Controls
         // - set its value and visibility, 
         private void InitiateRenameUI(TreeViewItem tvi)
         {
-            if (tvi == null)
+            try
             {
-                return;
+                if (tvi == null)
+                {
+                    return;
+                }
+
+                Node node = (Node)tvi.Tag;
+                if (false == node.FolderExists)
+                {
+                    // If the folder doesn't exists, flash the node and don't start the editing operation
+                    // Note that other error checking means that we really should never get to this point.
+                    this.Flash(tvi);
+                    return;
+                }
+
+                // Bring the tree view item into view. If that requires scrolling, we don't want the scroll change event to fire.
+                // Afterwards, we do want it to fire as then it will handle positioning the TextBoxEditNode as it is scrolled,
+                // and cancelling the edit if it is scrolled out of view..
+                this.ScrollViewerActivateScrollChangedEvent(false);
+                tvi.BringIntoView(new Rect(new Size(10, 40)));
+                this.ScrollViewerActivateScrollChangedEvent(true);
+
+                this.TextBoxPositionOverTreeViewItem(tvi);
+                this.TextBoxEditNode.Visibility = Visibility.Visible;
+                this.TextBoxEditNode.Text = node.Name;
+                this.TextBoxEditNode.Tag = tvi;
+                this.textBoxEditNodeMinWidth = -1;
+                this.TextBoxEditNode.BorderThickness = new Thickness(2);
+                this.TextBoxEditNode.CaretIndex = node.Path.Length;
+                this.TextBoxEditNode.Focus();
+                this.originalTextInHeader = node.Name;
+                this.originalPathInHeader = node.Path;
+
+                this.RenameStarted();
             }
-            Node node = (Node)tvi.Tag;
-            if (false == node.FolderExists)
+            catch (Exception e)
             {
-                // If the folder doesn't exists, flash the node and don't start the editing operation
-                // Note that other error checking means that we really should never get to this point.
-                this.Flash(tvi);
-                return;
+                TracePrint.CatchException($"Catch in initiateRenameUI: {e.Message}");
+                throw;
             }
-
-            // Bring the tree view item into view. If that requires scrolling, we don't want the scroll change event to fire.
-            // Afterwards, we do want it to fire as then it will handle positioning the TextBoxEditNode as it is scrolled,
-            // and cancelling the edit if it is scrolled out of view..
-            this.ScrollViewerActivateScrollChangedEvent(false);
-            tvi.BringIntoView(new Rect(new Size(10, 40)));
-            this.ScrollViewerActivateScrollChangedEvent(true);
-
-            this.TextBoxPositionOverTreeViewItem(tvi);
-            this.TextBoxEditNode.Visibility = Visibility.Visible;
-            this.TextBoxEditNode.Text = node.Name;
-            this.TextBoxEditNode.Tag = tvi;
-            this.textBoxEditNodeMinWidth = -1;
-            this.TextBoxEditNode.BorderThickness = new Thickness(2);
-            this.TextBoxEditNode.CaretIndex = node.Path.Length;
-            this.TextBoxEditNode.Focus();
-            this.originalTextInHeader = node.Name;
-            this.originalPathInHeader = node.Path;
-
-            this.RenameStarted();
         }
 
         private void TextBoxPositionOverTreeViewItem(TreeViewItem tvi)
         {
-            // Note that we associate the tag with its corresponding TreeViewItem
-            GeneralTransform myTransform = tvi.TransformToAncestor(this.Canvas);
-            Point myOffset = myTransform.Transform(new Point(0, 0));
+            try
+            {
+                // Note that we associate the tag with its corresponding TreeViewItem
+                GeneralTransform myTransform = tvi.TransformToAncestor(this.Canvas);
+                Point myOffset = myTransform.Transform(new Point(0, 0));
 
-            this.TextBoxEditNode.SetValue(Canvas.TopProperty, myOffset.Y - 1);
-            this.TextBoxEditNode.SetValue(Canvas.LeftProperty, myOffset.X + 33);
+                this.TextBoxEditNode.SetValue(Canvas.TopProperty, myOffset.Y - 1);
+                this.TextBoxEditNode.SetValue(Canvas.LeftProperty, myOffset.X + 33);
+            }
+            catch (Exception e)
+            {
+                TracePrint.CatchException($"Catch in TextBoxPositionOverTreeViewItem: {e.Message}");
+                throw;
+            }
         }
 
         // Whenever the textbox is edited, adjust its width to ensure that its never less than its original width
@@ -477,7 +506,8 @@ namespace Timelapse.Controls
                         TimerRenameItemAfterExtendedMousePress.Stop();
 
                         draggedItem = (TreeViewItem)this.TreeView.SelectedItem;
-                        if (draggedItem != null)
+                        // Only allow non-null folders that actually exist to be dragged
+                        if (draggedItem != null && ((Node)draggedItem.Tag).FolderExists)
                         {
                             DragDropEffects finalDropEffect = DragDrop.DoDragDrop(this.TreeView,
                                 this.TreeView.SelectedValue, DragDropEffects.Move);
@@ -562,32 +592,50 @@ namespace Timelapse.Controls
                 return false;
             }
 
-            //Check whether the destination is a subfolder of the source,
-            // as we shouldn't be able to move a folder into its subfolder
+            // Case 1: Disallow drop when the destination is a subfolder of the source,
+            // We shouldn't be able to move a folder into its subfolder
             string destPath = ((Node)_targetItem.Tag).Path;
             string sourcePath = ((Node)_sourceItem.Tag).Path;
             string sourceName = ((Node)_sourceItem.Tag).Name;
-
             if (destPath.Equals(this.GetParent(sourcePath), StringComparison.OrdinalIgnoreCase))
             {
+                //Debug.Write("1");
                 return false;
             }
 
-            // Check and disallow if dragging node to a node that has a child node of the same name
+            // Case 2: Disallow drop to a node that has a child node of the same name,
+            // A folder cannot have two folders with the same name
             foreach (KeyValuePair<string, Node> kvp in ((Node)_targetItem.Tag).Children)
             {
                 if (kvp.Key.Equals(sourceName, StringComparison.OrdinalIgnoreCase))
                 {
+                    //Debug.Write("2"); 
                     return false;
                 }
             }
 
-            if (false == destPath.StartsWith(sourcePath))
+            // Case 3: Disallow drop into itself
+            if (destPath.Equals(sourcePath, StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                //Debug.Write("3");
+                return false;
+
+            }
+            // Case 4: Disallow a drop from a folder into one of its subfolders
+            // if (false == destPath.StartsWith(sourcePath))
+            if ((destPath + this.charSeparator).StartsWith(sourcePath + this.charSeparator))
+            {
+                //Debug.Write("4"); 
+                return false;
             }
 
-            return false;
+            // Case 5: Disallow a drop onto a missing folder
+            if (false == ((Node)_targetItem.Tag).FolderExists)
+            {
+                //Debug.Write("5");
+                return false;
+            }
+            return true;
         }
 
         #endregion
@@ -631,7 +679,7 @@ namespace Timelapse.Controls
             // Thus rebuilding the tree should suffice, as it would no longer be present when we search for other
             // folders under the root folder
             this.MyPathList.Items.RemoveAll(p => p.Path.Equals(node.Path, StringComparison.OrdinalIgnoreCase));
-            this.RebuildTree();
+            this.RebuildTreeAndNodes();
         }
         #endregion
 
@@ -703,7 +751,7 @@ namespace Timelapse.Controls
                 this.MyPathList = originalPathList;
             }
 
-            this.RebuildTree();
+            this.RebuildTreeAndNodes();
 
             // Find the just created 'New folder' tree view item in the tree view
             TreeViewItem foundTvi = TreeViewFindMatchingPath(Path.Combine(node.Path, newFolderName));
@@ -728,18 +776,15 @@ namespace Timelapse.Controls
         {
             bool isInteriorNode = false;
 
-
-            // Get the node corresponding to that TreeViewItem
+            // Get the node corresponding to that TreeViewItem, but exit if null
             Node node = (Node)tvi.Tag;
-
-            // Ignore this if the node is null
             if (node == null)
             {
                 return;
             }
 
-            // Create a deep copy of the current path list in case there is an error, as this will let us restore 
-            // things to their original state
+            // Create a deep copy of the current path list.
+            // In case of error, this will let us restore things to their original state 
             PathList originalPathList = this.MyPathList.DeepClone();
 
             string newString = ReplaceLastOccurrence(node.Path, node.Name, newName);
@@ -792,10 +837,7 @@ namespace Timelapse.Controls
                         // this is an unchanged item
                         newPathList.Items.Add(new PathItem(item.Path, item.ContainsImages));
                     }
-
-
                 }
-
                 this.MyPathList = newPathList;
             }
             else
@@ -808,7 +850,6 @@ namespace Timelapse.Controls
                     bool containsPhotos = item.ContainsImages;
                     newPathList.Items.Add(new PathItem(path.Replace(node.Path, newString), containsPhotos));
                 }
-
                 this.MyPathList = newPathList;
             }
 
@@ -831,10 +872,8 @@ namespace Timelapse.Controls
                 Dialog.Dialogs.RenameRelativePathError(this.ParentDialogWindow, result, node.Path, newString);
                 // Restore the tree etc to its pre-renamed form
                 this.MyPathList = originalPathList;
-                // this.RebuildTree();
             }
-
-            this.RebuildTree();
+            this.RebuildTreeAndNodes();
         }
         #endregion
 
@@ -846,7 +885,7 @@ namespace Timelapse.Controls
                 Node sourceNode = (Node)_sourceItem.Tag;
                 Node targetNode = (Node)_targetItem.Tag;
                 this.MoveRelativePath(sourceNode.Path, sourceNode.Name, targetNode.Path);
-                this.RebuildTree();
+                this.RebuildTreeAndNodes();
             }
             catch
             {
@@ -856,7 +895,7 @@ namespace Timelapse.Controls
         private void MoveRelativePath(string sourcePath, string sourceName, string destinationPath)
         {
             string newPath = Path.Combine(destinationPath, sourceName);
-            List<PathItem> newRelativePathItemList = new List<PathItem>();
+            List<PathItem> newPathItemList = new List<PathItem>();
             List<PathItem> alteredPathItemList = new List<PathItem>();
             List<PathItem> unalteredPathItemList = new List<PathItem>();
 
@@ -876,13 +915,19 @@ namespace Timelapse.Controls
                 }
             }
 
-            // Create two lists:
+            // Create three lists:
             // - alteredPathItemList is a list containing only those paths that were altered
             // - unalteredPathItemList is a list containing only those paths that were not altered
+            // - newPathItemList is a list that will contain the correct path items after the move is done.
             // We do this so we can insert the altered paths into a location that makes sense when displaying the tree
             foreach (PathItem item in MyPathList.Items)
             {
-                if (item.Path.StartsWith(sourcePath, StringComparison.OrdinalIgnoreCase))
+                //if (
+                //    (isSourceInteriorNode && item.Path.StartsWith(sourcePath + this.charSeparator, StringComparison.OrdinalIgnoreCase))
+                //    || (false == isSourceInteriorNode && item.Path.Equals(sourcePath, StringComparison.OrdinalIgnoreCase)))
+                if (
+                    (item.Path.StartsWith(sourcePath + this.charSeparator, StringComparison.OrdinalIgnoreCase))
+                    || (item.Path.Equals(sourcePath, StringComparison.OrdinalIgnoreCase)))
                 {
                     string newEntry = this.ReplaceFirstOccurrence(item.Path, sourcePath, newPath);
                     alteredPathItemList.Add(new PathItem(newEntry, item.ContainsImages));
@@ -893,44 +938,61 @@ namespace Timelapse.Controls
                 }
             }
 
+            // Combine the unaltered and altered PathItem lists into the newPathItemList,
+            // where the insertion of the altered PathItems is done in the correct place
+            // so that the rebuilt tree doesn't jump around
             bool alteredPathItemListAdded = false;
             foreach (PathItem item in unalteredPathItemList)
             {
                 if (alteredPathItemListAdded == false &&
                     item.Path.StartsWith(destinationPath, StringComparison.OrdinalIgnoreCase))
                 {
-                    newRelativePathItemList.AddRange(alteredPathItemList);
+                    newPathItemList.AddRange(alteredPathItemList);
                     alteredPathItemListAdded = true;
                 }
-
-                newRelativePathItemList.Add(item);
+                newPathItemList.Add(item);
             }
 
-            // If we have an 'orphanded' subtree (e.g., a/b where we move b but a has no photos so there is no 'a' in the list)
-            // put it in the list as a new list it with no photos in it.
+            // However, we need a further possible addition to the  newPathItemList.
+            // If the move resulted in an 'orphaned' parent subtree (e.g., a/b where we move b but a has no photos so there is no longer an 'a' in the list)
+            // put the orphaned parent in the list as a new list,  with no photos in it.
             string parent = this.GetParent(sourcePath);
             if (false == string.IsNullOrEmpty(parent) && false ==
-                newRelativePathItemList.Any(s => s.Path.Equals(parent, StringComparison.OrdinalIgnoreCase)))
+                newPathItemList.Any(s => s.Path.Equals(parent, StringComparison.OrdinalIgnoreCase)))
             {
-                newRelativePathItemList.Add(new PathItem(parent, false));
+                newPathItemList.Add(new PathItem(parent, false));
             }
 
-            this.MyPathList.Items = newRelativePathItemList;
-            // To move a folder into a destination folder: create a new destination folder path comprising the destination path and the source folder name
+            // Now set the main path list so that it contains these new lists.
+            this.MyPathList.Items = newPathItemList;
+
+            // Check to see if the original DB entry was an interior node (i.e., path prefix). If its a '/' terminating prefix for even one of the paths, then it must be
+            // Note that this is differnt than the above, as we only include paths that have a photo in it.
+            bool isDatabaseInteriorNode = false;
+            foreach (PathItem item in originalPathList.Items)
+            {
+                if (item.ContainsImages && item.Path.StartsWith(sourcePath + this.charSeparator))
+                {
+                    isDatabaseInteriorNode = true;
+                    break;
+                }
+            }
+
+            // To move a folder into a destination folder (both physically and in the database):
+            // create a new destination folder path comprising the destination path and the source folder name
             string destinationFolderPathAndFolderName = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
             MoveFolderResultEnum result = this.ExternalMoveFolderIntoFolder(sourcePath,
-                destinationFolderPathAndFolderName, isSourceInteriorNode);
+                destinationFolderPathAndFolderName, isSourceInteriorNode, isDatabaseInteriorNode);
+
             if (result != MoveFolderResultEnum.Success)
             {
                 Dialog.Dialogs.RenameRelativePathError(this.ParentDialogWindow, result, sourcePath, destinationPath);
                 // Restore the tree etc to its pre-renamed form
                 this.MyPathList = originalPathList;
-                // this.RebuildTree();
             }
 
-            this.RebuildTree();
+            this.RebuildTreeAndNodes();
         }
-
         #endregion
 
         #region External: CreateNewFolder
@@ -1005,23 +1067,23 @@ namespace Timelapse.Controls
                         if (string.IsNullOrWhiteSpace(pathItem.Path))
                         {
                             pathItem.ContainsImages = false;
-                           // Debug.Print($"Setting '{pathItem.Path}' images to {pathItem.ContainsImages}");
+                            // Debug.Print($"Setting '{pathItem.Path}' images to {pathItem.ContainsImages}");
                         }
                         else if (pathItem.Path.Equals(destinationNode.Path))
                         {
                             pathItem.ContainsImages = true;
-                           // Debug.Print($"Setting '{pathItem.Path}' images to {pathItem.ContainsImages}");
+                            // Debug.Print($"Setting '{pathItem.Path}' images to {pathItem.ContainsImages}");
                         }
                     }
                     else
                     {
-                        string parent = string.IsNullOrWhiteSpace(pathItem.Path) 
-                            ? string.Empty 
-                            :Path.GetDirectoryName(pathItem.Path);
+                        string parent = string.IsNullOrWhiteSpace(pathItem.Path)
+                            ? string.Empty
+                            : Path.GetDirectoryName(pathItem.Path);
                         if (pathItem.Path.Equals(parent) || pathItem.Path.Equals(sourceNode.Path))
                         {
                             pathItem.ContainsImages = false;
-                           // Debug.Print($"Setting '{pathItem.Path}' images to {pathItem.ContainsImages}");
+                            // Debug.Print($"Setting '{pathItem.Path}' images to {pathItem.ContainsImages}");
                         }
                         else if (pathItem.Path.Equals(destinationNode.Path))
                         {
@@ -1031,7 +1093,7 @@ namespace Timelapse.Controls
                     }
                 }
                 this.WereEditsMade = true;
-                this.RebuildTree();
+                this.RebuildTreeAndNodes();
             }
             catch (Exception e)
             {
@@ -1072,7 +1134,7 @@ namespace Timelapse.Controls
         #region External:MoveFolder
 
         MoveFolderResultEnum ExternalMoveFolderIntoFolder(string sourceFolderPath, string destinationFolderPath,
-            bool isInteriorNode)
+            bool isInteriorNode, bool isDatabaseInteriorNode)
         {
             MoveFolderResultEnum result = FilesFolders.TryMoveFolderIfExists(
                 Path.Combine(this.RootFolder, sourceFolderPath),
@@ -1081,7 +1143,7 @@ namespace Timelapse.Controls
             {
                 // We assume we can always update the database with no errors. 
                 // It would be good if we could get an error code back!
-                this.FileDatabase.RelativePathReplacePrefix(sourceFolderPath, destinationFolderPath, isInteriorNode);
+                this.FileDatabase.RelativePathReplacePrefix(sourceFolderPath, destinationFolderPath, isDatabaseInteriorNode);
                 this.WereEditsMade = true;
             }
 
@@ -1112,7 +1174,7 @@ namespace Timelapse.Controls
                 if (LogicalTreeHelper.FindLogicalNode(cm, "DeleteMenuItem") is MenuItem deleteMenuItem)
                 {
                     // If the folder doesn't exist, or if the folder isn't empty (or flagged as containing photos), disable the Delete MenuItem
-                    if (node.FolderExists == false || node.ContainsPhotos || false == Directory.Exists(newFolderPath))
+                    if (node.FolderExists == false || node.ContainsImages || false == Directory.Exists(newFolderPath))
                     {
                         deleteMenuItem.IsEnabled = false;
                         return;
@@ -1282,19 +1344,16 @@ namespace Timelapse.Controls
             menuCreateNewFolderAfterItem.Click += MenuItemNewFolder_Click;
             contextMenu.Items.Add(menuCreateNewFolderAfterItem);
 
- 
+
             // Rename folder item (this is optional, as its not allowed for the root folder)
-            if (photosExists)
+            MenuItem menuItemRename = new MenuItem
             {
-                MenuItem menuItemRename = new MenuItem
-                {
-                    Header = "Rename folder...",
-                    Tag = tvi,
-                    IsEnabled = folderExists
-                };
-                menuItemRename.Click += MenuItemRenameFolder_Click;
-                contextMenu.Items.Add(menuItemRename);
-            }
+                Header = "Rename folder...",
+                Tag = tvi,
+                IsEnabled = folderExists && !isRootFolder
+            };
+            menuItemRename.Click += MenuItemRenameFolder_Click;
+            contextMenu.Items.Add(menuItemRename);
 
             // Delete folder item
             // Delete folder item (this is optional, as its not allowed for the root folder)
@@ -1322,18 +1381,16 @@ namespace Timelapse.Controls
             contextMenu.Items.Add(menuOpenInExplorer);
             contextMenu.Tag = tvi;
 
-            if (true || isRootFolder)
+
+            MenuItem menuItemMoveImagesToNewFolder = new MenuItem
             {
-                MenuItem menuItemMoveImagesToNewFolder = new MenuItem
-                {
-                    Header = "Create a new folder and move this folder's image/video files into it",
-                    Tag = tvi,
-                    IsEnabled = folderExists && photosExists
-                };
-                menuItemMoveImagesToNewFolder.Click += MenuItemMoveImagesToNewFolder_Click;
-                contextMenu.Items.Add(new Separator());
-                contextMenu.Items.Add(menuItemMoveImagesToNewFolder);
-            }
+                Header = "Create a new folder and move this folder's image/video files into it",
+                Tag = tvi,
+                IsEnabled = folderExists && photosExists
+            };
+            menuItemMoveImagesToNewFolder.Click += MenuItemMoveImagesToNewFolder_Click;
+            contextMenu.Items.Add(new Separator());
+            contextMenu.Items.Add(menuItemMoveImagesToNewFolder);
 
             tvi.ContextMenuOpening += ContextMenu_ContextMenuOpening;
             return contextMenu;
@@ -1560,7 +1617,7 @@ namespace Timelapse.Controls
             public readonly IDictionary<string, Node> Children = new Dictionary<string, Node>();
             public string Name { get; private set; } = string.Empty;
             public string Path { get; private set; } = string.Empty;
-            public bool ContainsPhotos { get; set; }
+            public bool ContainsImages { get; set; }
             public bool FolderExists { get; set; }
 
             private readonly char[] charSeparators = new char[] { '\\' };
@@ -1587,7 +1644,7 @@ namespace Timelapse.Controls
                         {
                             Name = name,
                             Path = pathSoFar,
-                            ContainsPhotos = containsPhotos && pathSoFar == path
+                            ContainsImages = containsPhotos && pathSoFar == path
                         };
                         currentNode.Children[name] = childNode;
                     }
@@ -1598,7 +1655,7 @@ namespace Timelapse.Controls
                     // If the path is the same, update the currentPhotos attribute to match the original PathItem
                     if (pathItem.Path.Equals(pathSoFar, StringComparison.OrdinalIgnoreCase))
                     {
-                        currentNode.ContainsPhotos = containsPhotos;
+                        currentNode.ContainsImages = containsPhotos;
                     }
                 }
             }

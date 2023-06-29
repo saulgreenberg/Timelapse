@@ -33,5 +33,10 @@ namespace Timelapse.Dialog
         {
             this.RelativePathControl.RebuildTree(true);
         }
+
+        private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.RelativePathControl.Initialize(this, this.FileDatabase, new List<Button> { SortButton, DoneButton });
+        }
     }
 }
