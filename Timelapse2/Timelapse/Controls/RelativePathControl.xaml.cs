@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -391,6 +392,7 @@ namespace Timelapse.Controls
         {
             if (sender is TextBox tb)
             {
+                //Debug.Print("TextChanged:" + tb.Text);
                 if (this.textBoxEditNodeMinWidth < 0)
                 {
                     textBoxEditNodeMinWidth = tb.ActualWidth;
@@ -421,6 +423,7 @@ namespace Timelapse.Controls
         {
             if (sender is TextBox tb)
             {
+                //Debug.Print("Before:" + tb.Text);
                 if (e.Key == Key.Escape)
                 {
                     // Escape aborts the edit
@@ -431,6 +434,7 @@ namespace Timelapse.Controls
 
                 if (e.Key == Key.Return || e.Key == Key.Enter)
                 {
+                    //Debug.Print("Return:" + tb.Text);
                     // Editing is considered completed on return.
                     // Check if the folder name is a legal one
                     this.RenameCompleted();
@@ -467,6 +471,7 @@ namespace Timelapse.Controls
                     this.RenameCompleted();
                     this.InvokeRename(tb.Text, (TreeViewItem)tb.Tag);
                 }
+                //Debug.Print("Processing:" + tb.Text);
                 // If we get here, then the user is still editing the  name
             }
         }
@@ -494,7 +499,7 @@ namespace Timelapse.Controls
         private void InvokeRename(string newName, TreeViewItem tvi)
         {
             bool isInteriorNode = false;
-
+            //Debug.Print("TextInvoked:" + newName);
             // Get the node corresponding to that TreeViewItem, but exit if null
             Node node = (Node)tvi.Tag;
             if (node == null)

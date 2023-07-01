@@ -14,7 +14,7 @@
                                       Title="Timelapse Folder Editor"
                                       What="Rename, move, and delete sub-folders already loaded into Timelapse, and create new subfolders as desired.
                                         &#10;&#x2022; Timelapse will update both its RelativePath data and the Windows subfolder structure as needed.
-                                        &#10;&#x2022; The interface will not let you to do certain operations if they could lead to errors or problems. "
+                                        &#10;&#x2022; The interface will not let you to do certain operations if they could lead to problems or errors. "
                                        
                                       Solution="Using the Folder Editor is similar to how you edit folders in Windows Explorer: 
                                         &#10;&#x2022; move a folder to another folder by dragging and dropping;
@@ -24,7 +24,8 @@
                                       Hint="Folder icons indicate whether Timelapse:
                                         &#10;&#x2022; currently records data associated with the images or videos found in that folder ,
                                         &#10;&#x2022; whether the folder is actually present or missing in your sub-folder structure.
-                                        &#10; If a folder is shown as missing, use  'Edit | Try to find any missing folders...' to locate it."
+                                        &#10; If a folder is shown as missing, use  'Edit | Try to find any missing folders...' to locate it.
+                                        &#10; Certain 'Merge' and 'Import Recognitions' operations may fail if folder paths are changed (Reference Guide:Folder Editor)."
                                       />
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
