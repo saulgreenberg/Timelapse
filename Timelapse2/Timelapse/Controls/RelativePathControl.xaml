@@ -38,7 +38,6 @@
                         <EventSetter Event="Drop" Handler="TreeViewItem_Drop"/>
                         <EventSetter Event="MouseMove" Handler="TreeViewItem_MouseMove"/>
                         <EventSetter Event="MouseUp" Handler="TreeViewItem_MouseUp"/>
-                        <EventSetter Event="Selected" Handler="TreeViewItem_Selected"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>
@@ -46,6 +45,7 @@
                      VerticalAlignment="Top" VerticalContentAlignment="Top" Visibility="Collapsed" 
                      KeyDown="TextBoxEditNode_OnKeyDown"  
                      TextChanged="TextBoxEditNode_OnTextChanged"
+                     LostFocus="TextBoxEditNode_OnLostFocus"
                      PreviewTextInput="TextBoxEditNode_OnPreviewTextInput"/>
         </Canvas>
     </Grid>

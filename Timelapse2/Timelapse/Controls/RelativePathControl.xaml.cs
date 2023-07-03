@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.IO;
+using System.Net.Mime;
 using System.Windows.Threading;
 using Timelapse.Database;
 using Timelapse.DebuggingSupport;
@@ -64,13 +65,6 @@ namespace Timelapse.Controls
         #endregion
 
         #region Variables
-        // When triggered, this timer indicates a Rename operation.
-        // Usually trigger if the user left-clicks and hold the mouse down on a tree view item for a given duration.
-        private readonly DispatcherTimer TimerRenameItemAfterExtendedMousePress = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(0.75)
-        };
-
         // A list of the relative paths contained by the Timelapse database, passed into the control.
         // As its in the database, each of these complete relative paths must be associated with one or more images. 
         private List<string> RelativePaths = new List<string>();
@@ -83,16 +77,12 @@ namespace Timelapse.Controls
         // For recording mouse down and dragging state during certain click and drag and drop operations
         private Point _lastMouseDown;
         private TreeViewItem draggedItem, _target;
-
-        // A list of buttons that we can temporarily disable while actively renaming
-        private List<Button> Buttons;
         #endregion
 
         #region Constructors
         public RelativePathControl()
         {
             InitializeComponent();
-            TimerRenameItemAfterExtendedMousePress.Tick += TimerRenameItemAfterExtendedMousePress_Tick;
         }
         #endregion
 
@@ -101,7 +91,7 @@ namespace Timelapse.Controls
         // then build the tree and corresponding node data structure from it and display it.
         // Needs to be invoked externally, usually immediately after the control is created. However, it can be re-invoked 
         // any time, which is usually used for testing purposes (e.g., to see if the changes to the treeview mirror the changes in the database)
-        public void Initialize(Window owner, FileDatabase fileDatabase, List<Button> buttons)
+        public void Initialize(Window owner, FileDatabase fileDatabase)
         {
             if (null == fileDatabase)
             {
@@ -113,7 +103,6 @@ namespace Timelapse.Controls
 
             this.FileDatabase = fileDatabase;
             this.ParentDialogWindow = owner;
-            this.Buttons = buttons;
 
             // Get the relative paths from the database
             this.RelativePaths = this.FileDatabase.GetRelativePaths();
@@ -271,43 +260,6 @@ namespace Timelapse.Controls
 
         #region Section: Rename a Folder 
 
-        #region UI interactions: Initiate Rename Action after a mouse-left hold for a particular timer duration
-        // Initiate renaming when an item is selected.
-        // Rename is invoked when the mouse is held down for more than the TimerRenameItemAfterExtendedMousePress's duration
-        // Rename initiation is cancelled if the mouse is moved more than a certain amount (see TreeViewItem_MouseMove, which stops the timer)
-        private void TreeViewItem_Selected(object Sender, RoutedEventArgs e)
-        {
-            if (Mouse.LeftButton != MouseButtonState.Pressed)
-            {
-                return;
-            }
-            this.TimerRenameItemAfterExtendedMousePress.Start();
-        }
-
-        private void TreeViewItem_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (Mouse.LeftButton != MouseButtonState.Pressed)
-            {
-                return;
-            }
-            // Cancel Rename initiation if a mouse up is detected before the rename operation was invokde.
-            this.TimerRenameItemAfterExtendedMousePress.Stop();
-            if (this.TreeView.SelectedItem is TreeViewItem tvi)
-            {
-                tvi.IsSelected = false;
-            }
-        }
-
-        // Enable renaming:
-        // - A mouse down on a selected item occured for more than the TimerRenameItemAfterExtendedMousePress's duration
-        private void TimerRenameItemAfterExtendedMousePress_Tick(object sender, EventArgs e)
-        {
-            TreeViewItem selectedItem = (TreeViewItem)this.TreeView.SelectedItem;
-            TimerRenameItemAfterExtendedMousePress.Stop();
-            this.InitiateRenameUI(selectedItem);
-        }
-        #endregion
-
         #region UI interactions: Rename TextBox
         private double textBoxEditNodeMinWidth = -1;
         private string originalTextInHeader;
@@ -356,8 +308,6 @@ namespace Timelapse.Controls
                 this.TextBoxEditNode.Focus();
                 this.originalTextInHeader = node.Name;
                 this.originalPathInHeader = node.Path;
-
-                this.RenameStarted();
             }
             catch (Exception e)
             {
@@ -423,75 +373,91 @@ namespace Timelapse.Controls
         {
             if (sender is TextBox tb)
             {
-                //Debug.Print("Before:" + tb.Text);
-                if (e.Key == Key.Escape)
-                {
-                    // Escape aborts the edit
-                    this.Flash((TreeViewItem)tb.Tag);
-                    this.RenameCompleted();
-                    return;
-                }
-
-                if (e.Key == Key.Return || e.Key == Key.Enter)
-                {
-                    //Debug.Print("Return:" + tb.Text);
-                    // Editing is considered completed on return.
-                    // Check if the folder name is a legal one
-                    this.RenameCompleted();
-                    tb.Text = tb.Text.Trim();
-                    if (tb.Text == this.originalTextInHeader)
-                    {
-                        // If the text is the same, do nothing
-                        return;
-                    }
-                    if (tb.Text.EndsWith("."))
-                    {
-                        // Disallowed ending with a period folder name - abort and display error message
-                        this.RenameCompleted();
-                        this.DisplayFeedback("Rename cancelled",
-                            "Windows does not allow folder and file names to end with a '.'");
-                        return;
-                    }
-                    if (this.invalidFileNames.Contains(tb.Text, StringComparer.OrdinalIgnoreCase))
-                    {
-                        // Disallowed reserved word folder name - abort and display error message
-                        this.RenameCompleted();
-                        this.DisplayFeedback("Rename cancelled",
-                            $"Windows does not allow '{tb.Text}' as a folder name as it is a reserved name.");
-                        return;
-                    }
-                    if (string.IsNullOrWhiteSpace(tb.Text))
-                    {
-                        // Disallowed empty folder name - abort and display error message
-                        this.Flash((TreeViewItem)tb.Tag);
-                        return;
-                    }
-
-                    // We have a valid folder name. Change the name as needed.
-                    this.RenameCompleted();
-                    this.InvokeRename(tb.Text, (TreeViewItem)tb.Tag);
-                }
-                //Debug.Print("Processing:" + tb.Text);
-                // If we get here, then the user is still editing the  name
+                TextBoxEditNode_DoKeyDown(tb, e.Key);
             }
         }
 
+        private void TextBoxEditNode_DoKeyDown(TextBox tb, Key key)
+        {
+            //Debug.Print("Before:" + tb.Text);
+            if (key == Key.Escape)
+            {
+                // Escape aborts the edit
+                this.Flash((TreeViewItem)tb.Tag);
+                this.RenameHideTextBox();
+                return;
+            }
+
+            if (key == Key.Return || key == Key.Enter)
+            {
+                //Debug.Print("Return:" + tb.Text);
+                // Editing is considered completed on return.
+                // Check if the folder name is a legal one
+                this.RenameHideTextBox();
+                tb.Text = tb.Text.Trim();
+                if (tb.Text == this.originalTextInHeader)
+                {
+                    // If the text is the same, do nothing
+                    return;
+                }
+                if (tb.Text.EndsWith("."))
+                {
+                    // Disallowed ending with a period folder name - abort and display error message
+                    this.RenameHideTextBox();
+                    this.DisplayFeedback("Rename cancelled",
+                        "Windows does not allow folder and file names to end with a '.'");
+                    return;
+                }
+                if (this.invalidFileNames.Contains(tb.Text, StringComparer.OrdinalIgnoreCase))
+                {
+                    // Disallowed reserved word folder name - abort and display error message
+                    this.RenameHideTextBox();
+                    this.DisplayFeedback("Rename cancelled",
+                        $"Windows does not allow '{tb.Text}' as a folder name as it is a reserved name.");
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(tb.Text))
+                {
+                    // Disallowed empty folder name - abort and display error message
+                    this.Flash((TreeViewItem)tb.Tag);
+                    return;
+                }
+
+                // We have a valid folder name. Change the name as needed.
+                this.RenameHideTextBox();
+                this.InvokeRename(tb.Text, (TreeViewItem)tb.Tag);
+            }
+            //Debug.Print("Processing:" + tb.Text);
+            // If we get here, then the user is still editing the  name
+        }
+
         // If the user does certain actions (e.g., clicking outside the textBox)
-        // cancel the textBoxEditNode by turning its visibility off (in case its open for editing)
+        // accept the edit
         private void TreeViewItem_Cancel(object sender, object e)
         {
-            this.RenameCompleted();
+            // Accept the edit, if any
+            RenameEditCompleted();
         }
 
-        private void RenameStarted()
-        {
-            this.EnableOrDisableButtons(false);
-        }
-
-        private void RenameCompleted()
+        private void RenameHideTextBox()
         {
             this.TextBoxEditNode.Visibility = Visibility.Collapsed;
-            this.EnableOrDisableButtons(true);
+        }
+
+        private void RenameEditCompleted()
+        {
+            // Simulate an enter key
+            // Note that we don't have to hide the textbox here as that will be done in DoKeyDown.
+            if (TextBoxEditNode.Visibility == Visibility.Visible)
+            {
+                Debug.Print("Lost");
+                TextBoxEditNode_DoKeyDown(this.TextBoxEditNode, Key.Enter);
+            }
+        }
+
+        private void TextBoxEditNode_OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            this.RenameEditCompleted();
         }
         #endregion
 
@@ -669,9 +635,6 @@ namespace Timelapse.Controls
                     if ((Math.Abs(currentPosition.X - _lastMouseDown.X) > 10.0) ||
                         (Math.Abs(currentPosition.Y - _lastMouseDown.Y) > 10.0))
                     {
-                        // As we are likely dragging rather than initiating a rename sequence, stop the TimerRenameItemAfterExtendedMousePress.
-                        TimerRenameItemAfterExtendedMousePress.Stop();
-
                         draggedItem = (TreeViewItem)this.TreeView.SelectedItem;
                         // Only allow non-null folders that actually exist to be dragged
                         if (draggedItem != null && ((Node)draggedItem.Tag).FolderExists)
@@ -752,6 +715,12 @@ namespace Timelapse.Controls
             }
         }
 
+        private void TreeViewItem_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            this.draggedItem = null;
+            Debug.Print("Cancelled");
+        }
+
         // Check if a valid drop traget. 
         private bool IsValidDropTarget(TreeViewItem _sourceItem, TreeViewItem _targetItem)
         {
@@ -760,7 +729,6 @@ namespace Timelapse.Controls
                 // For some reason, the source is not valid.
                 return false;
             }
-
 
             string destPath = ((Node)_targetItem.Tag).Path;
             string sourcePath = ((Node)_sourceItem.Tag).Path;
@@ -805,7 +773,7 @@ namespace Timelapse.Controls
         #endregion
 
         #region Invoke and Do: Move the folder
-        
+
         // Invoke moving the dragged item
         private void MoveDraggedItem(TreeViewItem _sourceItem, TreeViewItem _targetItem)
         {
@@ -929,7 +897,7 @@ namespace Timelapse.Controls
         #endregion
 
         #region Section: DeleteFolder
-        
+
         // Delete the indicated folder from the path list and the physical file system
         // We don't have to delete it from the Database, as the UI doesn't allow deletion of folders in the database (i.e., those with images in it)
         private void DeleteFolder(TreeViewItem tvi)
@@ -1091,19 +1059,19 @@ namespace Timelapse.Controls
                 // Failed for some reason so abort. No need to do anything else, as the CreateNewFolder would have displayed an error message dialog
                 return;
             }
-            
+
             // Get the destination node. 
             Node destinationNode = (Node)destinationTvi.Tag;
             if (destinationNode == null)
             {
                 // This would create the new folder but not move the images into it. 
                 this.DisplayFeedback(
-                    "Could not move images into a new folder", 
+                    "Could not move images into a new folder",
                     "While a new folder was created, for some reasons we could not move the images into it.");
                 return;
             }
 
-            destinationTvi.IsSelected = true; 
+            destinationTvi.IsSelected = true;
             string fullDestinationPath = Path.Combine(this.RootFolder, destinationNode.Path);
 
             // Get all the image/video files in the source folder and try to move them to the destination
@@ -1241,7 +1209,7 @@ namespace Timelapse.Controls
             tvi.ContextMenuOpening += ContextMenu_ContextMenuOpening;
             return contextMenu;
         }
-        
+
         // When the context menu when it is opened,
         // - enable or disable the Delete menu item as needed.  
         private void ContextMenu_ContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -1543,8 +1511,8 @@ namespace Timelapse.Controls
                 double ybottom = y + TextBoxEditNode.ActualHeight - 25;
                 if (y < 0 || ybottom >= sv.ViewportHeight)
                 {
-                    // Treeviewitem has scrolled out of view, so end the edit.
-                    this.RenameCompleted();
+                    // Treeviewitem has scrolled out of view, so accept and end the edit.
+                    this.RenameEditCompleted();
                 }
                 else
                 {
@@ -1553,18 +1521,6 @@ namespace Timelapse.Controls
                 }
             }
         }
-        #endregion
-
-        #region External Button enablement 
- 
-        private void EnableOrDisableButtons(bool isEnabled)
-        {
-            foreach (Button button in this.Buttons)
-            {
-                button.IsEnabled = isEnabled;
-            }
-        }
-
         #endregion
 
         #region Feedback Dialog
@@ -1692,5 +1648,6 @@ namespace Timelapse.Controls
             }
         }
         #endregion
+
     }
 }

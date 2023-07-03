@@ -21,7 +21,7 @@ namespace Timelapse.Dialog
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.RelativePathControl.Initialize(this, this.FileDatabase, new List<Button> { SortButton, DoneButton });
+            this.RelativePathControl.Initialize(this, this.FileDatabase);
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
@@ -36,7 +36,7 @@ namespace Timelapse.Dialog
 
         private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.Initialize(this, this.FileDatabase, new List<Button> { SortButton, DoneButton });
+            this.RelativePathControl.Initialize(this, this.FileDatabase);
         }
     }
 }
