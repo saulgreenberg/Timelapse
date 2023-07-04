@@ -117,6 +117,7 @@ namespace Timelapse
                 this.MenuS4.Visibility = Visibility.Collapsed;
                 this.MenuS5.Visibility = Visibility.Collapsed;
                 this.MenuS6.Visibility = Visibility.Collapsed;
+                this.MenuS7.Visibility = Visibility.Collapsed;
 
                 this.CopyPreviousValuesButton.Visibility = Visibility.Collapsed;
             }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,7 +9,6 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.IO;
-using System.Net.Mime;
 using System.Windows.Threading;
 using Timelapse.Database;
 using Timelapse.DebuggingSupport;
@@ -161,11 +159,6 @@ namespace Timelapse.Controls
             // Finally, sort and rebuild the tree and node structure from these paths. 
             this.RebuildTreeAndNodes(true);
         }
-
-        private void ParentDialogWindow_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            this.RenameEditCompleted();
-        }
         #endregion
 
         #region Build the Node and TreeView structures
@@ -275,14 +268,7 @@ namespace Timelapse.Controls
 
                 // Restore whether or not a node is expanded, as recorded in the isExpandedDict dictionary.
                 // If its not there, just set it to isExpanded.
-                if (dictIsExpandedState.ContainsKey(node.Path))
-                {
-                    tvi.IsExpanded = dictIsExpandedState[node.Path];
-                }
-                else
-                {
-                    tvi.IsExpanded = true;
-                }
+                tvi.IsExpanded = !dictIsExpandedState.ContainsKey(node.Path) || dictIsExpandedState[node.Path];
                 currentTvi.Items.Add(tvi); 
 
             }
@@ -455,8 +441,7 @@ namespace Timelapse.Controls
 
             if (key == Key.Return || key == Key.Enter)
             {
-                //Debug.Print("Return:" + tb.Text);
-                // Editing is considered completed on return.
+                // Editing is considered completed on Enter or return or Tab.
                 // Check if the folder name is a legal one
                 this.RenameHideTextBox();
                 tb.Text = tb.Text.Trim();

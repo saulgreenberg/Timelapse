@@ -16,10 +16,9 @@
                                         &#10;&#x2022; Timelapse will update both its RelativePath data and the Windows subfolder structure as needed.
                                         &#10;&#x2022; The interface will not let you to do certain operations if they could lead to problems or errors. "
                                        
-                                      Solution="Using the Folder Editor is similar to how you edit folders in Windows Explorer: 
+                                      Solution="Using the Folder Editor is somewhat similar to how you edit folders in Windows Explorer: 
                                         &#10;&#x2022; move a folder to another folder by dragging and dropping;
-                                        &#10;&#x2022; right click to raise a context menu for all other operations;
-                                        &#10;&#x2022; rename shortcut: left-mouse down on the folder name and hold for a second or so. "
+                                        &#10;&#x2022; right click to raise a context menu for all other operations"
                                       
                                       Hint="Folder icons indicate whether Timelapse:
                                         &#10;&#x2022; currently records data associated with the images or videos found in that folder ,
@@ -30,7 +29,7 @@
         <DockPanel>
             <DockPanel DockPanel.Dock="Bottom">
                 <Button DockPanel.Dock="Left" Name="ExpandAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ExpandAll_Click">_Expand all</Button>
-                <Button DockPanel.Dock="Left" Name="ContractAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ContractAll_Click">_Contract all</Button>
+                <Button DockPanel.Dock="Left" Name="ContractAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ContractAll_Click">_Collapse all</Button>
                 <!--This is for testing, where we can check if changes are reflected in a completely rebuilt tree-->
                 <!--<Button Name="RefreshCompletely" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="RefreshCompletelyButton_Click">_Refresh completely</Button>-->
                 <Button DockPanel.Dock="Left" Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>

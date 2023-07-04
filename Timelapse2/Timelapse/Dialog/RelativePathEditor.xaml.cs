@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
 using Timelapse.Database;
 
 namespace Timelapse.Dialog
@@ -34,11 +32,6 @@ namespace Timelapse.Dialog
             this.RelativePathControl.RebuildTreeAndNodes(true);
         }
 
-        private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.RelativePathControl.Initialize(this, this.FileDatabase);
-        }
-
         private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
             this.RelativePathControl.ExpandTreeView(true);
@@ -47,6 +40,12 @@ namespace Timelapse.Dialog
         {
             this.RelativePathControl.ExpandTreeView(false);
         }
-        
+
+        // Used for debugging
+        //private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    this.RelativePathControl.Initialize(this, this.FileDatabase);
+        //}
+
     }
 }
