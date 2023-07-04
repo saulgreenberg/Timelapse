@@ -38,5 +38,15 @@ namespace Timelapse.Dialog
         {
             this.RelativePathControl.Initialize(this, this.FileDatabase);
         }
+
+        private void ExpandAll_Click(object sender, RoutedEventArgs e)
+        {
+            this.RelativePathControl.ExpandTreeView(true);
+        }
+        private void ContractAll_Click(object sender, RoutedEventArgs e)
+        {
+            this.RelativePathControl.ExpandTreeView(false);
+        }
+        
     }
 }

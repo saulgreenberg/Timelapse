@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -205,6 +206,13 @@ namespace Timelapse.Controls
                 rootNode.AddPath(nodePathItem);
             }
 
+            // Record whether or not the old treeviewitem (using its complete path as its key) is or is not expanded in a dictionary
+            Dictionary<string, bool> dictIsExpandedState = new Dictionary<string, bool>();
+            if (TreeView.Items.Count > 0)
+            {
+                RecordIsExpandedStateInDict((TreeViewItem) TreeView.Items[0], "", dictIsExpandedState);
+            }
+
             // Create the initial TreeViewItem representing the root folder.
             StackPanel sp = CreateTreeViewItemHeaderAsStackPanel(this.RootFolderName, rootNodeContainsImages, rootNode.FolderExists);
             TreeViewItem tvi = new TreeViewItem
@@ -219,17 +227,36 @@ namespace Timelapse.Controls
             tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, rootNode.FolderExists, rootNode.ContainsImages, false, true);
 
             // Add children to the root TreeViewItem to match the node structure hierarchy
-            this.TraverseNodeAndAddToTreeViewItem(tvi, rootNode);
+            this.TraverseNodeAndAddToTreeViewItem(tvi, rootNode, dictIsExpandedState);
 
             // Clear the treeView, in case it has been previously populated;
             // and add the (now populated) TreeViewItem to the treeView
+
             this.TreeView.Items.Clear();
             this.TreeView.Items.Add(tvi);
+
+        }
+
+        // Record whether or not a treeviewitem (as denoted by its complete path) in a dictionary
+        // We will use this to set the expanded state when the tree view item is rebuilt
+        public void RecordIsExpandedStateInDict(TreeViewItem parentItem, string path, Dictionary<string,bool> dictIsExpandedState)
+        {
+            // first time through, so use "" instead of "Root Folder"
+            string newpath = dictIsExpandedState.Count == 0
+                ? path
+                : Path.Combine(path, this.GetTextBlockFromTreeViewItem(parentItem).Text);
+            dictIsExpandedState.Add(newpath, parentItem.IsExpanded);
+
+            // Start recursion on all subnodes.
+            foreach (TreeViewItem childItem in parentItem.Items)
+            {
+                RecordIsExpandedStateInDict(childItem, newpath, dictIsExpandedState);
+            }
         }
 
         // Given a node and a treeViewItem, recursively traverse this node's hierarchy
         // and populate a treeview item to reflect each node and its position in the hierarchy.
-        private void TraverseNodeAndAddToTreeViewItem(TreeViewItem currentTvi, Node node)
+        private void TraverseNodeAndAddToTreeViewItem(TreeViewItem currentTvi, Node node, Dictionary<string, bool> dictIsExpandedState)
         {
             TreeViewItem tvi;
             if (node.Name != string.Empty)
@@ -245,7 +272,19 @@ namespace Timelapse.Controls
                     Tag = node
                 };
                 tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, node.FolderExists, node.ContainsImages, true, false);
-                currentTvi.Items.Add(tvi);
+
+                // Restore whether or not a node is expanded, as recorded in the isExpandedDict dictionary.
+                // If its not there, just set it to isExpanded.
+                if (dictIsExpandedState.ContainsKey(node.Path))
+                {
+                    tvi.IsExpanded = dictIsExpandedState[node.Path];
+                }
+                else
+                {
+                    tvi.IsExpanded = true;
+                }
+                currentTvi.Items.Add(tvi); 
+
             }
             else
             {
@@ -257,9 +296,30 @@ namespace Timelapse.Controls
             // Recursively traverse the children nodes, if any
             foreach (Node child in node.Children.Values)
             {
-                TraverseNodeAndAddToTreeViewItem(tvi, child);
+                TraverseNodeAndAddToTreeViewItem(tvi, child, dictIsExpandedState);
             }
-            tvi.IsExpanded = true;
+        }
+
+        // Expand or collapse all tree view items
+        public void ExpandTreeView(bool expandTheTreeViewItem)
+        {
+            if (this.TreeView.Items.Count > 0)
+            {
+                TreeViewItem tvi = (TreeViewItem)this.TreeView.Items[0];
+                this.ExpandTreeView(tvi, expandTheTreeViewItem);
+                tvi.IsExpanded = true; // always expand the root node
+            }
+
+        }
+        private void ExpandTreeView(TreeViewItem item, bool expandTheTreeViewItem)
+        {
+            // item.IsExpanded = expandTheTreeViewItem;
+            // Start recursion on all subnodes.
+            foreach (TreeViewItem childItem in item.Items)
+            {
+                childItem.IsExpanded = expandTheTreeViewItem;
+                ExpandTreeView(childItem, expandTheTreeViewItem);
+            }
         }
         #endregion
 
