@@ -160,6 +160,11 @@ namespace Timelapse.Controls
             // Finally, sort and rebuild the tree and node structure from these paths. 
             this.RebuildTreeAndNodes(true);
         }
+
+        private void ParentDialogWindow_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.RenameEditCompleted();
+        }
         #endregion
 
         #region Build the Node and TreeView structures
@@ -450,7 +455,7 @@ namespace Timelapse.Controls
             // Note that we don't have to hide the textbox here as that will be done in DoKeyDown.
             if (TextBoxEditNode.Visibility == Visibility.Visible)
             {
-                Debug.Print("Lost");
+                Debug.Print("EditComplete");
                 TextBoxEditNode_DoKeyDown(this.TextBoxEditNode, Key.Enter);
             }
         }
@@ -718,7 +723,7 @@ namespace Timelapse.Controls
         private void TreeViewItem_MouseUp(object sender, MouseButtonEventArgs e)
         {
             this.draggedItem = null;
-            Debug.Print("Cancelled");
+            Debug.Print("EditCancelled");
         }
 
         // Check if a valid drop traget. 
