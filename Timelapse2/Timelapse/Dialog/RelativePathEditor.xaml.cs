@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
 using Timelapse.Database;
 
 namespace Timelapse.Dialog
@@ -21,7 +19,7 @@ namespace Timelapse.Dialog
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.RelativePathControl.Initialize(this, this.FileDatabase, new List<Button> { SortButton, DoneButton });
+            this.RelativePathControl.Initialize(this, this.FileDatabase);
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
@@ -34,9 +32,20 @@ namespace Timelapse.Dialog
             this.RelativePathControl.RebuildTreeAndNodes(true);
         }
 
-        private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
+        private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.Initialize(this, this.FileDatabase, new List<Button> { SortButton, DoneButton });
+            this.RelativePathControl.ExpandTreeView(true);
         }
+        private void ContractAll_Click(object sender, RoutedEventArgs e)
+        {
+            this.RelativePathControl.ExpandTreeView(false);
+        }
+
+        // Used for debugging
+        //private void RefreshCompletelyButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    this.RelativePathControl.Initialize(this, this.FileDatabase);
+        //}
+
     }
 }

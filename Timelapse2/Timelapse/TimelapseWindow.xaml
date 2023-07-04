@@ -203,10 +203,11 @@
                     <!-- Folder editor, missing folders, missingfiles -->
                     <!-- Test some code here - should only be enabled when developing code -->
                     <MenuItem Name="MenuItemFolderEditor" Header="_Folder editor (move, rename etc)..." IsEnabled="True" Click="MenuItemFolderEditr_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <Separator Name="MenuS6"/>
 
                     <MenuItem Name="MenuItemFindMissingImage" Header="Try to find this (and other) missing files ..." IsEnabled="True" Click="MenuItemEditFindMissingImage_Click" ToolTip="Try to find the currently displayed missing file, as well as other missing images in the same folder as this one "  />
                     <MenuItem Name="MenuItemFindMissingFolder" Header="Try to find any missing folders ..." IsEnabled="True" Click="MenuItemEditFindMissingFolder_Click" ToolTip="Check to see if any folders are missing. If so, try to find them."  />
-                    <Separator Name="MenuS6"/>
+                    <Separator Name="MenuS7"/>
 
                     <!-- Classify dark files...-->
                     <MenuItem Name="MenuItemOptionsDarkImages" Header="Populate a field with Dark classification data..." IsEnabled="True" Click="MenuItemEditClassifyDarkImages_Click" ToolTip="Populate a flag field with classification data that determines (for each selected image) whether it is a dark (usualy night-time ) shot."  />
