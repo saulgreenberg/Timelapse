@@ -24,13 +24,13 @@
                                         &#10;&#x2022; currently records data associated with the images or videos found in that folder ,
                                         &#10;&#x2022; whether the folder is actually present or missing in your sub-folder structure.
                                         &#10; If a folder is shown as missing, use  'Edit | Try to find any missing folders...' to locate it.
-                                        &#10; Certain 'Merge' and 'Import Recognitions' operations may fail if folder paths are changed (Reference Guide:Folder Editor)."
+                                        &#10; 'Merge' and 'Import Recognitions' operations may fail if folder paths are changed (see Reference Guide:Folder Editor)."
                                       />
         <DockPanel>
             <DockPanel DockPanel.Dock="Bottom">
                 <Button DockPanel.Dock="Left" Name="ExpandAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ExpandAll_Click">_Expand all</Button>
                 <Button DockPanel.Dock="Left" Name="ContractAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ContractAll_Click">_Collapse all</Button>
-                <!--This is for testing, where we can check if changes are reflected in a completely rebuilt tree-->
+                <!--This button is for testing, where we can check if changes are reflected in a completely rebuilt tree-->
                 <!--<Button Name="RefreshCompletely" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="RefreshCompletelyButton_Click">_Refresh completely</Button>-->
                 <Button DockPanel.Dock="Left" Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>
                 <Button DockPanel.Dock="Right" Name="DoneButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
