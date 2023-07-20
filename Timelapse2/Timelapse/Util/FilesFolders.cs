@@ -386,7 +386,7 @@ namespace Timelapse.Util
         /// <param name="folderRoot"></param>
         /// <param name="folderPaths"></param>
         /// <param name="prefixPath"></param>
-        public static void GetAllFoldersExceptBackupAndDeletedFolders(string folderRoot, List<string> folderPaths, string prefixPath)
+        public static List<string> GetAllFoldersExceptBackupAndDeletedFolders(string folderRoot, List<string> folderPaths, string prefixPath)
         {
             // Check the arguments for null 
             if (folderPaths == null || folderRoot == null)
@@ -395,12 +395,12 @@ namespace Timelapse.Util
                 TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(folderPaths));
                 // Not sure what happens if we have a null folderPaths, but we may as well try it.
-                return;
+                return folderPaths;
             }
 
             if (!Directory.Exists(folderRoot))
             {
-                return;
+                return folderPaths;
             }
 
             if (string.IsNullOrEmpty(prefixPath) == false)
@@ -428,7 +428,7 @@ namespace Timelapse.Util
             catch
             {
                 // It may fail if there is a permissions issue
-                return;
+                return folderPaths;
             }
             foreach (DirectoryInfo subDir in subDirs)
             {
@@ -437,8 +437,9 @@ namespace Timelapse.Util
                 {
                     continue;
                 }
-                GetAllFoldersExceptBackupAndDeletedFolders(subDir.FullName, folderPaths, prefixPath);
+                return GetAllFoldersExceptBackupAndDeletedFolders(subDir.FullName, folderPaths, prefixPath);
             }
+            return folderPaths;
         }
         #endregion
 
