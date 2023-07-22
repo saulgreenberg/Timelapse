@@ -425,7 +425,7 @@ namespace Timelapse
 
                         this.CloseImageSet();
                         this.State.ExifToolManager.Stop();
-                        this.BusyCancelIndicator.Reset();
+                        this.BusyCancelIndicator.Reset(false);
                         this.FileNavigatorSlider.Visibility = Visibility.Visible;
                         this.StatusBar.SetMessage("Cancelled loading of image set");
                         Mouse.OverrideCursor = null;
@@ -451,7 +451,7 @@ namespace Timelapse
                 // Stop the ExifToolManager if it was invoked while loading files, which can occurs when populating metadata to a file via the EXIFTool on load.
                 this.State.ExifToolManager.Stop();
 
-                this.BusyCancelIndicator.Reset(); // Hide the busy indicator and reset the cancel token
+                this.BusyCancelIndicator.Reset(false); // Hide the busy indicator and reset the cancel token
 
                 this.StatusBar.SetMessage(isCancelled 
                     ? "Cancelled adding files to image set " 

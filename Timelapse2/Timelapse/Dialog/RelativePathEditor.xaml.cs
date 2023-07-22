@@ -6,7 +6,9 @@ using Timelapse.Database;
 using System.Diagnostics;
 using System.Windows.Documents;
 using System.Windows.Forms.VisualStyles;
+using System.Windows.Input;
 using Timelapse.Controls;
+using Timelapse.DataStructures;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -27,49 +29,22 @@ namespace Timelapse.Dialog
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            // Set up a progress handler that will update the progress bar
+            
+            // Set up a progress handler for long-running atomic operation
             this.InitalizeProgressHandler(this.BusyCancelIndicator);
-            this.BusyCancelIndicator.IsBusy = true; ;
-            var relativePaths = await ProgressWrapper(() => AsyncGetRelativePath("foo"), this.ProgressHandler);
-            var physicalFolders = await ProgressWrapper(() => AsyncGetAllFoldersExceptBackupAndDeletedFolders(FileDatabase.FolderPath, FileDatabase.FolderPath), this.ProgressHandler);
+            Mouse.OverrideCursor = Cursors.Wait;
+            this.BusyCancelIndicator.Reset(true);
 
+            bool result = await this.RelativePathControl.AsyncInitialize(this, this.FileDatabase, this.ProgressHandler, GlobalReferences.CancelTokenSource);
 
-            // Need to get alll files/folders in the async task loop!
-            this.RelativePathControl.Initialize(this, this.FileDatabase, relativePaths, physicalFolders);
-            this.BusyCancelIndicator.IsBusy = false;
-        }
-
-        public async Task<List<string>> AsyncGetRelativePath(string someArgumentCurrentlyUnused)
-        {
-            //await Task.Delay(TimeSpan.FromSeconds(1));
-            return await Task.Run(() => this.FileDatabase.GetRelativePaths());
-        }
-
-
-        public async Task<List<string>> AsyncGetAllFoldersExceptBackupAndDeletedFolders(string rootFolderPath, string rootFolderPrefix)
-        {
-            List<string> physicalFolders = new List<string>();
-            //await Task.Delay(TimeSpan.FromSeconds(1));
-            return await Task.Run(() => FilesFolders.GetAllFoldersExceptBackupAndDeletedFolders(rootFolderPath, physicalFolders, rootFolderPrefix));
-            // await this.RelativePathControl.Initialize(this, this.FileDatabase);
-            //await Task.Delay(TimeSpan.FromSeconds(5));
-            //return new List<string>();
-        }
-
-        static int i = 0;
-        public async Task<T> ProgressWrapper<T>(Func<Task<T>> method, System.IProgress<ProgressBarArguments> progress)
-        {
-            Task<T> task = method();
-            while (!task.IsCompleted && !task.IsCanceled && !task.IsFaulted)
+            this.BusyCancelIndicator.Reset(false);
+            Mouse.OverrideCursor = null;
+            if (result == false)
             {
-                await Task.WhenAny(task, Task.Delay(250)); // original was 500
-                progress.Report(new ProgressBarArguments(i,
-                    $"Please wait", true, true));
-                i++;
+                // Abort this, likely due to a user's progress cancel event
+                this.DialogResult = false;
             }
-            return await task;
         }
-
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {

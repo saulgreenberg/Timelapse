@@ -223,7 +223,7 @@ namespace Timelapse.Dialog
 
             // Turn off progress indicators
             this.BusyCancelIndicator.EnableForSelection(false);
-            this.BusyCancelIndicator.Reset();
+            this.BusyCancelIndicator.Reset(false);
             Mouse.OverrideCursor = null;
 
             // Show the result;

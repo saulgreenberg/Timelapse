@@ -317,16 +317,25 @@ namespace Timelapse.Controls
         #region Private methods and callbacks: Play and AutoPlay
         private void Play()
         {
-            this.PlayOrPause.IsChecked = true;
-            // start over from beginning if at end of video
-            // Technote: The natural duration default value is Automatic if you query this property before MediaOpened. So we just reset the position if its a new video.
-            if (this.Video.NaturalDuration == Duration.Automatic || (this.Video.NaturalDuration.HasTimeSpan && this.Video.Position == this.Video.NaturalDuration.TimeSpan))
+            try
             {
-                this.Video.Position = TimeSpan.Zero;
-                this.ShowPosition();
+                this.PlayOrPause.IsChecked = true;
+                // start over from beginning if at end of video
+                // Technote: The natural duration default value is Automatic if you query this property before MediaOpened. So we just reset the position if its a new video.
+                if (this.Video.NaturalDuration == Duration.Automatic || (this.Video.NaturalDuration.HasTimeSpan && this.Video.Position == this.Video.NaturalDuration.TimeSpan))
+                {
+                    this.Video.Position = TimeSpan.Zero;
+                    this.ShowPosition();
+                }
+                this.positionUpdateTimer.Start();
+                this.Video.Play();
             }
-            this.positionUpdateTimer.Start();
-            this.Video.Play();
+            catch (Exception _)
+            {
+                // A user reported a rare crash in the above
+                this.PlayOrPause.IsChecked = false;
+                this.positionUpdateTimer.Stop();
+            }
         }
 
         // Set the video to automatically start playing after a brief delay 
