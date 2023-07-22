@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.DataStructures;
-using Timelapse.Constant;
 
 namespace Timelapse.Controls
 {

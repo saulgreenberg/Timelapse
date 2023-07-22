@@ -1,15 +1,7 @@
-﻿using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using Timelapse.Database;
-using System.Diagnostics;
-using System.Windows.Documents;
-using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
-using Timelapse.Controls;
 using Timelapse.DataStructures;
-using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {

@@ -16,7 +16,7 @@ using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
 using System.Threading.Tasks;
-using Timelapse.DataStructures;
+
 // ReSharper disable EmptyGeneralCatchClause
 
 namespace Timelapse.Controls
@@ -452,7 +452,7 @@ namespace Timelapse.Controls
                 return;
             }
 
-            if (key == Key.Return || key == Key.Enter)
+            if (key == Key.Enter) // both keys are equivalent, so no need for this || key == Key.Return )
             {
                 // Editing is considered completed on Enter or return or Tab.
                 // Check if the folder name is a legal one

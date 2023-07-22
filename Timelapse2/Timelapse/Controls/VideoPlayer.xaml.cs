@@ -330,7 +330,7 @@ namespace Timelapse.Controls
                 this.positionUpdateTimer.Start();
                 this.Video.Play();
             }
-            catch (Exception _)
+            catch (Exception)
             {
                 // A user reported a rare crash in the above
                 this.PlayOrPause.IsChecked = false;
