@@ -1115,6 +1115,13 @@ namespace Timelapse.Database
             return allPaths;
         }
 
+        // GetRelativePaths Async wrapper so we can show progress for a long-running operation
+        public async Task<List<string>> AsyncGetRelativePaths()
+        {
+            // Get the relative paths from the database
+            return await Task.Run(this.GetRelativePaths);
+        }
+
         // Get only the distinct and complete relative paths associated with images
         public List<string> GetRelativePaths()
         {

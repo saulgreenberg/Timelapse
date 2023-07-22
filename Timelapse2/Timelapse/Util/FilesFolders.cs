@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -380,13 +381,22 @@ namespace Timelapse.Util
         #endregion
 
         #region public static Method - GetFolders
+
+        ///
+        // Async wrapper around GetAllFoldersExceptBackupAndDeletedFolders
+        public static async Task<List<string>> AsyncGetAllFoldersExceptBackupAndDeletedFolders(string rootFolderPath, string rootFolderPrefix)
+        {
+            // Get all the physcial folders under the root folder (excepting backups and deleted folders)
+            return await Task.Run(() => FilesFolders.GetAllFoldersExceptBackupAndDeletedFolders(rootFolderPath, new List<string>(), rootFolderPrefix));
+        }
+
         /// <summary>
         /// Populate folderPaths with all the folders and subfolders (from the root folder) excepting the Backup and Deleted folders
         /// </summary>
         /// <param name="folderRoot"></param>
         /// <param name="folderPaths"></param>
         /// <param name="prefixPath"></param>
-        public static void GetAllFoldersExceptBackupAndDeletedFolders(string folderRoot, List<string> folderPaths, string prefixPath)
+        public static List<string> GetAllFoldersExceptBackupAndDeletedFolders(string folderRoot, List<string> folderPaths, string prefixPath)
         {
             // Check the arguments for null 
             if (folderPaths == null || folderRoot == null)
@@ -395,12 +405,12 @@ namespace Timelapse.Util
                 TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(folderPaths));
                 // Not sure what happens if we have a null folderPaths, but we may as well try it.
-                return;
+                return folderPaths;
             }
 
             if (!Directory.Exists(folderRoot))
             {
-                return;
+                return folderPaths;
             }
 
             if (string.IsNullOrEmpty(prefixPath) == false)
@@ -428,7 +438,7 @@ namespace Timelapse.Util
             catch
             {
                 // It may fail if there is a permissions issue
-                return;
+                return folderPaths;
             }
             foreach (DirectoryInfo subDir in subDirs)
             {
@@ -437,8 +447,9 @@ namespace Timelapse.Util
                 {
                     continue;
                 }
-                GetAllFoldersExceptBackupAndDeletedFolders(subDir.FullName, folderPaths, prefixPath);
+                return GetAllFoldersExceptBackupAndDeletedFolders(subDir.FullName, folderPaths, prefixPath);
             }
+            return folderPaths;
         }
         #endregion
 

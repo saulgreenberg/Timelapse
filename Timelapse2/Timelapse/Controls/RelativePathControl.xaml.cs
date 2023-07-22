@@ -15,6 +15,8 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
+using System.Threading.Tasks;
+
 // ReSharper disable EmptyGeneralCatchClause
 
 namespace Timelapse.Controls
@@ -90,21 +92,33 @@ namespace Timelapse.Controls
         // then build the tree and corresponding node data structure from it and display it.
         // Needs to be invoked externally, usually immediately after the control is created. However, it can be re-invoked 
         // any time, which is usually used for testing purposes (e.g., to see if the changes to the treeview mirror the changes in the database)
-        public void Initialize(Window owner, FileDatabase fileDatabase)
+        public async Task<bool> AsyncInitialize(Window owner, FileDatabase fileDatabase, System.IProgress<ProgressBarArguments> progressHandler, System.Threading.CancellationTokenSource cancelTokenSource)
         {
             if (null == fileDatabase)
             {
                 // Can't really do anything, so display that.
                 TreeViewItem tvi = new TreeViewItem { Header = "No files appear to be loaded" };
                 TreeView.Items.Add(tvi);
-                return;
+                return false;
             }
 
             this.FileDatabase = fileDatabase;
             this.ParentDialogWindow = owner;
 
+            // Start: Wrap long operations to show progress: 
             // Get the relative paths from the database
-            this.RelativePaths = this.FileDatabase.GetRelativePaths();
+            this.RelativePaths = await BusyCancelIndicator.ProgressWrapper(this.FileDatabase.AsyncGetRelativePaths, progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
+            if (this.RelativePaths == null)
+            {
+                return false;
+            }
+
+            List<string> physicalFolders = await BusyCancelIndicator.ProgressWrapper(() => FilesFolders.AsyncGetAllFoldersExceptBackupAndDeletedFolders(FileDatabase.FolderPath, FileDatabase.FolderPath), progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
+            if (physicalFolders == null)
+            {
+                return false;
+            }
+            // End: show progress (the remaining steps should be relatively fast)
 
             // Build the initial relative path list from the relative paths
             // Because they are in the database, these RelativePaths indicate that Timelapse associates that path with images, so containsImages will be true.
@@ -145,8 +159,6 @@ namespace Timelapse.Controls
             // Add sub-folders (if any) that are under the root folder but not currently represented in our Path List (which currently is generated only
             // from the relativePaths in the database). We do this by getting all sub-folders under the root folder, and adding those that are not in the my PathList.
             // Note that we set containsImages to false. While the physical folders may actually contain images, they are not known to Timelapse.
-            List<string> physicalFolders = new List<string>();
-            FilesFolders.GetAllFoldersExceptBackupAndDeletedFolders(this.RootFolder, physicalFolders, this.FileDatabase.FolderPath);
             foreach (string folder in physicalFolders)
             {
                 if (this.MyPathList.Items.Any(s => s.Path.Equals(folder, StringComparison.OrdinalIgnoreCase)))
@@ -158,6 +170,7 @@ namespace Timelapse.Controls
 
             // Finally, sort and rebuild the tree and node structure from these paths. 
             this.RebuildTreeAndNodes(true);
+            return true;
         }
         #endregion
 
@@ -439,7 +452,7 @@ namespace Timelapse.Controls
                 return;
             }
 
-            if (key == Key.Return || key == Key.Enter)
+            if (key == Key.Enter) // both keys are equivalent, so no need for this || key == Key.Return )
             {
                 // Editing is considered completed on Enter or return or Tab.
                 // Check if the folder name is a legal one

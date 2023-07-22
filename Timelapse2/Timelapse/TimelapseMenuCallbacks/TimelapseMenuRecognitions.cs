@@ -84,14 +84,14 @@ namespace Timelapse
                 {
                     // Abort. The json file could not be read.
                     Dialogs.MenuFileRecognizersDataCouldNotBeReadDialog(this);
-                    this.BusyCancelIndicator.Reset();
+                    this.BusyCancelIndicator.Reset(false);
                     return;
                 }
 
                 if (jsonRecognitions.info == null)
                 {
                     // A null info signals that the operation was cancelled. 
-                    this.BusyCancelIndicator.Reset();
+                    this.BusyCancelIndicator.Reset(false);
                     return;
                 }
 
@@ -122,7 +122,7 @@ namespace Timelapse
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
                     {
-                        this.BusyCancelIndicator.Reset();
+                        this.BusyCancelIndicator.Reset(false);
                         return;
                     }
 
@@ -131,7 +131,7 @@ namespace Timelapse
                         RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
                         if (false == messageBox.ShowDialog())
                         {
-                            this.BusyCancelIndicator.Reset();
+                            this.BusyCancelIndicator.Reset(false);
                             return;
                         }
                         if (messageBox.AddSubFolderPrefix)
@@ -139,7 +139,7 @@ namespace Timelapse
                             // The user indicated we should add the prefix, so do so.
                             if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
                             {
-                                this.BusyCancelIndicator.Reset();
+                                this.BusyCancelIndicator.Reset(false);
                                 return;
                             }
                         }
@@ -150,7 +150,7 @@ namespace Timelapse
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
-                            this.BusyCancelIndicator.Reset();
+                            this.BusyCancelIndicator.Reset(false);
                             return;
                         }
                     }
@@ -165,7 +165,7 @@ namespace Timelapse
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
                     {
-                        this.BusyCancelIndicator.Reset();
+                        this.BusyCancelIndicator.Reset(false);
                         return;
                     }
 
@@ -175,7 +175,7 @@ namespace Timelapse
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
-                            this.BusyCancelIndicator.Reset();
+                            this.BusyCancelIndicator.Reset(false);
                             return;
                         }
                     }
@@ -192,7 +192,7 @@ namespace Timelapse
                 RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
                 if (result == RecognizerImportResultEnum.Cancelled)
                 {
-                    this.BusyCancelIndicator.Reset();
+                    this.BusyCancelIndicator.Reset(false);
                     return;
                 }
 
@@ -213,7 +213,7 @@ namespace Timelapse
                 }
 
                 // Hide the Busy indicator
-                this.BusyCancelIndicator.Reset();
+                this.BusyCancelIndicator.Reset(false);
 
                 //
                 // 6. Check for incompatable detections (and delete old recognition data if needed) and/or Report the status.
@@ -234,7 +234,7 @@ namespace Timelapse
                         result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
                         if (result == RecognizerImportResultEnum.Cancelled)
                         {
-                            this.BusyCancelIndicator.Reset();
+                            this.BusyCancelIndicator.Reset(false);
                         }
                     }
                     else

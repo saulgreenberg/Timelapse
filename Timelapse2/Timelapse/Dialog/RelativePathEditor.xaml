@@ -1,14 +1,15 @@
-﻿<Window x:Class="Timelapse.Dialog.RelativePathEditor"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:Timelapse.Controls"
-        Title="Relative Path Editor" 
-        MinHeight="200" MinWidth="768"
-        Height="700" Width="768"
-        ResizeMode="CanResizeWithGrip"
-        ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded"
-        >
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.RelativePathEditor"
+                               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                               xmlns:controls="clr-namespace:Timelapse.Controls"
+                               Title="Relative Path Editor" 
+                               MinHeight="200" MinWidth="768"
+                               Height="700" Width="768"
+                               ResizeMode="CanResizeWithGrip"
+                               ShowInTaskbar="False"
+                               WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded"
+>
+    <Grid>
     <DockPanel>
         <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" Icon="Asterisk"
                                       Title="Timelapse Folder Editor"
@@ -41,4 +42,6 @@
             </Grid>
         </DockPanel>
     </DockPanel>
-</Window>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" CancelClick="CancelAsyncOperationButton_Click" Grid.Row="0"/>
+    </Grid>
+</controls:BusyableDialogWindow>
