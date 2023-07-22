@@ -1349,7 +1349,7 @@ namespace Timelapse.Controls
                 // If the folder doesn't exists, flash the node and don't start the editing operation
                 if (node.FolderExists)
                 {
-                    ProcessExecution.TryProcessStartUsingFileExplorer(Path.Combine(this.RootFolder,
+                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootFolder,
                         node.Path));
                 }
                 else

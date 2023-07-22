@@ -36,7 +36,8 @@ namespace Timelapse.Util
             }
         }
 
-        /// <param name="uri">should contain a valid Uri</param>
+        /// Try to open the uri with whatever default program is used to openn that file
+        /// /// <param name="uri">should contain a valid Uri</param>
         /// <returns>true/false if the process started or not</returns>
         public static bool TryProcessStart(Uri uri)
         {
@@ -48,6 +49,7 @@ namespace Timelapse.Util
             return ProcessExecution.TryProcessStart(processStartInfo);
         }
 
+        /// Try to open the filepath with whatever default program is used to openn that file
         /// <param name="filePath">should contain a valid file path</param>
         /// <returns>true/false if the process started or not</returns>
         public static bool TryProcessStart(string filePath)
@@ -66,10 +68,10 @@ namespace Timelapse.Util
         #endregion
 
         #region Public Methods - Try Process Start using File Explorer
-        /// Try to start the Windows file explorer on the provided folder path.
+        /// Try to open Windows file explorer on the provided folder path.
         /// <param name="folderPath">should contain a valid file path, as its otherwise aborted</param>
         /// <returns>true/false if the process started or not</returns>
-        public static bool TryProcessStartUsingFileExplorer(string folderPath)
+        public static bool TryProcessStartUsingFileExplorerOnFolder(string folderPath)
         {
             if (Directory.Exists(folderPath) == false)
             {
@@ -80,6 +82,25 @@ namespace Timelapse.Util
             {
                 FileName = "explorer.exe",
                 Arguments = folderPath
+            };
+            return ProcessExecution.TryProcessStart(processStartInfo);
+        }
+
+        /// Try to open file explorer with the file selected.
+        /// <param name="filePath">should contain a valid file path</param>
+        /// <returns>true/false if the process started or not</returns>
+        public static bool TryProcessStartUsingFileExplorerToSelectFile(string filePath)
+        {
+            if (File.Exists(filePath) == false)
+            {
+                // Don't even try to start the process if the file doesn't exist.
+                return false;
+            }
+
+            ProcessStartInfo processStartInfo = new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/e, /select, \"{filePath}\""
             };
             return ProcessExecution.TryProcessStart(processStartInfo);
         }

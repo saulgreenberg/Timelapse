@@ -9,8 +9,6 @@ namespace Timelapse
     // View Menu Callbacks
     public partial class TimelapseWindow
     {
-
-
         #region View sub-menu opening
         private void View_SubmenuOpening(object sender, RoutedEventArgs e)
         {
@@ -24,6 +22,9 @@ namespace Timelapse
             this.MenuItemBookmarkDefaultPanZoom.IsEnabled = state;
             this.MenuItemBookmarkSavePanZoom.IsEnabled = state;
             this.MenuItemBookmarkSetPanZoom.IsEnabled = state;
+            this.MenuItemShowInExplorer.IsEnabled = 
+                state &&
+                true == this.DataHandler?.ImageCache?.Current?.FileExists(this.DataHandler?.FileDatabase?.FolderPath);
         }
         #endregion
 
@@ -124,6 +125,19 @@ namespace Timelapse
         private void MenuItemViewDifferencesCombined_Click(object sender, RoutedEventArgs e)
         {
             this.TryViewCombinedDifference();
+        }
+        #endregion
+
+        #region Show in Explorer
+        private void MenuItemShowInExplorer_Click(object sender, RoutedEventArgs e)
+        {
+            // Note that the menu item is only selectable if the file actually exists
+            // Thus the empty/null test is likely not needed, but...
+            string path = this.DataHandler?.ImageCache?.Current?.GetFilePath(this.DataHandler?.FileDatabase?.FolderPath);
+            if (false == string.IsNullOrWhiteSpace(path))
+            {
+                Util.ProcessExecution.TryProcessStartUsingFileExplorerToSelectFile(path);
+            }
         }
         #endregion
     }

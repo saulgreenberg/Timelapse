@@ -38,6 +38,7 @@ namespace Timelapse
         #region Menu stub to test some code
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
+
         }
         #endregion
 

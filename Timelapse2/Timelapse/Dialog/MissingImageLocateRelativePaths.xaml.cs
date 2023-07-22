@@ -161,7 +161,7 @@ namespace Timelapse.Dialog
             {
                 case 0:
                     // Show the folder in the file explorer
-                    Util.ProcessExecution.TryProcessStartUsingFileExplorer(Path.Combine(this.FolderPath, possibleFolderLocation));
+                    Util.ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.FolderPath, possibleFolderLocation));
                     break;
                 case 3:
                     // Use checkmark has been selected. 

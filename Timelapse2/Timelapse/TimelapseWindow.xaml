@@ -266,6 +266,8 @@
                     <Separator/>
                     <MenuItem Name="MenuItemViewDifferencesCycleThrough" Header="_Cycle through image differences" Click="MenuItemViewDifferencesCycleThrough_Click" InputGestureText="&#x2191;" ToolTip="View an enhancement that cycles through the differences between the current and the next file, and then the previous file"/>
                     <MenuItem Name="MenuItemViewDifferencesCombined" Header="_View combined image differences" Click="MenuItemViewDifferencesCombined_Click" InputGestureText="&#x2193;" ToolTip="View an enhancement that simultaneously shows the differences between the current image vs. the next and previous files."/>
+                    <Separator/>
+                    <MenuItem Name="MenuItemShowInExplorer" Header="_Show in Explorer" Click="MenuItemShowInExplorer_Click" ToolTip="Show this file in a Windows Explorer window"/>
 
                 </MenuItem>
 

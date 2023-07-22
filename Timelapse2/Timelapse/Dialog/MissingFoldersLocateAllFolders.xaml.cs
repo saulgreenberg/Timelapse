@@ -149,7 +149,7 @@ namespace Timelapse.Dialog
         {
             string possibleLocation = GetPossibleLocationFromSelection();
             if (String.Equals(possibleLocation, this.useLocateButtonText)) return;
-            Util.ProcessExecution.TryProcessStartUsingFileExplorer(Path.Combine(this.RootPath, possibleLocation));
+            Util.ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootPath, possibleLocation));
         }
 
         private void LocateButton_Click(object sender, RoutedEventArgs e)
