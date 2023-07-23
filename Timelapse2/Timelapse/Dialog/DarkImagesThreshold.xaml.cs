@@ -146,10 +146,7 @@ namespace Timelapse.Dialog
 
             if (disposing)
             {
-                if (this.imageEnumerator != null)
-                {
-                    this.imageEnumerator.Dispose();
-                }
+                this.imageEnumerator?.Dispose();
             }
 
             this.disposed = true;

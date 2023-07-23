@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Timelapse.Controls;
+using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
@@ -36,7 +39,6 @@ namespace Timelapse
         #endregion
 
         #region FilesSelectAndShow: Full version
-        // PEFORMANCE FILES SELECT AND SHOW CALLED TOO OFTEN, GIVEN THAT IT IS A SLOW OPERATION
         private async Task<bool> FilesSelectAndShowAsync(long imageID, FileSelectionEnum selection)
         {
             // change selection
@@ -47,27 +49,25 @@ namespace Timelapse
                 return false;
             }
 
-            // Select the files according to the given selection
-            // Note that our check for missing actually checks to see if the file exists,
-            // which is why its a different operation
-            // PEFORMANCE - TWO  SLOW OPERATIONS: FilesSelectAndShow invoking this.dataHandler.FileDatabase.SelectFile / .SelectMissingFilesFromCurrentlySelectedFiles
+            // Select the files according to the given selection, where Missing files is treated as a special case.
             Mouse.OverrideCursor = Cursors.Wait;
             if (selection == FileSelectionEnum.Missing)
             {
-                // PERFORMANCE this can be slow if there are many files, as it checks every single file in the current database selection to see if it exists
-                // However, it is not a mainstream operation so can be considered a lower priority place for optimization
-                bool anyFilesMissing = this.DataHandler.FileDatabase.SelectMissingFilesFromCurrentlySelectedFiles();
-                if (anyFilesMissing == false)
+                this.BusyCancelIndicator.Reset(true);
+                bool result = await FilesSelectAndShowMissingAsync();
+                this.BusyCancelIndicator.Reset(false);
+                if (false == result )
                 {
-                    // No files were missing. Inform the user, and don't change anything.
-                    Mouse.OverrideCursor = null;
-                    Dialogs.FileSelectionNoFilesAreMissingDialog(this);
+                    // Either cancelled or no missing files were found. Dialog message for no missing file is handled in the above method
                     return false;
                 }
+                // As missing files were found, we just fall through as the remaining code will update the UI
             }
             else
             {
-                // PERFORMANCE Select Files is a very slow operation as it runs a query over all files and returns everything it finds as datatables stored in memory.
+                // A  selection other than Missing files.
+                // Select Files is a slow operation as it runs a query over all files and returns everything it finds as datatables stored in memory.
+                // As we don't know how long it will take, we display an indeterminate progress bar
                 this.BusyCancelIndicator.EnableForSelection(true);
                 await this.DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
                 this.BusyCancelIndicator.EnableForSelection(false);
@@ -77,6 +77,8 @@ namespace Timelapse
 
             if ((this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles < 1) && (selection != FileSelectionEnum.All))
             {
+                // A final check that there is actually some files returned in the above selection process.
+                // If not, the reset the selection to all files.
                 // Tell the user that we are resetting the selection to all files
                 Dialogs.FileSelectionResettngSelectionToAllFilesDialog(this, selection);
 
@@ -87,7 +89,6 @@ namespace Timelapse
                 this.BusyCancelIndicator.EnableForSelection(true);
                 await this.DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
                 this.BusyCancelIndicator.EnableForSelection(false);
-
                 this.DataHandler.FileDatabase.BindToDataGrid();
             }
 
@@ -155,6 +156,38 @@ namespace Timelapse
             this.DataHandler.FileDatabase.FileSelectionEnum = selection;    // Remember the current selection
             return true;
         }
+        #endregion
+
+        #region Private Helpers
+        // Special case selection for missing files
+        private async Task<bool> FilesSelectAndShowMissingAsync()
+        {
+            // Note that the missing files check is slow if there are many files, as it checks every single file in the current database selection to see if it exists
+            // To mitigate this, we use a cancellable progress handler that will update the progress bar during this check
+            Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
+            {
+                // Update the progress bar
+                FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+            });
+            IProgress<ProgressBarArguments> progress = progressHandler;
+            SelectMissingFilesResultEnum resultEnum = await this.DataHandler.FileDatabase.SelectMissingFilesFromCurrentlySelectedFiles(progressHandler, GlobalReferences.CancelTokenSource);
+
+            if (SelectMissingFilesResultEnum.NoMissingFiles == resultEnum)
+            {
+                // No files were missing. Inform the user, and don't change anything.
+                Mouse.OverrideCursor = null;
+                Dialogs.FileSelectionNoFilesAreMissingDialog(this);
+                return false;
+            }
+            if (SelectMissingFilesResultEnum.Cancelled == resultEnum)
+            {
+                Mouse.OverrideCursor = null;
+                return false;
+            }
+            // must be SelectMissingFilesResultEnum.MissingFilesFound 
+            return true;
+        }
+
         #endregion
     }
 }

@@ -230,6 +230,7 @@
     </Compile>
     <Compile Include="Enums\CreateSubfolderResultEnum.cs" />
     <Compile Include="Enums\MoveFolderResultEnum.cs" />
+    <Compile Include="Enums\SelectMissingFilesResultEnum.cs" />
     <Compile Include="Extensions\StringExtension.cs" />
     <Compile Include="Recognition\RecognitionDatabases.cs" />
     <Compile Include="Recognition\Recognizer.cs" />

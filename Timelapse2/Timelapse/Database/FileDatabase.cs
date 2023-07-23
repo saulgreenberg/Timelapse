@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -358,7 +359,7 @@ namespace Timelapse.Database
                 else
                 {
                     // The date/time is malformed, so just use the default. Not optimal, but...
-                   return new SchemaColumnDefinition(control.DataLabel, "DATETIME", DateTimeHandler.ToStringDatabaseDateTime(Constant.ControlDefault.DateTimeDefaultValue));
+                    return new SchemaColumnDefinition(control.DataLabel, "DATETIME", DateTimeHandler.ToStringDatabaseDateTime(Constant.ControlDefault.DateTimeDefaultValue));
                 }
             }
 
@@ -1005,34 +1006,60 @@ namespace Timelapse.Database
             }
             return idList;
         }
+
         // Check for the existence of missing files in the current selection, and return a list of IDs of those that are missing
         // PERFORMANCE this can be slow if there are many files
-        public bool SelectMissingFilesFromCurrentlySelectedFiles()
+        public async Task<SelectMissingFilesResultEnum> SelectMissingFilesFromCurrentlySelectedFiles(System.IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             if (this.FileTable == null)
             {
-                return false;
+                return SelectMissingFilesResultEnum.Cancelled;
             }
             string commaSeparatedListOfIDs = string.Empty;
-
-            // Check if each file exists. Get all missing files in the selection as a list of file ids, e.g., "1,2,8,10" 
-            foreach (ImageRow image in this.FileTable)
+            SelectMissingFilesResultEnum resultEnum = await Task.Run(() =>
             {
-                if (!File.Exists(Path.Combine(this.FolderPath, image.RelativePath, image.File)))
+                int fileCount = this.FileTable.RowCount;
+                int i = 0;
+                // Check if each file exists. Get all missing files in the selection as a list of file ids, e.g., "1,2,8,10" 
+                foreach (ImageRow image in this.FileTable)
                 {
-                    commaSeparatedListOfIDs += image.ID + ",";
+                    // Update the progress bar and populate the detection tables
+                    //int percentDone = Convert.ToInt32(i++ * 100.0 / fileCount);
+                    if (this.ReadyToRefresh()) //if (newPercentDone != percentDone)
+                    {
+                        if (cancelTokenSource.Token.IsCancellationRequested)
+                        {
+                            return SelectMissingFilesResultEnum.Cancelled;
+                        }
+                        Thread.Sleep(Constant.ThrottleValues.ProgressBarSleepInterval); // Allows the UI thread to update every now and then
+                        progress.Report(new ProgressBarArguments(
+                            Convert.ToInt32(i++ * 100.0 / fileCount), 
+                            $"Checking to see which files, if any, are missing (now on {i}/{fileCount})", 
+                            true, false));
+                    }
+                    
+                    if (!File.Exists(Path.Combine(this.FolderPath, image.RelativePath, image.File)))
+                    {
+                        commaSeparatedListOfIDs += image.ID + ",";
+                    }
+                    i++;
                 }
-            }
-            // remove the trailing comma
-            commaSeparatedListOfIDs = commaSeparatedListOfIDs.TrimEnd(',');
-            if (string.IsNullOrEmpty(commaSeparatedListOfIDs))
+
+                // remove the trailing comma
+                commaSeparatedListOfIDs = commaSeparatedListOfIDs.TrimEnd(',');
+                return string.IsNullOrEmpty(commaSeparatedListOfIDs)
+                    ? SelectMissingFilesResultEnum.NoMissingFiles
+                    : SelectMissingFilesResultEnum.MissingFilesFound;
+            }).ConfigureAwait(true);
+            
+            if (SelectMissingFilesResultEnum.MissingFilesFound == resultEnum)
             {
-                // No missing files
-                return false;
+                // the search for missing files was successful, where missing files were found.
+                // So we need to select them in the data table
+                this.FileTable = this.SelectFilesInDataTableByCommaSeparatedIds(commaSeparatedListOfIDs);
+                this.FileTable.BindDataGrid(this.boundGrid, this.onFileDataTableRowChanged);
             }
-            this.FileTable = this.SelectFilesInDataTableByCommaSeparatedIds(commaSeparatedListOfIDs);
-            this.FileTable.BindDataGrid(this.boundGrid, this.onFileDataTableRowChanged);
-            return true;
+            return resultEnum;
         }
 
         public List<string> SelectFileNamesWithRelativePathFromDatabase(string relativePath)
@@ -1528,9 +1555,9 @@ namespace Timelapse.Database
             else
             {
                 query = Sql.Update + Constant.DBTables.FileData
-                                   + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(newPrefixPath) 
+                                   + Sql.Set + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(newPrefixPath)
                                    + Sql.Where
-                                   + Constant.DatabaseColumn.RelativePath  + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
+                                   + Constant.DatabaseColumn.RelativePath + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
             }
             this.Database.ExecuteNonQuery(query);
         }
@@ -2011,9 +2038,9 @@ namespace Timelapse.Database
             if (File.Exists(Path.Combine(this.FolderPath, this.FileName)))
             {
                 // SAULXXX Should really check for failure, as TryMove will return true/false
-               FilesFolders.TryMoveFileIfExists(
-                    Path.Combine(this.FolderPath, this.FileName),
-                    Path.Combine(this.FolderPath, newFileName));  // Change the file name to the new file name
+                FilesFolders.TryMoveFileIfExists(
+                     Path.Combine(this.FolderPath, this.FileName),
+                     Path.Combine(this.FolderPath, newFileName));  // Change the file name to the new file name
                 this.FileName = newFileName; // Store the file name
                 this.Database = new SQLiteWrapper(Path.Combine(this.FolderPath, newFileName));          // Recreate the database connecction
             }

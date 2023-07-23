@@ -236,7 +236,7 @@ namespace Timelapse.Images
                         return writeableBitmap;
                     }
                     // black frame was rendered; backoff slightly to try again
-                    Thread.Sleep(TimeSpan.FromMilliseconds(Constant.ThrottleValues.VideoRenderingBackoffTime.TotalMilliseconds));
+                    Thread.Sleep(TimeSpan.FromMilliseconds(Constant.ThrottleValues.ProgressBarSleepInterval.TotalMilliseconds));
                 }
                 // We failed, so just return a blank video.
                 mediaPlayer.Stop();

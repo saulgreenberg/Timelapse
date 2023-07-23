@@ -24,6 +24,5 @@
             busyCancelIndicator.CancelButtonIsEnabled = false;
             busyCancelIndicator.CancelButtonText = isBusy ? "Merging databases..." : "Cancel";
         }
-
     }
 }
