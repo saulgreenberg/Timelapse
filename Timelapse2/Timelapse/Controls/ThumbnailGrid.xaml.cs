@@ -808,7 +808,7 @@ namespace Timelapse.Controls
             }
             catch
             {
-                TracePrint.PrintMessage("In RebuildGrid: rowCount or columnCount cannot be converted to Int. Aborted");
+                TracePrint.PrintMessage("In RebuildGrid: rowCount or columnCount cannot be converted to Int. Catch is acceptable");
                 return false;
             }
 
