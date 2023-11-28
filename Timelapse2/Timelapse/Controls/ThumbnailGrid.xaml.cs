@@ -799,8 +799,19 @@ namespace Timelapse.Controls
         private bool RebuildGrid(double gridWidth, double gridHeight, double cellWidth, double cellHeight, int fileTableCount, int fileTableIndex)
         {
             // Calculated the number of rows/columns that can fit into the available space,
-            int rowCount = Convert.ToInt32(Math.Floor(gridHeight / cellHeight));
-            int columnCount = Convert.ToInt32(Math.Floor(gridWidth / cellWidth));
+            int rowCount;
+            int columnCount;
+            try
+            {
+                rowCount = Convert.ToInt32(Math.Floor(gridHeight / cellHeight));
+                columnCount = Convert.ToInt32(Math.Floor(gridWidth / cellWidth));
+            }
+            catch
+            {
+                TracePrint.PrintMessage("In RebuildGrid: rowCount or columnCount cannot be converted to Int. Aborted");
+                return false;
+            }
+
             if (rowCount == 0 || columnCount == 0)
             {
                 // We can't even fit a single row or column in, so no point in continuing.

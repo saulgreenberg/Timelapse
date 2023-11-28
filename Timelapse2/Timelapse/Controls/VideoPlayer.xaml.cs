@@ -292,17 +292,24 @@ namespace Timelapse.Controls
         private void ShowPosition()
         {
             this.isProgrammaticUpdate = true;
-            if (this.Video.NaturalDuration.HasTimeSpan)
+            try
             {
-                this.VideoPosition.Maximum = this.Video.NaturalDuration.TimeSpan.TotalSeconds;
-                // SAULXX: The line below will show the end time as a delta rather than absolute time. I decided that is undesirable, as the start time already shows the delta
-                // this.TimeDuration.Text = (this.Video.NaturalDuration.TimeSpan - this.Video.Position).ToString(Constant.Time.VideoPositionFormat);
-                this.TimeDuration.Text = this.Video.NaturalDuration.TimeSpan.ToString(Constant.Time.VideoPositionFormat);
-                this.VideoPosition.TickFrequency = this.VideoPosition.Maximum / 10.0;
+                if (this.Video.NaturalDuration.HasTimeSpan)
+                {
+                    this.VideoPosition.Maximum = this.Video.NaturalDuration.TimeSpan.TotalSeconds;
+                    // SAULXX: The line below will show the end time as a delta rather than absolute time. I decided that is undesirable, as the start time already shows the delta
+                    // this.TimeDuration.Text = (this.Video.NaturalDuration.TimeSpan - this.Video.Position).ToString(Constant.Time.VideoPositionFormat);
+                    this.TimeDuration.Text = this.Video.NaturalDuration.TimeSpan.ToString(Constant.Time.VideoPositionFormat);
+                    this.VideoPosition.TickFrequency = this.VideoPosition.Maximum / 10.0;
+                }
+                this.TimeFromStart.Text = this.Video.Position.ToString(Constant.Time.VideoPositionFormat);
+                this.VideoPosition.Value = this.Video.Position.TotalSeconds;
+                this.isProgrammaticUpdate = false;
             }
-            this.TimeFromStart.Text = this.Video.Position.ToString(Constant.Time.VideoPositionFormat);
-            this.VideoPosition.Value = this.Video.Position.TotalSeconds;
-            this.isProgrammaticUpdate = false;
+            catch
+            {
+                this.isProgrammaticUpdate = false;
+            }
         }
 
         private void TimerUpdatePosition_Tick(object sender, EventArgs e)
