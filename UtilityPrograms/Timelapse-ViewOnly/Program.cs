@@ -14,7 +14,7 @@ namespace Timelapse_ViewOnly
                 UseShellExecute = true,
                 RedirectStandardOutput = false,
                 Arguments = "-viewonly",
-                FileName = "Timelapse2.exe",
+                FileName = "Timelapse.exe",
             };
             TryProcessStart(processStartInfo);
         }

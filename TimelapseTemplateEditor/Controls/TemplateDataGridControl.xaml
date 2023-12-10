@@ -1,0 +1,245 @@
+﻿<UserControl x:Class="TimelapseTemplateEditor.Controls.TemplateDataGridControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TimelapseTemplateEditor.Controls"
+             xmlns:timelapseTemplateEditor2="clr-namespace:TimelapseTemplateEditor"
+             xmlns:controls="clr-namespace:Timelapse.Controls;assembly=Timelapse"
+             xmlns:dataTables="clr-namespace:Timelapse.DataTables;assembly=Timelapse"
+             mc:Ignorable="d" 
+             d:DesignHeight="250" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <!-- Define the default text associated with the various controls -->
+            <ToolTip x:Key="DefaultValueToolTip">
+                <TextBlock>An optional default data value that will be displayed to the analyst</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="LabelToolTip">
+                <TextBlock>The text describing this field as shown in the user interface</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="DataLabelToolTip">
+                <TextBlock>The text describing this field as written in the output file. Will be the same as the Label if its left empty.</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TooltipToolTip">
+                <TextBlock>The help text describing this field as shown in the user interface</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="WidthToolTip">
+                <TextBlock>The width of the data entry field as shown in the user interface</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="CopyableToolTip">
+                <TextBlock>Whether the data value from the previous will be copied to the current file if the user selects the ‘Copy’ button in Timelapse</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="VisibleToolTip">
+                <TextBlock>Whether this item will be displayed in the user interface</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TypeNoteToolTip">
+                <TextBlock>The Note item accepts free-form text</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TypeCounterToolTip">
+                <TextBlock>The Count item provides a point and click interface for counting entities in an image or video</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TypeFixedChoiceToolTip">
+                <TextBlock>The Choice item provides a drop down menu of possible choices that can be entered. Edit the list to create these choices</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TypeFlagToolTip">
+                <TextBlock>The Flag item can be toggled between true and false</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TypeFileToolTip">
+                <TextBlock>The File Item is filled in automatically by the system with the file name of the image or video</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="TypeDeletionFlagToolTip">
+                <TextBlock>The Deleted flag is a standard control used to mark files for deletion</TextBlock>
+            </ToolTip>
+            <ToolTip x:Key="ListFixedChoiceToolTip">
+                <TextBlock>A list of items displayed as a menu of choices. Type in new items; right click on an item to edit, move or delete it.</TextBlock>
+            </ToolTip>
+
+            <local:CellTextBlockConverter x:Key="CellTextBlockConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <!-- The primary template data grid -->
+        <DataGrid Name="DataGrid"  MinHeight="215" VerticalAlignment="Top"  Grid.Row="0" Grid.Column="0" RowHeight="25" VirtualizingStackPanel.IsVirtualizing="False"
+                                                AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" 
+                                                BeginningEdit="TemplateDataGrid_BeginningEdit" 
+                                                CellEditEnding="TemplateDataGrid_CellEditEnding"
+                                                CurrentCellChanged="TemplateDataGrid_CurrentCellChanged" 
+                                                PreviewKeyDown="TemplateDataGrid_PreviewKeyDown" 
+                                                PreviewTextInput="TemplateDataGrid_PreviewTextInput" 
+                                                LayoutUpdated="TemplateDataGrid_LayoutUpdated"  
+                                                SelectionChanged="TemplateDataGrid_SelectionChanged" SelectionMode="Single" 
+                                                ItemsSource="{Binding}"  
+                                                KeyboardNavigation.TabNavigation="Cycle"
+                                                ColumnHeaderStyle="{DynamicResource VerticalGridHeaderStyle}" 
+                                            >
+
+            <DataGrid.Resources>
+                <Style x:Key="VerticalGridHeaderStyle" TargetType="DataGridColumnHeader">
+                    <Setter Property="VerticalContentAlignment" Value="Bottom"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Style>
+            </DataGrid.Resources>
+            <!-- If you change the visible rows or header names, please check UpdateCellColors() constants to ensure they match new conventions -->
+            <DataGrid.Columns >
+                <!-- ID Column -->
+                <DataGridTextColumn Header="ID" CanUserSort="False" Binding="{Binding Path=Id, Converter={StaticResource CellTextBlockConverter}}" IsReadOnly="True" />
+
+                <!-- Control order Column -->
+                <DataGridTextColumn Header="Control&#x0a;order" Binding="{Binding Path=ControlOrder, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" IsReadOnly="True"/>
+
+                <!-- Spreadsheet order Column -->
+                <DataGridTextColumn Header="Spreadsheet&#x0a;order" Binding="{Binding Path=SpreadsheetOrder, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" IsReadOnly="True"/>
+
+                <!-- Type Column; Bind the tooltip as well -->
+                <DataGridTextColumn MinWidth="40" Header="Type" Binding="{Binding Path=Type, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" IsReadOnly="True" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Type}" Value="Note">
+                                    <Setter Property="ToolTip" Value="{StaticResource TypeNoteToolTip}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Type}" Value="Counter">
+                                    <Setter Property="ToolTip" Value="{StaticResource TypeCounterToolTip}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Type}" Value="FixedChoice">
+                                    <Setter Property="ToolTip" Value="{StaticResource TypeFixedChoiceToolTip}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Type}" Value="Flag">
+                                    <Setter Property="ToolTip" Value="{StaticResource TypeFlagToolTip}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Type}" Value="File">
+                                    <Setter Property="ToolTip" Value="{StaticResource TypeFileToolTip}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Type}" Value="DeleteFlag">
+                                    <Setter Property="ToolTip" Value="{StaticResource TypeDeletionFlagToolTip}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Default Value Column -->
+                <DataGridTextColumn MinWidth="40"  Header="Default Value" Binding="{Binding Path=DefaultValue, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="ToolTip" Value="{StaticResource DefaultValueToolTip}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Type}" Value="Counter">
+                                    <Setter Property="TextAlignment" Value="Right"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Label Column -->
+                <DataGridTextColumn MinWidth="40"  Header="Label" Binding="{Binding Path=Label, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="ToolTip" Value="{StaticResource LabelToolTip}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Data Label Column -->
+                <DataGridTextColumn MinWidth="40"   Header="Data Label"  Binding="{Binding Path=DataLabel,  Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="ToolTip" Value="{StaticResource DataLabelToolTip}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Tooltip Column -->
+                <DataGridTextColumn MinWidth="50"  Header="Tooltip" Binding="{Binding Path=Tooltip, Converter={StaticResource CellTextBlockConverter}}" Width="*" CanUserSort="False" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="ToolTip" Value="{StaticResource TooltipToolTip}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Width Column -->
+                <DataGridTextColumn MinWidth="40"  Header="Width" Binding="{Binding Path=TXTBOXWIDTH, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="ToolTip" Value="{StaticResource WidthToolTip}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Copyable Column -->
+                <DataGridTemplateColumn  MinWidth="25" Width="Auto" Header="Copyable" SortMemberPath="Include" CanUserSort="False" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type controls:DataEntryControl}">
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Copyable, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{StaticResource CopyableToolTip}"/>
+                        </Style>
+                    </DataGridTemplateColumn.CellStyle>
+                </DataGridTemplateColumn>
+
+                <!-- Visible Column -->
+                <DataGridTemplateColumn MinWidth="25" Width="Auto" Header="Visible" SortMemberPath="Include" CanUserSort="False" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=Visible, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{StaticResource VisibleToolTip}"/>
+                        </Style>
+                    </DataGridTemplateColumn.CellStyle>
+                </DataGridTemplateColumn>
+
+                <!--List Column -->
+                <DataGridTemplateColumn MinWidth="40" Header="List" Width="80"  CanUserSort="False" IsReadOnly="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="dataTables:ControlRow">
+                            <StackPanel>
+                                <Button Name="btnButton" Tag="{Binding Path=ControlOrder}" Click="ChoiceListButton_Click" timelapseTemplateEditor2:TemplateEditorWindowExtensions.ChoiceList="{Binding Path=List, Mode=TwoWay}" Margin="3,1,3,1"  Content="Define List" >
+                                    <Button.Style>
+                                        <Style TargetType="{x:Type Button}">
+                                            <Style.Triggers>
+                                                <!--Triggers for disabling lists for some types-->
+                                                <DataTrigger Binding="{Binding Type}" Value="File">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="RelativePath">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="DateTime">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="DeleteFlag">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Counter">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Note">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Flag">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="FixedChoice">
+                                                    <Setter Property="ToolTip" Value="{StaticResource ListFixedChoiceToolTip}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,35 @@
+﻿<UserControl x:Class="TimelapseTemplateEditor.Controls.TemplateHelpTextControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="100" d:DesignWidth="600">
+    <Grid>
+        <!--Brief help Messages to display at the top of the template pane, whose visibility depends upon whether there is an open template -->
+        <TextBlock Name="HelpMessageInitial" 
+                   Grid.Row="0" Grid.Column="0" 
+                   Margin="0,0,0,10"
+                   Visibility="Visible">
+                   <Run FontSize="14" FontWeight="Bold"   Text="To create a new template               To open an existing template:"/>
+                   <LineBreak/>
+                   <Run FontSize="12" Text="  &#x2022; select File | New template...                    &#x2022; select File | Open template...    "/> <Run FontSize="12" FontStyle="Italic" Text="or"/>
+                   <LineBreak/>
+                   <Run FontSize="12" Text="                                                                    &#x2022; select File | Recent templates... "/> <Run FontSize="12" FontStyle="Italic" Text="or"/>
+                   <LineBreak/>
+                   <Run FontSize="12" Text="                                                                    &#x2022; drag and drop an existing .tdb template onto the space below."/>                                       
+                   <LineBreak/>
+                   <Run FontSize="2" Text="  &#160;"/> <!-- fakes some space after this line -->
+                   <LineBreak/>
+                   <Run FontSize="12" Text="The template's contents will then appear below, which you can modify as desired."/>
+        </TextBlock>
+
+        <TextBlock Name="HelpMessageForTemplate" 
+                   Grid.Row="0" Grid.Column="0"
+                   Visibility="Collapsed" >
+                   <Run FontWeight="Bold" Text="Use the buttons on the right to add new data types. Click to edit the white fields (gray fields are uneditable)."/>
+                   <LineBreak/>
+                   <Run FontWeight="Bold" Text="Fixed choice data types: click 'Define List' to define the menu, one item per line."/>
+        </TextBlock>
+    </Grid>
+</UserControl>
