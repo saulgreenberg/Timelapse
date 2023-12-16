@@ -595,6 +595,12 @@ namespace Timelapse.Database
             return (obj == DBNull.Value) ? 0 : Convert.ToInt32(obj);
         }
 
+        public long ScalarGetLongFromSelect(string query)
+        {
+            object obj = this.GetScalarFromSelect(query);
+            return (obj == DBNull.Value) ? 0 : Convert.ToInt64(obj);
+        }
+
         // This query is used to transform scalar queries that
         // which returns a 1  or a 0 into true or false respectively         
         // For example, Select EXISTS ( SELECT 1 FROM DataTable WHERE DeleteFlag='true') returnes 1 if any matching row exists else 0
@@ -611,6 +617,13 @@ namespace Timelapse.Database
             return this.ScalarGetCountFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
         }
 
+        // Get the Maximum value of the field from the datatable  
+        // Form: "SELECT MAX(field) From DataTable"
+        // The field should contain an int value
+        public long ScalarGetMaxLongValue(string dataTable, string intfield)
+        {
+            return this.ScalarGetLongFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
+        }
 
         // Return a scalar float value, or null if things go wrong.
         public float? ScalarGetFloatValue(string dataTable, string floatfield)

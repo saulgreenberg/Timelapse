@@ -827,8 +827,8 @@ namespace Timelapse.Database
 
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
             // The offeset should be 0 if there are no detections in the main DB, as we will be creating the detection table and then just adding to it.
-            int offsetDetectionId = destinationRecognitionsExist
-                ? destinationDdb.ScalarGetMaxIntValue(Constant.DBTables.Detections, Constant.DetectionColumns.DetectionID)
+            long offsetDetectionId = destinationRecognitionsExist
+                ? destinationDdb.ScalarGetMaxLongValue(Constant.DBTables.Detections, Constant.DetectionColumns.DetectionID)
                 : 0;
 
             query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, Constant.DBTables.Detections) + Environment.NewLine;
