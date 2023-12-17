@@ -157,10 +157,10 @@ namespace Timelapse.Database
         /// Assumes that the database has already been opened and that the Template Table is loaded, where the DataLabel always has a valid value.
         /// Then create both the ImageSet table and the Markers table
         /// </summary>
-        protected override async Task OnDatabaseCreatedAsync(TemplateDatabase templateDatabase)
+        protected override async Task OnDatabaseCreatedAsync(TemplateDatabase existingTemplateTable)
         {
             // copy the template's TemplateTable
-            await base.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
+            await base.OnDatabaseCreatedAsync(existingTemplateTable).ConfigureAwait(true);
 
             // Create the DataTable from the template
             // First, define the creation string based on the contents of the template. 

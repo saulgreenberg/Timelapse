@@ -14,6 +14,7 @@ using System.Windows.Input;
 using Timelapse;
 using Timelapse.Dialog;
 using Timelapse.Util;
+using System;
 
 namespace TimelapseTemplateEditor
 {
@@ -27,11 +28,15 @@ namespace TimelapseTemplateEditor
         private async Task<bool> TemplateInitializeFromDBFileAsync(string templateDatabaseFilePath)
         {
             // Create a new DB file if one does not exist, or load a DB file if there is one.
-            this.templateDatabase = await TemplateDatabase.CreateOrOpenAsync(templateDatabaseFilePath).ConfigureAwait(true);
-            if (this.templateDatabase == null)
+            Tuple<bool, TemplateDatabase> tupleResult = await TemplateDatabase.TryCreateOrOpenAsync(templateDatabaseFilePath).ConfigureAwait(true);
+            if (!tupleResult.Item1)
             {
+                // The template couldn't be loaded
                 return false;
             }
+
+            this.templateDatabase = tupleResult.Item2;
+
             // Map the data table to the data grid, and create a callback which is executed whenever the datatable row changes
             this.templateDatabase.BindToEditorDataGrid(this.TemplateUI.TemplateDataGridControl.DataGrid, Globals.TemplateDataGridControl.TemplateDataGrid_RowChanged);
 
