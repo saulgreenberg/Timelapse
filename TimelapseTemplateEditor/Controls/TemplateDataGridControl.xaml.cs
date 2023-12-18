@@ -421,7 +421,7 @@ namespace TimelapseTemplateEditor.Controls
             if (string.IsNullOrWhiteSpace(dataLabel))
             {
                 EditorDialogs.EditorDataLabelsCannotBeEmptyDialog(Globals.RootEditor);
-                textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabel("DataLabel");
+                textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabelInControls("DataLabel");
             }
 
             // Check to see if the data label is unique. If not, generate a unique data label and warn the user
@@ -435,7 +435,7 @@ namespace TimelapseTemplateEditor.Controls
                         continue; // Its the same row, so its the same key, so skip it
                     }
                     EditorDialogs.EditorDataLabelsMustBeUniqueDialog(Globals.RootEditor, textBox.Text);
-                    textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabel(dataLabel);
+                    textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabelInControls(dataLabel);
                     break;
                 }
             }
@@ -499,7 +499,7 @@ namespace TimelapseTemplateEditor.Controls
                         string s = (cell == null)
                             ? "Label"
                             : ((TextBlock)cell.Content).Text;
-                        textBox.Text = s; //this.TemplateDatabase.GetNextUniqueLabel(s);
+                        textBox.Text = s; //this.TemplateDatabase.GetNextUniqueLabelInControls(s);
                         label = s;
                         editorDialogAlreadyShown = true;
                     }
@@ -519,7 +519,7 @@ namespace TimelapseTemplateEditor.Controls
                         {
                             EditorDialogs.EditorLabelsMustBeUniqueDialog(Globals.RootEditor, label);
                         }
-                        textBox.Text = Globals.TemplateDatabase.GetNextUniqueLabel(label);
+                        textBox.Text = Globals.TemplateDatabase.GetNextUniqueLabelInControls(label);
                         break;
                     }
                 }

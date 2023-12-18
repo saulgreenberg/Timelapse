@@ -111,7 +111,7 @@ namespace TimelapseTemplateEditor
             this.TemplateDoApplyPendingEdits();
 
             this.dataGridBeingUpdatedByCode = true;
-            this.templateDatabase.AddUserDefinedControl(controlType);
+            this.templateDatabase.AddControlToDataTableAndDatabase(controlType);
             this.TemplateUI.TemplateDataGridControl.DataGrid.DataContext = Globals.TemplateDatabase.Controls;
             this.TemplateUI.TemplateDataGridControl.DataGrid.ScrollIntoView(Globals.TemplateUI.TemplateDataGridControl.DataGrid.Items[Globals.TemplateUI.TemplateDataGridControl.DataGrid.Items.Count - 1]);
 
@@ -144,7 +144,7 @@ namespace TimelapseTemplateEditor
 
                 // remove the datagrid row (and thus the control represented by it)
                 this.dataGridBeingUpdatedByCode = true;
-                this.templateDatabase.RemoveUserDefinedControl(new ControlRow(selectedRowView.Row));
+                this.templateDatabase.RemoveControlFromDataTableAndDatabase(new ControlRow(selectedRowView.Row));
 
                 // Update the view so it reflects the current values in the database
                 Globals.TemplateDataEntryPanelPreviewControl.GeneratePreviewControls(Globals.TemplateUI.TemplateDataEntryPanelPreview.ControlsPanel, Globals.TemplateDatabase.Controls);
@@ -167,7 +167,7 @@ namespace TimelapseTemplateEditor
                 controlOrder++;
             }
             this.dataGridBeingUpdatedByCode = true;
-            this.templateDatabase.UpdateDisplayOrder(Constant.Control.ControlOrder, newControlOrderByDataLabel);
+            this.templateDatabase.UpdateControlDisplayOrder(Constant.Control.ControlOrder, newControlOrderByDataLabel);
             this.dataGridBeingUpdatedByCode = false;
             Globals.TemplateDataEntryPanelPreviewControl.GeneratePreviewControls(this.TemplateUI.TemplateDataEntryPanelPreview.ControlsPanel, this.templateDatabase.Controls); // Ensures that the controls panel updates itself
         }

@@ -271,7 +271,7 @@ namespace Timelapse.QuickPaste
             else if (quickPasteItem.ControlType == Constant.Control.FixedChoice)
             {
                 // Choices use choiceboxes
-                ControlRow controlRow = this.fileDatabase.GetControlFromTemplateTable(quickPasteItem.DataLabel);
+                ControlRow controlRow = this.fileDatabase.GetControlFromControls(quickPasteItem.DataLabel);
                 ComboBox comboBoxValue = new ComboBox()
                 {
                     Height = ValuesHeight,

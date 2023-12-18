@@ -44,7 +44,7 @@ namespace Timelapse.Database
                         // If the data label is an empty string, we use the label instead.
                         // The append sequence results in a trailing comma which is retained when writing the line.
                         StringBuilder header = new StringBuilder();
-                        List<string> dataLabels = database.GetDataLabelsExceptIDInSpreadsheetOrder();
+                        List<string> dataLabels = database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
                         if (csvIncludeRootFolderColumn)
                         {
                             dataLabels.Insert(0, Constant.DatabaseColumn.RootFolder);
@@ -296,7 +296,7 @@ namespace Timelapse.Database
                             }
                             else
                             {
-                                ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(header);
+                                ControlRow controlRow = fileDatabase.GetControlFromControls(header);
                                 type = controlRow.Type;
                             }
 
@@ -470,7 +470,7 @@ namespace Timelapse.Database
         {
             bool abort = false;
             // Get the dataLabels from the database and from the headers in the CSV files (and remove any empty trailing headers from the CSV file list)
-            List<string> dataLabelsFromDB = fileDatabase.GetDataLabelsExceptIDInSpreadsheetOrder();
+            List<string> dataLabelsFromDB = fileDatabase.GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
             // Because Date and Time (which are not controls) may appear instead of DateTime, we add them explicitly so they can pass this test
             // Similarly, we add (and we will skip over)
             // - Folder and ImageQuality (both deprecated columns that could exist in CSV files pre v2.3)
@@ -587,7 +587,7 @@ namespace Timelapse.Database
                         // Date/Time/DateTime checking is handled elsewhere, while Folder, RootFolder and ImageQuality are skipped
                         continue;
                     }
-                    ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(csvHeader);
+                    ControlRow controlRow = fileDatabase.GetControlFromControls(csvHeader);
                     string controlRowType = controlRow.Type;
 
                     if (IsStandardColumn(controlRowType))
@@ -744,7 +744,7 @@ namespace Timelapse.Database
                         //End NEW
                     }
 
-                    ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(header);
+                    ControlRow controlRow = fileDatabase.GetControlFromControls(header);
                     // process each column but only if its of the specific type
                     if (controlRow != null &&
                         (controlRow.Type == Constant.Control.Flag ||

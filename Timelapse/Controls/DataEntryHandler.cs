@@ -138,8 +138,7 @@ namespace Timelapse.Controls
         // For convenience, we use the calendar's tag to store the DateTimePicker control so we can retrieve it from the event.
         private void DateTimePicker_Loaded(object sender, RoutedEventArgs e)
         {
-            DateTimePicker dateTimePicker = sender as DateTimePicker;
-            if (dateTimePicker == null) return;
+            if (!(sender is DateTimePicker dateTimePicker)) return;
             if (dateTimePicker.Template.FindName("PART_Calendar", dateTimePicker) is Calendar calendar)
             {
                 // Debug.Print("DateTimePicker_Loaded: Adding calendar event ");
@@ -149,7 +148,7 @@ namespace Timelapse.Controls
             }
         }
 
-        // Create the Context menu, incluidng settings its callbakcs
+        // Create the Context menu, including settings its callbakcs
         private void SetContextMenuCallbacks(DataEntryControl control)
         {
             if (GlobalReferences.TimelapseState.IsViewOnly)
@@ -159,14 +158,15 @@ namespace Timelapse.Controls
             }
 
             // Start with an empty clipboard
-            // Its in a try / catch as one user reported an unusual error: OpenClipboardFailed
+            // Its in a try / catch loop as a known issue is that it may sometimes fail due
+            // to another process briefly having the clipboard
             try
             {
                 Clipboard.SetText(string.Empty);
             }
             catch
             {
-                Debug.Print("Error in setting text in clipboard (see SetContextMenuCallbacks in DataEntryHandler");
+                Debug.Print("Ignorable error in Clipboard.SetText (see DataEntryHandler:SetContextMenuCallbacks in ");
             }
 
             MenuItem menuItemPropagateFromLastValue = new MenuItem()
@@ -706,8 +706,8 @@ namespace Timelapse.Controls
             {
                 return;
             }
-            Calendar calendar = sender as Calendar;
-            if (calendar == null)
+
+            if (!(sender is Calendar calendar))
             {
                 TracePrint.NullException(nameof(calendar));
                 return;
@@ -985,14 +985,14 @@ namespace Timelapse.Controls
             }
             this.disposed = true;
         }
-        
+
         public void DisposeAsNeeded()
         {
             try
             {
-                this.Dispose(); 
+                this.Dispose();
                 this.ImageCache = null;
-                this.FileDatabase = null;   
+                this.FileDatabase = null;
             }
             catch
             {

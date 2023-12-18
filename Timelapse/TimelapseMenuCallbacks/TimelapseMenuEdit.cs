@@ -844,7 +844,7 @@ namespace Timelapse
                     // Ignore stock controls
                     continue;
                 }
-                ControlRow imageDatabaseControl = this.templateDatabase.GetControlFromTemplateTable(control.DataLabel);
+                ControlRow imageDatabaseControl = this.templateDatabase.GetControlFromControls(control.DataLabel);
                 if (this.MarkableCanvas.ThumbnailGrid.IsVisible == false && this.MarkableCanvas.ThumbnailGrid.IsGridActive == false)
                 {
                     // Only a single image is displayed: update the database for the current row with the control's value
