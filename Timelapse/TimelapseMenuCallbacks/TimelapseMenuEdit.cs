@@ -375,13 +375,14 @@ namespace Timelapse
                 int fileIndex = this.DataHandler.ImageCache.CurrentRow;
                 bool allDone = false;
                 Mouse.OverrideCursor = Cursors.Wait;
-                for (int nextFileIndex = fileIndex; nextFileIndex < this.DataHandler.FileDatabase.FileTable.Count(); nextFileIndex++)
+                int count = this.DataHandler.FileDatabase.FileTable.Count();
+                for (int nextFileIndex = fileIndex; nextFileIndex < count; nextFileIndex++)
                 {
                     // Check if is a deleted file. 
                     if (this.DataHandler.FileDatabase.IsFileRowInRange(nextFileIndex))
                     {
-                        // Debug.Print("-->" + this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID.ToString());
-                        if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID))
+                        if (this.DataHandler.FileDatabase.FileTable[nextFileIndex].DeleteFlag == false)
+                        //if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID))
                         {
                             // Its not a deleted file, so we have a valid next file to display!
                             currentFileID = this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID;
@@ -398,7 +399,8 @@ namespace Timelapse
                         // Check if is a deleted file. 
                         if (this.DataHandler.FileDatabase.IsFileRowInRange(prevFileIndex))
                         {
-                            if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID))
+                            if (this.DataHandler.FileDatabase.FileTable[prevFileIndex].DeleteFlag == false)
+                            //if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID))
                             {
                                 // Its not a deleted file, so we have a valid next file to display!
                                 currentFileID = this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID;

@@ -14,6 +14,7 @@ namespace Timelapse.DataTables
     public class ControlRow : DataRowBackedObject
     {
         #region Public Properties
+
         public long ControlOrder
         {
             get => this.Row.GetLongField(Constant.Control.ControlOrder);
@@ -72,11 +73,19 @@ namespace Timelapse.DataTables
             get => this.Row.GetBooleanField(Constant.Control.Visible);
             set => this.Row.SetField(Constant.Control.Visible, value);
         }
+
+        public bool ExportToCSV
+        {
+            get => this.Row.GetBooleanField(Constant.Control.ExportToCSV);
+            set => this.Row.SetField(Constant.Control.ExportToCSV, value);
+        }
+
         public int Width
         {
             get => this.Row.GetIntegerField(Constant.Control.TextBoxWidth);
             set => this.Row.SetField(Constant.Control.TextBoxWidth, value);
         }
+
         #endregion
 
         #region Constructors
@@ -89,8 +98,8 @@ namespace Timelapse.DataTables
         #region Public Methods - Try Update This ControlRow To Match
         /// <summary>
         /// Check if a synchronization between the given control row and this instance's control row is needed,
-        /// which wojld occur if any field differs.
-        /// Note: As a side effect it also re-orders this instance's ControlOrder and SpreadsheetOrder to the other's order if needed
+        /// which occurf if any field's values differ between the two.
+        /// Note: Values updated include ControlOrder and SpreadsheetOrder 
         /// </summary>
         /// <param name="controlRowToMatch"></param>
         /// <returns></returns>
@@ -100,6 +109,7 @@ namespace Timelapse.DataTables
             ThrowIf.IsNullArgument(controlRowToMatch, nameof(controlRowToMatch));
 
             bool synchronizationMadeChanges = false;
+
             if (this.Copyable != controlRowToMatch.Copyable)
             {
                 this.Copyable = controlRowToMatch.Copyable;
@@ -140,6 +150,11 @@ namespace Timelapse.DataTables
                 this.Visible = controlRowToMatch.Visible;
                 synchronizationMadeChanges = true;
             }
+            if (this.ExportToCSV != controlRowToMatch.ExportToCSV)
+            {
+                this.ExportToCSV = controlRowToMatch.ExportToCSV;
+                synchronizationMadeChanges = true;
+            }
             if (this.Width != controlRowToMatch.Width)
             {
                 this.Width = controlRowToMatch.Width;
@@ -153,7 +168,6 @@ namespace Timelapse.DataTables
         #region Public Methods (can be overriden) - CreateColumnTuplesWithWhereForControlRowByID
         public override ColumnTuplesWithWhere CreateColumnTuplesWithWhereByID()
         {
-
             List<ColumnTuple> columnTuples = new List<ColumnTuple>
             {
                 new ColumnTuple(Constant.Control.ControlOrder, this.ControlOrder),
@@ -166,7 +180,8 @@ namespace Timelapse.DataTables
                 new ColumnTuple(Constant.Control.TextBoxWidth, this.Width),
                 new ColumnTuple(Constant.Control.Tooltip, this.Tooltip),
                 new ColumnTuple(Constant.Control.Type, this.Type),
-                new ColumnTuple(Constant.Control.Visible, this.Visible)
+                new ColumnTuple(Constant.Control.Visible, this.Visible),
+                new ColumnTuple(Constant.Control.ExportToCSV, this.ExportToCSV),
             };
             return new ColumnTuplesWithWhere(columnTuples, this.ID);
         }

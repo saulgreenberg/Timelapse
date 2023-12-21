@@ -170,29 +170,47 @@ namespace Timelapse.Dialog
         // Deleting multiple images - set up the UI
         private void DeleteMultipleImages()
         {
+            int maxFilesToShow = 50000;
             int numberOfImagesToDelete = this.filesToDelete.Count;
 
             // Load the files that are candidates for deletion as listbox items
             this.ShowMultipleFilesView();
             this.DeletedFilesListBox.Items.Clear();
             this.maxPathLength = 100;
-            foreach (ImageRow imageProperties in this.filesToDelete)
-            {
-                string filePath = Path.Combine(imageProperties.RelativePath, imageProperties.File);
-                if (string.IsNullOrEmpty(filePath) == false)
-                {
-                    filePath = filePath.Length <= this.maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - this.maxPathLength, this.maxPathLength);
-                }
 
+            if (this.filesToDelete.Count < maxFilesToShow)
+            {
+                foreach (ImageRow imageProperties in this.filesToDelete)
+                {
+
+                    string filePath = Path.Combine(imageProperties.RelativePath, imageProperties.File);
+                    if (string.IsNullOrEmpty(filePath) == false)
+                    {
+                        filePath = filePath.Length <= this.maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - this.maxPathLength, this.maxPathLength);
+                    }
+
+                    ListBoxItem lbi = new ListBoxItem
+                    {
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Height = 28,
+                        Content = filePath,
+                        Tag = imageProperties
+                    };
+                    lbi.MouseEnter += this.Lbi_MouseEnter;
+                    lbi.MouseLeave += this.Lbi_MouseLeave;
+                    this.DeletedFilesListBox.Items.Add(lbi);
+                }
+            }
+            else
+            {
                 ListBoxItem lbi = new ListBoxItem
                 {
                     VerticalAlignment = VerticalAlignment.Top,
                     Height = 28,
-                    Content = filePath,
-                    Tag = imageProperties
+                    Content = $"Items marked for deletion are not listed as there are a very large number of them ({numberOfImagesToDelete}).",
                 };
-                lbi.MouseEnter += this.Lbi_MouseEnter;
-                lbi.MouseLeave += this.Lbi_MouseLeave;
+                this.DeletedFilesListBox.FontStyle = FontStyles.Italic;
+                this.DeletedFilesListBox.FontWeight = FontWeights.Bold;
                 this.DeletedFilesListBox.Items.Add(lbi);
             }
 

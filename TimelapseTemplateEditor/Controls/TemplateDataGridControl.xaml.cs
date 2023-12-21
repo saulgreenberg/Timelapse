@@ -273,30 +273,31 @@ namespace TimelapseTemplateEditor.Controls
                     // These columns should always be editable
                     // Note that Width is normally editable unless it is a Flag (as the checkbox is set to the optimal width)
                     string columnHeader = (string)this.DataGrid.Columns[column].Header;
-                    if ((columnHeader == Constant.Control.Label) ||
-                        (columnHeader == Constant.Control.Tooltip) ||
-                        (columnHeader == Constant.Control.Visible) ||
-                        (columnHeader == EditorConstant.ColumnHeader.Width && (control.Type != Constant.DatabaseColumn.DeleteFlag && control.Type != Constant.Control.Flag)))
+                    if (columnHeader == Constant.Control.Label ||
+                        columnHeader == Constant.Control.Tooltip ||
+                        columnHeader == Constant.Control.Visible ||
+                        (columnHeader == EditorConstant.ColumnHeader.Width && control.Type != Constant.DatabaseColumn.DeleteFlag && control.Type != Constant.Control.Flag))
                     {
                         cell.SetValue(DataGridCell.IsTabStopProperty, true); // Allow tabbing in non-editable fields
                         continue;
                     }
 
-                    // The following attributes should NOT be editable.
+                    // The following attributes should NOT be editable
                     ContentPresenter cellContent = cell.Content as ContentPresenter;
                     string sortMemberPath = this.DataGrid.Columns[column].SortMemberPath;
+
                     if (String.Equals(sortMemberPath, Constant.DatabaseColumn.ID, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.ControlOrder, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.SpreadsheetOrder, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.Type, StringComparison.OrdinalIgnoreCase) ||
-                        (controlType == Constant.DatabaseColumn.DateTime) ||
-                        (controlType == Constant.DatabaseColumn.DeleteFlag) ||
-                        (controlType == Constant.DatabaseColumn.File) ||
-                        (controlType == Constant.DatabaseColumn.RelativePath) ||
-                        ((controlType == Constant.Control.Flag) && (columnHeader == EditorConstant.ColumnHeader.Width)) ||
-                        ((controlType == Constant.Control.Counter) && (columnHeader == Constant.Control.List)) ||
-                        ((controlType == Constant.Control.Flag) && (columnHeader == Constant.Control.List)) ||
-                        ((controlType == Constant.Control.Note) && (columnHeader == Constant.Control.List)))
+                        controlType == Constant.DatabaseColumn.DateTime ||
+                        controlType == Constant.DatabaseColumn.DeleteFlag ||
+                        controlType == Constant.DatabaseColumn.File ||
+                        controlType == Constant.DatabaseColumn.RelativePath ||
+                        (controlType == Constant.Control.Flag && columnHeader == EditorConstant.ColumnHeader.Width) ||
+                        (controlType == Constant.Control.Counter && columnHeader == Constant.Control.List) ||
+                        (controlType == Constant.Control.Flag && columnHeader == Constant.Control.List) ||
+                        (controlType == Constant.Control.Note && columnHeader == Constant.Control.List))
                     {
                         cell.Background = EditorConstant.NotEditableCellColor;
                         cell.Foreground = Brushes.Gray;

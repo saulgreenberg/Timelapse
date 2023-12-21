@@ -66,6 +66,8 @@ namespace Timelapse.Constant
     public static class Control
     {
         // columns unique to the template table
+
+
         public const string ControlOrder = "ControlOrder";
         public const string Copyable = "Copyable";     // whether the content of this item should be copied from previous values
         public const string DataLabel = "DataLabel";   // if not empty, its used instead of the label as the header for the column when writing the spreadsheet
@@ -77,6 +79,7 @@ namespace Timelapse.Constant
         public const string Tooltip = "Tooltip";       // the tooltip text that describes the code
         public const string Type = "Type";             // the data type
         public const string Visible = "Visible";       // whether an item should be visible (used by standard items)
+        public const string ExportToCSV = "ExportToCSV";
 
         // control types
         public const string Counter = "Counter";       // a counter
@@ -540,6 +543,13 @@ namespace Timelapse.Constant
     public static class Time
     {
         public const string DateFormat = "dd-MMM-yyyy";
+        public const string RelaxedDateFormat = "d-MMM-yyyy";
+        public static readonly string[] DateFormats =
+        {
+            DateFormat,
+            RelaxedDateFormat
+        };
+
         public const string TimeInputFormat = "HH:mm:ss"; // format for Time in Select dialog
 
         // DateTimes as stored in the database. The 2nd form is so it can read in from the DB both the legacy (UTC) format and current simpler format 
@@ -579,6 +589,12 @@ namespace Timelapse.Constant
 
         public const int MonthsInYear = 12;
         public const string TimeFormat = "HH:mm:ss";
+        public const string RelaxedTimeFormat = "H:mm:ss";
+        public static readonly string[] TimeFormats =
+        {
+            TimeFormat,
+            RelaxedTimeFormat
+        };
 
         public const string VideoPositionFormat = @"mm\:ss";
     }

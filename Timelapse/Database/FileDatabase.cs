@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DialogUpgradeFiles.Database;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -444,12 +445,14 @@ namespace Timelapse.Database
             //    }
             //}
 
-            // perform TemplateTable initializations
-            await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
+
             //await base.UpgradeDatabasesAndCompareTemplatesAsync(templateDatabase, null).ConfigureAwait(true);
 
             // Upgrade the database from older to newer formats to preserve backwards compatability
             await this.UpgradeDatabasesForBackwardsCompatabilityAsync().ConfigureAwait(true);
+
+            // perform TemplateTable initializations
+            await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
 
             // Get the datalabels in the various templates 
             Dictionary<string, string> templateDataLabels = templateDatabase.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromControls();
@@ -502,6 +505,7 @@ namespace Timelapse.Database
                     imageDatabaseControl.Width != templateControl.Width ||
                     imageDatabaseControl.Copyable != templateControl.Copyable ||
                     imageDatabaseControl.Visible != templateControl.Visible ||
+                    imageDatabaseControl.ExportToCSV != templateControl.ExportToCSV ||
                     templateChoices.Except(imageDatabaseChoices).ToList().Count > 0)
                 {
                     templateSyncResults.SyncRequiredAsNonCriticalFieldsDiffer = true;
@@ -557,12 +561,6 @@ namespace Timelapse.Database
         // Upgrade the database as needed from older to newer formats to preserve backwards compatability 
         private async Task UpgradeDatabasesForBackwardsCompatabilityAsync()
         {
-            //bool neverRun = true;
-            //if (neverRun)
-            //{
-            //    // This method is currently a placeholder until we need to do some updating
-            //    return;
-            //}
             // Some comparisons are triggered by comparing
             // - the version number stored in the DB's ImageSetTable 
             // - the current Timelapse program version of the 
@@ -575,9 +573,13 @@ namespace Timelapse.Database
             //// Get the version of the current Timelapse program
             //string timelapseVersionNumberAsString = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
 
-            //// Add code here that check and repair backward compatability
+            // Code below checks and repairs backward compatability
             await Task.Run(() =>
             {
+                // If the ExportToCSV column isn't in the template, it means we are opening up 
+                // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
+                TemplateDatabase.AddExportToCSVColumnIfNeeded(this.Database);
+
                 // See pre-2.2.2.5 version for example code
             }).ConfigureAwait(true);
         }
@@ -1566,6 +1568,7 @@ namespace Timelapse.Database
             this.Database.ExecuteNonQuery(query);
         }
         #endregion
+
         #region Deletions
         // Delete the data (including markers associated with the images identified by the list of IDs.
         public void DeleteFilesAndMarkers(List<long> fileIDs)
@@ -2341,7 +2344,7 @@ namespace Timelapse.Database
             return jsonRecognizer;
         }
 
-        public async Task<RecognizerImportResultEnum> PopulateRecognitionTablesFromRecognizerAsync(Recognizer jsonRecognizer, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
+        public async Task<RecognizerImportResultEnum> PopulateRecognitionTablesFromRecognizerAsync(Recognizer jsonRecognizer, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(foldersInDBListButNotInJSon, nameof(foldersInDBListButNotInJSon));

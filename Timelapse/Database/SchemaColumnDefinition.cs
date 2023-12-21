@@ -27,6 +27,11 @@ namespace Timelapse.Database
         {
         }
 
+        // Bool default converted to string 
+        public SchemaColumnDefinition(string name, string type, bool defaultValue) : this(name, type, defaultValue.ToString())
+        {
+        }
+
         // Float default converted to string 
         public SchemaColumnDefinition(string name, string type, float defaultValue) : this(name, type, defaultValue.ToString(CultureInfo.InvariantCulture))
         {

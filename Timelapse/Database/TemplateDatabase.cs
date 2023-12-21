@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DialogUpgradeFiles.DataStructures;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -10,6 +11,9 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
+using ColumnTuple = Timelapse.DataStructures.ColumnTuple;
+using ColumnTuplesWithWhere = Timelapse.DataStructures.ColumnTuplesWithWhere;
+
 // ReSharper disable LocalizableElement
 
 namespace Timelapse.Database
@@ -131,7 +135,10 @@ namespace Timelapse.Database
                     templateDatabase.Dispose();
                     return null;
                 }
-
+                // Backwards compatability: If the ExportToCSV column isn't in the template, it means we are opening up 
+                // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
+                TemplateDatabase.AddExportToCSVColumnIfNeeded(templateDatabase.Database);
+                
                 // Load (or reload) the Controls data structure from the template table in the database
                 await templateDatabase.LoadControlsFromTemplateDBSortedByControlOrderAsync(); 
             }
@@ -253,6 +260,7 @@ namespace Timelapse.Database
                     newControl.Width = Constant.ControlDefault.CounterWidth;
                     newControl.Copyable = false;
                     newControl.Visible = true;
+                    newControl.ExportToCSV = true;
                     newControl.Tooltip = Constant.ControlDefault.CounterTooltip;
                     newControl.DataLabel = this.GetNextUniqueDataLabelInControls(dataLabelPrefix);
                     newControl.Label = newControl.DataLabel;
@@ -264,6 +272,7 @@ namespace Timelapse.Database
                     newControl.Width = Constant.ControlDefault.NoteWidth;
                     newControl.Copyable = true;
                     newControl.Visible = true;
+                    newControl.ExportToCSV = true;
                     newControl.Tooltip = Constant.ControlDefault.NoteTooltip;
                     newControl.DataLabel = this.GetNextUniqueDataLabelInControls(dataLabelPrefix);
                     newControl.Label = newControl.DataLabel;
@@ -275,6 +284,7 @@ namespace Timelapse.Database
                     newControl.Width = Constant.ControlDefault.FixedChoiceWidth;
                     newControl.Copyable = true;
                     newControl.Visible = true;
+                    newControl.ExportToCSV = true;
                     newControl.Tooltip = Constant.ControlDefault.FixedChoiceTooltip;
                     newControl.DataLabel = this.GetNextUniqueDataLabelInControls(dataLabelPrefix);
                     newControl.Label = newControl.DataLabel;
@@ -286,6 +296,7 @@ namespace Timelapse.Database
                     newControl.Width = Constant.ControlDefault.FlagWidth;
                     newControl.Copyable = true;
                     newControl.Visible = true;
+                    newControl.ExportToCSV = true;
                     newControl.Tooltip = Constant.ControlDefault.FlagTooltip;
                     newControl.DataLabel = this.GetNextUniqueDataLabelInControls(dataLabelPrefix);
                     newControl.Label = newControl.DataLabel;
@@ -462,6 +473,33 @@ namespace Timelapse.Database
             IEnumerable<ControlRow> controlsInSpreadsheetOrder = this.Controls.OrderBy(control => control.SpreadsheetOrder);
             foreach (ControlRow control in controlsInSpreadsheetOrder)
             {
+                string dataLabel = control.DataLabel;
+                if (string.IsNullOrEmpty(dataLabel))
+                {
+                    dataLabel = control.DataLabel;
+                }
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
+                    $"Encountered empty data label and label at ID {control.ID} in template table.");
+
+                // get a list of datalabels so we can add columns in the order that matches the current template table order
+                if (Constant.DatabaseColumn.ID != dataLabel)
+                {
+                    dataLabels.Add(dataLabel);
+                }
+            }
+            return dataLabels;
+        }
+
+        public List<string> GetDataLabelsToExcludeFromExport()
+        {
+            List<string> dataLabels = new List<string>();
+            IEnumerable<ControlRow> controlsInSpreadsheetOrder = this.Controls.OrderBy(control => control.SpreadsheetOrder);
+            foreach (ControlRow control in controlsInSpreadsheetOrder)
+            {
+                if (control.ExportToCSV)
+                {
+                    continue;
+                }
                 string dataLabel = control.DataLabel;
                 if (string.IsNullOrEmpty(dataLabel))
                 {
@@ -679,8 +717,9 @@ namespace Timelapse.Database
                 new SchemaColumnDefinition(Constant.Control.TextBoxWidth, Sql.Text),
                 new SchemaColumnDefinition(Constant.Control.Copyable, Sql.Text),
                 new SchemaColumnDefinition(Constant.Control.Visible, Sql.Text),
-                new SchemaColumnDefinition(Constant.Control.List, Sql.Text)
-                };
+                new SchemaColumnDefinition(Constant.Control.List, Sql.Text),
+                new SchemaColumnDefinition(Constant.Control.ExportToCSV, Sql.Text, true)
+            };
             database.CreateTable(Constant.DBTables.Template, templateTableColumns);
         }
 
@@ -726,10 +765,28 @@ namespace Timelapse.Database
             // insert standard controls into the template table
             database.Insert(Constant.DBTables.Template, standardControls);
         }
+
+        protected static void AddExportToCSVColumnIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If the ExportToCSV column isn't in the template, it means we are opening up 
+            // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
+            // Note that the DeleteFlag export is set to false, while all theothers are true.
+            if (false == database.SchemaIsColumnInTable(Constant.DBTables.Template, Constant.Control.ExportToCSV))
+            {
+                SchemaColumnDefinition scd = new SchemaColumnDefinition(Constant.Control.ExportToCSV, Constant.Control.Flag, Constant.BooleanValue.True);
+                database.SchemaAddColumnToEndOfTable(Constant.DBTables.Template, scd);
+                ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
+
+                ctww.Columns.Add(new ColumnTuple(Constant.Control.ExportToCSV, Constant.BooleanValue.False));
+                ctww.SetWhere(new ColumnTuple(Constant.Control.Type, Constant.DatabaseColumn.DeleteFlag));
+                database.Update(Constant.DBTables.Template, ctww);
+            }
+        }
+
         #endregion
 
-        #region Private static Methods: Create tuples defining the standard controls  (File, RelativePath, DateTime, DeleteFlag)
-        private static List<ColumnTuple> CreateFileTuples(long controlOrder, long spreadsheetOrder, bool visible)
+    #region Private static Methods: Create tuples defining the standard controls  (File, RelativePath, DateTime, DeleteFlag)
+    private static List<ColumnTuple> CreateFileTuples(long controlOrder, long spreadsheetOrder, bool visible)
         {
             List<ColumnTuple> file = new List<ColumnTuple>
             {
@@ -743,7 +800,8 @@ namespace Timelapse.Database
                 new ColumnTuple(Constant.Control.TextBoxWidth, Constant.ControlDefault.FileWidth),
                 new ColumnTuple(Constant.Control.Copyable, false),
                 new ColumnTuple(Constant.Control.Visible, visible),
-                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value)
+                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value),
+                new ColumnTuple(Constant.Control.ExportToCSV, true),
             };
             return file;
         }
@@ -763,7 +821,8 @@ namespace Timelapse.Database
                 new ColumnTuple(Constant.Control.TextBoxWidth, Constant.ControlDefault.RelativePathWidth),
                 new ColumnTuple(Constant.Control.Copyable, false),
                 new ColumnTuple(Constant.Control.Visible, visible),
-                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value)
+                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value),
+                new ColumnTuple(Constant.Control.ExportToCSV, true),
             };
             return relativePath;
         }
@@ -782,13 +841,15 @@ namespace Timelapse.Database
                 new ColumnTuple(Constant.Control.TextBoxWidth, Constant.ControlDefault.DateTimeWidth),
                 new ColumnTuple(Constant.Control.Copyable, false),
                 new ColumnTuple(Constant.Control.Visible, visible),
-                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value)
+                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value),
+                new ColumnTuple(Constant.Control.ExportToCSV, true),
             };
             return dateTime;
         }
 
 
-        // Defines a DeleteFlag control. The definition is used by its caller to insert a DeleteFlag control into the template for backwards compatability. 
+        // Defines a DeleteFlag control. The definition is used by its caller to insert a DeleteFlag control into the template for backwards compatability.
+        // Note that, unlike the others, the default is NOT to export it to a CSV file.
         private static List<ColumnTuple> CreateDeleteFlagTuples(long controlOrder, long spreadsheetOrder, bool visible)
         {
             List<ColumnTuple> deleteFlag = new List<ColumnTuple>
@@ -803,7 +864,8 @@ namespace Timelapse.Database
                 new ColumnTuple(Constant.Control.TextBoxWidth, Constant.ControlDefault.FlagWidth),
                 new ColumnTuple(Constant.Control.Copyable, false),
                 new ColumnTuple(Constant.Control.Visible, visible),
-                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value)
+                new ColumnTuple(Constant.Control.List, Constant.ControlDefault.Value),
+                new ColumnTuple(Constant.Control.ExportToCSV, false),
             };
             return deleteFlag;
         }

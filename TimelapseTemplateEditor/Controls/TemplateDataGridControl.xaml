@@ -33,6 +33,9 @@
             <ToolTip x:Key="VisibleToolTip">
                 <TextBlock>Whether this item will be displayed in the user interface</TextBlock>
             </ToolTip>
+            <ToolTip x:Key="ExportToCSVToolTip">
+                <TextBlock>Whether this item and its value will be exported to a CSV file</TextBlock>
+            </ToolTip>
             <ToolTip x:Key="TypeNoteToolTip">
                 <TextBlock>The Note item accepts free-form text</TextBlock>
             </ToolTip>
@@ -76,12 +79,13 @@
 
             <DataGrid.Resources>
                 <Style x:Key="VerticalGridHeaderStyle" TargetType="DataGridColumnHeader">
-                    <Setter Property="VerticalContentAlignment" Value="Bottom"/>
+                    <Setter Property="VerticalContentAlignment" Value="Bottom"/> 
                     <Setter Property="FontWeight" Value="Bold"/>
                 </Style>
             </DataGrid.Resources>
             <!-- If you change the visible rows or header names, please check UpdateCellColors() constants to ensure they match new conventions -->
             <DataGrid.Columns >
+              
                 <!-- ID Column -->
                 <DataGridTextColumn Header="ID" CanUserSort="False" Binding="{Binding Path=Id, Converter={StaticResource CellTextBlockConverter}}" IsReadOnly="True" />
 
@@ -160,43 +164,6 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <!-- Width Column -->
-                <DataGridTextColumn MinWidth="40"  Header="Width" Binding="{Binding Path=TXTBOXWIDTH, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Setter Property="ToolTip" Value="{StaticResource WidthToolTip}"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <!-- Copyable Column -->
-                <DataGridTemplateColumn  MinWidth="25" Width="Auto" Header="Copyable" SortMemberPath="Include" CanUserSort="False" >
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="{x:Type controls:DataEntryControl}">
-                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Copyable, UpdateSourceTrigger=PropertyChanged}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellStyle>
-                        <Style TargetType="{x:Type DataGridCell}">
-                            <Setter Property="ToolTip" Value="{StaticResource CopyableToolTip}"/>
-                        </Style>
-                    </DataGridTemplateColumn.CellStyle>
-                </DataGridTemplateColumn>
-
-                <!-- Visible Column -->
-                <DataGridTemplateColumn MinWidth="25" Width="Auto" Header="Visible" SortMemberPath="Include" CanUserSort="False" >
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
-                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=Visible, UpdateSourceTrigger=PropertyChanged}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellStyle>
-                        <Style TargetType="{x:Type DataGridCell}">
-                            <Setter Property="ToolTip" Value="{StaticResource VisibleToolTip}"/>
-                        </Style>
-                    </DataGridTemplateColumn.CellStyle>
-                </DataGridTemplateColumn>
-
                 <!--List Column -->
                 <DataGridTemplateColumn MinWidth="40" Header="List" Width="80"  CanUserSort="False" IsReadOnly="True" >
                     <DataGridTemplateColumn.CellTemplate>
@@ -239,6 +206,61 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+
+                <!-- Width Column -->
+                <DataGridTextColumn MinWidth="40"  Header="Width" Binding="{Binding Path=TXTBOXWIDTH, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="ToolTip" Value="{StaticResource WidthToolTip}"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- Copyable Column -->
+                <DataGridTemplateColumn  MinWidth="25" Width="Auto" Header="Copyable" SortMemberPath="Include" CanUserSort="False" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type controls:DataEntryControl}">
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Copyable, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{StaticResource CopyableToolTip}"/>
+                        </Style>
+                    </DataGridTemplateColumn.CellStyle>
+                </DataGridTemplateColumn>
+
+                <!-- Visible Column -->
+                <DataGridTemplateColumn MinWidth="25" Width="Auto" Header="Visible" SortMemberPath="Include" CanUserSort="False" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=Visible, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{StaticResource VisibleToolTip}"/>
+                        </Style>
+                    </DataGridTemplateColumn.CellStyle>
+                </DataGridTemplateColumn>
+
+                <!-- ExportToCSV Column -->
+                <DataGridTemplateColumn MinWidth="25" Width="Auto" Header="Export" SortMemberPath="Include" CanUserSort="False" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=ExportToCSV, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Setter Property="ToolTip" Value="{StaticResource ExportToCSVToolTip}"/>
+                        </Style>
+                    </DataGridTemplateColumn.CellStyle>
+                </DataGridTemplateColumn>
+
+
+
+ 
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

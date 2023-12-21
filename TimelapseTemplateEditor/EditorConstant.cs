@@ -40,6 +40,7 @@ namespace TimelapseTemplateEditor
             public const string ID = "ID";
             public const string Width = "Width";
             public const string SpreadsheetOrder = "Spreadsheet\norder";
+            public const string Export = "Export";
         }
 
         public static class Registry

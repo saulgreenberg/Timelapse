@@ -32,7 +32,7 @@ namespace Timelapse.DataTables
         }
         #endregion
 
-        #region Public Methods - Modify the DataTable: NewRow, RemoveAt
+        #region Public Methods - Modify the DataTable by adding/removing a row: NewRow, RemoveAt
         public TRow NewRow()
         {
             DataRow row = this.DataTable.NewRow();
