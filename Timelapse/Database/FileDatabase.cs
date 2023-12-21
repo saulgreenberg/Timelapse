@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -123,6 +122,7 @@ namespace Timelapse.Database
             else
             {
                 // if it's an existing database check if it needs updating to current structure and load data tables
+                // await fileDatabase.LoadControlsFromTemplateDBSortedByControlOrderAsync();
                 await fileDatabase.OnExistingDatabaseOpenedAsync(templateDatabase, templateSyncResults).ConfigureAwait(true);
             }
 
@@ -157,10 +157,10 @@ namespace Timelapse.Database
         /// Assumes that the database has already been opened and that the Template Table is loaded, where the DataLabel always has a valid value.
         /// Then create both the ImageSet table and the Markers table
         /// </summary>
-        protected override async Task OnDatabaseCreatedAsync(TemplateDatabase templateDatabase)
+        protected override async Task OnDatabaseCreatedAsync(TemplateDatabase existingTemplateTable)
         {
             // copy the template's TemplateTable
-            await base.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
+            await base.OnDatabaseCreatedAsync(existingTemplateTable).ConfigureAwait(true);
 
             // Create the DataTable from the template
             // First, define the creation string based on the contents of the template. 
@@ -234,14 +234,16 @@ namespace Timelapse.Database
             this.Database.CreateTable(Constant.DBTables.Markers, schemaColumnDefinitions);
         }
 
-        protected override async Task OnExistingDatabaseOpenedAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        //protected override async Task OnExistingDatabaseOpenedAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        protected async Task OnExistingDatabaseOpenedAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(templateDatabase, nameof(templateDatabase));
             ThrowIf.IsNullArgument(templateSyncResults, nameof(templateSyncResults));
 
             // Perform TemplateTable initializations.
-            await base.OnExistingDatabaseOpenedAsync(templateDatabase, null).ConfigureAwait(true);
+            await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
+           // await base.OnExistingDatabaseOpenedAsync(templateDatabase, null).ConfigureAwait(true);
 
             // If directed to use the template found in the template database, 
             // check and repair differences between the .tdb and .ddb template tables due to  missing or added controls 
@@ -264,7 +266,7 @@ namespace Timelapse.Database
 
                 foreach (string dataLabel in templateSyncResults.DataLabelsToAdd)
                 {
-                    long id = this.GetControlIDFromTemplateTable(dataLabel);
+                    long id = this.GetControlIDFromControls(dataLabel);
                     ControlRow control = this.Controls.Find(id);
                     SchemaColumnDefinition columnDefinition = CreateFileDataColumnDefinition(control);
                     this.Database.SchemaAddColumnToEndOfTable(Constant.DBTables.FileData, columnDefinition);
@@ -325,7 +327,7 @@ namespace Timelapse.Database
                 }
 
                 // Refetch the data labels if needed, as they will have changed due to the repair
-                List<string> dataLabels = this.GetDataLabelsExceptIDInSpreadsheetOrder();
+                List<string> dataLabels = this.GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
 
                 // Condition 4: There are non-critical updates in the template's row (e.g., that only change the UI). 
                 // Synchronize the image database's TemplateTable with the template database's TemplateTable 
@@ -335,8 +337,8 @@ namespace Timelapse.Database
                 {
                     foreach (string dataLabel in dataLabels)
                     {
-                        ControlRow imageDatabaseControl = this.GetControlFromTemplateTable(dataLabel);
-                        ControlRow templateControl = templateDatabase.GetControlFromTemplateTable(dataLabel);
+                        ControlRow imageDatabaseControl = this.GetControlFromControls(dataLabel);
+                        ControlRow templateControl = templateDatabase.GetControlFromControls(dataLabel);
 
                         if (imageDatabaseControl.TryUpdateThisControlRowToMatch(templateControl))
                         {
@@ -403,7 +405,7 @@ namespace Timelapse.Database
                 return null;
             }
             FileDatabase fileDatabase = new FileDatabase(filePath);
-            if (fileDatabase.Database.PragmaGetQuickCheck() == false || fileDatabase.TableExists(Constant.DBTables.FileData) == false)
+            if (fileDatabase.Database.PragmaGetQuickCheck() == false || fileDatabase.DoesTableExist(Constant.DBTables.FileData) == false)
             {
                 // The database file is likely corrupt, possibly due to missing a key table, is an empty file, or is otherwise unreadable
                 fileDatabase.Dispose();
@@ -413,7 +415,8 @@ namespace Timelapse.Database
             return fileDatabase;
         }
 
-        protected override async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+       //protected override async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        protected async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
 
             // Check the arguments for null 
@@ -441,15 +444,18 @@ namespace Timelapse.Database
             //    }
             //}
 
-            // perform TemplateTable initializations and migrations, then check for synchronization issues
-            await base.UpgradeDatabasesAndCompareTemplatesAsync(templateDatabase, null).ConfigureAwait(true);
+
+            //await base.UpgradeDatabasesAndCompareTemplatesAsync(templateDatabase, null).ConfigureAwait(true);
 
             // Upgrade the database from older to newer formats to preserve backwards compatability
             await this.UpgradeDatabasesForBackwardsCompatabilityAsync().ConfigureAwait(true);
 
+            // perform TemplateTable initializations
+            await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
+
             // Get the datalabels in the various templates 
-            Dictionary<string, string> templateDataLabels = templateDatabase.GetTypedDataLabelsExceptIDInSpreadsheetOrder();
-            Dictionary<string, string> imageDataLabels = this.GetTypedDataLabelsExceptIDInSpreadsheetOrder();
+            Dictionary<string, string> templateDataLabels = templateDatabase.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromControls();
+            Dictionary<string, string> imageDataLabels = this.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromControls();
             templateSyncResults.DataLabelsInTemplateButNotImageDatabase = Compare.Dictionary1ExceptDictionary2(templateDataLabels, imageDataLabels);
             templateSyncResults.DataLabelsInImageButNotTemplateDatabase = Compare.Dictionary1ExceptDictionary2(imageDataLabels, templateDataLabels);
 
@@ -467,8 +473,8 @@ namespace Timelapse.Database
                 {
                     continue;
                 }
-                ControlRow imageDatabaseControl = this.GetControlFromTemplateTable(dataLabel);
-                ControlRow templateControl = templateDatabase.GetControlFromTemplateTable(dataLabel);
+                ControlRow imageDatabaseControl = this.GetControlFromControls(dataLabel);
+                ControlRow templateControl = templateDatabase.GetControlFromControls(dataLabel);
 
                 if (imageDatabaseControl.Type != templateControl.Type)
                 {
@@ -498,6 +504,7 @@ namespace Timelapse.Database
                     imageDatabaseControl.Width != templateControl.Width ||
                     imageDatabaseControl.Copyable != templateControl.Copyable ||
                     imageDatabaseControl.Visible != templateControl.Visible ||
+                    imageDatabaseControl.ExportToCSV != templateControl.ExportToCSV ||
                     templateChoices.Except(imageDatabaseChoices).ToList().Count > 0)
                 {
                     templateSyncResults.SyncRequiredAsNonCriticalFieldsDiffer = true;
@@ -553,12 +560,6 @@ namespace Timelapse.Database
         // Upgrade the database as needed from older to newer formats to preserve backwards compatability 
         private async Task UpgradeDatabasesForBackwardsCompatabilityAsync()
         {
-            //bool neverRun = true;
-            //if (neverRun)
-            //{
-            //    // This method is currently a placeholder until we need to do some updating
-            //    return;
-            //}
             // Some comparisons are triggered by comparing
             // - the version number stored in the DB's ImageSetTable 
             // - the current Timelapse program version of the 
@@ -571,9 +572,13 @@ namespace Timelapse.Database
             //// Get the version of the current Timelapse program
             //string timelapseVersionNumberAsString = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
 
-            //// Add code here that check and repair backward compatability
+            // Code below checks and repairs backward compatability
             await Task.Run(() =>
             {
+                // If the ExportToCSV column isn't in the template, it means we are opening up 
+                // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
+                TemplateDatabase.AddExportToCSVColumnIfNeeded(this.Database);
+
                 // See pre-2.2.2.5 version for example code
             }).ConfigureAwait(true);
         }
@@ -1562,6 +1567,7 @@ namespace Timelapse.Database
             this.Database.ExecuteNonQuery(query);
         }
         #endregion
+
         #region Deletions
         // Delete the data (including markers associated with the images identified by the list of IDs.
         public void DeleteFilesAndMarkers(List<long> fileIDs)
@@ -2337,7 +2343,7 @@ namespace Timelapse.Database
             return jsonRecognizer;
         }
 
-        public async Task<RecognizerImportResultEnum> PopulateRecognitionTablesFromRecognizerAsync(Recognizer jsonRecognizer, string path, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
+        public async Task<RecognizerImportResultEnum> PopulateRecognitionTablesFromRecognizerAsync(Recognizer jsonRecognizer, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(foldersInDBListButNotInJSon, nameof(foldersInDBListButNotInJSon));
@@ -3152,7 +3158,7 @@ namespace Timelapse.Database
                     // Fixed choice lists must match, and the value must be in the list 
                     if (stFromJson.ControlType == Constant.Control.FixedChoice)
                     {
-                        ControlRow row = this.GetControlFromTemplateTable(stFromJson.DataLabel);
+                        ControlRow row = this.GetControlFromControls(stFromJson.DataLabel);
                         Choices choices = Choices.ChoicesFromJson(row.List);
 
                         if (stFromJson.List.Count != 0 && choices.IncludeEmptyChoice)

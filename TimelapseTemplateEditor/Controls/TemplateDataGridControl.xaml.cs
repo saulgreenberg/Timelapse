@@ -273,30 +273,37 @@ namespace TimelapseTemplateEditor.Controls
                     // These columns should always be editable
                     // Note that Width is normally editable unless it is a Flag (as the checkbox is set to the optimal width)
                     string columnHeader = (string)this.DataGrid.Columns[column].Header;
-                    if ((columnHeader == Constant.Control.Label) ||
-                        (columnHeader == Constant.Control.Tooltip) ||
-                        (columnHeader == Constant.Control.Visible) ||
-                        (columnHeader == EditorConstant.ColumnHeader.Width && (control.Type != Constant.DatabaseColumn.DeleteFlag && control.Type != Constant.Control.Flag)))
+                    if (columnHeader == Constant.Control.Label ||
+                        columnHeader == Constant.Control.Tooltip ||
+                        columnHeader == Constant.Control.Visible //||
+                        //(columnHeader == EditorConstant.ColumnHeader.Width && control.Type != Constant.DatabaseColumn.DeleteFlag && control.Type != Constant.Control.Flag))
+                        )
                     {
                         cell.SetValue(DataGridCell.IsTabStopProperty, true); // Allow tabbing in non-editable fields
                         continue;
                     }
 
-                    // The following attributes should NOT be editable.
+                    // The following attributes should NOT be editable
                     ContentPresenter cellContent = cell.Content as ContentPresenter;
                     string sortMemberPath = this.DataGrid.Columns[column].SortMemberPath;
-                    if (String.Equals(sortMemberPath, Constant.DatabaseColumn.ID, StringComparison.OrdinalIgnoreCase) ||
+
+                    if (
+                        // Types are never editable
+                        String.Equals(sortMemberPath, Constant.DatabaseColumn.ID, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.ControlOrder, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.SpreadsheetOrder, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.Type, StringComparison.OrdinalIgnoreCase) ||
-                        (controlType == Constant.DatabaseColumn.DateTime) ||
-                        (controlType == Constant.DatabaseColumn.DeleteFlag) ||
-                        (controlType == Constant.DatabaseColumn.File) ||
-                        (controlType == Constant.DatabaseColumn.RelativePath) ||
-                        ((controlType == Constant.Control.Flag) && (columnHeader == EditorConstant.ColumnHeader.Width)) ||
-                        ((controlType == Constant.Control.Counter) && (columnHeader == Constant.Control.List)) ||
-                        ((controlType == Constant.Control.Flag) && (columnHeader == Constant.Control.List)) ||
-                        ((controlType == Constant.Control.Note) && (columnHeader == Constant.Control.List)))
+                        
+                        // These four are treated as a special case
+                        (controlType == Constant.DatabaseColumn.File && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable || columnHeader == EditorConstant.ColumnHeader.Export)) ||
+                        (controlType == Constant.DatabaseColumn.RelativePath && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable || columnHeader == EditorConstant.ColumnHeader.Export)) ||
+                        (controlType == Constant.DatabaseColumn.DateTime && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable)) ||
+                        (controlType == Constant.DatabaseColumn.DeleteFlag && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable || columnHeader == EditorConstant.ColumnHeader.Width)) ||
+
+                        (controlType == Constant.Control.Flag && columnHeader == EditorConstant.ColumnHeader.Width) ||
+                        (controlType == Constant.Control.Counter && columnHeader == Constant.Control.List) ||
+                        (controlType == Constant.Control.Flag && columnHeader == Constant.Control.List) ||
+                        (controlType == Constant.Control.Note && columnHeader == Constant.Control.List))
                     {
                         cell.Background = EditorConstant.NotEditableCellColor;
                         cell.Foreground = Brushes.Gray;
@@ -421,7 +428,7 @@ namespace TimelapseTemplateEditor.Controls
             if (string.IsNullOrWhiteSpace(dataLabel))
             {
                 EditorDialogs.EditorDataLabelsCannotBeEmptyDialog(Globals.RootEditor);
-                textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabel("DataLabel");
+                textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabelInControls("DataLabel");
             }
 
             // Check to see if the data label is unique. If not, generate a unique data label and warn the user
@@ -435,7 +442,7 @@ namespace TimelapseTemplateEditor.Controls
                         continue; // Its the same row, so its the same key, so skip it
                     }
                     EditorDialogs.EditorDataLabelsMustBeUniqueDialog(Globals.RootEditor, textBox.Text);
-                    textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabel(dataLabel);
+                    textBox.Text = Globals.TemplateDatabase.GetNextUniqueDataLabelInControls(dataLabel);
                     break;
                 }
             }
@@ -499,7 +506,7 @@ namespace TimelapseTemplateEditor.Controls
                         string s = (cell == null)
                             ? "Label"
                             : ((TextBlock)cell.Content).Text;
-                        textBox.Text = s; //this.TemplateDatabase.GetNextUniqueLabel(s);
+                        textBox.Text = s; //this.TemplateDatabase.GetNextUniqueLabelInControls(s);
                         label = s;
                         editorDialogAlreadyShown = true;
                     }
@@ -519,7 +526,7 @@ namespace TimelapseTemplateEditor.Controls
                         {
                             EditorDialogs.EditorLabelsMustBeUniqueDialog(Globals.RootEditor, label);
                         }
-                        textBox.Text = Globals.TemplateDatabase.GetNextUniqueLabel(label);
+                        textBox.Text = Globals.TemplateDatabase.GetNextUniqueLabelInControls(label);
                         break;
                     }
                 }

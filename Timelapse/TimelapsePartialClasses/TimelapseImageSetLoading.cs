@@ -217,7 +217,7 @@ namespace Timelapse
             char[] quote = { '\'' };
             foreach (KeyValuePair<string, string> pair in columndefaultdict)
             {
-                ControlRow row = this.templateDatabase.GetControlFromTemplateTable(pair.Key);
+                ControlRow row = this.templateDatabase.GetControlFromControls(pair.Key);
                 if (row != null && pair.Value.Trim(quote) != row.DefaultValue)
                 {
                     fileDatabase.UpgradeFileDBSchemaDefaultsFromTemplate();

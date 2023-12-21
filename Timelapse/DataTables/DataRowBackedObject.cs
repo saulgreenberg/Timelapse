@@ -6,11 +6,11 @@ using Timelapse.Util;
 namespace Timelapse.DataTables
 {
     /// <summary>
-    /// A DataRowBackedObject is a DataRow in a DataTable, which also has a Database ID. 
+    /// A DataRowBackedObject represents and stores a DataRow and its values from a DataTable.  
     /// Each row is associated with 
     /// - an index (the location of that row in a datatable)
     /// - an ID (the Database ID associated with that row)
-    /// The two are not necessarily the same. For example, a selection will change the indexes, but not the ID
+    /// The index and ID are not necessarily the same. For example, a selection will change the indexes, but not the ID
     /// It comprises
     /// - a Row (which is a stock DataRow)
     /// - an ID (i.e., the Database ID associated with that row)

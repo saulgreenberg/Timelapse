@@ -37,19 +37,24 @@ namespace Timelapse.Database
             {
                 try
                 {
+
                     progress.Report(new ProgressBarArguments(0, "Writing the CSV file. Please wait", false, true));
                     using (StreamWriter fileWriter = new StreamWriter(filePath, false))
                     {
+                        // Get all data labels except those excluded from export (via a false ExportToCSV field)
+                        List<string> dataLabelsToExport = database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls().Except(database.GetDataLabelsToExcludeFromExport()).ToList();
+
                         // Write the header as defined by the data labels in the template file (skipping the ones we don't use)
                         // If the data label is an empty string, we use the label instead.
                         // The append sequence results in a trailing comma which is retained when writing the line.
                         StringBuilder header = new StringBuilder();
-                        List<string> dataLabels = database.GetDataLabelsExceptIDInSpreadsheetOrder();
+
+
                         if (csvIncludeRootFolderColumn)
                         {
-                            dataLabels.Insert(0, Constant.DatabaseColumn.RootFolder);
+                            dataLabelsToExport.Insert(0, Constant.DatabaseColumn.RootFolder);
                         }
-                        foreach (string dataLabel in dataLabels)
+                        foreach (string dataLabel in dataLabelsToExport)
                         {
                             if (dataLabel == Constant.DatabaseColumn.DateTime && csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                             {
@@ -70,7 +75,7 @@ namespace Timelapse.Database
                         {
                             StringBuilder csvRow = new StringBuilder();
                             ImageRow image = database.FileTable[row];
-                            foreach (string dataLabel in dataLabels)
+                            foreach (string dataLabel in dataLabelsToExport)
                             {
                                 if (dataLabel == Constant.DatabaseColumn.RootFolder)
                                 {
@@ -296,7 +301,7 @@ namespace Timelapse.Database
                             }
                             else
                             {
-                                ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(header);
+                                ControlRow controlRow = fileDatabase.GetControlFromControls(header);
                                 type = controlRow.Type;
                             }
 
@@ -308,8 +313,8 @@ namespace Timelapse.Database
                             else
                             {
                                 // Its not a standard control, so check if its a date/time/DateTime control and handle that as these are special cases
-                                // Day: dd-MMM-yyyy 03-Jul-2017
-                                // Time: HH:mm:ss 12:30:57
+                                // Day: dd-MMM-yyyy 03-Jul-2017 or d-MMM-yyyy 3-Jul-2017
+                                // Time: HH:mm:ss 12:30:57 or H:mm:ss 2:23:33
                                 // DateTime:
                                 // - yyyy-MM-ddTHH:mm:ss (includes T separator): 
                                 // - yyyy-MM-dd HH:mm:ss (excludes T separator) 
@@ -331,7 +336,7 @@ namespace Timelapse.Database
                                 {
                                     // Date only
                                     string strDateTime = rowDict[header];
-                                    if (DateTime.TryParseExact(strDateTime, Constant.Time.DateFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
+                                    if (DateTime.TryParseExact(strDateTime, Constant.Time.DateFormats, provider, DateTimeStyles.None, out DateTime tempDateTime))
                                     {
                                         datePortion = tempDateTime;
                                     }
@@ -340,7 +345,7 @@ namespace Timelapse.Database
                                 {
                                     // Time only
                                     string strDateTime = rowDict[header];
-                                    if (DateTime.TryParseExact(strDateTime, Constant.Time.TimeFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
+                                    if (DateTime.TryParseExact(strDateTime, Constant.Time.TimeFormats, provider, DateTimeStyles.None, out DateTime tempDateTime))
                                     {
                                         //Debug.Print("Time only: " + tempDateTime.ToString());
                                         timePortion = tempDateTime;
@@ -359,9 +364,9 @@ namespace Timelapse.Database
                         totalFilesProcessed++;
 
                         // If Date and Time columns were used instead of DateTime, they have to be combined to get the DateTime
-                        if (dateTime != DateTime.MinValue || (datePortion != DateTime.MinValue && timePortion != DateTime.MinValue))
+                        if (dateTime != DateTime.MinValue || datePortion != DateTime.MinValue)
                         {
-                            // Update dateTime from the separate date and time fields were used, update dateTime from them
+                            // Check if we need to update dateTime from the separate date and time fields were used, update dateTime from them
                             if (datePortion != DateTime.MinValue && timePortion != DateTime.MinValue)
                             {
                                 // We have a valid separate date and time. Combine it.
@@ -371,7 +376,7 @@ namespace Timelapse.Database
                             imageToUpdate.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.DateTime, dateTime));
                             // Debug.Print("Wrote DateTime: " + dateTime.ToString());
                         }
-                        else
+                        else if (dateTime == DateTime.MinValue && datePortion == DateTime.MinValue)
                         {
                             dateTimeErrors++;
                             // importErrors.Add(String.Format("{0}: Could not extract datetime", currentPath));
@@ -470,7 +475,7 @@ namespace Timelapse.Database
         {
             bool abort = false;
             // Get the dataLabels from the database and from the headers in the CSV files (and remove any empty trailing headers from the CSV file list)
-            List<string> dataLabelsFromDB = fileDatabase.GetDataLabelsExceptIDInSpreadsheetOrder();
+            List<string> dataLabelsFromDB = fileDatabase.GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
             // Because Date and Time (which are not controls) may appear instead of DateTime, we add them explicitly so they can pass this test
             // Similarly, we add (and we will skip over)
             // - Folder and ImageQuality (both deprecated columns that could exist in CSV files pre v2.3)
@@ -587,7 +592,7 @@ namespace Timelapse.Database
                         // Date/Time/DateTime checking is handled elsewhere, while Folder, RootFolder and ImageQuality are skipped
                         continue;
                     }
-                    ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(csvHeader);
+                    ControlRow controlRow = fileDatabase.GetControlFromControls(csvHeader);
                     string controlRowType = controlRow.Type;
 
                     if (IsStandardColumn(controlRowType))
@@ -744,7 +749,7 @@ namespace Timelapse.Database
                         //End NEW
                     }
 
-                    ControlRow controlRow = fileDatabase.GetControlFromTemplateTable(header);
+                    ControlRow controlRow = fileDatabase.GetControlFromControls(header);
                     // process each column but only if its of the specific type
                     if (controlRow != null &&
                         (controlRow.Type == Constant.Control.Flag ||

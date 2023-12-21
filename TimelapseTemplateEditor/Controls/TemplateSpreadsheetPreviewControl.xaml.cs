@@ -29,6 +29,10 @@ namespace TimelapseTemplateEditor.Controls
             foreach (ControlRow control in controlsInSpreadsheetOrder)
             {
                 DataGridTextColumn column = new DataGridTextColumn();
+                if (control.ExportToCSV == false)
+                {
+                    continue;
+                }
                 string dataLabel = control.DataLabel;
                 if (string.IsNullOrEmpty(dataLabel))
                 {
@@ -56,7 +60,7 @@ namespace TimelapseTemplateEditor.Controls
                 spreadsheetOrderByDataLabel.Add(dataLabelFromColumnHeader, newSpreadsheetOrder);
             }
             Globals.RootEditor.dataGridBeingUpdatedByCode = true;
-            Globals.TemplateDatabase.UpdateDisplayOrder(Constant.Control.SpreadsheetOrder, spreadsheetOrderByDataLabel);
+            Globals.TemplateDatabase.UpdateControlDisplayOrder(Constant.Control.SpreadsheetOrder, spreadsheetOrderByDataLabel);
             Globals.RootEditor.dataGridBeingUpdatedByCode = false;
         }
         #endregion

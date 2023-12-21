@@ -189,7 +189,7 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
-                RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
+                RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
                 if (result == RecognizerImportResultEnum.Cancelled)
                 {
                     this.BusyCancelIndicator.Reset(false);
@@ -231,7 +231,7 @@ namespace Timelapse
                             return;
                         }
                         // Try again by deleting the old recognition data 
-                        result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, jsonFilePath, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
+                        result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
                         if (result == RecognizerImportResultEnum.Cancelled)
                         {
                             this.BusyCancelIndicator.Reset(false);
