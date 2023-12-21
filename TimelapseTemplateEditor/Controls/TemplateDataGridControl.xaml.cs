@@ -275,8 +275,9 @@ namespace TimelapseTemplateEditor.Controls
                     string columnHeader = (string)this.DataGrid.Columns[column].Header;
                     if (columnHeader == Constant.Control.Label ||
                         columnHeader == Constant.Control.Tooltip ||
-                        columnHeader == Constant.Control.Visible ||
-                        (columnHeader == EditorConstant.ColumnHeader.Width && control.Type != Constant.DatabaseColumn.DeleteFlag && control.Type != Constant.Control.Flag))
+                        columnHeader == Constant.Control.Visible //||
+                        //(columnHeader == EditorConstant.ColumnHeader.Width && control.Type != Constant.DatabaseColumn.DeleteFlag && control.Type != Constant.Control.Flag))
+                        )
                     {
                         cell.SetValue(DataGridCell.IsTabStopProperty, true); // Allow tabbing in non-editable fields
                         continue;
@@ -286,14 +287,19 @@ namespace TimelapseTemplateEditor.Controls
                     ContentPresenter cellContent = cell.Content as ContentPresenter;
                     string sortMemberPath = this.DataGrid.Columns[column].SortMemberPath;
 
-                    if (String.Equals(sortMemberPath, Constant.DatabaseColumn.ID, StringComparison.OrdinalIgnoreCase) ||
+                    if (
+                        // Types are never editable
+                        String.Equals(sortMemberPath, Constant.DatabaseColumn.ID, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.ControlOrder, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.SpreadsheetOrder, StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(sortMemberPath, Constant.Control.Type, StringComparison.OrdinalIgnoreCase) ||
-                        controlType == Constant.DatabaseColumn.DateTime ||
-                        controlType == Constant.DatabaseColumn.DeleteFlag ||
-                        controlType == Constant.DatabaseColumn.File ||
-                        controlType == Constant.DatabaseColumn.RelativePath ||
+                        
+                        // These four are treated as a special case
+                        (controlType == Constant.DatabaseColumn.File && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable || columnHeader == EditorConstant.ColumnHeader.Export)) ||
+                        (controlType == Constant.DatabaseColumn.RelativePath && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable || columnHeader == EditorConstant.ColumnHeader.Export)) ||
+                        (controlType == Constant.DatabaseColumn.DateTime && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable)) ||
+                        (controlType == Constant.DatabaseColumn.DeleteFlag && (columnHeader == EditorConstant.ColumnHeader.DefaultValue || columnHeader == EditorConstant.ColumnHeader.DataLabel || columnHeader == Constant.Control.List || columnHeader == Constant.Control.Copyable || columnHeader == EditorConstant.ColumnHeader.Width)) ||
+
                         (controlType == Constant.Control.Flag && columnHeader == EditorConstant.ColumnHeader.Width) ||
                         (controlType == Constant.Control.Counter && columnHeader == Constant.Control.List) ||
                         (controlType == Constant.Control.Flag && columnHeader == Constant.Control.List) ||
