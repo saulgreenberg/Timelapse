@@ -18,8 +18,7 @@ obj/
 Dependencies/**
 !Dependencies/Xceed.Wpf.AvalonDock.dll
 !Dependencies/Xceed.Wpf.Toolkit.dll
-!Dependencies/DialogUpgradeFiles.dll
-!Dependencies/DialogUpgradeFiles.pdb
+
 !Dependencies/exiftool(-k).exe
 #!Dependencies/ffmpeg.exe
 
@@ -33,11 +32,14 @@ Dependencies/**
 
 # Timelapse output
 Backups/
+*.pdb
 
 # Local Documents and backups
 ToDo.docx
 ~$ToDo.docx
 *.tmp
+Dependencies/DialogUpgradeFiles.dll
+Dependencies/DialogUpgradeFiles.pdb
 
 
 Timelapse2/Timelapse/Timelapse2 - Shortcut.lnk
