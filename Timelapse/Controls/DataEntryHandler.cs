@@ -652,6 +652,15 @@ namespace Timelapse.Controls
                     $"IsCopyFromLastNonEmptyValuePossible: IndexOutOfRange Exception, where index is: {currentIndex}{Environment.NewLine}{e.Message}");
                 return (nearestRowWithCopyableValue >= 0);
             }
+            catch (Exception exception)
+            {
+                // A user reported a system.NullReference exception, although I have no idea where that would occur
+                // so we put in a general catch here. I have tried to generate either of these catches, with no luck
+                // but I suspect its some odd combination of trying to get the FileTable[fileIndex] above.
+                TracePrint.PrintMessage(
+                    $"IsCopyFromLastNonEmptyValuePossible: {exception.Message}");
+                return false;
+            }
             return (nearestRowWithCopyableValue >= 0);
         }
         #endregion
