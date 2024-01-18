@@ -365,7 +365,7 @@ namespace Timelapse.Database
             // Part 2. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
             //    This will guarantee that there are no duplicate primary keys.
             //    Note: if there are no entries in the database, this function returns 0 
-            long offsetId = destinationDdb.ScalarGetMaxIntValue(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
+            long offsetId = destinationDdb.ScalarGetMaxLongValue(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
 
             // Part 3. Handle the DataTable portion
             query += QueryPhraseMergeDataTable(offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference);

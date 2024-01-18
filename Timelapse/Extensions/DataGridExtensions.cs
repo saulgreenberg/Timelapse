@@ -70,12 +70,12 @@ namespace Timelapse.Extensions
                 return;
             }
 
-            int topmostRowIndex = int.MaxValue; // Keeps track of the topmost row index, as this is the one we will want to scroll too
-            
+            int topmostRowIndex = int.MaxValue - 3; // Keeps track of the topmost row index, as this is the one we will want to scroll too if we are at the end
+
             List<int> rowIndexesToSelect = new List<int>();
             foreach (Tuple<long, int> idRowIndex in idRowIndexes)
             {
-                long currentID = (int)idRowIndex.Item1;
+                long currentID = idRowIndex.Item1;
                 int currentRowIndexThatMayContainID = idRowIndex.Item2;
 
                 // Get the row indicated by rowIndex (after first checking that such a row exists)
@@ -126,8 +126,11 @@ namespace Timelapse.Extensions
             SelectRowByIndexes(dataGrid, rowIndexesToSelect);
 
             // Depending on our selection direction, we scroll to expose the previous or next 2 rows to ensure they are visible beyond the selected row);
-            int scrollIndex = indexIncreasing ? Math.Min(topmostRowIndex + 3, dataGrid.Items.Count - 1) : Math.Max(topmostRowIndex - 3, 0);
-            dataGrid.ScrollIntoView(dataGrid.Items[scrollIndex]);
+            int scrollIndex = indexIncreasing ? Math.Min( topmostRowIndex + 3, dataGrid.Items.Count - 1) : Math.Max(topmostRowIndex - 3, 0);
+            if (scrollIndex >= 0 && scrollIndex < dataGrid.Items.Count)
+            {
+                dataGrid.ScrollIntoView(dataGrid.Items[scrollIndex]);
+            }
         }
         #endregion
 
