@@ -240,6 +240,7 @@ namespace Timelapse.Controls
             {
                 Source = imageRow.LoadBitmap(GlobalReferences.MainWindow.FolderPath, Convert.ToInt32(imageHeight), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, out bool isCorruptOrMissing)
             };
+
             // Need to scale the image to the correct height
             if (isCorruptOrMissing)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -138,6 +139,10 @@ namespace Timelapse.Images
                     return;
                 }
 
+                // Get the EXIF orientation from the file, if any, in various formats, and pass it on as an argument so that the image can be rotated if needed.
+                // Note that if the exif isn't present, this method will set them all to 0 and return false.
+                BitmapUtilities.MetadataExtractorGetOrientation(path, out int angle, out Rotation rotation, out RotateFlipType rotateFlip);
+
                 // Set the state to Processing is used to indicate that other attempts to process the image should be aborted util this is done.
                 this.Processing = true;
                 using (MemoryStream imageStream = new MemoryStream(File.ReadAllBytes(path)))
@@ -149,10 +154,12 @@ namespace Timelapse.Images
                     this.lastDetectEdges = this.detectEdges;
                     this.lastUseGamma = this.useGamma;
                     this.lastGammaValue = this.gammaValue;
-                    BitmapFrame bf = await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue).ConfigureAwait(true);
+                    BitmapFrame bf = await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue, angle, rotateFlip).ConfigureAwait(true);
                     if (bf != null)
                     {
-                        this.ImageToDisplay.Source = await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue).ConfigureAwait(true);
+                        this.ImageToDisplay.Source = bf;
+                        // In an earlier version, I was I was invoking StreamToImageProcessedBitmap twice, but am not sure why. So I commented it out but left it here just in case there was a reason for this.
+                        // await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue).ConfigureAwait(true);
                     }
                 }
             }

@@ -1,4 +1,5 @@
-﻿using ImageProcessor;
+﻿using System.Drawing;
+using ImageProcessor;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -10,7 +11,9 @@ namespace Timelapse.Images
     {
         #region Public Static Methods
         // Given a stream and various image-processing parameters, generate a bitmap frame processed according to those parameters
-        public static async Task<BitmapFrame> StreamToImageProcessedBitmap(MemoryStream inImageStream, int brightness, int contrast, bool sharpen, bool detectEdges, bool useGamma, float gammaValue)
+        // Arguments also indicates orientation as read from the exif orientaton flag:
+        // - Angle gives the angle in degrees (eg., 90) while rotateflip gives it as a rotatefliptype. 
+        public static async Task<BitmapFrame> StreamToImageProcessedBitmap(MemoryStream inImageStream, int brightness, int contrast, bool sharpen, bool detectEdges, bool useGamma, float gammaValue, int rotation, RotateFlipType rotateFlip)
         {
             if (inImageStream == null || inImageStream.CanRead == false)
             {
@@ -23,11 +26,14 @@ namespace Timelapse.Images
                     // Initialize the ImageFactory using the overload to preserve EXIF metadata.
                     using (ImageFactory imageFactory = new ImageFactory(preserveExifData: false))
                     {
+                        // Note that there are two different ways we use to generate the image based upon what options were set,
+                        // as ImageProcessor doesn't do the gamma option 
                         try
                         {
                             if (useGamma)
                             {
                                 System.Drawing.Image drawingImage = System.Drawing.Image.FromStream(inImageStream);
+                                drawingImage.RotateFlip(rotateFlip);
                                 System.Drawing.Bitmap bitmap = AdjustGamma(drawingImage, gammaValue);
                                 bitmap.Save(outImageStream, System.Drawing.Imaging.ImageFormat.Bmp);
                             }
@@ -41,6 +47,7 @@ namespace Timelapse.Images
                                                 .DetectEdges(edger)
                                                 .Contrast(contrast)
                                                 .Brightness(brightness)
+                                                .Rotate(rotation)
                                                 .Save(outImageStream);
                                 }
                                 else if (sharpen)
@@ -51,6 +58,7 @@ namespace Timelapse.Images
                                                 .GaussianSharpen(gaussian)
                                                 .Contrast(contrast)
                                                 .Brightness(brightness)
+                                                .Rotate(rotation)
                                                 .Save(outImageStream);
                                 }
                                 else
@@ -59,6 +67,7 @@ namespace Timelapse.Images
                                     imageFactory.Load(inImageStream)
                                                 .Contrast(contrast)
                                                 .Brightness(brightness)
+                                                .Rotate(rotation)
                                                 .Save(outImageStream);
                                 }
                             }

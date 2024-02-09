@@ -1,6 +1,11 @@
-﻿using NReco.VideoConverter;
+﻿using MetadataExtractor.Formats.Exif;
+using MetadataExtractor;
+using NReco.VideoConverter;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -9,6 +14,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
+using Point = System.Windows.Point;
 
 namespace Timelapse.Images
 {
@@ -41,12 +47,15 @@ namespace Timelapse.Images
                 {
                     // returns the full size bitmap
                     BitmapFrame frame = BitmapFrame.Create(new Uri(filePath), BitmapCreateOptions.None, bitmapCacheOption);
-                    frame.Freeze();
+                    // See if the image needs rotation. 
+                    BitmapSource newFrame = RotateBitmapIfNeeded(frame);
+                    newFrame.Freeze();
                     isCorruptOrMissing = false;
-                    return frame;
+                    return newFrame;
                 }
 
                 BitmapImage bitmap = new BitmapImage();
+                MetadataExtractorGetOrientation(filePath, out int angle, out Rotation rotation, out RotateFlipType rotateFlip);
                 bitmap.BeginInit();
                 if (imageDimension == ImageDimensionEnum.UseWidth)
                 {
@@ -58,6 +67,7 @@ namespace Timelapse.Images
                 }
                 bitmap.CacheOption = bitmapCacheOption;
                 bitmap.UriSource = new Uri(filePath);
+                bitmap.Rotation = rotation;
                 bitmap.EndInit();
                 bitmap.Freeze();
 
@@ -81,6 +91,7 @@ namespace Timelapse.Images
             }
         }
         #endregion
+
 
         #region Public - Get Bitmap from Video File
         // Get the bitmap representing a video file
@@ -380,5 +391,133 @@ namespace Timelapse.Images
             }
         }
         #endregion
+
+        #region Manage the Exif Orientation flag in images
+        // Check if the orientaton flag is set in the metadata and, if so,
+        // rotate the image as needed and return it. Otherwise just return the image that was passed in
+        public static BitmapSource RotateBitmapIfNeeded(BitmapFrame frame)
+        {
+            string _orientationQuery = "System.Photo.Orientation";
+            if (frame.Metadata is BitmapMetadata bitmapMetadata && bitmapMetadata.ContainsQuery(_orientationQuery))
+            {
+                int angle = 0;
+                object o = bitmapMetadata.GetQuery(_orientationQuery);
+                if (o != null)
+                {
+                    switch ((ushort)o)
+                    {
+                        case 6:
+                            angle = 90;
+                            break;
+                        case 3:
+                            angle = 180;
+                            break;
+                        case 8:
+                            angle = 270;
+                            break;
+                        default:
+                            angle = 0;
+                            break;
+                    }
+
+                    if (angle != 0)
+                    {
+                        // rotate the bitmap to the desired angle
+                        TransformedBitmap tb = new TransformedBitmap();
+                        tb.BeginInit();
+                        tb.Source = frame;
+                        RotateTransform transform = new RotateTransform(angle);
+                        tb.Transform = transform;
+                        tb.EndInit();
+                        return tb;
+                    }
+                }
+            }
+            return frame;
+        }
+
+        public static int RotateBitmapGetAngle(BitmapFrame frame)
+        {
+            string _orientationQuery = "System.Photo.Orientation";
+            int angle = 0;
+            if (frame.Metadata is BitmapMetadata bitmapMetadata && bitmapMetadata.ContainsQuery(_orientationQuery))
+            {
+                object o = bitmapMetadata.GetQuery(_orientationQuery);
+
+                if (o != null)
+                {
+                    switch ((ushort)o)
+                    {
+                        case 6:
+                            angle = 90;
+                            break;
+                        case 3:
+                            angle = 180;
+                            break;
+                        case 8:
+                            angle = 270;
+                            break;
+                        default:
+                            angle = 0;
+                            break;
+                    }
+                }
+            }
+            return angle;
+        }
+
+        // Given a file, return the orientation angle via the arguments in various formats, with 0 as the default (and false) if problems happen.
+        public static bool MetadataExtractorGetOrientation(string filePath, out int angle, out Rotation rotation, out RotateFlipType rotateFlip)
+        {
+            // Default values
+            rotateFlip = RotateFlipType.RotateNoneFlipNone;
+            rotation = Rotation.Rotate0;
+            angle = 0;
+
+            // Use metadata extractor to get the orientation metadata from the file, if it exists.
+            if (false == File.Exists(filePath))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Use metadataextractor to read the orientation flag
+                IEnumerable<MetadataExtractor.Directory> directories = ImageMetadataReader.ReadMetadata(filePath);
+                ExifIfd0Directory ifd0Directory = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
+                if (ifd0Directory == null)
+                {
+                    return false;
+                }
+
+                int orientation = ifd0Directory.TryGetInt32(ExifDirectoryBase.TagOrientation, out int value) ? value : -1;
+                switch (orientation)
+                {
+                    case 6:
+                        rotateFlip = RotateFlipType.Rotate90FlipNone;
+                        rotation = Rotation.Rotate90;
+                        angle = 90;
+                        return true;
+                    case 3:
+                        rotateFlip = RotateFlipType.Rotate180FlipNone;
+                        rotation = Rotation.Rotate180;
+                        angle = 180;
+                        return true;
+                    case 8:
+                        rotateFlip = RotateFlipType.Rotate270FlipNone;
+                        rotation = Rotation.Rotate270;
+                        angle = 270;
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            catch 
+            {
+                return false;
+            }
+        }
+        #endregion
     }
+
 }

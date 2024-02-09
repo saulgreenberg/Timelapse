@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:Timelapse.Controls;assembly=Timelapse"
+        xmlns:controls1="clr-namespace:Timelapse.Controls;assembly=Timelapse"
         mc:Ignorable="d"
         Title="Inspect what metadata is available in an image..." 
 		MinHeight="600" MinWidth="768"
@@ -14,7 +14,7 @@
     <Grid>
         <DockPanel Grid.Row="0">
 
-            <controls:StockMessageControl x:Name="Message" DockPanel.Dock="Top" 
+            <controls1:StockMessageControl x:Name="Message" DockPanel.Dock="Top" 
                             Icon="Question"
                             Title="See what metadata is available in a file of your choosing"
                             What="Cameras typically embed metadata into image files, some of which may be useful to capture as data. 
@@ -34,7 +34,7 @@
                     <Button Name="OpenFile" VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="10" Margin="10,10,5,10"  Click="OpenFile_Click">Open _File</Button>
                 </DockPanel>
 
-                <controls:MetadataGrid x:Name="MetadataGrid"  DockPanel.Dock="Top" VerticalAlignment="Stretch"/>
+                <controls1:MetadataGrid x:Name="MetadataGrid"  DockPanel.Dock="Top" VerticalAlignment="Stretch"/>
                 
             </DockPanel>
         </DockPanel>
