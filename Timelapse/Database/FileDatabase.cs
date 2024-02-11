@@ -234,7 +234,6 @@ namespace Timelapse.Database
             this.Database.CreateTable(Constant.DBTables.Markers, schemaColumnDefinitions);
         }
 
-        //protected override async Task OnExistingDatabaseOpenedAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         protected async Task OnExistingDatabaseOpenedAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
             // Check the arguments for null 
@@ -243,7 +242,7 @@ namespace Timelapse.Database
 
             // Perform TemplateTable initializations.
             await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
-           // await base.OnExistingDatabaseOpenedAsync(templateDatabase, null).ConfigureAwait(true);
+            // await base.OnExistingDatabaseOpenedAsync(templateDatabase, null).ConfigureAwait(true);
 
             // If directed to use the template found in the template database, 
             // check and repair differences between the .tdb and .ddb template tables due to  missing or added controls 
@@ -415,7 +414,6 @@ namespace Timelapse.Database
             return fileDatabase;
         }
 
-       //protected override async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         protected async Task UpgradeDatabasesAndCompareTemplatesAsync(TemplateDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
 
@@ -830,6 +828,17 @@ namespace Timelapse.Database
                 if (string.IsNullOrEmpty(conditionalExpression) == false)
                 {
                     query += conditionalExpression;
+
+                    // A duplicate was just created. Because we are in a custom selection, we have to include it as an OR criteria in the WHERE in order to include it in the select.
+                    // The added form that creates the exception is something like:
+                    //    OR (RelativePath = '<duplicate.RelativePath>' AND File = 'duplicate.File').
+                    if (null != this.CustomSelection.DuplicatesRelativePathAndFileTuple)
+                    {
+                        string relativePath = this.CustomSelection.DuplicatesRelativePathAndFileTuple.Item1;
+                        string file = this.CustomSelection.DuplicatesRelativePathAndFileTuple.Item2;
+                        query += $"{Sql.Or} {Sql.OpenParenthesis} {Constant.DatabaseColumn.RelativePath} {Sql.Equal} {Sql.Quote(relativePath)} " +
+                                 $"{Sql.And} {Constant.DatabaseColumn.File} {Sql.Equal} {Sql.Quote(file)} {Sql.CloseParenthesis}";
+                    }
                 }
             }
 
@@ -1038,11 +1047,11 @@ namespace Timelapse.Database
                         }
                         Thread.Sleep(Constant.ThrottleValues.ProgressBarSleepInterval); // Allows the UI thread to update every now and then
                         progress.Report(new ProgressBarArguments(
-                            Convert.ToInt32(i++ * 100.0 / fileCount), 
-                            $"Checking to see which files, if any, are missing (now on {i}/{fileCount})", 
+                            Convert.ToInt32(i++ * 100.0 / fileCount),
+                            $"Checking to see which files, if any, are missing (now on {i}/{fileCount})",
                             true, false));
                     }
-                    
+
                     if (!File.Exists(Path.Combine(this.FolderPath, image.RelativePath, image.File)))
                     {
                         commaSeparatedListOfIDs += image.ID + ",";
@@ -1056,7 +1065,7 @@ namespace Timelapse.Database
                     ? SelectMissingFilesResultEnum.NoMissingFiles
                     : SelectMissingFilesResultEnum.MissingFilesFound;
             }).ConfigureAwait(true);
-            
+
             if (SelectMissingFilesResultEnum.MissingFilesFound == resultEnum)
             {
                 // the search for missing files was successful, where missing files were found.

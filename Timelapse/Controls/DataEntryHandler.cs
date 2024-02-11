@@ -157,17 +157,18 @@ namespace Timelapse.Controls
                 return;
             }
 
-            // Start with an empty clipboard
-            // Its in a try / catch loop as a known issue is that it may sometimes fail due
-            // to another process briefly having the clipboard
-            try
-            {
-                Clipboard.SetText(string.Empty);
-            }
-            catch
-            {
-                Debug.Print("Ignorable error in Clipboard.SetText (see DataEntryHandler:SetContextMenuCallbacks in ");
-            }
+            //// This seems to consistently stall out, so I just got rid of it.
+            /// Start with an empty clipboard
+            //// Its in a try / catch loop as a known issue is that it may sometimes fail due
+            //// to another process briefly having the clipboard
+            //try
+            //{
+            //    Clipboard.SetText(string.Empty);
+            //}
+            //catch
+            //{
+            //    Debug.Print("Ignorable error in Clipboard.SetText (see DataEntryHandler:SetContextMenuCallbacks in ");
+            //}
 
             MenuItem menuItemPropagateFromLastValue = new MenuItem()
             {

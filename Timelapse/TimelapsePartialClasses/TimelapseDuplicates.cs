@@ -44,7 +44,12 @@ namespace Timelapse
             // Insert the duplicated image into the filedata table
             List<ImageRow> imagesToInsert = new List<ImageRow> { duplicate };
             this.DataHandler.FileDatabase.AddFiles(imagesToInsert, null);
-
+            // We want the select to display this duplicate (and all its companion duplicates for this image). So we create a search term
+            // that specifies the RelativePath and File. Later, the FilesSelectAndShowAsync will then include it as an exception,
+            // where it will be added to the select criteria within a WHERE.
+            this.DataHandler.FileDatabase.CustomSelection.DuplicatesRelativePathAndFileTuple = new Tuple<string,string>(duplicate.RelativePath, duplicate.File);
+            //this.DataHandler.FileDatabase.CustomSelection.DuplicatesRelativePathAndFileTuple = $"{Sql.OpenParenthesis} {Constant.DatabaseColumn.RelativePath} {Sql.Equal} {Sql.Quote(duplicate.RelativePath)} " +
+            //                               $"{Sql.And} {Constant.DatabaseColumn.File} {Sql.Equal} {Sql.Quote(duplicate.File)} {Sql.CloseParenthesis}";
             if (GlobalReferences.DetectionsExists)
             {
                 // Get the ID of the duplicate file that was just inserted into the filedata table
@@ -107,10 +112,14 @@ namespace Timelapse
                 this.DataHandler.FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
             }
             await this.FilesSelectAndShowAsync();
+            // Clear the DuplicatesRelativePathAndFileTuple after every select,
+            // as we don't want that duplicate to be automatically included in future selects.
+            this.DataHandler.FileDatabase.CustomSelection.DuplicatesRelativePathAndFileTuple = null;
             this.TryFileShowWithoutSliderCallback(DirectionEnum.Next);
         }
         #endregion
 
+      
 
         // Manage the display of the duplicate indicator (text in the form Duplicate: x/y) in the main window.
         public void DuplicateDisplayIndicatorInImageIfWarranted()

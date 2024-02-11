@@ -92,7 +92,6 @@ namespace Timelapse.Images
         }
         #endregion
 
-
         #region Public - Get Bitmap from Video File
         // Get the bitmap representing a video file
         // Note that displayIntent is ignored as it's specific to interaction with WCF's bitmap cache, which doesn't occur in rendering video preview frames

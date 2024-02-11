@@ -29,6 +29,15 @@ namespace Timelapse.SearchingAndSorting
         // Episode-specific data
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
         public string EpisodeNoteField { get; set; } = string.Empty;
+
+        // Duplicates
+        // This string will be set to a search term immediately after a duplicate record is created
+        // e.g. (RelativePath = '<duplicate.RelativePath>' AND File = 'duplicate.File') 
+        // Its purpose is to include the duplicate in the selected files immediately after a duplicate is created
+        // While this normally occurs when the selection is to (say) All files, the duplicate is excluded if the selection 
+        // was e.g., a Custom selection to a particular field value, as duplicates normally set the data fields back to their defaults.
+        public Tuple<string,string> DuplicatesRelativePathAndFileTuple { get; set; } = null;
+
         #endregion
 
         #region Constructor

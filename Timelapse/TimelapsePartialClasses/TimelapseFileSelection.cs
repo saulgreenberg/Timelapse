@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Timelapse.Controls;
@@ -87,6 +88,7 @@ namespace Timelapse
                 // PEFORMANCE: The standard select files operation in FilesSelectAndShow
                 this.BusyCancelIndicator.EnableForSelection(true);
                 await this.DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
+
                 this.BusyCancelIndicator.EnableForSelection(false);
                 this.DataHandler.FileDatabase.BindToDataGrid();
             }
