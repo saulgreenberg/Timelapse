@@ -1,0 +1,118 @@
+﻿<UserControl x:Class="Timelapse.Controls.VideoPlayer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="800"
+             Loaded="VideoPlayer_Loaded"
+             >
+    <UserControl.Resources>
+        <Style x:Key="PlayPauseButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Margin" Value="0,5,0,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Content">
+                        <Setter.Value>
+                            <Image Source="pack://application:,,/Resources/VideoPauseIcon.png" />
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="False">
+                    <Setter Property="Content">
+                        <Setter.Value>
+                            <Image Source="pack://application:,,/Resources/VideoPlayIcon.png" />
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="TimeTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="IsReadOnly" Value="True" />
+        </Style>
+    </UserControl.Resources>
+    
+    <Grid Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <!--Previous element to use cached thumbnails - Unused as it was only a test, but left here just in case I revisit it-->
+        <!--<Image Name="ThumbnailImage" VerticalAlignment="Top"/>-->
+
+        <!--The Video Dusokat-->
+        <Canvas Name="VideoCanvas" ClipToBounds="True" Focusable="True" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+            <MediaElement Name="Video" Focusable="True"  LoadedBehavior="Manual" ScrubbingEnabled="True" MediaEnded="Video_MediaEnded" MediaOpened="Video_MediaOpened" Unloaded="Video_Unloaded" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,1" />
+        </Canvas>
+
+        <!--The primary video controls (slider/play button)-->
+        <StackPanel Grid.Row="1" Grid.Column="1">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                <Slider Name="VideoPosition"  ValueChanged="VideoPosition_ValueChanged" PreviewMouseDown="VideoPosition_PreviewMouseDown" AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="3" IsMoveToPointEnabled="True" MinWidth="300" HorizontalContentAlignment="Stretch" VerticalAlignment="Center" TickPlacement="BottomRight" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBox Name="TimeFromStart" Grid.Column="0" Grid.Row="0" Style="{StaticResource TimeTextBoxStyle}">00:00</TextBox>
+                    <ToggleButton Name="PlayOrPause" Click="PlayOrPause_Click" Style="{StaticResource PlayPauseButtonStyle}" Background="Transparent" BorderThickness="0" Width="35" Height="35"  Grid.Column="1" Grid.Row="0" />
+                    <TextBox Name="TimeDuration" Grid.Column="2" Grid.Row="0" Style="{StaticResource TimeTextBoxStyle}">00:00</TextBox>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+
+        <!--Video Playback controls (speed, autoreplay, repeat)-->
+        <GroupBox Grid.Row="1" Grid.Column="2" Margin="5,0,0,0" Width ="190" Height="66" Foreground="LightGray" BorderThickness=".4" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <GroupBox.Header>
+                Options
+            </GroupBox.Header>
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="5,0,0,10">
+                    <!--<Label Content="Speed" Foreground="LightGray"/>-->
+                    <RadioButton Name="RBSlow" Content=".5x" Foreground="White" GroupName="Speed"  Margin="5,3,10,0" Checked="SetSpeed_Checked" Tag="0.5" VerticalAlignment="Center"/>
+                    <RadioButton Name="RBNormal" Content="1x" Foreground="White"  GroupName="Speed"  Margin="0,0,10,0" Checked="SetSpeed_Checked" IsChecked="True" Tag="1" VerticalAlignment="Center"/>
+                    <RadioButton Name="RBFast" Content="2x" Foreground="White" GroupName="Speed" Margin="0,0,5,0" Checked="SetSpeed_Checked" Tag="2" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!--</GroupBox>-->
+                <StackPanel Orientation="Horizontal" Margin="5,0,0,0">
+                    <!--<Label Content="Play" Foreground="LightGray" Margin="10,0,0,0"/>-->
+                    <CheckBox Name="CBAutoPlay" Content="AutoPlay" Focusable="False" VerticalAlignment="Center"  Margin="5,0,0,0" Foreground="White" Checked="CBAutoPlay_CheckChanged" Unchecked="CBAutoPlay_CheckChanged"/>
+                    <CheckBox Name="CBRepeat" Content="Repeat" Focusable="False" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="White"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        
+        <!--Open external player control-->
+        <Button Name="OpenExternalPlayer"  Grid.Row="1" Grid.Column="0" Width="143" Height="50" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,10,10,00" 
+                ToolTip="Open the current video in an external video player." Click="OpenExternalPlayer_Click">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="pack://application:,,,/Icons/ExternalVideoPlayer.png" Width="46" Height="32" Margin="3,0,0,0"/>
+                <TextBlock Text="Play externally" VerticalAlignment="Center" Margin="5,0,0,5"/>
+            </StackPanel>
+        </Button>
+        
+    </Grid>
+</UserControl>

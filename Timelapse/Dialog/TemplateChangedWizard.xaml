@@ -1,0 +1,199 @@
+﻿<Window x:Class="Timelapse.Dialog.TemplateChangedWizard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        mc:Ignorable="d"
+        Title="Definitions differ between your Template (.tdb) and Data (.ddb) file" MinHeight="600" MinWidth="800"
+        Height="680" Width="800"
+        Loaded="Window_Loaded">
+    <xctk:Wizard FinishButtonClosesWindow="True">
+
+        <!--#region Page 1 Intro message-->
+        <xctk:WizardPage x:Name="PageIntro" 
+                         FontSize="18" FontStyle="Italic"
+                         Title="Use this wizard to review these differences before loading your data file"
+                         PageType="Interior" 
+                         HelpButtonVisibility="Collapsed"
+                         CancelButtonVisibility="Collapsed"
+                         Background="White" HeaderBackground="WhiteSmoke" 
+                         VerticalContentAlignment="Top" 
+                         Margin ="0,0,0,0" >
+            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0"  Margin="0,-12,0,0">
+                    <controls:StockMessageControl   x:Name="Message" 
+                FontStyle="Normal" 
+                Icon="Question"
+                Title="Differences exist between your Template (.tdb) and Data (.ddb) file"
+                What="Your just-opened Template (.tdb) file defines what you see when you run Timelapse, and how your data is stored.
+                        &#10;However, the Template definitions differ from what is recorded in your Data (.ddb) file." 
+                Reason="1  Intentional: someone in your organization updated the template. For example, to:
+                          &#10;    &#x2022; change the folder data level attributes (if used),
+                          &#10;    &#x2022; change what data fields are displayed in Timelapse,
+                          &#10;    &#x2022; alter aspects of the user interface.
+                        &#10;2  Unintended. For example, someone:
+                            &#10;    &#x2022; copied a different template into your image set,
+                            &#10;    &#x2022; previously updated your ddb file with a different template, 
+                            &#10;    &#x2022; provided a wrong or incompatable template."
+
+                Solution="Review the differences in the following pages. Then select an action from the available buttons."
+
+                Hint="Timelapse will inform you of differences that cannot be resolved. These may include:
+                         &#10;    &#x2022; changes to data field's type (e.g., text to number), as the new type may not match previously entered data,
+                         &#10;    &#x2022; organizational changes to folder levels, which would result in data loss and require sub-folder re-organization.
+                        &#10;&#10;If you are unsure of what to do, ask the person who provided you with the template .tdb file."                                      
+                ShowExplanationVisibility="False"/>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" >
+                    <Button VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="20,10" Margin="10,10,0,10" FontSize="12" FontStyle="Normal"
+                            Click="CancelButton_Click">Cancel</Button>
+                </StackPanel>
+            </Grid>
+        </xctk:WizardPage>
+        <!--#endregion Page1 Intro message-->
+        <!--&#10;    &#x2022; Open using New Template:          (if present) updates your data file to match the template
+                &#10;    &#x2022; Open using Original Template:    leave your data fields and data unchanged.
+                &#10;    &#x2022; Cancel:                                          exits this Wizard without opening your file.-->
+        <!--#region Page 2 Folder level differences -->
+        <xctk:WizardPage x:Name="PageHierarchy" PageType="Interior"
+                         Title="Folder-level differences"
+                         HelpButtonVisibility="Collapsed"
+                         CancelButtonVisibility="Collapsed"
+                         CanFinish="False"
+                         Background="White" HeaderBackground="WhiteSmoke"
+                         Description="Templates may define a folder hierarchy, where each folder level can define folder-specific data fields. 
+                         &#10;    &#x2022; If folder levels are included, Timelapse expects you to construct your sub-folder hierarchy to match those levels. 
+                         &#10;    &#x2022; When you view an image, data fields for particular folders will be accessible in the folder data tab, which you can fill in as desired.
+                         &#10;&#10;Important: Your subfolder hieararchy should conform to the levels defined in your chosen template.
+                         ">
+            <Grid Name="MessagLevelGrid"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer  Margin="0,-12,0,0" Grid.Row="0">
+                    <controls:StockMessageControl   
+                    x:Name="MessageLevelsIncompatable" 
+                    Visibility="Collapsed"
+                    FontStyle="Normal" 
+                    Icon="Error"
+                    Title="Your folder-level definitions are incompatable"
+                    Problem="Your Template's (.tdb) folder-level definitions are incompatable with those in your Data (.ddb) file"
+                    Reason="The folder-level hierarchy in your template (.tdb) file differs from the folder hierarchy in your data (.ddb) file.
+                            &#10;These differences, which are illustrated below, cannot be applied, as:
+                              &#10;    &#x2022; it could lead to a loss of some of your folder-level data, as it would no longer match its location in the hierarchy
+                              &#10;    &#x2022; some or all of your actual sub-folders would no longer match what is expected."
+                    ShowExplanationVisibility="False"/>
+                </ScrollViewer>
+
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,0,0,0">
+                    <Grid Name="LevelGrid"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                    </Grid>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Name="PageHierarchyOldTemplateButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseOldTemplate_Click">Open using Original Template</Button>
+                    <Button Name="PageHierarchyNewTemplateButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewTemplateButton_Click">Open using New Template</Button>
+                    <Button VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="20,10" Margin="20,10,-5,10" Click="CancelButton_Click">Cancel</Button>
+                </StackPanel>
+            </Grid>
+        </xctk:WizardPage>
+        <!--#endregion Page 2 Folder leveldifferences -->
+
+        <!--#region Page 3 Data field differences -->
+        <xctk:WizardPage x:Name="PageDataField" PageType="Interior"
+                        Title="Data field differences"
+                        HelpButtonVisibility="Collapsed"
+                        FinishButtonVisibility="Collapsed"
+                        NextButtonVisibility="Visible"
+                        CancelButtonVisibility="Collapsed"
+                        Background="White" HeaderBackground="WhiteSmoke"
+                        Description="The template defines data fields for:
+                           &#10;    &#x2022; each folder level, used to enter information about each sub-folder,
+                           &#10;    &#x2022; the image level, used to enter information about each image or video
+                           &#10;&#10;Data field differences between those levels common to both templates are listed below. 
+                           &#10;After reviewing them (including correcting deletions vs. renames, if listed), you can select: 
+                           &#10;    &#x2022; Open using New Template:        (if present) updates the data fields in your Data (ddb) file to match the new template.
+                           &#10;    &#x2022; Open using Original Template:   leaves your data fields unchanged as in the original template,
+                           &#10;    &#x2022; Cancel:                                         exits this Wizard without opening your file."
+                        CanFinish="False">
+            <Grid >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <controls:StockMessageControl  
+                        x:Name="MessageDataFieldsIncompatable"
+                        Grid.Row="0"  Margin="0,-12,0,0"  Visibility="Collapsed"
+                        FontStyle="Normal" 
+                        Icon="Error"
+                        Title="Your data field definitions are incompatable"
+                        Problem="Your Template (.tdb) file contains data fields that are incompatable with those in your Data (.ddb) file"
+                        Reason="Certain data fields in your template (.tdb) file are of a data type differs from its counterpart in the data (.ddb) file.
+                            &#10;These differences are problematic, as:
+                            &#10;    &#x2022; the new data type may not match previously entered data already stored in your data file"
+                        Hint="Select: 
+                        &#10;    &#x2022; Open using Original Template:   leaves your data fields unchanged as in the original template,
+                        &#10;    &#x2022; Cancel:                                         exits this Wizard without opening your file."
+                        ShowExplanationVisibility="False"/>
+                <ScrollViewer x:Name="MessageDataFields" Grid.Row="1"  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid Name="DataFieldGrid"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <!--Column Headers-->
+                        <TextBlock FontWeight="Bold" FontSize="14" 
+                               Grid.Row="0" Grid.Column="0" 
+                               VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,20,5"
+                               Text="Type" />
+                        <TextBlock  FontWeight="Bold" FontSize="14"  
+                               Grid.Row="0" Grid.Column="1" 
+                               VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,20,5"
+                               Text="Data label"/>
+                        <TextBlock  FontWeight="Bold" FontSize="14"  
+                                    Grid.Row="0" Grid.Column="2" 
+                                    VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,20,5"
+                                    Text="Label"/>
+                        <TextBlock  FontWeight="Bold" FontSize="14"  
+                               Grid.Row="0" Grid.ColumnSpan="3" Grid.Column="3" 
+                               VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,20,5"
+                               Text="Update action to be performed" />
+                    </Grid>
+                </ScrollViewer>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Name="PageDataFieldOldTemplateButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseOldTemplate_Click">Open using Original Template</Button>
+                    <Button Name="PageDataFieldNewTemplateButton"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="UseNewTemplateButton_Click">Open using New Template</Button>
+                    <Button VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="20,10" Margin="20,10,0,10" Click="CancelButton_Click">Cancel</Button>
+                </StackPanel>
+            </Grid>
+        </xctk:WizardPage>
+        <!--#endregion Page 3 -->
+
+
+    </xctk:Wizard>
+</Window>

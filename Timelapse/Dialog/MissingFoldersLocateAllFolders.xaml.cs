@@ -1,0 +1,403 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using Timelapse.Util;
+using FileDatabase = Timelapse.Database.FileDatabase;
+
+namespace Timelapse.Dialog
+{
+    /// <summary>
+    /// This dialog deals with missing folders, i.e. folders that are not found at their relative paths.
+    /// It is given a data structure of old and possibly matching folder names, and based on that it displays a table of rows, each showing 
+    /// - a folder's name, 
+    /// - a relative path to an expected old location of that folder,
+    /// - a relative path to a possible new location of that folder
+    /// - a checkbox indicating whether that new location should be used
+    /// - A Locate button
+    /// - a View button
+    /// The user can then check each location (via View) and find a new location (via Locate) if needed
+    /// - return true: the new locations with the 'Use' checkbox checked will be returned
+    /// - return false: cancel all attempts to find the locaton of missing folders.
+    /// </summary>
+    public partial class MissingFoldersLocateAllFolders
+    {
+        #region Public properties
+        public Dictionary<string, string> FinalFolderLocations
+        {
+            get
+            {
+                Dictionary<string, string> finalFolderLocations = new Dictionary<string, string>();
+                int rowIndex = 0;
+                foreach (MissingFolderRow row in observableCollection)
+                {
+                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    if (dataGridRow == null) continue;
+                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    if (comboBox == null) continue;
+
+                    if (row.Use && false == string.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                    {
+                        finalFolderLocations.Add(row.ExpectedOldLocation, (string)comboBox.SelectedItem);
+                    }
+                    rowIndex++;
+                }
+                return finalFolderLocations;
+            }
+        }
+
+        private ObservableCollection<MissingFolderRow> observableCollection { get; set; } // A tuple defining the contents of the datagrid
+
+        #endregion
+
+        #region Private variables
+        private readonly string useLocateButtonText = "0 matches. Try [Locate]";
+        private readonly string RootPath;
+        private readonly FileDatabase FileDatabase;
+        private readonly List<string> MissingRelativePaths;
+
+        private IList<DataGridCellInfo> selectedRowValues; // Will contain the tuple of the row corresponding to the selected cell
+        #endregion
+
+        #region Constructor, Loaded 
+        public MissingFoldersLocateAllFolders(Window owner, string rootPath, List<string> missingRelativePaths, Dictionary<string, List<string>> missingFoldersAndLikelyLocations, FileDatabase fileDatabase)
+        {
+            InitializeComponent();
+
+            if (missingFoldersAndLikelyLocations == null || missingFoldersAndLikelyLocations.Count == 0)
+            {
+                // Nothing to do. Abort
+                this.DialogResult = false;
+                return;
+            }
+
+            this.Owner = owner;
+            this.RootPath = rootPath;
+            this.FileDatabase = fileDatabase;
+            this.MissingRelativePaths = missingRelativePaths;
+            this.CreateDataTable(missingFoldersAndLikelyLocations);
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            Dialogs.TryPositionAndFitDialogIntoWindow(this);
+
+            // Get rid of those ugly empty cell headers atop the Locate/View columns
+            this.DataGrid.Columns[5].HeaderStyle = CreateEmptyHeaderStyle();
+            this.DataGrid.Columns[6].HeaderStyle = CreateEmptyHeaderStyle();
+
+            // Add the missing folders
+            this.PopulateDataGridRow();
+        }
+        #endregion
+
+        private void CreateDataTable(Dictionary<string, List<string>> missingFoldersAndLikelyLocations)
+        {
+            this.observableCollection = new ObservableCollection<MissingFolderRow>();
+            this.EnsureCheckboxValue();
+            
+            foreach (KeyValuePair<string, List<string>> pair in missingFoldersAndLikelyLocations)
+            {
+                bool isEmpty = false;
+                List<string> possibleNewLocations = missingFoldersAndLikelyLocations[pair.Key];
+                if (possibleNewLocations.Count == 0)
+                {
+                    possibleNewLocations.Add(this.useLocateButtonText);
+                    isEmpty = true;
+                }
+                MissingFolderRow row = new MissingFolderRow(Path.GetFileName(pair.Key), pair.Key, possibleNewLocations, false, isEmpty);
+                this.observableCollection.Add(row);
+            }
+
+            this.DataGrid.ItemsSource = null;
+            this.DataGrid.ItemsSource = this.observableCollection;
+        }
+
+        private void PopulateDataGridRow()
+        {
+            // Bind each combobox, and select the first item in each Combobox
+            int rowIndex = 0;
+            foreach (MissingFolderRow mfr in this.observableCollection)
+            {
+                DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                    .ContainerFromIndex(rowIndex);
+                if (dataGridRow == null)
+                {
+                    this.DataGrid.UpdateLayout();
+                    this.DataGrid.ScrollIntoView(this.DataGrid.Items[rowIndex]);
+                    dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                }
+                ComboBox cb = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                cb.ItemsSource = mfr.PossibleNewLocation;
+                cb.SelectedIndex = 0;
+                rowIndex++;
+            }
+            this.SetInitialCheckboxValue();
+        }
+        #region Button callbacks
+        private void Cancel_Click(object sender, RoutedEventArgs e) => this.DialogResult = false;
+
+        private void UseNewLocations_Click(object sender, RoutedEventArgs e) => this.DialogResult = true;
+        #endregion
+
+        #region View/ Locate / CheckChanged, Combobox callbacks
+        private void ViewButton_Click(object sender, RoutedEventArgs e)
+        {
+            string possibleLocation = GetPossibleLocationFromSelection();
+            if (String.Equals(possibleLocation, this.useLocateButtonText)) return;
+            Util.ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootPath, possibleLocation));
+        }
+
+        private void LocateButton_Click(object sender, RoutedEventArgs e)
+        {
+            string missingFolderName = this.GetFolderNameFromSelection();
+
+            // We need to update the datagrid with the new value. 
+            int rowIndex = 0;
+            MissingFolderRow rowValues = (MissingFolderRow)this.selectedRowValues[0].Item;
+            string newLocation = Dialogs.LocateRelativePathUsingOpenFileDialog(this.RootPath, missingFolderName);
+            if (string.IsNullOrWhiteSpace(newLocation)) return;
+
+            // Find the selected row
+            foreach (MissingFolderRow row in this.observableCollection)
+            {
+                if (row == rowValues)
+                {
+                    // Rebuild its combobox items so it has the latest user-provided location as the first selected item
+                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    if (dataGridRow == null) return;
+                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    if (comboBox == null) return;
+
+                    // Rebuild the list with the new position at the beginning and selected.
+                    List<string> newList = new List<string>
+                    {
+                        newLocation
+                    };
+                    foreach (string item in row.PossibleNewLocation)
+                    {
+                        if (String.Equals(item, this.useLocateButtonText))
+                        {
+                            continue;
+                        }
+                        if (false == String.Equals(item, newLocation))
+                        {
+                            newList.Add(item);
+                        }
+                    }
+                    if (newList.Count == 0)
+                    {
+                        newList.Add(this.useLocateButtonText);
+                    }
+                    row.PossibleNewLocation = newList;
+
+                    comboBox.ItemsSource = newList;
+                    comboBox.SelectedIndex = 0;
+                    this.EnsureCheckboxValue();
+                }
+                rowIndex++;
+            }
+        }
+
+        // Currently a no-op. We don't want to invoke the EnsureCheckboxValue as done previously, as
+        // it resets the checkbox even when we uncheck  or check it.
+        private void Checkbox_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            // this.EnsureCheckboxValue();
+        }
+
+        // Whenever the selection changes (which only happens if the user actually selects something)
+        // try to automatically select its 'Use' box
+        private void Part_Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox comboBoxSender)
+            {
+                int rowIndex = 0;
+                foreach (MissingFolderRow unused in this.observableCollection)
+                {
+                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                       .ContainerFromIndex(rowIndex++);
+                    if (null == dataGridRow) continue;
+                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    if (null == comboBox || comboBox != comboBoxSender) continue;
+
+                    // We found the row.
+                    CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                    if (null == checkBox) break;
+
+                    if (comboBox.Items.Count > 1)
+                    {
+                        checkBox.IsChecked = true;
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region DataGrid callbacks
+        // Remember the data for the selected row
+        private void MatchDataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+        {
+            this.selectedRowValues = e.AddedCells;
+        }
+        #endregion
+
+        #region Checkbox Checks 
+        private void SetInitialCheckboxValue()
+        {
+            int rowIndex = 0;
+            foreach (MissingFolderRow unused in this.observableCollection)
+            {
+                DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                   .ContainerFromIndex(rowIndex);
+                if (null == dataGridRow) continue;
+                CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                if (null == checkBox) continue;
+                ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                if (null == comboBox) continue;
+                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText) || comboBox.Items.Count > 1)
+                {
+                    checkBox.IsChecked = false;
+                }
+                else
+                {
+                    checkBox.IsChecked = true;
+                }
+                rowIndex++;
+            }
+        }
+
+        // Sets the Use checkbox to the appropriate initial values when its invoked.
+        // If there is only one option in the location, Use is checked.
+        // If there are two options, Use is unchecked.
+        private void EnsureCheckboxValue()
+        {
+            int rowIndex = 0;
+            foreach (MissingFolderRow unused in this.observableCollection)
+            {
+                DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                   .ContainerFromIndex(rowIndex);
+                if (null == dataGridRow) continue;
+                CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                if (null == checkBox) continue;
+                ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                if (null == comboBox) continue;
+                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                {
+                    checkBox.IsChecked = false;
+                }
+                else if (comboBox.Items.Count == 1)
+                {
+                    // We have a single valid item
+                    checkBox.IsChecked = true;
+                }
+                // else leave it unchanged
+                rowIndex++;
+            }
+        }
+
+        // Toggles a more selective match 
+        private void CheckBoxStringentMatch_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is CheckBox cb))
+            {
+                return;
+            }
+            Dictionary<string, List<string>> missingFoldersAndLikelyLocations = cb.IsChecked == true
+                ? FilesFolders.TryGetMissingFoldersStringent(this.FileDatabase.FolderPath, this.MissingRelativePaths, this.FileDatabase)
+                : FilesFolders.TryGetMissingFolders(this.FileDatabase.FolderPath, this.MissingRelativePaths);
+
+            this.CreateDataTable(missingFoldersAndLikelyLocations);
+            this.PopulateDataGridRow();
+        }
+        #endregion
+
+        #region Helper methods
+        private string GetFolderNameFromSelection()
+        {
+            MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
+            return (mfr == null) ? string.Empty : mfr.FolderName;
+        }
+
+        private string GetPossibleLocationFromSelection()
+        {
+            string location = string.Empty;
+            MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
+            // return (mfr == null || mfr.PossibleNewLocation.Count == 0) ? string.Empty : mfr.PossibleNewLocation[0];
+            int rowIndex = 0;
+            foreach (MissingFolderRow row in this.observableCollection)
+            {
+                if (row == mfr)
+                {
+                    // We foound the row,
+                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    if (null == dataGridRow) break;
+                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    if (null == comboBox) break;
+                    location = (string)comboBox.SelectedItem;
+                    break;
+                }
+                rowIndex++;
+            }
+            return string.IsNullOrEmpty(location) ? string.Empty : location;
+        }
+        #endregion
+
+        #region Styles
+        // A ColumnHeader style that appears (more or less) empty
+        private static Style CreateEmptyHeaderStyle()
+        {
+            Style headerStyle = new Style
+            {
+                TargetType = typeof(DataGridColumnHeader)//sets target type as DataGrid row
+            };
+
+            Setter setterBackground = new Setter
+            {
+                Property = DataGridColumnHeader.BackgroundProperty,
+                Value = new SolidColorBrush(Colors.White)
+            };
+
+            Setter setterBorder = new Setter
+            {
+                Property = DataGridColumnHeader.BorderThicknessProperty,
+                Value = new Thickness(0, 0, 0, 1)
+            };
+
+            headerStyle.Setters.Add(setterBackground);
+            headerStyle.Setters.Add(setterBorder);
+            return headerStyle;
+        }
+        #endregion
+
+        #region Private Class MissingFolderRow - used only by the above class
+        // An internal class used to store the contents of a datagrid row
+        private class MissingFolderRow
+        {
+            public string FolderName { get; }
+            public string ExpectedOldLocation { get; }
+            public List<string> PossibleNewLocation { get; set; }
+            // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+            public bool Use { get; set; }
+            // ReSharper disable once MemberCanBePrivate.Local
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
+            public int Count { get;} // The count of the possible matching folders
+
+            public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use, bool isEmpty)
+            {
+                this.FolderName = folderName;
+                this.ExpectedOldLocation = expectedOldLocation;
+                this.PossibleNewLocation = possibleNewLocation;
+                this.Use = use;
+                this.Count = isEmpty ? possibleNewLocation.Count - 1 : possibleNewLocation.Count;
+            }
+        }
+        #endregion
+
+ 
+    }
+}

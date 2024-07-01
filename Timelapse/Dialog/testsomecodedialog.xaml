@@ -1,0 +1,33 @@
+﻿<Window x:Class="Timelapse.Dialog.TestSomeCodeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Test Some Code Dialog" Height="450" Width="800" Loaded="TestSomeCodeDialog_OnLoaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button Name="ButtonDoSomething" Content="Do something" Click="ButtonDoSomething_Click"/>
+            <Button Name="ButtonShowStatus" Content="Status?" Click="ButtonShowStatus_Click" />
+        </StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Column="0">
+                <ListBox Name="ListFeedback"/>
+            </ScrollViewer>
+            <ScrollViewer Grid.Column="1">
+                <ListBox Name="ListData"/>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,45 @@
+# Omit Visual Studio unneeded folders/files 
+*.suo
+*.user
+*.vsp
+*.vspx
+.vs/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+debug.log
+
+# Omit Build results 
+bin/
+packages/
+obj/
+**/StyleCop.Cache
+
+# Keep: Only the required dependencies
+Dependencies/**
+!Dependencies/Xceed.Wpf.AvalonDock.dll
+!Dependencies/Xceed.Wpf.Toolkit.dll
+
+!Dependencies/exiftool(-k).exe
+#!Dependencies/ffmpeg.exe
+
+
+# NuGet Packages
+**/packages/*
+
+# except build/, which is used as an MSBuild target.
+# and any custom dlls that aren't from NuGet
+!**/packages/build/
+
+# Timelapse output
+Backups/
+*.pdb
+
+# Local Documents and backups
+ToDo.docx
+~$ToDo.docx
+*.tmp
+Dependencies/DialogUpgradeFiles.dll
+Dependencies/DialogUpgradeFiles.pdb
+
+
+Timelapse2/Timelapse/Timelapse2 - Shortcut.lnk
