@@ -42,22 +42,22 @@ namespace Timelapse.ControlsDataEntry
             }
         }
 
-        private TextBox part_TextBox;
-        private TextBox Part_textbox
-        {
-            get
-            {
-                // For efficiency, we do this so we only need to get the TextBox once
-                if (part_TextBox == null)
-                {
-                    if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
-                    {
-                        part_TextBox = textBox;
-                    }
-                }
-                return part_TextBox;
-            }
-        }
+        //private TextBox part_TextBox;
+        //private TextBox Part_textbox
+        //{
+        //    get
+        //    {
+        //        // For efficiency, we do this so we only need to get the TextBox once
+        //        if (part_TextBox == null)
+        //        {
+        //            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
+        //            {
+        //                part_TextBox = textBox;
+        //            }
+        //        }
+        //        return part_TextBox;
+        //    }
+        //}
         #endregion
 
         #region Constructor
@@ -72,21 +72,21 @@ namespace Timelapse.ControlsDataEntry
             //this.ContentControl.PreviewLostKeyboardFocus += ContentControl_PreviewLostKeyboardFocus;
         }
 
-        private void ContentControl_PreviewGotKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
-        {
-            if (this.Part_textbox?.Text == Constant.Unicode.Ellipsis)
-            {
-                this.ContentControl.AllowSpin = false;
-                e.Handled = true;
-            }
-        }
-        private void ContentControl_PreviewLostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
-        {
-            if (this.Part_textbox?.Text != Constant.Unicode.Ellipsis)
-            {
-                this.ContentControl.AllowSpin = true;
-            }
-        }
+        //private void ContentControl_PreviewGotKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+        //{
+        //    if (this.Part_textbox?.Text == Constant.Unicode.Ellipsis)
+        //    {
+        //        this.ContentControl.AllowSpin = false;
+        //        e.Handled = true;
+        //    }
+        //}
+        //private void ContentControl_PreviewLostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+        //{
+        //    if (this.Part_textbox?.Text != Constant.Unicode.Ellipsis)
+        //    {
+        //        this.ContentControl.AllowSpin = true;
+        //    }
+        //}
         #endregion
 
         #region Event Handlers

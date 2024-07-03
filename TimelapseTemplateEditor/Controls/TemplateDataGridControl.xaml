@@ -76,10 +76,6 @@
             <ToolTip x:Key="ListFixedChoiceToolTip">
                 <TextBlock>A list of items displayed as a menu of choices. Type in new items; right click on an item to edit, move or delete it.</TextBlock>
             </ToolTip>
-            <ToolTip x:Key="ListMultiChoiceToolTip">
-                <TextBlock>A list of items displayed as a menu of choices. Type in new items; right click on an item to edit, move or delete it.</TextBlock>
-            </ToolTip>
-
 
             <editorCode:CellTextBlockConverter x:Key="CellTextBlockConverter" />
         </ResourceDictionary>

@@ -268,7 +268,7 @@ namespace Timelapse
                 this.BusyCancelIndicator.IsBusy = true;
                 // TODO SAULXXX CHANGE TRUE TO STATE VARIABLE CONTAINING A PREFERENCE TO INCLUDE THE METADATA FOLDER LOCATIONS AT THE BEGINNING OF THE CSV
                 if (false == await CsvReaderWriter.ExportToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFilePath, 
-                        this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, true, this.DataHandler.FileDatabase.ImageSet.RootFolder))
+                        this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, this.DataHandler.FileDatabase.ImageSet.RootFolder))
                 {
                     Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);
                     this.BusyCancelIndicator.IsBusy = false;
@@ -437,7 +437,7 @@ namespace Timelapse
                 // Show the Busy indicator
                 this.BusyCancelIndicator.IsBusy = true;
 
-                if (false == await CsvReaderWriter.ExportMetadataToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, this.DataHandler.FileDatabase.ImageSet.RootFolder))
+                if (false == await CsvReaderWriter.ExportMetadataToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates))
                 {
                     // Hide the Busy indicator
                     this.BusyCancelIndicator.IsBusy = false;

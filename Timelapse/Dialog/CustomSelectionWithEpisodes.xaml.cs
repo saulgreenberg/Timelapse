@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Media;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -850,19 +849,6 @@ namespace Timelapse.Dialog
             // Set the selected item to the Note field with episode data in it.
             this.database.CustomSelection.EpisodeNoteField = this.NoteDataLabelContainingEpisodeData;
             this.database.CustomSelection.EpisodeShowAllIfAnyMatch = this.CheckboxShowAllEpisodeImages.IsChecked == true;
-        }
-
-        private void AlphaNumericTextBoxValue_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (sender is TextBox tb)
-            {
-                if (false == Timelapse.Util.IsCondition.IsAlphaNumericIncludingGlobCharacters(tb.Text.Trim()))
-                {
-                    tb.Text = string.Empty;
-                    Dialogs.InvalidDataFieldInput(this, tb.Text.Trim(), Constant.Control.AlphaNumeric);
-                    SystemSounds.Exclamation.Play();
-                }
-            }
         }
         #endregion
 

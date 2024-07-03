@@ -42,8 +42,6 @@ namespace Timelapse.ControlsDataEntry
             }
         }
 
-        private readonly DateTimeFormatEnum dateTimeFormat;
-
         private TextBox part_TextBox;
         private TextBox Part_textbox
         {
@@ -66,7 +64,6 @@ namespace Timelapse.ControlsDataEntry
         public DataEntryDateTimeBase(ControlRow control, DataEntryControls styleProvider, DateTimeFormatEnum dateTimeFormat, DateTime defaultValue) :
             base(control, styleProvider, ControlContentStyleEnum.DateTimeBox, ControlLabelStyleEnum.DefaultLabel)
         {
-            this.dateTimeFormat = dateTimeFormat;
             // configure the various elements
             CreateControls.Configure(this.ContentControl, dateTimeFormat, defaultValue);
             this.ContentControl.GotKeyboardFocus += this.ContentControl_GotKeyboardFocus;

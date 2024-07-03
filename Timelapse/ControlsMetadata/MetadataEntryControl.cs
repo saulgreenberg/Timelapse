@@ -130,7 +130,8 @@ namespace Timelapse.ControlsMetadata
             // Check the arguments for null 
             ThrowIf.IsNullArgument(control, nameof(control));
             ThrowIf.IsNullArgument(styleProvider, nameof(styleProvider));
-
+            
+            this.Tooltip = tooltip;
             this.ContentControl = new TContent()
             {
                 IsTabStop = true

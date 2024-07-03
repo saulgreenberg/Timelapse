@@ -47,7 +47,6 @@ namespace Timelapse.ControlsMetadata
         public MetadataDataEntryFlag(MetadataControlRow control, DataEntryControls styleProvider, string tooltip)
             : base(control, styleProvider, ControlContentStyleEnum.FlagCheckBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             // Callback used to allow Enter to select the highlit item
             this.ContentControl.PreviewKeyDown += this.ContentControl_PreviewKeyDown;

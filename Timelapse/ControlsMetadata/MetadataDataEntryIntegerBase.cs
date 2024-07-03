@@ -45,27 +45,21 @@ namespace Timelapse.ControlsMetadata
         }
         #endregion
 
-        #region Private variables
-        private readonly bool AllowPositiveNumbersOnly;
-        #endregion
 
         #region Constructor
         public MetadataDataEntryIntegerBase(MetadataControlRow control, DataEntryControls styleProvider, string tooltip, bool allowPositiveNumbersOnly) :
             base(control, styleProvider, ControlContentStyleEnum.IntegerTextBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
-            this.AllowPositiveNumbersOnly = allowPositiveNumbersOnly;
-
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
             // This is the only real difference between an IntegerAny and an IntegerPositive
-            if (this.AllowPositiveNumbersOnly)
+            if (allowPositiveNumbersOnly)
             {
                 this.ContentControl.Minimum = 0;
             }
             this.ContentControl.FormatString = Constant.ControlDefault.IntegerFormatString;
-            this.ContentControl.Watermark = this.AllowPositiveNumbersOnly ? "number\u22650 or blank" : "number or blank";
+            this.ContentControl.Watermark = allowPositiveNumbersOnly ? "number\u22650 or blank" : "number or blank";
             this.ContentControl.GotKeyboardFocus += ControlsDataHelpersCommon.Control_GotFocus;
             this.ContentControl.LostKeyboardFocus += ControlsDataHelpersCommon.Control_LostFocus;
             this.ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;

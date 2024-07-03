@@ -44,7 +44,6 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.NoteTextBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
             this.ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;

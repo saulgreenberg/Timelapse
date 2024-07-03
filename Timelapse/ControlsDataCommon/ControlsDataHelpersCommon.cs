@@ -248,7 +248,11 @@ namespace Timelapse.ControlsDataCommon
                 args.CancelCommand();
             }
 
-            string textToPaste = args.SourceDataObject.GetData(DataFormats.UnicodeText) as string;
+            if (!(args.SourceDataObject.GetData(DataFormats.UnicodeText) is string textToPaste))
+            {
+                args.CancelCommand();
+                return;
+            }
             if (sender is TextBox textBox)
             {
                 textAfterPasting = textBox.Text;
@@ -506,9 +510,14 @@ namespace Timelapse.ControlsDataCommon
             {
                 // Nothing to paste, so abort
                 args.CancelCommand();
+                return;
             }
 
-            string textToPaste = args.SourceDataObject.GetData(DataFormats.UnicodeText) as string;
+            if (!(args.SourceDataObject.GetData(DataFormats.UnicodeText) is string textToPaste))
+            {
+                args.CancelCommand();
+                return;
+            }
             if ((numberType == NumberTypeEnum.IntegerAny || numberType == NumberTypeEnum.IntegerPositive || numberType == NumberTypeEnum.Counter) && sender is IntegerUpDown integerUpDown)
             {
                 TextBox textBox = Util.VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");

@@ -120,6 +120,7 @@ namespace Timelapse.DataStructures
         {
             return this.list.GetEnumerator();
         }
+
         #endregion
     }
 }

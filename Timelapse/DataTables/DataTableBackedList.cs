@@ -157,12 +157,15 @@ namespace Timelapse.DataTables
             // skipping of rows has not been.
             if (null == this.DataTable?.Rows)
             {
-                yield return null; 
+                yield return null;
             }
-            int rowCount = this.DataTable.Rows.Count;
-            for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+            else
             {
-                yield return this.createRow(this.DataTable.Rows[rowIndex]);
+                int rowCount = this.DataTable.Rows.Count;
+                for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+                {
+                    yield return this.createRow(this.DataTable.Rows[rowIndex]);
+                }
             }
         }
 

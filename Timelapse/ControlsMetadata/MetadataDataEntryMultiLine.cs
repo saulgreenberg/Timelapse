@@ -47,7 +47,6 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.MultiLineBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
         }

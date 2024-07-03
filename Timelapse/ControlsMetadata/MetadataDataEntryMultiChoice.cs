@@ -69,7 +69,6 @@ namespace Timelapse.ControlsMetadata
             this.ContentControl.SelectedItem = control.DefaultValue;
 
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
         }

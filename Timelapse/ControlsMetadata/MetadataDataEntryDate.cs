@@ -50,7 +50,6 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.DateTimeBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
             this.ContentControl.GotKeyboardFocus += ControlsDataHelpersCommon.Control_GotFocus;

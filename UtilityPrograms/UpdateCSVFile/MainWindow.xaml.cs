@@ -112,15 +112,16 @@ namespace UpdateCSVFile
                             string relativePath = Path.GetDirectoryName(newFileName);
                             // The new file name is extracted from the path
                             newFileName = Path.GetFileName(newFileName);
-                            if (rowDictionary.ContainsKey(Constant.DatabaseColumn.RelativePath))
-                            {
-                                // Update RelativePath to its new value if the RelativePath key already exists
-                                rowDictionary[Constant.DatabaseColumn.RelativePath] = relativePath;
-                            }
-                            else
+                            // ReSharper disable once RedundantDictionaryContainsKeyBeforeAdding
+                            if (!rowDictionary.ContainsKey(Constant.DatabaseColumn.RelativePath))
                             {
                                 // Add  RelativePath and its new value if the RelativePath key does not exist
                                 rowDictionary.Add(Constant.DatabaseColumn.RelativePath, relativePath);
+                            }
+                            else
+                            {
+                                // Update RelativePath to its new value if the RelativePath key already exists
+                                rowDictionary[Constant.DatabaseColumn.RelativePath] = relativePath;
                             }
                         }
                         // Add the File and its new adjusted value 

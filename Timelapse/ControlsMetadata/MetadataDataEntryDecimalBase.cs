@@ -46,29 +46,21 @@ namespace Timelapse.ControlsMetadata
         }
         #endregion
 
-        #region Private variables
-
-        private readonly bool AllowPositiveNumbersOnly;
-        #endregion
-
         #region Constructor
         public MetadataDataEntryDecimalBase(MetadataControlRow control, DataEntryControls styleProvider, string tooltip, bool allowPositiveNumbersOnly) :
             base(control, styleProvider, ControlContentStyleEnum.DoubleTextBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
-            this.AllowPositiveNumbersOnly = allowPositiveNumbersOnly;
-
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
             // This is the only real difference between an DecimalAny and an DecimalPositive
-            if (this.AllowPositiveNumbersOnly)
+            if (allowPositiveNumbersOnly)
             {
                 this.ContentControl.Minimum = 0;
             }
 
             this.ContentControl.FormatString = Timelapse.Constant.ControlDefault.DecimalFormatString;
-            this.ContentControl.Watermark = this.AllowPositiveNumbersOnly ? "decimal\u22650 or blank" : "decimal or blank";
+            this.ContentControl.Watermark = allowPositiveNumbersOnly ? "decimal\u22650 or blank" : "decimal or blank";
             this.ContentControl.GotKeyboardFocus += ControlsDataHelpersCommon.Control_GotFocus;
             this.ContentControl.LostKeyboardFocus += ControlsDataHelpersCommon.Control_LostFocus;
             this.ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
@@ -85,58 +77,6 @@ namespace Timelapse.ControlsMetadata
                 ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(contentHost, e, true);
             }
         }
-
-        // Because its a KeyDown vs a PreviewKeyDown, the editing characters have already been processed e.g.
-        // Tab, Delete, etc
-        private void ContentControl_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            switch (e.Key)
-            {
-                case Key.D0:
-                case Key.NumPad0:
-                case Key.D1:
-                case Key.NumPad1:
-                case Key.D2:
-                case Key.NumPad2:
-                case Key.D3:
-                case Key.NumPad3:
-                case Key.D4:
-                case Key.NumPad4:
-                case Key.D5:
-                case Key.NumPad5:
-                case Key.D6:
-                case Key.NumPad6:
-                case Key.D7:
-                case Key.NumPad7:
-                case Key.D8:
-                case Key.NumPad8:
-                case Key.D9:
-                case Key.NumPad9:
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.NumLock:
-                case Key.OemPeriod:
-                case Key.Decimal:
-                    // case Key.OemPlus: // We disallow '+'  as it serves no purpose
-                    e.Handled = false;
-                    break;
-
-                case Key.OemMinus:
-
-                    if (this.AllowPositiveNumbersOnly)
-                    {
-                        // Disallow '-' if this control was configured to allow only positive integers
-                        FlashContentControl();
-                        e.Handled = true;
-                    }
-                    break;
-                default:
-                    FlashContentControl();
-                    e.Handled = true;
-                    break;
-            }
-        }
-
         #endregion
 
         #region Setting Content and Tooltip

@@ -28,7 +28,7 @@ namespace Timelapse.Database
         /// Export all the database data associated with the selected view to the .csv file indicated in the file path so that spreadsheet applications (like Excel) can display it.
         /// </summary>
         public static async Task<bool> ExportToCsv(FileDatabase database, DataEntryControls controls, string filePath, CSVDateTimeOptionsEnum csvDateTimeOptions,
-            bool csvInsertSpaceBeforeDates, bool csvIncludeRootFolderColumn, bool csvIncludeMetadataFolderLevels, string rootFolder)
+            bool csvInsertSpaceBeforeDates, bool csvIncludeRootFolderColumn, string rootFolder)
         {
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
@@ -247,8 +247,7 @@ namespace Timelapse.Database
         /// <summary>
         /// Export all the database data associated with the selected view to the .csv file indicated in the file path so that spreadsheet applications (like Excel) can display it.
         /// </summary>
-        public static async Task<bool> ExportMetadataToCsv(FileDatabase database, string folderPath, CSVDateTimeOptionsEnum csvDateTimeOptions, bool csvInsertSpaceBeforeDates,
-            bool csvIncludeRootFolderColumn, string rootFolder)
+        public static async Task<bool> ExportMetadataToCsv(FileDatabase database, string folderPath, CSVDateTimeOptionsEnum csvDateTimeOptions, bool csvInsertSpaceBeforeDates)
         {
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
@@ -979,9 +978,9 @@ namespace Timelapse.Database
                                 }
                                 break;
                             case Constant.Control.DateTime_:
-                                if (false == DateTime.TryParseExact(content, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime dateTimeCustom) &&
-                                    false == DateTime.TryParseExact(content, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTimeCustom) &&
-                                    false == DateTime.TryParseExact(content, Constant.Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out dateTimeCustom))
+                                if (false == DateTime.TryParseExact(content, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime _) &&
+                                    false == DateTime.TryParseExact(content, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out _) &&
+                                    false == DateTime.TryParseExact(content, Constant.Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out _))
                                 {
                                     // Multi Choices must be in the Choice List
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must be in one of the expected data formats, but '{2}' isn't.", csvHeader, rowNumber, content));

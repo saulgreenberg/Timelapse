@@ -82,10 +82,6 @@ namespace Timelapse.ControlsDataEntry
             {
                 // If we are in viewonly state, this ensures that the number textbox can't be edited.
                 textBox.IsReadOnly = GlobalReferences.TimelapseState.IsViewOnly;
-                //if (textBox.Text.Length == 1 && textBox.Text[0] == '0' && keyEvent.Key == Key.D0)
-                //{
-                //    keyEvent.Handled = true;
-                //}
             }
 
             // We need to handle Enter/Return key presses here, as otherwise wrong values are displayed in the text box when we hit enter
@@ -117,37 +113,7 @@ namespace Timelapse.ControlsDataEntry
                 }
             }
         }
-        private void XXXContentControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs keyEvent)
-        {
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
-            {
-                // If we are in viewonly state, this ensures that the number textbox can't be edited.
-                textBox.IsReadOnly = GlobalReferences.TimelapseState.IsViewOnly;
-            }
-
-            // We need to ignore Enter/Return key presses, as otherwise wrong values are displayed in the text box when we hit enter
-            if (keyEvent.Key == Key.Enter || keyEvent.Key == Key.Return)
-            {
-                keyEvent.Handled = true;
-                return;
-            }
-
-            if (keyEvent.Key == Key.Space)
-            {
-                TextBox contentHost = (TextBox)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
-                ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(contentHost, keyEvent, true);
-            }
-        }
-
-        // Behaviour: Ignore any non-numeric input (but backspace delete etc work just fine)
-        private void ContentControl_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
-        {
-            if (int.TryParse(e.Text, out _) == false)
-            {
-                e.Handled = true;
-            }
-        }
-
+        
         // Behaviour: If the currently clicked counter is deselected, it will be selected and all other counters will be deselected,
         // If the currently clicked counter is selected, it will be deselected along with all other counters will be deselected,
         private void LabelControl_Click(object sender, RoutedEventArgs e)

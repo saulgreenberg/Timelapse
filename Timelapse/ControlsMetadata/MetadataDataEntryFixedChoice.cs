@@ -86,9 +86,7 @@ namespace Timelapse.ControlsMetadata
             //((ComboBoxItem)this.ContentControl.Items[0]).Visibility = Visibility.Collapsed;
             this.ContentControl.SelectedIndex = 0;
 
-
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentChanged = false;
         }

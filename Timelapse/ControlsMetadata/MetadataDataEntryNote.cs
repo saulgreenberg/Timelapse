@@ -48,7 +48,6 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.NoteTextBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // Now configure the various elements
-            this.Tooltip = tooltip;
             this.ControlType = control.Type;
             this.ContentControl.Autocompletions = autocompletions;
             this.ContentChanged = false;
