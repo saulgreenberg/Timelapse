@@ -820,7 +820,7 @@ namespace Timelapse.Util
                 }
                 return true;
             }
-            catch (Exception _)
+            catch (Exception )
             {
                 return false;
             }

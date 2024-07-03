@@ -1,7 +1,7 @@
 # Timelapse2
-This repository contains the source code for and releases of [Timelapse 2](http://saul.cpsc.ucalgary.ca/timelapse/pmwiki.php?n=Main.HomePage), created by Saul Greenberg of the University of Calgary and Greenberg Consulting Inc.
+This repository contains the source code for and releases of [Timelapse](http://saul.cpsc.ucalgary.ca/timelapse/pmwiki.php?n=Main.HomePage), created by Saul Greenberg of the University of Calgary and Greenberg Consulting Inc.
 
-Timelapse2 is an Image Analyser for Camera Traps, where it is used by scientists to visually analyze and encode data as tags from thousands to millions  of images and videos. See  the [Timelapse web site](http://saul.cpsc.ucalgary.ca/timelapse/pmwiki.php?) for packaged downloads, a tutorial guide and manual oriented towards end-users, and other resources.
+Timelapse is an Image Analyser for Camera Traps, where it is used by scientists to visually analyze and encode data as tags from thousands to millions  of images and videos. See  the [Timelapse web site](http://saul.cpsc.ucalgary.ca/timelapse/pmwiki.php?) for packaged downloads, a tutorial guide and manual oriented towards end-users, and other resources.
 
 Timelapse is currently in use across the world by various biologists / ecologists / scientists and resource managers within broadly varying institutions --- national and regional parks, ecological agencies, fishery departments, conservation societies, university groups, etc. --- for quite different needs (e.g., wildlife monitoring, fisheries usage, resource monitoring and management, social science studies etc). What they have in common is
 * they collect extremely large numbers of images from one to very many field cameras
@@ -18,8 +18,8 @@ Bug reports, feature requests, and feedback are most welcome. Let us know! We ca
 ### History
 Timelapse was originally designed for a fisheries biologist who ran many camera traos in Timelapse mode, hence its name. Over time, its interface and functionality has been extended to meet the needs of a broad variety of user who use camera traps in many different ways. 
 
-While a few developers have contributed to Timelapse over the years, the vast majority has been done by Saul Greenberg.
-This repository begins at Timelapse Version 2.2.3.0. Earlier Timelapse versions are maintained in a different repository
+While a few developers have contributed to Timelapse over the years, the overwhelming majority was done as a solo effort by Saul Greenberg.
+This repository begins at Timelapse Version 2.2.3.2. Earlier Timelapse versions are maintained in a different repository   named TimelapseDeprecated
 
 ## For Developers
 If you wish to co-develop this project, contact saul@ucalgary.ca to see if our project goals coincide.
@@ -61,7 +61,7 @@ To run all parts of Timelapse, do the following.
 
 ### Dependencies
 * Timelapse software requires .NET 4.8.
-* Timelapse is tested on Windows 10 and - as far as we know - should run without issue on all versions of Windows. End users may need to [install .NET 4.8](https://msdn.microsoft.com/en-us/library/bb822049.aspx) if it's not already present. 
+* Timelapse is currently tested  on Windows 11 and - as far as we know - should run without issue on all versions of Windows. End users may need to [install .NET 4.8](https://msdn.microsoft.com/en-us/library/bb822049.aspx) if it's not already present. 
 * Timelapse uses various packages (including dlls available via NuGet). See the License file for a list of packages and their particular license terms.
 * Screen size of 1600 x 900 or larger is preferred, although it is usable on smaller displays.
 

@@ -786,12 +786,12 @@ namespace DialogUpgradeFiles.Database
 
                 string dataLabel = control.DataLabel;
                 // Because we don't show all controls, we skip the ones that are missing.
-                if (newOrderByDataLabel.ContainsKey(dataLabel) == false)
+                if (newOrderByDataLabel.TryGetValue(dataLabel, out var newOrder) == false)
                 {
                     control.SpreadsheetOrder = lastItem--;
                     continue;
                 }
-                long newOrder = newOrderByDataLabel[dataLabel];
+
                 switch (orderColumnName)
                 {
                     case Constant.Control.ControlOrder:

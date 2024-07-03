@@ -302,19 +302,15 @@ namespace UpdateCSVFile
         public static bool TryGetFileFromUser(string title, string defaultFilePath, string filter, string defaultExtension, out string selectedFilePath)
         {
             // Get the template file, which should be located where the images reside
-            using (OpenFileDialog openFileDialog = new OpenFileDialog()
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                Title = title,
-                CheckFileExists = true,
-                CheckPathExists = true,
-                Multiselect = false,
-                AutoUpgradeEnabled = true,
-
-                // Set filter for file extension and default file extension 
-                DefaultExt = defaultExtension,
-                Filter = filter
-            })
-            {
+                openFileDialog.Title = title;
+                openFileDialog.CheckFileExists = true;
+                openFileDialog.CheckPathExists = true;
+                openFileDialog.Multiselect = false;
+                openFileDialog.AutoUpgradeEnabled = true; // Set filter for file extension and default file extension 
+                openFileDialog.DefaultExt = defaultExtension;
+                openFileDialog.Filter = filter;
                 if (string.IsNullOrWhiteSpace(defaultFilePath))
                 {
                     openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

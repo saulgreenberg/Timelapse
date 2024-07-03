@@ -12,19 +12,15 @@ namespace DialogUpgradeFiles.Dialog
         public static bool TryGetFilesFromUserUsingOpenFileDialog(string title, string defaultFilePath, string filter, string defaultExtension, out string[] selectedFiles)
         {
             // Get the template file, which should be located where the images reside
-            using (OpenFileDialog openFileDialog = new OpenFileDialog()
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                Title = title,
-                CheckFileExists = true,
-                CheckPathExists = true,
-                Multiselect = true,
-                AutoUpgradeEnabled = true,
-
-                // Set filter for file extension and default file extension 
-                DefaultExt = defaultExtension,
-                Filter = filter
-            })
-            {
+                openFileDialog.Title = title;
+                openFileDialog.CheckFileExists = true;
+                openFileDialog.CheckPathExists = true;
+                openFileDialog.Multiselect = true;
+                openFileDialog.AutoUpgradeEnabled = true; // Set filter for file extension and default file extension 
+                openFileDialog.DefaultExt = defaultExtension;
+                openFileDialog.Filter = filter;
                 if (string.IsNullOrWhiteSpace(defaultFilePath) || !(File.Exists(defaultFilePath) || Directory.Exists(defaultFilePath)))
                 {
                     openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -59,15 +55,13 @@ namespace DialogUpgradeFiles.Dialog
         public static bool TryGetFoldersFromUserUsingOpenFileDialog(string title, string initialFolder, out string[] selectedFolderPath)
         {
 
-            using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog()
+            using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog())
             {
-                Title = title,
-                DefaultDirectory = initialFolder,
-                IsFolderPicker = true,
-                EnsurePathExists = false,
-                Multiselect = true
-            })
-            {
+                folderSelectionDialog.Title = title;
+                folderSelectionDialog.DefaultDirectory = initialFolder;
+                folderSelectionDialog.IsFolderPicker = true;
+                folderSelectionDialog.EnsurePathExists = false;
+                folderSelectionDialog.Multiselect = true;
                 folderSelectionDialog.InitialDirectory = folderSelectionDialog.DefaultDirectory;
                 if (folderSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {

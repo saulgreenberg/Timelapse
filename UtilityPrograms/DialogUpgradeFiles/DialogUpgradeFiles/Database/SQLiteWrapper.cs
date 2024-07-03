@@ -1083,9 +1083,9 @@ namespace DialogUpgradeFiles.Database
             try
             {
                 string newColumnName = string.Empty;
-                if (attributes.ContainsKey(SchemaAttributesEnum.Name))
+                if (attributes.TryGetValue(SchemaAttributesEnum.Name, out var attribute))
                 {
-                    newColumnName = attributes[SchemaAttributesEnum.Name].Trim();
+                    newColumnName = attribute.Trim();
                 }
                 using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
                 {
@@ -1188,21 +1188,21 @@ namespace DialogUpgradeFiles.Database
                             case 1:  // name (Column Name)
                                      // Rename the column if needed
                                 currentColumnName = reader[field].ToString();
-                                existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Name))
-                                    ? attributes[SchemaAttributesEnum.Name]
+                                existingColumnDefinition += (currentColumnName == existingColumnName && attributes.TryGetValue(SchemaAttributesEnum.Name, out var attribute))
+                                    ? attribute
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 2:  // type (Column type)
-                                existingColumnDefinition += (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Type))
-                                    ? attributes[SchemaAttributesEnum.Type]
+                                existingColumnDefinition += (currentColumnName == existingColumnName && attributes.TryGetValue(SchemaAttributesEnum.Type, out var attribute1))
+                                    ? attribute1
                                     : reader[field].ToString();
                                 existingColumnDefinition += " ";
                                 break;
                             case 3:  // notnull (Column has a NOT NULL constraint)
-                                if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.NotNull))
+                                if (currentColumnName == existingColumnName && attributes.TryGetValue(SchemaAttributesEnum.NotNull, out var attribute2))
                                 {
-                                    existingColumnDefinition += attributes[SchemaAttributesEnum.NotNull];
+                                    existingColumnDefinition += attribute2;
                                 }
                                 else if (reader[field].ToString() != "0")
                                 {
@@ -1211,9 +1211,9 @@ namespace DialogUpgradeFiles.Database
                                 existingColumnDefinition += " ";
                                 break;
                             case 4:  // dflt_value (Column has a default value)
-                                if (currentColumnName == existingColumnName && attributes.ContainsKey(SchemaAttributesEnum.Default))
+                                if (currentColumnName == existingColumnName && attributes.TryGetValue(SchemaAttributesEnum.Default, out var attribute3))
                                 {
-                                    existingColumnDefinition += Sql.Default + Sql.Quote(attributes[SchemaAttributesEnum.Default]);
+                                    existingColumnDefinition += Sql.Default + Sql.Quote(attribute3);
                                 }
                                 else if (false == string.IsNullOrEmpty(reader[field].ToString()))
                                 {

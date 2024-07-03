@@ -1455,7 +1455,7 @@ namespace Timelapse.Database
             }
             else
             {
-                UpdateFiles(valueSource, control.DataLabel);
+                UpdateFiles(valueSource, control.DataLabel, from, to);
             }
         }
 
