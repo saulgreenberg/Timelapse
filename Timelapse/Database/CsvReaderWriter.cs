@@ -108,114 +108,120 @@ namespace Timelapse.Database
 
                             foreach (string dataLabel in dataLabelsToExport)
                             {
-                                DataEntryControl control = controls.ControlsByDataLabel[dataLabel];
+                                
                                 // Check for these standard controls, as represented by a fixed data label
                                 if (dataLabel == Constant.DatabaseColumn.RootFolder)
                                 {
                                     // Export the data as is
                                     csvRow.Append(AddColumnValue(rootFolder));
                                 }
-                                else if (dataLabel == Constant.DatabaseColumn.DateTime)
+                                else
                                 {
-                                    if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
-                                    {
-                                        // Export both the separate Date and Time column data with or without a space as needed
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                        // csvRow.Append(prefix + AddColumnValue(image.GetValueDatabaseString(dataLabel)));
-                                        csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateString()));
-                                        csvRow.Append(prefix + AddColumnValue(image.GetValueCSVTimeString()));
-                                    }
-                                    else
-                                    {
-                                        // Export the single DateTime column data
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                        if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
-                                        {
-                                            // with the T separator
-                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithTSeparatorString()));
-                                        }
-                                        else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
-                                        {
-                                            // without the T separator
-                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithoutTSeparatorString()));
-                                        }
-                                    }
-                                }
+                                    DataEntryControl control = controls.ControlsByDataLabel[dataLabel];
 
-                                // Now check for these custom controls, as represented by its data type
-                                else if (control is DataEntryDateTimeCustom)
-                                // Export the  DateTime_ column as determined by the options
-                                {
-                                    if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
+                                    if (dataLabel == Constant.DatabaseColumn.DateTime)
                                     {
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                        if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
-                                        {
-                                            // Export both the separate Date and Time column data with or without a space as needed
-
-                                            // with the T separator
-                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime)));
-                                        }
-                                        else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
-                                        {
-                                            // without the T separator
-                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime)));
-                                        }
-                                        else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
-                                        {
-                                            // dd-MMM-yyyy HH:mm:ss
-                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDateTime(dateTime)));
-                                        }
-                                    }
-                                    else
-                                    {
-                                        TracePrint.PrintMessage($"DateTime_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
-                                        csvRow.Append(string.Empty);
-                                    }
-                                }
-
-                                // Now check for these custom controls, as represented by its data type
-                                else if (control is DataEntryDate)
-                                // Export the  Date_ column as determined by the options
-                                {
-                                    if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
-                                    {
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                         if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                         {
-                                            // dd-MMM-yyyy HH:mm:ss
-                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDatePortion(dateTime)));
+                                            // Export both the separate Date and Time column data with or without a space as needed
+                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
+                                            // csvRow.Append(prefix + AddColumnValue(image.GetValueDatabaseString(dataLabel)));
+                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateString()));
+                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVTimeString()));
                                         }
                                         else
                                         {
-                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDatabaseDate(dateTime)));
+                                            // Export the single DateTime column data
+                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
+                                            if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
+                                            {
+                                                // with the T separator
+                                                csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithTSeparatorString()));
+                                            }
+                                            else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
+                                            {
+                                                // without the T separator
+                                                csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithoutTSeparatorString()));
+                                            }
                                         }
                                     }
+
+                                    // Now check for these custom controls, as represented by its data type
+                                    else if (control is DataEntryDateTimeCustom)
+                                        // Export the  DateTime_ column as determined by the options
+                                    {
+                                        if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
+                                        {
+                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
+                                            if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
+                                            {
+                                                // Export both the separate Date and Time column data with or without a space as needed
+
+                                                // with the T separator
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime)));
+                                            }
+                                            else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
+                                            {
+                                                // without the T separator
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime)));
+                                            }
+                                            else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
+                                            {
+                                                // dd-MMM-yyyy HH:mm:ss
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDateTime(dateTime)));
+                                            }
+                                        }
+                                        else
+                                        {
+                                            TracePrint.PrintMessage($"DateTime_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
+                                            csvRow.Append(string.Empty);
+                                        }
+                                    }
+
+                                    // Now check for these custom controls, as represented by its data type
+                                    else if (control is DataEntryDate)
+                                        // Export the  Date_ column as determined by the options
+                                    {
+                                        if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
+                                        {
+                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
+                                            if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
+                                            {
+                                                // dd-MMM-yyyy HH:mm:ss
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDatePortion(dateTime)));
+                                            }
+                                            else
+                                            {
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDatabaseDate(dateTime)));
+                                            }
+                                        }
+                                        else
+                                        {
+                                            TracePrint.PrintMessage($"Date_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
+                                            csvRow.Append(string.Empty);
+                                        }
+                                    }
+
+                                    else if (control is DataEntryTime)
+                                        // Export the  Time_ column as determined by the options
+                                    {
+                                        if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
+                                        {
+                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
+                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringTime(dateTime)));
+                                        }
+                                        else
+                                        {
+                                            TracePrint.PrintMessage($"Time_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
+                                            csvRow.Append(string.Empty);
+                                        }
+                                    }
+
                                     else
                                     {
-                                        TracePrint.PrintMessage($"Date_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
-                                        csvRow.Append(string.Empty);
+                                        // Export the data as is
+                                        csvRow.Append(AddColumnValue(image.GetValueDatabaseString(dataLabel)));
                                     }
-                                }
-
-                                else if (control is DataEntryTime)
-                                // Export the  Time_ column as determined by the options
-                                {
-                                    if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
-                                    {
-                                        string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                        csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringTime(dateTime)));
-                                    }
-                                    else
-                                    {
-                                        TracePrint.PrintMessage($"Time_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
-                                        csvRow.Append(string.Empty);
-                                    }
-                                }
-
-                                else
-                                {   // Export the data as is
-                                    csvRow.Append(AddColumnValue(image.GetValueDatabaseString(dataLabel)));
                                 }
                             }
                             fileWriter.WriteLine(csvRow.ToString());
