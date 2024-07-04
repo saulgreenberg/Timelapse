@@ -32,7 +32,7 @@ namespace Timelapse.ControlsDataEntry
         public override bool ContentReadOnly
         {
             // A hack, as the CheckComboBox does not contain an IsReadOnly field
-            get => this.ContentControl.IsEnabled == false;
+            get => this.ContentControl.IsEditable;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
@@ -42,7 +42,7 @@ namespace Timelapse.ControlsDataEntry
                 }
                 else
                 {
-                    this.ContentControl.IsEnabled = value;
+                    this.ContentControl.IsEditable = value;
                 }
             }
         }

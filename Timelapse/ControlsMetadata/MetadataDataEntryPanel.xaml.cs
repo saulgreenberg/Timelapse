@@ -96,7 +96,10 @@ namespace Timelapse.ControlsMetadata
                 {
                     // Note
                     case Constant.Control.Note:
-                        MetadataDataEntryNote noteControl = new MetadataDataEntryNote(metadataControlRow, new Dictionary<string, string>(), styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryNote noteControl = new MetadataDataEntryNote(metadataControlRow, new Dictionary<string, string>(), styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         noteControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = noteControl;
                         // Maybe don't add it if its invisible?
@@ -106,7 +109,10 @@ namespace Timelapse.ControlsMetadata
 
                     // Multiline
                     case Constant.Control.MultiLine:
-                        MetadataDataEntryMultiLine multiLineControl = new MetadataDataEntryMultiLine(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryMultiLine multiLineControl = new MetadataDataEntryMultiLine(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         multiLineControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = multiLineControl;
                         // Maybe don't add it if its invisible?
@@ -116,7 +122,10 @@ namespace Timelapse.ControlsMetadata
 
                     // AlphaNumeric
                     case Constant.Control.AlphaNumeric:
-                        MetadataDataEntryAlphaNumeric alphaNumericControl = new MetadataDataEntryAlphaNumeric(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryAlphaNumeric alphaNumericControl = new MetadataDataEntryAlphaNumeric(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         alphaNumericControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = alphaNumericControl;
                         // Maybe don't add it if its invisible?
@@ -126,7 +135,10 @@ namespace Timelapse.ControlsMetadata
 
                     // IntegerAny
                     case Constant.Control.IntegerAny:
-                        MetadataDataEntryIntegerAny integerAnyControl = new MetadataDataEntryIntegerAny(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryIntegerAny integerAnyControl = new MetadataDataEntryIntegerAny(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         integerAnyControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = integerAnyControl;
                         // Maybe don't add it if its invisible?
@@ -137,7 +149,10 @@ namespace Timelapse.ControlsMetadata
 
                     // IntegerPostive
                     case Constant.Control.IntegerPositive:
-                        MetadataDataEntryIntegerPositive integerPostiveControl = new MetadataDataEntryIntegerPositive(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryIntegerPositive integerPostiveControl = new MetadataDataEntryIntegerPositive(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         integerPostiveControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = integerPostiveControl;
                         // Maybe don't add it if its invisible?
@@ -147,7 +162,10 @@ namespace Timelapse.ControlsMetadata
 
                     // DecimalAny
                     case Constant.Control.DecimalAny:
-                        MetadataDataEntryDecimalAny decimalAnyControl = new MetadataDataEntryDecimalAny(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryDecimalAny decimalAnyControl = new MetadataDataEntryDecimalAny(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         decimalAnyControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = decimalAnyControl;
                         // Maybe don't add it if its invisible?
@@ -157,7 +175,10 @@ namespace Timelapse.ControlsMetadata
 
                     // DecimalPostive
                     case Constant.Control.DecimalPositive:
-                        MetadataDataEntryDecimalPositive decimalPostiveControl = new MetadataDataEntryDecimalPositive(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryDecimalPositive decimalPostiveControl = new MetadataDataEntryDecimalPositive(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         decimalPostiveControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = decimalPostiveControl;
                         // Maybe don't add it if its invisible?
@@ -166,7 +187,10 @@ namespace Timelapse.ControlsMetadata
                         break;
 
                     case Constant.Control.FixedChoice:
-                        MetadataDataEntryFixedChoice fixedChoiceControl = new MetadataDataEntryFixedChoice(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryFixedChoice fixedChoiceControl = new MetadataDataEntryFixedChoice(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         fixedChoiceControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = fixedChoiceControl;
                         // Maybe don't add it if its invisible?
@@ -175,7 +199,10 @@ namespace Timelapse.ControlsMetadata
                         break;
 
                     case Constant.Control.MultiChoice:
-                        MetadataDataEntryMultiChoice multiChoiceControl = new MetadataDataEntryMultiChoice(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryMultiChoice multiChoiceControl = new MetadataDataEntryMultiChoice(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         multiChoiceControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = multiChoiceControl;
 
@@ -194,7 +221,8 @@ namespace Timelapse.ControlsMetadata
                                     Value = DateTime.TryParse(metadataControlRow.DefaultValue, out DateTime tempDateTime)
                                         ? tempDateTime
                                         : Constant.ControlDefault.DateTimeCustomDefaultValue
-                             }
+                            },
+                            ContentReadOnly = false
                         };
                         MetadataDataEntryPanel.ConfigureFormatForDateTimeCustom(dateTimeCustomControl.ContentControl);
                         dateTimeCustomControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimeCustomControl.ContentControl.Value));
@@ -216,7 +244,8 @@ namespace Timelapse.ControlsMetadata
                                 Value = DateTime.TryParse(metadataControlRow.DefaultValue, out DateTime tempDate)
                                     ? tempDate
                                     : Constant.ControlDefault.DateTimeCustomDefaultValue
-                            }
+                            },
+                            ContentReadOnly = false
                         };
                         MetadataDataEntryPanel.ConfigureFormatForDate(dateControl.ContentControl);
                         dateControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateControl.ContentControl.Value));
@@ -239,7 +268,8 @@ namespace Timelapse.ControlsMetadata
                                 Value = DateTime.TryParse(metadataControlRow.DefaultValue, out DateTime tempTime)
                                     ? tempTime
                                     : Constant.ControlDefault.DateTimeCustomDefaultValue
-                            }
+                            },
+                            ContentReadOnly = false
                         };
                         MetadataDataEntryPanel.ConfigureFormatForTime(timeControl.ContentControl);
                         timeControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime((DateTime)timeControl.ContentControl.Value));
@@ -251,7 +281,10 @@ namespace Timelapse.ControlsMetadata
 
                     // Flag
                     case Constant.Control.Flag:
-                        MetadataDataEntryFlag flagControl = new MetadataDataEntryFlag(metadataControlRow, styleProvider, metadataControlRow.Tooltip);
+                        MetadataDataEntryFlag flagControl = new MetadataDataEntryFlag(metadataControlRow, styleProvider, metadataControlRow.Tooltip)
+                        {
+                            ContentReadOnly = false
+                        };
                         flagControl.SetContentAndTooltip(metadataControlRow.DefaultValue);
                         controlToAdd = flagControl;
                         // Maybe don't add it if its invisible?
@@ -574,6 +607,13 @@ namespace Timelapse.ControlsMetadata
                 brushToUse = Constant.Colours.VeryLightGrey;
                 this.ButtonAddMetadata.IsEnabled = false;
                 this.ButtonAddMetadata.Visibility = Visibility.Collapsed;
+            }
+
+            // Finally, if we are in view only, make sure that the button is disabled 
+            // to disallow initialization
+            if (GlobalReferences.TimelapseState.IsViewOnly)
+            {
+                this.ButtonAddMetadata.IsEnabled = false;
             }
 
             // Color the rest of the panel accordingly

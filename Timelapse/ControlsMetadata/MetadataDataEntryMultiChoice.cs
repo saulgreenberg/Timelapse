@@ -27,18 +27,18 @@ namespace Timelapse.ControlsMetadata
         public override bool ContentReadOnly
         {
             // A hack, as the CheckComboBox does not contain an IsReadOnly field
-            get => this.ContentControl.IsEnabled == false;
+            get => this.ContentControl.IsEditable;
             set
             {
-                //if (GlobalReferences.TimelapseState.IsViewOnly)
-                //{
-                //    this.ContentControl.IsReadOnly = true;
-                //    this.ContentControl.IsHitTestVisible = false;
-                //}
-                //else
-                //{
-                //    this.ContentControl.IsReadOnly = value;
-                //}
+                if (GlobalReferences.TimelapseState.IsViewOnly)
+                {
+                    this.ContentControl.IsEditable = false;
+                    this.ContentControl.IsHitTestVisible = false;
+                }
+                else
+                {
+                    this.ContentControl.IsEditable = value;
+                }
             }
         }
         #endregion
@@ -49,7 +49,7 @@ namespace Timelapse.ControlsMetadata
         {
             // The behaviour of the combo box
             this.ContentControl.Focusable = true;
-            this.ContentControl.IsEditable = false;
+            //this.ContentControl.IsEditable = false;
             this.ContentControl.IsTextSearchEnabled = true;
 
             // Callback used to allow Enter to select the highlit item

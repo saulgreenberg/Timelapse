@@ -97,6 +97,7 @@ namespace Timelapse
             if (this.State.IsViewOnly)
             {
                 this.MenuItemAddFilesToImageSet.Visibility = Visibility.Collapsed;
+                this.MenuItemUpgradeTimelapseFiles.Visibility = Visibility.Collapsed;
                 this.MenuItemImportDetectionData.Visibility = Visibility.Collapsed;
                 this.MenuItemImportFromCsv.Visibility = Visibility.Collapsed;
                 this.MenuItemRenameFileDatabaseFile.Visibility = Visibility.Collapsed;
@@ -104,6 +105,7 @@ namespace Timelapse
                 this.MenuItemImportDetectionData.Visibility = Visibility.Collapsed;
                 this.MenuItemDeleteCurrentFile.Visibility = Visibility.Collapsed;
                 this.MenuItemRestoreDefaults.Visibility = Visibility.Collapsed;
+                this.MenuItemCheckInDatabases.IsEnabled = false;
 
                 this.MenuItemShowQuickPasteWindow.Visibility = Visibility.Collapsed;
                 this.MenuItemImportQuickPasteFromDB.Visibility = Visibility.Collapsed;
@@ -123,6 +125,7 @@ namespace Timelapse
                 this.MenuItemFindMissingImage.Visibility = Visibility.Collapsed;
                 this.MenuItemFindMissingFolder.Visibility = Visibility.Collapsed;
 
+                this.MenuItemPopulateWithDetectionCounts.Visibility = Visibility.Collapsed;
 
                 this.MenuS1.Visibility = Visibility.Collapsed;
                 this.MenuS2.Visibility = Visibility.Collapsed;

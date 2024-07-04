@@ -44,7 +44,6 @@ namespace Timelapse.ControlsDataEntry
                     this.contentReadOnly = value;
                 }
             }
-            // set { this.ContentControl.IsEnabled = !value; }
         }
         #endregion
 

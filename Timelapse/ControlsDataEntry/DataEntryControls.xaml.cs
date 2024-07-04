@@ -61,7 +61,10 @@ namespace Timelapse.ControlsDataEntry
                 switch (control.Type)
                 {
                     case Constant.DatabaseColumn.DateTime:
-                        DataEntryDateTime dateTimeControl = new DataEntryDateTime(control, this);
+                        DataEntryDateTime dateTimeControl = new DataEntryDateTime(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = dateTimeControl;
                         break;
 
@@ -98,47 +101,80 @@ namespace Timelapse.ControlsDataEntry
                         break;
                     case Constant.Control.Flag:
                     case Constant.DatabaseColumn.DeleteFlag:
-                        DataEntryFlag flagControl = new DataEntryFlag(control, this);
+                        DataEntryFlag flagControl = new DataEntryFlag(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = flagControl;
                         break;
                     case Constant.Control.Counter:
-                        DataEntryCounter counterControl = new DataEntryCounter(control, this);
+                        DataEntryCounter counterControl = new DataEntryCounter(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = counterControl;
                         break;
                     case Constant.Control.IntegerAny:
-                        DataEntryIntegerAny integerAnyControl = new DataEntryIntegerAny(control, this);
+                        DataEntryIntegerAny integerAnyControl = new DataEntryIntegerAny(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = integerAnyControl;
                         break;
                     case Constant.Control.IntegerPositive:
-                        DataEntryIntegerPositive integerPositiveControl = new DataEntryIntegerPositive(control, this);
+                        DataEntryIntegerPositive integerPositiveControl = new DataEntryIntegerPositive(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = integerPositiveControl;
                         break;
                     case Constant.Control.DecimalAny:
-                        DataEntryDecimalAny decimalAnyControl = new DataEntryDecimalAny(control, this);
+                        DataEntryDecimalAny decimalAnyControl = new DataEntryDecimalAny(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = decimalAnyControl;
                         break;
                     case Constant.Control.DecimalPositive:
-                        DataEntryDecimalPositive decimalPositiveControl = new DataEntryDecimalPositive(control, this);
+                        DataEntryDecimalPositive decimalPositiveControl = new DataEntryDecimalPositive(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = decimalPositiveControl;
                         break;
                     case Constant.Control.FixedChoice:
-                        DataEntryChoice choiceControl = new DataEntryChoice(control, this);
+                        DataEntryChoice choiceControl = new DataEntryChoice(control, this)
+                        {
+                            ContentReadOnly = false
+                        };                      
                         controlToAdd = choiceControl;
                         break;
                     case Constant.Control.MultiChoice:
-                        DataEntryMultiChoice multiChoiceControl = new DataEntryMultiChoice(control, this);
+                        DataEntryMultiChoice multiChoiceControl = new DataEntryMultiChoice(control, this)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = multiChoiceControl;
                         break;
                     case Constant.Control.DateTime_:
-                        DataEntryDateTimeCustom dateTimeCustomControl = new DataEntryDateTimeCustom(control, this, Constant.ControlDefault.DateTimeCustomDefaultValue);
+                        DataEntryDateTimeCustom dateTimeCustomControl = new DataEntryDateTimeCustom(control, this, Constant.ControlDefault.DateTimeCustomDefaultValue)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = dateTimeCustomControl;
                         break;
                     case Constant.Control.Date_:
-                        DataEntryDate dateControl = new DataEntryDate(control, this, Constant.ControlDefault.Date_DefaultValue);
+                        DataEntryDate dateControl = new DataEntryDate(control, this, Constant.ControlDefault.Date_DefaultValue)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = dateControl;
                         break;
                     case Constant.Control.Time_:
-                        DataEntryTime timeControl = new DataEntryTime(control, this, Constant.ControlDefault.Time_DefaultValue);
+                        DataEntryTime timeControl = new DataEntryTime(control, this, Constant.ControlDefault.Time_DefaultValue)
+                        {
+                            ContentReadOnly = false
+                        };
                         controlToAdd = timeControl;
                         break;
                     default:
