@@ -12,29 +12,47 @@ namespace DialogUpgradeFiles.Database
     {
         #region Public Properties
         // These  lists collect information about possible mismatches between the .tdb and the .ddb template, and what should eventually be added, deleted or renamed
-        public Dictionary<string, string> DataLabelsInTemplateButNotImageDatabase { get; set; } = new Dictionary<string, string>();
-        public Dictionary<string, string> DataLabelsInImageButNotTemplateDatabase { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> DataLabelsInTemplateButNotImageDatabase { get; set; }
+        public Dictionary<string, string> DataLabelsInImageButNotTemplateDatabase { get; set; }
 
         // These  lists collect information about what should eventually be added, deleted or renamed
-        public List<String> DataLabelsToAdd { get; set; } = new List<String>();
-        public List<String> DataLabelsToDelete { get; set; } = new List<String>();
-        public List<KeyValuePair<string, string>> DataLabelsToRename { get; set; } = new List<KeyValuePair<string, string>>();
+        public List<String> DataLabelsToAdd { get; set; }
+        public List<String> DataLabelsToDelete { get; set; }
+        public List<KeyValuePair<string, string>> DataLabelsToRename { get; set; }
 
         // These lists collect error messages and warnings concerning control synchronization between the templates
-        public List<string> ControlSynchronizationErrors { get; } = new List<string>();
-        public List<string> ControlSynchronizationWarnings { get; } = new List<string>();
+        public List<string> ControlSynchronizationErrors { get; }
+        public List<string> ControlSynchronizationWarnings { get; }
 
         // Signals whether or not to use the template found in the Image database instead of the Template database
-        public bool UseTemplateDBTemplate { get; set; } = true;
+        public bool UseTemplateDBTemplate { get; set; }
 
         // Signals whether a silent update of the Image database template should be performed at the minimum
-        public bool SyncRequiredAsNonCriticalFieldsDiffer { get; set; } = false;
+        public bool SyncRequiredAsNonCriticalFieldsDiffer { get; set; }
 
         // ReSharper disable once UnusedMember.Global
         public bool SyncRequiredAsDataLabelsDiffer => this.DataLabelsInTemplateButNotImageDatabase.Count > 0 || this.DataLabelsInImageButNotTemplateDatabase.Count > 0;
 
-        public bool SyncRequiredAsChoiceMenusDiffer { get; set; } = false;
+        public bool SyncRequiredAsChoiceMenusDiffer { get; set; }
+        #endregion
 
+        #region Constructors
+        public TemplateSyncResults()
+        {
+            this.DataLabelsInTemplateButNotImageDatabase = new Dictionary<string, string>();
+            this.DataLabelsInImageButNotTemplateDatabase = new Dictionary<string, string>();
+
+            this.DataLabelsToAdd = new List<String>();
+            this.DataLabelsToDelete = new List<String>();
+            this.DataLabelsToRename = new List<KeyValuePair<string, string>>();
+
+            this.ControlSynchronizationErrors = new List<string>();
+            this.ControlSynchronizationWarnings = new List<string>();
+
+            this.UseTemplateDBTemplate = true;
+            this.SyncRequiredAsNonCriticalFieldsDiffer = false;
+            this.SyncRequiredAsChoiceMenusDiffer = false;
+        }
         #endregion
     }
 }

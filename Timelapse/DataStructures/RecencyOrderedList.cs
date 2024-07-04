@@ -113,11 +113,13 @@ namespace Timelapse.DataStructures
         #region Enumerator-related
         public IEnumerator<TElement> GetEnumerator()
         {
+            // ReSharper disable once NotDisposedResourceIsReturned
             return this.list.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
+            // ReSharper disable once NotDisposedResourceIsReturned
             return this.list.GetEnumerator();
         }
 

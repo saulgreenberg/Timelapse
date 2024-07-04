@@ -46,6 +46,10 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DialogUpgradeFiles, Version=2.3.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependencies\DialogUpgradeFiles.dll</HintPath>
+    </Reference>
     <Reference Include="MetadataExtractor, Version=2.8.1.0, Culture=neutral, PublicKeyToken=b66b5ccaf776c301, processorArchitecture=MSIL">
       <HintPath>..\packages\MetadataExtractor.2.8.1\lib\net45\MetadataExtractor.dll</HintPath>
     </Reference>
@@ -292,10 +296,6 @@
     <ProjectReference Include="..\Timelapse\Timelapse.csproj">
       <Project>{f223a2f9-f2c2-47a8-80f3-472349176579}</Project>
       <Name>Timelapse</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\UtilityPrograms\DialogUpgradeFiles\DialogUpgradeFiles\DialogUpgradeFiles.csproj">
-      <Project>{B289257E-5186-43AA-AD08-298A2E1EB7F4}</Project>
-      <Name>DialogUpgradeFiles</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

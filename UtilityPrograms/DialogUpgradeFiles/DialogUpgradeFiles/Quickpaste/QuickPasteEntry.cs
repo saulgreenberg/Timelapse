@@ -6,8 +6,16 @@ namespace DialogUpgradeFiles.QuickPaste
     public class QuickPasteEntry
     {
         #region Public Properties
-        public string Title { get; set; } = string.Empty; // a user- or system-supplied Title that will be displayed to identify the QuickPaste Entry
-        public List<QuickPasteItem> Items { get; set; } = new List<QuickPasteItem>(); // a list of QuickPasteItems, each identifying a potential pastable control
+        public string Title { get; set; }                 // a user- or system-supplied Title that will be displayed to identify the QuickPaste Entry
+        public List<QuickPasteItem> Items { get; set; }   // a list of QuickPasteItems, each identifying a potential pastable control
+        #endregion
+
+        #region Constructor
+        public QuickPasteEntry()
+        {
+            this.Title = string.Empty;
+            this.Items = new List<QuickPasteItem>();
+        }
         #endregion
 
         #region Public Methods
