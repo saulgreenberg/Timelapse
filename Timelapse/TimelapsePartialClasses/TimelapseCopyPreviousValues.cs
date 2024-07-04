@@ -37,7 +37,7 @@ namespace Timelapse
             }
 
             bool isMouseOver = this.CopyPreviousValuesButton.IsMouseOver;
-            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
                 DataEntryControl control = pair.Value;
                 if (control.Copyable)
@@ -98,7 +98,7 @@ namespace Timelapse
                     BlurRadius = 5,
                     Opacity = 1
                 };
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     if (control.Copyable)
@@ -110,7 +110,7 @@ namespace Timelapse
             else
             {
                 // Remove the glow around the copyable controls
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     control.Container.ClearValue(Control.EffectProperty);
@@ -129,7 +129,7 @@ namespace Timelapse
                 previousRow >= 0)
             {
                 // Show the previews on the copyable controls
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     if (control.Copyable)
@@ -159,7 +159,7 @@ namespace Timelapse
             else
             {
                 // Remove the preview from each control
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     if (control.Copyable)
@@ -182,7 +182,7 @@ namespace Timelapse
             }
 
             this.FilePlayer_Stop(); // In case the FilePlayer is going
-            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
                 DataEntryControl control = pair.Value;
                 if (control.Copyable)

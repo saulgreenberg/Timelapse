@@ -888,7 +888,7 @@ namespace Timelapse
         private void MenuItemRestoreDefaultValues_Click(object sender, RoutedEventArgs e)
         {
             // Retrieve the controls
-            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
                 DataEntryControl control = pair.Value;
                 if (control.DataLabel == Constant.DatabaseColumn.File || control.DataLabel == Constant.DatabaseColumn.RelativePath ||

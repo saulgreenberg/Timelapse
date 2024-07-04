@@ -222,7 +222,7 @@ namespace Timelapse
                 }
 
                 // Find the data entry control that matches the quickPasteItem's DataLael
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     if (control.DataLabel == item.DataLabel)
@@ -260,7 +260,7 @@ namespace Timelapse
                 }
 
                 // Find the data entry control that matches the quickPasteItem's DataLael
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     if (control.DataLabel == item.DataLabel)
@@ -293,7 +293,7 @@ namespace Timelapse
                 }
 
                 // Find the data entry control that matches the quickPasteItem's DataLabel
-                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabel)
+                foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
                 {
                     DataEntryControl control = pair.Value;
                     if (control.DataLabel == item.DataLabel)
@@ -329,10 +329,7 @@ namespace Timelapse
         {
             this.DataHandler.FileDatabase.ImageSet.QuickPasteAsJSON = JsonConvert.SerializeObject(this.quickPasteEntries);
             this.DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
-            if (this.quickPasteWindow != null)
-            {
-                this.quickPasteWindow.Refresh(this.quickPasteEntries);
-            }
+            this.quickPasteWindow?.Refresh(this.quickPasteEntries);
         }
         #endregion
     }

@@ -16,7 +16,8 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public properties and Private Variables
         public List<DataEntryControl> Controls { get; }
-        public Dictionary<string, DataEntryControl> ControlsByDataLabel { get; }
+        public Dictionary<string, DataEntryControl> ControlsByDataLabelThatAreVisible { get; }
+        public Dictionary<string, DataEntryControl> ControlsByDataLabelForExport { get; }
 
         private DataEntryHandler dataEntryHandler;
         #endregion
@@ -26,7 +27,8 @@ namespace Timelapse.ControlsDataEntry
         {
             this.InitializeComponent();
             this.Controls = new List<DataEntryControl>();
-            this.ControlsByDataLabel = new Dictionary<string, DataEntryControl>();
+            this.ControlsByDataLabelThatAreVisible = new Dictionary<string, DataEntryControl>();
+            this.ControlsByDataLabelForExport = new Dictionary<string, DataEntryControl>();
         }
         #endregion
 
@@ -43,16 +45,17 @@ namespace Timelapse.ControlsDataEntry
             // Depending on how the user interacts with the file import process image set loading can be aborted after controls are generated and then
             // another image set loaded.  Any existing controls therefore need to be cleared.
             this.Controls.Clear();
-            this.ControlsByDataLabel.Clear();
+            this.ControlsByDataLabelThatAreVisible.Clear();
+            this.ControlsByDataLabelForExport.Clear();
             this.ControlGrid.Inlines.Clear();
 
             foreach (ControlRow control in database.Controls)
             {
                 // no point in generating a control if it doesn't render in the UX
-                if (control.Visible == false)
-                {
-                    continue;
-                }
+                //if (control.Visible == false)
+                //{
+                //    continue;
+                //}
 
                 DataEntryControl controlToAdd;
                 switch (control.Type)
@@ -142,14 +145,21 @@ namespace Timelapse.ControlsDataEntry
                         TracePrint.PrintMessage($"Unhandled control type {control.Type} in CreateControls.");
                         continue;
                 }
-                this.ControlGrid.Inlines.Add(controlToAdd.Container);
-                this.Controls.Add(controlToAdd);
-                this.ControlsByDataLabel.Add(control.DataLabel, controlToAdd);
+                if (control.Visible)
+                {
+                    this.ControlGrid.Inlines.Add(controlToAdd.Container);
+                    this.Controls.Add(controlToAdd);
+                    this.ControlsByDataLabelThatAreVisible.Add(control.DataLabel, controlToAdd);
+                }
+                if (control.ExportToCSV)
+                {
+                    this.ControlsByDataLabelForExport.Add(control.DataLabel, controlToAdd);
+                }
             }
 
             // Redundant check as for some reason CA1062 was still showing up as a warning.
             ThrowIf.IsNullArgument(dataEntryPropagator, nameof(dataEntryPropagator));
-            dataEntryPropagator.SetDataEntryCallbacks(this.ControlsByDataLabel);
+            dataEntryPropagator.SetDataEntryCallbacks(this.ControlsByDataLabelThatAreVisible);
             this.dataEntryHandler = dataEntryPropagator;
         }
         #endregion
@@ -157,7 +167,8 @@ namespace Timelapse.ControlsDataEntry
         public void Reset()
         {
             this.Controls.Clear();
-            this.ControlsByDataLabel.Clear();
+            this.ControlsByDataLabelThatAreVisible.Clear();
+            this.ControlsByDataLabelForExport.Clear();
             this.ControlGrid.Inlines.Clear();
         }
 
@@ -430,7 +441,7 @@ namespace Timelapse.ControlsDataEntry
                 // Decimals 
                 else if (control is DataEntryDecimalBase decimalBase)
                 {
-                    
+
                     // Works for DecimalAny and DecimalPositive
                     if (controlsToEnable == ControlsEnableStateEnum.SingleImageView)
                     {

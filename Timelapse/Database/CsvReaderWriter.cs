@@ -117,7 +117,7 @@ namespace Timelapse.Database
                                 }
                                 else
                                 {
-                                    DataEntryControl control = controls.ControlsByDataLabel[dataLabel];
+                                    DataEntryControl control = controls.ControlsByDataLabelForExport[dataLabel];
 
                                     if (dataLabel == Constant.DatabaseColumn.DateTime)
                                     {

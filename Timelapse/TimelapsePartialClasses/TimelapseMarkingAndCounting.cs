@@ -43,7 +43,7 @@ namespace Timelapse
                 return;
             }
             // An existing marker has been deleted.
-            DataEntryCounter counter = (DataEntryCounter)this.DataEntryControls.ControlsByDataLabel[e.Marker.DataLabel];
+            DataEntryCounter counter = (DataEntryCounter)this.DataEntryControls.ControlsByDataLabelThatAreVisible[e.Marker.DataLabel];
 
             // Part 1. Decrement the counter only if there is a number in it
             string oldCounterData = counter.Content;
@@ -224,7 +224,7 @@ namespace Timelapse
             for (int counter = 0; counter < markersOnCurrentFileCount; counter++)
             {
                 MarkersForCounter markersForCounter = this.markersOnCurrentFile[counter];
-                if (this.DataEntryControls.ControlsByDataLabel.TryGetValue(markersForCounter.DataLabel, out _) == false)
+                if (this.DataEntryControls.ControlsByDataLabelThatAreVisible.TryGetValue(markersForCounter.DataLabel, out _) == false)
                 {
                     // If we can't find the counter, its likely because the control was made invisible in the template,
                     // which means that there is no control associated with the marker. So just don't create the 
@@ -234,7 +234,7 @@ namespace Timelapse
                 }
 
                 // Update the emphasise for each tag to reflect how the user is interacting with tags
-                DataEntryCounter currentCounter = (DataEntryCounter)this.DataEntryControls.ControlsByDataLabel[markersForCounter.DataLabel];
+                DataEntryCounter currentCounter = (DataEntryCounter)this.DataEntryControls.ControlsByDataLabelThatAreVisible[markersForCounter.DataLabel];
                 bool emphasize = markersForCounter.DataLabel == this.State.MouseOverCounter;
                 foreach (Marker marker in markersForCounter.Markers)
                 {

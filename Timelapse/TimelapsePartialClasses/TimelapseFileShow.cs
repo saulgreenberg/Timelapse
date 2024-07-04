@@ -105,7 +105,7 @@ namespace Timelapse
             // This is always done as it's assumed either the image changed or that a control refresh is required due to database changes
             // the call to TryMoveToImage() above refreshes the data stored under this.dataHandler.ImageCache.Current.
             this.DataHandler.IsProgrammaticControlUpdate = true;
-            foreach (KeyValuePair<string, DataEntryControl> control in this.DataEntryControls.ControlsByDataLabel)
+            foreach (KeyValuePair<string, DataEntryControl> control in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
                 // update value
                 string controlType = this.DataHandler.FileDatabase.FileTableColumnsByDataLabel[control.Key].ControlType;
