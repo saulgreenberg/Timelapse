@@ -18,6 +18,7 @@ obj/
 Dependencies/**
 !Dependencies/Xceed.Wpf.AvalonDock.dll
 !Dependencies/Xceed.Wpf.Toolkit.dll
+!Dependencies/DialogUpgradeFiles.dll
 
 !Dependencies/exiftool(-k).exe
 #!Dependencies/ffmpeg.exe
@@ -38,7 +39,6 @@ Backups/
 ToDo.docx
 ~$ToDo.docx
 *.tmp
-Dependencies/DialogUpgradeFiles.dll
 Dependencies/DialogUpgradeFiles.pdb
 
 
