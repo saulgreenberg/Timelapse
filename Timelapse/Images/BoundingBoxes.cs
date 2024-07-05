@@ -58,11 +58,8 @@ namespace Timelapse.Images
             // So we just use it as a short cut, i.e., if none of the bounding boxes are above the threshold, we can abort.
             // Also, we add a slight correction value to the MaxConfidence, so confidences near the threshold will still appear.
             double correction = 0.005;
-            Debug.Print( "-------");
             if (this.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && this.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
             {
-                Debug.Print($"Ignored as {(MaxConfidence + correction):F4} < {GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold:F4} and < {GlobalReferences.TimelapseState.BoundingBoxThresholdOveride:F4}");
-
                 // Ignore any bounding box that is below the desired confidence threshold for displaying it.
                 // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
                 // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
@@ -75,14 +72,12 @@ namespace Timelapse.Images
             {
                 if ((bbox.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && (bbox.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
                 {
-                    Debug.Print($"Skipped: {(bbox.Confidence + correction):F4} < {GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold:F4} and < {GlobalReferences.TimelapseState.BoundingBoxThresholdOveride:F4}");
                     // Ignore any bounding box that is below the desired confidence threshold for displaying it.
                     // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
                     // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
                     // show bounding boxes when the confidence is .4 or more.
                     continue;
                 }
-                Debug.Print($"Displayed: {(bbox.Confidence + correction)} > {GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold:F4} OR > {GlobalReferences.TimelapseState.BoundingBoxThresholdOveride}");
                 // Create a bounding box 
                 Rectangle rect = new Rectangle();
                 SolidColorBrush brush;

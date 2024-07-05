@@ -9,6 +9,7 @@ using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Timelapse.ControlsDataEntry
@@ -92,8 +93,9 @@ namespace Timelapse.ControlsDataEntry
         // To fix that, we remove the observable collection when the drop down is closed.
         private void ContentControl_DropDownOpened(object sender, RoutedEventArgs e)
         {
-            ObservableCollection<string> itemsList = new ObservableCollection<string>(this.ContentControl.Text.Split(',').ToList());
-            this.ContentControl.SelectedItemsOverride = itemsList;
+            this.SetMenuToList(this.ContentControl.Text);
+            //ObservableCollection<string> itemsList = new ObservableCollection<string>(this.ContentControl.Text.Split(',').ToList());
+            //this.ContentControl.SelectedItemsOverride = itemsList;
         }
 
         private void ContentControl_DropDownClosed(object sender, RoutedEventArgs e)
@@ -164,6 +166,13 @@ namespace Timelapse.ControlsDataEntry
         }
         #endregion
 
+
+        public void SetMenuToList(string commaSeparatedList)
+        {
+            ObservableCollection<string> itemsList = new ObservableCollection<string>(commaSeparatedList.Split(',').ToList());
+            this.ContentControl.SelectedItemsOverride = itemsList;
+        }
+
         #region Setting Content and Tooltip
         // Set the Control's Content and Tooltip to the provided value
         public override void SetContentAndTooltip(string value)
@@ -179,7 +188,9 @@ namespace Timelapse.ControlsDataEntry
               
             if (ContentControl.Text != value)
             {
+                Debug.Print($"'{value}'");
                 this.ContentControl.Text = value;
+
                 this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
             }
         }

@@ -919,7 +919,6 @@ namespace Timelapse.ControlsDataEntry
             // update file data table and write the new DateTime, Date, and Time to the database
             if (this.ImageCache?.Current == null)
             {
-                TracePrint.NullException(nameof(this.ImageCache));
                 return;
             }
             this.ImageCache.Current.SetDateTime(dateTime);
@@ -1036,14 +1035,9 @@ namespace Timelapse.ControlsDataEntry
             }
             CheckComboBox checkComboBox = (CheckComboBox)sender;
 
-            if (checkComboBox.SelectedItem == null)
-            {
-                // no item selected (probably the user cancelled)
-                return;
-            }
-
             // Get the key identifying the control, and then add its value to the database
             DataEntryControl control = (DataEntryControl)checkComboBox.Tag;
+            Debug.Print($"Multi-'{checkComboBox.Text.TrimStart(',')}'");
             control.SetContentAndTooltip(checkComboBox.Text.TrimStart(','));
             this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }
@@ -1132,7 +1126,6 @@ namespace Timelapse.ControlsDataEntry
                 // Only a single image is displayed: update the database for the current row with the control's value
                 if (this.ImageCache?.Current == null)
                 {
-                    TracePrint.NullException(nameof(ImageCache));
                     return;
                 }
                 this.FileDatabase.UpdateFile(this.ImageCache.Current.ID, datalabel, content);

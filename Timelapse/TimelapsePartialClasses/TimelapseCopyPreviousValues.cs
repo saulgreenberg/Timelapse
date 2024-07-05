@@ -187,6 +187,10 @@ namespace Timelapse
                 DataEntryControl control = pair.Value;
                 if (control.Copyable)
                 {
+                    if (control is DataEntryMultiChoice multiChoice)
+                    {
+                        multiChoice.SetMenuToList(this.DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
+                    }
                     control.SetContentAndTooltip(this.DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
                 }
             }

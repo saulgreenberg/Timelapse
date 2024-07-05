@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Timelapse.Database;
 using Timelapse.DataTables;
@@ -205,7 +206,14 @@ namespace Timelapse.ControlsDataEntry
             this.Controls.Clear();
             this.ControlsByDataLabelThatAreVisible.Clear();
             this.ControlsByDataLabelForExport.Clear();
-            this.ControlGrid.Inlines.Clear();
+            try
+            {
+                this.ControlGrid.Inlines.Clear();
+            }
+            catch (Exception )
+            {
+                return;
+            } 
         }
 
         #region Autocompletion methods

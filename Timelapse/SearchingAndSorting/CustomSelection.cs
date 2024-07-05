@@ -680,7 +680,6 @@ namespace Timelapse.SearchingAndSorting
                 // When no recognitions are selected, setting the override to 1 essentially means the override value is ignore.
                 // That is, the user's bounding box preference is used to decide the cut-off for displaying bounding boxes.
                 GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = 1;
-                Debug.Print("No recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
             }
         }
         #endregion
