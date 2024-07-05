@@ -29,18 +29,14 @@ namespace TimelapseTemplateEditor.Standards
         public string Tooltip { get; set; }
         public string Choice { get; set; }
         public bool Copyable { get; set; }
+        public bool Visible { get; set; }
 
-        public StandardsRow(string type, int level, string defaultValue, string label, string dataLabel, string tooltip, string choice, bool copyable)
+        public StandardsRow(string type, int level, string defaultValue, string label, string dataLabel, string tooltip, string choice, bool copyable = true, bool visible = true)
         {
-            this.SetAllValues(type, level, defaultValue, label, dataLabel, tooltip, choice, copyable);
+            this.SetAllValues(type, level, defaultValue, label, dataLabel, tooltip, choice, copyable, visible);
         }
 
-        public StandardsRow(string type, int level, string defaultValue, string label, string dataLabel, string tooltip, string choice)
-        {
-           this.SetAllValues( type, level, defaultValue, label, dataLabel, tooltip, choice, true);
-        }
-
-        private void SetAllValues(string type, int level, string defaultValue, string label, string dataLabel, string tooltip, string choice, bool copyable)
+        private void SetAllValues(string type, int level, string defaultValue, string label, string dataLabel, string tooltip, string choice, bool copyable, bool visible)
         {
             Type = type;
             Level = level;
@@ -50,6 +46,7 @@ namespace TimelapseTemplateEditor.Standards
             Tooltip = tooltip;
             Choice = choice;
             Copyable = copyable;
+            Visible = visible;
         }
     }
     #endregion

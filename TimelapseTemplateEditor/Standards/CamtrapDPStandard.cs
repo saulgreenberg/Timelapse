@@ -259,11 +259,11 @@ namespace TimelapseTemplateEditor.Standards
 
         public static List<StandardsRow> ImageTemplateRows = new List<StandardsRow>
         {
-            new StandardsRow(Control.Note, 0, "", "Media ID", "mediaID",
-                $"Unique identifier of the media file.{Environment.NewLine}" +
-                $"Required.{Environment.NewLine}" +
-                "• e.g., \"m1\"",
-                null),
+            //new StandardsRow(Control.Note, 0, "", "Media ID", "mediaID",
+            //    $"Unique identifier of the media file.{Environment.NewLine}" +
+            //    $"Required.{Environment.NewLine}" +
+            //    "• e.g., \"m1\"",
+            //    null),
 
             // deploymentID LEFT OUT AS IT WILL BE AUTOMATICALLY ADDED
             //new StandardsRow(Control.Note, 0, "", "Deployment ID", "deploymentID",
@@ -304,11 +304,11 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"IMG0001.jpg\"",
                 null),
 
-            new StandardsRow(Control.Note, 0, "", "File Mediatype*", "fileMediatype",
+            new StandardsRow(Control.Choice, 0, "", "File Mediatype*", "fileMediatype",
                 $"Mediatype of the media file. Expressed as an IANA Media Type.{Environment.NewLine}" +
                 $"Pattern: ^(image|video|audio)/.*$ Required.{Environment.NewLine}" +
-                "• e.g., \"image/jpeg\"",
-                null),
+                "• e.g., \"image\"",
+                StandardsBase.CreateChoiceList(true, new List<string> { "image", "video", "audio" })),
 
             new StandardsRow(Control.MultiLine, 0, "", "Exif Data*", "exifData",
                 "EXIF data of the media file." +

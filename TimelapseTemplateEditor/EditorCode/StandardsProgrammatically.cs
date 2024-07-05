@@ -59,16 +59,14 @@ namespace TimelapseTemplateEditor
                     new ColumnTuple(Control.DefaultValue, sr.DefaultValue),
                     new ColumnTuple(Control.Label, sr.Label),
                     new ColumnTuple(Control.DataLabel, sr.DataLabel),
-                    new ColumnTuple(Control.Tooltip, sr.Tooltip)
+                    new ColumnTuple(Control.Tooltip, sr.Tooltip),
+                    new ColumnTuple(Control.Visible, sr.Visible)
                 };
                 if (null != sr.Choice)
                 {
                     columnTupleList.Add(new ColumnTuple(Control.List, sr.Choice));
                 }
                 infoColumnsTuplesWithWhereList.Add(new ColumnTuplesWithWhere(columnTupleList, id++));
-
-                // Now add it all to the database
-                //Globals.TemplateDatabase.Database.Update(DBTables.MetadataTemplate, infoColumnsTuplesWithWhereList);
             }
             // Now add it to the database
             Globals.TemplateDatabase.Database.Update(DBTables.MetadataTemplate, infoColumnsTuplesWithWhereList);
@@ -95,6 +93,7 @@ namespace TimelapseTemplateEditor
                     new ColumnTuple(Control.DataLabel, sr.DataLabel),
                     new ColumnTuple(Control.Tooltip, sr.Tooltip),
                     new ColumnTuple(Control.Copyable, sr.Copyable.ToString()),
+                    new ColumnTuple(Control.Visible, sr.Visible.ToString())
                 };
                 if (null != sr.Choice)
                 {

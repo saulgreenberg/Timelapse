@@ -1291,7 +1291,7 @@ namespace TimelapseTemplateEditor.Standards
                 Control.AlphaNumeric, 1, "", "Image Name", "img_id",
                 $"A unique alphanumeric identifier for the image.{Environment.NewLine}" +
                 "• e.g., \"\"bh1_17-Jul-2018_22-Jul-2018_10:34:22_img_100\"",
-                null, false),
+                null, copyable:false),
 
             // Alphanumeric
             new StandardsRow(
@@ -1379,7 +1379,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"The order of the image in a rapid-fire sequence as reported in the image Exif data.{Environment.NewLine}" +
                 $"Leave blank if not applicable.{Environment.NewLine}" +
                 "e.g., \"1 of 3\"",
-                null, false),
+                null, copyable:false),
 
             new StandardsRow(
                 Control.FixedChoice, 1, "", "*Image Infrared Illuminator", "img_infrared_illum",
