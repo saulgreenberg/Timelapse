@@ -42,6 +42,44 @@ namespace TimelapseTemplateEditor.Dialog
             messageBox.ShowDialog();
         }
 
+        public static bool? TypeChangeInformationDialog(Window owner, string from, string to)
+        {
+            MessageBox messageBox = new MessageBox("Changing a data field's type", owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    What = $"You are changing the data field's type from '{from}' to '{to}.'{Environment.NewLine}" +
+                           $"This may have consequences when loading a Timelapse Data (.ddb) file previously opened with the old data type.{Environment.NewLine}" +
+                           $"1. Two equivalent types. You can convert back and forth between them, e.g., {Environment.NewLine}" +
+                           $"   ‣ Note\u27F7MultiLine, as both contain plain text.{Environment.NewLine}" +
+                           $"2. From a specialized type to a more general type. This is a one-way  operation. Reversing it falls under 3 below, e.g., {Environment.NewLine}" +
+                           $"   ‣ PositiveDecimal→Decimal (decimals can contain positive decimals).{Environment.NewLine}" +
+                           $"   ‣ Decimal→Note (notes can contain decimals as text).{Environment.NewLine}" +
+                           $"3. Unsafe: From a general type to a specialized type. Timelapse will not allow the update as its data {Environment.NewLine}" +
+                           $"   will likely not match what the specialized type expects, e.g., {Environment.NewLine}" +
+                           $"   ‣ Note→Decimal (Note data may contain non-numeric characters).{Environment.NewLine}" +
+                           $"   ‣ Decimal→Date (Decimal data if very different from Date data).{Environment.NewLine}" +
+                           $"   ‣ Decimal→PositiveDecimal (Decimal data may be negative).{Environment.NewLine}{Environment.NewLine}" +
+                           "The drop-down menu only lists the first two Safe type changes.", 
+
+                    Result = $" • The data field's control will reflect the new type.{Environment.NewLine}" +
+                             $" • The data field's default value may be adjusted if it doesn't match the new type.{Environment.NewLine}" +
+                             " • When you load an existing data (.ddb) file with this revised template, Timelapse will check to see if the change is allowed.",
+
+                    Hint = $"Hold the <Shift> key while opening the menu to select from all types, including unsafe ones.{Environment.NewLine}" +
+                            $"If you plan to open an existing data file, consider the consequences (if any) on previously entered data, e.g., {Environment.NewLine}" +
+                            $" • Note→MultiLine is ok: the control will now let you enter longer text.{Environment.NewLine}" +
+                            $" • FixedChoice→MultiChoice is ok: the control will now let you do multi-selections.{Environment.NewLine}" +
+                            $" • PositiveDecimal→Decimal is ok: the control will now let you enter negative numbers.{Environment.NewLine}" +
+                            $" • Date→Text field is mostly ok, but previously entered Date data will become plain text.{Environment.NewLine}" +
+                            $" • Note→Decimal is disallowed by Timelapse: previously entered Note data may be non-numeric.{Environment.NewLine}" +
+                            " • Date→Decimal is disallowed by Timelapse: previously entered Date data will never by a decimal."
+                }
+            };
+            return messageBox.ShowDialog();
+        }
+
         public static void EditorDataLabelIsAReservedWordDialog(Window owner, string data_label)
         {
             MessageBox messageBox = new MessageBox("'" + data_label + "' is not a valid data label.", owner)

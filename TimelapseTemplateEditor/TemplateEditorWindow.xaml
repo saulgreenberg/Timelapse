@@ -78,7 +78,7 @@
                     </MenuItem>
 
                     <MenuItem Name="MenuFileNewAllControlsStandard" Header="_All controls metadata example..."
-                              Visibility ="Collapsed"
+                              Visibility ="Visible"
                               Click="MenuFileNewAllControlsStandard_Click" 
                               ToolTip="Create a new data template file based on an example standard that lists all controls. You can edit it afterwards if desired.">
                         <MenuItem.Icon>

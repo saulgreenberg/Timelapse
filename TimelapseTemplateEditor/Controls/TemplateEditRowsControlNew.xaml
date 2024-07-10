@@ -81,15 +81,15 @@
                         <MenuItem Header="Choices ... " 
                                   FontSize="14" Width="126" Padding ="5,5"
                                   ToolTip="Create one of several types of choice controls">
-                            <MenuItem Header="Choose one item from a list" 
+                            <MenuItem Header="Fixed Choice - Choose one item from a list" 
                                       FontSize="14" Padding ="0,5"
                                       Tag="FixedChoice"  
-                                      ToolTip="Choice: allows one to choose from a pulldown menu "
+                                      ToolTip="Choice: allows one to choose a single item from a dropdown menu "
                                       Click="MenuItemAddDataRow_Click"/>
-                            <MenuItem Header="Choose multiple items from a list" 
+                            <MenuItem Header="MultiChoice - Choose multiple items from a list" 
                                       FontSize="14" Padding ="0,5"
                                       Tag="MultiChoice"  
-                                      ToolTip="MultiChoice: allows one to choose multiple items from a pulldown menu"
+                                      ToolTip="MultiChoice: allows one to choose multiple items from a dropdown menu"
                                       Click="MenuItemAddDataRow_Click"/>
                         </MenuItem>
                     </Menu>

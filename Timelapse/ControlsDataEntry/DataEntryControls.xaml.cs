@@ -210,10 +210,10 @@ namespace Timelapse.ControlsDataEntry
             {
                 this.ControlGrid.Inlines.Clear();
             }
-            catch (Exception )
+            catch (Exception)
             {
-                return;
-            } 
+                // ignored
+            }
         }
 
         #region Autocompletion methods

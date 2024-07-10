@@ -699,5 +699,59 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         }
 
         #endregion
+
+        #region Callback: Type ComboBox specific handlers
+        // Manipulate the TypeComboBox dropdown based on its current value,
+        // where we disable the visibility of items that don't make sense for the current type.
+        // That is, make it so the use can only select an item that changes from one type to another equivalent, or to a more general type.
+        private void TypeComboBoxDropDownOpened(object sender, EventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+            {
+                // The tag holds the Control Order of the row the button is in, not the ID.
+                // So we have to search through the rows to find the one with the correct control order
+                // and retrieve / set the ItemList menu in that row.
+                MetadataControlRow controlRow = Globals.TemplateDatabase.MetadataControlsByLevel[ParentTab.Level].FirstOrDefault(control => control.ControlOrder.ToString().Equals(comboBox.Tag.ToString()));
+                if (controlRow == null)
+                {
+                    TracePrint.PrintMessage($"Control named {comboBox.Tag} not found.");
+                    return;
+                }
+                // The tag holds the Control Order of the row the button is in, not the ID.
+                // So we have to search through the rows to find the one with the correct control order
+                // and retrieve / set the ItemList menu in that row.
+                DataGridCommonCode.DoTypeComboBoxDropDownOpened(comboBox, controlRow.Type);
+            }
+        }
+
+        // Change the type of a template row. This comes with all sorts of checks and warnings to the user via a dialog.
+        private void TypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+            {
+                if (comboBox.IsDropDownOpen == false)
+                {
+                    // we only want to continue if this is a user action, as SelectionChanged is also invoked when updating the grid.
+                    return;
+                }
+                MetadataControlRow typeControl = Globals.TemplateDatabase.MetadataControlsByLevel[ParentTab.Level].FirstOrDefault(control => control.ControlOrder.ToString().Equals(comboBox.Tag.ToString()));
+                if (null == typeControl || false == DataGridCommonCode.DoTypeComboBox_SelectionChanged(comboBox, e.RemovedItems, typeControl.Type, typeControl.DefaultValue, typeControl.List, out string newType, out string newDefaultValue))
+                {
+                    e.Handled = true;
+                }
+                else
+                {
+                    if (typeControl.DefaultValue == newDefaultValue && typeControl.Type == newType)
+                    {
+                        // If nothing changed, then do nothing.
+                        return;
+                    }
+                    typeControl.DefaultValue = newDefaultValue;
+                    typeControl.Type = newType;
+                    Globals.RootEditor.DoSyncMetadataControlToDatabase(typeControl);
+                }
+            }
+        }
+        #endregion
     }
 }

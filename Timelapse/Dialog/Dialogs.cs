@@ -2447,11 +2447,11 @@ namespace Timelapse.Dialog
             messageBox.ShowDialog();
         }
 
-        // Incompatable Template
+        // Incompatible Template
         public static void MergeErrorTemplateFilesNotCompatableDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Incompatable templates ";
+            const string title = "Incompatible templates ";
             MessageBox messageBox = new MessageBox(title, owner)
             {
                 Title = title,
@@ -2477,7 +2477,7 @@ namespace Timelapse.Dialog
         public static void MergeErrorTemplateFilesLevelsNotCompatableDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Incompatable templates ";
+            const string title = "Incompatible templates ";
             MessageBox messageBox = new MessageBox(title, owner)
             {
                 Title = title,

@@ -21,8 +21,8 @@ namespace Timelapse.Database
         public List<Tuple<MetadataInfoRow, MetadataInfoRow>> InfoRowsWithDifferentGuidSameAlias { get; set; } // TDB rows, DDB rows
 
         // Various state variables concerning differences between the InfoHierarchy tructure
-        public bool InfoHierarchyIncompatableDifferences { get; set; } // Iincompatable differences between the info hierarchies
-        public bool InfoHierarchyTdbDiffersOnlyWithAppendedLevels { get; set; } // Iincompatable differences between the info hierarchies
+        public bool InfoHierarchyIncompatibleDifferences { get; set; } // Iincompatible differences between the info hierarchies
+        public bool InfoHierarchyTdbDiffersOnlyWithAppendedLevels { get; set; } // Iincompatible differences between the info hierarchies
 
         // The last level in the level list sequence that is in common between the Tdb and DDb
         public int LastLevelInCommon { get; set; } = 0;
@@ -78,7 +78,7 @@ namespace Timelapse.Database
             this.UseTdbTemplate = true;
             this.SyncRequiredAsNonCriticalDataFieldAttributesDiffer = false;
             this.SyncRequiredAsFolderLevelsDiffer = false;
-            this.InfoHierarchyIncompatableDifferences = false;
+            this.InfoHierarchyIncompatibleDifferences = false;
             this.InfoHierarchyTdbDiffersOnlyWithAppendedLevels = false;
             this.SyncRequiredToUpdateInfoTableGuids = false;
         }

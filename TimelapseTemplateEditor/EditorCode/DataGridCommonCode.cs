@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Util;
+using TimelapseTemplateEditor.Dialog;
 using Control = Timelapse.Constant.Control;
 
 namespace TimelapseTemplateEditor.EditorCode
@@ -121,30 +126,34 @@ namespace TimelapseTemplateEditor.EditorCode
 
                         // These four standard controls are treated as special cases, where certain columns are never editable
                         (controlType == DatabaseColumn.File &&
-                            (columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
+                            (columnHeader == Control.Type ||
+                             columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
                              columnHeader == EditorConstant.ColumnHeader.DataLabel ||
                              columnHeader == Control.List ||
                              columnHeader == Control.Copyable ||
                              columnHeader == EditorConstant.ColumnHeader.Export)) ||
                         (controlType == DatabaseColumn.RelativePath &&
-                            (columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
+                            (columnHeader == Control.Type ||
+                             columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
                              columnHeader == EditorConstant.ColumnHeader.DataLabel ||
                              columnHeader == Control.List ||
                              columnHeader == Control.Copyable ||
                              columnHeader == EditorConstant.ColumnHeader.Export)) ||
                         (controlType == DatabaseColumn.DateTime &&
-                            (columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
+                            (columnHeader == Control.Type ||
+                             columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
                              columnHeader == EditorConstant.ColumnHeader.DataLabel ||
                              columnHeader == Control.List ||
                              columnHeader == Control.Copyable)) ||
                         (controlType == DatabaseColumn.DeleteFlag &&
-                            (columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
+                            (columnHeader == Control.Type ||
+                             columnHeader == EditorConstant.ColumnHeader.DefaultValue ||
                              columnHeader == EditorConstant.ColumnHeader.DataLabel ||
                              columnHeader == Control.List ||
                              columnHeader == Control.Copyable ||
                              columnHeader == EditorConstant.ColumnHeader.Width)) ||
 
-                        // These default values are  editable but if we want to change that, uncomment this
+                        // These default values are editable but if we want to change that, uncomment this
                         //(controlType == Control.DateTime_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
                         //(controlType == Control.Date_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
                         //(controlType == Control.Time_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
@@ -158,6 +167,32 @@ namespace TimelapseTemplateEditor.EditorCode
 
                     )
                     {
+                        // Disable the Type ComboBox for the standard (required) controls
+                        if (columnHeader == Control.Type && (controlType == DatabaseColumn.File || controlType == DatabaseColumn.RelativePath ||
+                                                            controlType == DatabaseColumn.DateTime || controlType == DatabaseColumn.DeleteFlag))
+                        {
+                            if (null != cellContent)
+                            {
+                                if (cellContent.ContentTemplate.FindName("typeComboBox", cellContent) is ComboBox comboBox)
+                                {
+                                    comboBox.IsEditable = false;
+                                    comboBox.IsEnabled = false;
+                                    comboBox.Focusable = false;
+                                    cell.IsEditing = false;
+                                    //cell.IsEnabled = false;
+                                    if (controlType == DatabaseColumn.File) cell.ToolTip = "File field is filled in automatically by the system with the file name of the image or video";
+                                    else if (controlType == DatabaseColumn.RelativePath) cell.ToolTip = "RelativePath field is filled in automatically by the system with the path of the image or video from the root folder";
+                                    else if (controlType == DatabaseColumn.DateTime) cell.ToolTip = "DateTime field is filled in automatically by the system with the creation time of the image or video file";
+                                    else if (controlType == DatabaseColumn.DeleteFlag) cell.ToolTip = "DeleteFlag field is a standaard Timelapse control used to mark image or video files for later deletion";
+                                    Border border = VisualChildren.GetVisualChild<Border>(comboBox);
+                                    if (null != border)
+                                    {
+                                        border.Background = EditorConstant.NotEditableCellColor;
+                                    }
+                                }
+                            }
+                        }
+
                         if (controlType == Control.Date_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue)
                         {
                             // Date_ values are the complete date/time. As we only want to display the date portion, we trim the Time_ portion off here.
@@ -261,6 +296,267 @@ namespace TimelapseTemplateEditor.EditorCode
             if (column == null)
             {
                 return true;
+            }
+            return false;
+        }
+        #endregion
+
+        #region Callback: Type ComboBox specific handlers
+        // Manipulate the TypeComboBox dropdown based on its current value,
+        // where we disable the visibility of items that don't make sense for the current type.
+        // That is, make it so the use can only select an item that changes from one type to another equivalent, or to a more general type.
+        public static void DoTypeComboBoxDropDownOpened(ComboBox comboBox, string type)
+        {
+
+            bool isShift = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+            // If the shift key is held down, show all menu items
+            if (isShift)
+            {
+                foreach (ComboBoxItem item in comboBox.Items)
+                {
+                    string itemType = (string)item.Content;
+                    item.Visibility = itemType == DatabaseColumn.File ||
+                                      itemType == DatabaseColumn.RelativePath ||
+                                      itemType == DatabaseColumn.DateTime ||
+                                      itemType == DatabaseColumn.DeleteFlag
+                        ? Visibility.Collapsed
+                        : Visibility.Visible;
+                }
+                return;
+            }
+
+            foreach (ComboBoxItem item in comboBox.Items)
+            {
+
+                string itemType = (string)item.Content;
+                switch (type)
+                {
+                    case Control.Note:
+                    case Control.MultiLine:
+                        item.Visibility = itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                           ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.AlphaNumeric:
+                        item.Visibility = itemType == Control.MultiLine ||
+                                          itemType == Control.Note ||
+                                          itemType == Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.IntegerPositive:
+                    case Control.Counter:
+                        item.Visibility = itemType == Control.Counter ||
+                                          itemType == Control.IntegerPositive ||
+                                          itemType == Control.IntegerAny ||
+                                          itemType == Control.DecimalPositive ||
+                                          itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note ||
+                                          itemType == Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.IntegerAny:
+                        item.Visibility = itemType == Control.IntegerAny ||
+                                          itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note ||
+                                          itemType == Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.DecimalPositive:
+                        item.Visibility = itemType == Control.DecimalPositive ||
+                                          itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.DecimalAny:
+                        item.Visibility = itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.FixedChoice:
+                        item.Visibility = itemType == Control.FixedChoice ||
+                                          itemType == Control.MultiChoice ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.MultiChoice:
+                        item.Visibility = itemType == Control.MultiChoice ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.DateTime_:
+                    case Control.Date_:
+                    case Control.Time_:
+                        // While it apparantly makes sense to convert between date types, we don't do that as
+                        // we would then have to go into the database and convert all the values as well.
+                        item.Visibility = itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.Flag:
+                        // While it apparantly makes sense to convert between date types, we don't do that as
+                        // we would then have to go into the database and convert all the values as well.
+                        item.Visibility = itemType == Control.Flag ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    default:
+                        item.Visibility = Visibility.Collapsed;
+                        break;
+                }
+            }
+        }
+
+        // Change the type field if it differs from whatever is already there.
+        public static bool DoTypeComboBox_SelectionChanged(ComboBox comboBox, IList removedItems, string currentType, string currentDefaultValue, string jsonList, out string newType, out string newDefaultValue)
+        {
+            newType = currentType;
+            newDefaultValue = currentDefaultValue;
+
+            ComboBoxItem item = comboBox.SelectedItem as ComboBoxItem;
+
+            // Note that this test also checks to make sure that the type differs,
+            // If not, it will fall through and return false.
+            if (null != item?.Content && item.Content is string textContent && currentType != textContent)
+            {
+                
+                if (false == EditorDialogs.TypeChangeInformationDialog(Globals.RootEditor, comboBox.Text, textContent))
+                {
+                    if (removedItems.Count == 1)
+                    {
+                        comboBox.SelectedItem = removedItems[0];
+                    }
+                    return false;
+                }
+                newType = textContent;
+
+                // Check the defaults and change them if its not appropriate
+                switch (newType)
+                {
+                    case DatabaseColumn.File:
+                    case DatabaseColumn.RelativePath:
+                    case DatabaseColumn.DateTime:
+                    case DatabaseColumn.DeleteFlag:
+                        // Should never change the type of the standard controls
+                        return false;
+                    case Control.Note:
+                    case Control.MultiLine:
+                        // Defaults are always type-safe as everything can be converted to text
+                        return true;
+                    case Control.AlphaNumeric:
+                        if (false == (currentDefaultValue == string.Empty || IsCondition.IsAlphaNumeric(currentDefaultValue)))
+                        {
+                            newDefaultValue = ControlDefault.AlphaNumericDefaultValue;
+                        }
+                        return true;
+                    case Control.IntegerPositive:
+                    case Control.Counter:
+                        if (false == (currentDefaultValue == string.Empty || IsCondition.IsIntegerPositive(currentDefaultValue)))
+                        {
+                            newDefaultValue = ControlDefault.NumberDefaultValue;
+                        }
+                        return true;
+                    case Control.IntegerAny:
+                        if (false == (currentDefaultValue == string.Empty || IsCondition.IsInteger(currentDefaultValue)))
+                        {
+                            newDefaultValue = ControlDefault.NumberDefaultValue;
+                        }
+                        return true;
+
+                    case Control.DecimalPositive:
+                        if (false == (currentDefaultValue == string.Empty || IsCondition.IsDecimalPositive(currentDefaultValue)))
+                        {
+                            newDefaultValue = ControlDefault.NumberDefaultValue;
+                        }
+                        return true;
+                    case Control.DecimalAny:
+                        if (false == (currentDefaultValue == string.Empty || IsCondition.IsDecimal(currentDefaultValue)))
+                        {
+                            newDefaultValue = ControlDefault.NumberDefaultValue;
+                        }
+                        return true;
+
+                    case Control.FixedChoice:
+                        Choices choices = Choices.ChoicesFromJson(jsonList);
+                        // Empties not allowed
+                        if (false == choices.IncludeEmptyChoice && (string.IsNullOrEmpty(currentDefaultValue) || false == choices.Contains(currentDefaultValue)))
+                        {
+                            newDefaultValue = choices.ChoiceList[0];
+                        }
+                        // If a non-empty default value matches an entry on the edited choice menu, Use that. Otherwise set it to empty
+                        else if (!string.IsNullOrEmpty(currentDefaultValue) && choices.Contains(currentDefaultValue) == false)
+                        {
+                            newDefaultValue = string.Empty;
+                        }
+                        return true;
+
+                    //    break;
+                    case Control.MultiChoice:
+
+                        if (string.IsNullOrWhiteSpace(currentDefaultValue))
+                        {
+                            // An empty default is always valid
+                            return true;
+                        }
+                        // Parse the current comma-separated textBox items as a list
+                        Choices multiChoices = Choices.ChoicesFromJson(jsonList);
+                        List<string> sortedList = new List<string>();
+                        string[] parsedText = currentDefaultValue.Split(',');
+                        foreach (string str in parsedText)
+                        {
+                            if (multiChoices.Contains(str) == false)
+                            {
+                                newDefaultValue = ControlDefault.MultiChoiceDefaultValue;
+                                return true;
+                            }
+                            sortedList.Add(str);
+                        }
+                        // If we get here, it means the current default is valid, but make sure its sorted correctly
+                        sortedList.Sort();
+                        newDefaultValue = string.Join(",", sortedList).Trim(',');
+                        // If we get here, it means the current default is valid
+                        return true;
+
+                    case Control.DateTime_:
+                        if (false == IsCondition.IsDateTime(currentDefaultValue))
+                        {
+                            newDefaultValue = DateTimeHandler.ToStringDatabaseDateTime(ControlDefault.DateTimeCustomDefaultValue);
+                        }
+                        return true;
+                    case Control.Date_:
+                        if (false == IsCondition.IsDateTime(currentDefaultValue))
+                        {
+                            newDefaultValue = DateTimeHandler.ToStringDatabaseDate(ControlDefault.Date_DefaultValue);
+                        }
+                        return true;
+                    case Control.Time_:
+                        if (false == IsCondition.IsTime(currentDefaultValue))
+                        {
+                            newDefaultValue = DateTimeHandler.ToStringTime(ControlDefault.Time_DefaultValue);
+                        }
+                        return true;
+
+                    case Control.Flag:
+                        if (false == (currentDefaultValue == string.Empty || IsCondition.IsBoolean(currentDefaultValue)))
+                        {
+                            newDefaultValue = ControlDefault.FlagValue;
+                        }
+                        return true;
+                    default:
+                        return false;
+                }
             }
             return false;
         }

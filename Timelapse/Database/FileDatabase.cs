@@ -277,7 +277,7 @@ namespace Timelapse.Database
                 Database.DropTable(Constant.DBTables.Template);
                 isDatabaseRecreated = true;
             }
-            if (templateSyncResults.SyncRequiredAsFolderLevelsDiffer && false == templateSyncResults.InfoHierarchyIncompatableDifferences)
+            if (templateSyncResults.SyncRequiredAsFolderLevelsDiffer && false == templateSyncResults.InfoHierarchyIncompatibleDifferences)
             {
                 Database.DropTable(Constant.DBTables.MetadataTemplate);
                 Database.DropTable(Constant.DBTables.MetadataInfo);
@@ -345,7 +345,7 @@ namespace Timelapse.Database
                     }
                 }
 
-                else if (false == templateSyncResults.InfoHierarchyIncompatableDifferences
+                else if (false == templateSyncResults.InfoHierarchyIncompatibleDifferences
                          && templateSyncResults.DataLabelsToAddByLevel.TryGetValue(level, out var value1))
                 {
                     // Metadata levels: Handle additional metadata controls by level
@@ -401,7 +401,7 @@ namespace Timelapse.Database
                     }
                 }
 
-                else if (false == templateSyncResults.InfoHierarchyIncompatableDifferences
+                else if (false == templateSyncResults.InfoHierarchyIncompatibleDifferences
                          && templateSyncResults.DataLabelsToDeleteByLevel.ContainsKey(level))
                 {
                     // Metadata level: Handle deleted metadata controls by level
@@ -460,7 +460,7 @@ namespace Timelapse.Database
                     }
                 }
 
-                else if (false == templateSyncResults.InfoHierarchyIncompatableDifferences
+                else if (false == templateSyncResults.InfoHierarchyIncompatibleDifferences
                          && templateSyncResults.DataLabelsToRenameByLevel.TryGetValue(level, out var value1))
                 {
                     // Metadata level: Handle Renamed metadata controls
@@ -498,7 +498,7 @@ namespace Timelapse.Database
                 }
 
                 // Metadata levels: Compare Level data controls and sync each if needed
-                if (false == templateSyncResults.InfoHierarchyIncompatableDifferences)
+                if (false == templateSyncResults.InfoHierarchyIncompatibleDifferences)
                 {
                     await this.LoadMetadataControlsAndInfoFromTemplateTDBSortedByControlOrderAsync();
                     foreach (MetadataInfoRow row in MetadataInfo)
@@ -894,9 +894,6 @@ namespace Timelapse.Database
         public async Task SelectFilesAsync(FileSelectionEnum selection)
         {
             string query = string.Empty;
-
-
-
 
             // Random selection - Add folderPrefix
             //if (this.CustomSelection.RandomSample > 0)
@@ -2884,7 +2881,7 @@ namespace Timelapse.Database
                         else
                         {
                             // Debug.Print("merged failed for detection categories");
-                            return RecognizerImportResultEnum.IncompatableDetectionCategories;
+                            return RecognizerImportResultEnum.IncompatibleDetectionCategories;
                         }
 
                         // Step 3. Check if the new classfication categories are the same or at least a subset of the old ones.
@@ -2897,7 +2894,7 @@ namespace Timelapse.Database
                         else
                         {
                             // Debug.Print("merged failed for classification categories");
-                            return RecognizerImportResultEnum.IncompatableClassificationCategories;
+                            return RecognizerImportResultEnum.IncompatibleClassificationCategories;
                         }
                         clearDBRecognitionData = false; // just to make it more readable
 

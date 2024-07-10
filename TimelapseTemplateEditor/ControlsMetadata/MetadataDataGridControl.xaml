@@ -12,49 +12,12 @@
              >
     <UserControl.Resources>
         <ResourceDictionary>
-            <!-- Define the default text associated with the various controls -->
-            <ToolTip x:Key="DefaultValueToolTip">
-                <TextBlock>An optional default data value that will be displayed to the analyst</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="LabelToolTip">
-                <TextBlock>How this metadata field is labeled in the user interface.Will be the same as the DataLabel if its left empty.</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="DataLabelToolTip">
-                <TextBlock>How this metadata field is labeled in the database and in the output file.</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TooltipToolTip">
-                <TextBlock>The help text describing this metadata field as shown in that field's tooltip</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="VisibleToolTip">
-                <TextBlock>Whether this item will be displayed in the user interface</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TypeNoteToolTip">
-                <TextBlock>The Note item accepts free-form text</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TypeCounterToolTip">
-                <TextBlock>The Count item provides a point and click interface for counting entities in an image or video</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TypeFixedChoiceToolTip">
-                <TextBlock>The Choice item provides a drop down menu of possible choices that can be entered. Edit the list to create these choices</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TypeFlagToolTip">
-                <TextBlock>The Flag item can be toggled between true and false</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TypeFileToolTip">
-                <TextBlock>The File Item is filled in automatically by the system with the file name of the image or video</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="TypeDeletionFlagToolTip">
-                <TextBlock>The Deleted flag is a standard control used to mark files for deletion</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="ListFixedChoiceToolTip">
-                <TextBlock>A list of items displayed as a menu of choices. Type in new items; right click on an item to edit, move or delete it.</TextBlock>
-            </ToolTip>
-            <ToolTip x:Key="ExportToCSVToolTip">
-                <TextBlock>Whether this item and its value will be exported to a CSV file</TextBlock>
-            </ToolTip>
-
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ResourceDictionaries/TemplateDataGridResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <editorCode:CellTextBlockConverter x:Key="CellTextBlockConverter" />
         </ResourceDictionary>
+
     </UserControl.Resources>
 
     <Grid>
@@ -125,32 +88,88 @@
                 <!--#endregion-->
 
                 <!-- #region Type Column; Bind the tooltip as well -->
-                <DataGridTextColumn MinWidth="40" Header="Type" Binding="{Binding Path=Type, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" IsReadOnly="True" >
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Type}" Value="Note">
-                                    <Setter Property="ToolTip" Value="{StaticResource TypeNoteToolTip}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="Counter">
-                                    <Setter Property="ToolTip" Value="{StaticResource TypeCounterToolTip}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="FixedChoice">
-                                    <Setter Property="ToolTip" Value="{StaticResource TypeFixedChoiceToolTip}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="Flag">
-                                    <Setter Property="ToolTip" Value="{StaticResource TypeFlagToolTip}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="File">
-                                    <Setter Property="ToolTip" Value="{StaticResource TypeFileToolTip}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="DeleteFlag">
-                                    <Setter Property="ToolTip" Value="{StaticResource TypeDeletionFlagToolTip}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                <DataGridTemplateColumn MinWidth="40"  Header="Type" 
+                         Width="*" CanUserSort="False" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="dataTables:ControlRow">
+                            <ComboBox 
+                   Name="typeComboBox"
+                   Text="{Binding Path=Type, Converter={StaticResource CellTextBlockConverter}}"
+                   Tag="{Binding Path=ControlOrder}" 
+                   MinWidth="50"
+                   HorizontalContentAlignment="Left"
+                   Margin="0,0,0,0" 
+                   Visibility="Visible"
+                   DropDownOpened ="TypeComboBoxDropDownOpened" 
+                   SelectionChanged="TypeComboBox_SelectionChanged"
+              >
+                                <ComboBox.Style>
+                                    <Style TargetType="ComboBox">
+                                        <Style.Triggers>
+                                            <!--Standard controls' tooltips are defined in code behind: since their comboboxes are disabled, nothing is triggered-->
+                                            <DataTrigger Binding="{Binding Type}" Value="Note">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeNoteToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Multiline">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeMultilineToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="AlphaNumeric">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeAlphaNumericToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="IntegerAny">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeIntegerAnyToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="IntegerPositive">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeIntegerPositiveToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="DecimalAny">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeDecimalAnyToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="DecimalPositive">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeDecimalPositiveToolTip}"/>
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding Type}" Value="FixedChoice">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeFixedChoiceToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="MultiChoice">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeMultiChoiceToolTip}"/>
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding Type}" Value="DateTime_">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeDateTime_ToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Date_">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeDate_ToolTip}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Time_">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeTime_ToolTip}"/>
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding Type}" Value="Flag">
+                                                <Setter Property="ToolTip" Value="{StaticResource TypeFlagToolTip}"/>
+                                            </DataTrigger>
+
+                                        </Style.Triggers>
+                                    </Style>
+                                </ComboBox.Style>
+                                <ComboBoxItem Content="Note"/>
+                                <ComboBoxItem Content="MultiLine"/>
+                                <ComboBoxItem Content="AlphaNumeric"/>
+                                <ComboBoxItem Content="IntegerAny"/>
+                                <ComboBoxItem Content="IntegerPositive"/>
+                                <ComboBoxItem Content="DecimalAny"/>
+                                <ComboBoxItem Content="DecimalPositive"/>
+                                <ComboBoxItem Content="FixedChoice"/>
+                                <ComboBoxItem Content="MultiChoice"/>
+                                <ComboBoxItem Content="DateTime_"/>
+                                <ComboBoxItem Content="Date_"/>
+                                <ComboBoxItem Content="Time_"/>
+                                <ComboBoxItem Content="Flag"/>
+                            </ComboBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <!--#endregion-->
 
                 <!-- #region Default Value Column -->

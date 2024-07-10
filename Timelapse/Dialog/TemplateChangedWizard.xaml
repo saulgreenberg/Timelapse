@@ -40,7 +40,7 @@
                         &#10;2  Unintended. For example, someone:
                             &#10;    &#x2022; copied a different template into your image set,
                             &#10;    &#x2022; previously updated your ddb file with a different template, 
-                            &#10;    &#x2022; provided a wrong or incompatable template."
+                            &#10;    &#x2022; provided a wrong or incompatible template."
 
                 Solution="Review the differences in the following pages. Then select an action from the available buttons."
 
@@ -81,12 +81,12 @@
                 </Grid.RowDefinitions>
                 <ScrollViewer  Margin="0,-12,0,0" Grid.Row="0">
                     <controls:StockMessageControl   
-                    x:Name="MessageLevelsIncompatable" 
+                    x:Name="MessageLevelsIncompatible" 
                     Visibility="Collapsed"
                     FontStyle="Normal" 
                     Icon="Error"
-                    Title="Your folder-level definitions are incompatable"
-                    Problem="Your Template's (.tdb) folder-level definitions are incompatable with those in your Data (.ddb) file"
+                    Title="Your folder-level definitions are incompatible"
+                    Problem="Your Template's (.tdb) folder-level definitions are incompatible with those in your Data (.ddb) file"
                     Reason="The folder-level hierarchy in your template (.tdb) file differs from the folder hierarchy in your data (.ddb) file.
                             &#10;These differences, which are illustrated below, cannot be applied, as:
                               &#10;    &#x2022; it could lead to a loss of some of your folder-level data, as it would no longer match its location in the hierarchy
@@ -139,15 +139,16 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <controls:StockMessageControl  
-                        x:Name="MessageDataFieldsIncompatable"
+                        x:Name="MessageDataFieldsIncompatible"
                         Grid.Row="0"  Margin="0,-12,0,0"  Visibility="Collapsed"
                         FontStyle="Normal" 
                         Icon="Error"
-                        Title="Your data field definitions are incompatable"
-                        Problem="Your Template (.tdb) file contains data fields that are incompatable with those in your Data (.ddb) file"
+                        Title="Your data field definitions are incompatible"
+                        Problem="Your Template (.tdb) file contains data fields that are incompatible with those in your Data (.ddb) file"
                         Reason="Certain data fields in your template (.tdb) file are of a data type differs from its counterpart in the data (.ddb) file.
                             &#10;These differences are problematic, as:
-                            &#10;    &#x2022; the new data type may not match previously entered data already stored in your data file"
+                            &#10;    &#x2022; the new data type may not match previously entered data already stored in your data file
+                            &#10;    &#x2022; certain type mismatches could introduce serious issues leading to corrupt data or even crashes."
                         Hint="Select: 
                         &#10;    &#x2022; Open using Original Template:   leaves your data fields unchanged as in the original template,
                         &#10;    &#x2022; Cancel:                                         exits this Wizard without opening your file."

@@ -174,6 +174,40 @@ namespace Timelapse.Util
             }
             return Boolean.TryParse(str, out _);
         }
+
+        public static bool IsDateTime(string str)
+        {
+            return DateTimeHandler.TryParseDatabaseDateTime(str, out _);
+        }
+
+        public static bool IsDate(string str)
+        {
+            return DateTimeHandler.TryParseDatabaseDate(str, out _);
+        }
+
+        public static bool IsTime(string str)
+        {
+            return DateTimeHandler.TryParseDatabaseTime(str, out _);
+        }
+
+        // Type matches
+        // Is the type one of the number types?
+        public static bool IsNumberType(string type)
+        {
+            return type == Constant.Control.Counter || type == Constant.Control.IntegerAny || type == Constant.Control.IntegerPositive ||
+             type == Constant.Control.DecimalAny || type == Constant.Control.DecimalPositive;
+        }
+
+        // Is the type one of the Date types?
+        public static bool IsDateTimeType(string type)
+        {
+            return type == Constant.DatabaseColumn.DateTime || type == Constant.Control.DateTime_ || type == Constant.Control.Date_ || type == Constant.Control.Time_;
+        }
+
+        public static bool IsChoicesType(string type)
+        {
+            return type == Constant.Control.FixedChoice || type == Constant.Control.MultiChoice;
+        }
         #endregion
 
         #region Check for matches to particular control row types

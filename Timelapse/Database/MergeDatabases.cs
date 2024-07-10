@@ -133,7 +133,7 @@ namespace Timelapse.Database
                         if (false == (destinationDdbTemplate.MetadataInfo[destRowIndex].Guid == sourceDdbTemplate.MetadataInfo[rowIndex].Guid ||
                                       destinationDdbTemplate.MetadataInfo[destRowIndex].Alias == sourceDdbTemplate.MetadataInfo[rowIndex].Alias))
                         {
-                            // If neither Guid or Alias match, assume they are not equal and thus incompatable
+                            // If neither Guid or Alias match, assume they are not equal and thus incompatible
                             return false;
                         }
 
@@ -157,7 +157,7 @@ namespace Timelapse.Database
                         }
                         if (sourceDdbTemplate.MetadataControlsByLevel[srcLevel].RowCount != value.RowCount)
                         {
-                            // if there are not the same number of controls in each, the are incompatable
+                            // if there are not the same number of controls in each, the are incompatible
                             return false;
                         }
                         // Check:  are datalabels the same?

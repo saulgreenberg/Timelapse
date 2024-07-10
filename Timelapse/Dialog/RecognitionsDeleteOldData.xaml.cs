@@ -20,7 +20,7 @@ namespace Timelapse.Dialog
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            string errorType = RecognizerImportResultEnum.IncompatableDetectionCategories == ImportError ? "detection" : "classification";
+            string errorType = RecognizerImportResultEnum.IncompatibleDetectionCategories == ImportError ? "detection" : "classification";
 
             this.Message.Reason = "Conflicts exist between the old versus new " + errorType + " categories." + Environment.NewLine;
             this.Message.Reason += "Consequently, Timelapse can't merge the new recognition data into the existing recognition data.";

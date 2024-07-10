@@ -77,7 +77,7 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             if (this.TemplateSyncResults.ControlSynchronizationErrorsByLevel.Count > 0)
             {
-                GenerateIncompatableDataFields();
+                GenerateIncompatibleDataFields();
             }
             else
             {
@@ -89,11 +89,11 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region GenerateIncompatableDDataFieldDifferences
-        // Displays an error message plus list of incompatable data fields on the data fields page.
-        private void GenerateIncompatableDataFields()
+        #region GenerateIncompatibleDDataFieldDifferences
+        // Displays an error message plus list of incompatible data fields on the data fields page.
+        private void GenerateIncompatibleDataFields()
         {
-            this.MessageDataFieldsIncompatable.Visibility = Visibility.Visible;
+            this.MessageDataFieldsIncompatible.Visibility = Visibility.Visible;
 
             // Add the details
             int row = 0;
@@ -101,11 +101,13 @@ namespace Timelapse.Dialog
 
             // Yes. display differences as collected in the warnings.
             TextBlock tb = new TextBlock();
-            this.TextBlockAddHeader(tb, $"{Environment.NewLine}The incompatable data fields defined in your template differ as follows", 14);
+            this.TextBlockAddHeader(tb, $"{Environment.NewLine}The incompatible data fields defined in your template differ as follows", 14);
             this.CreateRow(DataFieldGrid, tb, ++row);
             for (int level = 0; level <= lastLevel; level++)
             {
-                if (!TemplateSyncResults.ControlSynchronizationWarningsByLevel.ContainsKey(level))
+                // SAULXXX Check - Original was warnings but this method is only invoked if its on Errors, so I think this version is correct.
+                //if (! (TemplateSyncResults.ControlSynchronizationWarningsByLevel.ContainsKey(level) || TemplateSyncResults.ControlSynchronizationErrorsByLevel.ContainsKey(level)))
+                if (! TemplateSyncResults.ControlSynchronizationErrorsByLevel.ContainsKey(level))
                 {
                     continue;
                 }
@@ -115,7 +117,7 @@ namespace Timelapse.Dialog
                 tb = null;
                 foreach (string errorMessage in TemplateSyncResults.ControlSynchronizationErrorsByLevel[level])
                 {
-                    // print each incompatable data field in this level
+                    // print each incompataible data field in this level
                     if (tb == null)
                     {
                         // So we don't add a line feed at the beginning
@@ -204,8 +206,8 @@ namespace Timelapse.Dialog
                 // Level 0 is the image data fields.
                 for (int level = 0; level <= lastLevel; level++)
                 {
-                    // Check: Level 1 and above? If the level hierarchies are incompatable, there is no point showing their differences
-                    if (level > 0 && this.TemplateSyncResults.InfoHierarchyIncompatableDifferences)
+                    // Check: Level 1 and above? If the level hierarchies are incompatible, there is no point showing their differences
+                    if (level > 0 && this.TemplateSyncResults.InfoHierarchyIncompatibleDifferences)
                     {
                         break;
                     }
@@ -1010,7 +1012,7 @@ namespace Timelapse.Dialog
                                         && this.TemplateSyncResults.InfoRowsInTdbToAdd.Count == 0
                                         && this.TemplateSyncResults.InfoRowsWithNameChanges.Count == 0);
             bool dataFieldDiffers = this.TemplateSyncResults.SyncRequiredAsDataLabelsDiffer || TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count > 0;
-            bool hierarchyIncompatable = this.TemplateSyncResults.InfoHierarchyIncompatableDifferences;
+            bool hierarchyIncompatible = this.TemplateSyncResults.InfoHierarchyIncompatibleDifferences;
 
             if (this.TemplateSyncResults.ControlSynchronizationErrorsByLevel.Count > 0)
             {
@@ -1033,15 +1035,15 @@ namespace Timelapse.Dialog
                 PageIntro.NextPage = PageDataField;
                 PageDataField.PreviousPage = PageIntro;
             }
-            else if (hierarchyIncompatable)
+            else if (hierarchyIncompatible)
             {
                 // COMMENTED OUT FOR NOW. I WANTED TO GIVE THE USER THE OPTION OF ONLY UPDATING THE IMAGE LEVEL DATA FIELDS, IF THERE WERE CHANNGES THERE
                 // BUT MY CODE IS SOMEWHAT WRONG AS IT DOESN"T CHECK FOR ONLY IMAGE LEVEL CHANGES OR RESTRICT IT TO THAT UPDATE, AND I THINK IT JUST ADDS CONFUSION.
                 // Show
                 // - the hierarchy page
-                // - the incompatable templates error message
+                // - the incompatble templates error message
                 // remove the grey banner from the top of the hierarchy difference page to make the error message clearer
-                this.MessageLevelsIncompatable.Visibility = Visibility.Visible;
+                this.MessageLevelsIncompatible.Visibility = Visibility.Visible;
                 this.PageHierarchy.PageType = WizardPageType.Blank;
                 //if (dataFieldDiffers)
                 //{
@@ -1057,7 +1059,7 @@ namespace Timelapse.Dialog
                 //else
                 //{
                 // Change the hint
-                this.MessageLevelsIncompatable.Hint = "Select:" +
+                this.MessageLevelsIncompatible.Hint = "Select:" +
                     $"{Environment.NewLine}    \u2022 Open using Original Template:    leave your data fields and data unchanged" +
                     $"{Environment.NewLine}    \u2022 Cancel:                                          exits this Wizard without opening your file.";
 

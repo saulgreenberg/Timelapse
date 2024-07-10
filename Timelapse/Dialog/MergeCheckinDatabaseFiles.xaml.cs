@@ -435,11 +435,11 @@ namespace Timelapse.Dialog
                     b1.Click += InvokeErrorExplanation_Click;
                     return new Tuple<string, Button>("The file path length exceeds the Windows maximum size.", b1);
 
-                // Incompatable Template
+                // Incompatible Template
                 case DatabaseFileErrorsEnum.TemplateElementsDiffer:
                     b1.Tag = DatabaseFileErrorsEnum.TemplateElementsDiffer;
                     b1.Click += InvokeErrorExplanation_Click;
-                    return new Tuple<string, Button>("The file's template is incompatable due to image control differences.", b1);
+                    return new Tuple<string, Button>("The file's template is incompatible due to image control differences.", b1);
 
                 // File does not exist
                 case DatabaseFileErrorsEnum.DoesNotExist:
@@ -459,7 +459,7 @@ namespace Timelapse.Dialog
                 case DatabaseFileErrorsEnum.MetadataLevelsDiffer:
                     b1.Tag = DatabaseFileErrorsEnum.MetadataLevelsDiffer;
                     b1.Click += InvokeErrorExplanation_Click;
-                    return new Tuple<string, Button>("The file's template is incompatable due to folder-level differences.", b1);
+                    return new Tuple<string, Button>("The file's template is incompatible due to folder-level differences.", b1);
 
                 default:
                     return new Tuple<string, Button>("Unknown error", null);
@@ -495,12 +495,12 @@ namespace Timelapse.Dialog
                         Dialogs.MergeErrorFilePathTooLongDialog(this);
                         break;
 
-                    // Incompatable Template
+                    // Incompatible Template
                     case DatabaseFileErrorsEnum.TemplateElementsDiffer:
                         Dialogs.MergeErrorTemplateFilesNotCompatableDialog(this);
                         break;
 
-                    // Incompatable Template
+                    // Incompatible Template
                     case DatabaseFileErrorsEnum.MetadataLevelsDiffer:
                         Dialogs.MergeErrorTemplateFilesLevelsNotCompatableDialog(this);
                         break;

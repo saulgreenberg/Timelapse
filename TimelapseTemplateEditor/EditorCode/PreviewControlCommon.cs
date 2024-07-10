@@ -87,6 +87,7 @@ namespace TimelapseTemplateEditor.EditorCode
             MultiLineTextEditor textBox = new MultiLineTextEditor
             {
                 Text = control.DefaultValue,
+                Content = control.DefaultValue,
                 ToolTip = control.Tooltip,
 
                 Width = controlType == ControlTypeEnum.MetadataControl

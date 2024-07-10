@@ -216,10 +216,10 @@ namespace Timelapse
                 this.BusyCancelIndicator.Reset(false);
 
                 //
-                // 6. Check for incompatable detections (and delete old recognition data if needed) and/or Report the status.
+                // 6. Check for incompatible detections (and delete old recognition data if needed) and/or Report the status.
                 //
-                if (result == RecognizerImportResultEnum.IncompatableDetectionCategories
-                    || result == RecognizerImportResultEnum.IncompatableClassificationCategories)
+                if (result == RecognizerImportResultEnum.IncompatibleDetectionCategories
+                    || result == RecognizerImportResultEnum.IncompatibleClassificationCategories)
                 {
                     RecognitionsDeleteOldData messageBox = new RecognitionsDeleteOldData(this, result);
                     if (true == messageBox.ShowDialog())

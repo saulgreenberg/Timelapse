@@ -174,72 +174,72 @@ namespace TimelapseTemplateEditor.Standards
         public static List<StandardsRow> ImageTemplateRows = new List<StandardsRow>
         {
             new StandardsRow(
-                Control.Note, 1, "", "iNote", "img_note",
+                Control.Note, 1, "a note", "iNote", "img_note",
                 "A note for the image set",
                 null),
 
             new StandardsRow(
-                Control.MultiChoice, 1, "", "iMultiline", "img_multiline",
+                Control.MultiChoice, 1, "a multichoice", "iMultiline", "img_multiline",
                 "A multiline for the image set",
                 null),
 
             new StandardsRow(
-                Control.AlphaNumeric, 1, "", "iAlphaNumeric", "img_alphaNumeric",
+                Control.AlphaNumeric, 1, "An_AlphaNumeric", "iAlphaNumeric", "img_alphaNumeric",
                 "An AlphaNumeric for the image set",
                 null),
 
             new StandardsRow(
-                Control.Counter, 1, "", "iCount", "img_count",
+                Control.Counter, 1, "1", "iCount", "img_count",
                 "A count for the image set",
                 null),
 
             new StandardsRow(
-                Control.IntegerAny, 1, "", "iIntegerAny", "img_IntegerAny",
+                Control.IntegerAny, 1, "-2", "iIntegerAny", "img_IntegerAny",
                 "An IntegerAny for the image set",
                 null),
 
             new StandardsRow(
-                Control.IntegerPositive, 1, "", "iIntegerPositive", "img_IntegerPositive",
+                Control.IntegerPositive, 1, "3", "iIntegerPositive", "img_IntegerPositive",
                 "An IntegerPositive for the image set",
                 null),
 
             new StandardsRow(
-                Control.DecimalAny, 1, "", "iDecimalAny", "img_DecimalAny",
+                Control.DecimalAny, 1, "-4.0", "iDecimalAny", "img_DecimalAny",
                 "A DecimalAny for the image set",
                 null),
 
             new StandardsRow(
-                Control.DecimalPositive, 1, "", "iDecimalPositive", "img_DecimalPositive",
+                Control.DecimalPositive, 1, "5.0", "iDecimalPositive", "img_DecimalPositive",
                 "A DecimalPositive for the image set",
                 null),
 
             new StandardsRow(
-                Control.FixedChoice, 1, "", "iFixedchoice", "img_fixedchoice",
+                Control.FixedChoice, 1, "Bbb", "iFixedchoice", "img_fixedchoice",
                 "A FixedChoice for the image set",
                 StandardsBase.CreateChoiceList(true, new List<string> { "Aaa", "Bbb", "Ccc", "Should have a blank option", })),
 
             new StandardsRow(
-                Control.MultiChoice, 1, "", "iMultichoice", "img_multichoice",
+                Control.MultiChoice, 1, "Yyy,Xxx", "iMultichoice", "img_multichoice",
                 "A MultiChoice for the image set",
                 StandardsBase.CreateChoiceList(false, new List<string> { "Xxx", "Yyy", "Zzz", "No blank option", })),
 
             new StandardsRow(
-                Control.DateTime_, 1, "", "iDateTime_", "img_datetime_",
+                Control.DateTime_, 1, "2025-05-05 05:05:05", "iDateTime_", "img_datetime_",
                 "A DateTime_ for the image set",
                 null),
 
             new StandardsRow(
-                Control.Date_, 1, "", "iDate_", "img_date_",
+                Control.Date_, 1, "2025-06-06", "iDate_", "img_date_",
                 "A Date_ for the image set",
                 null),
 
             new StandardsRow(
-                Control.Time_, 1, "", "iTime_", "img_time_",
+                Control.Time_, 1, "06:06:06", "iTime_", "img_time_",
                 "A Time_ for the image set",
                 null),
 
             new StandardsRow(
-                Control.Flag, 1, "", "iFlag", "i_flag",
+                Control.Flag, 1, "true", "iFlag", "i_flag",
                 "A flag for the image set",
                 null),
         };

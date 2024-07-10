@@ -2,8 +2,8 @@
 {
     public enum RecognizerImportResultEnum
     {
-        IncompatableDetectionCategories,
-        IncompatableClassificationCategories,
+        IncompatibleDetectionCategories,
+        IncompatibleClassificationCategories,
         JsonFileCouldNotBeRead,
         Success,
         Failure,

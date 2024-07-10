@@ -36,7 +36,6 @@ namespace TimelapseTemplateEditor.Controls
         public DataGrid DataGridInstance { get; set; }
         public ObservableCollection<DataGridColumn> Columns => this.DataGridInstance.Columns;
         private int LastRowCount = -1; // Tracked to see if we need to update the layout: only if row count changes
-
         #region Constructor, Loaded, LayoutUpdated
         public TemplateDataGridControl()
         {
@@ -294,7 +293,7 @@ namespace TimelapseTemplateEditor.Controls
             }
         }
         #endregion
-      
+
         #region Callback: SelectionChanged
         // Logic to enable/disable editing buttons depending on there being a row selection
         // Also sets the text for the remove row button.
@@ -398,7 +397,7 @@ namespace TimelapseTemplateEditor.Controls
         // Validate the data label to correct for empty, duplicate, or non-legal naming
         private void ValidateDataLabel(DataGridCellEditEndingEventArgs e)
         {
-            
+
             // Check to see if the data label entered is a reserved word or if its a non-unique label
             if (!(e.EditingElement is TextBox textBox))
             {
@@ -417,7 +416,7 @@ namespace TimelapseTemplateEditor.Controls
                 errorMessageAlreadyDisplayed = true;
             }
 
-  
+
             // Check to see if the label (if its not empty, which it shouldn't be) has any illegal characters.
             // Note that most of this is redundant, as we have already checked for illegal characters as they are typed. However,
             // we have not checked to see if the first letter is alphabetic.
@@ -448,7 +447,7 @@ namespace TimelapseTemplateEditor.Controls
                 }
             }
 
-            
+
             if (dataLabel == "Date" || dataLabel == "Time")
             {
                 if (!errorMessageAlreadyDisplayed)
@@ -746,6 +745,59 @@ namespace TimelapseTemplateEditor.Controls
                 if (popup != null)
                 {
                     editor.DropDownWidth = editor.ActualWidth;
+                }
+            }
+        }
+        #endregion
+
+        #region Callback: Type ComboBox specific handlers
+        // Manipulate the TypeComboBox dropdown based on its current value,
+        // where we disable the visibility of items that don't make sense for the current type.
+        // That is, make it so the use can only select an item that changes from one type to another equivalent, or to a more general type.
+        private void TypeComboBoxDropDownOpened(object sender, EventArgs e)
+        {
+
+            if (sender is ComboBox comboBox)
+            {
+                // The tag holds the Control Order of the row the button is in, not the ID.
+                // So we have to search through the rows to find the one with the correct control order
+                // and retrieve / set the ItemList menu in that row.
+                ControlRow controlRow = Globals.TemplateDatabase.Controls.FirstOrDefault(control => control.ControlOrder.ToString().Equals(comboBox.Tag.ToString()));
+                if (controlRow == null)
+                {
+                    TracePrint.PrintMessage($"Control named {comboBox.Tag} not found.");
+                    return;
+                }
+
+                DataGridCommonCode.DoTypeComboBoxDropDownOpened(comboBox, controlRow.Type);
+            }
+        }
+
+        // Change the type of a template row. This comes with all sorts of checks and warnings to the user via a dialog.
+        private void TypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+            {
+                if (comboBox.IsDropDownOpen == false)
+                {
+                    // we only want to continue if this is a user action, as SelectionChanged is also invoked when updating the grid.
+                    return;
+                }
+                ControlRow typeControl = Globals.TemplateDatabase.Controls.FirstOrDefault(control => control.ControlOrder.ToString().Equals(comboBox.Tag.ToString()));
+                if (null == typeControl || false == DataGridCommonCode.DoTypeComboBox_SelectionChanged(comboBox, e.RemovedItems, typeControl.Type, typeControl.DefaultValue, typeControl.List, out string newType, out string newDefaultValue))
+                {
+                    e.Handled = true;
+                }
+                else
+                {
+                    if (typeControl.DefaultValue == newDefaultValue && typeControl.Type == newType)
+                    {
+                        // If nothing changed, then do nothing.
+                        return;
+                    }
+                    typeControl.DefaultValue = newDefaultValue;
+                    typeControl.Type = newType;
+                    Globals.RootEditor.TemplateDoSyncControlToDatabase(typeControl);
                 }
             }
         }
