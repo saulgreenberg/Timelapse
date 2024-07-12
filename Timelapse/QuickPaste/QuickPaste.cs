@@ -43,6 +43,7 @@ namespace Timelapse.QuickPaste
                 {
                     // User defined control types are the potential items to paste
                     // 'Use' is initially set to whether the control is copyable
+                    case Constant.DatabaseColumn.DeleteFlag:
                     case Constant.Control.FixedChoice:
                     case Constant.Control.MultiChoice:
                     case Constant.Control.Note:
@@ -165,6 +166,7 @@ namespace Timelapse.QuickPaste
                     switch (row.Type)
                     {
                         // We only consider the non-standard controls as quickpaste candidates
+                        case Constant.DatabaseColumn.DeleteFlag:
                         case Constant.Control.FixedChoice:
                         case Constant.Control.MultiChoice:
                         case Constant.Control.Note:
@@ -199,7 +201,7 @@ namespace Timelapse.QuickPaste
                             // If we arrive here, it means that we have a control with no matching entry. So we should add that
                             if (noItemsMatch)
                             {
-                                string value = (row.Type == Constant.Control.Flag) ? "False" : string.Empty;
+                                string value = (row.Type == Constant.Control.Flag || row.Type == Constant.DatabaseColumn.DeleteFlag) ? "False" : string.Empty;
                                 newQuickPasteEntry.Items.Add(new QuickPasteItem(row.DataLabel, row.Label, value, false, row.Type));
                             }
                             break;

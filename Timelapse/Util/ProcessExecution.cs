@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using Timelapse.ControlsDataEntry;
 
 namespace Timelapse.Util
 {
@@ -65,6 +66,24 @@ namespace Timelapse.Util
             };
             return ProcessExecution.TryProcessStart(processStartInfo);
         }
+
+        // Run an arbitrary command within an (invisible) cmd window.
+        public static bool TryProcessRunCommand(string cmd)
+        {
+            //cmd = @"/c echo foo";
+            Process process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = false,
+                    FileName = "cmd.exe",
+                    Arguments = cmd
+                }
+            };
+            return process.Start();
+        }
+
         #endregion
 
         #region Public Methods - Try Process Start using File Explorer

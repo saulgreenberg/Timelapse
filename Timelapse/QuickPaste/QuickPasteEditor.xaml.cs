@@ -31,7 +31,7 @@ namespace Timelapse.QuickPaste
         public QuickPasteEntry QuickPasteEntry { get; set; }
         #endregion
 
-        #region Privaate Variables
+        #region Private Variables
         // Columns where fields will be placed in the grid
         private const int GridColumnUse = 1;
         private const int GridColumnLabel = 2;
@@ -466,7 +466,8 @@ namespace Timelapse.QuickPaste
 
             // Flags Value column
             // - presented as an editable Checkbox field 
-            else if (quickPasteItem.ControlType == Constant.Control.Flag)
+            else if (quickPasteItem.ControlType == Constant.Control.Flag ||
+                     quickPasteItem.ControlType == Constant.DatabaseColumn.DeleteFlag)
             {
                 // Flags present checkable checkboxes
                 CheckBox flagCheckBox = new CheckBox()

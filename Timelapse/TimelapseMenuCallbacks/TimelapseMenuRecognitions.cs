@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -9,6 +13,11 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Recognition;
+using Timelapse.Util;
+using ToastNotifications.Core;
+using ToastNotifications.Messages;
+using ToastNotifications.Position;
+using Path = System.IO.Path;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse
@@ -128,21 +137,33 @@ namespace Timelapse
 
                     if (resultRecognizerPathTest == RecognizerPathTestResults.PathsRelativeToSubFolder)
                     {
-                        RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
-                        if (false == messageBox.ShowDialog())
+
+
+                        // Automatically add the prefix, so do so.
+                        if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
                         {
                             this.BusyCancelIndicator.Reset(false);
                             return;
                         }
-                        if (messageBox.AddSubFolderPrefix)
-                        {
-                            // The user indicated we should add the prefix, so do so.
-                            if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
-                            {
-                                this.BusyCancelIndicator.Reset(false);
-                                return;
-                            }
-                        }
+
+                        // This is old code from before EcoAssist was added to Timelapse
+                        // It asks the user to choose between options where the recognition file should be added as is,
+                        // or wether the path should be repaired to add a prefix path that will make it consistent with a path from the root folder
+                        //RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
+                        //if (false == messageBox.ShowDialog())
+                        //{
+                        //    this.BusyCancelIndicator.Reset(false);
+                        //    return;
+                        //}
+                        //if (messageBox.AddSubFolderPrefix)
+                        //{
+                        //    // The user indicated we should add the prefix, so do so.
+                        //    if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
+                        //    {
+                        //        this.BusyCancelIndicator.Reset(false);
+                        //        return;
+                        //    }
+                        //}
                     }
                     else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
@@ -258,7 +279,11 @@ namespace Timelapse
                 else if (foldersInDBListButNotInJSon.Count > 0)
                 {
                     // Some folders missing - show which folder paths in the DB are not in the recognizer file
-                    Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, details);
+                    // Trim the uneeded path from the jsonFilePath
+                    string trimmedJsonPath = null == this.DataHandler?.FileDatabase?.FolderPath
+                        ? jsonFilePath
+                        : Path.GetDirectoryName(jsonFilePath.Substring(this.DataHandler.FileDatabase.FolderPath.Length + 1));
+                    Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, trimmedJsonPath, details);
                 }
                 else
                 {
@@ -279,7 +304,7 @@ namespace Timelapse
                 return folderDetails;
             }
 
-            folderDetails += "For the folders listed in the Timelapse database, this is what happened." + Environment.NewLine;
+            folderDetails += "For the folders included in the Timelapse data (.ddb) file, this is what happened." + Environment.NewLine;
 
             // At this point, there is a mismatch, so we should show something.
             if (foldersInBoth.Count > 0)
@@ -304,7 +329,7 @@ namespace Timelapse
 
             if (foldersInJsonButNotInDB.Count > 0)
             {
-                folderDetails += "- While the recognition file included images in these folders, they were skipped over " + Environment.NewLine; 
+                folderDetails += "- While the recognition file included images in these folders, they were skipped over " + Environment.NewLine;
                 folderDetails += "   as their folder paths did not match any Relative Paths in the Timelapse database.";
                 foreach (string folder in foldersInJsonButNotInDB)
                 {
@@ -314,5 +339,77 @@ namespace Timelapse
             return folderDetails;
         }
         #endregion
+
+        #region EcoAssist menu items
+       
+        // Download and install ecoassist. 
+        private void MenuItemEcoAssistDownload_Click(object sender, RoutedEventArgs e)
+        {
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),  Constant.EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+
+            // If an installation already exists, check with the user to see if he/she wants to continue...
+            if (File.Exists(ecoAssistExecutable1) || File.Exists(ecoAssistExecutable2))
+            {
+                if (false == Dialogs.EcoAssistAlreadyDownloaded(this))
+                {
+                    return;
+                }
+            }
+
+            // Give the user information about the installation...
+            if (true == Dialogs.EcoAssistInstallationInformaton(this))
+            {
+                ProcessExecution.TryProcessStart(new Uri(Constant.EcoAssist.EcoAssistDownload));
+            }
+        }
+
+        private void MenuItemEcoAssistCheckForUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            return;
+            // TO BE MODIFIED
+            ProcessExecution.TryProcessStart(new Uri(Constant.EcoAssist.EcoAssistCheckForUpdates));
+        }
+
+        private void MenuItemEcoAssistRun_Click(object sender, RoutedEventArgs e)
+        {
+            string homepath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string initialFolderPath = this.DataHandler?.FileDatabase?.FolderPath ?? myDocuments;
+            // Since we don't have an image set, ask the user to select the folder.
+            // Or maybe we should always do that, where we use the initial folder as the root folder if the image set is open.
+            if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Run EcoAssist on the selected folder", initialFolderPath, out string selectedFolderPath))
+            {
+                return;
+            }
+
+            string cmd = $@"/k (cd /d {programFiles} && ""{Path.Combine(programFiles, Constant.EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || (cd /d {homepath} && ""{homepath}\EcoAssist_files\EcoAssist\open.bat"" timelapse ""{selectedFolderPath}"" ) ";
+            if (false == ProcessExecution.TryProcessRunCommand(cmd))
+            {
+                Dialogs.EcoAssistCouldNotBeStarted(this);
+            }
+            else
+            {
+                Dialogs.EcoAssistApplicationInstructions(this);
+                MessageOptions toastOptions = new MessageOptions
+                {
+                    FontSize = 14, // set notification font size
+                    FreezeOnMouseEnter = true, // set the option to prevent notification disappearing automatically if user move cursor on it
+                    UnfreezeOnMouseLeave = true
+                };
+                this.ToastNotifier.ShowInformation("The EcoAssist application should appear shortly in a separate window (about 2-20 seconds)", toastOptions);
+            }
+        }
+        #endregion
+
+        private void MenuItem_OnEcoAssistSubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+
+            // Enable runing ecoassist only if the Ecoassist executable seems to be installed.
+            this.MenuItemEcoAssistRun.IsEnabled = File.Exists(ecoAssistExecutable1) || File.Exists(ecoAssistExecutable2);
+        }
     }
 }

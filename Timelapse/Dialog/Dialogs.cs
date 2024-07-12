@@ -12,6 +12,7 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using static System.Net.Mime.MediaTypeNames;
 using Clipboard = System.Windows.Clipboard;
 using Cursor = System.Windows.Input.Cursor;
 using Rectangle = System.Drawing.Rectangle;
@@ -22,6 +23,7 @@ namespace Timelapse.Dialog
     public static class Dialogs
     {
         #region Dialog Box Positioning and Fitting
+
         // Most (but not all) invocations of SetDefaultDialogPosition and TryFitDialogWndowInWorkingArea 
         // are done together, so collapse it into a single call
         public static void TryPositionAndFitDialogIntoWindow(Window window)
@@ -60,10 +62,12 @@ namespace Timelapse.Dialog
             {
                 return false;
             }
+
             if (Double.IsNaN(window.Left))
             {
                 window.Left = 0;
             }
+
             if (Double.IsNaN(window.Top))
             {
                 window.Top = 0;
@@ -80,6 +84,7 @@ namespace Timelapse.Dialog
                 TracePrint.NullException(nameof(mainWindow));
                 return false;
             }
+
             PresentationSource presentationSource = PresentationSource.FromVisual(mainWindow);
             if (presentationSource != null)
             {
@@ -90,6 +95,7 @@ namespace Timelapse.Dialog
                     TracePrint.NullException(nameof(compositionTarget));
                     return false;
                 }
+
                 Matrix m = compositionTarget.TransformToDevice;
                 //Matrix m = PresentationSource.FromVisual(System.Windows.Application.Current.MainWindow).CompositionTarget.TransformToDevice;
                 dpiWidthFactor = m.M11;
@@ -108,10 +114,10 @@ namespace Timelapse.Dialog
 
             // Get a rectangle defining the current window, converted to dpi
             Rectangle windowPositionInDpi = new Rectangle(
-                        (int)(window.Left * dpiWidthFactor),
-                        (int)(window.Top * dpiHeightFactor),
-                        (int)(window.Width * dpiWidthFactor),
-                        (int)(window.Height * dpiHeightFactor));
+                (int)(window.Left * dpiWidthFactor),
+                (int)(window.Top * dpiHeightFactor),
+                (int)(window.Width * dpiWidthFactor),
+                (int)(window.Height * dpiHeightFactor));
 
             // Get a rectangle defining the working area for this window, which should be dpi
             // We will compare the two to see how the window fits into the working area.
@@ -128,6 +134,7 @@ namespace Timelapse.Dialog
                 {
                     return false;
                 }
+
                 window.Height = height;
                 window.Top = 0;
             }
@@ -146,6 +153,7 @@ namespace Timelapse.Dialog
                     {
                         return false;
                     }
+
                     window.Height = height;
                     windowFitsInWorkingArea = false;
                 }
@@ -174,11 +182,14 @@ namespace Timelapse.Dialog
                     window.Left -= dpiToMoveLeft / dpiWidthFactor;
                 }
             }
+
             return windowFitsInWorkingArea;
         }
+
         #endregion
 
         #region OpenFileDialog: Get file or folder
+
         /// <summary>
         /// Prompt the user for a file location via an an open file dialog. Set selectedFilePath.
         /// </summary>
@@ -210,6 +221,7 @@ namespace Timelapse.Dialog
                     selectedFilePath = openFileDialog.FileName;
                     return true;
                 }
+
                 selectedFilePath = null;
                 return false;
             }
@@ -235,6 +247,7 @@ namespace Timelapse.Dialog
                     selectedFolderPath = folderSelectionDialog.FileName;
                     return true;
                 }
+
                 return false;
             }
         }
@@ -300,6 +313,7 @@ namespace Timelapse.Dialog
             {
                 return string.Empty;
             }
+
             using (CommonOpenFileDialog folderSelectionDialog = new CommonOpenFileDialog())
             {
                 folderSelectionDialog.Title = "Locate folder" + folderNameToLocate + "...";
@@ -327,15 +341,18 @@ namespace Timelapse.Dialog
             {
                 return;
             }
+
             // require folders to be loaded be either the same folder as the .tdb and .ddb or subfolders of it
             if (e.Folder.StartsWith(dialog.DefaultDirectory, StringComparison.OrdinalIgnoreCase) == false)
             {
                 e.Cancel = true;
             }
         }
+
         #endregion
 
         #region SaveFileDialog: Get file or folder
+
         /// <summary>
         /// Prompt the user for a file location via an an open file dialog. Set selectedFilePath.
         /// </summary>
@@ -366,28 +383,33 @@ namespace Timelapse.Dialog
                     selectedFilePath = saveFileDialog.FileName;
                     return true;
                 }
+
                 selectedFilePath = null;
                 return false;
             }
         }
+
         #endregion
 
         #region MessageBox: DragDrop Close template and open a new template
+
         // Confirm closing this template and creating a new one
         public static bool? CloseTemplateAndOpenNewTemplate(Window owner, string newTemplateFileName)
         {
             return new MessageBox("Close this template and open another one", owner, MessageBoxButton.OKCancel)
             {
                 Message =
-                    {
-                        Icon = MessageBoxImage.Question,
-                        What = $"Close the current template and open this one instead? {Environment.NewLine}   {newTemplateFileName} "
-                    }
+                {
+                    Icon = MessageBoxImage.Question,
+                    What = $"Close the current template and open this one instead? {Environment.NewLine}   {newTemplateFileName} "
+                }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: Cannot read/write file
+
         public static void FileCantOpen(Window owner, string path, bool isFile)
         {
             string entity = isFile ? "file" : "folder";
@@ -415,17 +437,21 @@ namespace Timelapse.Dialog
             if (isFile)
             {
                 messageBox.Message.Solution += Environment.NewLine
-                    + "\u2022 another application is using that file (e.g., Excel)";
+                                               + "\u2022 another application is using that file (e.g., Excel)";
             }
+
             messageBox.Message.Hint = "Try logging off and then back on, which may release the " + entity + " if another application is using it.";
             messageBox.Message.Icon = MessageBoxImage.Error;
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: Prompt to apply operation if partial selection.
+
         // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-        public static bool MaybePromptToApplyOperationOnSelectionDialog(Window owner, FileDatabase fileDatabase, bool promptState, string operationDescription, Action<bool> persistOptOut)
+        public static bool MaybePromptToApplyOperationOnSelectionDialog(Window owner, FileDatabase fileDatabase, bool promptState, string operationDescription,
+            Action<bool> persistOptOut)
         {
             if (Dialogs.CheckIfPromptNeeded(promptState, fileDatabase, out int filesTotalCount, out int filesSelectedCount) == false)
             {
@@ -467,6 +493,7 @@ namespace Timelapse.Dialog
             {
                 persistOptOut(messageBox.DontShowAgain.IsChecked.Value);
             }
+
             return proceedWithOperation;
         }
 
@@ -487,14 +514,17 @@ namespace Timelapse.Dialog
                 // We don't show the prompt as the user has turned it off.
                 return false;
             }
+
             // We want to show the prompt only if the promptState is true, and we are  viewing all images
             filesTotalCount = fileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.All);
             filesSelectedCount = fileDatabase.FileTable.RowCount;
             return filesTotalCount != filesSelectedCount;
         }
+
         #endregion
 
         #region MessageBox: Overwrite Files?
+
         // Check if a prompt dialog is needed
         public static bool OverwriteExistingFiles(Window owner, int existingFilesCount)
         {
@@ -515,11 +545,13 @@ namespace Timelapse.Dialog
             };
             return messageBox.ShowDialog() == true;
         }
+
         #endregion
 
         #region MessageBox: Overwrite Files?
+
         // Check if a prompt dialog is needed
-        public static bool OverwriteListOfExistingFiles(Window owner, List<string>files)
+        public static bool OverwriteListOfExistingFiles(Window owner, List<string> files)
         {
             // Warn the user that the operation will overwrite existing files
             string s = files.Count == 1 ? "" : "s";
@@ -529,25 +561,28 @@ namespace Timelapse.Dialog
             {
                 fileList += $"{Environment.NewLine}\u2022 {file}";
             }
+
             MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
-                
+
 
                 Message =
                 {
                     What = $"Overwrite {files.Count} file{s} with the same name?",
                     Reason = $"The destination folder already has {files.Count} file{s} with the same name:{fileList}",
                     Solution = $"Select {Environment.NewLine}"
-                                         + "\u2022 'Ok' for Timelapse to overwrite those files" + Environment.NewLine
-                                         + "\u2022 'Cancel' to abort",
+                               + "\u2022 'Ok' for Timelapse to overwrite those files" + Environment.NewLine
+                               + "\u2022 'Cancel' to abort",
                     Icon = MessageBoxImage.Question
                 }
             };
             return messageBox.ShowDialog() == true;
         }
+
         #endregion
 
         #region MessageBox: FilesCannotBeModified
+
         public static bool FilesCannotBeModified(Window owner, List<string> files)
         {
             // Warn the user that these files cannot be modified
@@ -558,23 +593,27 @@ namespace Timelapse.Dialog
             {
                 fileList += $"\u2022 {file}{Environment.NewLine}";
             }
+
             MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
                     Problem = "Some files you are trying to write already exist and cannot be modified",
-                    Reason = $"The destination folder already has {files.Count} file{s} with the same name,{Environment.NewLine}and whose permissions disallow modification:{Environment.NewLine}{fileList}",
-                    Solution = "Try changing the security setting on the file by"+ Environment.NewLine
-                             + "\u2022 clicking its 'Property' setting" + Environment.NewLine
-                             + "\u2022 go to the  'Attributes' row and unclick the 'Read only' checkbox.",
+                    Reason =
+                        $"The destination folder already has {files.Count} file{s} with the same name,{Environment.NewLine}and whose permissions disallow modification:{Environment.NewLine}{fileList}",
+                    Solution = "Try changing the security setting on the file by" + Environment.NewLine
+                                                                                  + "\u2022 clicking its 'Property' setting" + Environment.NewLine
+                                                                                  + "\u2022 go to the  'Attributes' row and unclick the 'Read only' checkbox.",
                     Icon = MessageBoxImage.Question
                 }
             };
             return messageBox.ShowDialog() == true;
         }
+
         #endregion
 
         #region MessageBox: File Exists
+
         public static void FileExistsDialog(Window owner, string filePath)
         {
             const string title = "The file already exists.";
@@ -592,9 +631,11 @@ namespace Timelapse.Dialog
             };
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: New FileName As Old FileName Exists
+
         public static void NewFileNameGeneratedDialog(Window owner, string tdbFileName, string ddbFileName)
         {
             string what;
@@ -623,10 +664,10 @@ namespace Timelapse.Dialog
             {
                 // The datafile only was renamed
                 fileTypeText = $"Timelapse data {Constant.File.FileDatabaseFileExtension} ";
-                pluralityText = " is"; 
+                pluralityText = " is";
                 what =
                     $"Your folder has multiple {fileTypeText} files in it,";
-                
+
                 fileList = $"\u2022 {ddbFileName}";
             }
 
@@ -644,9 +685,11 @@ namespace Timelapse.Dialog
             };
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessagBox: Original file cannot be overwritten
+
         public static void FileCannotBeOverwrittenDialog(Window owner, string filePath)
         {
             const string title = "The file cannot be over-written";
@@ -660,16 +703,18 @@ namespace Timelapse.Dialog
                               + Environment.NewLine
                               + "\u2022 " + filePath,
                     Reason = "Overwriting a file requires deleting the original file and then creating the new file."
-                              + Environment.NewLine
-                              + "However, if another application is using the original file, it may block deletion.",
+                             + Environment.NewLine
+                             + "However, if another application is using the original file, it may block deletion.",
                     Solution = "Check if another application is using that file. If so, close that application and retry."
                 }
             };
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: Missing dependencies
+
         public static void DependencyFilesMissingDialog(string applicationName, string missingAssemblies)
         {
             // can't use DialogMessageBox to show this message as that class requires the Timelapse window to be displayed.
@@ -677,7 +722,8 @@ namespace Timelapse.Dialog
             StringBuilder message = new StringBuilder("Problem:" + Environment.NewLine);
             message.AppendFormat("{0} won't run properly as it was not correctly installed.{1}{1}", applicationName, Environment.NewLine);
             message.AppendLine("Reason:");
-            message.AppendFormat("When you downloaded {0}, it was in a folder with several other files and folders it needs. You probably dragged {0} out of that folder.{1}{1}", applicationName, Environment.NewLine);
+            message.AppendFormat("When you downloaded {0}, it was in a folder with several other files and folders it needs. You probably dragged {0} out of that folder.{1}{1}",
+                applicationName, Environment.NewLine);
             message.AppendLine("Solution:");
             message.AppendFormat("Move the {0} program back to its original folder, or download it again.{1}{1}", applicationName, Environment.NewLine);
             message.AppendLine("Hint:");
@@ -690,6 +736,7 @@ namespace Timelapse.Dialog
             message.AppendFormat("- {0}", missingAssemblies);
             System.Windows.MessageBox.Show(message.ToString(), messageTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
+
         #endregion
 
         #region MessageBox: Path too long warnings - several versions
@@ -706,9 +753,10 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Error,
                     Title = title,
                     Problem = "Timelapse has to shut down as one or more of your file paths are too long.",
-                    Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 Use shorter folder or file names."
-                     + Environment.NewLine + "\u2022 If you do move them and Timelapse cannot find those folders, "
-                     + Environment.NewLine + "     use Edit|Try to find any missing folders... to locate them.",
+                    Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine +
+                               "\u2022 Use shorter folder or file names."
+                               + Environment.NewLine + "\u2022 If you do move them and Timelapse cannot find those folders, "
+                               + Environment.NewLine + "     use Edit|Try to find any missing folders... to locate them.",
                     Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength + " characters."
                              + "Timelapse will shut down until you fix this.",
                     Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
@@ -718,6 +766,7 @@ namespace Timelapse.Dialog
             {
                 Clipboard.SetText(e.ExceptionObject.ToString());
             }
+
             messageBox.ShowDialog();
         }
 
@@ -738,7 +787,8 @@ namespace Timelapse.Dialog
                     Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Try reloading this image set after shortening the file path:"
                                + Environment.NewLine
-                               + "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 use shorter folder or file names.",
+                               + "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine +
+                               "\u2022 use shorter folder or file names.",
                     Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
                 }
             };
@@ -751,6 +801,7 @@ namespace Timelapse.Dialog
                     messageBox.Message.Problem += Environment.NewLine + "\u2022 " + folder;
                 }
             }
+
             messageBox.ShowDialog();
         }
 
@@ -816,8 +867,9 @@ namespace Timelapse.Dialog
                               + "\u2022 " + databasePath,
                     Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine
-                        + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
-                        + "\u2022 use shorter folder or file names.",
+                                                                                                + "\u2022 move your image folder higher up the folder hierarchy, or" +
+                                                                                                Environment.NewLine
+                                                                                                + "\u2022 use shorter folder or file names.",
                     Icon = MessageBoxImage.Error
                 }
             }.ShowDialog();
@@ -833,7 +885,8 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse will continue, but without backing up your files."
                               + Environment.NewLine
                               + "The issue is that the backup file can't be created as its name is too long for Windows to handle.",
-                    Reason = "Timelapse normally creates time-stamped backup files of your template, database, and csv files within a " + Constant.File.BackupFolder + " folder." + Environment.NewLine
+                    Reason = "Timelapse normally creates time-stamped backup files of your template, database, and csv files within a " + Constant.File.BackupFolder + " folder." +
+                             Environment.NewLine
                              + "However, Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
@@ -864,9 +917,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: .tdb is in a root or system folder
+
         public static void TemplateInDisallowedFolder(Window owner, bool isDrive, string path)
         {
             const string title = "Your template file is in a problematic location";
@@ -887,16 +942,17 @@ namespace Timelapse.Dialog
                     $"The issue is that your files are located in the top-level root drive '{path}' rather than a folder.{Environment.NewLine}"
                     + "Timelapse disallows this as the entire drive would be searched for images. ";
                 messageBox.Message.Reason += "Timelapse cannot tell if this location is a massive drive containing all your files" + Environment.NewLine
-                 + "(which would take ages to search and would retrieve every single image on it)," + Environment.NewLine
-                 + "or, for example, an SD card that only contains your image set images.";
+                    + "(which would take ages to search and would retrieve every single image on it)," + Environment.NewLine
+                    + "or, for example, an SD card that only contains your image set images.";
             }
             else
             {
                 messageBox.Message.Problem += "The issue is that your files are located in a system or hidden folder:" + Environment.NewLine + "\u2022 " + path;
                 messageBox.Message.Reason += "As system or hidden folders shouldn't normally contain user files, this could lead to future problems.";
                 messageBox.Message.Solution += Environment.NewLine + "Or, you may be able to change the folder's attributes by selecting 'Properties' from" + Environment.NewLine
-                + "that folder's context menu, and reviewing the 'Attributes' settings on the 'General' tab";
+                                               + "that folder's context menu, and reviewing the 'Attributes' settings on the 'General' tab";
             }
+
             messageBox.ShowDialog();
         }
 
@@ -904,6 +960,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region MessageBox: template includes a control of an unknown type
+
         public static void TemplateIncludesControlOfUnknownType(Window owner, string unknownTypes)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -919,15 +976,18 @@ namespace Timelapse.Dialog
                              + "This could happen if you are trying to open a template with an old Timelapse version," + Environment.NewLine
                              + "as newer Timelapse versions may have new types of controls.",
                     Solution = "Download the latest verson of Timelapse and try reloading your files." + Environment.NewLine
-                        + "You can also send an explanatory note to saul@ucalgary.ca." + Environment.NewLine
-                        + "He will check those files to see if there is a fixable bug.",
+                                                                                                       + "You can also send an explanatory note to saul@ucalgary.ca." +
+                                                                                                       Environment.NewLine
+                                                                                                       + "He will check those files to see if there is a fixable bug.",
                     Icon = MessageBoxImage.Error
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: Corrupted template
+
         public static void TemplateFileNotLoadedAsCorruptDialog(Window owner, string templateDatabasePath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -937,29 +997,31 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Problem = "Timelapse could not load the Template File :"
-                    + Environment.NewLine
-                    + "\u2022 " + templateDatabasePath,
+                              + Environment.NewLine
+                              + "\u2022 " + templateDatabasePath,
                     Reason = $"The template ({Constant.File.TemplateDatabaseFileExtension}) file may be corrupted, unreadable, or otherwise invalid.",
                     Solution = "Try one or more of the following:"
-                    + Environment.NewLine
-                    + $"\u2022 recreate the template, or use another copy of it.{Environment.NewLine}"
-                    + $"\u2022 check if there is a valid template file in your {Constant.File.BackupFolder} folder.{Environment.NewLine}"
-                    + $"\u2022 email {Constant.ExternalLinks.EmailAddress} describing what happened, attaching a copy of your {Constant.File.TemplateDatabaseFileExtension} file.",
+                               + Environment.NewLine
+                               + $"\u2022 recreate the template, or use another copy of it.{Environment.NewLine}"
+                               + $"\u2022 check if there is a valid template file in your {Constant.File.BackupFolder} folder.{Environment.NewLine}"
+                               + $"\u2022 email {Constant.ExternalLinks.EmailAddress} describing what happened, attaching a copy of your {Constant.File.TemplateDatabaseFileExtension} file.",
                     Result = "Timelapse did not affect any of your other files.",
                     Icon = MessageBoxImage.Error,
                     Hint = owner.Name.Equals("Timelapse") // Only displayed in Timelapse, not the template editor
-                     ? $"See if you can open and examine the template file in the Timelapse Template Editor.{Environment.NewLine}"
-                        + $"If you can't, and if you don't have a copy elsewhere, you will have to recreate it.{Environment.NewLine}"
-                        + $"You can also send an explanatory note to saul@ucalgary.ca.{Environment.NewLine}"
-                        + "He will check those files to see if there is a fixable bug."
-                     : string.Empty
+                        ? $"See if you can open and examine the template file in the Timelapse Template Editor.{Environment.NewLine}"
+                          + $"If you can't, and if you don't have a copy elsewhere, you will have to recreate it.{Environment.NewLine}"
+                          + $"You can also send an explanatory note to saul@ucalgary.ca.{Environment.NewLine}"
+                          + "He will check those files to see if there is a fixable bug."
+                        : string.Empty
                 }
             };
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: Corrupted .ddb file (no primary key)
+
         public static void DatabaseFileNotLoadedAsCorruptDialog(Window owner, string ddbDatabasePath, bool isEmpty)
         {
             // notify the user the database couldn't be loaded because there is a problem with it
@@ -968,29 +1030,33 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Problem = "Timelapse could not load your .ddb database file:"
-                        + Environment.NewLine
-                        + "\u2022 " + ddbDatabasePath,
+                              + Environment.NewLine
+                              + "\u2022 " + ddbDatabasePath,
                     Reason = isEmpty
-                         ? "Your database file is empty. Possible reasons include:" + Environment.NewLine
+                        ? "Your database file is empty. Possible reasons include:" + Environment.NewLine
                         : "Your database is unreadable or corrupted. Possible reasons include:" + Environment.NewLine,
                     Solution = "\u2022 If you have not analyzed any images yet, delete the .ddb file and try again."
-                        + Environment.NewLine
-                        + "\u2022 Also, check for valid backups of your database in your " + Constant.File.BackupFolder + " folder that you can reuse.",
+                               + Environment.NewLine
+                               + "\u2022 Also, check for valid backups of your database in your " + Constant.File.BackupFolder + " folder that you can reuse.",
                     Hint = "If you are stuck: Send an explanatory note to saul@ucalgary.ca." + Environment.NewLine
-                         + "He will check those files to see if there is a fixable bug.",
-                 Icon = MessageBoxImage.Error
-                 }
+                                                                                             + "He will check those files to see if there is a fixable bug.",
+                    Icon = MessageBoxImage.Error
+                }
             };
             messageBox.Message.Reason += "\u2022 Timelapse was shut down (or crashed) in the midst of:" + Environment.NewLine
-                + "    - loading your image set for the first time, or" + Environment.NewLine
-                + "    - writing your data into the file, or" + Environment.NewLine
-                + "\u2022 system, security or network  restrictions prohibited file reading and writing, or," + Environment.NewLine
-                + "\u2022 some other unkown reason.";
+                                                                                                        + "    - loading your image set for the first time, or" +
+                                                                                                        Environment.NewLine
+                                                                                                        + "    - writing your data into the file, or" + Environment.NewLine
+                                                                                                        + "\u2022 system, security or network  restrictions prohibited file reading and writing, or," +
+                                                                                                        Environment.NewLine
+                                                                                                        + "\u2022 some other unkown reason.";
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: Not a Timelapse File
+
         public static void FileNotATimelapseFile(Window owner, string templateDatabasePath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -1010,9 +1076,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: DataEntryHandler Confirmations / Warnings for Propagate, Copy Forward, Propagate to here
+
         // Display a dialog box saying there is nothing to propagate. 
         public static void DataEntryNothingToPropagateDialog(Window owner)
         {
@@ -1065,8 +1133,9 @@ namespace Timelapse.Dialog
             {
                 messageBox.Message.Result += "\u2022 copy the value \u00AB" + text + "\u00BB in this field from here to the last file of your selected files.";
             }
+
             messageBox.Message.Result += Environment.NewLine + "\u2022 over-write any existing data values in those fields"
-                                      + Environment.NewLine + "\u2022 will affect " + imagesAffected + " files.";
+                                                             + Environment.NewLine + "\u2022 will affect " + imagesAffected + " files.";
             return messageBox.ShowDialog();
         }
 
@@ -1113,9 +1182,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: MarkableCanvas Can't Open External PhotoViewer
+
         /// <summary>
         /// // Can't Open the External Photo Viewer. 
         /// </summary>
@@ -1138,9 +1209,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: No Updates Available / Timeout
+
         public static void NoUpdatesAvailableDialog(Window owner, string applicationName, Version currentVersionNumber)
         {
             new MessageBox($"No updates to {applicationName} are available.", owner)
@@ -1166,9 +1239,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: File Selection
+
         /// <summary>
         /// // No files were missing in the current selection
         /// </summary>
@@ -1231,11 +1306,14 @@ namespace Timelapse.Dialog
                 default:
                     throw new NotSupportedException($"Unhandled selection {selection}.");
             }
+
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: MissingFilesNotFound / Missing Folders
+
         public static void MissingFileSearchNoMatchesFoundDialog(Window owner, string fileName)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -1255,7 +1333,7 @@ namespace Timelapse.Dialog
                            + "\u2022 deleted, check your " + Constant.File.DeletedFilesFolder + " folder to see if its there." + Environment.NewLine
                            + "\u2022 moved outside of this image set, then you will have to find it and move it back in." + Environment.NewLine
                            + "\u2022 renamed, then you have to find it yourself and restore its original name." + Environment.NewLine + Environment.NewLine
-                            + "Of course, you can just leave things as they are, or delete this image's data field if it has little value to you.",
+                           + "Of course, you can just leave things as they are, or delete this image's data field if it has little value to you.",
                     Icon = MessageBoxImage.Question
                 }
             }.ShowDialog();
@@ -1287,9 +1365,11 @@ namespace Timelapse.Dialog
             }.ShowDialog();
             Mouse.OverrideCursor = cursor;
         }
+
         #endregion
 
         #region MessageBox: ImageSetLoading
+
         /// <summary>
         /// No images were found in the root folder or subfolders, so there is nothing to do
         /// </summary>
@@ -1304,7 +1384,7 @@ namespace Timelapse.Dialog
                     Title = title,
                     Problem = "No images or videos were found in this folder or its subfolders:"
                               + Environment.NewLine
-                              +  "\u2022 " + selectedFolderPath + Environment.NewLine,
+                              + "\u2022 " + selectedFolderPath + Environment.NewLine,
                     Reason = "Neither the folder nor its sub-folders contain:"
                              + Environment.NewLine
                              + "\u2022 image files (ending in '.jpg') " + Environment.NewLine
@@ -1315,166 +1395,12 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
-        #region MessageBox: MenuFile
-        public static void MenuFileRecognizersDataCouldNotBeReadDialog(Window owner)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Recognition data not imported.";
-            new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Title = title,
-                    Problem = "No recognition information was imported."
-                              + Environment.NewLine
-                              + "There were problems reading the recognition data in the json file.",
-                    Reason = "Possible causes are:" + Environment.NewLine
-                                                    + "\u2022 the file could not be opened, or" + Environment.NewLine
-                                                    + "\u2022 the recognition data in the file is somehow corrupted",
-                    Solution = "You may have to re-create the json file.",
-                    Result = "Recognition information was not imported."
-                }
-            }.ShowDialog();
-        }
-
-        /// <summary>
-        /// No matching folders in the DB and the recognizer file
-        /// </summary>
-        public static void MenuFileRecognitionDataNotImportedDialog(Window owner, string details)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Recognition data not imported.";
-            new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Title = title,
-                    Problem = "No recognition information was imported. The image file paths in the recognition file and the Timelapse"
-                              + Environment.NewLine
-                              + "database are all completely different. Thus no recognition information could be assigned to your images.",
-                    Reason = "When the recognizer originally processed a folder (and its subfolders) containing your images,"
-                             + Environment.NewLine
-                             + "it recorded each image's location relative to that folder. If the subfolder structure differs from " + Environment.NewLine
-                             + "that found in the Timelapse root folder, then the paths won't match." + Environment.NewLine
-                             + "For example, if the recognizer was run on 'AllFolders/Camera1/' but your template and database is in 'Camera1/'," + Environment.NewLine
-                             + "the folder paths won't match, since AllFolders/Camera1/ \u2260 Camera1/.",
-                    Solution = "1. Rerun the recognizer on the proper folder. See the Timelapse Recognition Guide to better understand what happens." 
-                               + Environment.NewLine 
-                               + "2. You may be able to repair the paths in the recognition file using this program:"
-                               + Environment.NewLine
-                               + "  https://lila.science/cameratraps-detectormismatch",
-                    Result = "Recognition information was not imported.",
-                    Details = details
-                }
-            }.ShowDialog();
-        }
-
-        /// <summary>
-        ///  Some folders missing - show which folder paths in the DB are not in the recognizer file
-        /// </summary>
-        public static void MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(Window owner, string details)
-        {
-            // Some folders missing - show which folder paths in the DB are not in the detector
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Recognition data imported for only some of your folders.";
-            new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Information,
-                    Title = title,
-                    What = "The recognition file references images in only some of the sub-folders loaded in the Timelapse database file." + Environment.NewLine
-                        + "We just want to bring it to your attention, in case this is not what you expected.",
-                    Reason = "This normally happens if the imported file only includes data about a subset your folders.",
-                    Hint = "You can check to see which images (if any) are missing recognition data by choosing" + Environment.NewLine
-                        + "'Select|Custom Selection...' and checking the box titled 'Show all files with no recognition data'",
-                    Details = details
-                }
-            }.ShowDialog();
-        }
-
-        /// <summary>
-        /// Recognitions: successfully imported message
-        /// </summary>
-        public static void MenuFileRecognitionsSuccessfulyImportedDialog(Window owner, string details)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Recognitions imported.";
-            new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Title = title,
-                    Icon = MessageBoxImage.Information,
-                    Result = "Recognition data imported. You can select images matching particular recognitions by choosing 'Select|Custom Selection...'",
-                    Hint = "You can also view which images (if any) are missing recognition data by choosing" + Environment.NewLine
-                        + "'Select|Custom Selection...' and checking the box titled 'Show all files with no recognition data'",
-                    Details = details
-                }
-            }.ShowDialog();
-        }
-
-        /// <summary>
-        /// Recognitions: failed import message
-        /// </summary>
-        public static void MenuFileRecognitionsFailedImportedDialog(Window owner, RecognizerImportResultEnum importError)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Could not import the recognition data.";
-            new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Title = title,
-                    Icon = MessageBoxImage.Information,
-                    Reason = (RecognizerImportResultEnum.JsonFileCouldNotBeRead == importError)
-                        ? "The Json recognition file could not be read"
-                        : "There were problems trying to import the recogntion data. We are not sure why this happened.",
-                    Result = "Recognition data was not imported"
-                }
-            }.ShowDialog();
-        }
-
-        /// <summary>
-        /// Warn the user that there no existing files match the recognition data
-        /// </summary>
-        /// <returns>The selected path, otherwise null </returns>
-        public static bool RecognizerNoMatchToExistingFiles(Window owner, string samplePath)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "None of the recognition file paths match your existing files";
-            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
-            {
-                Message =
-                    {
-                        Title = title,
-                        What = "None of the recognition file paths match your existing files." + Environment.NewLine
-                            +  "Is this intensional?",
-                        Reason = "It's likely that there is a mismatch between the recognizer paths and your actual file paths." + Environment.NewLine
-                            + "Somewhat less likely is that you haven't yet moved your images over.",
-                        Solution = "You may want to do one of the following." + Environment.NewLine
-                                                                              + "\u2022 'Okay' to import the recognitions anyways" + Environment.NewLine
-                                                                              + "\u2022 'Cancel' to stop importing so you can check to see what is going on.",
-                        Icon = MessageBoxImage.Question
-                    }
-            };
-            if (string.IsNullOrWhiteSpace(samplePath))
-            {
-                messageBox.Message.Hint = "The problem is that the recognition file contains no files!" + Environment.NewLine
-                + "You probably want to Cancel";
-            }
-            else
-            {
-                messageBox.Message.Hint = "An example file path found in the recogntion file is: " + Environment.NewLine
-                + "\u2022 " + samplePath + Environment.NewLine
-                + "Examine this to see if you think this file path should point to a different location.";
-            }
-            return true == messageBox.ShowDialog();
-        }
 
 
+        #region MenuFile CSV Export
         /// <summary>
         /// Export data for this image set as a.csv file, but confirm, as only a subset will be exported since a selection is active
         /// </summary>
@@ -1491,11 +1417,11 @@ namespace Timelapse.Dialog
                     Reason = "As your selection (in the Selection menu) is not set to view 'All', "
                              + "only data for these selected files will be exported. ",
                     Solution = "If you want to export just this subset, then " + Environment.NewLine
-                        + "\u2022 click Okay" + Environment.NewLine + Environment.NewLine
-                        + "If you want to export data for all your files, then " + Environment.NewLine
-                        + "\u2022 click Cancel," + Environment.NewLine
-                        + "\u2022 select 'All Files' in the Selection menu, " + Environment.NewLine
-                        + "\u2022 retry exporting your data as a .csv file.",
+                                                                               + "\u2022 click Okay" + Environment.NewLine + Environment.NewLine
+                                                                               + "If you want to export data for all your files, then " + Environment.NewLine
+                                                                               + "\u2022 click Cancel," + Environment.NewLine
+                                                                               + "\u2022 select 'All Files' in the Selection menu, " + Environment.NewLine
+                                                                               + "\u2022 retry exporting your data as a .csv file.",
                     Hint = "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.",
                     Icon = MessageBoxImage.Warning
                 },
@@ -1510,6 +1436,7 @@ namespace Timelapse.Dialog
             {
                 GlobalReferences.TimelapseState.SuppressSelectedCsvExportPrompt = messageBox.DontShowAgain.IsChecked.Value;
             }
+
             return exportCsv;
         }
 
@@ -1535,6 +1462,7 @@ namespace Timelapse.Dialog
         }
 
         #region MessageBox: FolderDataExportedToCSV
+
         // A message saying that the folder data was exported to various CSV files
         public static void FolderDataExportedToCSV(Window owner, string folderPath, List<string> files)
         {
@@ -1545,6 +1473,7 @@ namespace Timelapse.Dialog
             {
                 fileList += $"{Environment.NewLine}\u2022 {file}";
             }
+
             MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
@@ -1556,6 +1485,7 @@ namespace Timelapse.Dialog
             };
             messageBox.ShowDialog();
         }
+
         #endregion
 
 
@@ -1595,9 +1525,11 @@ namespace Timelapse.Dialog
                     Result =
                         $"This file is overwritten every time you export it (backups can be found in the {Constant.File.BackupFolder} folder).",
                     Hint = "\u2022 You can open this file with most spreadsheet programs, such as Excel." + Environment.NewLine
-                        + "\u2022 If you make changes in the spreadsheet file, you will need to import it to see those changes." + Environment.NewLine
-                        + "\u2022 You can change the Date and Time formats by selecting the Options|Preferences menu." + Environment.NewLine
-                        + "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.",
+                                                                                                          + "\u2022 If you make changes in the spreadsheet file, you will need to import it to see those changes." +
+                                                                                                          Environment.NewLine
+                                                                                                          + "\u2022 You can change the Date and Time formats by selecting the Options|Preferences menu." +
+                                                                                                          Environment.NewLine
+                                                                                                          + "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.",
                     Icon = MessageBoxImage.Information
                 },
                 DontShowAgain =
@@ -1627,21 +1559,31 @@ namespace Timelapse.Dialog
                     Title = title,
                     What = "Importing data from a .csv (comma separated value) file follows the rules below.",
                     Reason = "The first row in the CSV file must comprise column headers, where:" + Environment.NewLine
-                        + "\u2022 'File' must be included." + Environment.NewLine
-                        + "\u2022 'RelativePath' must be included if any of your images are in subfolders" + Environment.NewLine
-                        + "\u2022 remaining headers should generally match your template's DataLabels" + Environment.NewLine
-                        + "Headers can be a subset of your template's DataLabels." + Environment.NewLine + Environment.NewLine
-                        + "Subsequent rows define the data for each file, where it must match the Header type:" + Environment.NewLine
-                        + "\u2022 'File' data should match the name of the file you want to update." + Environment.NewLine
-                        + "\u2022 'RelativePath' data should match the sub-folder path containing that file, if any" + Environment.NewLine
-                        + "\u2022 'Counter' data must be blank, 0, or a positive integer. " + Environment.NewLine
-                        + "\u2022 'DateTime', 'Date' and 'Time' data must follow the specific date/time formats (see File|Export data...). " + Environment.NewLine
-                        + "\u2022 'Flag' and 'DeleteFlag' data must be 'true' or 'false'." + Environment.NewLine
-                        + "\u2022 'FixedChoice' data should exactly match a corresponding list item defined in the template, or empty. " + Environment.NewLine
-                        + "\u2022 'Folder' and 'ImageQuality' columns, if included, are skipped over.",
+                                                                                                  + "\u2022 'File' must be included." + Environment.NewLine
+                                                                                                  + "\u2022 'RelativePath' must be included if any of your images are in subfolders" +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 remaining headers should generally match your template's DataLabels" +
+                                                                                                  Environment.NewLine
+                                                                                                  + "Headers can be a subset of your template's DataLabels." + Environment.NewLine +
+                                                                                                  Environment.NewLine
+                                                                                                  + "Subsequent rows define the data for each file, where it must match the Header type:" +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'File' data should match the name of the file you want to update." +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'RelativePath' data should match the sub-folder path containing that file, if any" +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'Counter' data must be blank, 0, or a positive integer. " +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'DateTime', 'Date' and 'Time' data must follow the specific date/time formats (see File|Export data...). " +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'Flag' and 'DeleteFlag' data must be 'true' or 'false'." +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'FixedChoice' data should exactly match a corresponding list item defined in the template, or empty. " +
+                                                                                                  Environment.NewLine
+                                                                                                  + "\u2022 'Folder' and 'ImageQuality' columns, if included, are skipped over.",
                     Result = "Database values will be updated only for matching RelativePath/File entries. Non-matching entries are ignored.",
                     Hint = "Warnings will be generated for non-matching CSV headers, which you can then fix." + Environment.NewLine
-                           +"Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.",
+                                                                                                              + "Select 'Don't show this message again' to hide this message. You can unhide it later via the Options|Show or hide... menu.",
                     Icon = MessageBoxImage.Warning
                 },
                 DontShowAgain =
@@ -1654,6 +1596,7 @@ namespace Timelapse.Dialog
             {
                 GlobalReferences.TimelapseState.SuppressCsvImportPrompt = messageBox.DontShowAgain.IsChecked.Value;
             }
+
             return result;
         }
 
@@ -1673,14 +1616,17 @@ namespace Timelapse.Dialog
                     Problem = $"The file {csvFileName} could not be read.",
                     Reason = "The .csv file is not compatible with the Timelapse template defining the current image set.",
                     Hint = "Timelapse checks the following when importing the .csv file:" + Environment.NewLine
-                        + "\u2022 The first row is a header whose column names match the data labels in the .tdb template file" + Environment.NewLine
-                        + "\u2022 Counter data values are numbers or blanks." + Environment.NewLine
-                        + "\u2022 Flag and DeleteFlag values are either 'True' or 'False'." + Environment.NewLine
-                        + "\u2022 Choice values are in that field's Choice list, defined in the template." + Environment.NewLine + Environment.NewLine
+                                                                                          + "\u2022 The first row is a header whose column names match the data labels in the .tdb template file" +
+                                                                                          Environment.NewLine
+                                                                                          + "\u2022 Counter data values are numbers or blanks." + Environment.NewLine
+                                                                                          + "\u2022 Flag and DeleteFlag values are either 'True' or 'False'." + Environment.NewLine
+                                                                                          + "\u2022 Choice values are in that field's Choice list, defined in the template." +
+                                                                                          Environment.NewLine + Environment.NewLine
 
-                        + "While Timelapse will do the best it can to update your fields: " + Environment.NewLine
-                        + "\u2022 the csv row is skipped if its RelativePath/File location do not match a file in the Timelapse database ." + Environment.NewLine
-                        + "\u2022 the csv row's Date/Time is updated only if it is in the expected format (see Timelapse Reference Guide).",
+                                                                                          + "While Timelapse will do the best it can to update your fields: " + Environment.NewLine
+                                                                                          + "\u2022 the csv row is skipped if its RelativePath/File location do not match a file in the Timelapse database ." +
+                                                                                          Environment.NewLine
+                                                                                          + "\u2022 the csv row's Date/Time is updated only if it is in the expected format (see Timelapse Reference Guide).",
                     Result = "Importing of data from the CSV file was aborted. No changes were made."
                 }
             };
@@ -1694,6 +1640,7 @@ namespace Timelapse.Dialog
                     messageBox.Message.Solution += Environment.NewLine + prefix + importError;
                 }
             }
+
             messageBox.ShowDialog();
         }
 
@@ -1723,6 +1670,7 @@ namespace Timelapse.Dialog
                     messageBox.Message.Result += Environment.NewLine + prefix + warning;
                 }
             }
+
             messageBox.ShowDialog();
 
         }
@@ -1742,7 +1690,7 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Error,
                     Problem = $"The file {csvFileName} could not be opened.",
                     Reason = "Most likely the file is open in another program. The technical reason is:" + Environment.NewLine
-                        + exceptionMessage,
+                                                                                                         + exceptionMessage,
                     Solution = "If the file is open in another program, close it.",
                     Result = "Importing of data from the CSV file was aborted. No changes were made.",
                     Hint = "Is the file open in Excel?"
@@ -1769,9 +1717,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: MenuEdit
+
         /// <summary>
         /// Tell the user how duplicates work, including showing a problem statement if the sort order isn't optimal. Give them the opportunity to abort.
         /// THe various flags determine whether to show or hide the duplicate information, and how to deal with the DontShowAgain checkbox, as we always want
@@ -1796,7 +1746,8 @@ namespace Timelapse.Dialog
 
             if (false == sortTermsOKForDuplicateOrdering)
             {
-                messageBox.Message.Problem = "'Duplicate this record' works best with Sorting set to either 'Sort | By relative Path + DateTime (default)', or 'Sort |by DateTime'. Otherwise, duplicate records may not appear next to each other.";
+                messageBox.Message.Problem =
+                    "'Duplicate this record' works best with Sorting set to either 'Sort | By relative Path + DateTime (default)', or 'Sort |by DateTime'. Otherwise, duplicate records may not appear next to each other.";
                 if (showProblemDescriptionOnly)
                 {
                     messageBox.Message.Hint += "You may want to change your sort order before proceeding.";
@@ -1817,15 +1768,19 @@ namespace Timelapse.Dialog
                     + "If you export your data to a CSV file, each duplicates will appear in its own row ";
 
                 messageBox.Message.Hint = "Duplicates come with several caveats." + Environment.NewLine
-                    + "\u2022 Use 'Sort | Relative Path + Date Time (default)' to ensure that duplicates appear in sequence." + Environment.NewLine
-                    + "\u2022 Duplicates can only be created in the main view when displaying a single image, not in the overview." + Environment.NewLine
-                    + "\u2022 Duplicates in the exported CSV file are identifiable as rows with the same relative path and file name.";
+                                                                                  + "\u2022 Use 'Sort | Relative Path + Date Time (default)' to ensure that duplicates appear in sequence." +
+                                                                                  Environment.NewLine
+                                                                                  + "\u2022 Duplicates can only be created in the main view when displaying a single image, not in the overview." +
+                                                                                  Environment.NewLine
+                                                                                  + "\u2022 Duplicates in the exported CSV file are identifiable as rows with the same relative path and file name.";
             }
+
             bool? result = messageBox.ShowDialog();
             if (messageBox.DontShowAgain.IsChecked.HasValue && showProblemDescriptionOnly == false)
             {
                 GlobalReferences.TimelapseState.SuppressHowDuplicatesWork = messageBox.DontShowAgain.IsChecked.Value;
             }
+
             return result;
         }
 
@@ -1847,6 +1802,7 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         /// <summary>
         /// There are no displayable images, and thus no metadata to choose from
         /// </summary>
@@ -1915,9 +1871,11 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: MenuOptions
+
         public static void MenuOptionsCantPopulateDataFieldWithEpisodeAsNoFilesDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -1975,10 +1933,11 @@ namespace Timelapse.Dialog
                 {
                     messageBox.Message.Reason += "1. ";
                 }
+
                 messageBox.Message.Reason += "Your current file selection includes search terms that may omit files in an Episode.";
                 messageBox.Message.Hint += "Use the Select menu to select either:" + Environment.NewLine
-                    + " - All files, or " + Environment.NewLine
-                    + " - All files in a folder and its subfolders";
+                                                                                   + " - All files, or " + Environment.NewLine
+                                                                                   + " - All files in a folder and its subfolders";
                 if (!sortTermsOk)
                 {
                     messageBox.Message.Reason += Environment.NewLine;
@@ -1991,15 +1950,18 @@ namespace Timelapse.Dialog
             {
                 messageBox.Message.Reason += "2. ";
             }
+
             messageBox.Message.Reason += "Your files should be sorted in ascending date order for this to make sense.";
             messageBox.Message.Hint += "Use the Sort menu to sort either by:" + Environment.NewLine
-                + " - RelativePath then DateTime (both in ascending order), or " + Environment.NewLine
-                + " - DateTime only  (in ascending order)";
+                                                                              + " - RelativePath then DateTime (both in ascending order), or " + Environment.NewLine
+                                                                              + " - DateTime only  (in ascending order)";
             return messageBox.ShowDialog() == true;
         }
+
         #endregion
 
         #region MessageBox: related to DateTime
+
         public static void DateTimeNewTimeShouldBeLaterThanEarlierTimeDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -2018,9 +1980,11 @@ namespace Timelapse.Dialog
             };
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: related to Arguments to start a particular template or to constrain to a particular relative path
+
         // Tell the user that Timelapse is currently restricted to the folder designated by a particulare relative path
         public static void ArgumentRelativePathDialog(Window owner, string folderName)
         {
@@ -2064,18 +2028,23 @@ namespace Timelapse.Dialog
 
             if (!string.IsNullOrWhiteSpace(relativePathArgument))
             {
-                messageBox.Message.What += Environment.NewLine + "\u2022 the additional instruction to limit analysis to the subfolder " + "'" + relativePathArgument + "'" + " is also ignored ";
+                messageBox.Message.What += Environment.NewLine + "\u2022 the additional instruction to limit analysis to the subfolder " + "'" + relativePathArgument + "'" +
+                                           " is also ignored ";
             }
+
             if (!string.IsNullOrWhiteSpace(relativePathArgument))
             {
                 messageBox.Message.Reason += "and to limit analysis to a particular subfolder." + Environment.NewLine;
             }
+
             messageBox.Message.Reason += "However, that template either does not exist or could not be accessed.";
             messageBox.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: related to selecting Episodes in the custom select
+
         // There are two version of this warning dialog
         // - If the flag is true, the text informs that Timelapse could not find a data field in the expected episode format
         // - If the flag is false, the text informs that the currently selected data field is not in the expected format
@@ -2093,18 +2062,24 @@ namespace Timelapse.Dialog
                         + "with your files' episode data, where the episode data is in the expected format." + Environment.NewLine
                         + "None of your data fields, at least for the current file, includes the expected episode data.",
                     Reason = "When you choose this option, Timelapse searches for episodes having at least one file " + Environment.NewLine
-                        + "matching your search criteria. If so, all files contained in those episodes are then displayed." + Environment.NewLine + Environment.NewLine
-                        + "For this to work properly, one of your data fields must have been filled in using " + Environment.NewLine
-                        + "Edit | Populate a field with episode data..., where:" + Environment.NewLine
-                        + " \u2022 the episode format includes the episode sequence number as its prefix, e.g. 25:1|3," + Environment.NewLine
-                        + " \u2022 all currently selected files were populated with Episode information at the same time.",
+                                                                                                                      + "matching your search criteria. If so, all files contained in those episodes are then displayed." +
+                                                                                                                      Environment.NewLine + Environment.NewLine
+                                                                                                                      + "For this to work properly, one of your data fields must have been filled in using " +
+                                                                                                                      Environment.NewLine
+                                                                                                                      + "Edit | Populate a field with episode data..., where:" +
+                                                                                                                      Environment.NewLine
+                                                                                                                      + " \u2022 the episode format includes the episode sequence number as its prefix, e.g. 25:1|3," +
+                                                                                                                      Environment.NewLine
+                                                                                                                      + " \u2022 all currently selected files were populated with Episode information at the same time.",
                     Hint = "See the Timelapse Reference Guide about how this operation works, what is required, and what it is for."
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: opening messages when Timelapse is started
+
         /// <summary>
         /// Give the user various opening messages
         /// </summary>
@@ -2137,9 +2112,11 @@ namespace Timelapse.Dialog
                 GlobalReferences.TimelapseState.SuppressOpeningMessageDialog = openingMessage.DontShowAgain.IsChecked.Value;
             }
         }
+
         #endregion
 
         #region MessageBox: Opening in a viewonly state
+
         /// Give the user various opening mesages
         public static void OpeningMessageViewOnly(Window owner)
         {
@@ -2151,10 +2128,12 @@ namespace Timelapse.Dialog
                 {
                     Title = title,
                     What = "You started the view-only version of Timelapse. " + Environment.NewLine
-                        + "\u2022 You can open and view existing images, videos and any previously entered data." + Environment.NewLine
-                        + "\u2022 You will not be able to edit or alter that data, or create a new image set." + Environment.NewLine,
+                                                                              + "\u2022 You can open and view existing images, videos and any previously entered data." +
+                                                                              Environment.NewLine
+                                                                              + "\u2022 You will not be able to edit or alter that data, or create a new image set." +
+                                                                              Environment.NewLine,
                     Reason = "This Timelapse version is handy if you only want to view an image set and its data," + Environment.NewLine
-                        + "as it ensures that no accidental changes to the data will be made.",
+                                                                                                                   + "as it ensures that no accidental changes to the data will be made.",
                     Hint = "If you want to edit data, then you should start the normal Timelapse program.",
                     Details = "Menu items that alter data are hidden from view, and data entry controls are disabled.",
                     Icon = MessageBoxImage.Information
@@ -2173,16 +2152,19 @@ namespace Timelapse.Dialog
                     Title = title,
                     What = "Creating a new image set is not allowed when Timelapse is started as view-only. " + Environment.NewLine,
                     Reason = "You tried to open a template on an image set that has no data associated with it." + Environment.NewLine
-                        + "Timelapse normally looks for images in this folder, and creates a database holding data for each image." + Environment.NewLine
-                        + "In view-only mode, creating a new database is not permitted",
+                                                                                                                 + "Timelapse normally looks for images in this folder, and creates a database holding data for each image." +
+                                                                                                                 Environment.NewLine
+                                                                                                                 + "In view-only mode, creating a new database is not permitted",
                     Hint = "If you want to load these images for the first time, then you should start the normal Timelapse program.",
                     Icon = MessageBoxImage.Warning
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region MessageBox: ddb file opened with an older version of Timelapse than recorded in it
+
         public static bool? DatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -2194,17 +2176,18 @@ namespace Timelapse.Dialog
             {
                 Message =
                 {
-                    Title=title,
+                    Title = title,
                     What = "You are opening your image set with an older version of Timelapse." + Environment.NewLine
-                        + "You previously used a later version of Timelapse to open this image set." + Environment.NewLine
-                        + "This is just a warning, as its rarely a problem.",
+                                                                                                + "You previously used a later version of Timelapse to open this image set." +
+                                                                                                Environment.NewLine
+                                                                                                + "This is just a warning, as its rarely a problem.",
                     Reason = "Its best to use the latest Timelapse version to minimize any incompatabilities with older versions.",
                     Solution = "Click:" + Environment.NewLine
-                                + "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine
-                                + "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.",
+                                        + "\u2022 " + "Ok to keep going. It will likely work fine anyways." + Environment.NewLine
+                                        + "\u2022 " + "Cancel to abort. You can then download the latest version from the Timelapse web site.",
                     Icon = MessageBoxImage.Warning,
                     Hint = "Select 'Don't show this message again' to hide this warning. " + Environment.NewLine
-                         + "You can unhide it later via the 'Options|Show or hide...' menu."
+                                                                                           + "You can unhide it later via the 'Options|Show or hide...' menu."
                 },
                 DontShowAgain =
                 {
@@ -2216,12 +2199,15 @@ namespace Timelapse.Dialog
             {
                 GlobalReferences.TimelapseState.SuppressOpeningWithOlderTimelapseVersionDialog = messageBox.DontShowAgain.IsChecked.Value;
             }
+
             Mouse.OverrideCursor = cursor;
             return result;
         }
+
         #endregion
 
         #region DialogIsFileValid checks for valid database file and displays appropriate dialog if it isn't
+
         public static bool DialogIsFileValid(Window owner, string filePath)
         {
             switch (FilesFolders.QuickCheckDatabaseFile(filePath))
@@ -2233,6 +2219,7 @@ namespace Timelapse.Dialog
                     {
                         return true == Dialogs.DatabaseFileOpenedWithOlderVersionOfTimelapse(owner);
                     }
+
                     return true;
                 case DatabaseFileErrorsEnum.PreVersion2300:
                 case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
@@ -2263,6 +2250,7 @@ namespace Timelapse.Dialog
                     {
                         Dialogs.DatabaseFileNotLoadedAsCorruptDialog(owner, filePath, false);
                     }
+
                     return false;
                 case DatabaseFileErrorsEnum.NotATimelapseFile:
                     Mouse.OverrideCursor = null;
@@ -2277,9 +2265,11 @@ namespace Timelapse.Dialog
                     return true;
             }
         }
+
         #endregion
 
         #region Testing messages for development
+
         // ReSharper disable once UnusedMember.Global
         public static void RandomMessage(Window owner, string message)
         {
@@ -2304,9 +2294,11 @@ namespace Timelapse.Dialog
                 GlobalReferences.TimelapseState.SuppressOpeningMessageDialog = openingMessage.DontShowAgain.IsChecked.Value;
             }
         }
+
         #endregion
 
         #region Merging errors
+
         // Invalid file
         public static void MergeErrorDatabaseFileAppearsCorruptDialog(Window owner)
         {
@@ -2319,10 +2311,10 @@ namespace Timelapse.Dialog
                 {
                     Problem = $"The selected {Constant.File.FileDatabaseFileExtension} file does not contain a valid  database.",
                     Reason = "Your  database file is likely corrupted, which means that Timelapse cannot use it.",
-                    Solution =  $"If you could open this database file previously, a working backup may be available.{Environment.NewLine}"
-                                + $"\u2022 Check your {Constant.File.BackupFolder} folder to see if there is a backup that works.{Environment.NewLine}"
-                                + $"\u2022 If so, copy it to the problem file's location, and try to open it.{Environment.NewLine}"
-                                + "\u2022 If not, you may have to delete your database file and then recreate it.",
+                    Solution = $"If you could open this database file previously, a working backup may be available.{Environment.NewLine}"
+                               + $"\u2022 Check your {Constant.File.BackupFolder} folder to see if there is a backup that works.{Environment.NewLine}"
+                               + $"\u2022 If so, copy it to the problem file's location, and try to open it.{Environment.NewLine}"
+                               + "\u2022 If not, you may have to delete your database file and then recreate it.",
                     Hint = $"If you are stuck, send an explanatory note to saul@ucalgary.ca.{Environment.NewLine}"
                            + "He will check those files to see if they can be repaired."
                 }
@@ -2342,12 +2334,12 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Question,
                     Problem = $"A database {Constant.File.FileDatabaseFileExtension} file already exists in that folder.",
                     Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
-                     + "as to which one to use and which one has the most up to date data.",
-                    Solution =  $"You can continue to create the empty database. However, you may want to {Environment.NewLine}"
-                                + $"\u2022 reconsider, revisit and/or clean up that folder before doing so, or{Environment.NewLine}"
-                                + "\u2022 create a folder above this one, and use that as the root folder instead.",
+                             + "as to which one to use and which one has the most up to date data.",
+                    Solution = $"You can continue to create the empty database. However, you may want to {Environment.NewLine}"
+                               + $"\u2022 reconsider, revisit and/or clean up that folder before doing so, or{Environment.NewLine}"
+                               + "\u2022 create a folder above this one, and use that as the root folder instead.",
                     Hint = $"This is just a warning, as having multiple databases in a folder goes against best practices.{Environment.NewLine}"
-                        + "You may want to read about 'Merging files' in the Timelapse Reference Guide."
+                           + "You may want to read about 'Merging files' in the Timelapse Reference Guide."
                 }
             }.ShowDialog();
         }
@@ -2366,8 +2358,8 @@ namespace Timelapse.Dialog
                     Problem = $"A database {Constant.File.FileDatabaseFileExtension} file already exists in that folder.",
                     Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
                              + "as to which one to use and which one has the most up to date data.",
-                    Solution =  $"You can continue to check out a database. However, you may want to {Environment.NewLine}"
-                                + " reconsider, revisit and/or clean up that folder before doing so.",
+                    Solution = $"You can continue to check out a database. However, you may want to {Environment.NewLine}"
+                               + " reconsider, revisit and/or clean up that folder before doing so.",
                     Hint = $"This is just a warning, as having multiple databases in a folder goes against best practices.{Environment.NewLine}"
                            + "You may want to read 'Merging files' in the Timelapse Reference Guide."
                 }
@@ -2386,9 +2378,9 @@ namespace Timelapse.Dialog
                     Problem = $"Your database {Constant.File.FileDatabaseFileExtension} needs to be updated.",
                     Reason = $"Your  database file was created with an old version of Timelapse{Environment.NewLine}"
                              + "and cannot be opened with the current Timelapse version",
-                    Solution =  $"Upgrade this (and other) files as follows.{Environment.NewLine}"
-                                + $"1. Select 'File|Upgrade Timelapse files to the latest version...' from the Timelapse menu.{Environment.NewLine}"
-                                + "2. Follow the instructions in that dialog to select and upgrade one or more files.",
+                    Solution = $"Upgrade this (and other) files as follows.{Environment.NewLine}"
+                               + $"1. Select 'File|Upgrade Timelapse files to the latest version...' from the Timelapse menu.{Environment.NewLine}"
+                               + "2. Follow the instructions in that dialog to select and upgrade one or more files.",
                     Hint = $"Opening an upgraded file with an old version of Timelapse can cause Timelapseto crash,{Environment.NewLine}"
                            + $"which may corrupt your database {Constant.File.FileDatabaseFileExtension} file.{Environment.NewLine}"
                            + "If that happens, try upgrading it again in the latest version of Timelapse."
@@ -2438,7 +2430,8 @@ namespace Timelapse.Dialog
                     Problem = "Your file's path name is too long.",
                     Reason = $"Windows cannot perform file operations if the folder path combined with the file name{Environment.NewLine}"
                              + "is more than " + Constant.File.MaxPathLength + " characters.",
-                    Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine + "\u2022 Use shorter folder or file names."
+                    Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine +
+                               "\u2022 Use shorter folder or file names."
                                + Environment.NewLine + "\u2022 If you do move or rename them and Timelapse cannot find those folders or files, "
                                + Environment.NewLine + "     use the 'Edit|Try to find...' functions to locate them.",
                     Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
@@ -2461,14 +2454,15 @@ namespace Timelapse.Dialog
                               + "because their templates differ.",
                     Reason = "The data field definitions used to enter image-level data differ.",
                     Solution = "Try the following steps."
-                           + Environment.NewLine
-                           + $"1. Update the selected database's template ({Constant.File.TemplateDatabaseFileExtension}) file to match the destination database's template.{Environment.NewLine}"
-                           + $"2. Using folder levels? The child template should not include the extraneous folder levels.{Environment.NewLine}     If it does, this can be difficult to repair.{Environment.NewLine}"
-                           + $"3. Reopen the selected database in Timelapse to complete the update.{Environment.NewLine}"
-                           + "4. Try to merge the file again.",
+                               + Environment.NewLine
+                               + $"1. Update the selected database's template ({Constant.File.TemplateDatabaseFileExtension}) file to match the destination database's template.{Environment.NewLine}"
+                               + $"2. Using folder levels? The child template should not include the extraneous folder levels.{Environment.NewLine}     If it does, this can be difficult to repair.{Environment.NewLine}"
+                               + $"3. Reopen the selected database in Timelapse to complete the update.{Environment.NewLine}"
+                               + "4. Try to merge the file again.",
                     Icon = MessageBoxImage.Error,
-                    Hint = $"The best way to create compatable child template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
-                           $"the child via the File|Merge option.{Environment.NewLine}Then use that template to either load the checked out data file, or to create a new data file."
+                    Hint =
+                        $"The best way to create compatable child template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
+                        $"the child via the File|Merge option.{Environment.NewLine}Then use that template to either load the checked out data file, or to create a new data file."
                 }
             };
             messageBox.ShowDialog();
@@ -2486,11 +2480,12 @@ namespace Timelapse.Dialog
                     Problem = $"Timelapse could not merge this database back into the parent database{Environment.NewLine}"
                               + "because their templates differ.",
                     Reason = "The folder level definitions differ.",
-                    Solution =  $"Compare the folder levels between the templates used by the parent and child.{Environment.NewLine}" +
-                                "Their folder levels should be the same, and each level should include the same controls.",
+                    Solution = $"Compare the folder levels between the templates used by the parent and child.{Environment.NewLine}" +
+                               "Their folder levels should be the same, and each level should include the same controls.",
                     Icon = MessageBoxImage.Error,
-                    Hint = $"The best way to create compatable child template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
-                           $"the child via the File|Merge option.{Environment.NewLine}Then use that template to either load the checked out data file, or to create a new data file."
+                    Hint =
+                        $"The best way to create compatable child template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
+                        $"the child via the File|Merge option.{Environment.NewLine}Then use that template to either load the checked out data file, or to create a new data file."
                 }
             };
             messageBox.ShowDialog();
@@ -2507,9 +2502,9 @@ namespace Timelapse.Dialog
                 {
                     Problem = "The selected file no longer exists so it can't be merged",
                     Reason = $"Timelapse could not determine why the selected file no longer exists.{Environment.NewLine}"
-                        + "Was it was deleted, moved or renamed before completing the merge operation?",
+                             + "Was it was deleted, moved or renamed before completing the merge operation?",
                     Solution = $"Try relocating the file and moving it into the correct folder, {Environment.NewLine}"
-                    + "or, run the merge operation again to see what files are available for merging.",
+                               + "or, run the merge operation again to see what files are available for merging.",
                     Icon = MessageBoxImage.Error,
                 }
             };
@@ -2526,18 +2521,20 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Problem = $"The detection and/or classification categories used for image recognition{Environment.NewLine}"
-                    + "differ between the selected files and the destination file.",
+                              + "differ between the selected files and the destination file.",
                     Reason = "The categories must be identical, as otherwise the recognitions will be wrong",
-                    Solution =  $"Possibities include:{Environment.NewLine}"
-                        + $"\u2022 Recreate the recognition file imported by the selected file using the same categories as the destination.{Environment.NewLine}"
-                        +  $"\u2022 Revisit how the imported recognition json files were created.{Environment.NewLine}"
-                        + "\u2022 Delete the recognitions from the selected file."
+                    Solution = $"Possibities include:{Environment.NewLine}"
+                               + $"\u2022 Recreate the recognition file imported by the selected file using the same categories as the destination.{Environment.NewLine}"
+                               + $"\u2022 Revisit how the imported recognition json files were created.{Environment.NewLine}"
+                               + "\u2022 Delete the recognitions from the selected file."
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region Moving and Creating folder errors (used by the RelativePathEditor)
+
         public static void RenameRelativePathError(Window owner, MoveFolderResultEnum result, string sourceFolderPath, string destinationFolderPath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -2615,7 +2612,8 @@ namespace Timelapse.Dialog
 
         #endregion
 
-        #region Invalid data field input 
+        #region Invalid data field input
+
         public static void InvalidDataFieldInput(Window owner, string dataFieldType, string invalidContent)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -2684,7 +2682,7 @@ namespace Timelapse.Dialog
                     break;
                 case Constant.Control.DateTime_:
                     expectedInput = "in date/time format";
-                    example = $"{Environment.NewLine}• format is yyyy-mm-dd hh:mm:ss" + 
+                    example = $"{Environment.NewLine}• format is yyyy-mm-dd hh:mm:ss" +
                               $"{Environment.NewLine}• e.g., 2024-12-24 13:05:00 for Dec. 24, 2024, 1:05 pm";
                     expectedType = "date/time";
                     title += "in date/time format";
@@ -2710,7 +2708,7 @@ namespace Timelapse.Dialog
             }
 
             string what = invalidContent.Length < 30
-            
+
                 ? $"Your entered data would be: {invalidContent}{Environment.NewLine}This does not match what a {expectedType} data field expects."
                 : "Your entered data does not match what this data field expects.";
 
@@ -2722,14 +2720,16 @@ namespace Timelapse.Dialog
                     What = what,
                     Reason = $"The contents of this data field must {expectedInput}{example}",
                     Result = "Your data field's contents may be reset.",
-                    Hint = "Check your data field's contents, then enter text that matches what the data field expects.", 
+                    Hint = "Check your data field's contents, then enter text that matches what the data field expects.",
                     Icon = MessageBoxImage.Error
                 }
             }.ShowDialog();
         }
+
         #endregion
 
         #region FolderEditor warning as using folder levels
+
         public static bool? FolderEditorMetadataWarning(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -2740,17 +2740,257 @@ namespace Timelapse.Dialog
                 {
                     Title = title,
                     Problem = "Your image set uses folder levels and folder metadata. " + Environment.NewLine
-                    + "If you rename, move or delete existing folders that have metadata associated with it, " + Environment.NewLine
-                    + "the folder editor will not update its folder level locations." + Environment.NewLine
-                    + "This means that previously entered metadata may no longer be associated with the edited folder.",
-                    Solution = "For now, we recommend against moving or renaming existing folders."  + Environment.NewLine
-                    + " This will be fixed in the next version of Timelapse.",
+                                                                                        + "If you rename, move or delete existing folders that have metadata associated with it, " +
+                                                                                        Environment.NewLine
+                                                                                        + "the folder editor will not update its folder level locations." + Environment.NewLine
+                                                                                        + "This means that previously entered metadata may no longer be associated with the edited folder.",
+                    Solution = "For now, we recommend against moving or renaming existing folders." + Environment.NewLine
+                                                                                                    + " This will be fixed in the next version of Timelapse.",
                     Hint = "You can still use the folder editor to review your folders and/or to create new folders",
                     Icon = MessageBoxImage.Information
                 }
             }.ShowDialog();
         }
-       
+
+        #endregion
+
+        #region MessageBox: MenuRecognition - ImportRecognizer File Feeldback
+        public static void MenuFileRecognizersDataCouldNotBeReadDialog(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Recognition data not imported.";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Problem = "No recognition information was imported."
+                              + Environment.NewLine
+                              + "There were problems reading the recognition data.",
+                    Reason = $"Possible causes are:{Environment.NewLine}" +
+                             $" \u2022 the file could not be opened, or{Environment.NewLine}" +
+                              " \u2022 the recognition data in the file is somehow corrupted",
+                    Solution = "You may have to re-create the json file.",
+                    Result = "Recognition information was not imported, and nothing was changed."
+                }
+            }.ShowDialog();
+        }
+
+        /// <summary>
+        /// No matching folders in the DB and the recognizer file
+        /// </summary>
+        public static void MenuFileRecognitionDataNotImportedDialog(Window owner, string details)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Recognition data not imported.";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Problem = $"No recognition information was imported. The image file paths in the recognition file and the Timelapse{Environment.NewLine}"
+                              + "database are all completely different. Thus no recognition information could be assigned to your images.",
+                    Reason = $"When the recognizer originally processed a folder (and its subfolders) containing your images,{Environment.NewLine}" +
+                             $"it recorded each image's location relative to that folder. If the subfolder structure differs from{Environment.NewLine}" +
+                             $"that found in the Timelapse root folder, then the paths won't match.{Environment.NewLine}" +
+                             $"For example, if the recognizer was run on 'AllFolders/Camera1/' but your template and database is in 'Camera1/',{Environment.NewLine}" +
+                             "the folder paths won't match, since AllFolders/Camera1/ \u2260 Camera1/.",
+                    Solution = $"1. Easiest: Rerun the recognizer on the proper folder. See the Timelapse Recognition Guide to better understand what happens.{Environment.NewLine}" +
+                               $"2. You may be able to repair the paths in the recognition file using this program:{Environment.NewLine}" +
+                                "  https://lila.science/cameratraps-detectormismatch",
+                    Result = "Recognition information was not imported, and nothing was changed.",
+                    Details = details
+                }
+            }.ShowDialog();
+        }
+
+        /// <summary>
+        ///  Some folders missing - show which folder paths in the DB are not in the recognizer file
+        /// </summary>
+        public static void MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(Window owner, string jsonFilePath, string details)
+        {
+            // Some folders missing - show which folder paths in the DB are not in the detector
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"Recognition data imported for images in a sub-folder";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    Title = title,
+                    What = $"Recognition data imported for images located in this sub-folder, with details listed below.{Environment.NewLine}" +
+                           $"•  {jsonFilePath}",
+                    Reason =  $"When you run the recognizer on a sub-folder, recognitions are constrained{Environment.NewLine}" +
+                               "to images located within that folder and its sub-folders.",
+                    Hint = $"If you choose 'Select|Custom Selection...', you can:{Environment.NewLine}" +
+                           $"• select images matching particular recognitions,{Environment.NewLine}" +
+                           $"• click 'Show all files with no recognition data' to list images missing recognition data.",
+                    Details = details
+                }
+            }.ShowDialog();
+        }
+
+        /// <summary>
+        /// Recognitions: successfully imported message
+        /// </summary>
+        public static void MenuFileRecognitionsSuccessfulyImportedDialog(Window owner, string details)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Recognitions imported.";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Icon = MessageBoxImage.Information,
+                    Result = "Recognition data imported for your image set.",
+                    Hint = $"If you choose 'Select|Custom Selection...', you can:{Environment.NewLine}" +
+                           $"• select images matching particular recognitions,{Environment.NewLine}" +
+                           $"• click 'Show all files with no recognition data' to list images missing recognition data.",
+                    Details = details
+                }
+            }.ShowDialog();
+        }
+
+        /// <summary>
+        /// Recognitions: failed import message
+        /// </summary>
+        public static void MenuFileRecognitionsFailedImportedDialog(Window owner, RecognizerImportResultEnum importError)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Could not import the recognition data.";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Icon = MessageBoxImage.Information,
+                    Reason = (RecognizerImportResultEnum.JsonFileCouldNotBeRead == importError)
+                        ? "The Json recognition file could not be read"
+                        : "There were problems trying to import the recogntion data. We are not sure why this happened.",
+                    Result = "Recognition data was not imported"
+                }
+            }.ShowDialog();
+        }
+
+        /// <summary>
+        /// Warn the user that there no existing files match the recognition data
+        /// </summary>
+        /// <returns>The selected path, otherwise null </returns>
+        public static bool RecognizerNoMatchToExistingFiles(Window owner, string samplePath)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "None of the recognition file paths match your existing files";
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Title = title,
+                    What = $"None of the recognition file paths match your existing files.{Environment.NewLine}" +
+                           "Is this intensional?",
+                    Reason = $"It's likely that there is a mismatch between the recognizer paths and your actual file paths.{Environment.NewLine}" +
+                              "Somewhat less likely is that you haven't yet moved your images over, and you plan to do so.",
+                    Solution = $"You may want to:{Environment.NewLine}" +
+                               $"\u2022 'Cancel' to stop importing so you can check to see what is going on.{Environment.NewLine}" +
+                               "\u2022 'Okay' to import the recognitions anyways (if you know how to resolve this)",
+                    Icon = MessageBoxImage.Question,
+                    Hint = string.IsNullOrWhiteSpace(samplePath)
+                        ? $"The problem is that the recognition file contains no files!{Environment.NewLine}You probably want to Cancel"
+                        : $"An example file path found in the recogntion file is:{Environment.NewLine}" +
+                          $"\u2022 {samplePath}{Environment.NewLine}" +
+                          "Examine this to see if you think this file path should point to a different location."
+                }
+            };
+            return true == messageBox.ShowDialog();
+        }
+
+        #endregion
+        #region EcoAssist-related dialogs
+        public static void EcoAssistCouldNotBeStarted(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "EcoAssist could not be started";
+
+            new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"EcoAssist could not be started, but we don't know why.{Environment.NewLine}" +
+                           $"\u2022 You can try to re-download and install EcoAssist again, or{Environment.NewLine}" +
+                           $"\u2022 Check for the access and execution permissions for EcoAssist (perhaps your computer setup has restrictions?)."
+                }
+            }.ShowDialog();
+        }
+        public static bool? EcoAssistAlreadyDownloaded(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "A version of EcoAssist is already installed ";
+
+            return new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"A version of EcoAssist is already installed.{Environment.NewLine}" +
+                           $"As installation takes about 10-15 minutes, you may want to avoid reinstalling EcoAssist unless:{Environment.NewLine}" +
+                           $"\u2022 you know that a new version is available, or{Environment.NewLine}" +
+                           $"\u2022 you are having issues with EcoAssist, and want to reinstall it,{Environment.NewLine}" +
+                           $"\u2022 you are unsure if this is the latest and greatest EcoAssist version.",
+                    Hint = $"Select:{Environment.NewLine}" +
+                           $"• 'Okay' to continue with the EcoAssist installation, or{Environment.NewLine}" +
+                           $"• 'Cancel' to return to Timelapse without re-installing EcoAssist."
+                }
+            }.ShowDialog();
+        }
+
+        public static bool? EcoAssistInstallationInformaton(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Install EcoAssist (from web site) - Overview ";
+
+            return new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"An overview of the EcoAssist installation process.{Environment.NewLine}" +
+                           $"\u2022 The EcoAssist Windows Installation web page will appear.{Environment.NewLine}" +
+                           $"\u2022 Click its 'Download...' button, and then open the just-downloaded 'Install.bat' file in your Downloads folder.{Environment.NewLine}" +
+                           $"\u2022 If a 'Windows protected your PC' dialog appears, select 'More Info' and 'Run anyway'.{Environment.NewLine}" +
+                           $"\u2022 A window appears. Follow the prompts, if any. {Environment.NewLine}" +
+                           $"\u2022 Intallation takes ~5-15 minutes. Lots of technical feedback will be displayed.{Environment.NewLine}" +
+                           $"\u2022 It takes time: EcoAssist relies on Python Anaconda Data Science Platform, which is a big.",
+                    Hint = $"It takes time as EcoAssist relies on Python Anaconda Data Science Platform, which is a big.{Environment.NewLine}" +
+                           $"Try to avoid interrupting the installation, as cleaning up an aborted installation can be messy."
+                }
+            }.ShowDialog();
+        }
+
+        public static bool? EcoAssistApplicationInstructions(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "EcoAssist is starting up (about 5 - 20 seconds)...";
+
+            return new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"The EcoAssist application should start up shortly. When it does:{Environment.NewLine}" +
+                           $" 1. Select the model you want to use{Environment.NewLine}" +
+                           $"    (the default model shows detections with broad animal/person/vehicle classifications){Environment.NewLine}" +
+                           $" 2. Click 'Start processing', which will start processing your images.{Environment.NewLine}" +
+                           $" 3. You will be notified when your image recognition is completed.",
+                    Hint = $"Be patient. Image recognition takes time.{Environment.NewLine}" +
+                           $" • you may want to run this overnight if you have (say) tens or hundreds of thousands of images.{Environment.NewLine}" +
+                           $" • you can continue with your other work (including Timelapse work) while EcoAssist is running.",
+                }
+            }.ShowDialog();
+        }
+        
+        #endregion
     }
-    #endregion
+
 }
+

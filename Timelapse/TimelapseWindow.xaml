@@ -350,6 +350,31 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
+                    <Separator />
+                    <!-- EcoAsssist -->
+                    <MenuItem Header="EcoAssist Image Recognizer..." SubmenuOpened="MenuItem_OnEcoAssistSubmenuOpened" >
+
+                        <MenuItem Name="MenuItemEcoAssistRun" Header="Run EcoAssist recognizer on a folder..." IsEnabled="True" Click="MenuItemEcoAssistRun_Click" ToolTip="Run the EcoAssist recognizer on a folder that you select">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/JSONImport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator />
+
+                        <MenuItem Name="MenuItemEcoAssistDownload" Header="Install EcoAssist image recognizer (web site)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/JSONImport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Check for EcoAssist updates..." IsEnabled="True" Click="MenuItemEcoAssistCheckForUpdates_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/JSONImport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                    </MenuItem>
                 </MenuItem>
 
                 <!-- Window Menu -->
@@ -809,7 +834,7 @@
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
 
- 
+
 
                                         <images:MarkableCanvas x:Name="MarkableCanvas" Grid.Row="0" HorizontalAlignment="Stretch" />
 

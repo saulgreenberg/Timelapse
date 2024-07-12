@@ -680,6 +680,7 @@ namespace Timelapse
             {
                 FontSize = 14, // set notification font size
                 FreezeOnMouseEnter = true, // set the option to prevent notification dissapearing automatically if user move cursor on it
+                UnfreezeOnMouseLeave = true
             };
 
             if (false == string.IsNullOrEmpty(sortMessage))

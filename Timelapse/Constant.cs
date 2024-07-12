@@ -345,6 +345,12 @@ namespace Timelapse.Constant
         public const string SelectionColour = "MediumBlue";
     }
 
+    public static class EcoAssist
+    {
+        public const string EcoAssistDownload = @"https://addaxdatascience.com/ecoassist-windows/";
+        public const string EcoAssistCheckForUpdates = @"";
+        public const string EcoAssistSubfolderExecutable = @"EcoAssist_files\EcoAssist\open.bat";
+    }
     public static class EpisodeDefaults
     {
         public static readonly double TimeThresholdDefault = 2; // 2 Minutes - the default

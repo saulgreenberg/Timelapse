@@ -71,12 +71,16 @@ namespace Timelapse
             this.MenuItemSort.IsEnabled = filesSelected;
 
             // Recognitions menu
-            this.MenuItemRecognitions.IsEnabled = filesSelected;
+            this.MenuItemRecognitions.IsEnabled = true;                 // Always visible
+            this.MenuItemEcoAssistDownload.IsEnabled = true;
+            this.MenuItemEcoAssistCheckForUpdates.IsEnabled = true;
+            this.MenuBoundingBoxSetOptions.IsEnabled = filesSelected;  // Hidden when no image set
             this.MenuItemImportDetectionData.IsEnabled = filesSelected;
+            this.MenuItemPopulateWithDetectionCounts.IsEnabled = filesSelected;
 
             // Windows menu is always enabled
 
-            // Enablement state of the various other UI components.
+            // Enablement state of the various othesr UI components.
             this.ControlsPanel.IsEnabled = filesSelected;  // If images don't exist, the user shouldn't be allowed to interact with the control tray
             this.FileNavigatorSlider.IsEnabled = filesSelected;
             this.GridFileNavigator.Visibility = imageSetAvailable ? Visibility.Visible : Visibility.Collapsed;
