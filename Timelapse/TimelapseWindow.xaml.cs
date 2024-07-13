@@ -341,7 +341,11 @@ namespace Timelapse
         private void DeleteTheDeletedFilesFolderIfNeeded()
         {
             string deletedFolderPath = Path.Combine(this.DataHandler.FileDatabase.FolderPath, Constant.File.DeletedFilesFolder);
-            int howManyDeletedFiles = Directory.Exists(deletedFolderPath) ? Directory.GetFiles(deletedFolderPath).Length : 0;
+            string[] extensions = { Constant.File.JpgFileExtension, Constant.File.ASFFileExtension, Constant.File.AviFileExtension, Constant.File.MovFileExtension, Constant.File.Mp4FileExtension };
+            int howManyDeletedFiles = Directory.Exists(deletedFolderPath) 
+                ? Directory.GetFiles(deletedFolderPath, "*.*", SearchOption.AllDirectories).Where(f => extensions.Contains(System.IO.Path.GetExtension(f).ToLower()))
+                    .ToArray().Length
+                :0;
 
             // If there are no files, there is nothing to delete
             if (howManyDeletedFiles <= 0)

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
@@ -393,9 +395,28 @@ namespace Timelapse.DataTables
                 Directory.CreateDirectory(deletedFilesFolderPath);
             }
 
-            // Move the file to the backup location.           
-            string destinationFilePath = Path.Combine(deletedFilesFolderPath, this.File);
+            // Get the sub-folder path from the root folder to the image, so we can reconstruct its path
+            string destinationFolderPath = Path.Combine(deletedFilesFolderPath, this.RelativePath);
 
+            // If we can't create the destinaton folder sub-folder, we use the root delete folder
+            string destinationFilePath = Path.Combine(deletedFilesFolderPath, destinationFolderPath, this.File);
+            if (!Directory.Exists(destinationFolderPath))
+            {
+                try
+                {
+                    // If we can create the destinaton folder / sub-folder, the path is to that subfolder
+                    Directory.CreateDirectory(destinationFolderPath);
+                    
+                }
+                catch (Exception exception)
+                {
+                    // If we can't create that folder, fall back to just putting the image into the main Deleted folder
+                    TracePrint.PrintMessage("Could not create " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception);
+                    destinationFilePath = Path.Combine(deletedFilesFolderPath, this.File);
+                }
+            }
+
+            // Move the file to the backup location.           
             if (System.IO.File.Exists(destinationFilePath))
             {
                 return FilesFolders.TryDeleteFileIfExists(destinationFilePath);
