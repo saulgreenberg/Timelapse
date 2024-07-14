@@ -1037,7 +1037,6 @@ namespace Timelapse.ControlsDataEntry
 
             // Get the key identifying the control, and then add its value to the database
             DataEntryControl control = (DataEntryControl)checkComboBox.Tag;
-            Debug.Print($"Multi-'{checkComboBox.Text.TrimStart(',')}'");
             control.SetContentAndTooltip(checkComboBox.Text.TrimStart(','));
             this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }

@@ -12,7 +12,6 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
-using static System.Net.Mime.MediaTypeNames;
 using Clipboard = System.Windows.Clipboard;
 using Cursor = System.Windows.Input.Cursor;
 using Rectangle = System.Drawing.Rectangle;
@@ -2811,7 +2810,7 @@ namespace Timelapse.Dialog
         {
             // Some folders missing - show which folder paths in the DB are not in the detector
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            string title = $"Recognition data imported for images in a sub-folder";
+            string title = "Recognition data imported for images in a sub-folder";
             new MessageBox(title, owner)
             {
                 Message =
@@ -2824,7 +2823,7 @@ namespace Timelapse.Dialog
                                "to images located within that folder and its sub-folders.",
                     Hint = $"If you choose 'Select|Custom Selection...', you can:{Environment.NewLine}" +
                            $"• select images matching particular recognitions,{Environment.NewLine}" +
-                           $"• click 'Show all files with no recognition data' to list images missing recognition data.",
+                           "• click 'Show all files with no recognition data' to list images missing recognition data.",
                     Details = details
                 }
             }.ShowDialog();
@@ -2846,7 +2845,7 @@ namespace Timelapse.Dialog
                     Result = "Recognition data imported for your image set.",
                     Hint = $"If you choose 'Select|Custom Selection...', you can:{Environment.NewLine}" +
                            $"• select images matching particular recognitions,{Environment.NewLine}" +
-                           $"• click 'Show all files with no recognition data' to list images missing recognition data.",
+                           "• click 'Show all files with no recognition data' to list images missing recognition data.",
                     Details = details
                 }
             }.ShowDialog();
@@ -2918,7 +2917,7 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Information,
                     What = $"EcoAssist could not be started, but we don't know why.{Environment.NewLine}" +
                            $"\u2022 You can try to re-download and install EcoAssist again, or{Environment.NewLine}" +
-                           $"\u2022 Check for the access and execution permissions for EcoAssist (perhaps your computer setup has restrictions?)."
+                           "\u2022 Check for the access and execution permissions for EcoAssist (perhaps your computer setup has restrictions?)."
                 }
             }.ShowDialog();
         }
@@ -2936,10 +2935,10 @@ namespace Timelapse.Dialog
                            $"As installation takes about 10-15 minutes, you may want to avoid reinstalling EcoAssist unless:{Environment.NewLine}" +
                            $"\u2022 you know that a new version is available, or{Environment.NewLine}" +
                            $"\u2022 you are having issues with EcoAssist, and want to reinstall it,{Environment.NewLine}" +
-                           $"\u2022 you are unsure if this is the latest and greatest EcoAssist version.",
+                           "\u2022 you are unsure if this is the latest and greatest EcoAssist version.",
                     Hint = $"Select:{Environment.NewLine}" +
                            $"• 'Okay' to continue with the EcoAssist installation, or{Environment.NewLine}" +
-                           $"• 'Cancel' to return to Timelapse without re-installing EcoAssist."
+                           "• 'Cancel' to return to Timelapse without re-installing EcoAssist."
                 }
             }.ShowDialog();
         }
@@ -2960,9 +2959,9 @@ namespace Timelapse.Dialog
                            $"\u2022 If a 'Windows protected your PC' dialog appears, select 'More Info' and 'Run anyway'.{Environment.NewLine}" +
                            $"\u2022 A window appears. Follow the prompts, if any. {Environment.NewLine}" +
                            $"\u2022 Intallation takes ~5-15 minutes. Lots of technical feedback will be displayed.{Environment.NewLine}" +
-                           $"\u2022 It takes time: EcoAssist relies on Python Anaconda Data Science Platform, which is a big.",
+                           "\u2022 It takes time: EcoAssist relies on Python Anaconda Data Science Platform, which is a big.",
                     Hint = $"It takes time as EcoAssist relies on Python Anaconda Data Science Platform, which is a big.{Environment.NewLine}" +
-                           $"Try to avoid interrupting the installation, as cleaning up an aborted installation can be messy."
+                           "Try to avoid interrupting the installation, as cleaning up an aborted installation can be messy."
                 }
             }.ShowDialog();
         }
@@ -2981,10 +2980,10 @@ namespace Timelapse.Dialog
                            $" 1. Select the model you want to use{Environment.NewLine}" +
                            $"    (the default model shows detections with broad animal/person/vehicle classifications){Environment.NewLine}" +
                            $" 2. Click 'Start processing', which will start processing your images.{Environment.NewLine}" +
-                           $" 3. You will be notified when your image recognition is completed.",
+                           " 3. You will be notified when your image recognition is completed.",
                     Hint = $"Be patient. Image recognition takes time.{Environment.NewLine}" +
                            $" • you may want to run this overnight if you have (say) tens or hundreds of thousands of images.{Environment.NewLine}" +
-                           $" • you can continue with your other work (including Timelapse work) while EcoAssist is running.",
+                           " • you can continue with your other work (including Timelapse work) while EcoAssist is running.",
                 }
             }.ShowDialog();
         }

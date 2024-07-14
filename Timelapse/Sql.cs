@@ -364,6 +364,38 @@ namespace Timelapse
             return Sql.TimeFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.TimeFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
         }
 
+        // MultiLine Include/Exclude version
+        // We want to avoid matches that could happen if a term is a substring of another term, e.g.
+        // if the menu contains "Sheep" and "Bighorn Sheep" we want to make sure that a selection containing
+        // "Sheep" does not return "Bighorn Sheep". Because Glob expression are limited, we do this by
+        // searching for the exact term as it would appear in different possible positions in the comma separated list,
+        // i.e., at the beginning, middle and end plus as exact matches.
+        public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value)
+        {
+            value = value == null ? string.Empty : value.Trim();
+            if (value == string.Empty)
+            {
+                // special case for empty string
+                return SqlPhrase.DataLabelOperatorValue(dataLabel, mathOperator, "*", Constant.Control.MultiLine);
+            }
+            string[] terms = value.Split(',');
+            string where = string.Empty;
+            for (int i = 0; i < terms.Length; i++)
+            {
+                where += Sql.OpenParenthesis;
+                where += $"{dataLabel} {mathOperator} {Sql.Quote(terms[i])} {Sql.Or}";          // aa:   matches a single term
+                where += $"{dataLabel} {mathOperator} {Sql.Quote(terms[i] + ",*")} {Sql.Or}";   // aa,*  matches term at beginning 
+                where += $"{dataLabel} {mathOperator} {Sql.Quote("*," + terms[i])} {Sql.Or}";   // *,aa  matches term at end  
+                where += $"{dataLabel} {mathOperator} {Sql.Quote("*," + terms[i] + ",*")}";     // *,aa,*  matchesin middle
+                where += Sql.CloseParenthesis;
+                if (i < terms.Length - 1)
+                {
+                    where += Sql.And;
+                }
+            }
+            return where;
+        }
+
         /// <summary>
         /// Sql phrase used in Where
         /// </summary>

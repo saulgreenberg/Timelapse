@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using Timelapse.ControlsDataEntry;
 
 namespace Timelapse.Util
 {

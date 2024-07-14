@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.Util;
+using Arguments = Timelapse.DataStructures.Arguments;
 
 namespace Timelapse.SearchingAndSorting
 {
@@ -255,7 +257,8 @@ namespace Timelapse.SearchingAndSorting
             // Collect all the standard search terms which the user currently selected as UseForSearching
             IEnumerable<SearchTerm> standardSearchTerms = this.SearchTerms.Where(term => term.UseForSearching
             && (term.DataLabel == Constant.DatabaseColumn.File ||
-               term.DataLabel == Constant.DatabaseColumn.RelativePath || term.DataLabel == Constant.DatabaseColumn.DateTime ||
+               term.DataLabel == Constant.DatabaseColumn.RelativePath ||
+               term.DataLabel == Constant.DatabaseColumn.DateTime ||
                term.DataLabel == Constant.DatabaseColumn.DeleteFlag));
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
@@ -420,7 +423,7 @@ namespace Timelapse.SearchingAndSorting
                         // The search term is querying for a non-empty value.
                         Debug.Assert(searchTerm.DatabaseValue.Contains("\"") == false,
                             $"Search term '{searchTerm.DatabaseValue}' contains quotation marks and could be used for SQL injection.");
-                        if (dataLabel == Constant.DatabaseColumn.RelativePath || 
+                        if (dataLabel == Constant.DatabaseColumn.RelativePath ||
                             dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.RelativePath)
                         {
                             // Special case for RelativePath and DataTable.RelativePath, 
@@ -430,13 +433,13 @@ namespace Timelapse.SearchingAndSorting
                             string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", Sql.Text);
                             whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
                         }
-                        else if ((dataLabel == Constant.DatabaseColumn.DateTime || 
+                        else if ((dataLabel == Constant.DatabaseColumn.DateTime ||
                                   dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && false == this.UseTimeInsteadOfDate)
                         {
                             // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
                         }
-                        else if ((dataLabel == Constant.DatabaseColumn.DateTime || 
+                        else if ((dataLabel == Constant.DatabaseColumn.DateTime ||
                                   dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && this.UseTimeInsteadOfDate)
                         {
                             // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
@@ -458,7 +461,20 @@ namespace Timelapse.SearchingAndSorting
                             {
                                 sqlType = Sql.RealType;
                             }
-                            whereForTerm = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue, sqlType);
+
+                            // DO MULTICHOICE AROUND HERE,  ADD NOT GLOB
+                            if (searchTerm.ControlType == Constant.Control.MultiChoice &&
+                                //false == string.IsNullOrEmpty(searchTerm.DatabaseValue) &&  // Including this makes it the same as '=', which doesn't really have the same semantics as Include. But unsure...
+                                (searchTerm.Operator == SearchTermOperator.Includes || searchTerm.Operator == SearchTermOperator.Excludes))
+                            {
+                                // MultiChoice globs have to be constructed in a different way, where we interpret it to mean
+                                // 'contains at least the selected items'. See the specialized method below on how this is done.
+                                whereForTerm = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
+                            }
+                            else
+                            {
+                                whereForTerm = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue, sqlType);
+                            }
                         }
 
                         if (searchTerm.ControlType == Constant.Control.Flag)
@@ -723,8 +739,10 @@ namespace Timelapse.SearchingAndSorting
                 case Constant.SearchTermOperator.GreaterThanOrEqual:
                     return ">=";
                 case Constant.SearchTermOperator.Glob:
+                case Constant.SearchTermOperator.Includes:
                     return Constant.SearchTermOperator.Glob;
                 case Constant.SearchTermOperator.NotGlob:
+                case Constant.SearchTermOperator.Excludes:
                     return " NOT GLOB ";
                 default:
                     return string.Empty;

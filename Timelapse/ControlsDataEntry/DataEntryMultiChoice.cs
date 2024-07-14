@@ -9,7 +9,6 @@ using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Timelapse.ControlsDataEntry
@@ -188,7 +187,6 @@ namespace Timelapse.ControlsDataEntry
               
             if (ContentControl.Text != value)
             {
-                Debug.Print($"'{value}'");
                 this.ContentControl.Text = value;
 
                 this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Shapes;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -16,7 +12,6 @@ using Timelapse.Recognition;
 using Timelapse.Util;
 using ToastNotifications.Core;
 using ToastNotifications.Messages;
-using ToastNotifications.Position;
 using Path = System.IO.Path;
 
 // ReSharper disable once CheckNamespace

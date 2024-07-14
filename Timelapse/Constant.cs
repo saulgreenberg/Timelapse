@@ -620,6 +620,8 @@ namespace Timelapse.Constant
         public const string Equal = "\u003D";
         public const string Glob = " GLOB ";
         public const string NotGlob = " ^GLOB ";
+        public const string Includes = " Includes ";
+        public const string Excludes = " Excludes ";
         public const string GreaterThan = "\u003E";
         public const string GreaterThanOrEqual = "\u2265";
         public const string LessThan = "\u003C";

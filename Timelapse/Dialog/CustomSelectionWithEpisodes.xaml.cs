@@ -369,6 +369,8 @@ namespace Timelapse.Dialog
                         {
                             Constant.SearchTermOperator.Equal,
                             Constant.SearchTermOperator.NotEqual,
+                            Constant.SearchTermOperator.Includes,
+                            Constant.SearchTermOperator.Excludes
                         };
                         break;
                     // Relative path only allows = (this will be converted later to a glob to get subfolders) 
@@ -413,7 +415,7 @@ namespace Timelapse.Dialog
                     IsEnabled = searchTerm.UseForSearching,
                     ItemsSource = termOperators,
                     Margin = thickness,
-                    Width = 70,
+                    Width = 78,
                     Height = 25,
                     SelectedValue = searchTerm.Operator
                 };

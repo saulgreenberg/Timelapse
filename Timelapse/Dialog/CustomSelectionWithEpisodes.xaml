@@ -7,8 +7,8 @@
         xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="Select and view a  subset of your files"
-        MinHeight="640" MinWidth="700"
-		Height="900" Width="768"
+        MinHeight="640" MinWidth="705"
+		Height="900" Width="783"
 		ResizeMode="CanResizeWithGrip"
 		ShowInTaskbar="False"
 		WindowStartupLocation="CenterOwner"  Loaded="Window_Loaded" >
@@ -116,7 +116,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" MinWidth="300"/>
+                            <ColumnDefinition Width="Auto" MinWidth="305"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>

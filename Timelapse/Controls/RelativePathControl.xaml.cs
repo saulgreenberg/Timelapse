@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -513,7 +512,6 @@ namespace Timelapse.Controls
             // Note that we don't have to hide the textbox here as that will be done in DoKeyDown.
             if (TextBoxEditNode.Visibility == Visibility.Visible)
             {
-                Debug.Print("EditComplete");
                 TextBoxEditNode_DoKeyDown(this.TextBoxEditNode, Key.Enter);
             }
         }
