@@ -2590,6 +2590,24 @@ namespace Timelapse.Database
             return dataLabelsAndTypes;
         }
 
+        // Return a dictionary comprised of datalabel, type pairs but only for rows with its Export flag on
+        public Dictionary<string, string> MetadataGetDataLabelsInSpreadsheetOrderForExport(int level)
+        {
+            Dictionary<string, string> allDataLabelsAndTypes = MetadataGetDataLabelsInSpreadsheetOrder(level);
+            Dictionary<string, string> dataLabelsAndTypesForExport = new Dictionary<string, string>();
+            foreach (string key in allDataLabelsAndTypes.Keys)
+            {
+                MetadataControlRow row = GetControlFromMetadataControls(key, level);
+                if (row.ExportToCSV)
+                {
+                    // We only include rows that are flagged for export
+                    dataLabelsAndTypesForExport.Add(key, allDataLabelsAndTypes[key]);
+                }
+            }
+            return dataLabelsAndTypesForExport;
+        }
+
+
         public MetadataRow MetadataTablesGetRow(int level, string relativePathPart)
         {
             DataTableBackedList<MetadataRow> metadataRows = MetadataTablesByLevel[level];

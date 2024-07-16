@@ -280,7 +280,7 @@ namespace Timelapse.Database
                             : value;
 
                         // Get the data labels in spreadsheet order
-                        Dictionary<string, string> dataLabelsAndTypesInSpreadsheetOrder = database.MetadataGetDataLabelsInSpreadsheetOrder(level);
+                        Dictionary<string, string> dataLabelsAndTypesInSpreadsheetOrder = database.MetadataGetDataLabelsInSpreadsheetOrderForExport(level);
                         // dataLabelsInSpreadsheetOrder.Insert(0,Constant.DatabaseColumn.FolderDataPath);
 
                         using (StreamWriter fileWriter = new StreamWriter(filePath, false))
@@ -327,6 +327,12 @@ namespace Timelapse.Database
 
                                 foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypesInSpreadsheetOrder)
                                 {
+                                    if (false == dataLabelsAndTypesInSpreadsheetOrder.ContainsKey(dataLabelAndType.Key))
+                                    {
+                                        // Skip a column as it is flagged as not for export
+                                        continue;
+                                    }
+
                                     string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                     switch (dataLabelAndType.Value)
                                     {
