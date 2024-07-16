@@ -1399,7 +1399,9 @@ namespace Timelapse.Database
             for (int column = 0; column < columnDefinitionsCount; ++column)
             {
                 string columnDefinition = columnDefinitions[column];
-                if (columnDefinition.StartsWith(columnName))
+                // Extract the exact column name from the definition
+                string definitionColumnName = columnDefinition.Trim().Split()[0];
+                if (definitionColumnName == columnName)
                 {
                     columnToRemove = column;
                     break;
