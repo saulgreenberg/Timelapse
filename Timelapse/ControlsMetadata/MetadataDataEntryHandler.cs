@@ -663,13 +663,12 @@ namespace Timelapse.ControlsMetadata
         #region Update Rows
         // Update either the current row or the selected rows in the database, 
         // depending upon whether we are in the single image or  theThumbnailGrid view respectively.
-        private void UpdateMetadataTableAndMetadataDatabase(MetadataDataEntryControl control)
+        public void UpdateMetadataTableAndMetadataDatabase(MetadataDataEntryControl control)
         {
             // Now, update the similar entry in the MetadataTable structure
             DataTableBackedList<MetadataRow> rows = this.FileDatabase.MetadataTablesByLevel[control.ParentPanel.Level];
             foreach (MetadataRow row in rows)
             {
-                //if (row[Constant.DatabaseColumn.FolderDataPath] == control.ParentPanel.RelativePathToCurrentFolder)
                 if (row[Constant.DatabaseColumn.FolderDataPath] == control.ParentPanel.SubPath)
                 {
                     if (row[control.DataLabel] == control.Content)

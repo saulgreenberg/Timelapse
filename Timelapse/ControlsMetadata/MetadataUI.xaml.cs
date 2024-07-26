@@ -47,7 +47,7 @@ namespace Timelapse.ControlsMetadata
         }
         #endregion
 
-        #region Public InitialzeFolderMetadataTabs
+        #region Public InitializeFolderMetadataTabs
         public void InitalizeFolderMetadataTabs()
         {
             // clear any existing metadata tabs (except the instructions)
@@ -112,7 +112,6 @@ namespace Timelapse.ControlsMetadata
             }
         }
         #endregion
-
 
         #region Public SetEnableState
         // Clear any existing metadata tabs (except the instructions, which should always be the first tab)

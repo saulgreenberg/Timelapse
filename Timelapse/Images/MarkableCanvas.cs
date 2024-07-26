@@ -939,7 +939,8 @@ namespace Timelapse.Images
             // Find the current height of the available space and split it the number of rows defined by the state. i.e. state 1 is 2 rows, 2 is 3 rows, etc.
             // However, if the resulting image is less than a minimum height, then ignore it.
             //if (!resizing && cellHeight < Constant.ThumbnailGrid.MinumumThumbnailHeight) return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
-            return this.ThumbnailGrid.Refresh(this.ThumbnailGrid.Width, this.ThumbnailGrid.Height, zoomIn);
+
+                return this.ThumbnailGrid.Refresh(this.ThumbnailGrid.Width, this.ThumbnailGrid.Height, zoomIn);
         }
 
         private void TimerSlider_Tick(object sender, EventArgs e)

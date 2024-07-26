@@ -460,6 +460,20 @@
     <Compile Include="Images\ZoomBookmark.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="DataStructures\ImageMetadataOnLoad.cs" />
+    <Compile Include="Standards\CamtrapDPContributors.xaml.cs">
+      <DependentUpon>CamtrapDPContributors.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPConstants.cs" />
+    <Compile Include="Standards\CamtrapDPConvertCSVFiles.cs" />
+    <Compile Include="Standards\CamtrapDPLicenses.xaml.cs">
+      <DependentUpon>CamtrapDPLicenses.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPSources.xaml.cs">
+      <DependentUpon>CamtrapDPSources.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPTaxonomic.xaml.cs">
+      <DependentUpon>CamtrapDPTaxonomic.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TimelapseMenuCallbacks\TimelapseMenuRecognitions.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseDuplicates.cs" />
     <Compile Include="TimelapsePartialClasses\TimelapseCheckAndCorrectFolders.cs" />
@@ -700,6 +714,22 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="QuickPaste\QuickPasteWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPContributors.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPLicenses.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPSources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPTaxonomic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

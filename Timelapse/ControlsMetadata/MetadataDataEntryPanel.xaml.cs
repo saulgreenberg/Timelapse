@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,6 +16,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using static Timelapse.Standards.CamtrapDPConstants;
 using Control = System.Windows.Controls.Control;
 using FileDatabase = Timelapse.Database.FileDatabase;
 
@@ -314,7 +317,10 @@ namespace Timelapse.ControlsMetadata
                 this.TabControlOrderList.Add(controlToAdd);
                 // Track the datalabel and its contents so we can add it as a row if needed
                 dataLabelsAndValues.Add(controlToAdd.DataLabel, alternateContent ?? controlToAdd.Content);
+
             }
+
+            this.RenderFieldsIfCamtrapDPStandards();
 
             // Format each control for displaying one per line: label, control, then a description derived from the tooltip. To do so:
             MetadataDataEntryPanel.FormatControlsEachOnASingleLine(this.ControlsPanel.Children);
@@ -700,6 +706,11 @@ namespace Timelapse.ControlsMetadata
             {
                 // Becomes a noop if there is no level for this control
                 this.InitializePanelWithControls(this.Level, GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataControlsByLevel[this.Level]);
+                MetadataRow metadataRow = this.FileDatabase.MetadataTablesGetRow(this.Level, this.SubPath);
+
+                // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements
+                this.AutofillFieldsIfCamtrapDPStandards();
+
                 this.TrySyncControlRowFromMetadata();
                 this.SetPanelAppearance(ImageLevelLocationStatusEnum.Okay);
             }
@@ -745,6 +756,193 @@ namespace Timelapse.ControlsMetadata
                 }
             }
             return true;
+        }
+        #endregion
+
+        #region Standard-specific initializations
+
+        // Contributors will be a json string that holds a list of contributor objects.
+        // Instead of showing the string, we display a button that will raise a dialog box allowing
+        // the user to construct and/or edit a list of contributors
+        private void RenderFieldsIfCamtrapDPStandards()
+        {
+            if (this.FileDatabase.MetadataTablesIsCamtrapDPStandard())
+            {
+                // Data package level
+                if (this.Level == 1)
+                {
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Contributors, out var contributorsControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Click to edit a list of Contributors",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Padding = new Thickness(15,0,15,0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        button.Click += Contributors_Click;
+                        contributorsControl.GetContentControl.Visibility = Visibility.Collapsed;
+                        contributorsControl.Container.Children.Insert(1, button);
+                    }
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Sources, out var sourcesControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Click to edit a list of Sources",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Padding = new Thickness(15, 0, 15, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        button.Click += Sources_Click;
+                        sourcesControl.GetContentControl.Visibility = Visibility.Collapsed;
+                        sourcesControl.Container.Children.Insert(1, button);
+                    }
+
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Licenses, out var licensesControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Click to edit a list of Licenses",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Padding = new Thickness(15, 0, 15, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        button.Click += Licenses_Click;
+                        licensesControl.GetContentControl.Visibility = Visibility.Collapsed;
+                        licensesControl.Container.Children.Insert(1, button);
+                    }
+
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Taxonomic, out var taxonomicControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Click to edit a list of taxonomic definitions",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Padding = new Thickness(15, 0, 15, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        button.Click += Taxonomic_Click;
+                        taxonomicControl.GetContentControl.Visibility = Visibility.Collapsed;
+                        taxonomicControl.Container.Children.Insert(1, button);
+                    }
+                }
+            }
+        }
+
+        // See above - Raise a dialog box allowing the user to construct and/or edit a list of contributors
+        // and set the contributors string to the json representation of that list
+        public void Contributors_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            if (this.Level == 1) // It should always be the DataPackage level 1
+            {
+                // Get and set the Contributors json
+                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Contributors, out var contributorsControl))
+                {
+                    Standards.CamptrapDPContributors contributorDialog = new Standards.CamptrapDPContributors(GlobalReferences.MainWindow, contributorsControl.Content);
+                    if (true == contributorDialog.ShowDialog())
+                    {
+                        contributorsControl.SetContentAndTooltip(contributorDialog.JsonContributorsList);
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(contributorsControl);
+                    }
+                }
+            }
+        }
+
+        public void Sources_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            if (this.Level == 1) // It should always be the DataPackage level 1
+            {
+                // Get and set the Sources json
+                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Sources, out var sourcesControl))
+                {
+                    Standards.CamtrapDPSources sourcesDialog = new Standards.CamtrapDPSources(GlobalReferences.MainWindow, sourcesControl.Content);
+                    if (true == sourcesDialog.ShowDialog())
+                    {
+                        sourcesControl.SetContentAndTooltip(sourcesDialog.JsonSourcesList);
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(sourcesControl);
+                    }
+                }
+            }
+        }
+
+        public void Licenses_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            if (this.Level == 1) // It should always be the DataPackage level 1
+            {
+                // Get and set the Sources json
+                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Licenses, out var licensesControl))
+                {
+                    Standards.CamtrapDPLicenses licensesDialog = new Standards.CamtrapDPLicenses(GlobalReferences.MainWindow, licensesControl.Content);
+                    if (true == licensesDialog.ShowDialog())
+                    {
+                        licensesControl.SetContentAndTooltip(licensesDialog.JsonLicensesList);
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(licensesControl);
+                    }
+                }
+            }
+        }
+
+        public void Taxonomic_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            if (this.Level == 1) // It should always be the DataPackage level 1
+            {
+                // Get and set the Sources json
+                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Taxonomic, out var taxonomicControl))
+                {
+                    Standards.CamtrapDPTaxonomic taxonomicDialog = new Standards.CamtrapDPTaxonomic(GlobalReferences.MainWindow, taxonomicControl.Content);
+                    if (true == taxonomicDialog.ShowDialog())
+                    {
+                        taxonomicControl.SetContentAndTooltip(taxonomicDialog.JsonTaxonomicList);
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(taxonomicControl);
+                    }
+                }
+            }
+        }
+
+        // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements
+        private void AutofillFieldsIfCamtrapDPStandards()
+        {
+            if (this.FileDatabase.MetadataTablesIsCamtrapDPStandard())
+            {
+                // Data package level
+                if (this.Level == 1)
+                {
+                    // Set the package ID
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.IdAlias, out var idControl))
+                    {
+                        idControl.SetContentAndTooltip(Guid.NewGuid().ToString());
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(idControl);
+                    }
+
+                    // Set the package created date
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Created, out var createdControl))
+                    {
+                        createdControl.SetContentAndTooltip(Util.DateTimeHandler.ToStringDatabaseDateTime(DateTime.Now));
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(createdControl);
+                    }
+                }
+
+                // Deployment level
+                if (this.Level == 2)
+                {
+                    // Set the DeploymentID to a GUID
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.DeploymentID, out var deploymentIDControl))
+                    {
+                        deploymentIDControl.SetContentAndTooltip(Guid.NewGuid().ToString());
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(deploymentIDControl);
+                    }
+                    // Set the LocationID to a GUID
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.LocationID, out var locationIDControl))
+                    {
+                        locationIDControl.SetContentAndTooltip(Guid.NewGuid().ToString());
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(locationIDControl);
+                    }
+                }
+            }
         }
         #endregion
 
@@ -809,7 +1007,7 @@ namespace Timelapse.ControlsMetadata
                         ? lines[0]
                         : lines[0] + "\u2026";
 
-                    // Now create and the tooltip, which can be multiline.
+                    // Now create the tooltip, which can be multiline.
                     TextBlock description = new TextBlock
                     {
                         Height = 16,

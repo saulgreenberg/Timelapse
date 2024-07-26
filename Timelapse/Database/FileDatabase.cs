@@ -23,6 +23,7 @@ using Timelapse.Util;
 
 using Path = System.IO.Path;
 using Timelapse.ControlsDataEntry;
+using DialogUpgradeFiles.Database;
 
 namespace Timelapse.Database
 {
@@ -2662,6 +2663,32 @@ namespace Timelapse.Database
         public static string MetadataComposeTableNameFromLevel(int level)
         {
             return $"Level{level}";
+        }
+
+        // Return true iff our folder level structure appears to be a CamtrapDP standard.
+        // We may want to put in more checks, e.g., to see if some of the required CamtrapDP fields are in a level
+        public bool MetadataTablesIsCamtrapDPStandard()
+        {
+            if (null == this.MetadataInfo || this.MetadataInfo.RowCount != 2)
+            {
+                // Needs to be a metadata table with two levels
+                return false;
+            }
+
+            bool dataPackagePresent = false;
+            bool deploymentPresent = false;
+            foreach (MetadataInfoRow row in this.MetadataInfo)
+            {
+                if (row.Level == 1 && row.Alias == Standards.CamtrapDPConstants.ResourceLevels.DataPackage)
+                {
+                    dataPackagePresent = true;
+                }
+                else if (row.Level == 2 && row.Alias == Standards.CamtrapDPConstants.ResourceLevels.Deployments)
+                {
+                    deploymentPresent = true;
+                }
+            }
+            return dataPackagePresent && deploymentPresent;
         }
         #endregion
 

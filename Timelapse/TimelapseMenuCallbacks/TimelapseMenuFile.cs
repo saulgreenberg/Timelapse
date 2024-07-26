@@ -13,6 +13,7 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Standards;
 using Timelapse.Util;
 using DialogResult = System.Windows.Forms.DialogResult;
 using Path = System.IO.Path;
@@ -267,7 +268,7 @@ namespace Timelapse
                 // Show the Busy indicator
                 this.BusyCancelIndicator.IsBusy = true;
                 // TODO SAULXXX CHANGE TRUE TO STATE VARIABLE CONTAINING A PREFERENCE TO INCLUDE THE METADATA FOLDER LOCATIONS AT THE BEGINNING OF THE CSV
-                if (false == await CsvReaderWriter.ExportToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFilePath, 
+                if (false == await CsvReaderWriter.ExportToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFilePath,
                         this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, this.DataHandler.FileDatabase.ImageSet.RootFolder))
                 {
                     Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);
@@ -415,7 +416,7 @@ namespace Timelapse
                 this.BusyCancelIndicator.IsBusy = false;
                 return;
             }
-            else if (filesThatExist.Count > 0 )
+            else if (filesThatExist.Count > 0)
             {
                 // The file exists ...
                 if (false == Dialogs.OverwriteListOfExistingFiles(this, filesThatExist))
@@ -426,8 +427,8 @@ namespace Timelapse
                     return;
                 }
             }
-            
-            
+
+
             // Backup the csv file if it exists, as the export will overwrite it. 
             //this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, selectedCSVFilePath)
             //    ? "Backup of csv file made."
@@ -448,16 +449,22 @@ namespace Timelapse
                 this.BusyCancelIndicator.IsBusy = false;
                 Dialogs.FolderDataExportedToCSV(this, selectedCSVFolderPath, filesToBeWritten);
             }
-            catch 
+            catch
             {
                 // Can't write the spreadsheet file
                 this.BusyCancelIndicator.IsBusy = false;
                 // Hide the Busy indicator
                 Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
+            }
 
-
+            // If we are following the CamtrapDP Standard, write those files as well
+            if (this.DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard())
+            {
+                string dataPackageFileName = Path.Combine(selectedCSVFolderPath, "DataPackage.csv");
+                CamtrapDPConvertCSVFiles.ConvertCamtrapDPMetadataToCamtrapJson(dataPackageFileName, Path.Combine(selectedCSVFolderPath, "CamtrapDPExport"));
             }
         }
+
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {

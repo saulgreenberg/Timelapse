@@ -744,7 +744,7 @@ namespace Timelapse.Database
 
         #region Helpers for TryImportFromCsv. These just reduce the size of the method to make it easier to debug.
         // Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
-        private static bool TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors)
+        public static bool TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors)
         {
             parsedFile = ReadAndParseCSVFile(filePath);
 
@@ -829,7 +829,7 @@ namespace Timelapse.Database
         }
 
         // Get all the data rows from the CSV file. Each dictionary entry is a row with a list of matching  CSV column Headers and column value 
-        private static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile)
+        public static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile)
         {
             List<Dictionary<string, string>> rowDictionaryList = new List<Dictionary<string, string>>();
 
