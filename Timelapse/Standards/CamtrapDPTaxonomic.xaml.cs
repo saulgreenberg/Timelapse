@@ -2,17 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Web.UI.WebControls;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using Timelapse.Dialog;
-using static Timelapse.Standards.CamtrapDPTaxonomic;
 using TextBox = System.Windows.Controls.TextBox;
+#pragma warning disable IDE1006
 
 namespace Timelapse.Standards
 {
@@ -21,26 +17,19 @@ namespace Timelapse.Standards
     /// </summary>
     public partial class CamtrapDPTaxonomic : Window
     {
-        #region JsonTaxonomicList, TaxonomicList, and Fields
+        #region Properties and Variables: JsonTaxonomicList, TaxonomicList, and Fields
+        // The json list will eventally contain a serialized taxonomic object
         public string JsonTaxonomicList { get; set; }
 
-        // The main list of taxonomic definitions. It is
+        // The main list of taxonomic fields. It is
         // - initially populated by the initial jsonTaxonomicList
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
-        // - its contents is returned as a json string when done.
+        // - its contents is available as a json string when done.
+        // - VernacualNames is itself a list of keyvalue pairs that has to be handled separately
         public ObservableCollection<Taxonomic> TaxonomicList { get; set; }
 
-        // The fields used to construct the EditList
-        public string kingdom { get; set; } = string.Empty;
-        public string phylum { get; set; } = string.Empty;
-        public string class_ { get; set; } = string.Empty;
-        public string order { get; set; } = string.Empty;
-        public string family { get; set; } = string.Empty;
-        public string genus { get; set; } = string.Empty;
-        
-        public ObservableCollection<string> vernacularNames { get; set; }
-
+        // Fields are used to bind a field label and tooltip info in the xaml
         public Fields ScientificNameField { get; set; } =
             new Fields("Scientific name*",
                 $"Scientific name of the taxon.{Environment.NewLine}" +
@@ -56,55 +45,56 @@ namespace Timelapse.Standards
         public Fields TaxonRankField { get; set; } =
             new Fields("Taxonomic rank",
                 $"Taxonomic rank of the scientific name.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/taxonRank" +
+                $"See http://rs.tdwg.org/dwc/terms/taxonRank {Environment.NewLine}" +
                  "• e.g., \"species\"");
 
         public Fields KingdomField { get; set; } =
             new Fields("Kingdom",
                 $"Kingdom in which the taxon is classified.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/kingdom" +
+                $"See http://rs.tdwg.org/dwc/terms/kingdom {Environment.NewLine}" +
                 "• e.g., \"Animalia\"");
 
         public Fields PhylumField { get; set; } =
             new Fields("Phylum",
                 $"Phylum or division in which the taxon is classified.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/phylum" +
+                $"See http://rs.tdwg.org/dwc/terms/phylum {Environment.NewLine}" +
                 "• e.g., \"Chordata\"");
 
         public Fields ClassField { get; set; } =
             new Fields("Class",
                 $"Class in which the taxon is classified.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/class" +
+                $"See http://rs.tdwg.org/dwc/terms/class {Environment.NewLine}" +
                 "• e.g., \"Mammalia\"");
 
         public Fields OrderField { get; set; } =
             new Fields("Order",
                 $"Order in which the taxon is classified.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/order" +
+                $"See http://rs.tdwg.org/dwc/terms/order {Environment.NewLine}" +
                 "• e.g., \"Carnivora\"");
 
         public Fields FamilyField { get; set; } =
             new Fields("Family",
                 $"Family in which the taxon is classified.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/family" +
+                $"See http://rs.tdwg.org/dwc/terms/family {Environment.NewLine}" +
                 "• e.g., \"Canidae\"");
 
         public Fields GenusField { get; set; } =
             new Fields("Genus",
                 $"Genus in which the taxon is classified.{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/genus" +
+                $"See http://rs.tdwg.org/dwc/terms/genus {Environment.NewLine}" +
                 "• e.g., \"Canis\"");
 
         public Fields VernacularNamesField { get; set; } =
             new Fields("Vernacular names",
                 $"Common or vernacular names of the taxon, as languageCode: vernacular name pairs.{Environment.NewLine}" +
                 $"Language codes should follow ISO 693-3 (e.g. eng for English).{Environment.NewLine}" +
-                $"See http://rs.tdwg.org/dwc/terms/kingdom" +
+                $"See https://iso639-3.sil.org/code_tables/639/data {Environment.NewLine}" +
                 "• e.g., \"{'eng': 'wolf', 'fra': 'loup gris'}\"");
         #endregion
 
         #region Private variables
         private bool DontUpdate = false;
+        private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
 
@@ -137,18 +127,19 @@ namespace Timelapse.Standards
                 DialogResult = false;
             }
             DataGrid_Refresh();
+            if (this.dataGrid.Items.Count == 0)
+            {
+                this.NewRow_OnClick(null, null);
+            }
             if (this.dataGrid.Items.Count > 0)
             {
                 this.dataGrid.SelectedIndex = 0;
                 this.dataGridSelectedRow = this.dataGrid.SelectedIndex;
             }
-
-            //DataGridVernacular_Refresh();
-            //this.DataFieldVernacularNames.ItemsSource = this.VernacularItemsList;
         }
         #endregion
 
-        #region DataGrid callbacks and helpers
+        #region Callbacks and helpers: DataGrid
         // Refresh the data grid to show the current itmes in the sources list
         private void DataGrid_Refresh()
         {
@@ -161,7 +152,6 @@ namespace Timelapse.Standards
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
         }
 
-
         // When a data grid row is selected, populate the data fields with that row's contents
         // The enable state of the Delete button should also reflect whether there is a row to delete
         private void DataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -171,12 +161,11 @@ namespace Timelapse.Standards
                 return;
             }
             this.dataGridSelectedRow = dataGrid.SelectedIndex;
+            EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DontUpdate = true;
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
             {
-
                 this.DeleteRow.IsEnabled = true;
-
-                this.DontUpdate = true;
                 Taxonomic taxonomic = this.TaxonomicList[dataGrid.SelectedIndex];
                 this.DataFieldScientificName.Text = taxonomic.scientificName;
                 this.DataFieldTaxonID.Text = taxonomic.taxonID;
@@ -187,14 +176,10 @@ namespace Timelapse.Standards
                 this.DataFieldOrder.Text = taxonomic.order;
                 this.DataFieldFamily.Text = taxonomic.family;
                 this.DataFieldGenus.Text = taxonomic.genus;
-                this.vernacularNames = this.VernacularStringListFromVernacularItemsList(taxonomic.vernacularNames);
-                this.DontUpdate = false;
             }
             else
             {
                 this.DeleteRow.IsEnabled = false;
-
-                this.DontUpdate = true;
                 this.DataFieldScientificName.Text = string.Empty;
                 this.DataFieldTaxonID.Text = string.Empty;
                 this.DataFieldTaxonRank.Text = string.Empty;
@@ -204,29 +189,42 @@ namespace Timelapse.Standards
                 this.DataFieldOrder.Text = string.Empty;
                 this.DataFieldFamily.Text = string.Empty;
                 this.DataFieldGenus.Text = string.Empty;
-                this.vernacularNames = new ObservableCollection<string>();
-
-                this.DontUpdate = false;
+            }
+            this.DontUpdate = false;
+            if (this.SetFocus)
+            {
+                this.DataFieldScientificName.Focus();
             }
         }
         #endregion
 
-        #region Button callbacks
+        #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
             this.TaxonomicList.Add(new Taxonomic());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DataFieldScientificName.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
             {
+                this.DontUpdate = true;
                 this.TaxonomicList.RemoveAt(dataGrid.SelectedIndex);
-                dataGrid.SelectedIndex = dataGridSelectedRow == -1 ? -1 : --dataGridSelectedRow;
+                this.DontUpdate = false;
+                // When a row is deleted, select the last row if there is one.
+                dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+                if (dataGrid.SelectedIndex == -1)
+                {
+                    // This will clear the edit fields if nothing is selected
+                    this.SetFocus = false;
+                    DataGrid_OnSelectionChanged(null, null);
+                    this.SetFocus = true;
+                }
             }
         }
 
@@ -237,13 +235,14 @@ namespace Timelapse.Standards
 
         private void Done_OnClick(object sender, RoutedEventArgs e)
         {
+
             this.JsonSerialize();
             DialogResult = true;
         }
         #endregion
 
-        #region DataField callbacks
-        // When a data field is edited, update the contributors list to reflect that change
+        #region Callbacks: DataField edits
+        // When a data field is edited, update the taxonomic list to reflect that change
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
         {
@@ -279,17 +278,15 @@ namespace Timelapse.Standards
                     case "DataFieldGenus":
                         this.TaxonomicList[dataGrid.SelectedIndex].genus = tb.Text;
                         break;
-                        //case "DataFieldVernacularNames":
-                        //    this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames = JsonConvert.SerializeObject(vernacularNames);
-                        //    //case "DataFieldVernacularNames":
-                        //    //    this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames = tb.Text;
-                        //    break;
                 }
             }
+            this.SetFocus = false;
             DataGrid_Refresh();
             dataGrid.SelectedItem = this.dataGridSelectedRow;
+            this.SetFocus = true;
         }
 
+        // Rank updates are via combobox changes
         private void DataFieldTaxonRank_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (this.DontUpdate)
@@ -305,38 +302,91 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region Helpers - Json Serializer
+        #region Json Serializer
         private void JsonSerialize()
         {
-            this.JsonTaxonomicList = JsonConvert.SerializeObject(this.TaxonomicList);
+            // If an item is an empty string, set it to null (to make for a cleaner json)
+            // If a taxonomic object is all empty, skip it/
+            // Note that we could put in a check for required fields here...
+            List<Taxonomic> taxonomicListForExport = new List<Taxonomic>();
+            foreach (Taxonomic taxonomic in this.TaxonomicList)
+            {
+                PropertyInfo[] properties = typeof(Taxonomic).GetProperties();
+                bool allNull = true;
+                Taxonomic newTaxonomic = new Taxonomic();
+                foreach (PropertyInfo property in properties)
+                {
+                    // Ignore vernacularCounts, as that is just used for display purposes internally
+                    if (property.Name != "vernacularCount" && property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    {
+                        allNull = false;
+                        property.SetValue(newTaxonomic, property.GetValue(taxonomic));
+                    }
+                    else if (property.Name != "vernacularCount")
+                    {
+                        property.SetValue(newTaxonomic, null);
+                    }
+                }
+                if (!allNull)
+                {
+                    taxonomicListForExport.Add(newTaxonomic);
+                }
+            }
+ 
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
+            this.JsonTaxonomicList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
         }
         #endregion
 
-        #region Taxonomic class 
+        #region Class: Taxonomic 
         // A Taxonomic has these fields, as defined in the CamtrapDP specification.
-        // VernacularNames is a 
+        // VernacularNames is a Dictionary, which will hold key/value pairs eventually as language : vernacular (common) name pairs
         public class Taxonomic
         {
-            public string scientificName { get; set; } = string.Empty;
-            public string taxonID { get; set; } = string.Empty;
-            public string taxonRank { get; set; } = string.Empty;
-            public string kingdom { get; set; } = string.Empty;
-            public string phylum { get; set; } = string.Empty;
-            public string class_ { get; set; } = string.Empty;
-            public string order { get; set; } = string.Empty;
-            public string family { get; set; } = string.Empty;
-            public string genus { get; set; } = string.Empty;
-            public List<VernacularItem> vernacularNames { get; set; } = new List<VernacularItem>();
+            public string scientificName { get; set; }
+            public string taxonID { get; set; }
+            public string taxonRank { get; set; }
+            public string kingdom { get; set; }
+            public string phylum { get; set; }
+            public string class_ { get; set; }
+            public string order { get; set; }
+            public string family { get; set; }
+            public string genus { get; set; }
+            public Dictionary<string, string> vernacularNames { get; set; }
 
-            public string vernacularCount
+            // 
+            // Generates a string only used for feedback in the datagrid, where it is bound to the VernacularNames cell in the data grid.
+            [JsonIgnore]
+            public string vernacularCount => vernacularNames == null ? "0" : $"{vernacularNames.Count.ToString()} - {TruncatedVernacularNames()}";
+
+            // Generate a possibly truncated string representation of the vernacular name list for display in the data grid.
+            private string TruncatedVernacularNames()
             {
-                get { return vernacularNames == null ? "0" : vernacularNames.Count.ToString(); }
+                const int max = 30;
+                bool isStringTruncated = false;
+                string truncatedString = string.Empty;
+                foreach (KeyValuePair<string, string> vName in vernacularNames)
+                {
+                    truncatedString += $"{vName.Key}:{vName.Value},";
+                    if (truncatedString.Length > max)
+                    {
+                        isStringTruncated = true;
+                        break;
+                    }
+                }
+                truncatedString = isStringTruncated
+                    ? $"{truncatedString.Substring(0, Math.Min(truncatedString.Length, max)).TrimEnd(',')}\u2026"
+                    : truncatedString.TrimEnd(',', ' ');
+                return truncatedString;
             }
         }
-
         #endregion
 
-        #region Fields class
+        #region Class: Fields 
         //The EditFields
         public class Fields
         {
@@ -350,36 +400,6 @@ namespace Timelapse.Standards
             }
         }
 
- 
-
-        #region Class VernacularItem
-        public class VernacularItem
-        {
-            public string lang { get; set; }
-            public string vernacularName { get; set; }
-
-            public string GetVernaculatItemAsString()
-            {
-                return ($"{lang}:{vernacularName}");
-            }
-
-            public static VernacularItem VernacularItemFromString(string itemAsString)
-            {
-                string[] items = itemAsString.Split(':');
-                if (items.Length != 2)
-                {
-                    // Not in correct format!
-                    return null;
-                }
-                return new VernacularItem
-                {
-                    lang = items[0].Trim(),
-                    vernacularName = items[1].Trim()
-                };
-            }
-        }
-        #endregion
-
         #region VernacularNames editor callbacks
 
         private void VernacularButton_OnOpened(object sender, RoutedEventArgs e)
@@ -387,9 +407,12 @@ namespace Timelapse.Standards
             if (this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
             {
                 TBVernacularItemsEditor.Text = string.Empty;
-                foreach (VernacularItem vItem in this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
+                if (null != this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
                 {
-                    TBVernacularItemsEditor.Text += $"{vItem.GetVernaculatItemAsString()}{Environment.NewLine}";
+                    foreach (KeyValuePair<string, string> vItem in this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
+                    {
+                        TBVernacularItemsEditor.Text += $"{vItem.Key}:{vItem.Value}{Environment.NewLine}";
+                    }
                 }
                 TBVernacularItemsEditor.Text = TBVernacularItemsEditor.Text.TrimEnd('\r', '\n');
             }
@@ -412,13 +435,13 @@ namespace Timelapse.Standards
         #region VernacularItems Helpers
         private void SetVernacularItemsListFromStringList(List<string> stringList)
         {
-            
+
             if (this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
             {
-                
+
                 if (null == this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
                 {
-                    this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames = new List<VernacularItem>();
+                    this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames = new Dictionary<string, string>();
                 }
                 else
                 {
@@ -428,28 +451,27 @@ namespace Timelapse.Standards
                 // Populate the list
                 foreach (string str in stringList)
                 {
-                    VernacularItem vItem = VernacularItem.VernacularItemFromString(str);
-                    if (null != vItem)
+                    KeyValuePair<string, string> vItem = VernacularItemFromString(str);
+                    if (vItem.Key != string.Empty)
                     {
-                        this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames.Add(vItem);
+                        this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames.Add(vItem.Key, vItem.Value);
                     }
                 }
-
-                this.vernacularNames = VernacularStringListFromVernacularItemsList(this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames);
             }
         }
 
-        private ObservableCollection<string> VernacularStringListFromVernacularItemsList(List<VernacularItem> vItemsList)
+        public static KeyValuePair<string, string> VernacularItemFromString(string itemAsString)
         {
-            ObservableCollection<string> vStringList = new ObservableCollection<string>();
-            foreach (VernacularItem vItem in vItemsList)
+            string[] items = itemAsString.Split(':');
+            if (items.Length != 2)
             {
-                vStringList.Add(vItem.GetVernaculatItemAsString());
+                // Not in correct format!
+                return new KeyValuePair<string, string>(string.Empty, string.Empty);
             }
-            return vStringList;
+
+            return new KeyValuePair<string, string>(items[0].Trim(), items[1].Trim());
         }
         #endregion
     }
     #endregion
 }
-

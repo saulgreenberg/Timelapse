@@ -1,19 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Timelapse.Dialog;
 using Xceed.Wpf.Toolkit;
 
@@ -24,7 +15,7 @@ namespace Timelapse.Standards
     /// </summary>
     public partial class CamtrapDPLicenses : Window
     {
-        #region Public properties
+        #region Properties and Variables: JsonLicensesList, and Fields
         // The list of licenses, in json format
         public string JsonLicensesList { get; set; }
 
@@ -43,7 +34,7 @@ namespace Timelapse.Standards
                 "• e.g., \"ODC-PDDL-1.0\"");
 
         public Fields PathField { get; set; } =
-            new Fields("Path",
+            new Fields("Path*",
                 $"An email to the source.{Environment.NewLine}" +
                  "• e.g., \"bloggs@agouti.com\"");
 
@@ -53,7 +44,7 @@ namespace Timelapse.Standards
                 "• e.g., \"Open Data Commons Public Domain Dedication and License v1.0\"");
 
         public Fields ScopeField { get; set; } =
-            new Fields("Scope",
+            new Fields("Scope*",
                 $"Scope of the license to either or both of: {Environment.NewLine}" +
                 $"- data: applies to the content of this package and resources,{Environment.NewLine}" +
                 $"- media: applies to the media files referenced in media.{Environment.NewLine}" +
@@ -65,6 +56,7 @@ namespace Timelapse.Standards
 
         #region Private variables
         private bool DontUpdate = false;
+        private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
 
@@ -97,6 +89,10 @@ namespace Timelapse.Standards
             }
 
             DataGrid_Refresh();
+            if (this.dataGrid.Items.Count == 0)
+            {
+                this.NewRow_OnClick(null, null);
+            }
             if (this.dataGrid.Items.Count > 0)
             {
                 this.dataGrid.SelectedIndex = 0;
@@ -105,7 +101,7 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region DataGrid callbacks and helpers
+        #region Callbacks and helpers: DataGrid
         // Refresh the data grid to show the current itmes in the sources list
         private void DataGrid_Refresh()
         {
@@ -127,29 +123,30 @@ namespace Timelapse.Standards
                 return;
             }
             this.dataGridSelectedRow = dataGrid.SelectedIndex;
+            EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DontUpdate = true;
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count)
             {
-
                 this.DeleteRow.IsEnabled = true;
-
                 this.DontUpdate = true;
                 Licenses licenses = this.LicensesList[dataGrid.SelectedIndex];
                 this.DataFieldName.Text = licenses.name;
                 this.DataFieldPath.Text = licenses.path;
                 this.DataFieldTitle.Text = licenses.title;
                 this.DataFieldScope.Text = licenses.scope;
-                this.DontUpdate = false;
             }
             else
             {
                 this.DeleteRow.IsEnabled = false;
-
-                this.DontUpdate = true;
                 this.DataFieldName.Text = string.Empty;
                 this.DataFieldPath.Text = string.Empty;
                 this.DataFieldTitle.Text = string.Empty;
                 this.DataFieldScope.Text = string.Empty;
-                this.DontUpdate = false;
+            }
+            this.DontUpdate = false;
+            if (this.SetFocus)
+            {
+                this.DataFieldName.Focus();
             }
         }
         #endregion
@@ -161,15 +158,26 @@ namespace Timelapse.Standards
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DataFieldName.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count)
             {
+                this.DontUpdate = true;
                 this.LicensesList.RemoveAt(dataGrid.SelectedIndex);
-                dataGrid.SelectedIndex = dataGridSelectedRow == -1 ? -1 : --dataGridSelectedRow;
+                this.DontUpdate = false;
+                // When a row is deleted, select the last row if there is one.
+                dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+                if (dataGrid.SelectedIndex == -1)
+                {
+                    // This will clear the edit fields if nothing is selected
+                    this.SetFocus = false;
+                    DataGrid_OnSelectionChanged(null, null);
+                    this.SetFocus = true;
+                }
             }
         }
 
@@ -212,8 +220,10 @@ namespace Timelapse.Standards
                         break;
                 }
             }
+            this.SetFocus = false;
             DataGrid_Refresh();
             dataGrid.SelectedItem = this.dataGridSelectedRow;
+            this.SetFocus = true;
         }
 
         private void DataFieldScope_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
@@ -231,10 +241,42 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region Helpers - Json Serializer
+        #region Json Serializer
         private void JsonSerialize()
         {
-            this.JsonLicensesList = JsonConvert.SerializeObject(this.LicensesList);
+            // If an item is an empty string, set it to null (to make for a cleaner json)
+            // If a taxonomic object is all empty, skip it/
+            // Note that we could put in a check for required fields here...
+            List<Licenses> taxonomicListForExport = new List<Licenses>();
+            foreach (Licenses taxonomic in this.LicensesList)
+            {
+                PropertyInfo[] properties = typeof(Licenses).GetProperties();
+                bool allNull = true;
+                Licenses newLicensesList = new Licenses();
+                foreach (PropertyInfo property in properties)
+                {
+                    if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    {
+                        allNull = false;
+                        property.SetValue(newLicensesList, property.GetValue(taxonomic));
+                    }
+                    else 
+                    {
+                        property.SetValue(newLicensesList, null);
+                    }
+                }
+                if (!allNull)
+                {
+                    taxonomicListForExport.Add(newLicensesList);
+                }
+            }
+
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
+            this.JsonLicensesList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
         }
         #endregion
 

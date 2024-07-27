@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Dialog;
@@ -13,7 +14,7 @@ namespace Timelapse.Standards
     /// </summary>
     public partial class CamtrapDPSources : Window
     {
-        #region Public properties
+        #region Properties and Variables: JsonSourcesList, SourcesList, and Fields
         public string JsonSourcesList { get; set; }
 
         // The main list of sources. It is
@@ -48,6 +49,7 @@ namespace Timelapse.Standards
 
         #region Private variables
         private bool DontUpdate = false;
+        private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
 
@@ -80,6 +82,10 @@ namespace Timelapse.Standards
             }
 
             DataGrid_Refresh();
+            if (this.dataGrid.Items.Count == 0)
+            {
+                this.NewRow_OnClick(null, null);
+            }
             if (this.dataGrid.Items.Count > 0)
             {
                 this.dataGrid.SelectedIndex = 0;
@@ -88,7 +94,7 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region DataGrid callbacks and helpers
+        #region Callbacks and helpers: DataGrid
         // Refresh the data grid to show the current itmes in the sources list
         private void DataGrid_Refresh()
         {
@@ -110,18 +116,16 @@ namespace Timelapse.Standards
                 return;
             }
             this.dataGridSelectedRow = dataGrid.SelectedIndex;
+            EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DontUpdate = true;
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
             {
-
                 this.DeleteRow.IsEnabled = true;
-
-                this.DontUpdate = true;
                 Sources sources = this.SourcesList[dataGrid.SelectedIndex];
                 this.DataFieldTitle.Text = sources.title;
                 this.DataFieldEmail.Text = sources.email;
                 this.DataFieldPath.Text = sources.path;
                 this.DataFieldVersion.Text = sources.version;
-                this.DontUpdate = false;
             }
             else
             {
@@ -132,27 +136,42 @@ namespace Timelapse.Standards
                 this.DataFieldEmail.Text = string.Empty;
                 this.DataFieldPath.Text = string.Empty;
                 this.DataFieldVersion.Text = string.Empty;
-                this.DontUpdate = false;
+            }
+            this.DontUpdate = false;
+            if (this.SetFocus)
+            {
+                this.DataFieldTitle.Focus();
             }
         }
         #endregion
 
-        #region Button callbacks
+        #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
             this.SourcesList.Add(new Sources());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DataFieldTitle.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
             {
+                this.DontUpdate = true;
                 this.SourcesList.RemoveAt(dataGrid.SelectedIndex);
-                dataGrid.SelectedIndex = dataGridSelectedRow == -1 ? -1 : --dataGridSelectedRow;
+                this.DontUpdate = false;
+                // When a row is deleted, select the last row if there is one.
+                dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+                if (dataGrid.SelectedIndex == -1)
+                {
+                    // This will clear the edit fields if nothing is selected
+                    this.SetFocus = false;
+                    DataGrid_OnSelectionChanged(null, null);
+                    this.SetFocus = true;
+                }
             }
         }
 
@@ -168,7 +187,7 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region DataField callbacks
+        #region Callbacks: DataField edits
         // When a data field is edited, update the contributors list to reflect that change
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
@@ -195,15 +214,49 @@ namespace Timelapse.Standards
                         break;
                 }
             }
+            this.SetFocus = false;
             DataGrid_Refresh();
             dataGrid.SelectedItem = this.dataGridSelectedRow;
+            this.SetFocus = true;
         }
         #endregion
 
-        #region Helpers - Json Serializer
+        #region Json Serializer
         private void JsonSerialize()
         {
-            this.JsonSourcesList = JsonConvert.SerializeObject(this.SourcesList);
+            // If an item is an empty string, set it to null (to make for a cleaner json)
+            // If a taxonomic object is all empty, skip it/
+            // Note that we could put in a check for required fields here...
+            List<Sources> sourcesListForExport = new List<Sources>();
+            foreach (Sources taxonomic in this.SourcesList)
+            {
+                PropertyInfo[] properties = typeof(Sources).GetProperties();
+                bool allNull = true;
+                Sources newTaxonomic = new Sources();
+                foreach (PropertyInfo property in properties)
+                {
+                    if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    {
+                        allNull = false;
+                        property.SetValue(newTaxonomic, property.GetValue(taxonomic));
+                    }
+                    else
+                    {
+                        property.SetValue(newTaxonomic, null);
+                    }
+                }
+                if (!allNull)
+                {
+                    sourcesListForExport.Add(newTaxonomic);
+                }
+            }
+
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
+            this.JsonSourcesList = JsonConvert.SerializeObject(sourcesListForExport, settings);
         }
         #endregion
 

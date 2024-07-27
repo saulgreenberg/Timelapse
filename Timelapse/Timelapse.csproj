@@ -514,6 +514,7 @@
     <Compile Include="Enums\DeletiionManagementEnum.cs" />
     <Compile Include="DataStructures\ErrorsAndWarnings.cs" />
     <Compile Include="Util\IsCondition.cs" />
+    <Compile Include="Util\JsonConverters.cs" />
     <Compile Include="Util\Numbers.cs" />
     <Compile Include="Util\ValidationCallbacks.cs" />
     <Compile Include="Util\ViewModelBase.cs" />

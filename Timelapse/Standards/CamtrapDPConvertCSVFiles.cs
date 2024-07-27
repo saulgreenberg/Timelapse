@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Timelapse.Database;
+#pragma warning disable IDE1006
 
 namespace Timelapse.Standards
 {
@@ -128,36 +129,11 @@ namespace Timelapse.Standards
                         case CamtrapDPConstants.DataPackage.Sources:
                             camtrapDp.sources = JsonConvert.DeserializeObject<List<sources>>(cell.Value);
                             break;
-                        //// Sources - allows only one so far
-                        //case CamtrapDPConstants.DataPackage.Sources.Title:
-                        //    camtrapDp.sources[0].title = cell.Value;
-                        //    break;
-                        //case CamtrapDPConstants.DataPackage.Sources.Email:
-                        //    camtrapDp.sources[0].email = cell.Value;
-                        //    break;
-                        //case CamtrapDPConstants.DataPackage.Sources.Path:
-                        //    camtrapDp.sources[0].path = cell.Value;
-                        //    break;
-                        //case CamtrapDPConstants.DataPackage.Sources.Version:
-                        //    camtrapDp.sources[0].version = cell.Value;
-                        //    break;
 
                         // Licenses array from json
                         case CamtrapDPConstants.DataPackage.Licenses:
                             camtrapDp.licenses = JsonConvert.DeserializeObject<List<licenses>>(cell.Value);
                             break;
-                        //case CamtrapDPConstants.DataPackage.Licenses.Name:
-                        //    camtrapDp.licenses[0].name = cell.Value;
-                        //    break;
-                        //case CamtrapDPConstants.DataPackage.Licenses.Title:
-                        //    camtrapDp.licenses[0].title = cell.Value;
-                        //    break;
-                        //case CamtrapDPConstants.DataPackage.Licenses.Path:
-                        //    camtrapDp.licenses[0].path = cell.Value;
-                        //    break;
-                        //case CamtrapDPConstants.DataPackage.Licenses.Scope:
-                        //    camtrapDp.licenses[0].scope = cell.Value;
-                        //    break;
 
                         case CamtrapDPConstants.DataPackage.BibliographicCitation:
                             camtrapDp.bibliographicCitation = cell.Value;
@@ -215,11 +191,15 @@ namespace Timelapse.Standards
                                 : string.Empty;
                             break;
                         case CamtrapDPConstants.DataPackage.Taxonomic:
-                            camtrapDp.taxonomic = JsonConvert.DeserializeObject<List<taxonomic>>(cell.Value);
+                            var settings = new JsonSerializerSettings
+                            {
+                                NullValueHandling = NullValueHandling.Ignore,
+                                MissingMemberHandling = MissingMemberHandling.Ignore
+                            };
+                            camtrapDp.taxonomic = JsonConvert.DeserializeObject<List<taxonomic>>(cell.Value, settings);
                             break;
 
                             // NOT DONE:
-                            // TAXONOMIC
                             // RelatedIdentifiers
                             // REFERENCES
                     }
@@ -228,7 +208,12 @@ namespace Timelapse.Standards
             using (StreamWriter fileWriter = new StreamWriter(exportFilePath, false))
             {
                 StringBuilder header = new StringBuilder();
-                header.Append(JsonConvert.SerializeObject(camtrapDp, Formatting.Indented));
+                var settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    //MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                header.Append(JsonConvert.SerializeObject(camtrapDp, Formatting.Indented, settings));
                 fileWriter.WriteLine(header);
             }
             return true;
@@ -355,17 +340,16 @@ namespace Timelapse.Standards
 
         public class taxonomic
         {
-            public string scientificName { get; set; } = string.Empty;
-            public string taxonID { get; set; } = string.Empty;
-            public string taxonRank { get; set; } = string.Empty;
-            public string kingdom { get; set; } = string.Empty;
-            public string phylum { get; set; } = string.Empty;
-            public string class_ { get; set; } = string.Empty;
-            public string order { get; set; } = string.Empty;
-            public string family { get; set; } = string.Empty;
-            public string genus { get; set; } = string.Empty;
-            public List<VernacularItem> vernacularNames { get; set; } = new List<VernacularItem>();
-            //public string vernacularCount = string.Empty;
+            public string scientificName { get; set; } = null;
+            public string taxonID { get; set; } = null;
+            public string taxonRank { get; set; } = null;
+            public string kingdom { get; set; } = null;
+            public string phylum { get; set; } = null;
+            public string class_ { get; set; } = null;
+            public string order { get; set; } = null;
+            public string family { get; set; } = null;
+            public string genus { get; set; } = null;
+            public Dictionary<string, string> vernacularNames { get; set; } = null;
         }
 
         public class VernacularItem

@@ -22,7 +22,8 @@
             <Run Text="Sources" FontWeight ="Bold" FontStyle="Italic"/> 
             is an optional list of sources for this data.
             <LineBreak/>
-            <Run Text="*" FontWeight ="Bold"/> indicates a required source field. Other fields are optional.
+            <Run Text="Title*" FontWeight ="Bold" FontStyle="Italic"/> is required for each source you create. Other fields are optional.
+
         </TextBlock>
 
         <TextBlock Grid.Row="1" Margin="10,10,5,5">

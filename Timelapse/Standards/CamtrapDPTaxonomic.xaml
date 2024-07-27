@@ -23,7 +23,7 @@
             <Run Text="Taxonomic" FontWeight ="Bold" FontStyle="Italic"/> 
             is an optional list of taxonomic definitions for this data.
             <LineBreak/>
-            <Run Text="*" FontWeight ="Bold"/> indicates a required taxonomic definition field. Other fields are optional.
+            <Run Text="Scientific name*" FontWeight ="Bold" FontStyle="Italic"/> is required for each taxonomic definition you create. Other fields are optional.
         </TextBlock>
 
         <TextBlock Grid.Row="1" Margin="10,10,5,5">
@@ -62,7 +62,7 @@
                 <DataGridTextColumn Header="Taxon rank" Binding="{Binding taxonRank}"/>
                 <DataGridTextColumn Header="Kingdom" Binding="{Binding kingdom}"/>
                 <DataGridTextColumn Header="Phylum" Binding="{Binding phylum}"/>
-                <DataGridTextColumn Header="Class" Binding="{Binding class}"/>
+                <DataGridTextColumn Header="Class" Binding="{Binding class_}"/>
                 <DataGridTextColumn Header="Order" Binding="{Binding order}"/>
                 <DataGridTextColumn Header="Family" Binding="{Binding family}"/>
                 <DataGridTextColumn Header="Genus" Binding="{Binding genus}"/>

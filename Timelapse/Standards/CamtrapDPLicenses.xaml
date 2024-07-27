@@ -24,8 +24,8 @@
             <Run Text="Licenses" FontWeight ="Bold" FontStyle="Italic"/> 
             is an optional list of licenses under which this data is provided.
             <LineBreak/>
-            <Run Text="Name" FontWeight ="Bold"/> or <Run Text="Path" FontWeight ="Bold"/>: at least one of them are required for each license. Other fields are optional.
-        </TextBlock>
+            <Run Text="Scope*" FontWeight ="Bold" FontStyle="Italic"/> and one of <Run Text="Name*" FontWeight ="Bold" FontStyle="Italic"/> or <Run Text="Path*" FontWeight ="Bold" FontStyle="Italic"/> is required for each license definition you create. Other fields are optional.
+</TextBlock>
 
         <TextBlock Grid.Row="1" Margin="10,10,5,5">
             <Run Text="License list" FontWeight ="Bold" FontSize="18"/>
@@ -163,6 +163,9 @@
             <xctk:CheckComboBox Grid.Row="3" Grid.Column="1" 
                      Name ="DataFieldScope" 
                      Margin="5,5,5,5"
+                     Width="150"
+                     HorizontalAlignment="Left"
+                     Background="#E5E8EF"
                      Text=""
                      ToolTip ="{Binding ElementName=Window1, Path=ScopeField.Tooltip}"
                      SelectedValue =""

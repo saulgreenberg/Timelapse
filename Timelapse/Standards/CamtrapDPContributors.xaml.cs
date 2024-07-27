@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using Newtonsoft.Json;
@@ -16,7 +16,7 @@ namespace Timelapse.Standards
     /// </summary>
     public partial class CamptrapDPContributors : Window
     {
-        #region Public properties
+        #region Properties and Variables: JsonContributorsList, Fields
         // The initial and final tring of contributors, in json format
         public string JsonContributorsList { get; set; }
 
@@ -56,6 +56,7 @@ namespace Timelapse.Standards
 
         #region Private variables
         private bool DontUpdate = false;
+        private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
 
@@ -88,6 +89,10 @@ namespace Timelapse.Standards
             }
             
             DataGrid_Refresh();
+            if (this.dataGrid.Items.Count == 0)
+            {
+                this.NewRow_OnClick(null, null);
+            }
             if (this.dataGrid.Items.Count > 0)
             {
                 this.dataGrid.SelectedIndex = 0;
@@ -96,7 +101,7 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region DataGrid callbacks and helpers
+        #region Callbacks and helpers: DataGrid
         // Refresh the data grid to show the current itmes in the contributors list
         private void DataGrid_Refresh()
         {
@@ -118,12 +123,11 @@ namespace Timelapse.Standards
                 return;
             }
             this.dataGridSelectedRow = dataGrid.SelectedIndex;
+            EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DontUpdate = true;
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ContributorsList.Count)
             {
-
                 this.DeleteRow.IsEnabled = true;
-
-                this.DontUpdate = true;
                 Contributors contributor = this.ContributorsList[dataGrid.SelectedIndex];
                 this.DataFieldTitle.Text = contributor.title;
                 this.DataFieldEmail.Text = contributor.email;
@@ -135,25 +139,29 @@ namespace Timelapse.Standards
             else
             {
                 this.DeleteRow.IsEnabled = false;
-
                 this.DontUpdate = true;
                 this.DataFieldTitle.Text = string.Empty;
                 this.DataFieldEmail.Text = string.Empty;
                 this.DataFieldPath.Text = string.Empty;
                 this.DataFieldRole.Text = string.Empty;
                 this.DataFieldOrganization.Text = string.Empty;
-                this.DontUpdate = false;
+            }
+            this.DontUpdate = false;
+            if (this.SetFocus)
+            {
+                this.DataFieldTitle.Focus();
             }
         }
         #endregion
 
-        #region Button callbacks
+        #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
             this.ContributorsList.Add(new Contributors());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            this.DataFieldTitle.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
@@ -161,8 +169,17 @@ namespace Timelapse.Standards
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ContributorsList.Count)
             {
                 this.ContributorsList.RemoveAt(dataGrid.SelectedIndex);
-                dataGrid.SelectedIndex = dataGridSelectedRow == -1 ? -1 : --dataGridSelectedRow;
+                this.DontUpdate = false;
+                // When a row is deleted, select the last row if there is one.
+                dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+                if (dataGrid.SelectedIndex == -1)
+                {
+                    // This will clear the edit fields if nothing is selected
+                    this.SetFocus = false;
+                    DataGrid_OnSelectionChanged(null, null);
+                    this.SetFocus = true;
+                }
             }
         }
 
@@ -178,7 +195,7 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region DataField callbacks
+        #region Callbacks: DataField edits
         // When a data field is edited, update the contributors list to reflect that change
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
@@ -205,8 +222,11 @@ namespace Timelapse.Standards
                         break;
                 }
             }
+
+            this.SetFocus = false;
             DataGrid_Refresh();
             dataGrid.SelectedItem = this.dataGridSelectedRow;
+            this.SetFocus = true;
         }
 
         private void DataFieldRole_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -224,14 +244,43 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region Helpers - Json Serializer
+        #region Json Serializer
         private void JsonSerialize()
         {
-            this.JsonContributorsList = JsonConvert.SerializeObject(this.ContributorsList);
+            List<Contributors>contributorsListForExport = new List<Contributors>();
+            foreach (Contributors taxonomic in this.ContributorsList)
+            {
+                PropertyInfo[] properties = typeof(Contributors).GetProperties();
+                bool allNull = true;
+                Contributors newTaxonomic = new Contributors();
+                foreach (PropertyInfo property in properties)
+                {
+                    if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    {
+                        allNull = false;
+                        property.SetValue(newTaxonomic, property.GetValue(taxonomic));
+                    }
+                    else 
+                    {
+                        property.SetValue(newTaxonomic, null);
+                    }
+                }
+                if (!allNull)
+                {
+                    contributorsListForExport.Add(newTaxonomic);
+                }
+            }
+
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
+            this.JsonContributorsList = JsonConvert.SerializeObject(contributorsListForExport, settings);
         }
         #endregion
 
-        #region Contributors class
+        #region Class: Contributors 
         // A contributor has these fields, as defined in the CamtrapDP specification
         public class Contributors
         {
@@ -243,7 +292,7 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region Fields class
+        #region Class: Fields
         //The EditFields
         public class Fields
         {
