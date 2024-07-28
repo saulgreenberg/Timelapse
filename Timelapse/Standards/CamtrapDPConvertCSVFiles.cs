@@ -1,22 +1,260 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Newtonsoft.Json;
+using Timelapse.Controls;
+using Timelapse.ControlsMetadata;
 using Timelapse.Database;
+using Timelapse.DataStructures;
+using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
+using Timelapse.Enums;
+using DataPackage = Timelapse.Standards.CamtrapDPConstants.DataPackage;
 #pragma warning disable IDE1006
 
 namespace Timelapse.Standards
 {
     public class CamtrapDPConvertCSVFiles
     {
+        public static async Task<bool> ConvertFooToMetadata(FileDatabase database)
+        {
+            Standards.CamtrapDPDataPackage datapackage = new CamtrapDPDataPackage();
+            Standards.resources resourceDeployment = new Standards.resources();
+            Standards.resources resourceMedia = new Standards.resources();
+            Standards.resources resourceObservations = new Standards.resources();
+            datapackage.resources.Add(resourceDeployment); 
+            datapackage.resources.Add(resourceMedia);
+            datapackage.resources.Add(resourceObservations);
+
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    // Get level 1
+
+                    MetadataInfoRow infoRow = null;
+                    foreach (MetadataInfoRow tmpInfoRow in database.MetadataInfo)
+                    {
+                        if (tmpInfoRow != null && tmpInfoRow.Level == 1)
+                        {
+                            infoRow = tmpInfoRow;
+                            break;
+                        }
+                    }
+                    if (null == infoRow)
+                    {
+                        return false;
+                    }
+
+                    string alias = MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
+                    int level = infoRow.Level;
+
+                    // Get the rows for this level
+                    DataTables.DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
+                        ? null
+                        : value;
+
+                    // Get the data labels in spreadsheet order
+                    Dictionary<string, string> dataLabelsAndTypesInSpreadsheetOrder = database.MetadataGetDataLabelsInSpreadsheetOrderForExport(level);
+                    // dataLabelsInSpreadsheetOrder.Insert(0,Constant.DatabaseColumn.FolderDataPath);
+                    JsonSerializerSettings settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        Formatting = Formatting.Indented
+                    };
+
+                    foreach (MetadataRow row in rows)
+                    {
+                        foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypesInSpreadsheetOrder)
+                        {
+                            
+                            switch (dataLabelAndType.Key)
+                            {
+                                #region Populate the three resources - deployment, media and observations
+                                case DataPackage.Resources.Resource_profile:
+                                    resourceDeployment.profile = row[dataLabelAndType.Key];
+                                    resourceMedia.profile = row[dataLabelAndType.Key];
+                                    resourceObservations.profile = row[dataLabelAndType.Key];
+                                    break;
+
+                                case DataPackage.Resources.Deployment_name:
+                                    resourceDeployment.name = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Resources.Deployment_path:
+                                    resourceDeployment.path = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Resources.Deployment_schema:
+                                    resourceDeployment.schema = row[dataLabelAndType.Key];
+                                    break;
+
+                                case DataPackage.Resources.Media_name:
+                                    resourceMedia.name = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Resources.Media_path:
+                                    resourceMedia.path = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Resources.Media_schema:
+                                    resourceMedia.schema = row[dataLabelAndType.Key];
+                                    break;
+
+                                case DataPackage.Resources.Observations_name:
+                                    resourceObservations.name = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Resources.Observations_path:
+                                    resourceObservations.path = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Resources.Observations_schema:
+                                    resourceObservations.schema = row[dataLabelAndType.Key];
+                                    break;
+                                #endregion
+
+                                case DataPackage.Profile:
+                                    datapackage.profile = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Name:
+                                    resourceObservations.name = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.IdAlias:
+                                    datapackage.id = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Created:
+                                    datapackage.created = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Title: 
+                                    datapackage.title = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Contributors:
+                                    datapackage.contributors = JsonConvert.DeserializeObject<List<Standards.contributors>>(row[dataLabelAndType.Key], settings);
+                                    break;
+                                case DataPackage.Description: 
+                                    datapackage.description = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Version: 
+                                    datapackage.version = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Keywords: 
+                                    datapackage.keywords = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Image:
+                                    datapackage.image = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Homepage:
+                                    datapackage.homepage = row[dataLabelAndType.Key];
+                                    break;
+
+                                // Sources
+                                case DataPackage.Sources:
+                                    datapackage.sources = JsonConvert.DeserializeObject<List<Standards.sources>>(row[dataLabelAndType.Key], settings);
+                                    break;
+
+                                // Licenses
+                                case DataPackage.Licenses:
+                                    datapackage.licenses = JsonConvert.DeserializeObject<List<Standards.licenses>>(row[dataLabelAndType.Key], settings);
+                                    break;
+
+                               
+                                case DataPackage.BibliographicCitation:
+                                    datapackage.bibliographicCitation = row[dataLabelAndType.Key];
+                                    break;
+
+                                #region Project
+                                case DataPackage.Project.Id:
+                                    datapackage.project.id = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.Title:
+                                    datapackage.project.title = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.Acronym:
+                                    datapackage.project.acronym = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.Description:
+                                    datapackage.project.description = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.Path:
+                                    datapackage.project.path = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.SamplingDesign:
+                                    datapackage.project.samplingDesign = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.CaptureMethod:
+                                    datapackage.project.captureMethod = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Project.IndividualAnimals:
+                                    datapackage.project.individualAnimals = Boolean.TryParse(row[dataLabelAndType.Key], out bool boolValue) && boolValue;
+                                    break;
+                                case DataPackage.Project.ObservationLevel:
+                                    datapackage.project.observationLevel = row[dataLabelAndType.Key];
+                                    break;
+                                #endregion
+
+                                case DataPackage.CoordinatePrecision:
+                                    datapackage.coordinatePrecision = Double.TryParse(row[dataLabelAndType.Key], out double coordPrecision) ? coordPrecision : 0.0;
+                                    break;
+
+                                case DataPackage.Spatial: // NOT REALLY DONE
+                                    datapackage.spatial = row[dataLabelAndType.Key];
+                                    break;
+
+                                #region Temporal
+                                case DataPackage.Temporal.Start: // Convert to CAMTRAPDP DATE Format
+                                    datapackage.temporal.start = row[dataLabelAndType.Key];
+                                    break;
+                                case DataPackage.Temporal.End: // Convert to CAMTRAPDP DATE Format
+                                    datapackage.temporal.end = row[dataLabelAndType.Key];
+                                    break;
+                                #endregion
+
+                                // Taxonomic
+                                case DataPackage.Taxonomic:
+                                    datapackage.taxonomic = JsonConvert.DeserializeObject<List<Standards.taxonomic>>(row[dataLabelAndType.Key], settings);
+                                    break;
+
+                                // RelatedIdentifiers
+                                case DataPackage.RelatedIdentifiers:
+                                    datapackage.relatedIdentifiers = JsonConvert.DeserializeObject<List<Standards.relatedIdentifiers>>(row[dataLabelAndType.Key], settings);
+                                    break;
+
+                                // References
+                                case DataPackage.References:
+                                    datapackage.references = JsonConvert.DeserializeObject<List<Standards.references_>>(row[dataLabelAndType.Key], settings);
+                                    break;
+
+                                default:
+                                    Debug.Print($"{dataLabelAndType.Key} : {dataLabelAndType.Value} => {row[dataLabelAndType.Key]}");
+                                    break;
+                            }
+
+                        }
+                    }
+
+                    settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
+                    string dataPackageAsJson = JsonConvert.SerializeObject(datapackage, settings);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }).ConfigureAwait(true);
+        }
+
+
+
+
+
+
         #region Public Static Method - Import from CSV (async)
         // Try importing a CSV file, checking its headers and values against the template's DataLabels and data types.
         public static bool ConvertCamtrapDPMetadataToCamtrapJson(string timelapseDataPackagePath, string camtrapDPExportFolder)
         {
+            ConvertFooToMetadata(GlobalReferences.MainWindow.DataHandler.FileDatabase);
+
             MetadataCamtrapDP camtrapDp = new MetadataCamtrapDP();
             //        int processedFilesCount = 0;
             //        int totalFilesProcessed = 0;

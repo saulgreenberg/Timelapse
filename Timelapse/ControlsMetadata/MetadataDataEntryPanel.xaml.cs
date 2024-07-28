@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,7 +14,6 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
-using static Timelapse.Standards.CamtrapDPConstants;
 using Control = System.Windows.Controls.Control;
 using FileDatabase = Timelapse.Database.FileDatabase;
 
@@ -829,6 +826,36 @@ namespace Timelapse.ControlsMetadata
                         taxonomicControl.GetContentControl.Visibility = Visibility.Collapsed;
                         taxonomicControl.Container.Children.Insert(1, button);
                     }
+
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.RelatedIdentifiers, out var relatedIdentifiersControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Click to edit a list of related identifiers",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Padding = new Thickness(15, 0, 15, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        button.Click += RelatedIdentifiers_Click;
+                        relatedIdentifiersControl.GetContentControl.Visibility = Visibility.Collapsed;
+                        relatedIdentifiersControl.Container.Children.Insert(1, button);
+                    }
+
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.References, out var referencesControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Click to edit a list of references",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Padding = new Thickness(15, 0, 15, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        button.Click += References_Click;
+                        referencesControl.GetContentControl.Visibility = Visibility.Collapsed;
+                        referencesControl.Container.Children.Insert(1, button);
+                    }
                 }
             }
         }
@@ -898,6 +925,41 @@ namespace Timelapse.ControlsMetadata
                     {
                         taxonomicControl.SetContentAndTooltip(taxonomicDialog.JsonTaxonomicList);
                         GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(taxonomicControl);
+                    }
+                }
+            }
+        }
+
+        public void RelatedIdentifiers_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            if (this.Level == 1) // It should always be the DataPackage level 1
+            {
+                // Get and set the Sources json
+                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.RelatedIdentifiers, out var relatedIdentifiersControl))
+                {
+                    Standards.CamtrapDPRelatedIdentifiers licensesDialog = new Standards.CamtrapDPRelatedIdentifiers(GlobalReferences.MainWindow, relatedIdentifiersControl.Content);
+                    if (true == licensesDialog.ShowDialog())
+                    {
+                        relatedIdentifiersControl.SetContentAndTooltip(licensesDialog.JsonRelatedIdentifiersList);
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(relatedIdentifiersControl);
+                    }
+                }
+            }
+        }
+
+
+        public void References_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            if (this.Level == 1) // It should always be the DataPackage level 1
+            {
+                // Get and set the Sources json
+                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.References, out var referencesControl))
+                {
+                    Standards.CamtrapDPReferences referencesDialog = new Standards.CamtrapDPReferences(GlobalReferences.MainWindow, referencesControl.Content);
+                    if (true == referencesDialog.ShowDialog())
+                    {
+                        referencesControl.SetContentAndTooltip(referencesDialog.JsonReferencesList);
+                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(referencesControl);
                     }
                 }
             }

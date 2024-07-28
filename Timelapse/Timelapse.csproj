@@ -465,8 +465,15 @@
     </Compile>
     <Compile Include="Standards\CamtrapDPConstants.cs" />
     <Compile Include="Standards\CamtrapDPConvertCSVFiles.cs" />
+    <Compile Include="Standards\CamtrapDPDataPackage.cs" />
     <Compile Include="Standards\CamtrapDPLicenses.xaml.cs">
       <DependentUpon>CamtrapDPLicenses.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPReferences.xaml.cs">
+      <DependentUpon>CamtrapDPReferences.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPRelatedIdentifiers.xaml.cs">
+      <DependentUpon>CamtrapDPRelatedIdentifiers.xaml</DependentUpon>
     </Compile>
     <Compile Include="Standards\CamtrapDPSources.xaml.cs">
       <DependentUpon>CamtrapDPSources.xaml</DependentUpon>
@@ -723,6 +730,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Standards\CamtrapDPLicenses.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPReferences.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPRelatedIdentifiers.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

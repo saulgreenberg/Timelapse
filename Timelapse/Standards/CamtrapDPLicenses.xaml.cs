@@ -284,10 +284,10 @@ namespace Timelapse.Standards
         // A contributor has these fields, as defined in the CamtrapDP specification
         public class Licenses
         {
-            public string name { get; set; } = string.Empty;
-            public string path { get; set; } = string.Empty;
-            public string title { get; set; } = string.Empty;
-            public string scope { get; set; } = string.Empty;
+            public string name { get; set; } 
+            public string path { get; set; } 
+            public string title { get; set; }
+            public string scope { get; set; }
         }
         #endregion
 

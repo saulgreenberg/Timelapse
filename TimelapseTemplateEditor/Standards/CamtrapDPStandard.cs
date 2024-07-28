@@ -332,60 +332,17 @@ namespace TimelapseTemplateEditor.Standards
                 $"A list of taxonomic definitions that apply to the data and / or media provided in this package. {Environment.NewLine}",
                 null, false, true),
 
-            #region Taxonomic Object
-            // LEFT OUT FOR NOW
-            // There are a variety of fileds in this object, but I only include 1 - the scientific anem - as a multi choice list that can be parsed into a json object
-            // taxonomic - Scientific name 
-            // left out: taxonID, taxonRank, kingdom, phylum, class, order, family, genus, vernacularNames (as languageCode: vernacular name pairs)
-            //Taxonomic - scientific name
-            //new StandardsRow(
-            //    Control.MultiChoice, 1, "", "Taxonomic scientific name*", CamtrapDPConstants.DataPackage.Taxonomic_scientificName,
-            //    $"Taxonomic coverage. {Environment.NewLine}" +
-            //    "• e.g., \"see drop-down menu\"",
-            //    StandardsBase.CreateChoiceList(true, new List<string> { "Anas platyrhynchos", "Anas strepera", "Ardea", "Ardea cinerea", "Aves", "Homo sapiens", "Martes foina", "Mustela putorius", "Rattus norvegicus", "Vulpes vulpes"}),
-            //    false, false),
-            #endregion
+            // RelatedIdentifiers - a json array that holds a list of RelatedIdentifiers objects
+            new StandardsRow(
+                Control.MultiLine, 1, "[]", "RelatedIdentifiers definitions", CamtrapDPConstants.DataPackage.RelatedIdentifiers,
+                $"A list of related identifier definitions  related to the data and / or media provided in this package. {Environment.NewLine}",
+                null, false, true),
 
-            #region Related Identifiers object - I only provide 1 but multiples are allowed in spec
-            //// Related Identifiers - relation type*
-            //new StandardsRow(
-            //    Control.FixedChoice, 1, "", "Related identifiers - relation type*", CamtrapDPConstants.DataPackage.RelatedIdentifiers1_relationType,
-            //    $"Description of the relationship between the resource (the package) and the related resource.{Environment.NewLine}" +
-            //"• e.g., \"IsDerivedFrom\"",
-            //    StandardsBase.CreateChoiceList(true, new List<string> { "IsCitedBy", "Cites", "IsSupplementTo", "IsSupplementedBy", "IsContinuedBy", "Continues",
-            //    "IsNewVersionOf", "IsPreviousVersionOf", "IsPartOf", "HasPart", "IsPublishedIn", "IsReferencedBy", "References",
-            //    "IsDocumentedBy", "Documents", "IsCompiledBy", "Compiles", "IsVariantFormOf", "IsOriginalFormOf", "IsIdenticalTo",
-            //    "HasMetadata", "IsMetadataFor", "Reviews", "IsReviewedBy", "IsDerivedFrom", "IsSourceOf", "Describes", "IsDescribedBy",
-            //    "HasVersion", "IsVersionOf", "Requires", "IsRequiredBy", "Obsoletes", "IsObsoletedBy"}),
-            //false, false),
-
-            //// Related Identifiers - relatedIdentifier*
-            //new StandardsRow(
-            //    Control.MultiLine, 1, "", "Related identifiers - Related identifier*", "relatedIdentifiers1_relatedIdentifier",
-            //    $"End date of the last (completed) deployment.{Environment.NewLine}" +
-            //    "• e.g., \"https://doi.org/10.15468/5tb6ze\"",
-            //    null, false, false),
-
-            //// Related Identifiers - resourceTypeGeneral
-            //new StandardsRow(
-            //    Control.FixedChoice, 1, "", "Related identifiers - Resource type general", "relatedIdentifiers1_resourceTypeGeneral",
-            //    $"Description of the relationship between the resource (the package) and the related resource.{Environment.NewLine}" +
-            //"• e.g., \"IsDerivedFrom\"",
-            //    StandardsBase.CreateChoiceList(true, new List<string> { "Audiovisual", "Book", "BookChapter", "Collection", "ComputationalNotebook", "ConferencePaper", "ConferenceProceeding",
-            //        "DataPaper", "Dataset", "Dissertation", "Event", "Image", "InteractiveResource", "Journal", "JournalArticle", "Model", "OutputManagementPlan", "PeerReview", "PhysicalObject",
-            //        "Preprint", "Report", "Service", "Software", "Sound", "Standard", "Text", "Workflow", "Other"}),
-            //    false, false),
-
-            //// Related Identifiers - relatedIdentifierType *
-            //new StandardsRow(
-            //    Control.FixedChoice, 1, "", "Related identifiers - Related identifier type", "relatedIdentifiers1_relatedIdentifierType",
-            //    $"Description of the relationship between the resource (the package) and the related resource.{Environment.NewLine}" +
-            //"• e.g., \"IsDerivedFrom\"",
-            //StandardsBase.CreateChoiceList(true, new List<string> { "ARK", "arXiv", "bibcode", "DOI", "EAN13", "EISSN",
-            //    "Handle", "IGSN", "ISBN", "ISSN", "ISTC", "LISSN", "LSID", "PMID", "PURL", "UPC", "URL", "URN", "w3id"}),
-            //    false, false),
-            #endregion
-
+            // References - a json array that holds a list of Reference objects
+            new StandardsRow(
+                Control.MultiLine, 1, "[]", "References", CamtrapDPConstants.DataPackage.References,
+                $"A list of references (preferably including a DOI) related to the data and / or media provided in this package. {Environment.NewLine}",
+                null, false, true),
             #endregion
 
             #region Level 2: Deployment

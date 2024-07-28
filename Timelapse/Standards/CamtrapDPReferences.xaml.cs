@@ -2,49 +2,42 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using Timelapse.Dialog;
 
 namespace Timelapse.Standards
 {
     /// <summary>
-    /// Interaction logic for CamtrapDPSOurces.xaml
+    /// Interaction logic for CamtrapDPReferences.xaml
     /// </summary>
-    public partial class CamtrapDPSources : Window
+    public partial class CamtrapDPReferences : Window
     {
-        #region Properties and Variables: JsonSourcesList, SourcesList, and Fields
-        public string JsonSourcesList { get; set; }
+        #region Properties and Variables: JsonReferencesList, ReferencesList, and Fields
+        public string JsonReferencesList { get; set; }
 
         // The main list of sources. It is
-        // - initially populated by the initial jsonSourcesList
+        // - initially populated by the initial jsonReferencesList
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<Sources> SourcesList { get; set; }
+        public ObservableCollection<References> ReferencesList { get; set; }
 
         // The fields used to construct the EditList
 
-        public Fields TitleField { get; set; } =
-            new Fields("Title*",
-                $"Title of the source (e.g. document or organization name).{Environment.NewLine}" +
-                "• e.g., \"World Bank and OECD\"");
-
-        public Fields EmailField { get; set; } =
-            new Fields("Email",
-                $"An email to the source.{Environment.NewLine}" +
-                 "• e.g., \"bloggs@agouti.com\"");
-
-        public Fields PathField { get; set; } =
-            new Fields("Path",
-                $"A fully qualified http URL pointing to a relevant location online for this contributor.{Environment.NewLine}" +
-                 "• e.g., \"http://www.bloggs.com\"");
-
-        public Fields VersionField { get; set; } =
-            new Fields("Version",
-                $"Version of the source.{Environment.NewLine}" +
-                "• e.g., \"v3.21\"");
+        public Fields ReferenceField { get; set; } =
+            new Fields("Reference",
+                $"A free-form reference, ideally including a DOI and following a standard reference formatting style.");
         #endregion
 
         #region Private variables
@@ -54,26 +47,26 @@ namespace Timelapse.Standards
         #endregion 
 
         #region Constructor / Loaded
-        public CamtrapDPSources(Window owner, string jsonSourcesList)
+        public CamtrapDPReferences(Window owner, string jsonReferencesList)
         {
             InitializeComponent();
             this.Owner = owner;
-            this.JsonSourcesList = jsonSourcesList;
+            this.JsonReferencesList = jsonReferencesList;
         }
 
         private void CamptrapDP_OnLoaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             DataContext = this;
-            if (string.IsNullOrWhiteSpace(JsonSourcesList))
+            if (string.IsNullOrWhiteSpace(JsonReferencesList))
             {
                 // Make sure its a valid json array
-                JsonSourcesList = "[]";
+                JsonReferencesList = "[]";
             }
 
             try
             {
-                this.SourcesList = new ObservableCollection<Sources>(JsonConvert.DeserializeObject<List<Sources>>(JsonSourcesList));
+                this.ReferencesList = new ObservableCollection<References>(JsonConvert.DeserializeObject<List<References>>(JsonReferencesList));
             }
             catch (Exception)
             {
@@ -101,7 +94,7 @@ namespace Timelapse.Standards
             this.DontUpdate = true;
             this.dataGrid.ItemsSource = null;
             this.dataGrid.Items.Clear();
-            this.dataGrid.ItemsSource = this.SourcesList;
+            this.dataGrid.ItemsSource = this.ReferencesList;
             this.DontUpdate = false;
             dataGrid.SelectedIndex = this.dataGridSelectedRow < this.dataGrid.Items.Count ? this.dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -118,29 +111,23 @@ namespace Timelapse.Standards
             this.dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
             this.DontUpdate = true;
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ReferencesList.Count)
             {
                 this.DeleteRow.IsEnabled = true;
-                Sources sources = this.SourcesList[dataGrid.SelectedIndex];
-                this.DataFieldTitle.Text = sources.title;
-                this.DataFieldEmail.Text = sources.email;
-                this.DataFieldPath.Text = sources.path;
-                this.DataFieldVersion.Text = sources.version;
+                References references = this.ReferencesList[dataGrid.SelectedIndex];
+                this.DataFieldReference.Text = references.references;
             }
             else
             {
                 this.DeleteRow.IsEnabled = false;
 
                 this.DontUpdate = true;
-                this.DataFieldTitle.Text = string.Empty;
-                this.DataFieldEmail.Text = string.Empty;
-                this.DataFieldPath.Text = string.Empty;
-                this.DataFieldVersion.Text = string.Empty;
+                this.DataFieldReference.Text = string.Empty;
             }
             this.DontUpdate = false;
             if (this.SetFocus)
             {
-                this.DataFieldTitle.Focus();
+                this.DataFieldReference.Focus();
             }
         }
         #endregion
@@ -148,19 +135,19 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.SourcesList.Add(new Sources());
+            this.ReferencesList.Add(new References());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DataFieldTitle.Focus();
+            this.DataFieldReference.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ReferencesList.Count)
             {
                 this.DontUpdate = true;
-                this.SourcesList.RemoveAt(dataGrid.SelectedIndex);
+                this.ReferencesList.RemoveAt(dataGrid.SelectedIndex);
                 this.DontUpdate = false;
                 // When a row is deleted, select the last row if there is one.
                 dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
@@ -196,21 +183,12 @@ namespace Timelapse.Standards
             {
                 return;
             }
-            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
+            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.ReferencesList.Count)
             {
                 switch (tb.Name)
                 {
-                    case "DataFieldTitle":
-                        this.SourcesList[dataGrid.SelectedIndex].title = tb.Text;
-                        break;
-                    case "DataFieldEmail":
-                        this.SourcesList[dataGrid.SelectedIndex].email = tb.Text;
-                        break;
-                    case "DataFieldPath":
-                        this.SourcesList[dataGrid.SelectedIndex].path = tb.Text;
-                        break;
-                    case "DataFieldVersion":
-                        this.SourcesList[dataGrid.SelectedIndex].version = tb.Text;
+                    case "DataFieldReference":
+                        this.ReferencesList[dataGrid.SelectedIndex].references = tb.Text;
                         break;
                 }
             }
@@ -227,12 +205,12 @@ namespace Timelapse.Standards
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
-            List<Sources> sourcesListForExport = new List<Sources>();
-            foreach (Sources taxonomic in this.SourcesList)
+            List<References> sourcesListForExport = new List<References>();
+            foreach (References taxonomic in this.ReferencesList)
             {
-                PropertyInfo[] properties = typeof(Sources).GetProperties();
+                PropertyInfo[] properties = typeof(References).GetProperties();
                 bool allNull = true;
-                Sources newTaxonomic = new Sources();
+                References newTaxonomic = new References();
                 foreach (PropertyInfo property in properties)
                 {
                     if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
@@ -256,18 +234,15 @@ namespace Timelapse.Standards
                 NullValueHandling = NullValueHandling.Ignore,
             };
             settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
-            this.JsonSourcesList = JsonConvert.SerializeObject(sourcesListForExport, settings);
+            this.JsonReferencesList = JsonConvert.SerializeObject(sourcesListForExport, settings);
         }
         #endregion
 
-        #region Sources class
+        #region References class
         // A contributor has these fields, as defined in the CamtrapDP specification
-        public class Sources
+        public class References
         {
-            public string title { get; set; }
-            public string email { get; set; } 
-            public string path { get; set; } 
-            public string version { get; set; }
+            public string references { get; set; }
         }
         #endregion
 
@@ -287,3 +262,4 @@ namespace Timelapse.Standards
         #endregion
     }
 }
+

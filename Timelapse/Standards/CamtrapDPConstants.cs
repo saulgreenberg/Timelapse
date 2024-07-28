@@ -128,22 +128,8 @@ namespace Timelapse.Standards
             public const string Homepage = "homepage";
 
             public const string Sources = "sources";
-            //public static class Sources
-            //{
-            //    public const string Title = "sources1_title";
-            //    public const string Email = "sources1_email";
-            //    public const string Path = "sources1_path";
-            //    public const string Version = "sources1_version";
-            //}
 
             public const string Licenses = "licenses";
-            //public static class Licenses
-            //{
-            //    public const string Name = "license1_name";
-            //    public const string Title = "license1_title";
-            //    public const string Path = "license1_path";
-            //    public const string Scope = "license1_scope";
-            //}
 
             public const string BibliographicCitation = "bibliographicCitation";
 
@@ -170,6 +156,10 @@ namespace Timelapse.Standards
             }
 
             public const string Taxonomic = "taxonomic";
+
+            public const string RelatedIdentifiers = "relatedIdentifiers";
+
+            public const string References = "references_";
         }
     }
 }

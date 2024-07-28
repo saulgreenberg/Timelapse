@@ -10,41 +10,41 @@ using Timelapse.Dialog;
 namespace Timelapse.Standards
 {
     /// <summary>
-    /// Interaction logic for CamtrapDPSOurces.xaml
+    /// Interaction logic for CamtrapDPRelatedIdentifiers.xaml
     /// </summary>
-    public partial class CamtrapDPSources : Window
+    public partial class CamtrapDPRelatedIdentifiers : Window
     {
-        #region Properties and Variables: JsonSourcesList, SourcesList, and Fields
-        public string JsonSourcesList { get; set; }
+        #region Properties and Variables: JsonRelatedIdentifiersList, Fields
+        // The initial and final tring of contributors, in json format
+        public string JsonRelatedIdentifiersList { get; set; }
 
-        // The main list of sources. It is
-        // - initially populated by the initial jsonSourcesList
+        // The main list of contributors. It is
+        // - initially populated by the initial jsonContributorList
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<Sources> SourcesList { get; set; }
+        public ObservableCollection<RelatedIdentifier> RelatedIdentifiersList { get; set; }
 
         // The fields used to construct the EditList
+        public Fields RelationTypeField { get; set; } =
+            new Fields(" Relation type*",
+            $"Description of the relationship between the resource (the package) and the related resource.{Environment.NewLine}" +
+            "• e.g., \" IsCitedBy\"");
 
-        public Fields TitleField { get; set; } =
-            new Fields("Title*",
-                $"Title of the source (e.g. document or organization name).{Environment.NewLine}" +
-                "• e.g., \"World Bank and OECD\"");
+        public Fields RelatedIdentifierField { get; set; } =
+            new Fields("Related identifier*",
+                $"Unique identifier of the related resource (e.g. a DOI or URL).{Environment.NewLine}" +
+                "• e.g., \"https://doi.org/10.1000/100\"");
 
-        public Fields EmailField { get; set; } =
-            new Fields("Email",
-                $"An email to the source.{Environment.NewLine}" +
-                 "• e.g., \"bloggs@agouti.com\"");
+        public Fields ResourceTypeGeneralField { get; set; } =
+            new Fields("Resource type - general",
+                $"General type of the related resource..{Environment.NewLine}" +
+                "• e.g., \"ConferencePaper\"");
 
-        public Fields PathField { get; set; } =
-            new Fields("Path",
-                $"A fully qualified http URL pointing to a relevant location online for this contributor.{Environment.NewLine}" +
-                 "• e.g., \"http://www.bloggs.com\"");
-
-        public Fields VersionField { get; set; } =
-            new Fields("Version",
-                $"Version of the source.{Environment.NewLine}" +
-                "• e.g., \"v3.21\"");
+        public Fields RelatedIdentifierTypeField { get; set; } =
+            new Fields("Related identifier type*",
+                $"Type of the RelatedIdentifier.{Environment.NewLine}" +
+                "• e.g., \"DOI\"");
         #endregion
 
         #region Private variables
@@ -54,26 +54,26 @@ namespace Timelapse.Standards
         #endregion 
 
         #region Constructor / Loaded
-        public CamtrapDPSources(Window owner, string jsonSourcesList)
+        public CamtrapDPRelatedIdentifiers(Window owner, string jsonRelatedIdentifiersList)
         {
             InitializeComponent();
             this.Owner = owner;
-            this.JsonSourcesList = jsonSourcesList;
+            this.JsonRelatedIdentifiersList = jsonRelatedIdentifiersList;
         }
 
         private void CamptrapDP_OnLoaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             DataContext = this;
-            if (string.IsNullOrWhiteSpace(JsonSourcesList))
+            if (string.IsNullOrWhiteSpace(JsonRelatedIdentifiersList))
             {
                 // Make sure its a valid json array
-                JsonSourcesList = "[]";
+                JsonRelatedIdentifiersList = "[]";
             }
 
             try
             {
-                this.SourcesList = new ObservableCollection<Sources>(JsonConvert.DeserializeObject<List<Sources>>(JsonSourcesList));
+                this.RelatedIdentifiersList = new ObservableCollection<RelatedIdentifier>(JsonConvert.DeserializeObject<List<RelatedIdentifier>>(JsonRelatedIdentifiersList));
             }
             catch (Exception)
             {
@@ -95,13 +95,13 @@ namespace Timelapse.Standards
         #endregion
 
         #region Callbacks and helpers: DataGrid
-        // Refresh the data grid to show the current itmes in the sources list
+        // Refresh the data grid to show the current itmes in the RelatedIdentifiers list
         private void DataGrid_Refresh()
         {
             this.DontUpdate = true;
             this.dataGrid.ItemsSource = null;
             this.dataGrid.Items.Clear();
-            this.dataGrid.ItemsSource = this.SourcesList;
+            this.dataGrid.ItemsSource = this.RelatedIdentifiersList;
             this.DontUpdate = false;
             dataGrid.SelectedIndex = this.dataGridSelectedRow < this.dataGrid.Items.Count ? this.dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -118,29 +118,30 @@ namespace Timelapse.Standards
             this.dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
             this.DontUpdate = true;
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.RelatedIdentifiersList.Count)
             {
                 this.DeleteRow.IsEnabled = true;
-                Sources sources = this.SourcesList[dataGrid.SelectedIndex];
-                this.DataFieldTitle.Text = sources.title;
-                this.DataFieldEmail.Text = sources.email;
-                this.DataFieldPath.Text = sources.path;
-                this.DataFieldVersion.Text = sources.version;
+                RelatedIdentifier relatedIdentifier = this.RelatedIdentifiersList[dataGrid.SelectedIndex];
+                this.DataFieldRelationType.Text = relatedIdentifier.relationType;
+                this.DataFieldRelatedIdentifier.Text = relatedIdentifier.relatedIdentifier;
+                this.DataFieldResourceTypeGeneral.Text = relatedIdentifier.resourceTypeGeneral;
+                this.DataFieldRelatedIdentifierType.Text = relatedIdentifier.relatedIdentifierType;
+
+                this.DontUpdate = false;
             }
             else
             {
                 this.DeleteRow.IsEnabled = false;
-
                 this.DontUpdate = true;
-                this.DataFieldTitle.Text = string.Empty;
-                this.DataFieldEmail.Text = string.Empty;
-                this.DataFieldPath.Text = string.Empty;
-                this.DataFieldVersion.Text = string.Empty;
+                this.DataFieldRelationType.Text = string.Empty;
+                this.DataFieldRelatedIdentifier.Text = string.Empty;
+                this.DataFieldResourceTypeGeneral.Text = string.Empty;
+                this.DataFieldRelatedIdentifierType.Text = string.Empty;
             }
             this.DontUpdate = false;
             if (this.SetFocus)
             {
-                this.DataFieldTitle.Focus();
+                this.DataFieldRelationType.Focus();
             }
         }
         #endregion
@@ -148,19 +149,18 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.SourcesList.Add(new Sources());
+            this.RelatedIdentifiersList.Add(new RelatedIdentifier());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DataFieldTitle.Focus();
+            this.DataFieldRelationType.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.RelatedIdentifiersList.Count)
             {
-                this.DontUpdate = true;
-                this.SourcesList.RemoveAt(dataGrid.SelectedIndex);
+                this.RelatedIdentifiersList.RemoveAt(dataGrid.SelectedIndex);
                 this.DontUpdate = false;
                 // When a row is deleted, select the last row if there is one.
                 dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
@@ -196,43 +196,57 @@ namespace Timelapse.Standards
             {
                 return;
             }
-            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
+            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.RelatedIdentifiersList.Count)
             {
                 switch (tb.Name)
                 {
-                    case "DataFieldTitle":
-                        this.SourcesList[dataGrid.SelectedIndex].title = tb.Text;
-                        break;
-                    case "DataFieldEmail":
-                        this.SourcesList[dataGrid.SelectedIndex].email = tb.Text;
-                        break;
-                    case "DataFieldPath":
-                        this.SourcesList[dataGrid.SelectedIndex].path = tb.Text;
-                        break;
-                    case "DataFieldVersion":
-                        this.SourcesList[dataGrid.SelectedIndex].version = tb.Text;
+                    case "DataFieldRelatedIdentifier":
+                        this.RelatedIdentifiersList[dataGrid.SelectedIndex].relatedIdentifier = tb.Text;
                         break;
                 }
             }
+
             this.SetFocus = false;
             DataGrid_Refresh();
             dataGrid.SelectedItem = this.dataGridSelectedRow;
             this.SetFocus = true;
+        }
+
+        private void DataField_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (this.DontUpdate)
+            {
+                return;
+            }
+            if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.RelatedIdentifiersList.Count && cb.SelectedValue != null)
+            {
+                switch (cb.Name)
+                {
+                    case "DataFieldRelationType":
+                        this.RelatedIdentifiersList[dataGrid.SelectedIndex].relationType = (string)((ComboBoxItem)cb.SelectedValue).Content;
+                        break;
+                case "DataFieldRelatedIdentifierType":
+                        this.RelatedIdentifiersList[dataGrid.SelectedIndex].relatedIdentifierType = (string)((ComboBoxItem)cb.SelectedValue).Content;
+                        break;
+                case "DataFieldResourceTypeGeneral":
+                        this.RelatedIdentifiersList[dataGrid.SelectedIndex].resourceTypeGeneral = (string)((ComboBoxItem)cb.SelectedValue).Content;
+                        break;
+                }
+            }
+            DataGrid_Refresh();
+            dataGrid.SelectedItem = this.dataGridSelectedRow;
         }
         #endregion
 
         #region Json Serializer
         private void JsonSerialize()
         {
-            // If an item is an empty string, set it to null (to make for a cleaner json)
-            // If a taxonomic object is all empty, skip it/
-            // Note that we could put in a check for required fields here...
-            List<Sources> sourcesListForExport = new List<Sources>();
-            foreach (Sources taxonomic in this.SourcesList)
+            List<RelatedIdentifier> relatedIdentifiersListForExport = new List<RelatedIdentifier>();
+            foreach (RelatedIdentifier taxonomic in this.RelatedIdentifiersList)
             {
-                PropertyInfo[] properties = typeof(Sources).GetProperties();
+                PropertyInfo[] properties = typeof(RelatedIdentifier).GetProperties();
                 bool allNull = true;
-                Sources newTaxonomic = new Sources();
+                RelatedIdentifier newTaxonomic = new RelatedIdentifier();
                 foreach (PropertyInfo property in properties)
                 {
                     if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
@@ -247,7 +261,7 @@ namespace Timelapse.Standards
                 }
                 if (!allNull)
                 {
-                    sourcesListForExport.Add(newTaxonomic);
+                    relatedIdentifiersListForExport.Add(newTaxonomic);
                 }
             }
 
@@ -256,22 +270,22 @@ namespace Timelapse.Standards
                 NullValueHandling = NullValueHandling.Ignore,
             };
             settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
-            this.JsonSourcesList = JsonConvert.SerializeObject(sourcesListForExport, settings);
+            this.JsonRelatedIdentifiersList = JsonConvert.SerializeObject(relatedIdentifiersListForExport, settings);
         }
         #endregion
 
-        #region Sources class
+        #region Class: RelatedIdentifier 
         // A contributor has these fields, as defined in the CamtrapDP specification
-        public class Sources
+        public class RelatedIdentifier
         {
-            public string title { get; set; }
-            public string email { get; set; } 
-            public string path { get; set; } 
-            public string version { get; set; }
+            public string relationType { get; set; } 
+            public string relatedIdentifier { get; set; } 
+            public string resourceTypeGeneral { get; set; } 
+            public string relatedIdentifierType { get; set; } 
         }
         #endregion
 
-        #region Fields class
+        #region Class: Fields
         //The EditFields
         public class Fields
         {
