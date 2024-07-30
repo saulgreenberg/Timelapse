@@ -2987,7 +2987,33 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
-        
+
+        #endregion
+
+        #region CamtrapDP Dialogs
+        public static bool? CamtrapDPDataPackageMissingRequiredFields(Window owner, List<string> missingMessages)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "CamtrapDP: Required fields are missing";
+            string missingMessage = string.Empty;
+            foreach (string str in missingMessages)
+            {
+                missingMessage += $"{Environment.NewLine}• {str}";
+            }
+
+            return new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Warning,
+                    What = $"CamtrapDP specifies various required fields, which don't appear to be filled in." +
+                           missingMessage,
+                    Result = $"Other systems that expect these required fields may complain or fail.", 
+                    Hint = $"This is just a warning, as your data was still exported.{Environment.NewLine}" +
+                           $"You may want to go back and fill in those missing fields.",
+                }
+            }.ShowDialog();
+        }
         #endregion
     }
 

@@ -24,7 +24,7 @@ namespace Timelapse.Standards
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<Licenses> LicensesList { get; set; }
+        public ObservableCollection<Standards.licenses> LicensesList { get; set; }
 
         // The fields used to construct the EditList
 
@@ -80,7 +80,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.LicensesList = new ObservableCollection<Licenses>(JsonConvert.DeserializeObject<List<Licenses>>(JsonLicensesList));
+                this.LicensesList = new ObservableCollection<Standards.licenses>(JsonConvert.DeserializeObject<List<Standards.licenses>>(JsonLicensesList));
             }
             catch (Exception)
             {
@@ -129,7 +129,7 @@ namespace Timelapse.Standards
             {
                 this.DeleteRow.IsEnabled = true;
                 this.DontUpdate = true;
-                Licenses licenses = this.LicensesList[dataGrid.SelectedIndex];
+                Standards.licenses licenses = this.LicensesList[dataGrid.SelectedIndex];
                 this.DataFieldName.Text = licenses.name;
                 this.DataFieldPath.Text = licenses.path;
                 this.DataFieldTitle.Text = licenses.title;
@@ -154,7 +154,7 @@ namespace Timelapse.Standards
         #region Button callbacks
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.LicensesList.Add(new Licenses());
+            this.LicensesList.Add(new Standards.licenses());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -247,18 +247,18 @@ namespace Timelapse.Standards
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
-            List<Licenses> taxonomicListForExport = new List<Licenses>();
-            foreach (Licenses taxonomic in this.LicensesList)
+            List<Standards.licenses> taxonomicListForExport = new List<Standards.licenses>();
+            foreach (Standards.licenses license in this.LicensesList)
             {
-                PropertyInfo[] properties = typeof(Licenses).GetProperties();
+                PropertyInfo[] properties = typeof(Standards.licenses).GetProperties();
                 bool allNull = true;
-                Licenses newLicensesList = new Licenses();
+                Standards.licenses newLicensesList = new Standards.licenses();
                 foreach (PropertyInfo property in properties)
                 {
-                    if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    if (property.GetValue(license) != null && !string.IsNullOrWhiteSpace(property.GetValue(license).ToString()))
                     {
                         allNull = false;
-                        property.SetValue(newLicensesList, property.GetValue(taxonomic));
+                        property.SetValue(newLicensesList, property.GetValue(license));
                     }
                     else 
                     {
@@ -280,17 +280,6 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region Licenses class
-        // A contributor has these fields, as defined in the CamtrapDP specification
-        public class Licenses
-        {
-            public string name { get; set; } 
-            public string path { get; set; } 
-            public string title { get; set; }
-            public string scope { get; set; }
-        }
-        #endregion
-
         #region Fields class
         //The EditFields
         public class Fields
@@ -305,6 +294,5 @@ namespace Timelapse.Standards
             }
         }
         #endregion
-
     }
 }

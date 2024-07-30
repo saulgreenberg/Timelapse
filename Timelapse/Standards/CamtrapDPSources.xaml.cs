@@ -22,7 +22,7 @@ namespace Timelapse.Standards
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<Sources> SourcesList { get; set; }
+        public ObservableCollection<Standards.sources> SourcesList { get; set; }
 
         // The fields used to construct the EditList
 
@@ -73,7 +73,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.SourcesList = new ObservableCollection<Sources>(JsonConvert.DeserializeObject<List<Sources>>(JsonSourcesList));
+                this.SourcesList = new ObservableCollection<Standards.sources>(JsonConvert.DeserializeObject<List<Standards.sources>>(JsonSourcesList));
             }
             catch (Exception)
             {
@@ -121,7 +121,7 @@ namespace Timelapse.Standards
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.SourcesList.Count)
             {
                 this.DeleteRow.IsEnabled = true;
-                Sources sources = this.SourcesList[dataGrid.SelectedIndex];
+                Standards.sources sources = this.SourcesList[dataGrid.SelectedIndex];
                 this.DataFieldTitle.Text = sources.title;
                 this.DataFieldEmail.Text = sources.email;
                 this.DataFieldPath.Text = sources.path;
@@ -148,7 +148,7 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.SourcesList.Add(new Sources());
+            this.SourcesList.Add(new Standards.sources());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -227,27 +227,27 @@ namespace Timelapse.Standards
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
-            List<Sources> sourcesListForExport = new List<Sources>();
-            foreach (Sources taxonomic in this.SourcesList)
+            List<Standards.sources> sourcesListForExport = new List<Standards.sources>();
+            foreach (Standards.sources source in this.SourcesList)
             {
-                PropertyInfo[] properties = typeof(Sources).GetProperties();
+                PropertyInfo[] properties = typeof(Standards.sources).GetProperties();
                 bool allNull = true;
-                Sources newTaxonomic = new Sources();
+                Standards.sources newSource = new Standards.sources();
                 foreach (PropertyInfo property in properties)
                 {
-                    if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    if (property.GetValue(source) != null && !string.IsNullOrWhiteSpace(property.GetValue(source).ToString()))
                     {
                         allNull = false;
-                        property.SetValue(newTaxonomic, property.GetValue(taxonomic));
+                        property.SetValue(newSource, property.GetValue(source));
                     }
                     else
                     {
-                        property.SetValue(newTaxonomic, null);
+                        property.SetValue(newSource, null);
                     }
                 }
                 if (!allNull)
                 {
-                    sourcesListForExport.Add(newTaxonomic);
+                    sourcesListForExport.Add(newSource);
                 }
             }
 
@@ -257,17 +257,6 @@ namespace Timelapse.Standards
             };
             settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
             this.JsonSourcesList = JsonConvert.SerializeObject(sourcesListForExport, settings);
-        }
-        #endregion
-
-        #region Sources class
-        // A contributor has these fields, as defined in the CamtrapDP specification
-        public class Sources
-        {
-            public string title { get; set; }
-            public string email { get; set; } 
-            public string path { get; set; } 
-            public string version { get; set; }
         }
         #endregion
 

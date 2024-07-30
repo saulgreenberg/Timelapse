@@ -40,10 +40,12 @@
 
         <DataGrid Grid.Row="2" Name="dataGrid"
                   Margin="10,0"
-                  DataContext="{Binding Source=ReferencesList}" AutoGenerateColumns="False" 
+                  ItemsSource="{Binding ReferencesList}" 
+                  AutoGenerateColumns="False" 
                   IsReadOnly ="True"
                   CanUserSortColumns="false"
                   CanUserReorderColumns="false"
+                  ColumnWidth="*" 
                   SelectionMode="Extended"  
                   SelectionUnit="FullRow" 
                   SelectionChanged="DataGrid_OnSelectionChanged">
@@ -61,8 +63,8 @@
                 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
                                  Color="LightBlue"/>
             </DataGrid.Resources>
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Reference" Binding="{Binding references}"/>
+            <DataGrid.Columns >
+                <DataGridTextColumn Header="Reference" Binding="{Binding}"/>
             </DataGrid.Columns>
             <GridViewHeaderRowPresenter AllowsColumnReorder="False"/>
             />

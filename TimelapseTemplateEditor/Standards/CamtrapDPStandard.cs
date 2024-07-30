@@ -33,7 +33,7 @@ namespace TimelapseTemplateEditor.Standards
 
             // Resource Deployment name * 
             new StandardsRow(
-                Control.FixedChoice, 1, "deployments", "Deployment name*", CamtrapDPConstants.DataPackage.Resources.Deployment_name,
+                Control.MultiLine, 1, "deployments", "Deployment name*", CamtrapDPConstants.DataPackage.Resources.Deployment_name,
                 $"Deployment identifier.{Environment.NewLine}" +
                 "• e.g., \"deployments\"",
                 StandardsBase.CreateChoiceList(false, new List<string> { "deployments", "media", "observations"}),
@@ -41,9 +41,9 @@ namespace TimelapseTemplateEditor.Standards
            
             // Resource - Deployment path *
             new StandardsRow(
-                Control.MultiLine, 1, "Deployment.csv", "Deployment .csv file path*", CamtrapDPConstants.DataPackage.Resources.Deployment_path,
-                $"Path or URL to the Deployment .csv data file.{Environment.NewLine}" +
-                "• e.g., \"Deployment.csv\"",
+                Control.MultiLine, 1, "deployments.csv", "Deployment .csv file path*", CamtrapDPConstants.DataPackage.Resources.Deployment_path,
+                $"Path or URL to the deployments .csv data file.{Environment.NewLine}" +
+                "• e.g., \"deployments.csv\"",
                 StandardsBase.CreateChoiceList(false, new List<string> { "deployments", "media", "observations"}),
                 false, false),
 
@@ -57,16 +57,16 @@ namespace TimelapseTemplateEditor.Standards
 
             // Resource Media name * 
             new StandardsRow(
-                Control.FixedChoice, 1, "media", "Media name*", CamtrapDPConstants.DataPackage.Resources.Media_name,
+                Control.MultiLine, 1, "media", "Media name*", CamtrapDPConstants.DataPackage.Resources.Media_name,
                 $"Media identifier.{Environment.NewLine}" +
                 "• e.g., \"media\"",
                null, false, false),
            
             // Resource - Media path *
             new StandardsRow(
-                Control.MultiLine, 1, "Media.csv", "Media .csv file path*", CamtrapDPConstants.DataPackage.Resources.Media_path,
+                Control.MultiLine, 1, "media.csv", "Media .csv file path*", CamtrapDPConstants.DataPackage.Resources.Media_path,
                 $"Path or URL to the Media .csv data file.{Environment.NewLine}" +
-                "• e.g., \"Media.csv\"",
+                "• e.g., \"media.csv\"",
                 null, false, false),
 
             // Resource - Media schema *
@@ -78,16 +78,16 @@ namespace TimelapseTemplateEditor.Standards
 
             // Resource Observations name * 
             new StandardsRow(
-                Control.FixedChoice, 1, "observations", "Observations name*", CamtrapDPConstants.DataPackage.Resources.Observations_name,
+                Control.MultiLine, 1, "observations", "Observations name*", CamtrapDPConstants.DataPackage.Resources.Observations_name,
                 $"Observations identifier.{Environment.NewLine}" +
                 "• e.g., \"media\"",
                 null, false, false),
            
             // Resource - Observations path *
             new StandardsRow(
-                Control.MultiLine, 1, "Observations.csv", "Observations .csv file path*", CamtrapDPConstants.DataPackage.Resources.Observations_path,
-                $"Path or URL to the Observations .csv data file.{Environment.NewLine}" +
-                "• e.g., \"Observations.csv\"",
+                Control.MultiLine, 1, "observations.csv", "Observations .csv file path*", CamtrapDPConstants.DataPackage.Resources.Observations_path,
+                $"Path or URL to the observations .csv data file.{Environment.NewLine}" +
+                "• e.g., \"observations.csv\"",
                 null, false, false),
 
             
@@ -285,7 +285,7 @@ namespace TimelapseTemplateEditor.Standards
 
             // CoordinatePrecision
             new StandardsRow(
-                Control.DecimalPositive, 1, "0.0", "Coordinate precision", CamtrapDPConstants.DataPackage.CoordinatePrecision,
+                Control.DecimalPositive, 1, "", "Coordinate precision", CamtrapDPConstants.DataPackage.CoordinatePrecision,
                 $"Least precise coordinate precision of the deployments.latitude and deployments.longitude (e.g. 0.01 for coordinates with a precision of 0.01 and 0.001 degree).{Environment.NewLine}" +
                 $"Especially relevant when coordinates have been rounded to protect sensitive species.{Environment.NewLine}" +
                 "• e.g., \"0.01\"",
@@ -294,7 +294,7 @@ namespace TimelapseTemplateEditor.Standards
             
             // Spatial
             new StandardsRow(
-                Control.MultiLine, 1, "0", "Spatial coverage", CamtrapDPConstants.DataPackage.Spatial,
+                Control.MultiLine, 1, "", "Spatial coverage", CamtrapDPConstants.DataPackage.Spatial,
                 $"Spatial coverage of the package, expressed as GeoJSON.{Environment.NewLine}" +
                 $"• e.g., Environment.NewLine{{{Environment.NewLine}    \"type\": \"Polygon\",{Environment.NewLine}" +
                 $"     \"bbox\": [{Environment.NewLine}       4.013,{Environment.NewLine}       50.699,{Environment.NewLine}       5.659,{Environment.NewLine}       51.496{Environment.NewLine}     ],{Environment.NewLine}" +
@@ -313,14 +313,14 @@ namespace TimelapseTemplateEditor.Standards
             #region Temporal OBJECT - a singleton
             // Temporal start*
             new StandardsRow(
-                Control.Date_, 1, "2024-01-01", "Temporal start", CamtrapDPConstants.DataPackage.Temporal.Start,
+                Control.Date_, 1, "", "Temporal start", CamtrapDPConstants.DataPackage.Temporal.Start,
                 $"Start date of the first deployment.{Environment.NewLine}" +
                 "• e.g., \"2024-01-12\"",
                 null, false, true),
 
             // Temporal end**
             new StandardsRow(
-                Control.Date_, 1, "2024-01-01", "Temporal end", CamtrapDPConstants.DataPackage.Temporal.End,
+                Control.Date_, 1, "", "Temporal end", CamtrapDPConstants.DataPackage.Temporal.End,
                 $"End date of the last (completed) deployment.{Environment.NewLine}" +
                 "• e.g., \"2024-01-12\"",
                 null, false, true),
@@ -540,8 +540,8 @@ namespace TimelapseTemplateEditor.Standards
 
             new StandardsRow(Control.FixedChoice, 0, "", "Capture Method",  CamtrapDPConstants.Media.CaptureMethod,
                 $"Method used to capture the media file.{Environment.NewLine}" +
-                "• e.g., \"activityDetection\"",
-                $"Optional.{Environment.NewLine}" +
+                "• e.g., \"activityDetection\"" +
+                $"Optional.{Environment.NewLine}",
                 StandardsBase.CreateChoiceList(true, new List<string> { "activityDetection", "timelapse" })),
 
 

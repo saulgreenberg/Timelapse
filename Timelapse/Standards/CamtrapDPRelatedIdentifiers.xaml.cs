@@ -23,7 +23,7 @@ namespace Timelapse.Standards
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<RelatedIdentifier> RelatedIdentifiersList { get; set; }
+        public ObservableCollection<Standards.relatedIdentifiers> RelatedIdentifiersList { get; set; }
 
         // The fields used to construct the EditList
         public Fields RelationTypeField { get; set; } =
@@ -73,7 +73,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.RelatedIdentifiersList = new ObservableCollection<RelatedIdentifier>(JsonConvert.DeserializeObject<List<RelatedIdentifier>>(JsonRelatedIdentifiersList));
+                this.RelatedIdentifiersList = new ObservableCollection<Standards.relatedIdentifiers>(JsonConvert.DeserializeObject<List<Standards.relatedIdentifiers>>(JsonRelatedIdentifiersList));
             }
             catch (Exception)
             {
@@ -121,7 +121,7 @@ namespace Timelapse.Standards
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.RelatedIdentifiersList.Count)
             {
                 this.DeleteRow.IsEnabled = true;
-                RelatedIdentifier relatedIdentifier = this.RelatedIdentifiersList[dataGrid.SelectedIndex];
+                Standards.relatedIdentifiers relatedIdentifier = this.RelatedIdentifiersList[dataGrid.SelectedIndex];
                 this.DataFieldRelationType.Text = relatedIdentifier.relationType;
                 this.DataFieldRelatedIdentifier.Text = relatedIdentifier.relatedIdentifier;
                 this.DataFieldResourceTypeGeneral.Text = relatedIdentifier.resourceTypeGeneral;
@@ -149,7 +149,7 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.RelatedIdentifiersList.Add(new RelatedIdentifier());
+            this.RelatedIdentifiersList.Add(new Standards.relatedIdentifiers());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -241,12 +241,12 @@ namespace Timelapse.Standards
         #region Json Serializer
         private void JsonSerialize()
         {
-            List<RelatedIdentifier> relatedIdentifiersListForExport = new List<RelatedIdentifier>();
-            foreach (RelatedIdentifier taxonomic in this.RelatedIdentifiersList)
+            List<Standards.relatedIdentifiers> relatedIdentifiersListForExport = new List<Standards.relatedIdentifiers>();
+            foreach (Standards.relatedIdentifiers taxonomic in this.RelatedIdentifiersList)
             {
-                PropertyInfo[] properties = typeof(RelatedIdentifier).GetProperties();
+                PropertyInfo[] properties = typeof(Standards.relatedIdentifiers).GetProperties();
                 bool allNull = true;
-                RelatedIdentifier newTaxonomic = new RelatedIdentifier();
+                Standards.relatedIdentifiers newTaxonomic = new Standards.relatedIdentifiers();
                 foreach (PropertyInfo property in properties)
                 {
                     if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
@@ -271,17 +271,6 @@ namespace Timelapse.Standards
             };
             settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
             this.JsonRelatedIdentifiersList = JsonConvert.SerializeObject(relatedIdentifiersListForExport, settings);
-        }
-        #endregion
-
-        #region Class: RelatedIdentifier 
-        // A contributor has these fields, as defined in the CamtrapDP specification
-        public class RelatedIdentifier
-        {
-            public string relationType { get; set; } 
-            public string relatedIdentifier { get; set; } 
-            public string resourceTypeGeneral { get; set; } 
-            public string relatedIdentifierType { get; set; } 
         }
         #endregion
 

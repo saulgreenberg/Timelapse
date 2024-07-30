@@ -457,11 +457,26 @@ namespace Timelapse
                 Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
             }
 
-            // If we are following the CamtrapDP Standard, write those files as well
+            // If we are following the CamtrapDP Standard, create a CamtrapDP folder (if needed) and write extra files in the 
+            // where those files convert the Timelapse data into the exact specs expected by CamtrapDP
             if (this.DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard())
             {
-                string dataPackageFileName = Path.Combine(selectedCSVFolderPath, "DataPackage.csv");
-                CamtrapDPConvertCSVFiles.ConvertCamtrapDPMetadataToCamtrapJson(dataPackageFileName, Path.Combine(selectedCSVFolderPath, "CamtrapDPExport"));
+                string camTrapDPFolder = Path.Combine(selectedCSVFolderPath, Constant.File.CamtrapDPExportFolder);
+                // Create a folder holding the exported files
+                if (false == Directory.Exists(camTrapDPFolder))
+                {
+                    Directory.CreateDirectory(camTrapDPFolder);
+                }
+                string dataPackageFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPDataPackageJson);
+                List<string> datapackageMessages = await CamtrapDPConvertCSVFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
+                if (null == datapackageMessages)
+                {
+                    Debug.Print("Couldn't write data package");
+                }
+                else if (datapackageMessages.Count > 0)
+                {
+                    Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
+                }
             }
         }
 

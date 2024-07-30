@@ -27,7 +27,7 @@ namespace Timelapse.Standards
         // - used to populate the dataGrid
         // - its contents is available as a json string when done.
         // - VernacualNames is itself a list of keyvalue pairs that has to be handled separately
-        public ObservableCollection<Taxonomic> TaxonomicList { get; set; }
+        public ObservableCollection<Standards.taxonomic> TaxonomicList { get; set; }
 
         // Fields are used to bind a field label and tooltip info in the xaml
         public Fields ScientificNameField { get; set; } =
@@ -119,7 +119,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.TaxonomicList = new ObservableCollection<Taxonomic>(JsonConvert.DeserializeObject<List<Taxonomic>>(JsonTaxonomicList));
+                this.TaxonomicList = new ObservableCollection<Standards.taxonomic>(JsonConvert.DeserializeObject<List<Standards.taxonomic>>(JsonTaxonomicList));
             }
             catch (Exception)
             {
@@ -166,7 +166,7 @@ namespace Timelapse.Standards
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
             {
                 this.DeleteRow.IsEnabled = true;
-                Taxonomic taxonomic = this.TaxonomicList[dataGrid.SelectedIndex];
+                Standards.taxonomic taxonomic = this.TaxonomicList[dataGrid.SelectedIndex];
                 this.DataFieldScientificName.Text = taxonomic.scientificName;
                 this.DataFieldTaxonID.Text = taxonomic.taxonID;
                 this.DataFieldTaxonRank.Text = taxonomic.taxonRank;
@@ -201,7 +201,7 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.TaxonomicList.Add(new Taxonomic());
+            this.TaxonomicList.Add(new Standards.taxonomic());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -308,12 +308,12 @@ namespace Timelapse.Standards
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
-            List<Taxonomic> taxonomicListForExport = new List<Taxonomic>();
-            foreach (Taxonomic taxonomic in this.TaxonomicList)
+            List<Standards.taxonomic> taxonomicListForExport = new List<Standards.taxonomic>();
+            foreach (Standards.taxonomic taxonomic in this.TaxonomicList)
             {
-                PropertyInfo[] properties = typeof(Taxonomic).GetProperties();
+                PropertyInfo[] properties = typeof(Standards.taxonomic).GetProperties();
                 bool allNull = true;
-                Taxonomic newTaxonomic = new Taxonomic();
+                Standards.taxonomic newTaxonomic = new Standards.taxonomic();
                 foreach (PropertyInfo property in properties)
                 {
                     // Ignore vernacularCounts, as that is just used for display purposes internally
@@ -339,50 +339,6 @@ namespace Timelapse.Standards
             };
             settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
             this.JsonTaxonomicList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
-        }
-        #endregion
-
-        #region Class: Taxonomic 
-        // A Taxonomic has these fields, as defined in the CamtrapDP specification.
-        // VernacularNames is a Dictionary, which will hold key/value pairs eventually as language : vernacular (common) name pairs
-        public class Taxonomic
-        {
-            public string scientificName { get; set; }
-            public string taxonID { get; set; }
-            public string taxonRank { get; set; }
-            public string kingdom { get; set; }
-            public string phylum { get; set; }
-            public string class_ { get; set; }
-            public string order { get; set; }
-            public string family { get; set; }
-            public string genus { get; set; }
-            public Dictionary<string, string> vernacularNames { get; set; }
-
-            // 
-            // Generates a string only used for feedback in the datagrid, where it is bound to the VernacularNames cell in the data grid.
-            [JsonIgnore]
-            public string vernacularCount => vernacularNames == null ? "0" : $"{vernacularNames.Count.ToString()} - {TruncatedVernacularNames()}";
-
-            // Generate a possibly truncated string representation of the vernacular name list for display in the data grid.
-            private string TruncatedVernacularNames()
-            {
-                const int max = 30;
-                bool isStringTruncated = false;
-                string truncatedString = string.Empty;
-                foreach (KeyValuePair<string, string> vName in vernacularNames)
-                {
-                    truncatedString += $"{vName.Key}:{vName.Value},";
-                    if (truncatedString.Length > max)
-                    {
-                        isStringTruncated = true;
-                        break;
-                    }
-                }
-                truncatedString = isStringTruncated
-                    ? $"{truncatedString.Substring(0, Math.Min(truncatedString.Length, max)).TrimEnd(',')}\u2026"
-                    : truncatedString.TrimEnd(',', ' ');
-                return truncatedString;
-            }
         }
         #endregion
 

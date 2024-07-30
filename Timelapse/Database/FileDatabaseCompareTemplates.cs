@@ -415,6 +415,12 @@ namespace Timelapse.Database
 
                    (ddbControlType == Constant.Control.MultiLine && tdbControlType == Constant.Control.Note) || // MultiLine -> Note
 
+                   (ddbControlType == Constant.Control.FixedChoice && tdbControlType == Constant.Control.Note) || // FixedChoice -> Note
+                   (ddbControlType == Constant.Control.FixedChoice && tdbControlType == Constant.Control.MultiLine) || // FixedChoice -> Multiline
+
+                   (ddbControlType == Constant.Control.MultiChoice && tdbControlType == Constant.Control.Note) || // MultiChoice -> Note
+                   (ddbControlType == Constant.Control.MultiChoice && tdbControlType == Constant.Control.MultiLine) || // MultiChoice -> Multiline
+
                    (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.IntegerPositive) || // Count -> IntPos  
                    (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.IntegerAny) || // Count -> IntAny  
                    (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.DecimalPositive) || // Count -> DecPos  

@@ -381,6 +381,8 @@ namespace Timelapse.Constant
         public const string BackupFolder = "Backups"; // Sub-folder that will contain database and csv file backups  
         public const string BackupCheckpointIndicator = ".Checkpoint-"; // string added to the backup file path for special backup files
 
+        public const string CamtrapDPExportFolder = "CamtrapDP";
+        public const string CamtrapDPDataPackageJson = "datapackage.json";
         public const string CsvFileExtension = ".csv";
         public const string DeletedFilesFolder = "DeletedFiles"; // Sub-folder that will contain backups of deleted images 
         public const string DefaultFileDatabaseFileName = DefaultFileDatabaseFileNameRoot + FileDatabaseFileExtension;

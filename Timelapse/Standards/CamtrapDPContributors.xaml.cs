@@ -25,7 +25,7 @@ namespace Timelapse.Standards
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<Contributors> ContributorsList { get; set; }
+        public ObservableCollection<Timelapse.Standards.contributors> ContributorsList { get; set; }
 
         // The fields used to construct the EditList
         public Fields TitleField { get; set; } =
@@ -80,7 +80,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.ContributorsList = new ObservableCollection<Contributors>(JsonConvert.DeserializeObject<List<Contributors>>(JsonContributorsList));
+                this.ContributorsList = new ObservableCollection<Timelapse.Standards.contributors>(JsonConvert.DeserializeObject<List<Timelapse.Standards.contributors>>(JsonContributorsList));
             }
             catch (Exception)
             {
@@ -128,12 +128,12 @@ namespace Timelapse.Standards
             if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ContributorsList.Count)
             {
                 this.DeleteRow.IsEnabled = true;
-                Contributors contributor = this.ContributorsList[dataGrid.SelectedIndex];
-                this.DataFieldTitle.Text = contributor.title;
-                this.DataFieldEmail.Text = contributor.email;
+                Timelapse.Standards.contributors contributor = this.ContributorsList[dataGrid.SelectedIndex];
+                this.DataFieldTitle.Text = contributor.title ;
+                this.DataFieldEmail.Text = contributor.email ;
                 this.DataFieldPath.Text = contributor.path;
-                this.DataFieldRole.Text = contributor.role;
-                this.DataFieldOrganization.Text = contributor.organization;
+                this.DataFieldRole.Text = contributor.role ;
+                this.DataFieldOrganization.Text = contributor.organization ;
                 this.DontUpdate = false;
             }
             else
@@ -157,7 +157,7 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.ContributorsList.Add(new Contributors());
+            this.ContributorsList.Add(new Timelapse.Standards.contributors());
             dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
@@ -247,18 +247,18 @@ namespace Timelapse.Standards
         #region Json Serializer
         private void JsonSerialize()
         {
-            List<Contributors>contributorsListForExport = new List<Contributors>();
-            foreach (Contributors taxonomic in this.ContributorsList)
+            List<Timelapse.Standards.contributors> contributorsListForExport = new List<Timelapse.Standards.contributors>();
+            foreach (Timelapse.Standards.contributors contributor in this.ContributorsList)
             {
-                PropertyInfo[] properties = typeof(Contributors).GetProperties();
+                PropertyInfo[] properties = typeof(Timelapse.Standards.contributors).GetProperties();
                 bool allNull = true;
-                Contributors newTaxonomic = new Contributors();
+                Timelapse.Standards.contributors newTaxonomic = new Timelapse.Standards.contributors();
                 foreach (PropertyInfo property in properties)
                 {
-                    if (property.GetValue(taxonomic) != null && !string.IsNullOrWhiteSpace(property.GetValue(taxonomic).ToString()))
+                    if (property.GetValue(contributor) != null && !string.IsNullOrWhiteSpace(property.GetValue(contributor).ToString()))
                     {
                         allNull = false;
-                        property.SetValue(newTaxonomic, property.GetValue(taxonomic));
+                        property.SetValue(newTaxonomic, property.GetValue(contributor));
                     }
                     else 
                     {
@@ -280,18 +280,6 @@ namespace Timelapse.Standards
         }
         #endregion
 
-        #region Class: Contributors 
-        // A contributor has these fields, as defined in the CamtrapDP specification
-        public class Contributors
-        {
-            public string title { get; set; } = string.Empty;
-            public string email { get; set; } = string.Empty;
-            public string path { get; set; } = string.Empty;
-            public string role { get; set; } = string.Empty;
-            public string organization { get; set; } = string.Empty;
-        }
-        #endregion
-
         #region Class: Fields
         //The EditFields
         public class Fields
@@ -306,6 +294,5 @@ namespace Timelapse.Standards
             }
         }
         #endregion
-
     }
 }
