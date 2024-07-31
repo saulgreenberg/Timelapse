@@ -5,9 +5,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Timelapse.Controls;
 using Timelapse.ControlsMetadata;
 using Timelapse.Database;
@@ -129,7 +131,7 @@ namespace Timelapse.Standards
                                 case DataPackage.Created:
                                     datapackage.created = DateTime.TryParseExact(row[dataLabelAndType.Key], CamtrapDPConstants.DateTimeFormats.TimelapseFullDateTimeFormat, CultureInfo.InvariantCulture,
                                                            DateTimeStyles.None, out DateTime dateTime)
-                                                            ? dateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapFormat)
+                                                            ? dateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat)
                                                             : row[dataLabelAndType.Key];
                                     break;
                                 case DataPackage.Title:
@@ -145,7 +147,7 @@ namespace Timelapse.Standards
                                     datapackage.version = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
                                     break;
                                 case DataPackage.Keywords:
-                                    datapackage.keywords = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
+                                    datapackage.keywords = CamtrapDPConvertCSVFiles.CommaSeparatedStringToList(row[dataLabelAndType.Key]);
                                     break;
                                 case DataPackage.Image:
                                     datapackage.image = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
@@ -188,13 +190,13 @@ namespace Timelapse.Standards
                                     datapackage.project.samplingDesign = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
                                     break;
                                 case DataPackage.Project.CaptureMethod:
-                                    datapackage.project.captureMethod = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
+                                    datapackage.project.captureMethod = CamtrapDPConvertCSVFiles.CommaSeparatedStringToList(row[dataLabelAndType.Key]);
                                     break;
                                 case DataPackage.Project.IndividualAnimals:
                                     datapackage.project.individualAnimals = Boolean.TryParse(row[dataLabelAndType.Key], out bool boolValue) && boolValue;
                                     break;
                                 case DataPackage.Project.ObservationLevel:
-                                    datapackage.project.observationLevel = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
+                                    datapackage.project.observationLevel = CamtrapDPConvertCSVFiles.CommaSeparatedStringToList(row[dataLabelAndType.Key]);
                                     break;
                                 #endregion
 
@@ -219,20 +221,24 @@ namespace Timelapse.Standards
                                     break;
 
                                 case DataPackage.Spatial: // NOT REALLY DONE
-                                    datapackage.spatial = row[dataLabelAndType.Key];
+                                    string jsonString = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) || row[dataLabelAndType.Key] == "[]"
+                                       ? "{\"type\": \"FeatureCollection\", \"features\": [] }"
+                                       : row[dataLabelAndType.Key];
+                                    JObject jobject = JObject.Parse(jsonString);
+                                    datapackage.spatial = jobject;
                                     break;
 
                                 #region Temporal
                                 case DataPackage.Temporal.Start: // Convert to CAMTRAPDP DATE Format
                                     datapackage.temporal.start = datapackage.temporal.start = DateTime.TryParseExact(row[dataLabelAndType.Key], CamtrapDPConstants.DateTimeFormats.TimelapseDateOnlyFormat, CultureInfo.InvariantCulture,
                                         DateTimeStyles.None, out DateTime dateTimeStart)
-                                        ? dateTimeStart.ToString(CamtrapDPConstants.DateTimeFormats.TimelapseDateOnlyFormat)
+                                        ? dateTimeStart.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateOnlyFormat)
                                         : row[dataLabelAndType.Key];
                                     break;
                                 case DataPackage.Temporal.End: // Convert to CAMTRAPDP DATE Format
-                                    datapackage.temporal.end = datapackage.temporal.start = DateTime.TryParseExact(row[dataLabelAndType.Key], CamtrapDPConstants.DateTimeFormats.TimelapseDateOnlyFormat, CultureInfo.InvariantCulture,
+                                    datapackage.temporal.end = DateTime.TryParseExact(row[dataLabelAndType.Key], CamtrapDPConstants.DateTimeFormats.TimelapseDateOnlyFormat, CultureInfo.InvariantCulture,
                                         DateTimeStyles.None, out DateTime dateTimeEnd)
-                                        ? dateTimeEnd.ToString(CamtrapDPConstants.DateTimeFormats.TimelapseDateOnlyFormat)
+                                        ? dateTimeEnd.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateOnlyFormat)
                                         : row[dataLabelAndType.Key];
                                     break;
                                 #endregion
@@ -267,7 +273,7 @@ namespace Timelapse.Standards
                             }
                         }
                     }
-                    
+
                     //
                     // Generate a list of messages indicating which required fields are missing.
                     //
@@ -320,17 +326,17 @@ namespace Timelapse.Standards
                     {
                         missingProjectFields += ", sampling design";
                     }
-                    if (datapackage.project.captureMethod == null)
+                    if (datapackage.project.captureMethod == null || datapackage.project.captureMethod.Count == 0)
                     {
                         missingProjectFields += ", capture method";
                     }
-                    #pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
+                    #pragma warning disable CS0472 // A value of bool is never equal to 'null'
                     if (datapackage.project.individualAnimals == null)
-                    #pragma warning restore CS0472 
+                    #pragma warning restore CS0472
                     {
                         missingProjectFields += ", individual animals";
                     }
-                    if (datapackage.project.observationLevel == null)
+                    if (datapackage.project.observationLevel == null || datapackage.project.observationLevel.Count == 0)
                     {
                         missingProjectFields += ", observation level";
                     }
@@ -340,16 +346,11 @@ namespace Timelapse.Standards
                         missingDataPackageFields.Add("Project: required fields include " + missingProjectFields.Trim(' ', ','));
                     }
 
-                    if (string.IsNullOrWhiteSpace(datapackage.spatial))
+                    // Spatial should not normall be null as by default we create an empty spatia item
+                    if (null == datapackage.spatial)
                     {
                         missingDataPackageFields.Add("Spatial: is required, but not yet implemented in Timelapse.");
                     }
-                    //else
-                    //{
-                    //foreach (Standards.spatial spatial in datapackage.spatial)
-                    //{
-                    //}
-                    //}
 
                     if (datapackage.temporal.start == null || datapackage.temporal.end == null)
                     {
@@ -399,13 +400,25 @@ namespace Timelapse.Standards
         }
         #endregion
 
+        #region helpers
 
-        #region Public Static Method - Import from CSV (async)
+        // Convert a comma-separated string into a list of non-empty trimmed strings
+        private static List<string> CommaSeparatedStringToList(string commaSeparatedList)
+        {
+            if (string.IsNullOrWhiteSpace(commaSeparatedList) || commaSeparatedList == "[]")
+            {
+                return null;
+            }
+
+            return commaSeparatedList.Split(',').Select(s => s.Trim()).Select(s => Regex.Replace(s, @"\s+", " ")).Where(s => !string.IsNullOrEmpty(s)).ToList();
+        }
+        #endregion
+
+
+        #region TO DELETE Public Static Method - Import from CSV (async)
         // Try importing a CSV file, checking its headers and values against the template's DataLabels and data types.
         //public static bool ConvertCamtrapDPMetadataToCamtrapJson(string timelapseDataPackagePath, string camtrapDPExportFolder)
         //{
-
-
         //    MetadataCamtrapDP camtrapDp = new MetadataCamtrapDP();
         //    //        int processedFilesCount = 0;
         //    //        int totalFilesProcessed = 0;
@@ -486,7 +499,7 @@ namespace Timelapse.Standards
         //                    // Try to convert string from Timelapse dateTime format to the CamtrapDP dateTime format
         //                    camtrapDp.created = DateTime.TryParseExact(cell.Value, CamtrapDPConstants.DateTimeFormats.TimelapseFullDateTimeFormat, CultureInfo.InvariantCulture,
         //                        DateTimeStyles.None, out DateTime dateTime)
-        //                        ? dateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapFormat)
+        //                        ? dateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat)
         //                        : cell.Value;
         //                    break;
         //                case CamtrapDPConstants.DataPackage.Title:
@@ -608,151 +621,5 @@ namespace Timelapse.Standards
         //    return true;
         //}
         #endregion
-
-       // public class MetadataCamtrapDP
-       // {
-       //     // Currently hard-wired to 3 Resources representing the deployment, media, and observations
-       //     public List<resources> resources = new List<resources>()
-       //{
-       //    new resources(), // Deployment
-       //    new resources(), // Media
-       //    new resources(), // Observations
-       //};
-
-       //     public string profile;
-       //     public string name;
-       //     public string id;
-       //     public string created;
-       //     public string title;
-
-       //     public List<contributors> contributors;
-
-       //     public string description;
-       //     public string version;
-       //     public string keywords;
-       //     public string image;
-       //     public string homepage;
-
-       //     public List<sources> sources = new List<sources>()
-       // {
-       //     new sources(),
-       // };
-       //     public List<licenses> licenses = new List<licenses>()
-       // {
-       //     new licenses(),
-       // };
-
-       //     public string bibliographicCitation;
-       //     public project project = new project();
-       //     public double coordinatePrecision;
-       //     // NEEDS TO BE A GEOJSON - NOT SURE WHAT THE BEST WAY TO DO THIS. CURRENTLY, ENTERED AS A STRING BUT COULD BLOW UP IF FORMAT IS BAD
-       //     // FIND OUT WHAT PART OF THE GEOJSON SPEC IT USES.. COULD MAKE THIS INTO AN OBJECT ETC
-       //     public string spatial;
-       //     public temporal temporal = new temporal();
-
-       //     //TAXONOMIC: NOT HANDLED FOR NOW.
-       //     // Only allow one taxonomic for now.But for this to be useful, we need a full(long) list.
-       //     public List<taxonomic> taxonomic = new List<taxonomic>()
-       // {
-       //     new taxonomic(),
-       // };
-
-       //     //RelatedIdentifiers: NOT HANDLED FOR NOW.
-       //     // Only allow one taxonomic for now.But for this to be useful, we need a full(long) list.
-       //     public List<relatedIdentifiers> relatedIdentifiers = new List<relatedIdentifiers>()
-       // {
-       //     new relatedIdentifiers(),
-       // };
-
-       //     public List<string> references_ = new List<string>();
-       // }
-
-       // public class resources
-       // {
-       //     public string name;
-       //     public string path;
-       //     public string profile;
-       //     public string schema;
-       // }
-
-       // public class contributors
-       // {
-       //     public string title;
-       //     public string email;
-       //     public string path;
-       //     public string role;
-       //     public string organization;
-       // }
-
-       // public class sources
-       // {
-       //     public string title;
-       //     public string email;
-       //     public string path;
-       //     public string version;
-       // }
-
-       // public class licenses
-       // {
-       //     public string name;
-       //     public string path;
-       //     public string title;
-       //     public string scope;
-       // }
-
-       // public class project
-       // {
-       //     public string id;
-       //     public string title;
-       //     public string acronym;
-       //     public string description;
-       //     public string samplingDesign;
-       //     public string path;
-       //     public string captureMethod;
-       //     public bool individualAnimals;
-       //     public string observationLevel;
-       // }
-
-       // // NOT USED FOR NOW, BUT WE DO WANT TO IMPLEMENT THIS PROPERLY
-       // //public class spatial
-       // //{
-       // //    public string type;
-       // //    public Point[] bbox;
-       // //    public Point[] coordinates;
-       // //}
-
-       // public class temporal
-       // {
-       //     public string start;
-       //     public string end;
-       // }
-
-       // public class taxonomic
-       // {
-       //     public string scientificName { get; set; } = null;
-       //     public string taxonID { get; set; } = null;
-       //     public string taxonRank { get; set; } = null;
-       //     public string kingdom { get; set; } = null;
-       //     public string phylum { get; set; } = null;
-       //     public string class_ { get; set; } = null;
-       //     public string order { get; set; } = null;
-       //     public string family { get; set; } = null;
-       //     public string genus { get; set; } = null;
-       //     public Dictionary<string, string> vernacularNames { get; set; } = null;
-       // }
-
-       // public class VernacularItem
-       // {
-       //     public string lang { get; set; }
-       //     public string vernacularName { get; set; }
-       // }
-
-       // public class relatedIdentifiers
-       // {
-       //     public string relationType = string.Empty;
-       //     public string relationIdentifier = string.Empty;
-       //     public string resourceTypeGeneral = string.Empty;
-       //     public string relatedIdentifierType = string.Empty;
-       // }
     }
 }

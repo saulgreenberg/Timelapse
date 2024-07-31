@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace Timelapse.Standards
@@ -22,7 +24,8 @@ namespace Timelapse.Standards
 
         public string description;
         public string version;
-        public string keywords;
+
+        public List<string> keywords;
         public string image;
         public string homepage;
 
@@ -41,7 +44,7 @@ namespace Timelapse.Standards
 
         // NEEDS TO BE A GEOJSON - NOT SURE WHAT THE BEST WAY TO DO THIS. CURRENTLY, ENTERED AS A STRING BUT COULD BLOW UP IF FORMAT IS BAD
         // FIND OUT WHAT PART OF THE GEOJSON SPEC IT USES.. COULD MAKE THIS INTO AN OBJECT ETC
-        public string spatial;
+        public JObject spatial;
 
         public temporal temporal = new temporal();
 
@@ -102,9 +105,12 @@ namespace Timelapse.Standards
         public string description { get; set; }
         public string samplingDesign { get; set; }
         public string path { get; set; }
-        public string captureMethod { get; set; }
+        
+        //public string captureMethodAsString { get; set; }
+        public List<string> captureMethod { get; set; }
         public bool individualAnimals { get; set; }
-        public string observationLevel { get; set; }
+        //public string observationLevelAsString { get; set; }
+        public List<string> observationLevel { get; set; }
     }
 
     // NOT USED FOR NOW, BUT WE DO WANT TO IMPLEMENT THIS PROPERLY
@@ -168,4 +174,6 @@ namespace Timelapse.Standards
         public string resourceTypeGeneral { get; set; }
         public string relatedIdentifierType { get; set; }
     }
+
+
 }

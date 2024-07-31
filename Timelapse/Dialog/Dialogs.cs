@@ -3014,6 +3014,31 @@ namespace Timelapse.Dialog
                 }
             }.ShowDialog();
         }
+
+        public static bool? CamtrapDPGeoJsonIO(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Generating spatial coverage with GeoJson.IO";
+            
+            return new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"Geojson.io is a browser-based application that can generate spatial coverage data.{Environment.NewLine}" +
+                           $"1. Use it to outline the geographic area(s) of your project.{Environment.NewLine}" +
+                           $"2. As you do so, it generates text (as GeoJson data) describing the area.{Environment.NewLine}" +
+                           $"3. Copy/paste the entire geojson text into the Timelapse spatial field.{Environment.NewLine}{Environment.NewLine}" +
+                           $"You can also view your existing geojson data.{Environment.NewLine}" +
+                           $"1.Copy the entire spatial coverage field's contents{Environment.NewLine}" +
+                           $"2. Paste it into the geojson.io's JSON tab",
+
+                    Hint = $"Geojson.IO has a help button, but its instructions are minimal.{Environment.NewLine}" +
+                           $"Search for the various online tutorials on geojson.io.{Environment.NewLine}{Environment.NewLine}" +
+                           $"Alternately, if you have a GIS person, ask them for the GeoJson data and enter it as above.{Environment.NewLine}"
+                }
+            }.ShowDialog();
+        }
         #endregion
     }
 

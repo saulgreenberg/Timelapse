@@ -11,6 +11,7 @@ using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
@@ -816,7 +817,7 @@ namespace Timelapse.ControlsMetadata
                     {
                         Button button = new Button()
                         {
-                            Content = "Click to edit a list of taxonomic definitions",
+                            Content = "Click to edit a list of Taxonomic definitions",
                             Visibility = Visibility.Visible,
                             Height = 24,
                             Padding = new Thickness(15, 0, 15, 0),
@@ -831,7 +832,7 @@ namespace Timelapse.ControlsMetadata
                     {
                         Button button = new Button()
                         {
-                            Content = "Click to edit a list of related identifiers",
+                            Content = "Click to edit a list of Related identifiers",
                             Visibility = Visibility.Visible,
                             Height = 24,
                             Padding = new Thickness(15, 0, 15, 0),
@@ -846,7 +847,7 @@ namespace Timelapse.ControlsMetadata
                     {
                         Button button = new Button()
                         {
-                            Content = "Click to edit a list of references",
+                            Content = "Click to edit a list of References",
                             Visibility = Visibility.Visible,
                             Height = 24,
                             Padding = new Thickness(15, 0, 15, 0),
@@ -855,6 +856,27 @@ namespace Timelapse.ControlsMetadata
                         button.Click += References_Click;
                         referencesControl.GetContentControl.Visibility = Visibility.Collapsed;
                         referencesControl.Container.Children.Insert(1, button);
+                    }
+
+                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
+                    {
+                        Button button = new Button()
+                        {
+                            Content = "Use GeoJson.IO",
+                            ToolTip = $"Opens a web browser on http://Geojson.IO{Environment.NewLine}" +
+                                      $"Use it to outline the geographic area(s) of your project.{Environment.NewLine}" +
+                                      "Then copy/paste the generated geojson into the Timelapse spatial field.",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Width  = Double.NaN,
+                            Margin=new Thickness(5, 0, 0, 0),
+                            Padding = new Thickness(5, 0, 5, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+
+                        button.Click += Spatial_Click;
+                        spatialControl.GetContentControl.Visibility = Visibility.Visible;
+                        spatialControl.Container.Children.Insert(2, button);
                     }
                 }
             }
@@ -963,6 +985,12 @@ namespace Timelapse.ControlsMetadata
                     }
                 }
             }
+        }
+
+        public void Spatial_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            Dialogs.CamtrapDPGeoJsonIO(GlobalReferences.MainWindow);
+            Util.ProcessExecution.TryProcessStart(new Uri("https://GeoJson.IO"));
         }
 
         // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements

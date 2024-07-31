@@ -61,8 +61,9 @@
                 <!-- #endregion -->
 
                 <!-- #region Type Column -->
-                <DataGridTemplateColumn MinWidth="110" MaxWidth="110" Header="Type" 
-                                       Width="110" CanUserSort="False" >
+                <DataGridTemplateColumn MinWidth="110" MaxWidth="110" Width="110"
+                                        Header="Type" 
+                                        CanUserSort="False" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="dataTables:ControlRow">
                             <ComboBox 
@@ -163,7 +164,8 @@
                 <!-- #endregion -->
 
                 <!-- #region Default Value Column -->
-                <DataGridTextColumn MinWidth="100"  Header="Default Value" Binding="{Binding Path=DefaultValue, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                <DataGridTextColumn MinWidth="100" Width="100" 
+                    Header="Default Value" Binding="{Binding Path=DefaultValue, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="ToolTip" Value="{StaticResource DefaultValueToolTip}"/>
@@ -212,14 +214,15 @@
 
                 <!-- #region Tooltip Column -->
                 <!-- The Tooltip is presented within a popup MultiLineTextEditor, which allows for long descriptions to be created.-->
-                <DataGridTemplateColumn MinWidth="100"  Header="Tooltip" 
-                                        Width="*" CanUserSort="False" >
+                <DataGridTemplateColumn MinWidth="50" Width="*" 
+                                        Header="Tooltip" 
+                                        CanUserSort="False" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="dataTables:ControlRow">
                             <xctk:MultiLineTextEditor 
                                   Content="{Binding Path=Tooltip, Converter={StaticResource CellTextBlockConverter}}" 
                                   Text="{Binding Path=Tooltip, Converter={StaticResource CellTextBlockConverter}}" 
-                                  MinWidth="50"
+                                  MinWidth="500"
                                   HorizontalContentAlignment="Left"
                                   Margin="0,0,0,0" 
                                   Visibility="Visible"
@@ -253,7 +256,8 @@
                 <!-- #endregion -->
 
                 <!--#region List Column -->
-                <DataGridTemplateColumn MinWidth="70" MaxWidth="70" Header="List" Width="70"  CanUserSort="False" IsReadOnly="True" >
+                <DataGridTemplateColumn MinWidth="70" MaxWidth="70" Width="70"
+                                        Header="List" CanUserSort="False" IsReadOnly="True" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="dataTables:ControlRow">
                             <StackPanel>
@@ -327,7 +331,8 @@
                 <!--#endregion -->
 
                 <!--#region ExportToCSV Column -->
-                <DataGridTemplateColumn MinWidth="48" Width="48" MaxWidth="48" Header="Export" SortMemberPath="Include" CanUserSort="False">
+                <DataGridTemplateColumn MinWidth="48" Width="48" MaxWidth="48" 
+                                        Header="Export" SortMemberPath="Include" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="{x:Type dataTables:ControlRow}">
                             <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=ExportToCSV, UpdateSourceTrigger=PropertyChanged}" />

@@ -19,9 +19,18 @@ namespace Timelapse.Standards
 
         public class DateTimeFormats
         {
-            public const string TimelapseFullDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-            public const string TimelapseDateOnlyFormat = "yyyy-MM-dd";
-            public const string CamtrapFormat = "yyyy-MM-ddTHH:mm:ssZ";
+            public static readonly string[] TimelapseFullDateTimeFormat =
+            {
+                "dd-MMM-yyyy HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss"
+            };
+            public static readonly string[] TimelapseDateOnlyFormat =
+            {
+                "dd-MMM-yyyy",
+                "yyyy-MM-dd"
+            };
+            public const string CamtrapDateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ";
+            public const string CamtrapDateOnlyFormat = "yyyy-MM-dd";
         }
 
         public class Deployment
@@ -143,6 +152,7 @@ namespace Timelapse.Standards
                 public const string Path = "project_path";
                 public const string CaptureMethod = "captureMethod";
                 public const string IndividualAnimals = "individualAnimals";
+                public const string ObservationLevelAsString = "observationLevel";
                 public const string ObservationLevel = "observationLevel";
             }
 

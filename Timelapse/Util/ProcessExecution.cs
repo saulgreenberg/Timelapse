@@ -36,7 +36,7 @@ namespace Timelapse.Util
             }
         }
 
-        /// Try to open the uri with whatever default program is used to openn that file
+        /// Try to open the uri with whatever default program is used to open that file
         /// /// <param name="uri">should contain a valid Uri</param>
         /// <returns>true/false if the process started or not</returns>
         public static bool TryProcessStart(Uri uri)

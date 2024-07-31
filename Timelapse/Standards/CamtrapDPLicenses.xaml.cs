@@ -226,19 +226,20 @@ namespace Timelapse.Standards
             this.SetFocus = true;
         }
 
-        private void DataFieldScope_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
+        private void DataFieldScope_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (this.DontUpdate)
             {
                 return;
             }
-            if (sender is CheckComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count && cb.SelectedValue != null)
+            if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count && cb.SelectedValue != null)
             {
                 this.LicensesList[dataGrid.SelectedIndex].scope = cb.Text;
             }
             DataGrid_Refresh();
             dataGrid.SelectedItem = this.dataGridSelectedRow;
         }
+    
         #endregion
 
         #region Json Serializer
