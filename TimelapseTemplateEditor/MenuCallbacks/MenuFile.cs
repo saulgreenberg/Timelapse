@@ -133,6 +133,7 @@ namespace TimelapseTemplateEditor
             }
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(CamtrapDPStandard.FolderMetadataRows, CamtrapDPStandard.ImageTemplateRows, CamtrapDPStandard.Aliases);
+            templateDatabase.UpdateStandard(CamtrapDPStandard.Standard);
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
 

@@ -220,6 +220,8 @@ namespace TimelapseTemplateEditor
             }
             return VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
         }
+
+
         #endregion
     }
 }

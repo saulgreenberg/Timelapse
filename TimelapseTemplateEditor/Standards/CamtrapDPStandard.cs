@@ -14,6 +14,8 @@ namespace TimelapseTemplateEditor.Standards
             {1, "DataPackage"},
             {2, "Deployments"},
         };
+
+        public static string Standard = Timelapse.Constant.Standards.CamtrapDPStandard;
         #endregion
 
         #region PracticeImageSet Folder Metadata as a Row List

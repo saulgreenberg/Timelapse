@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using ColumnTuple = Timelapse.DataStructures.ColumnTuple;
 using ColumnTuplesWithWhere = Timelapse.DataStructures.ColumnTuplesWithWhere;
+using File = System.IO.File;
 
 // ReSharper disable LocalizableElement
 
@@ -1566,13 +1567,19 @@ namespace Timelapse.Database
             this.Database.SetColumnToACommonValue(Constant.DBTables.TemplateInfo, Constant.DatabaseColumn.VersionCompatabily, versionNumber);
         }
 
+        public void UpdateStandard(string standard)
+        {
+            this.Database.SetColumnToACommonValue(Constant.DBTables.TemplateInfo, Constant.DatabaseColumn.Standard, standard);
+        }
+
         // Create and populate a TemplateInfo table in the database using the schema below
         private static void CreateAndPopulateTemplateInfoTable(SQLiteWrapper database)
         {
             // Add a TemplateInfo table only to the .tdb file
             List<SchemaColumnDefinition> templateInfoColumns = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(Constant.DatabaseColumn.VersionCompatabily, Sql.Text, Constant.DatabaseValues.VersionNumberMinimum)
+                new SchemaColumnDefinition(Constant.DatabaseColumn.VersionCompatabily, Sql.Text, Constant.DatabaseValues.VersionNumberMinimum),
+                new SchemaColumnDefinition(Constant.DatabaseColumn.Standard, Sql.Text, string.Empty)
             };
             database.CreateTable(Constant.DBTables.TemplateInfo, templateInfoColumns);
 
@@ -1586,6 +1593,20 @@ namespace Timelapse.Database
             database.Insert(Constant.DBTables.TemplateInfo, templateContents);
         }
 
+        // Return the current standard (if any) stored in the TemplateInfo table 
+        public string TemplateGetStandard()
+        {
+            if (this.Database.TableExists(DBTables.TemplateInfo))
+            {
+                DataTable table = this.Database.GetDataTableFromSelect(Sql.Select + DatabaseColumn.Standard + Sql.From + DBTables.TemplateInfo);
+                if (table.Rows.Count > 0)
+                {
+                    return (string)table.Rows[0][DatabaseColumn.Standard];
+                }
+            }
+
+            return string.Empty;
+        }
         #endregion
 
         #region MetadataInfoTable - UpsertMetadataInfoTableRow
@@ -1731,6 +1752,38 @@ namespace Timelapse.Database
                 ctww.Columns.Add(new ColumnTuple(Constant.Control.ExportToCSV, Constant.BooleanValue.False));
                 ctww.SetWhere(new ColumnTuple(Constant.Control.Type, Constant.DatabaseColumn.DeleteFlag));
                 database.Update(Constant.DBTables.Template, ctww);
+            }
+        }
+
+        protected static void AddStandardToTemplateInfoColumnIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If the Standards column isn't in the template info, it means we are opening up 
+            // an old version of the template. Update the table by adding a new Standards column filled with an empty value
+            // Note that the DeleteFlag export is set to false, while all theothers are true.
+            if (false == database.SchemaIsColumnInTable(Constant.DBTables.TemplateInfo, Constant.DatabaseColumn.Standard))
+            {
+                SchemaColumnDefinition scd = new SchemaColumnDefinition(Constant.DatabaseColumn.Standard, Sql.Text, string.Empty);
+                database.SchemaAddColumnToEndOfTable(Constant.DBTables.TemplateInfo, scd);
+
+                ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
+                ctww.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.Standard, string.Empty));
+                database.Update(Constant.DBTables.TemplateInfo, ctww);
+            }
+        }
+
+        protected static void AddStandardToImageSetColumnIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If the Standards column isn't in the image set info, it means we are opening up 
+            // an old version of the template. Update the table by adding a new Standards column filled with an empty value
+            // Note that the DeleteFlag export is set to false, while all theothers are true.
+            if (false == database.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.Standard))
+            {
+                SchemaColumnDefinition scd = new SchemaColumnDefinition(Constant.DatabaseColumn.Standard, Sql.Text, string.Empty);
+                database.SchemaAddColumnToEndOfTable(Constant.DBTables.ImageSet, scd);
+                
+                ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
+                ctww.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.Standard, string.Empty));
+                database.Update(Constant.DBTables.ImageSet, ctww);
             }
         }
 

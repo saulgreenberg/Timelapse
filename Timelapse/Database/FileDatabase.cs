@@ -198,6 +198,7 @@ namespace Timelapse.Database
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.SearchTerms, Sql.Text, Constant.DatabaseValues.DefaultSearchTerms));        // A JSON description of the search terms
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.QuickPasteTerms, Sql.Text));        // A comma-separated list of 4 sort terms
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.BoundingBoxDisplayThreshold, Sql.Real, Constant.RecognizerValues.BoundingBoxDisplayThresholdDefault));        // A comma-separated list of 4 sort terms
+            schemaColumnDefinitions.Add(new SchemaColumnDefinition(Constant.DatabaseColumn.Standard, Sql.Text, string.Empty));        // The standard used to create the template, if any
             this.Database.CreateTable(Constant.DBTables.ImageSet, schemaColumnDefinitions);
 
             // Populate the data for the image set with defaults
@@ -212,7 +213,8 @@ namespace Timelapse.Database
                 new ColumnTuple(Constant.DatabaseColumn.VersionCompatabily, timelapseCurrentVersionNumber.ToString()),
                 new ColumnTuple(Constant.DatabaseColumn.SortTerms, Constant.DatabaseValues.DefaultSortTerms),
                 new ColumnTuple(Constant.DatabaseColumn.SearchTerms, Constant.DatabaseValues.DefaultSearchTerms),
-                new ColumnTuple(Constant.DatabaseColumn.QuickPasteTerms, Constant.DatabaseValues.DefaultQuickPasteJSON)
+                new ColumnTuple(Constant.DatabaseColumn.QuickPasteTerms, Constant.DatabaseValues.DefaultQuickPasteJSON),
+                new ColumnTuple(Constant.DatabaseColumn.Standard, existingTemplateDatabase.TemplateGetStandard())
             };
             List<List<ColumnTuple>> insertionStatements = new List<List<ColumnTuple>>
             {
@@ -623,11 +625,11 @@ namespace Timelapse.Database
             //        templateDatabase.mostRecentBackup = DateTime.Now;
             //    }
             //}
-            //await base.UpgradeDatabasesAndCompareTemplatesAsync(templateDatabase, null).ConfigureAwait(true);
 
             // Note that the templateDatabase are guaranteed to have the MetadataTables and their corresponding data structures included
             // as definded in the tdb, or as empty tables/datastructures if they are not present in the tdb file (e.g., an old format tdb)
-            await this.UpgradeDatabasesForBackwardsCompatabilityAsync().ConfigureAwait(true);
+            await this.UpgradeDatabasesForBackwardsCompatabilityAsync(templateDatabase).ConfigureAwait(true);
+
             // Note that at this point the ddb database from older to newer formats to preserve backwards compatability
             // At this point, the ddb database will include metadata template tables if they were missing. As well, their corresponding data structures
             // will be non-null and populated with any template metadata .
@@ -669,7 +671,7 @@ namespace Timelapse.Database
         }
 
         // Upgrade the database as needed from older to newer formats to preserve backwards compatability 
-        private async Task UpgradeDatabasesForBackwardsCompatabilityAsync()
+        private async Task UpgradeDatabasesForBackwardsCompatabilityAsync(CommonDatabase templateDatabase)
         {
             // Some comparisons are triggered by comparing
             // - the version number stored in the DB's ImageSetTable 
@@ -686,9 +688,15 @@ namespace Timelapse.Database
             // Code below checks and repairs backward compatability
             await Task.Run(() =>
             {
+
+
                 // If the ExportToCSV column isn't in the template, it means we are opening up 
                 // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
                 CommonDatabase.AddExportToCSVColumnIfNeeded(this.Database);
+
+                // If the Standards column isn't in the ImageSet table or in the template's TemplateInfo table, add it
+                CommonDatabase.AddStandardToTemplateInfoColumnIfNeeded(templateDatabase.Database);
+                CommonDatabase.AddStandardToImageSetColumnIfNeeded(this.Database);
 
                 // If there are no metadata tables in the Ddb database, create them and their corresponding data structures
                 // Note that this is specific to the metadata tables in the DDB database, which may differ from table contents (if any) that are present in the TDB database
@@ -696,7 +704,6 @@ namespace Timelapse.Database
 
                 // See pre-2.2.2.5 version for example code
             }).ConfigureAwait(true);
-
         }
         #endregion
 
@@ -2669,6 +2676,14 @@ namespace Timelapse.Database
         // We may want to put in more checks, e.g., to see if some of the required CamtrapDP fields are in a level
         public bool MetadataTablesIsCamtrapDPStandard()
         {
+            // Check if the template was created using the CamtrapDP standard
+            if (string.IsNullOrEmpty(this.ImageSet.Standard) || this.ImageSet.Standard != Constant.Standards.CamtrapDPStandard)
+            {
+                return false;
+            }
+
+            // Just in case, do a few other checks to see if it (sort of) conforms to the CamtrapDP standard.
+            // We could make this more robust by checking to see if all the required fields are present, but that is something to do later.
             if (null == this.MetadataInfo || this.MetadataInfo.RowCount != 2)
             {
                 // Needs to be a metadata table with two levels
@@ -2677,6 +2692,7 @@ namespace Timelapse.Database
 
             bool dataPackagePresent = false;
             bool deploymentPresent = false;
+
             foreach (MetadataInfoRow row in this.MetadataInfo)
             {
                 if (row.Level == 1 && row.Alias == Standards.CamtrapDPConstants.ResourceLevels.DataPackage)

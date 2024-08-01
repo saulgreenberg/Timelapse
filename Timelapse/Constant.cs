@@ -309,6 +309,7 @@ namespace Timelapse.Constant
         public const string QuickPasteTerms = "QuickPasteTerms";              // a JSON description that specifies the user's quickpaste entries and values.
         public const string SearchTerms = "SearchTerms";              // a JSON description storing the current search terms
         public const string BoundingBoxDisplayThreshold = "BBDisplayThreshold";
+        public const string Standard = "Standard";
 
         // other columns found in Old XML files
         public const string Data = "Data";                 // the data describing the attributes of that control
@@ -643,6 +644,10 @@ namespace Timelapse.Constant
         public const string IDStatusBarLabel = "Id{0} (the order files were added to Timelapse)";
     }
 
+    public static class Standards
+    {
+        public const string CamtrapDPStandard = "CamtrapDP";
+    }
     public static class ThrottleValues
     {
         public const double DesiredMaximumImageRendersPerSecondLowerBound = 3.0;     // Likely a very safe render rate 

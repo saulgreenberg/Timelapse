@@ -54,6 +54,13 @@ namespace Timelapse.DataTables
             get => this.Row.GetStringField(Constant.DatabaseColumn.SearchTerms);
             set => this.Row.SetField(Constant.DatabaseColumn.SearchTerms, value);
         }
+
+        // The standard contains the name of the standard used to create the template,otherwise empty
+        public string Standard
+        {
+            get => this.Row.GetStringField(Constant.DatabaseColumn.Standard);
+            set => this.Row.SetField(Constant.DatabaseColumn.Standard, value);
+        }
         #endregion
 
         #region Private Properties to set / get the various row values
@@ -100,7 +107,7 @@ namespace Timelapse.DataTables
                 new ColumnTuple(Constant.DatabaseColumn.SortTerms, this.SortTermsAsJsonString),
                 new ColumnTuple(Constant.DatabaseColumn.SearchTerms, this.SearchTermsAsJSON),
                 new ColumnTuple(Constant.DatabaseColumn.QuickPasteTerms, this.QuickPasteAsJSON),
-                //new ColumnTuple(Constant.DatabaseColumn.SelectedFolder, this.SelectedFolder)
+                new ColumnTuple(Constant.DatabaseColumn.Standard, this.Standard)
             };
             return new ColumnTuplesWithWhere(columnTuples, this.ID);
         }
