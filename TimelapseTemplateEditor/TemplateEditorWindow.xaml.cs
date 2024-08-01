@@ -29,6 +29,7 @@ namespace TimelapseTemplateEditor
 
         public bool dataGridBeingUpdatedByCode;             // Used to indicate when the data grid is being updated
         public MouseState mouseState = new MouseState();    // Tracks mouse state for drag/drop of controls in the preview control panel
+        public string standardType = string.Empty;
         private bool setInitialFolderLevelTabSelection = true;         // Whether we should set the initial metadata tab
         #endregion
 

@@ -133,7 +133,9 @@ namespace TimelapseTemplateEditor
             }
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(CamtrapDPStandard.FolderMetadataRows, CamtrapDPStandard.ImageTemplateRows, CamtrapDPStandard.Aliases);
+            // Set the standard being used, if any. This avoids excessive calls to the database
             templateDatabase.UpdateStandard(CamtrapDPStandard.Standard);
+            this.standardType = CamtrapDPStandard.Standard;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
 

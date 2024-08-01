@@ -71,34 +71,27 @@ namespace TimelapseTemplateEditor
                 return;
             }
 
-            // Update the verson number in the templateInfo table to the current version, but only if its a later version
             if (templateDatabase != null)
             {
+                // Update the verson number in the templateInfo table to the current version, but only if its a later version
                 string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
                 if (VersionChecks.IsVersion1GreaterThanVersion2(timelapseCurrentVersionNumber, TemplateGetVersionCompatability(templateDatabase.Database)))
                 {
                     templateDatabase.UpdateVersionNumber(VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
                 }
-            }
 
-            // Update the UI state
+                // Set the standard being used, if any. This avoids excessive calls to the database
+                this.standardType = templateDatabase.TemplateGetStandard();
+            }
+            
+            // Update the UI states
             MenuFileClose.IsEnabled = true;
             MenuMetadata.IsEnabled = true;
 
             // Handle Metadata: Sync the metadata by creating metadata tabs that reflect each level (if any) in the Metadata table
             await MetadataUI.SyncMetadataTabsFromMetadataTableAsync();
 
-            // DOESNT WORK YET AS WRONG TYPE
-            //TabControl tc = Globals.Root.MetadataUI.MetadataTabs;
-            //for (int i = tc.Items.Count - 1; i >= 0; i--)
-            //{
-            //    if (tc.Items[i] is TabItem tabItem &&
-            //        tabItem.Content is MetadataTabControl metadataTabControl)
-                    
-            //    {
-            //        metadataTabControl.GeneratePreviewControls(this.TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, this.templateDatabase.MetadataControlsByLevel[metadataTabControl.Level]);
-            //    }
-            //}
+            
         }
 
         // Close the current template and clear the UI as needed
@@ -109,6 +102,7 @@ namespace TimelapseTemplateEditor
             // Close the DB file 
             templateDatabase = null;
             TemplateUI.TemplateDataGridControl.DataGridInstance.ItemsSource = null;
+            standardType = string.Empty;
 
             // Clear the user interface 
             TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel.Children.Clear();

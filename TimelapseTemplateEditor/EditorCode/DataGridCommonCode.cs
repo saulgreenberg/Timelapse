@@ -12,8 +12,10 @@ using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.Standards;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using Control = Timelapse.Constant.Control;
 
 namespace TimelapseTemplateEditor.EditorCode
@@ -65,8 +67,9 @@ namespace TimelapseTemplateEditor.EditorCode
             }
         }
 
-        public static void UpdateCellEditabilityAndVisibility(DataGrid dataGrid)
+        public static void UpdateCellEditabilityAndVisibility(DataGrid dataGrid, string standard)
         {
+            bool isCamtrapDP = standard == Timelapse.Constant.Standards.CamtrapDPStandard;
             // Greys out cells and updates the visibility of particular rows as defined by logic. 
             // This is to  show the user uneditable cells. Color is also used by code to check whether a cell can be edited.
             // This method should be called after row are added/moved/deleted to update the colors. 
@@ -153,6 +156,8 @@ namespace TimelapseTemplateEditor.EditorCode
                              columnHeader == Control.Copyable ||
                              columnHeader == EditorConstant.ColumnHeader.Width)) ||
 
+
+
                         // These default values are editable but if we want to change that, uncomment this
                         //(controlType == Control.DateTime_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
                         //(controlType == Control.Date_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
@@ -163,9 +168,37 @@ namespace TimelapseTemplateEditor.EditorCode
                         (controlType == Control.Flag && columnHeader == EditorConstant.ColumnHeader.Width) ||
 
                         // Any control's List except for FixedChoice and MultiChoice are never editable
-                        ((controlType != Control.FixedChoice && controlType != Control.MultiChoice) && columnHeader == Control.List)
+                        ((controlType != Control.FixedChoice && controlType != Control.MultiChoice) && columnHeader == Control.List) ||
 
-                    )
+                        // If its a camtrapDP file, certain fields should not be editable
+                        (isCamtrapDP &&
+                         (columnHeader == Control.Type ||
+                          columnHeader == EditorConstant.ColumnHeader.DataLabel ||
+                          columnHeader == Control.List ||
+                          (columnHeader == "Export" && control.DataLabel != Timelapse.Constant.DatabaseColumn.DeleteFlag) ||
+                          (columnHeader == EditorConstant.ColumnHeader.DefaultValue &&
+                           (control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Deployment_name ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Deployment_path ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Deployment_schema ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Media_name ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Media_path ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Media_schema ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Observations_name ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Observations_path ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Observations_schema ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Resource_profile ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Profile ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.IdAlias ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Project.Id ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Spatial ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Contributors ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Sources ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Licenses ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.Taxonomic ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.RelatedIdentifiers ||
+                            control.DataLabel == CamtrapDPConstants.DataPackage.References
+                         ))))
+                        )
                     {
                         // Disable the Type ComboBox for the standard (required) controls
                         if (columnHeader == Control.Type && (controlType == DatabaseColumn.File || controlType == DatabaseColumn.RelativePath ||

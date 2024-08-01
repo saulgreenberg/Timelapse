@@ -129,9 +129,9 @@ namespace TimelapseTemplateEditor.Standards
                 Control.AlphaNumeric, 1, $"{Guid.NewGuid()}", "Package: Id", CamtrapDPConstants.DataPackage.IdAlias,
                 $"A property reserved for globally unique identifiers, including UUIDs and DOIs.{Environment.NewLine}" +
                 "• e.g., \"b03ec84-77fd-4270-813b-0c698943f7ce\"",
-                null, false, true),
+                null, false, false),
 
-            // Created - SAULXX We use the date/time the template .tdb file was initially created, which is likely not what we want
+            // Created - We use the date/time the template .tdb file was initially created, but this can be edited
             new StandardsRow(
                 Control.DateTime_, 1,
                 $"{Timelapse.Util.DateTimeHandler.ToStringDatabaseDateTime(DateTime.Now)}", "Package: created*", CamtrapDPConstants.DataPackage.Created,

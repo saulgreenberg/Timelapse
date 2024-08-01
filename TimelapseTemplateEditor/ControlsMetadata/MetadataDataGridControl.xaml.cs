@@ -66,7 +66,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             if (alwaysUpdate || DataGrid.Items.Count != LastRowCount)
             {
                 LastRowCount = DataGrid.Items.Count;
-                DataGridCommonCode.UpdateCellEditabilityAndVisibility(DataGrid);
+                DataGridCommonCode.UpdateCellEditabilityAndVisibility(DataGrid, Globals.Root.standardType);
             }
         }
         #endregion
