@@ -464,7 +464,7 @@
       <DependentUpon>CamtrapDPContributors.xaml</DependentUpon>
     </Compile>
     <Compile Include="Standards\CamtrapDPConstants.cs" />
-    <Compile Include="Standards\CamtrapDPConvertCSVFiles.cs" />
+    <Compile Include="Standards\CamtrapDPExportFiles.cs" />
     <Compile Include="Standards\CamtrapDPDataPackage.cs" />
     <Compile Include="Standards\CamtrapDPKeywords.xaml.cs">
       <DependentUpon>CamtrapDPKeywords.xaml</DependentUpon>

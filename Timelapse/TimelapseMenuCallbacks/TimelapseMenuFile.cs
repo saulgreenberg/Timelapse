@@ -407,7 +407,6 @@ namespace Timelapse
                 }
             }
 
-
             if (filesThatExistReadOnly.Count > 0)
             {
                 Dialogs.FilesCannotBeModified(this, filesThatExistReadOnly);
@@ -467,8 +466,11 @@ namespace Timelapse
                 {
                     Directory.CreateDirectory(camTrapDPFolder);
                 }
+
+
+                // Export the data package
                 string dataPackageFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPDataPackageJson);
-                List<string> datapackageMessages = await CamtrapDPConvertCSVFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
+                List<string> datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
                 if (null == datapackageMessages)
                 {
                     Debug.Print("Couldn't write data package");
