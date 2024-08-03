@@ -242,7 +242,6 @@ namespace Timelapse.Database
         }
         #endregion
 
-
         #region Public Static Method - Export Metadata to CSV
         /// <summary>
         /// Export all the database data associated with the selected view to the .csv file indicated in the file path so that spreadsheet applications (like Excel) can display it.
@@ -261,6 +260,8 @@ namespace Timelapse.Database
                 try
                 {
                     progress.Report(new ProgressBarArguments(0, "Writing the CSV file. Please wait", false, true));
+
+                    
 
                     // For every level
                     foreach (MetadataInfoRow infoRow in database.MetadataInfo)
@@ -1174,8 +1175,8 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Private Method - Update Progress Bar
-        private static void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
+        #region Public Method - Update Progress Bar
+        public static void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -1199,15 +1200,17 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Private Methods - Used by above
+        #region Methods - Used by above CSVReader/Writer plus standard CSV writers
         // Given a string representing a comma-separated row of values, add a value to it.
         // If special characters are in the string,  escape the string as needed
-        private static string AddColumnValue(string value)
+
+        public static string AddColumnValue(string value, bool includeComma = true)
         {
             if (value == null)
             {
-                return ",";
+                return includeComma ? "," : string.Empty;
             }
+
             if (value.IndexOfAny("\",\x0A\x0D".ToCharArray()) > -1)
             {
                 // commas, double quotation marks, line feeds (\x0A), and carriage returns (\x0D) require leading and ending double quotation marks be added
@@ -1215,7 +1218,9 @@ namespace Timelapse.Database
                 return "\"" + value.Replace("\"", "\"\"") + "\"" + ",";
             }
 
-            return value + ",";
+            return includeComma 
+                ? value + ","
+                : value;
         }
 
         // Parse the rows in a CSV file and return it as a list   of lines, each line being a list of values

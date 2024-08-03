@@ -24,6 +24,8 @@ using Timelapse.Util;
 using Path = System.IO.Path;
 using Timelapse.ControlsDataEntry;
 using DialogUpgradeFiles.Database;
+using Timelapse.Standards;
+using static Timelapse.Standards.CamtrapDPConstants;
 
 namespace Timelapse.Database
 {
@@ -2584,11 +2586,17 @@ namespace Timelapse.Database
 
         }
 
-        // Return a dictionary comprised of datalabel, type pairs
-        public Dictionary<string, string> MetadataGetDataLabelsInSpreadsheetOrder(int level)
+        public Dictionary<string, string> MetadataGetDataLabels(int level)
+        {
+            return MetadataGetDataLabels(level, string.Empty);
+        }
+        public Dictionary<string, string> MetadataGetDataLabels(int level, string orderByString)
         {
             Dictionary<string, string> dataLabelsAndTypes = new Dictionary<string, string>();
-            string query = $"{Sql.Select} {Constant.Control.DataLabel} {Sql.Comma} {Constant.Control.Type}{Sql.From} {Constant.DBTables.MetadataTemplate} {Sql.Where} {Constant.Control.Level} {Sql.Equal} {level} {Sql.OrderBy} {Constant.Control.SpreadsheetOrder}";
+            string query = string.IsNullOrWhiteSpace(orderByString)
+                ? $"{Sql.Select} {Constant.Control.DataLabel} {Sql.Comma} {Constant.Control.Type}{Sql.From} {Constant.DBTables.MetadataTemplate} {Sql.Where} {Constant.Control.Level} {Sql.Equal} {level}" 
+                : $"{Sql.Select} {Constant.Control.DataLabel} {Sql.Comma} {Constant.Control.Type}{Sql.From} {Constant.DBTables.MetadataTemplate} {Sql.Where} {Constant.Control.Level} {Sql.Equal} {level} {Sql.OrderBy} {orderByString}";
+
             DataTable datatable = this.Database.GetDataTableFromSelect(query);
             for (int i = 0; i < datatable.Rows.Count; i++)
             {
@@ -2596,6 +2604,21 @@ namespace Timelapse.Database
                 dataLabelsAndTypes.Add((string)datatable.Rows[i][0], (string)datatable.Rows[i][1]);
             }
             return dataLabelsAndTypes;
+        }
+
+        // Return a dictionary comprised of datalabel, type pairs
+        public Dictionary<string, string> MetadataGetDataLabelsInSpreadsheetOrder(int level)
+        {
+            return MetadataGetDataLabels(level, Constant.Control.SpreadsheetOrder);
+            //Dictionary<string, string> dataLabelsAndTypes = new Dictionary<string, string>();
+            //string query = $"{Sql.Select} {Constant.Control.DataLabel} {Sql.Comma} {Constant.Control.Type}{Sql.From} {Constant.DBTables.MetadataTemplate} {Sql.Where} {Constant.Control.Level} {Sql.Equal} {level} {Sql.OrderBy} {Constant.Control.SpreadsheetOrder}";
+            //DataTable datatable = this.Database.GetDataTableFromSelect(query);
+            //for (int i = 0; i < datatable.Rows.Count; i++)
+            //{
+            //    // Dictionary entry is datalabel, type
+            //    dataLabelsAndTypes.Add((string)datatable.Rows[i][0], (string)datatable.Rows[i][1]);
+            //}
+            //return dataLabelsAndTypes;
         }
 
         // Return a dictionary comprised of datalabel, type pairs but only for rows with its Export flag on

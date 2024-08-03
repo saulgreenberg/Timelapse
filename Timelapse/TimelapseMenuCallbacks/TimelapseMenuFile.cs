@@ -267,6 +267,7 @@ namespace Timelapse
             {
                 // Show the Busy indicator
                 this.BusyCancelIndicator.IsBusy = true;
+                
                 // TODO SAULXXX CHANGE TRUE TO STATE VARIABLE CONTAINING A PREFERENCE TO INCLUDE THE METADATA FOLDER LOCATIONS AT THE BEGINNING OF THE CSV
                 if (false == await CsvReaderWriter.ExportToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFilePath,
                         this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, this.DataHandler.FileDatabase.ImageSet.RootFolder))
@@ -415,7 +416,7 @@ namespace Timelapse
                 this.BusyCancelIndicator.IsBusy = false;
                 return;
             }
-            else if (filesThatExist.Count > 0)
+            if (filesThatExist.Count > 0)
             {
                 // The file exists ...
                 if (false == Dialogs.OverwriteListOfExistingFiles(this, filesThatExist))
@@ -470,14 +471,41 @@ namespace Timelapse
 
                 // Export the data package
                 string dataPackageFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPDataPackageJson);
-                List<string> datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
+                List<string> datapackageMessages =
+                    await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
                 if (null == datapackageMessages)
                 {
-                    Debug.Print("Couldn't write data package");
+                    Debug.Print("Couldn't write CamtrapDP data package");
                 }
                 else if (datapackageMessages.Count > 0)
                 {
-                    Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
+     //               Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
+                }
+
+                datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDeploymentToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions,
+                        this.State.CSVInsertSpaceBeforeDates);
+                if (null == datapackageMessages)
+                {
+                    // ERROR DIALOG HERE
+                    Debug.Print("Couldn't write CamtrapDP deployment.csv");
+                }
+                else if (datapackageMessages.Count > 0)
+                {
+    //                Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
+                }
+
+                datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFolderPath);
+
+                    //datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions,
+                    //this.State.CSVInsertSpaceBeforeDates);
+                if (null == datapackageMessages)
+                {
+                    // ERROR DIALOG HERE
+                    Debug.Print("Couldn't write CamtrapDP deployment.csv");
+                }
+                else if (datapackageMessages.Count > 0)
+                {
+     //               Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
                 }
             }
         }

@@ -466,6 +466,7 @@
     <Compile Include="Standards\CamtrapDPConstants.cs" />
     <Compile Include="Standards\CamtrapDPExportFiles.cs" />
     <Compile Include="Standards\CamtrapDPDataPackage.cs" />
+    <Compile Include="Standards\CamtrapDPHelpers.cs" />
     <Compile Include="Standards\CamtrapDPKeywords.xaml.cs">
       <DependentUpon>CamtrapDPKeywords.xaml</DependentUpon>
     </Compile>

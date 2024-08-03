@@ -1020,11 +1020,13 @@ namespace Timelapse.ControlsMetadata
                 if (this.Level == 2)
                 {
                     // Set the DeploymentID to a GUID
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.DeploymentID, out var deploymentIDControl))
-                    {
-                        deploymentIDControl.SetContentAndTooltip(Guid.NewGuid().ToString());
-                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(deploymentIDControl);
-                    }
+                    // NOW DONE IN CSV FILE
+                    //if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.DeploymentID, out var deploymentIDControl))
+                    //{
+                    //    // the subpath should always be the deployment folder name, as its the 2nd level (i.e. the first subfolder)
+                    //    deploymentIDControl.SetContentAndTooltip(this.SubPath);
+                    //    GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(deploymentIDControl);
+                    //}
                     // Set the LocationID to a GUID
                     if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.LocationID, out var locationIDControl))
                     {

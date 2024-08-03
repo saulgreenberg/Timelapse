@@ -35,7 +35,7 @@ namespace Timelapse.Standards
 
         public class Deployment
         {
-            public const string DeploymentID = "deploymentID";
+            public const string DeploymentID = "deploymentID";  // same as Media.DemploymentID and Observations.DeploymentID
             public const string LocationID = "locationID";
             public const string LocationName = "locationName";
             public const string Latitude = "latitude";
@@ -63,8 +63,8 @@ namespace Timelapse.Standards
 
         public class Media
         {
-            public const string MediaID = "mediaID"; //LEFT OUT
-            public const string DeploymentID = "deploymentID "; // LEFTOUT
+            public const string MediaID = "mediaID";             // same as Observations.MediaID
+            public const string DeploymentID = "deploymentID";   // same as Deployment.DemploymentID
             public const string CaptureMethod = "captureMethod";
             public const string Timestamp = "timestamp";
             public const string FilePath = "filePath";
@@ -79,8 +79,8 @@ namespace Timelapse.Standards
         public class Observations
         {
             public const string ObservationID = "observationID";
-            public const string DeploymentID = "deploymentID";
-            public const string MediaID = "mediaID";
+            public const string DeploymentID = "deploymentID"; // same as Deployment.DemploymentID
+            public const string MediaID = "mediaID";           // same as Media.MediaID
             public const string EventID = "eventID";
             public const string EventStart = "eventStart";
             public const string EventEnd = "eventEnd";

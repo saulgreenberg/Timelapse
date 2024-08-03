@@ -66,11 +66,12 @@ namespace TimelapseTemplateEditor.Controls
 
         public void DoLayoutUpdated(bool alwaysUpdate)
         {
+
             // The sender null forces this when its not a callback i.e. when invoked from the preview panel
             if (alwaysUpdate || DataGrid.Items.Count != LastRowCount)
             {
                 LastRowCount = DataGrid.Items.Count;
-                DataGridCommonCode.UpdateCellEditabilityAndVisibility(DataGrid, Globals.Root.standardType);;
+                DataGridCommonCode.UpdateCellEditabilityAndVisibility(DataGrid, Globals.Root.standardType, -1);;
             }
         }
         #endregion
