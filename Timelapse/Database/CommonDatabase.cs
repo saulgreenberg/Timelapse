@@ -646,11 +646,11 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Controls - Get DataLabels, TypedDataLabel except id in spreadsheet order from controls
-        public List<string> GetDataLabelsFromControls()
+        #region Controls - Get DataLabels, TypedDataLabel except id controls
+        public List<string> GetDataLabelsFromControlsByIDCreationOrder()
         {
             List<string> dataLabels = new List<string>();
-            IEnumerable<ControlRow> controls = this.Controls;
+            IEnumerable<ControlRow> controls = this.Controls.OrderBy(control => control.ID);
             foreach (ControlRow control in controls)
             {
                 string dataLabel = control.DataLabel;

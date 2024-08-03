@@ -83,6 +83,10 @@ namespace Timelapse.ControlsMetadata
             {
                 this.ContentControl.SelectedValue = string.Empty;
             }
+            else
+            {
+                value = value.Trim();
+            }
 
             // Set the choice to the value provided  
             // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..

@@ -301,7 +301,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             if (DataGrid.SelectedItem is DataRowView selectedRowView)
             {
                 MetadataControlRow control = new MetadataControlRow(selectedRowView.Row);
-                ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type);
+                ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard; ;
                 // Now find the corresponding entry in the MetadataPreviewPanel and scroll it into view
                 ParentTab.MetadataDataEntryPreviewPanel.ScrollLabelIntoView(control.Label);
             }
@@ -370,7 +370,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                 return;
             }
 
-            ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = DataGrid.IsKeyboardFocusWithin;
+            ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = DataGrid.IsKeyboardFocusWithin && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard; ;
         }
 
         #endregion

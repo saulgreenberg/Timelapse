@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -51,13 +52,16 @@ namespace Timelapse.Database
                         // If the data label is an empty string, we use the label instead.
                         // The append sequence results in a trailing comma which is retained when writing the line.
                         StringBuilder header = new StringBuilder();
+                        bool includeComma = false; 
                         if (true)
                         {
                             // Add each level's name as a column at the beginning of the table
+                            
                             foreach (MetadataInfoRow infoRow in database.MetadataInfo)
                             {
                                 string alias = MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
-                                header.Append(AddColumnValue(alias));
+                                header.Append(AddColumnValue(alias, includeComma));
+                                includeComma = true;
                             }
                         }
 
@@ -69,21 +73,26 @@ namespace Timelapse.Database
                         {
                             if (dataLabel == Constant.DatabaseColumn.DateTime && csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                             {
-                                header.Append(AddColumnValue(Constant.ControlDeprecated.DateLabel));
-                                header.Append(AddColumnValue(Constant.ControlDeprecated.TimeLabel));
+                                header.Append(AddColumnValue(Constant.ControlDeprecated.DateLabel, includeComma));
+                                includeComma = true;
+                                header.Append(AddColumnValue(Constant.ControlDeprecated.TimeLabel, includeComma));
                             }
                             else
                             {
-                                header.Append(AddColumnValue(dataLabel));
+                                header.Append(AddColumnValue(dataLabel, includeComma));
+                                includeComma = true;
                             }
                         }
                         fileWriter.WriteLine(header.ToString());
 
+
                         // For each row in the data table, write out the columns in the same order as the 
                         // data labels in the template file (again, skipping the ones we don't use and special casing the date/time data)
                         int countAllCurrentlySelectedFiles = database.CountAllCurrentlySelectedFiles;
+                        
                         for (int row = 0; row < countAllCurrentlySelectedFiles; row++)
                         {
+                            includeComma = false;
                             StringBuilder csvRow = new StringBuilder();
                             ImageRow image = database.FileTable[row];
                             if (true)
@@ -94,13 +103,15 @@ namespace Timelapse.Database
                                     List<string> cascadingRelativePaths = FilesFolders.SplitAsCascadingRelativePath(image.RelativePath);
                                     if (level == 1)
                                     {
-                                        csvRow.Append(AddColumnValue(string.Empty));
+                                        csvRow.Append(AddColumnValue(string.Empty, includeComma));
+                                        includeComma = true;
                                     }
                                     else
                                     {
                                         if (level - 2 <= cascadingRelativePaths.Count - 1)
                                         {
-                                            csvRow.Append(AddColumnValue(cascadingRelativePaths[level - 2]));
+                                            csvRow.Append(AddColumnValue(cascadingRelativePaths[level - 2], includeComma));
+                                            includeComma = true;
                                         }
                                     }
                                 }
@@ -113,7 +124,8 @@ namespace Timelapse.Database
                                 if (dataLabel == Constant.DatabaseColumn.RootFolder)
                                 {
                                     // Export the data as is
-                                    csvRow.Append(AddColumnValue(rootFolder));
+                                    csvRow.Append(AddColumnValue(rootFolder, includeComma));
+                                    includeComma = true;
                                 }
                                 else
                                 {
@@ -125,9 +137,9 @@ namespace Timelapse.Database
                                         {
                                             // Export both the separate Date and Time column data with or without a space as needed
                                             string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                            // csvRow.Append(prefix + AddColumnValue(image.GetValueDatabaseString(dataLabel)));
-                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateString()));
-                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVTimeString()));
+                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateString(), includeComma));
+                                            includeComma = true;
+                                            csvRow.Append(prefix + AddColumnValue(image.GetValueCSVTimeString(), includeComma));
                                         }
                                         else
                                         {
@@ -136,12 +148,14 @@ namespace Timelapse.Database
                                             if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
                                             {
                                                 // with the T separator
-                                                csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithTSeparatorString()));
+                                                csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithTSeparatorString(), includeComma));
+                                                includeComma = true;
                                             }
                                             else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
                                             {
                                                 // without the T separator
-                                                csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithoutTSeparatorString()));
+                                                csvRow.Append(prefix + AddColumnValue(image.GetValueCSVDateTimeWithoutTSeparatorString(), includeComma));
+                                                includeComma = true;
                                             }
                                         }
                                     }
@@ -158,23 +172,27 @@ namespace Timelapse.Database
                                                 // Export both the separate Date and Time column data with or without a space as needed
 
                                                 // with the T separator
-                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime)));
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime), includeComma));
+                                                includeComma = true;
                                             }
                                             else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
                                             {
                                                 // without the T separator
-                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime)));
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime),includeComma));
+                                                includeComma = true;
                                             }
                                             else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                             {
                                                 // dd-MMM-yyyy HH:mm:ss
-                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDateTime(dateTime)));
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDateTime(dateTime), includeComma));
+                                                includeComma = true;
                                             }
                                         }
                                         else
                                         {
                                             TracePrint.PrintMessage($"DateTime_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
-                                            csvRow.Append(string.Empty);
+                                            csvRow.Append(AddColumnValue(string.Empty, includeComma));
+                                            includeComma = true;
                                         }
                                     }
 
@@ -188,17 +206,20 @@ namespace Timelapse.Database
                                             if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                             {
                                                 // dd-MMM-yyyy HH:mm:ss
-                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDatePortion(dateTime)));
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDatePortion(dateTime), includeComma));
+                                                includeComma = true;
                                             }
                                             else
                                             {
-                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDatabaseDate(dateTime)));
+                                                csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDatabaseDate(dateTime), includeComma));
+                                                includeComma = true;
                                             }
                                         }
                                         else
                                         {
                                             TracePrint.PrintMessage($"Date_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
-                                            csvRow.Append(string.Empty);
+                                            csvRow.Append(AddColumnValue(string.Empty, includeComma));
+                                            includeComma = true;
                                         }
                                     }
 
@@ -208,19 +229,22 @@ namespace Timelapse.Database
                                         if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                         {
                                             string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringTime(dateTime)));
+                                            csvRow.Append(prefix + AddColumnValue(DateTimeHandler.ToStringTime(dateTime), includeComma));
+                                            includeComma = true;
                                         }
                                         else
                                         {
                                             TracePrint.PrintMessage($"Time_ in CSV export is not parsable for {dataLabel}: {image.GetValueDatabaseString(dataLabel)}");
-                                            csvRow.Append(string.Empty);
+                                            csvRow.Append(AddColumnValue(string.Empty, includeComma));
+                                            includeComma = true;
                                         }
                                     }
 
                                     else
                                     {
                                         // Export the data as is
-                                        csvRow.Append(AddColumnValue(image.GetValueDatabaseString(dataLabel)));
+                                        csvRow.Append(AddColumnValue(image.GetValueDatabaseString(dataLabel), includeComma));
+                                        includeComma = true;
                                     }
                                 }
                             }
@@ -292,19 +316,27 @@ namespace Timelapse.Database
                             StringBuilder header = new StringBuilder();
 
                             // Insert the folder data path column at the beginning
+                            bool firstColumnWritten = false;
+                            bool includeComma;
                             for (int i = 0; i < level; i++)
                             {
                                 string tempAlias = MetadataUI.CreateTemporaryAliasIfNeeded(i, database.MetadataInfo[i].Alias);
-                                header.Append(AddColumnValue(tempAlias));
+                                includeComma = i > 0;
+                                firstColumnWritten = true;
+                                header.Append(AddColumnValue(tempAlias, includeComma));
                             }
 
+                            // At this point, we should have at least one column
+                            includeComma = firstColumnWritten;
                             foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypesInSpreadsheetOrder)
                             {
-                                header.Append(AddColumnValue(dataLabelAndType.Key));
+                                header.Append(AddColumnValue(dataLabelAndType.Key, includeComma));
+                                includeComma = true;
                             }
-
                             fileWriter.WriteLine(header.ToString());
 
+
+                            // Now write the data for each row
                             if (null == rows || rows.RowCount == 0)
                             {
                                 // No data for this level, so skip it
@@ -313,6 +345,7 @@ namespace Timelapse.Database
                             // Write each line
                             foreach (MetadataRow row in rows)
                             {
+                                includeComma = false;
                                 StringBuilder rowBuilder = new StringBuilder();
                                 List<string> cascadingPaths = FilesFolders.SplitAsCascadingRelativePath(row[Constant.DatabaseColumn.FolderDataPath]);
                                 if (level > 1)
@@ -323,7 +356,8 @@ namespace Timelapse.Database
 
                                 foreach (string path in cascadingPaths)
                                 {
-                                    rowBuilder.Append(AddColumnValue(path));
+                                    rowBuilder.Append(AddColumnValue(path, includeComma));
+                                    includeComma = true;
                                 }
 
                                 foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypesInSpreadsheetOrder)
@@ -345,22 +379,26 @@ namespace Timelapse.Database
                                                 if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
                                                 {
                                                     // with the T separator
-                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime)));
+                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime), includeComma));
+                                                    includeComma = true;
                                                 }
                                                 else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
                                                 {
                                                     // without the T separator
-                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime)));
+                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime), includeComma));
+                                                    includeComma = true;
                                                 }
                                                 else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                                 {
                                                     // dd-MMM-yyyy HH:mm:ss
-                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDateTime(dateTime)));
+                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDateTime(dateTime), includeComma));
+                                                    includeComma = true;
                                                 }
                                             }
                                             else
                                             {
-                                                rowBuilder.Append(AddColumnValue(row[dataLabelAndType.Key]));
+                                                rowBuilder.Append(AddColumnValue(row[dataLabelAndType.Key], includeComma));
+                                                includeComma = true;
                                             }
                                             break;
                                         case Constant.Control.Date_:
@@ -369,24 +407,29 @@ namespace Timelapse.Database
                                             {
                                                 if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                                 {
-                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDatePortion(date)));
+                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDisplayDatePortion(date), includeComma));
+                                                    includeComma = true;
                                                 }
                                                 else
                                                 {
-                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDatabaseDate(date)));
+                                                    rowBuilder.Append(prefix + AddColumnValue(DateTimeHandler.ToStringDatabaseDate(date), includeComma));
+                                                    includeComma = true;
                                                 }
                                             }
                                             else
                                             {
-                                                rowBuilder.Append(AddColumnValue(row[dataLabelAndType.Key]));
+                                                rowBuilder.Append(AddColumnValue(row[dataLabelAndType.Key], includeComma));
+                                                includeComma = true;
                                             }
                                             break;
                                         case Constant.Control.Time_:
                                             // Export the  Time_ column
-                                            rowBuilder.Append(prefix + AddColumnValue(row[dataLabelAndType.Key]));
+                                            rowBuilder.Append(prefix + AddColumnValue(row[dataLabelAndType.Key], includeComma));
+                                            includeComma = true;
                                             break;
                                         default:
-                                            rowBuilder.Append(AddColumnValue(row[dataLabelAndType.Key]));
+                                            rowBuilder.Append(AddColumnValue(row[dataLabelAndType.Key], includeComma));
+                                            includeComma = true;
                                             break;
                                     }
                                 }
@@ -1200,26 +1243,30 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Methods - Used by above CSVReader/Writer plus standard CSV writers
+        #region Methods - Used by various CSVReader/Writers including Standard-specific CSV writers
         // Given a string representing a comma-separated row of values, add a value to it.
         // If special characters are in the string,  escape the string as needed
+        // if includeComma is true, prepend a comma to the value
 
-        public static string AddColumnValue(string value, bool includeComma = true)
+        public static string AddColumnValue(string value, bool includeComma)
         {
             if (value == null)
             {
                 return includeComma ? "," : string.Empty;
             }
 
-            if (value.IndexOfAny("\",\x0A\x0D".ToCharArray()) > -1)
+            char[] charArray = new char[] { '\"', ',', '\r', '\n' };
+            if (value.IndexOfAny(charArray) > -1)
             {
                 // commas, double quotation marks, line feeds (\x0A), and carriage returns (\x0D) require leading and ending double quotation marks be added
                 // double quotation marks within the field also have to be escaped as double quotes
-                return "\"" + value.Replace("\"", "\"\"") + "\"" + ",";
+                return includeComma 
+                ? "," + "\"" + value.Replace("\"", "\"\"") + "\""
+                : "\"" + value.Replace("\"", "\"\"") + "\"";
             }
 
             return includeComma 
-                ? value + ","
+                ? "," + value 
                 : value;
         }
 

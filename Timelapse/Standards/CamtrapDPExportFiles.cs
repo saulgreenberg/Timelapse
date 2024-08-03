@@ -4,13 +4,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows;
-using MetadataExtractor;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Timelapse.Controls;
@@ -484,13 +480,12 @@ namespace Timelapse.Standards
                             // Insert the folder data path column at the beginning
                             // Note that unlike the usual metadata csv export, we do not create columns for the levels, as these are not included in the standard 
                             // Write each line
-                            int numberRows = dataLabelsAndTypes.Count;
-                            int rowsRead = 0;
-                            bool includeComma = true;
+
+                            bool includeComma = false;
                             foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypes)
                             {
-                                includeComma = rowsRead++ != numberRows - 1;
                                 header.Append(CsvReaderWriter.AddColumnValue(dataLabelAndType.Key, includeComma));
+                                includeComma = true;
                             }
 
                             fileWriter.WriteLine(header.ToString());
@@ -501,17 +496,15 @@ namespace Timelapse.Standards
                                 continue;
                             }
 
+                            // Now write out the data rows
                             foreach (MetadataRow row in rows)
                             {
                                 List<string> cascadingPaths = FilesFolders.SplitAsCascadingRelativePath(row[Constant.DatabaseColumn.FolderDataPath]);
-                                numberRows = dataLabelsAndTypes.Count;
-                                rowsRead = 0;
-                                includeComma = true;
+                                includeComma = false;
                                 StringBuilder rowBuilder = new StringBuilder();
                                 // Set the DeploymentID to the relative path
                                 foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypes)
                                 {
-                                    includeComma = rowsRead++ != numberRows - 1;
                                     string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
 
                                     switch (dataLabelAndType.Key)
@@ -538,8 +531,6 @@ namespace Timelapse.Standards
                                             {
                                                 problemDeploymentFields.Add($"{dataLabelAndType.Key}: a valid date/time value is required for this field.");
                                             }
-                                            // Dont append, as this will be caught by the 
-                                            //rowBuilder.Append(CsvReaderWriter.AddColumnValue(row[Constant.DatabaseColumn.FolderDataPath], includeComma));
                                             break;
                                     }
 
@@ -555,6 +546,7 @@ namespace Timelapse.Standards
                                                 ? dateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat)
                                                 : row[dataLabelAndType.Key];
                                             rowBuilder.Append(CsvReaderWriter.AddColumnValue(dateTimeString, includeComma));
+                                            includeComma = true;
                                             break;
                                         case Constant.Control.Date_:
                                             // Export the  Date_ column column in CamtrapDP format
@@ -564,10 +556,12 @@ namespace Timelapse.Standards
                                                 ? dateOnly.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat)
                                                 : row[dataLabelAndType.Key];
                                             rowBuilder.Append(CsvReaderWriter.AddColumnValue(dateString, includeComma));
+                                            includeComma = true;
                                             break;
 
                                         default:
                                             rowBuilder.Append(CsvReaderWriter.AddColumnValue(row[dataLabelAndType.Key], includeComma));
+                                            includeComma = true;
                                             break;
                                     }
                                 }
@@ -639,60 +633,59 @@ namespace Timelapse.Standards
                         {
 
                             // Get all data labels
-                            List<string> dataLabels = database.GetDataLabelsFromControls().ToList();
+                            List<string> dataLabels = database.GetDataLabelsFromControlsByIDCreationOrder().ToList();
 
                             // Write the header as defined by the data labels in the template file.
                             // If the data label is an empty string, we use the label instead.
                             // The append sequence results in a trailing comma which is retained when writing the line.
                             StringBuilder mediaHeader = new StringBuilder();
                             StringBuilder observationsHeader = new StringBuilder();
-                            int numberColumns = dataLabels.Count;
-                            int columnsRead = 0;
-                            bool includeComma = true;
+                            bool includeMediaComma = false;
+                            bool includeObservationComma = false;
                             foreach (string dataLabel in dataLabels)
                             {
-                                includeComma = columnsRead++ != numberColumns - 1;
                                 if (MetadataCreateControl.IsStandardControlType(dataLabel))
                                 {
                                     // Ignore these columns
                                     continue;
                                 }
 
-                                if (isMediaField(dataLabel))
+                                if (CamtrapDPHelpers.IsMediaField(dataLabel))
                                 {
-                                    mediaHeader.Append(CsvReaderWriter.AddColumnValue(dataLabel, includeComma));
+                                    mediaHeader.Append(CsvReaderWriter.AddColumnValue(dataLabel, includeMediaComma));
+                                    includeMediaComma = true;
                                 }
                                 else
                                 {
-                                    observationsHeader.Append(CsvReaderWriter.AddColumnValue(dataLabel, includeComma));
+                                    observationsHeader.Append(CsvReaderWriter.AddColumnValue(dataLabel, includeObservationComma));
+                                    includeObservationComma = true;
                                     if (dataLabel == CamtrapDPConstants.Observations.ObservationID)
                                     {
-                                        observationsHeader.Append(CsvReaderWriter.AddColumnValue(CamtrapDPConstants.Observations.DeploymentID, includeComma));
-                                        observationsHeader.Append(CsvReaderWriter.AddColumnValue(CamtrapDPConstants.Observations.MediaID, includeComma));
+                                        observationsHeader.Append(CsvReaderWriter.AddColumnValue(CamtrapDPConstants.Observations.DeploymentID, includeObservationComma));
+                                        observationsHeader.Append(CsvReaderWriter.AddColumnValue(CamtrapDPConstants.Observations.MediaID, includeObservationComma));
                                     }
 
                                 }
                             }
-                            // Remove trailing comma
-                            mediaHeader.Length--;
-                            //observationsHeader.Length--;
+
                             // Write out the csv row
                             mediaFileWriter.WriteLine(mediaHeader.ToString());
                             observationsFileWriter.WriteLine(observationsHeader.ToString());
+
 
                             // For each row in the data table, write out the columns in the same order as the 
                             // data labels in the template file (again, skipping the ones we don't use and special casing the date/time data)
                             int countAllCurrentlySelectedFiles = database.CountAllCurrentlySelectedFiles;
                             for (int row = 0; row < countAllCurrentlySelectedFiles; row++)
                             {
+                                includeMediaComma = false;
+                                includeObservationComma = false;
                                 ImageRow image = database.FileTable[row];
-                                //numberColumns = dataLabels.Count;
-                                columnsRead = 0;
+                                
                                 StringBuilder mediaRowBuilder = new StringBuilder();
                                 StringBuilder observationsRowBuilder = new StringBuilder();
                                 foreach (string dataLabel in dataLabels)
                                 {
-                                    includeComma = columnsRead++ != numberColumns - 1;
                                     if (MetadataCreateControl.IsStandardControlType(dataLabel))
                                     {
                                         // Ignore these columns
@@ -703,39 +696,46 @@ namespace Timelapse.Standards
                                     {
                                         case CamtrapDPConstants.Media.MediaID:
                                             // RelativePath + Filename
-                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(Path.Combine(image.RelativePath, image.File), includeComma));
-                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(Path.Combine(image.RelativePath, image.File), includeComma));
+                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(Path.Combine(image.RelativePath, image.File), includeMediaComma));
+                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(Path.Combine(image.RelativePath, image.File), includeObservationComma));
+                                            includeMediaComma = includeObservationComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.DeploymentID:
                                             // both need the deploymentID for cross referencing
-                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.RelativePath, includeComma));
-                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.RelativePath, includeComma));
+                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.RelativePath, includeMediaComma));
+                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.RelativePath, includeObservationComma));
+                                            includeMediaComma = includeObservationComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.Timestamp:
                                             // DateTime value
-                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.DateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeComma)); 
+                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.DateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeMediaComma));
+                                            includeMediaComma = includeObservationComma = true; 
                                             break;
 
                                         case CamtrapDPConstants.Media.FilePath:
-                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.RelativePath, includeComma));
+                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.RelativePath, includeMediaComma));
+                                            includeMediaComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.FileName:
-                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.File, includeComma));
+                                            mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.File, includeMediaComma));
+                                            includeMediaComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.FileMediatype:
                                             string extension = Path.GetExtension(image.File);
                                             mediaRowBuilder.Append(string.Equals(extension, Constant.File.JpgFileExtension, StringComparison.OrdinalIgnoreCase)
-                                                ? CsvReaderWriter.AddColumnValue("image/jpeg", includeComma)
-                                                : CsvReaderWriter.AddColumnValue($"video/{extension}", includeComma));
+                                                ? CsvReaderWriter.AddColumnValue("image/jpeg", includeMediaComma)
+                                                : CsvReaderWriter.AddColumnValue($"video/{extension}", includeMediaComma));
+                                            includeMediaComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Observations.ObservationID:
                                             // Filename
-                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(Path.Combine(image.RelativePath, image.File), includeComma));
+                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(Path.Combine(image.RelativePath, image.File), includeObservationComma));
+                                            includeObservationComma = true;
                                             break;
 
                                         // For now, we do events as the timestamp of a single image
@@ -743,25 +743,25 @@ namespace Timelapse.Standards
                                         case CamtrapDPConstants.Observations.EventStart:
                                         case CamtrapDPConstants.Observations.EventEnd:
                                             // Filename
-                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.DateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeComma));
+                                            observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.DateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeObservationComma));
+                                            includeObservationComma = true;
                                             break;
 
                                         default:
-                                            if (isMediaField(dataLabel))
+                                            if (CamtrapDPHelpers.IsMediaField(dataLabel))
                                             {
-                                                mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.GetValueDatabaseString(dataLabel), includeComma));
+                                                mediaRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.GetValueDatabaseString(dataLabel), includeMediaComma));
+                                                includeMediaComma = true;
                                             }
                                             else
                                             {
-                                                observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.GetValueDatabaseString(dataLabel), includeComma));
+                                                observationsRowBuilder.Append(CsvReaderWriter.AddColumnValue(image.GetValueDatabaseString(dataLabel), includeObservationComma));
+                                                includeObservationComma = true;
                                             }
                                             break;
                                     }
                                 }
 
-                                // Remove trailing comma
-                                mediaRowBuilder.Length--;
-                                //observationsRowBuilder.Length--;
                                 // Write out the csv row
                                 mediaFileWriter.WriteLine(mediaRowBuilder.ToString());
                                 observationsFileWriter.WriteLine(observationsRowBuilder.ToString());
@@ -797,63 +797,6 @@ namespace Timelapse.Standards
             return commaSeparatedList.Split(',').Select(s => s.Trim()).Select(s => Regex.Replace(s, @"\s+", " ")).Where(s => !string.IsNullOrEmpty(s)).ToList();
         }
 
-        private static bool isMediaField(string fieldName)
-        {
-            switch (fieldName)
-            {
-                case CamtrapDPConstants.Media.MediaID:
-                case CamtrapDPConstants.Media.DeploymentID:
-                case CamtrapDPConstants.Media.CaptureMethod:
-                case CamtrapDPConstants.Media.Timestamp:
-                case CamtrapDPConstants.Media.FilePath:
-                case CamtrapDPConstants.Media.FilePublic:
-                case CamtrapDPConstants.Media.FileName:
-                case CamtrapDPConstants.Media.FileMediatype:
-                case CamtrapDPConstants.Media.ExifData:
-                case CamtrapDPConstants.Media.Favorite:
-                case CamtrapDPConstants.Media.MediaComments:
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool isObservationsField(string fieldName)
-        {
-            switch (fieldName)
-            {
-                case CamtrapDPConstants.Observations.ObservationID:
-                case CamtrapDPConstants.Observations.DeploymentID:
-                case CamtrapDPConstants.Observations.MediaID:
-                case CamtrapDPConstants.Observations.EventID:
-                case CamtrapDPConstants.Observations.EventStart:
-                case CamtrapDPConstants.Observations.EventEnd:
-                case CamtrapDPConstants.Observations.ObservationLevel:
-                case CamtrapDPConstants.Observations.ObservationType:
-                case CamtrapDPConstants.Observations.CameraSetupType:
-                case CamtrapDPConstants.Observations.ScientificName:
-                case CamtrapDPConstants.Observations.Count:
-                case CamtrapDPConstants.Observations.LifeStage:
-                case CamtrapDPConstants.Observations.Sex:
-                case CamtrapDPConstants.Observations.Behavior:
-                case CamtrapDPConstants.Observations.IndividualID:
-                case CamtrapDPConstants.Observations.IndividualPositionRadius:
-                case CamtrapDPConstants.Observations.IndividualPositionAngle:
-                case CamtrapDPConstants.Observations.IndividualSpeed:
-                case CamtrapDPConstants.Observations.BboxX:
-                case CamtrapDPConstants.Observations.BboxY:
-                case CamtrapDPConstants.Observations.BboxWidth:
-                case CamtrapDPConstants.Observations.BboxHeight:
-                case CamtrapDPConstants.Observations.ClassificationMethod:
-                case CamtrapDPConstants.Observations.ClassificationTimestamp:
-                case CamtrapDPConstants.Observations.ClassificationProbability:
-                case CamtrapDPConstants.Observations.ObservationTags:
-                case CamtrapDPConstants.Observations.ObservationComments:
-                    return true;
-            }
-
-            return false;
-        }
         #endregion
     }
 }
