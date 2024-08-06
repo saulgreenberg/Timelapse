@@ -38,6 +38,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             // Note that we have to make the level names 0-based...
             TextBlockLevel.Text = (ParentTab.Level - 1).ToString();
             updating = false;
+            this.IsEnabled = Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
         }
 
         #endregion

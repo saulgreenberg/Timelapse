@@ -280,17 +280,9 @@ namespace TimelapseTemplateEditor.Standards
             new StandardsRow(
                 Control.MultiLine, 1, "", "Spatial coverage*", CamtrapDPConstants.DataPackage.Spatial,
                 $"Spatial coverage of the package, expressed as GeoJSON.{Environment.NewLine}" +
-                $"• e.g., Environment.NewLine{{{Environment.NewLine}    \"type\": \"Polygon\",{Environment.NewLine}" +
-                $"     \"bbox\": [{Environment.NewLine}       4.013,{Environment.NewLine}       50.699,{Environment.NewLine}       5.659,{Environment.NewLine}       51.496{Environment.NewLine}     ],{Environment.NewLine}" +
-                $"     \"coordinates\": [{Environment.NewLine}" +
-                $"     [{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          4.013,{Environment.NewLine}          50.699{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          5.659,{Environment.NewLine}          50.699{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          5.659,{Environment.NewLine}          51.496{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          4.013,{Environment.NewLine}          51.496{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          4.013,{Environment.NewLine}          50.699{Environment.NewLine}        ]{Environment.NewLine}" +
-                $"     ]{Environment.NewLine}" +
-                $"  ]{Environment.NewLine}}}",
+                $"Timelapse will calculate this as a bounding box outlining your deployments' latitude/longitude coordinates,{Environment.NewLine}" +
+                $"or will let you copy GeoJSON as outputed by a mapping package.{Environment.NewLine}" +
+                $"For example, Timelapse provides the option to go to https://Geojson.io , outline the spatial coverage, and then copy the GeoJson output.",
                 null,
                 false, true),
 
@@ -341,7 +333,7 @@ namespace TimelapseTemplateEditor.Standards
 
             // RelatedIdentifiers - a json array that holds a list of RelatedIdentifiers objects
             new StandardsRow(
-                Control.MultiLine, 1, "[]", "RelatedIdentifiers definitions", CamtrapDPConstants.DataPackage.RelatedIdentifiers,
+                Control.MultiLine, 1, "[]", "Related identifiers definitions", CamtrapDPConstants.DataPackage.RelatedIdentifiers,
                 $"A list of related identifier definitions  related to the data and / or media provided in this package. {Environment.NewLine}",
                 null, false, true),
 
@@ -360,7 +352,7 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"dep1\" or \"0f8fad5b-d9cb-469f-a165-70867728950e\"",
             null),
             new StandardsRow(
-                Control.Note, 2, "$\"{Guid.NewGuid()}\"", "Location ID", CamtrapDPConstants.Deployment.LocationID,
+                Control.Note, 2, $"{Guid.NewGuid()}", "Location ID", CamtrapDPConstants.Deployment.LocationID,
                 $"Identifier of the deployment location{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"loc1\" or \"7c9e6679-7425-40de-944b-e07fc1f90ae7\"",
@@ -532,20 +524,20 @@ namespace TimelapseTemplateEditor.Standards
 
         public static List<StandardsRow> ImageTemplateRows = new List<StandardsRow>
         {
-            //new StandardsRow(Control.Note, 0, "", "Media ID", CamtrapDPConstants.Media.MediaID,
-            //    $"Unique identifier of the media file.{Environment.NewLine}" +
-            //    $"Required.{Environment.NewLine}" +
-            //    "• e.g., \"m1\"",
-            //    null),
+            new StandardsRow(Control.Note, 0, "", "Media Id", CamtrapDPConstants.Media.MediaID,
+                $"Unique identifier of the media file.{Environment.NewLine}" +
+                $"Required.{Environment.NewLine}" +
+                "• e.g., \"m1\"",
+                null, false, false),
 
-            // deploymentID LEFT OUT AS IT WILL BE AUTOMATICALLY ADDED
-            //new StandardsRow(Control.Note, 0, "", "Deployment ID", CamtrapDPConstants.Media.DeploymentID,
-            //    $"Identifier of the deployment the media file belongs to. {Environment.NewLine}" +
-            //    $"Required.{Environment.NewLine}" +
-            //    "• e.g., \"dep1\"",
-            //    null),
+            // deploymentID 
+            new StandardsRow(Control.Note, 0, "", "Deployment Id", CamtrapDPConstants.Media.DeploymentID,
+                $"Identifier of the deployment the media file belongs to. {Environment.NewLine}" +
+                $"Required.{Environment.NewLine}" +
+                "• e.g., \"dep1\"",
+                null, false, false),
 
-            new StandardsRow(Control.FixedChoice, 0, "", "Capture Method",  CamtrapDPConstants.Media.CaptureMethod,
+            new StandardsRow(Control.FixedChoice, 0, "", "Capture method",  CamtrapDPConstants.Media.CaptureMethod,
                 $"Method used to capture the media file.{Environment.NewLine}" +
                 "• e.g., \"activityDetection\"" +
                 $"Optional.{Environment.NewLine}",
@@ -556,46 +548,46 @@ namespace TimelapseTemplateEditor.Standards
                 $"Date_ and time at which the media file was recorded. {Environment.NewLine}" +
                 $"Required. Format as YYYY-MM-DDThh:mm:ssZ or YYYY-MM-DDThh:mm:ss±hh:mm{Environment.NewLine}" +
                 "• e.g., \"2020-03-24T11:21:46Z\"",
-                null),
+                null,false, false),
 
-            new StandardsRow(Control.Note, 0, "", "Filepath*", CamtrapDPConstants.Media.FilePath,
+            new StandardsRow(Control.Note, 0, "", "File path*", CamtrapDPConstants.Media.FilePath,
                 $"URL or relative path to the media file, respectively for externally hosted files or files that are part of the package.{Environment.NewLine}" +
                 $"Required.{Environment.NewLine}" +
                 "• e.g., \"https://multimedia.agouti.eu/assets/6d65f3e4-4770-407b-b2bf-878983bf9872/file\"",
-                null),
+                null, false, false),
 
-            new StandardsRow(Control.Flag, 0, "", "File Public*", CamtrapDPConstants.Media.FilePublic,
-                $"false if the media file is not publicly accessible (e.g. to protect the privacy of people).{Environment.NewLine}" +
+            new StandardsRow(Control.Flag, 0, "true", "File public*", CamtrapDPConstants.Media.FilePublic,
+                $"false if the media file should not be publicly accessible (e.g. to protect the privacy of people captured in the media).{Environment.NewLine}" +
                 $"Required.{Environment.NewLine}" +
                 "• e.g., \"true\"",
-                null),
+                null, false, true),
 
-            new StandardsRow(Control.Note, 0, "", "File Name", CamtrapDPConstants.Media.FileName,
+            new StandardsRow(Control.Note, 0, "", "File name", CamtrapDPConstants.Media.FileName,
                 "Name of the media file. " +
                 $"If provided, one should be able to sort media files chronologically within a deployment on timestamp (first) and fileName (second).{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"IMG0001.jpg\"",
-                null),
+                null,false, false),
 
-            new StandardsRow(Control.FixedChoice, 0, "", "File Mediatype*", CamtrapDPConstants.Media.FileMediatype,
+            new StandardsRow(Control.FixedChoice, 0, "", "File mediatype*", CamtrapDPConstants.Media.FileMediatype,
                 $"Mediatype of the media file. Expressed as an IANA Media Type.{Environment.NewLine}" +
                 $"Pattern: ^(image|video|audio)/.*$ Required.{Environment.NewLine}" +
                 "• e.g., \"image\"",
-                StandardsBase.CreateChoiceList(true, new List<string> { "image", "video", "audio" })),
+                StandardsBase.CreateChoiceList(true, new List<string> { "image", "video" }),false, false), // while audio should be incuded, Timelapse doesn't have audio files
 
-            new StandardsRow(Control.MultiLine, 0, "", "Exif Data*", CamtrapDPConstants.Media.ExifData,
+            new StandardsRow(Control.MultiLine, 0, "", "Exif data", CamtrapDPConstants.Media.ExifData,
                 "EXIF data of the media file." +
                 $"Formatted as a valid JSON object. Optional.{Environment.NewLine}" +
                 "• e.g., \"{\"EXIF\":{\"ISO\":200,\"Make\":\"RECONYX\"}}\"",
-                null),
+                null, false, true),
 
-            new StandardsRow(Control.Flag, 0, "", "Favorite", CamtrapDPConstants.Media.Favorite,
+            new StandardsRow(Control.Flag, 0, "false", "Favorite", CamtrapDPConstants.Media.Favorite,
                 $"true if the media file is deemed of interest (e.g. an exemplar image of an individual).{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"true\"",
                 null),
 
-            new StandardsRow(Control.MultiLine, 0, "", "Media Comments", CamtrapDPConstants.Media.MediaComments,
+            new StandardsRow(Control.MultiLine, 0, "", "Media comments", CamtrapDPConstants.Media.MediaComments,
                 $"Comments or notes about the media file.{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"corrupted file\"",
@@ -604,42 +596,33 @@ namespace TimelapseTemplateEditor.Standards
             //
             // OBSERVATIONS SECTION
             //
-            new StandardsRow(Control.Note, 0, "", "Observation ID*", CamtrapDPConstants.Observations.ObservationID,
+            new StandardsRow(Control.Note, 0, "", "Observation Id*", CamtrapDPConstants.Observations.ObservationID,
                 $"Unique identifier of the observation.{Environment.NewLine}" +
                 $"Required.{Environment.NewLine}" +
                 "• e.g., \"obs1\"",
                 null),
 
-
-            // deploymentIDLEFT OUT AS ITS IN THE SAME LEVEL
-            //new StandardsRow(Control.Note, 0, "", "Deployment ID", CamtrapDPConstants.Observations.DeploymentID,
-            //    $"Identifier of the deployment the media file belongs to.{Environment.NewLine}" +
-            //    $"Required.{Environment.NewLine}" +
-            //    "• e.g., \"dep1\"",
-            //    null),
-
-            // mediaID LEFT OUT AS ITS IN THE SAME LEVEL
-
-            new StandardsRow(Control.Note, 0, "", "Event ID", CamtrapDPConstants.Observations.EventID,
+            new StandardsRow(Control.Note, 0, "", "Event Id", CamtrapDPConstants.Observations.EventID,
                 $"Identifier of the event the observation belongs to.{Environment.NewLine}" +
                 $"Facilitates linking event-based and media-based observations with a permanent identifier.{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"sequence1\"",
                 null),
 
-            new StandardsRow(Control.DateTime_, 0, "", "Event Start*", CamtrapDPConstants.Observations.EventStart,
+            new StandardsRow(Control.DateTime_, 0, "", "Event start*", CamtrapDPConstants.Observations.EventStart,
                 $"Date and time at which the event started. .{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"2023-11-31 13:01:05\"",
                 null),
 
-            new StandardsRow(Control.DateTime_, 0, "", "Event End*", CamtrapDPConstants.Observations.EventEnd,
+            new StandardsRow(Control.DateTime_, 0, "", "Event end*", CamtrapDPConstants.Observations.EventEnd,
                 $"Date and time at which the event ended. .{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
+                $"Note: Timelapse currently sets it the same as EventStart.{Environment.NewLine}" +
                 "• e.g., \"2023-11-31 13:01:05\"",
                 null),
 
-            new StandardsRow(Control.FixedChoice, 0, "", "Observation Level*", CamtrapDPConstants.Observations.ObservationLevel,
+            new StandardsRow(Control.FixedChoice, 0, "", "Observation level*", CamtrapDPConstants.Observations.ObservationLevel,
                 "Level at which the observation was classified. " +
                 $"• media for media-based observations that are directly associated with a media file (mediaID).{Environment.NewLine}" +
                 $"  These are especially useful for machine learning and don’t need to be mutually exclusive (e.g. multiple classifications are allowed).{Environment.NewLine}" +
@@ -650,7 +633,7 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"event\"",
                 StandardsBase.CreateChoiceList(true, new List<string> { "media", "event" })),
 
-            new StandardsRow(Control.FixedChoice, 0, "", "Observation Type*", CamtrapDPConstants.Observations.ObservationType,
+            new StandardsRow(Control.FixedChoice, 0, "", "Observation type*", CamtrapDPConstants.Observations.ObservationType,
                 $"Type of the observation.{Environment.NewLine}" +
                 $"All categories in this vocabulary have to be understandable from an AI point of view.{Environment.NewLine}" +
                 $"unknown describes classifications with a classificationProbability below some predefined threshold{Environment.NewLine}" +
@@ -659,13 +642,13 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"animal\"",
                 StandardsBase.CreateChoiceList(true, new List<string> { "animal", "human", "vehicle", "blank", "unknown", "unclassified"})),
 
-            new StandardsRow(Control.FixedChoice, 0, "", "Camera Setup Type", CamtrapDPConstants.Observations.CameraSetupType,
+            new StandardsRow(Control.FixedChoice, 0, "", "Camera setup type", CamtrapDPConstants.Observations.CameraSetupType,
                 $"Type of the camera setup action (if any) associated with the observation.{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"calibration\"",
                 StandardsBase.CreateChoiceList(true, new List<string> { "setup", "calibration"})),
 
-            new StandardsRow(Control.Note, 0, "", "Scientific Name", CamtrapDPConstants.Observations.ScientificName,
+            new StandardsRow(Control.Note, 0, "", "Scientific name", CamtrapDPConstants.Observations.ScientificName,
                 $"Scientific name of the observed individual(s).{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"Canis lupus\"",
@@ -677,7 +660,7 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"5\"",
                 null),
 
-            new StandardsRow(Control.FixedChoice, 0, "", "Life Stage", CamtrapDPConstants.Observations.LifeStage,
+            new StandardsRow(Control.FixedChoice, 0, "", "Life stage", CamtrapDPConstants.Observations.LifeStage,
                 $"Age class or life stage of the observed individual(s).{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"adult\"",
@@ -697,20 +680,20 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"vigilance\"",
                 null),
 
-            new StandardsRow(Control.Note, 0, "", "Individual ID", CamtrapDPConstants.Observations.IndividualID,
+            new StandardsRow(Control.Note, 0, "", "Individual Id", CamtrapDPConstants.Observations.IndividualID,
                 $"Identifier of the observed individual.{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"RD213\"",
                 null),
 
-            new StandardsRow(Control.DecimalAny, 0, "", "Individual Position Radius", CamtrapDPConstants.Observations.IndividualPositionRadius,
+            new StandardsRow(Control.DecimalAny, 0, "", "Individual position radius", CamtrapDPConstants.Observations.IndividualPositionRadius,
                 $"Distance from the camera to the observed individual identified by individualID.{Environment.NewLine} " +
                 $"Required for distance analyses (e.g. Howe et al. 2017) and random encounter modelling (e.g. Rowcliffe et al. 2011).{Environment.NewLine}" +
                 $"Expressed in meters. Optional.{Environment.NewLine}" +
                 "• e.g., \"-6.81\"",
                 null),
 
-            new StandardsRow(Control.DecimalAny, 0, "", "Individual Position Angle", CamtrapDPConstants.Observations.IndividualPositionAngle,
+            new StandardsRow(Control.DecimalAny, 0, "", "Individual position angle", CamtrapDPConstants.Observations.IndividualPositionAngle,
                 $"Angular distance from the camera view centerline to the observed individual identified by individualID.{Environment.NewLine}" +
                 $"Required for distance analyses (e.g. Howe et al. 2017) and random encounter modelling (e.g. Rowcliffe et al. 2011).{Environment.NewLine}" +
                 $"Expressed in degrees, with negative values left, 0 straight ahead and positive values right.{Environment.NewLine}" +
@@ -718,7 +701,7 @@ namespace TimelapseTemplateEditor.Standards
                 "• e.g., \"-8.56\"",
                 null),
 
-            new StandardsRow(Control.DecimalPositive, 0, "", "Individual Position Speed", CamtrapDPConstants.Observations.IndividualSpeed,
+            new StandardsRow(Control.DecimalPositive, 0, "", "Individual position speed", CamtrapDPConstants.Observations.IndividualSpeed,
                 $"Average movement speed of the observed individual identified by individualID.{Environment.NewLine}" +
                 $"Required for random encounter modelling (e.g. Rowcliffe et al. 2016).{Environment.NewLine}" +
                 $"Expressed in degrees, with negative values left, 0 straight ahead and positive values right.{Environment.NewLine}" +
@@ -731,65 +714,69 @@ namespace TimelapseTemplateEditor.Standards
                 $"Or the horizontal position of an object in that media file. {Environment.NewLine}" +
                 $"Measured from the left and relative to media file width.{Environment.NewLine}" +
                 "Minimum: 0, maximum: 1. Optional." +
+                $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
                 "• e.g., \".2\"",
-                null),
+                null, false, false),
 
             new StandardsRow(Control.DecimalAny, 0, "", "Bbox Y", CamtrapDPConstants.Observations.BboxY,
                 $"Vertical position of the top-left corner of a bounding box that encompasses the observed individual(s) in the media file identified by mediaID.{Environment.NewLine}" +
                 $"Or the vertical position of an object in that media file.{Environment.NewLine}" +
                 $"Measured from the top and relative to media file width.{Environment.NewLine}" +
                 "Minimum: 0, maximum: 1. Optional." +
+                $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
                 "• e.g., \".25\"",
-                null),
+                null, false, false),
 
-            new StandardsRow(Control.DecimalAny, 0, "", "Bbox Width", CamtrapDPConstants.Observations.BboxWidth,
+            new StandardsRow(Control.DecimalAny, 0, "", "Bbox width", CamtrapDPConstants.Observations.BboxWidth,
                 $"Width of a bounding box that encompasses the observed individual(s) in the media file identified by mediaID.{Environment.NewLine}" +
                 $"Measured from the left of the bounding box and relative to the media file width.{Environment.NewLine}" +
                 "Minimum: 1e-15, maximum: 1. Optional." +
+                $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
                 "• e.g., \"0.4\"",
-                null),
+                null, false, false),
 
-                new StandardsRow(Control.DecimalAny, 0, "", "Bbox Height", CamtrapDPConstants.Observations.BboxHeight,
+                new StandardsRow(Control.DecimalAny, 0, "", "Bbox height", CamtrapDPConstants.Observations.BboxHeight,
                     $"Height of a bounding box that encompasses the observed individual(s) in the media file identified by mediaID.{Environment.NewLine}" +
                     $"Measured from the top of the bounding box and relative to the media file height.{Environment.NewLine}" +
                     "Minimum: 1e-15, maximum: 1. Optional." +
                     "• e.g., \"0.5\"",
-                null),
+                    $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
+                null, false, false),
 
-                new StandardsRow(Control.FixedChoice, 0, "", "Classification Method", CamtrapDPConstants.Observations.ClassificationMethod,
+                new StandardsRow(Control.FixedChoice, 0, "", "Classification method", CamtrapDPConstants.Observations.ClassificationMethod,
                     $"Method (most recently) used to classify the observation.{Environment.NewLine}" +
                     "Optional." +
                     "• e.g., \"human\"",
                     StandardsBase.CreateChoiceList(true, new List<string> { "human", "machine"})),
 
-                new StandardsRow(Control.Note, 0, "", "Classified By", CamtrapDPConstants.Observations.ClassifiedBy,
+                new StandardsRow(Control.Note, 0, "", "Classified by", CamtrapDPConstants.Observations.ClassifiedBy,
                     $"Name or identifier of the person or AI algorithm that (most recently) classified the observation.{Environment.NewLine}" +
                     "Optional." +
                     "• e.g., \"MegaDetector V5\"",
                     null),
 
-                new StandardsRow(Control.DateTime_, 0, "", "Classification Timestamp", CamtrapDPConstants.Observations.ClassificationTimestamp,
+                new StandardsRow(Control.DateTime_, 0, "", "Classification timestamp", CamtrapDPConstants.Observations.ClassificationTimestamp,
                     $"Date_ and time of the (most recent) classification.{Environment.NewLine}" +
                     "Optional." +
                     "• e.g., \"2020-08-22 10:25:19\"",
-                    null),
+                    null, false, false),
 
-                new StandardsRow(Control.IntegerPositive, 0, "", "Classification Probability", CamtrapDPConstants.Observations.ClassificationProbability,
+                new StandardsRow(Control.IntegerPositive, 0, "", "Classification probability", CamtrapDPConstants.Observations.ClassificationProbability,
                     $"Degree of certainty of the (most recent) classification.{Environment.NewLine}" +
                     $"Expressed as a probability, with 1 being maximum certainty.{Environment.NewLine}" +
                     $"Omit or provide an approximate probability for human classifications.{Environment.NewLine}" +
                     "Minimum: 0, maximum: 1. Optional." +
                     "• e.g., \"0.95\"",
-                    null),
+                    null, false, false),
 
-                new StandardsRow(Control.MultiLine, 0, "", "Observation Tags", CamtrapDPConstants.Observations.ObservationTags,
+                new StandardsRow(Control.MultiLine, 0, "", "Observation tags", CamtrapDPConstants.Observations.ObservationTags,
                     $"Tag(s) associated with the observation.{Environment.NewLine}" +
                     $"Formatted as a pipe (|) separated list for multiple values, with values optionally formatted as key:value pairs.{Environment.NewLine}" +
                     "Optional." +
                     "• e.g., \"travelDirection:left\"",
                     null),
 
-                new StandardsRow(Control.MultiLine, 0, "", "Observation Comments", CamtrapDPConstants.Observations.ObservationComments,
+                new StandardsRow(Control.MultiLine, 0, "", "Observation comments", CamtrapDPConstants.Observations.ObservationComments,
                     $"Comments or notes about the observation..{Environment.NewLine}" +
                     "Optional.",
                     null),

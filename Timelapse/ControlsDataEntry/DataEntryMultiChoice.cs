@@ -184,7 +184,9 @@ namespace Timelapse.ControlsDataEntry
                 this.ContentControl.ToolTip = "Select an item to change the " + this.Label + " for all selected images";
                 return;
             }
-              
+            value = value.Trim();
+
+
             if (ContentControl.Text != value)
             {
                 this.ContentControl.Text = value;

@@ -258,10 +258,13 @@
     <Resource Include="Resources\PracticeImageSetTutorialStandardOverview.rtf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\CamtrapDPStandardsOverview.rtf">
+    <Resource Include="Resources\AlbertaMetadataStandardsTemplate.tdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\AlbertaMetadataStandardsTemplate.tdb">
+    <Resource Include="Resources\CamtrapDPOverview.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\CamtrapDPTemplate.tdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <None Include="Standards\jsonStandard.json" />

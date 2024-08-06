@@ -70,7 +70,7 @@ namespace TimelapseTemplateEditor.Controls
             if (alwaysUpdate || DataGrid.Items.Count != LastRowCount)
             {
                 LastRowCount = DataGrid.Items.Count;
-                DataGridCommonCode.UpdateCellEditabilityAndVisibility(DataGrid, Globals.Root.standardType);;
+                DataGridCommonCode.UpdateCellEditabilityAndVisibility(DataGrid, Globals.Root.standardType, -1);;
             }
         }
         #endregion
@@ -303,7 +303,7 @@ namespace TimelapseTemplateEditor.Controls
             if (DataGrid.SelectedItem is DataRowView selectedRowView)
             {
                 ControlRow control = new ControlRow(selectedRowView.Row);
-                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type);
+                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
             }
             else
             {
@@ -325,7 +325,7 @@ namespace TimelapseTemplateEditor.Controls
             {
                 // Something selected, but we enable the remove button only if its not a standard control 
                 ControlRow control = new ControlRow(selectedRowView.Row);
-                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type);
+                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard; ;
             }
         }
         private void DataGrid_OnLostFocus(object sender, RoutedEventArgs e)
@@ -347,7 +347,7 @@ namespace TimelapseTemplateEditor.Controls
             {
                 // Something selected, but we enable the remove button only if its not a standard control 
                 ControlRow control = new ControlRow(selectedRowView.Row);
-                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type);
+                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard; ;
             }
         }
         #endregion

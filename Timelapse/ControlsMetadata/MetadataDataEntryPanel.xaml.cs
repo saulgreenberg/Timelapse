@@ -13,6 +13,7 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Standards;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using Control = System.Windows.Controls.Control;
@@ -860,9 +861,22 @@ namespace Timelapse.ControlsMetadata
 
                     if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
                     {
-                        Button button = new Button()
+                        StackPanel spatialPanel = new StackPanel(){Orientation=Orientation.Horizontal};
+                        Button buttonLatLong = new Button()
                         {
-                            Content = "Use GeoJson.IO",
+                            Content = "From lat/long",
+                            ToolTip = $"Generates a GeoJson as a bounding box containing all your deployments' latitude/longitude coordinates.{Environment.NewLine}" +
+                                      "View this bounding box by opening GeoJson.IO and copying those coordinates into it.",
+                            Visibility = Visibility.Visible,
+                            Height = 24,
+                            Width = Double.NaN,
+                            Margin = new Thickness(5, 0, 0, 0),
+                            Padding = new Thickness(5, 0, 5, 0),
+                            HorizontalContentAlignment = HorizontalAlignment.Left,
+                        };
+                        Button buttonGeoJson = new Button()
+                        {
+                            Content = "Edit with GeoJson.IO",
                             ToolTip = $"Opens a web browser on http://Geojson.IO{Environment.NewLine}" +
                                       $"Use it to outline the geographic area(s) of your project.{Environment.NewLine}" +
                                       "Then copy/paste the generated geojson into the Timelapse spatial field.",
@@ -873,13 +887,21 @@ namespace Timelapse.ControlsMetadata
                             Padding = new Thickness(5, 0, 5, 0),
                             HorizontalContentAlignment = HorizontalAlignment.Left,
                         };
+                        spatialPanel.Children.Add(buttonLatLong);
+                        spatialPanel.Children.Add(buttonGeoJson);
 
-                        button.Click += Spatial_Click;
+                        buttonGeoJson.Click += SpatialGeoJson_Click;
+                        buttonLatLong.Click += SpatialLatLong_Click;
                         spatialControl.GetContentControl.Visibility = Visibility.Visible;
-                        spatialControl.Container.Children.Insert(2, button);
+                        spatialControl.Container.Children.Insert(2, spatialPanel);
                     }
                 }
             }
+        }
+
+        private void ButtonLatLong_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         // See above - Raise a dialog box allowing the user to construct and/or edit a list of contributors
@@ -987,10 +1009,30 @@ namespace Timelapse.ControlsMetadata
             }
         }
 
-        public void Spatial_Click(object sender, RoutedEventArgs eventArgs)
+        public void SpatialGeoJson_Click(object sender, RoutedEventArgs eventArgs)
         {
-            Dialogs.CamtrapDPGeoJsonIO(GlobalReferences.MainWindow);
-            Util.ProcessExecution.TryProcessStart(new Uri("https://GeoJson.IO"));
+            string command = "https://GeoJson.IO";
+            string jsonParameterCode = "/#data=data:application/json,";
+            Dialogs.CamtrapDPSpatialCoverageInstructions(GlobalReferences.MainWindow);
+            if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
+            {
+                if (false == string.IsNullOrWhiteSpace(spatialControl.Content))
+                {
+                    command += jsonParameterCode + Uri.EscapeDataString(spatialControl.Content);
+                }
+                Util.ProcessExecution.TryProcessStart(new Uri(command));
+            } 
+        }
+
+        public void SpatialLatLong_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            Dialogs.CamtrapDPSpatialCoverageInstructions(GlobalReferences.MainWindow);
+            string jsonAsString = CamtrapDPHelpers.CalculateLatLongBoundingBoxFromDeployments(this.FileDatabase);
+            // Set the package created date
+            if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
+            {
+                spatialControl.SetContentAndTooltip(jsonAsString);
+            }
         }
 
         // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements
@@ -1020,11 +1062,13 @@ namespace Timelapse.ControlsMetadata
                 if (this.Level == 2)
                 {
                     // Set the DeploymentID to a GUID
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.DeploymentID, out var deploymentIDControl))
-                    {
-                        deploymentIDControl.SetContentAndTooltip(Guid.NewGuid().ToString());
-                        GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(deploymentIDControl);
-                    }
+                    // NOW DONE IN CSV FILE
+                    //if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.DeploymentID, out var deploymentIDControl))
+                    //{
+                    //    // the subpath should always be the deployment folder name, as its the 2nd level (i.e. the first subfolder)
+                    //    deploymentIDControl.SetContentAndTooltip(this.SubPath);
+                    //    GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(deploymentIDControl);
+                    //}
                     // Set the LocationID to a GUID
                     if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.LocationID, out var locationIDControl))
                     {

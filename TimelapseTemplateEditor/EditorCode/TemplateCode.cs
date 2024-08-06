@@ -14,6 +14,7 @@ using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
+using TimelapseTemplateEditor.Standards;
 using Control = Timelapse.Constant.Control;
 // For debugging
 
@@ -90,8 +91,9 @@ namespace TimelapseTemplateEditor
 
             // Handle Metadata: Sync the metadata by creating metadata tabs that reflect each level (if any) in the Metadata table
             await MetadataUI.SyncMetadataTabsFromMetadataTableAsync();
+            this.TemplateUI.RowControls.IsEnabled = this.standardType != CamtrapDPStandard.Standard;
 
-            
+
         }
 
         // Close the current template and clear the UI as needed
@@ -109,9 +111,10 @@ namespace TimelapseTemplateEditor
             TemplateUI.TemplateSpreadsheetPreviewControl.SpreadsheetPreview.Columns.Clear();
             MetadataUI.RemoveAllMetadataLevelTabs();
 
-            // Enable/disable the various menus as needed.
+            // Enable/disable the various menus / controls as needed.
             ResetUIElements(false, string.Empty);
             MenuMetadata.IsEnabled = false;
+            this.TemplateUI.RowControls.IsEnabled = true;
         }
         #endregion
 

@@ -646,7 +646,30 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Controls - Get DataLabels, TypedDataLabel except id in spreadsheet order from controls
+        #region Controls - Get DataLabels, TypedDataLabel except id controls
+        public List<string> GetDataLabelsFromControlsByIDCreationOrder()
+        {
+            List<string> dataLabels = new List<string>();
+            IEnumerable<ControlRow> controls = this.Controls.OrderBy(control => control.ID);
+            foreach (ControlRow control in controls)
+            {
+                string dataLabel = control.DataLabel;
+                if (string.IsNullOrEmpty(dataLabel))
+                {
+                    dataLabel = control.DataLabel;
+                }
+                Debug.Assert(string.IsNullOrWhiteSpace(dataLabel) == false,
+                    $"Encountered empty data label and label at ID {control.ID} in template table.");
+
+                // get a list of datalabels so we can add columns in the order that matches the current template table order
+                if (Constant.DatabaseColumn.ID != dataLabel)
+                {
+                    dataLabels.Add(dataLabel);
+                }
+            }
+            return dataLabels;
+        }
+
         public List<string> GetDataLabelsExceptIDInSpreadsheetOrderFromControls()
         {
             // Utilities.PrintMethodName();

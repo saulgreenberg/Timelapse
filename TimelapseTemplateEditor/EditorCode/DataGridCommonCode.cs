@@ -67,7 +67,7 @@ namespace TimelapseTemplateEditor.EditorCode
             }
         }
 
-        public static void UpdateCellEditabilityAndVisibility(DataGrid dataGrid, string standard)
+        public static void UpdateCellEditabilityAndVisibility(DataGrid dataGrid, string standard, int level)
         {
             bool isCamtrapDP = standard == Timelapse.Constant.Standards.CamtrapDPStandard;
             // Greys out cells and updates the visibility of particular rows as defined by logic. 
@@ -175,30 +175,14 @@ namespace TimelapseTemplateEditor.EditorCode
                          (columnHeader == Control.Type ||
                           columnHeader == EditorConstant.ColumnHeader.DataLabel ||
                           columnHeader == Control.List ||
-                          (columnHeader == "Export" && control.DataLabel != Timelapse.Constant.DatabaseColumn.DeleteFlag) ||
-                          (columnHeader == EditorConstant.ColumnHeader.DefaultValue &&
-                           (control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Deployment_name ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Deployment_path ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Deployment_schema ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Media_name ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Media_path ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Media_schema ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Observations_name ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Observations_path ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Observations_schema ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Resources.Resource_profile ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Profile ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.IdAlias ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Project.Id ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Spatial ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Contributors ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Sources ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Licenses ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.Taxonomic ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.RelatedIdentifiers ||
-                            control.DataLabel == CamtrapDPConstants.DataPackage.References
-                         ))))
-                        )
+                          (columnHeader == "Export") ||
+                          // Check deployment levels
+                          (level == 1 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDataPackageFieldNonEditable(control.DataLabel)) ||
+                          (level == 2 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDeploymentFieldNonEditable(control.DataLabel)) ||
+                          (level == -1 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsMediaObservationsFieldNonEditable(control.DataLabel))
+                         )
+                         ))
+
                     {
                         // Disable the Type ComboBox for the standard (required) controls
                         if (columnHeader == Control.Type && (controlType == DatabaseColumn.File || controlType == DatabaseColumn.RelativePath ||
@@ -464,7 +448,7 @@ namespace TimelapseTemplateEditor.EditorCode
             // If not, it will fall through and return false.
             if (null != item?.Content && item.Content is string textContent && currentType != textContent)
             {
-                
+
                 if (false == EditorDialogs.TypeChangeInformationDialog(Globals.RootEditor, comboBox.Text, textContent))
                 {
                     if (removedItems.Count == 1)

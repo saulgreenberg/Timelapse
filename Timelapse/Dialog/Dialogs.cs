@@ -1397,8 +1397,6 @@ namespace Timelapse.Dialog
 
         #endregion
 
-
-
         #region MenuFile CSV Export
         /// <summary>
         /// Export data for this image set as a.csv file, but confirm, as only a subset will be exported since a selection is active
@@ -1435,9 +1433,41 @@ namespace Timelapse.Dialog
             {
                 GlobalReferences.TimelapseState.SuppressSelectedCsvExportPrompt = messageBox.DontShowAgain.IsChecked.Value;
             }
-
             return exportCsv;
         }
+
+        /// <summary>
+        /// Export data for this image set as a.csv file, but confirm, as only a subset will be exported since a selection is active
+        /// </summary>
+        public static bool? MenuFileExportFailedForUnknownReasonDialog(Window owner, string fileName)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Exporting failed for an unkown reason...";
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Title = title,
+                    What = $"Exporting your data to the file below failed for an unknown reason{Environment.NewLine}" +
+                           $"{fileName}",
+                    Hint = $"If there is no obvious reason for this failure, email the Timelapse developer saul@ucalgary.ca",
+                    Icon = MessageBoxImage.Exclamation
+                },
+                DontShowAgain =
+                {
+                    Visibility = Visibility.Visible
+                }
+            };
+
+            bool? exportCsv = messageBox.ShowDialog();
+            if (messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                GlobalReferences.TimelapseState.SuppressSelectedCsvExportPrompt = messageBox.DontShowAgain.IsChecked.Value;
+            }
+            return exportCsv;
+        }
+
+
 
         /// <summary>
         /// Cant write the spreadsheet file
@@ -1460,10 +1490,62 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
 
-        #region MessageBox: FolderDataExportedToCSV
+        /// <summary>
+        /// Export data for this image set as a.csv file, but confirm, as only a subset will be exported since a selection is active
+        /// </summary>
+        public static void MenuFileExportRequiresAllFilesSelected(Window owner, string whereToExport)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"Can't do the {whereToExport} export, as only a subset of your files are selected ";
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
+            {
+                Message =
+                {
+                    Title = title,
+                    What = $"Exporting {whereToExport} requires that you have all your files selected,{Environment.NewLine}" +
+                           $"but you are only viewing a subset of them",
+                    Solution = $"Try exporting again by selecting all your files via:{Environment.NewLine}" +
+                               $" • Select | All files",
+                    Icon = MessageBoxImage.Exclamation
+                },
+            };
+
+            messageBox.ShowDialog();
+        }
+
+        #region MessageBox: CamtrapDP-specific exporting
+
+        // Confirm closing this template and creating a new one
+        public static bool? ExportToCamtrapDPExplanation(Window owner)
+        {
+            return new MessageBox("Export all data as CamtrapDP files", owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Question,
+                    What = $"To export all your data as CamtrapDP files, you will be asked to select a folder.{Environment.NewLine}" +
+                           $"Timelapse will then create a new folder within that called '{Constant.File.CamtrapDPExportFolder}',{Environment.NewLine}" +
+                           $"and will export four files as required by the CamtrapDP standard into that folder.{Environment.NewLine}" +
+
+                           $" • {Constant.File.CamtrapDPDataPackageJsonFilename}{Environment.NewLine}" +
+                           $" • {Constant.File.CamtrapDPDeploymentCSVFilename}{Environment.NewLine}" +
+                           $" • {Constant.File.CamtrapDPMediaCSVFilename}{Environment.NewLine}" +
+                           $" • {Constant.File.CamtrapDPObservationsCSVFilename}",
+                    Result = $"You should be able to upload these files to a CamptrapDP-compatable data repository,{Environment.NewLine}" +
+                            $"as Timelapse configures each one to conform to the CamtrapDP standard.",
+                    Hint = $"CamptrapDP requires filled in values for various fields. Timelapse will warn you if some are missing.{Environment.NewLine}" +
+                           $" • see CamtrapDP specifications: see https://camtrap-dp.tdwg.org/{Environment.NewLine}{Environment.NewLine}" +
+                           $"However, we do recommend validating your files against a proper CamtrapDP validator before uploading.{Environment.NewLine}" +
+                           $" • see CamtrapDP validation: see https://camtrap-dp.tdwg.org/#validation ",
+                }
+            }.ShowDialog();
+        }
+        #endregion
+
+        #region MessageBox: AllDataExportedToCSV
 
         // A message saying that the folder data was exported to various CSV files
-        public static void FolderDataExportedToCSV(Window owner, string folderPath, List<string> files)
+        public static void AllDataExportedToCSV(Window owner, string folderPath, List<string> files, bool imageDataIncluded)
         {
             // Warn the user that these files cannot be modified
             string title = "The following CSV files were written";
@@ -1473,18 +1555,22 @@ namespace Timelapse.Dialog
                 fileList += $"{Environment.NewLine}\u2022 {file}";
             }
 
+            string reason = imageDataIncluded
+                ? $"• Image data was exported to {Constant.File.CSVImageDataFileName}.{Environment.NewLine}" +
+                  $"  (data in that file can be altered and imported back into Timelapse).{Environment.NewLine}"
+                : string.Empty;
+            reason += "• Each folder data level was exported to a file whose name is the same as the folder data level.";
             MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
             {
                 Message =
                 {
-                    What = $"Your folder data was exported to these files:{fileList}{Environment.NewLine}in the folder: {folderPath}",
-                    Reason = "Each folder data level was exported to a file whose name is the same as the folder data level.",
+                    What = $"All your  data was exported to these files:{fileList}{Environment.NewLine}in the folder: {folderPath}",
+                    Reason = reason,
                     Icon = MessageBoxImage.Information
                 }
             };
             messageBox.ShowDialog();
         }
-
         #endregion
 
 
@@ -2980,7 +3066,7 @@ namespace Timelapse.Dialog
                            $" 1. Select the model you want to use{Environment.NewLine}" +
                            $"    (the default model shows detections with broad animal/person/vehicle classifications){Environment.NewLine}" +
                            $" 2. Click 'Start processing', which will start processing your images.{Environment.NewLine}" +
-                           " 3. You will be notified when your image recognition is completed.",
+                            " 3. You will be notified when your image recognition is completed.",
                     Hint = $"Be patient. Image recognition takes time.{Environment.NewLine}" +
                            $" • you may want to run this overnight if you have (say) tens or hundreds of thousands of images.{Environment.NewLine}" +
                            " • you can continue with your other work (including Timelapse work) while EcoAssist is running.",
@@ -2998,7 +3084,7 @@ namespace Timelapse.Dialog
             string missingMessage = string.Empty;
             foreach (string str in missingMessages)
             {
-                missingMessage += $"{Environment.NewLine}• {str}";
+                missingMessage += $"{Environment.NewLine}{str}";
             }
 
             return new MessageBox(title, owner)
@@ -3008,34 +3094,35 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Warning,
                     What = $"CamtrapDP specifies various required fields, which don't appear to be filled in." +
                            missingMessage,
-                    Result = $"Other systems that expect these required fields may complain or fail.", 
+                    Result = $"Other systems that expect these required fields may complain or fail.",
                     Hint = $"This is just a warning, as your data was still exported.{Environment.NewLine}" +
                            $"You may want to go back and fill in those missing fields.",
                 }
             }.ShowDialog();
         }
 
-        public static bool? CamtrapDPGeoJsonIO(Window owner)
+        public static bool? CamtrapDPSpatialCoverageInstructions(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Generating spatial coverage with GeoJson.IO";
-            
+            const string title = "How to use spatial coverage";
+
             return new MessageBox(title, owner)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"Geojson.io is a browser-based application that can generate spatial coverage data.{Environment.NewLine}" +
-                           $"1. Use it to outline the geographic area(s) of your project.{Environment.NewLine}" +
-                           $"2. As you do so, it generates text (as GeoJson data) describing the area.{Environment.NewLine}" +
-                           $"3. Copy/paste the entire geojson text into the Timelapse spatial field.{Environment.NewLine}{Environment.NewLine}" +
-                           $"You can also view your existing geojson data.{Environment.NewLine}" +
-                           $"1.Copy the entire spatial coverage field's contents{Environment.NewLine}" +
-                           $"2. Paste it into the geojson.io's JSON tab",
+                    What = $"Spatial coverage, specified as GeoJson data, can be defined in a few ways.{Environment.NewLine}" +
+                           $"1. From lat/long. Click to:{Environment.NewLine}" +
+                           $"   • calculate a bounding box surrounding your deployments' latitude/longitude coordinates.{Environment.NewLine}" +
+                           $"2. Via Geojson.io. Click to:{Environment.NewLine}" +
+                           $"   • view and/or edit your current spatial coverage in a browser-based map;{Environment.NewLine}" +
+                           $"   • then copy/paste the generated geojson text into the Timelapse spatial field.{Environment.NewLine}" +
+                           $"3. From some other source (e.g., GIS package). {Environment.NewLine}" +
+                           $"   • paste geojson into the spatial coverage field",
 
-                    Hint = $"Geojson.IO has a help button, but its instructions are minimal.{Environment.NewLine}" +
-                           $"Search for the various online tutorials on geojson.io.{Environment.NewLine}{Environment.NewLine}" +
-                           $"Alternately, if you have a GIS person, ask them for the GeoJson data and enter it as above.{Environment.NewLine}"
+                    Hint = $"The easiest approach is to:{Environment.NewLine}" +
+                           $"   • click 'From lat/long'{Environment.NewLine}" +
+                           $"   • click 'Via GeoJson.IO' to view the results{Environment.NewLine}"
                 }
             }.ShowDialog();
         }

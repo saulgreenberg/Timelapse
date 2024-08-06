@@ -466,6 +466,7 @@
     <Compile Include="Standards\CamtrapDPConstants.cs" />
     <Compile Include="Standards\CamtrapDPExportFiles.cs" />
     <Compile Include="Standards\CamtrapDPDataPackage.cs" />
+    <Compile Include="Standards\CamtrapDPHelpers.cs" />
     <Compile Include="Standards\CamtrapDPKeywords.xaml.cs">
       <DependentUpon>CamtrapDPKeywords.xaml</DependentUpon>
     </Compile>
@@ -493,6 +494,7 @@
     <Compile Include="TimelapsePartialClasses\TimelapseProgress.cs" />
     <Compile Include="Util\ColorsAndBrushes.cs" />
     <Compile Include="Util\Compare.cs" />
+    <Compile Include="Util\CSVHelpers.cs" />
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\DragDropFile.cs" />
     <Compile Include="Episodes\Episodes.cs" />

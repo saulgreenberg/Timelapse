@@ -53,6 +53,7 @@ namespace TimelapseTemplateEditor
         private async void MenuFileNewTemplate_Click(object sender, RoutedEventArgs e)
         {
             await CreateNewTemplateFile();
+            this.TemplateUI.RowControls.IsEnabled = true;
         }
 
 
@@ -62,6 +63,7 @@ namespace TimelapseTemplateEditor
         {
             string rtfPath = string.Empty;
             string templatePath = string.Empty;
+            string title = string.Empty;
             if (sender is MenuItem menuItem)
             {
                 switch (menuItem.Tag)
@@ -69,13 +71,19 @@ namespace TimelapseTemplateEditor
                     case EditorConstant.Standards.AlbertaMetadataStandards:
                         rtfPath = EditorConstant.Standards.AlbertaMetadataStandardsOverview;
                         templatePath = EditorConstant.Standards.AlbertaMetadataStandardsTemplate;
+                        title = EditorConstant.Standards.AlbertaMetadataStandardsTitle;
+                        break;
+                    case EditorConstant.Standards.CamtrapDP:
+                        rtfPath = EditorConstant.Standards.CamtrapDPOverview;
+                        templatePath = EditorConstant.Standards.CamtrapDPTemplate;
+                        title = EditorConstant.Standards.CamtrapDPTitle;
                         break;
                     default:
                         return;
                 }
             }
 
-            ShowRtfFile show = new ShowRtfFile(this, $"{EditorConstant.Standards.AlbertaMetadataStandardsTitle} and Timelapse",
+            ShowRtfFile show = new ShowRtfFile(this, $"{title} and Timelapse",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
                 rtfPath);
             if (false == show.ShowDialog())
@@ -83,6 +91,7 @@ namespace TimelapseTemplateEditor
                 return;
             }
             CreateNewTemplateFileFromResource(templatePath);
+            this.TemplateUI.RowControls.IsEnabled = true;
         }
 
  
@@ -102,6 +111,7 @@ namespace TimelapseTemplateEditor
             }
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(AlbertaMetadataStandard.FolderMetadataRows, AlbertaMetadataStandard.ImageTemplateRows, AlbertaMetadataStandard.Aliases);
+            this.TemplateUI.RowControls.IsEnabled = true;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
 
@@ -117,12 +127,12 @@ namespace TimelapseTemplateEditor
             }
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(PracticeImageSetMetadataExample.FolderMetadataRows, PracticeImageSetMetadataExample.ImageTemplateRows, PracticeImageSetMetadataExample.Aliases);
-
+            this.TemplateUI.RowControls.IsEnabled = true;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
 
         // Create a camtrapDP template programmatically
-        private async void MenuFileNewCameratrapDP_Click(object sender, RoutedEventArgs e)
+        private async void MenuFileNewCameratrapDPProgramatically_Click(object sender, RoutedEventArgs e)
         {
             ShowRtfFile show = new ShowRtfFile(this, "The CamtrapDP Standard",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
@@ -136,6 +146,7 @@ namespace TimelapseTemplateEditor
             // Set the standard being used, if any. This avoids excessive calls to the database
             templateDatabase.UpdateStandard(CamtrapDPStandard.Standard);
             this.standardType = CamtrapDPStandard.Standard;
+            this.TemplateUI.RowControls.IsEnabled = false;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
 
@@ -144,7 +155,7 @@ namespace TimelapseTemplateEditor
         {
             await CreateNewTemplateFile();
             this.DoCreateMetadataStandardFields(AllControlsStandard.FolderMetadataRows, AllControlsStandard.ImageTemplateRows, AllControlsStandard.Aliases);
-
+            this.TemplateUI.RowControls.IsEnabled = true;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
         #endregion
@@ -201,7 +212,6 @@ namespace TimelapseTemplateEditor
                     }
                 }
                 await TemplateDoOpen(openFileDialog.FileName);
-
             }
         }
         #endregion
