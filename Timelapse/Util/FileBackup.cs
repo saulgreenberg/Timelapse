@@ -182,7 +182,12 @@ namespace Timelapse.Util
             // ReSharper restore All
             foreach (FileInfo file in backupFiles.Skip(Constant.File.NumberOfBackupFilesToKeep))
             {
-                Util.FilesFolders.TryDeleteFileIfExists(file.FullName);
+                // Don't remove newer backups
+                int days = (DateTime.Now - file.CreationTime).Days;
+                if (days > 14)
+                {
+                    Util.FilesFolders.TryDeleteFileIfExists(file.FullName);
+                }
             }
             return true;
         }
