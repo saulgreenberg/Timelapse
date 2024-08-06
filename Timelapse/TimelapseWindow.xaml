@@ -375,13 +375,13 @@
 
                         <Separator />
 
-                        <MenuItem Name="MenuItemEcoAssistDownload" Header="Install EcoAssist image recognizer (web site)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
+                        <MenuItem Name="MenuItemEcoAssistDownload" Header="Install EcoAssist image recognizer (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
                             <MenuItem.Icon>
                                 <Image Source="Icons/JSONImport_32x.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
-                        <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Check for EcoAssist updates..." IsEnabled="True" Click="MenuItemEcoAssistCheckForUpdates_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
+                        <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Uninstall EcoAssist (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistUninstall_Click" ToolTip="Go to the Uninstall EcoAssist web page to download the EcoAssist Unninstall utility">
                             <MenuItem.Icon>
                                 <Image Source="Icons/JSONImport_32x.png" />
                             </MenuItem.Icon>

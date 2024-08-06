@@ -349,7 +349,7 @@ namespace Timelapse.Constant
     public static class EcoAssist
     {
         public const string EcoAssistDownload = @"https://addaxdatascience.com/ecoassist-windows/";
-        public const string EcoAssistCheckForUpdates = @"";
+        public const string EcoAssistUninstallDownload = @"https://addaxdatascience.com/windows-uninstall/";
         public const string EcoAssistSubfolderExecutable = @"EcoAssist_files\EcoAssist\open.bat";
     }
     public static class EpisodeDefaults

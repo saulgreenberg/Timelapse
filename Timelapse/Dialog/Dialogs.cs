@@ -3029,6 +3029,22 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
 
+        public static bool? EcoAssistNotInstalled(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "EcoAssist doesn't appear to be installed.";
+
+            return new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"The EcoAssist image recognizer does not appear to be installed.{Environment.NewLine}" +
+                           $"But if you want to try to run the uninstaller anyways, press Ok.{Environment.NewLine}",
+                }
+            }.ShowDialog();
+        }
+
         public static bool? EcoAssistInstallationInformaton(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

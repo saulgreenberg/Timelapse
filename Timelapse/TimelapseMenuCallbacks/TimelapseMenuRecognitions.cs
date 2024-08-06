@@ -359,11 +359,20 @@ namespace Timelapse
             }
         }
 
-        private void MenuItemEcoAssistCheckForUpdates_Click(object sender, RoutedEventArgs e)
+        private void MenuItemEcoAssistUninstall_Click(object sender, RoutedEventArgs e)
         {
-            return;
-            // TO BE MODIFIED
-            ProcessExecution.TryProcessStart(new Uri(Constant.EcoAssist.EcoAssistCheckForUpdates));
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+
+            // If an installation already exists, check with the user to see if he/she wants to continue...
+            if (false == File.Exists(ecoAssistExecutable1) && false == File.Exists(ecoAssistExecutable2))
+            {
+                if (false == Dialogs.EcoAssistNotInstalled(this))
+                {
+                    return;
+                }
+            }
+            ProcessExecution.TryProcessStart(new Uri(Constant.EcoAssist.EcoAssistUninstallDownload));
         }
 
         private void MenuItemEcoAssistRun_Click(object sender, RoutedEventArgs e)
