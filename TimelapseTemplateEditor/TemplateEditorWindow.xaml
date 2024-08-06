@@ -58,9 +58,19 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Name="MenuFileNewCameratrapDP" Header="_CamtrapDP (for testing only)..." 
+                    <MenuItem Name="MenuFileNewCameratrapDP" Header="_CamtrapDP..." 
                               Visibility ="Visible"
-                              Click="MenuFileNewCameratrapDP_Click" 
+                              Click="MenuFileNewBasedOnStandard_Click" 
+                              Tag ="CamtrapDP"
+                              ToolTip="Create a new data template file based on the CamtrapDP standard. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuFileNewCameratrapDPProgrammaticaly" Header="_CamtrapDP (programatically)..." 
+                              Visibility ="Collapsed"
+                              Click="MenuFileNewCameratrapDPProgramatically_Click" 
                               ToolTip="Create a new data template file based on the CamtrapDP standard. You can edit it afterwards if desired.">
                         <MenuItem.Icon>
                             <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
@@ -78,7 +88,7 @@
                     </MenuItem>
 
                     <MenuItem Name="MenuFileNewAllControlsStandard" Header="_All controls metadata example..."
-                              Visibility ="Visible"
+                              Visibility ="Collapsed"
                               Click="MenuFileNewAllControlsStandard_Click" 
                               ToolTip="Create a new data template file based on an example standard that lists all controls. You can edit it afterwards if desired.">
                         <MenuItem.Icon>

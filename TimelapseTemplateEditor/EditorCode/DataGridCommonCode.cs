@@ -175,7 +175,7 @@ namespace TimelapseTemplateEditor.EditorCode
                          (columnHeader == Control.Type ||
                           columnHeader == EditorConstant.ColumnHeader.DataLabel ||
                           columnHeader == Control.List ||
-                          (columnHeader == "Export" && level != -1 && control.DataLabel != Timelapse.Constant.DatabaseColumn.DeleteFlag) ||
+                          (columnHeader == "Export") ||
                           // Check deployment levels
                           (level == 1 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDataPackageFieldNonEditable(control.DataLabel)) ||
                           (level == 2 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDeploymentFieldNonEditable(control.DataLabel)) ||

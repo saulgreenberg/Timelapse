@@ -106,12 +106,25 @@
                         <Separator />
 
                         <!-- Export folder data to a .csv file...-->
-                        <MenuItem Name="MenuItemExportFolderDataAsCSV" Header="Export all folder data to .csv files ..." IsEnabled="false" Click="MenuItem_ExportFolderDataToCSV_Click" 
-                                  ToolTip="Exports folder data in this image set to CSV (comma separated value) files, one file for each folder leve">
+                        <MenuItem Name="MenuItemExportAllDataAsCSV" Header="Export all data (folder data, image/video data) to .csv files ..." IsEnabled="false" 
+                                  Click="MenuItem_ExportAllDataToCSV_Click" 
+                                  ToolTip="Exports all data in this image set to CSV (comma separated value) files as:
+                                  &#10; image/video data in a file you can name,
+                                  &#10; folder data in a separates files, each named after the folder level.">
                             <MenuItem.Icon>
                                 <Image Source="Icons/CSVExport_32x.png" />
                             </MenuItem.Icon>
                         </MenuItem>
+
+                        <Separator/>
+                        <!-- Export CamtrapDP files...-->
+                        <MenuItem Name="MenuItem_ExportCamtrapDP" Header="Export all data as CamtrapDP files..." IsEnabled="false" Click="MenuItem_ExportCamtrapDP_Click" 
+                                  ToolTip="Exports all data in this image set as set of CamtrapDP files (for CamtrapDP-compatible templates only)">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/CSVExport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
                     </MenuItem>
 
                     <Separator />

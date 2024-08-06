@@ -51,6 +51,10 @@ namespace TimelapseTemplateEditor
             public const string AlbertaMetadataStandards = "AlbertaMetadataStandards"; 
             public const string AlbertaMetadataStandardsOverview = ResourcePath + AlbertaMetadataStandards + OverviewSuffix;
             public const string AlbertaMetadataStandardsTemplate = ResourcePath + AlbertaMetadataStandards + TemplateSuffix;
+            public const string CamtrapDPTitle = "CamtrapDP Standard";
+            public const string CamtrapDP = "CamtrapDP";
+            public const string CamtrapDPOverview = ResourcePath + CamtrapDP + OverviewSuffix;
+            public const string CamtrapDPTemplate = ResourcePath + CamtrapDP + TemplateSuffix;
         }
         public static class Registry
         {

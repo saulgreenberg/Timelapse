@@ -382,9 +382,14 @@ namespace Timelapse.Constant
         public const string BackupFolder = "Backups"; // Sub-folder that will contain database and csv file backups  
         public const string BackupCheckpointIndicator = ".Checkpoint-"; // string added to the backup file path for special backup files
 
-        public const string CamtrapDPExportFolder = "CamtrapDP";
-        public const string CamtrapDPDataPackageJson = "datapackage.json";
+        public const string CamtrapDPExportFolder = "CamtrapDPExportedFiles";
+        public const string CamtrapDPDataPackageJsonFilename = "datapackage.json";
+        public const string CamtrapDPDeploymentCSVFilename = "deployments.csv";
+        public const string CamtrapDPMediaCSVFilename = "media.csv";
+        public const string CamtrapDPObservationsCSVFilename = "observations.csv";
         public const string CsvFileExtension = ".csv";
+        public const string CsvExportFolder = "CsvExportedFiles";
+        public const string CSVImageDataFileName = "ImageData.csv";
         public const string DeletedFilesFolder = "DeletedFiles"; // Sub-folder that will contain backups of deleted images 
         public const string DefaultFileDatabaseFileName = DefaultFileDatabaseFileNameRoot + FileDatabaseFileExtension;
         public const string DefaultFileDatabaseFileNameRoot = "TimelapseData";
@@ -647,6 +652,7 @@ namespace Timelapse.Constant
     public static class Standards
     {
         public const string CamtrapDPStandard = "CamtrapDP";
+        public const string CamtrapDPStandardExportFolder = "ExportedCamtrapDP";
     }
     public static class ThrottleValues
     {

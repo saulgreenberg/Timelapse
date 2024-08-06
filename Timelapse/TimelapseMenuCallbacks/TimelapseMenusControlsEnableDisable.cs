@@ -16,8 +16,6 @@ namespace Timelapse
             // Depending upon whether images exist in the data set,
             // enable / disable menus and menu items as needed
 
-            // FolderMetadataPane.IsEnabled = true; filesSelected && this.DataHandler.FileDatabase.GetMetadataInfoTableMaxLevel() > 0;
-
             // File menu
             this.MenuItemAddFilesToImageSet.IsEnabled = imageSetAvailable;
             this.MenuItemLoadFiles.IsEnabled = !imageSetAvailable;
@@ -30,8 +28,10 @@ namespace Timelapse
             this.MenuItemCreateEmptyDatabase.IsEnabled = !imageSetAvailable;
             this.MenuItemCheckInDatabases.IsEnabled = imageSetAvailable;
             this.MenuItemCheckOutDatabase.IsEnabled = imageSetAvailable;
-            this.MenuItemImportFromCsv.IsEnabled = filesSelected;
-            this.MenuItemExportFolderDataAsCSV.IsEnabled = filesSelected && metadataLevelsExists;
+            this.MenuItemImportFromCsv.IsEnabled = filesSelected; 
+            this.MenuItemExportAllDataAsCSV.IsEnabled = filesSelected && metadataLevelsExists;
+            // Need to change this when we have more than one standard export
+            this.MenuItem_ExportCamtrapDP.IsEnabled = filesSelected && metadataLevelsExists && this.DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard();
             this.MenuItemRenameFileDatabaseFile.IsEnabled = filesSelected;
             this.MenuFileCloseImageSet.IsEnabled = imageSetAvailable;
             this.MenuItemImportDetectionData.Visibility = Visibility.Visible;

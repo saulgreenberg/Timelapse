@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Point = System.Windows.Point;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Navigation;
+using System.Runtime.InteropServices;
+using Timelapse.Database;
+using Timelapse.DataTables;
 
 namespace Timelapse.Standards
 {
@@ -67,6 +68,7 @@ namespace Timelapse.Standards
 
             return false;
         }
+
         // true if the data package's datalabel should not be editable in the template
         public static bool IsDataPackageFieldNonEditable(string dataLabel)
         {
@@ -94,6 +96,7 @@ namespace Timelapse.Standards
                 case CamtrapDPConstants.DataPackage.References:
                     return true;
             }
+
             return false;
         }
 
@@ -123,5 +126,70 @@ namespace Timelapse.Standards
 
             return false;
         }
+
+        #region Get a bounding box around the various deployment's lat/long coordinates
+        public static string CalculateLatLongBoundingBoxFromDeployments(FileDatabase fileDatabase)
+        {
+            DataTables.DataTableBackedList<MetadataRow> rows = false == fileDatabase.MetadataTablesByLevel.TryGetValue(2, out var value)
+                ? null
+                : value;
+            if (rows == null) return null;
+
+            decimal illegalCoordinate = 200;
+            decimal minLatitude = illegalCoordinate;
+            decimal maxLatitude = -illegalCoordinate;
+            decimal minLongitude = illegalCoordinate;
+            decimal maxLongitude = -illegalCoordinate;
+            int pointCount = 0;
+            foreach (MetadataRow row in rows)
+            {
+                string latitudeStr = row[CamtrapDPConstants.Deployment.Latitude];
+                string longitudeStr = row[CamtrapDPConstants.Deployment.Longitude];
+
+                // Skip invalid lat/longs
+                if (false == decimal.TryParse(latitudeStr, out decimal latitude) || false == decimal.TryParse(longitudeStr, out decimal longitude))
+                {
+                    continue;
+                }
+                // Valid decimal lat/long must be between these ranges
+                if (Math.Abs(latitude) > 90 || Math.Abs(longitude) > 180)
+                {
+                    continue;
+                }
+
+                // Expand the bounding box as needed to contain the lat/long coordinate
+                minLatitude = Math.Min(minLatitude, latitude);
+                minLongitude = Math.Min(minLongitude, longitude);
+
+                maxLatitude = Math.Max(maxLatitude, latitude);
+                maxLongitude = Math.Max(maxLongitude, longitude);
+                pointCount++;
+            }
+
+            if (pointCount == 0)
+            {
+                // No points, so return an empty geojson
+                return $"{{\"type\": \"FeatureCollection\",\"features\": []}}";
+            }
+
+            if (pointCount == 1)
+            {
+                // A single point, so return a single point geojson (i.e., a waypoint)
+                return
+                    $"{{\"type\": \"FeatureCollection\",\"features\": [{{\"type\": \"Feature\",\"properties\": {{}},\"geometry\": {{\"coordinates\": [{minLongitude},{minLatitude}],\"type\": \"Point\"}}}}]}}";
+            }
+            // multiple points, so return the bounding box containing all of them
+            return $"{{\"type\": \"FeatureCollection\",\"features\": " +
+                   $"{Environment.NewLine}[{{\"type\": \"Feature\"," +
+                   $"{Environment.NewLine}\"properties\": {{}}," +
+                   $"{Environment.NewLine}\"geometry\": {{\"coordinates\": [[" +
+                   $"[{Environment.NewLine}{minLongitude},{minLatitude}]," +
+                   $"[{Environment.NewLine}{minLongitude},{maxLatitude}]," +
+                   $"[{Environment.NewLine}{maxLongitude},{maxLatitude}]," +
+                   $"[{Environment.NewLine}{maxLongitude},{minLatitude}]," +
+                   $"[{Environment.NewLine}{minLongitude},{minLatitude}]" +
+                   $"{Environment.NewLine}]],\"type\": \"Polygon\"}}}}]}}";
+        }
+        #endregion
     }
 }

@@ -280,17 +280,9 @@ namespace TimelapseTemplateEditor.Standards
             new StandardsRow(
                 Control.MultiLine, 1, "", "Spatial coverage*", CamtrapDPConstants.DataPackage.Spatial,
                 $"Spatial coverage of the package, expressed as GeoJSON.{Environment.NewLine}" +
-                $"• e.g., Environment.NewLine{{{Environment.NewLine}    \"type\": \"Polygon\",{Environment.NewLine}" +
-                $"     \"bbox\": [{Environment.NewLine}       4.013,{Environment.NewLine}       50.699,{Environment.NewLine}       5.659,{Environment.NewLine}       51.496{Environment.NewLine}     ],{Environment.NewLine}" +
-                $"     \"coordinates\": [{Environment.NewLine}" +
-                $"     [{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          4.013,{Environment.NewLine}          50.699{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          5.659,{Environment.NewLine}          50.699{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          5.659,{Environment.NewLine}          51.496{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          4.013,{Environment.NewLine}          51.496{Environment.NewLine}        ],{Environment.NewLine}" +
-                $"        [{Environment.NewLine}          4.013,{Environment.NewLine}          50.699{Environment.NewLine}        ]{Environment.NewLine}" +
-                $"     ]{Environment.NewLine}" +
-                $"  ]{Environment.NewLine}}}",
+                $"Timelapse will calculate this as a bounding box outlining your deployments' latitude/longitude coordinates,{Environment.NewLine}" +
+                $"or will let you copy GeoJSON as outputed by a mapping package.{Environment.NewLine}" +
+                $"For example, Timelapse provides the option to go to https://Geojson.io , outline the spatial coverage, and then copy the GeoJson output.",
                 null,
                 false, true),
 
@@ -626,6 +618,7 @@ namespace TimelapseTemplateEditor.Standards
             new StandardsRow(Control.DateTime_, 0, "", "Event end*", CamtrapDPConstants.Observations.EventEnd,
                 $"Date and time at which the event ended. .{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
+                $"Note: Timelapse currently sets it the same as EventStart.{Environment.NewLine}" +
                 "• e.g., \"2023-11-31 13:01:05\"",
                 null),
 
@@ -721,30 +714,34 @@ namespace TimelapseTemplateEditor.Standards
                 $"Or the horizontal position of an object in that media file. {Environment.NewLine}" +
                 $"Measured from the left and relative to media file width.{Environment.NewLine}" +
                 "Minimum: 0, maximum: 1. Optional." +
+                $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
                 "• e.g., \".2\"",
-                null),
+                null, false, false),
 
             new StandardsRow(Control.DecimalAny, 0, "", "Bbox Y", CamtrapDPConstants.Observations.BboxY,
                 $"Vertical position of the top-left corner of a bounding box that encompasses the observed individual(s) in the media file identified by mediaID.{Environment.NewLine}" +
                 $"Or the vertical position of an object in that media file.{Environment.NewLine}" +
                 $"Measured from the top and relative to media file width.{Environment.NewLine}" +
                 "Minimum: 0, maximum: 1. Optional." +
+                $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
                 "• e.g., \".25\"",
-                null),
+                null, false, false),
 
             new StandardsRow(Control.DecimalAny, 0, "", "Bbox width", CamtrapDPConstants.Observations.BboxWidth,
                 $"Width of a bounding box that encompasses the observed individual(s) in the media file identified by mediaID.{Environment.NewLine}" +
                 $"Measured from the left of the bounding box and relative to the media file width.{Environment.NewLine}" +
                 "Minimum: 1e-15, maximum: 1. Optional." +
+                $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
                 "• e.g., \"0.4\"",
-                null),
+                null, false, false),
 
                 new StandardsRow(Control.DecimalAny, 0, "", "Bbox height", CamtrapDPConstants.Observations.BboxHeight,
                     $"Height of a bounding box that encompasses the observed individual(s) in the media file identified by mediaID.{Environment.NewLine}" +
                     $"Measured from the top of the bounding box and relative to the media file height.{Environment.NewLine}" +
                     "Minimum: 1e-15, maximum: 1. Optional." +
                     "• e.g., \"0.5\"",
-                null),
+                    $"Note: Timelapse does not currently let users create bounding boxes.{Environment.NewLine}" +
+                null, false, false),
 
                 new StandardsRow(Control.FixedChoice, 0, "", "Classification method", CamtrapDPConstants.Observations.ClassificationMethod,
                     $"Method (most recently) used to classify the observation.{Environment.NewLine}" +
@@ -762,7 +759,7 @@ namespace TimelapseTemplateEditor.Standards
                     $"Date_ and time of the (most recent) classification.{Environment.NewLine}" +
                     "Optional." +
                     "• e.g., \"2020-08-22 10:25:19\"",
-                    null),
+                    null, false, false),
 
                 new StandardsRow(Control.IntegerPositive, 0, "", "Classification probability", CamtrapDPConstants.Observations.ClassificationProbability,
                     $"Degree of certainty of the (most recent) classification.{Environment.NewLine}" +
@@ -770,7 +767,7 @@ namespace TimelapseTemplateEditor.Standards
                     $"Omit or provide an approximate probability for human classifications.{Environment.NewLine}" +
                     "Minimum: 0, maximum: 1. Optional." +
                     "• e.g., \"0.95\"",
-                    null),
+                    null, false, false),
 
                 new StandardsRow(Control.MultiLine, 0, "", "Observation tags", CamtrapDPConstants.Observations.ObservationTags,
                     $"Tag(s) associated with the observation.{Environment.NewLine}" +

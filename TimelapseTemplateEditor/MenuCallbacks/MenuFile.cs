@@ -63,6 +63,7 @@ namespace TimelapseTemplateEditor
         {
             string rtfPath = string.Empty;
             string templatePath = string.Empty;
+            string title = string.Empty;
             if (sender is MenuItem menuItem)
             {
                 switch (menuItem.Tag)
@@ -70,13 +71,19 @@ namespace TimelapseTemplateEditor
                     case EditorConstant.Standards.AlbertaMetadataStandards:
                         rtfPath = EditorConstant.Standards.AlbertaMetadataStandardsOverview;
                         templatePath = EditorConstant.Standards.AlbertaMetadataStandardsTemplate;
+                        title = EditorConstant.Standards.AlbertaMetadataStandardsTitle;
+                        break;
+                    case EditorConstant.Standards.CamtrapDP:
+                        rtfPath = EditorConstant.Standards.CamtrapDPOverview;
+                        templatePath = EditorConstant.Standards.CamtrapDPTemplate;
+                        title = EditorConstant.Standards.CamtrapDPTitle;
                         break;
                     default:
                         return;
                 }
             }
 
-            ShowRtfFile show = new ShowRtfFile(this, $"{EditorConstant.Standards.AlbertaMetadataStandardsTitle} and Timelapse",
+            ShowRtfFile show = new ShowRtfFile(this, $"{title} and Timelapse",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
                 rtfPath);
             if (false == show.ShowDialog())
@@ -125,7 +132,7 @@ namespace TimelapseTemplateEditor
         }
 
         // Create a camtrapDP template programmatically
-        private async void MenuFileNewCameratrapDP_Click(object sender, RoutedEventArgs e)
+        private async void MenuFileNewCameratrapDPProgramatically_Click(object sender, RoutedEventArgs e)
         {
             ShowRtfFile show = new ShowRtfFile(this, "The CamtrapDP Standard",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",

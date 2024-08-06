@@ -2779,7 +2779,7 @@ namespace Timelapse.Database
         #region DETECTION - Populate the Database (with progress bar)
         // To help determine periodic updates to the progress bar 
         private DateTime lastRefreshDateTime = DateTime.Now;
-        protected bool ReadyToRefresh()
+        public bool ReadyToRefresh()
         {
             TimeSpan intervalFromLastRefresh = DateTime.Now - this.lastRefreshDateTime;
             if (intervalFromLastRefresh > Constant.ThrottleValues.ProgressBarRefreshInterval)

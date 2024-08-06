@@ -1,11 +1,14 @@
-﻿using System;
+﻿using DialogUpgradeFiles.Database;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Markup;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -15,6 +18,7 @@ using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Standards;
 using Timelapse.Util;
+using ToastNotifications.Position;
 using DialogResult = System.Windows.Forms.DialogResult;
 using Path = System.IO.Path;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
@@ -235,7 +239,7 @@ namespace Timelapse
             }
 
             // Generate the candidate file name/path 
-            string csvFileName = Path.GetFileNameWithoutExtension(this.DataHandler.FileDatabase.FileName) + ".csv";
+            string csvFileName = Constant.File.CSVImageDataFileName;
 
             // Get the selected filepath from the user
             if (false == Dialogs.TryGetFileFromUserUsingSaveFileDialog(
@@ -267,7 +271,7 @@ namespace Timelapse
             {
                 // Show the Busy indicator
                 this.BusyCancelIndicator.IsBusy = true;
-                
+
                 // TODO SAULXXX CHANGE TRUE TO STATE VARIABLE CONTAINING A PREFERENCE TO INCLUDE THE METADATA FOLDER LOCATIONS AT THE BEGINNING OF THE CSV
                 if (false == await CsvReaderWriter.ExportToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFilePath,
                         this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, this.DataHandler.FileDatabase.ImageSet.RootFolder))
@@ -374,15 +378,29 @@ namespace Timelapse
         }
         #endregion
 
-        private async void MenuItem_ExportFolderDataToCSV_Click(object sender, RoutedEventArgs e)
+        private async void MenuItem_ExportAllDataToCSV_Click(object sender, RoutedEventArgs e)
         {
-            // Generate the candidate file name/path 
-            if (this.DataHandler?.FileDatabase == null) return;
-            //string csvFileName = Path.GetFileNameWithoutExtension(this.DataHandler.FileDatabase.FileName) + ".csv";
+            if (this.DataHandler?.FileDatabase == null || false == this.DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()) return;
 
-            string folderPath = this.DataHandler.FileDatabase.FolderPath;
+
+            // If we are not viewing all files, generate a warning and exit.
+            int filesTotalCount = this.DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.All);
+            int filesSelectedCount = this.DataHandler.FileDatabase.FileTable.RowCount;
+            if (filesTotalCount != filesSelectedCount)
+            {
+                Dialogs.MenuFileExportRequiresAllFilesSelected(this, "all your data ");
+                this.StatusBar.SetMessage("Export cancelled.");
+                return;
+            }
+
+            // Get the folder path
+            string initialFolderPath = this.DataHandler.FileDatabase.FolderPath;
             // Get a folder path from the user
-            if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Export and save your folder data as CSV files", folderPath, out string selectedCSVFolderPath))
+            // Get a folder path from the user
+
+            if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog(
+                    $"Select a folder to contain the {Constant.File.CsvExportFolder} folder and its csv files",
+                    initialFolderPath, out string csvExportFolder))
             {
                 this.StatusBar.SetMessage("Csv file export cancelled.");
                 // Hide the Busy indicator
@@ -390,12 +408,33 @@ namespace Timelapse
                 return;
             }
 
-            List<string> filesToBeWritten = new List<string>();
+            csvExportFolder = Path.Combine(csvExportFolder, Constant.File.CsvExportFolder);
+            // Create a the export folder (if needed)
+            if (false == Directory.Exists(csvExportFolder))
+            {
+                Directory.CreateDirectory(csvExportFolder);
+            }
+
+            // For error checking
             List<string> filesThatExist = new List<string>();
             List<string> filesThatExistReadOnly = new List<string>();
+
+            // Compose the image file path
+            string imageFilePath = Path.Combine(csvExportFolder, Constant.File.CSVImageDataFileName);
+            if (File.Exists(imageFilePath))
+            {
+                filesThatExist.Add(Constant.File.CSVImageDataFileName);
+                if (new FileInfo(imageFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
+                {
+                    filesThatExistReadOnly.Add(Constant.File.CSVImageDataFileName);
+                }
+            }
+
+            //Compose the folder level data files
+            List<string> filesToBeWritten = new List<string>() {Constant.File.CSVImageDataFileName};
             foreach (MetadataInfoRow infoRow in this.DataHandler.FileDatabase.MetadataInfo)
             {
-                string tentativeFileName = Path.Combine(selectedCSVFolderPath, infoRow.Alias + ".csv");
+                string tentativeFileName = Path.Combine(csvExportFolder, infoRow.Alias + ".csv");
                 string tempAlias = ControlsMetadata.MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
                 filesToBeWritten.Add(tempAlias + ".csv");
                 if (File.Exists(tentativeFileName))
@@ -416,6 +455,7 @@ namespace Timelapse
                 this.BusyCancelIndicator.IsBusy = false;
                 return;
             }
+
             if (filesThatExist.Count > 0)
             {
                 // The file exists ...
@@ -428,88 +468,244 @@ namespace Timelapse
                 }
             }
 
-
+            // TO FIX
             // Backup the csv file if it exists, as the export will overwrite it. 
-            //this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, selectedCSVFilePath)
+            //this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, imageFilePath)
             //    ? "Backup of csv file made."
             //    : "No csv file backup was made.");
+
+            // Export the Image data
+            try
+            {
+                // Show the Busy indicator
+                this.BusyCancelIndicator.IsBusy = true;
+                if (false == await CsvReaderWriter.ExportToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, imageFilePath,
+                        this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates, this.State.CSVIncludeFolderColumn, this.DataHandler.FileDatabase.ImageSet.RootFolder))
+                {
+                    Dialogs.FileCantOpen(GlobalReferences.MainWindow, imageFilePath, true);
+                    this.BusyCancelIndicator.IsBusy = false;
+                    this.StatusBar.SetMessage("Csv file export cancelled.");
+                    return;
+                }
+                // Hide the Busy indicator
+                this.BusyCancelIndicator.IsBusy = false;
+            }
+            catch (Exception exception)
+            {
+                // Can't write the spreadsheet file
+                Dialogs.MenuFileCantWriteSpreadsheetFileDialog(this, imageFilePath, exception.GetType().FullName, exception.Message);
+                this.StatusBar.SetMessage("Csv file export cancelled.");
+                return;
+            }
+
             try
             {
                 // Show the Busy indicator
                 this.BusyCancelIndicator.IsBusy = true;
 
-                if (false == await CsvReaderWriter.ExportMetadataToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates))
+                if (false == await CsvReaderWriter.ExportMetadataToCsv(this.DataHandler.FileDatabase, csvExportFolder, this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates))
                 {
                     // Hide the Busy indicator
                     this.BusyCancelIndicator.IsBusy = false;
-                    Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
+                    Dialogs.FileCantOpen(GlobalReferences.MainWindow, csvExportFolder, true);
                     return;
                 }
                 // Hide the Busy indicator
                 this.BusyCancelIndicator.IsBusy = false;
-                Dialogs.FolderDataExportedToCSV(this, selectedCSVFolderPath, filesToBeWritten);
+                Dialogs.AllDataExportedToCSV(this, csvExportFolder, filesToBeWritten, true);
             }
             catch
             {
                 // Can't write the spreadsheet file
                 this.BusyCancelIndicator.IsBusy = false;
                 // Hide the Busy indicator
-                Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
-            }
-
-            // If we are following the CamtrapDP Standard, create a CamtrapDP folder (if needed) and write extra files in the 
-            // where those files convert the Timelapse data into the exact specs expected by CamtrapDP
-            if (this.DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard())
-            {
-                string camTrapDPFolder = Path.Combine(selectedCSVFolderPath, Constant.File.CamtrapDPExportFolder);
-                // Create a folder holding the exported files
-                if (false == Directory.Exists(camTrapDPFolder))
-                {
-                    Directory.CreateDirectory(camTrapDPFolder);
-                }
-
-
-                // Export the data package
-                string dataPackageFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPDataPackageJson);
-                List<string> datapackageMessages =
-                    await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
-                if (null == datapackageMessages)
-                {
-                    Debug.Print("Couldn't write CamtrapDP data package");
-                }
-                else if (datapackageMessages.Count > 0)
-                {
-     //               Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
-                }
-
-                datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDeploymentToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions,
-                        this.State.CSVInsertSpaceBeforeDates);
-                if (null == datapackageMessages)
-                {
-                    // ERROR DIALOG HERE
-                    Debug.Print("Couldn't write CamtrapDP deployment.csv");
-                }
-                else if (datapackageMessages.Count > 0)
-                {
-    //                Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
-                }
-
-                datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, selectedCSVFolderPath);
-
-                    //datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions,
-                    //this.State.CSVInsertSpaceBeforeDates);
-                if (null == datapackageMessages)
-                {
-                    // ERROR DIALOG HERE
-                    Debug.Print("Couldn't write CamtrapDP deployment.csv");
-                }
-                else if (datapackageMessages.Count > 0)
-                {
-     //               Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, datapackageMessages);
-                }
+                Dialogs.FileCantOpen(GlobalReferences.MainWindow, csvExportFolder, true);
             }
         }
+        //private async void OLDMenuItem_ExportFolderDataToCSV_Click(object sender, RoutedEventArgs e)
+        //{
+        //    // Generate the candidate file name/path 
+        //    if (this.DataHandler?.FileDatabase == null) return;
 
+        //    string initialFolderPath = this.DataHandler.FileDatabase.FolderPath;
+        //    // Get a folder path from the user
+        //    if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Export and save all your data as CSV files", initialFolderPath, out string selectedCSVFolderPath))
+        //    {
+        //        this.StatusBar.SetMessage("Csv file export cancelled.");
+        //        // Hide the Busy indicator
+        //        this.BusyCancelIndicator.IsBusy = false;
+        //        return;
+        //    }
+
+        //    List<string> filesToBeWritten = new List<string>();
+        //    List<string> filesThatExist = new List<string>();
+        //    List<string> filesThatExistReadOnly = new List<string>();
+        //    foreach (MetadataInfoRow infoRow in this.DataHandler.FileDatabase.MetadataInfo)
+        //    {
+        //        string tentativeFileName = Path.Combine(selectedCSVFolderPath, infoRow.Alias + ".csv");
+        //        string tempAlias = ControlsMetadata.MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
+        //        filesToBeWritten.Add(tempAlias + ".csv");
+        //        if (File.Exists(tentativeFileName))
+        //        {
+        //            filesThatExist.Add(tempAlias + ".csv");
+        //            if (new FileInfo(tentativeFileName).Attributes.HasFlag(FileAttributes.ReadOnly))
+        //            {
+        //                filesThatExistReadOnly.Add(tempAlias + ".csv");
+        //            }
+        //        }
+        //    }
+
+        //    if (filesThatExistReadOnly.Count > 0)
+        //    {
+        //        Dialogs.FilesCannotBeModified(this, filesThatExistReadOnly);
+        //        this.StatusBar.SetMessage("Csv file export cancelled.");
+        //        // Hide the Busy indicator
+        //        this.BusyCancelIndicator.IsBusy = false;
+        //        return;
+        //    }
+        //    if (filesThatExist.Count > 0)
+        //    {
+        //        // The file exists ...
+        //        if (false == Dialogs.OverwriteListOfExistingFiles(this, filesThatExist))
+        //        {
+        //            this.StatusBar.SetMessage("Csv file export cancelled.");
+        //            // Hide the Busy indicator
+        //            this.BusyCancelIndicator.IsBusy = false;
+        //            return;
+        //        }
+        //    }
+
+
+        //    // Backup the csv file if it exists, as the export will overwrite it. 
+        //    //this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, selectedCSVFilePath)
+        //    //    ? "Backup of csv file made."
+        //    //    : "No csv file backup was made.");
+        //    try
+        //    {
+        //        // Show the Busy indicator
+        //        this.BusyCancelIndicator.IsBusy = true;
+
+        //        if (false == await CsvReaderWriter.ExportMetadataToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates))
+        //        {
+        //            // Hide the Busy indicator
+        //            this.BusyCancelIndicator.IsBusy = false;
+        //            Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
+        //            return;
+        //        }
+        //        // Hide the Busy indicator
+        //        this.BusyCancelIndicator.IsBusy = false;
+        //        Dialogs.AllDataExportedToCSV(this, selectedCSVFolderPath, filesToBeWritten);
+        //    }
+        //    catch
+        //    {
+        //        // Can't write the spreadsheet file
+        //        this.BusyCancelIndicator.IsBusy = false;
+        //        // Hide the Busy indicator
+        //        Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
+        //    }
+        //}
+
+        private async void MenuItem_ExportCamtrapDP_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.DataHandler?.FileDatabase == null || false == this.DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()) return;
+
+
+            // We want to show the prompt only if the promptState is true, and we are  viewing all images
+            int filesTotalCount = this.DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.All);
+            int filesSelectedCount = this.DataHandler.FileDatabase.FileTable.RowCount;
+            if (filesTotalCount != filesSelectedCount)
+            {
+                Dialogs.MenuFileExportRequiresAllFilesSelected(this, $"as {Constant.Standards.CamtrapDPStandard}");
+                this.StatusBar.SetMessage("Export cancelled.");
+                return;
+            }
+
+            if (false == Dialogs.ExportToCamtrapDPExplanation(this))
+            {
+                this.StatusBar.SetMessage("Export cancelled.");
+                return;
+            }
+            // Get a folder path from the user
+            if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog(
+                    $"Select a folder to contain the {Constant.File.CamtrapDPExportFolder} folder and CamtrapDP files",
+                    this.DataHandler.FileDatabase.FolderPath, out string camTrapDPFolder))
+            {
+                this.StatusBar.SetMessage("Export cancelled.");
+                return;
+            }
+
+            // Create a CamtrapDP export folder (if needed)
+            camTrapDPFolder = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPExportFolder);
+            if (false == Directory.Exists(camTrapDPFolder))
+            {
+                Directory.CreateDirectory(camTrapDPFolder);
+            }
+
+            // Write all the data into the expected camtrapDP files
+
+            // where those files convert the Timelapse data into the exact CamtrapDP specs
+            // Export the data package
+            string dataPackageFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPDataPackageJsonFilename);
+            List<string> datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
+            if (null == datapackageMessages)
+            {
+                // Something went wrong.
+                Dialogs.MenuFileExportFailedForUnknownReasonDialog(GlobalReferences.MainWindow, dataPackageFilePath);
+                this.StatusBar.SetMessage("Export cancelled.");
+                return;
+            }
+            if (datapackageMessages.Count > 0)
+            {
+                datapackageMessages.Insert(0, $"{Environment.NewLine}In {Constant.File.CamtrapDPDataPackageJsonFilename}:");
+            }
+
+            // Export the deployment csv file
+            string bboxAsJson = CamtrapDPHelpers.CalculateLatLongBoundingBoxFromDeployments(this.DataHandler.FileDatabase);
+            string deploymentFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPDeploymentCSVFilename);
+            List<string> deploymentMessages = await CamtrapDPExportFiles.ExportCamtrapDPDeploymentToCsv(this.DataHandler.FileDatabase, deploymentFilePath);
+            if (null == deploymentMessages)
+            {
+                Dialogs.MenuFileExportFailedForUnknownReasonDialog(GlobalReferences.MainWindow, deploymentFilePath);
+            }
+            else if (deploymentMessages.Count > 0)
+            {
+                deploymentMessages.Insert(0, $"{Environment.NewLine}In {Constant.File.CamtrapDPDeploymentCSVFilename}:");
+            }
+
+            // Export the media and observations csv file
+            string mediaFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPMediaCSVFilename);
+            string observationsFilePath = Path.Combine(camTrapDPFolder, Constant.File.CamtrapDPObservationsCSVFilename);
+
+            this.BusyCancelIndicator.IsBusy = true;
+            List<string> mediaObservationsMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(this.DataHandler.FileDatabase, this.DataEntryControls, mediaFilePath, observationsFilePath);
+            this.BusyCancelIndicator.IsBusy = false;
+            if (null == mediaObservationsMessages)
+            {
+                Dialogs.MenuFileExportFailedForUnknownReasonDialog(GlobalReferences.MainWindow, $"{Environment.NewLine}{mediaFilePath} and {observationsFilePath}:");
+            }
+            else if (mediaObservationsMessages.Count > 0)
+            {
+                mediaObservationsMessages.Insert(0, $"{Environment.NewLine}In {Constant.File.CamtrapDPMediaCSVFilename} and {Constant.File.CamtrapDPObservationsCSVFilename}:");
+            }
+
+            // ReSharper disable once AssignNullToNotNullAttribute
+            List<string> allMessages = datapackageMessages.Concat(deploymentMessages).Concat(mediaObservationsMessages).ToList();
+            if (allMessages.Count > 0)
+            {
+                Dialogs.CamtrapDPDataPackageMissingRequiredFields(GlobalReferences.MainWindow, allMessages);
+                this.StatusBar.SetMessage("Export completed, with warnings.");
+            }
+            else
+            {
+                Dialogs.AllDataExportedToCSV(this, camTrapDPFolder,
+                    new List<string>
+                    {
+                        Constant.File.CamtrapDPDataPackageJsonFilename, Constant.File.CamtrapDPDeploymentCSVFilename, Constant.File.CamtrapDPMediaCSVFilename,
+                        Constant.File.CamtrapDPObservationsCSVFilename
+                    }, false);
+                this.StatusBar.SetMessage("Export completed.");
+            }
+        }
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {

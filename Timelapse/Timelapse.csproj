@@ -494,6 +494,7 @@
     <Compile Include="TimelapsePartialClasses\TimelapseProgress.cs" />
     <Compile Include="Util\ColorsAndBrushes.cs" />
     <Compile Include="Util\Compare.cs" />
+    <Compile Include="Util\CSVHelpers.cs" />
     <Compile Include="Util\Dictionaries.cs" />
     <Compile Include="Util\DragDropFile.cs" />
     <Compile Include="Episodes\Episodes.cs" />
