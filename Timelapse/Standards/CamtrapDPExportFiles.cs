@@ -344,12 +344,10 @@ namespace Timelapse.Standards
                     {
                         missingDataPackageFields.Add(" • Project: capture method is required but is empty.");
                     }
-#pragma warning disable CS0472 // A value of bool is never equal to 'null'
-                    if (datapackage.project.individualAnimals == null)
-#pragma warning restore CS0472
-                    {
+                    //if (datapackage.project.individualAnimals == null) // bools are never null
+                    //{
                         missingDataPackageFields.Add(" • Project: individual animals is required but is empty.");
-                    }
+                    //}
 
                     if (datapackage.project.observationLevel == null || datapackage.project.observationLevel.Count == 0)
                     {
@@ -421,19 +419,10 @@ namespace Timelapse.Standards
         /// </summary>
         public static async Task<List<string>> ExportCamtrapDPDeploymentToCsv(FileDatabase database, string deploymentFilePath)
         {
-            // Set up a progress handler that will update the progress bar
-            Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
-            {
-                // Update the progress bar
-                CsvReaderWriter.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
-            });
-            IProgress<ProgressBarArguments> progress = progressHandler;
             return await Task.Run(() =>
             {
                 try
                 {
-                    progress.Report(new ProgressBarArguments(0, "Writing the CamtrapDP Deployment CSV file. Please wait", false, true));
-
                     List<string> problemList = new List<string>();
 
                     // Get the Deployment info (second) level
@@ -544,9 +533,6 @@ namespace Timelapse.Standards
                             fileWriter.WriteLine(rowBuilder.ToString());
                         }
                     }
-                    progress.Report(new ProgressBarArguments(Convert.ToInt32((double)level / rows.RowCount * 100.0),
-                        "Writing the CamtrapDP Deployment CSV file. Please wait...", false, false));
-
                     return problemList;
                 }
                 catch
@@ -610,7 +596,6 @@ namespace Timelapse.Standards
                                     continue;
                                 }
 
-
                                 if (CamtrapDPHelpers.IsMediaField(dataLabel))
                                 {
                                     mediaHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(dataLabel, includeMediaComma));
@@ -662,34 +647,41 @@ namespace Timelapse.Standards
                                     switch (dataLabel)
                                     {
                                         case CamtrapDPConstants.Media.MediaID:
-                                            // MediaID is constructed populated as RelativePath + Filename
-                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(Path.Combine(image.RelativePath, image.File), includeMediaComma));
-                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(Path.Combine(image.RelativePath, image.File), includeObservationComma));
+                                            // MediaID is constructed as RelativePath + Filename
+                                            string path1 = null == image?.RelativePath || null == image.File
+                                                ? string.Empty
+                                                : Path.Combine(image.RelativePath, image.File);
+                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path1, includeMediaComma));
+                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path1, includeObservationComma));
                                             includeMediaComma = includeObservationComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.DeploymentID:
                                             // Both CSV files need the deploymentID for cross referencing
-                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(image.RelativePath, includeMediaComma));
-                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(image.RelativePath, includeObservationComma));
+                                            string path2 = image?.RelativePath ?? string.Empty;
+                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path2, includeMediaComma));
+                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path2, includeObservationComma));
                                             includeMediaComma = includeObservationComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.Timestamp:
                                             // Timestamp is populated by the DateTime value
-                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(image.DateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeMediaComma));
+                                            DateTime timestamp = image?.DateTime ?? Constant.ControlDefault.DateTimeDefaultValue;
+                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(timestamp.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeMediaComma));
                                             includeMediaComma = includeObservationComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.FilePath:
                                             // Filepath is populated by the RelativePath value
-                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(image.RelativePath, includeMediaComma));
+                                            string path3 = image?.RelativePath ?? string.Empty;
+                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path3, includeMediaComma));
                                             includeMediaComma = true;
                                             break;
 
                                         case CamtrapDPConstants.Media.FileName:
                                             // Filename is populated by the File value
-                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(image.File, includeMediaComma));
+                                            string path4 =  image?.File?? string.Empty;
+                                            mediaRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path4, includeMediaComma));
                                             includeMediaComma = true;
                                             break;
 
@@ -703,8 +695,11 @@ namespace Timelapse.Standards
                                             break;
 
                                         case CamtrapDPConstants.Observations.ObservationID:
-                                            // ObservationID is populated as RelativePath + Filename
-                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(Path.Combine(image.RelativePath, image.File), includeObservationComma));
+                                            // ObservationID is RelativePath + Filename
+                                            string path5 = null == image?.RelativePath || null == image.File
+                                             ? string.Empty
+                                             : Path.Combine(image.RelativePath, image.File);
+                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(path5, includeObservationComma));
                                             includeObservationComma = true;
                                             break;
 
@@ -712,7 +707,8 @@ namespace Timelapse.Standards
                                         case CamtrapDPConstants.Observations.EventEnd:
                                             // EventStart/End is populated as DateTime
                                             // This is not correct for images that are part of a sequence
-                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(image.DateTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeObservationComma));
+                                            DateTime eventTime = image?.DateTime ?? Constant.ControlDefault.DateTimeDefaultValue;
+                                            observationsRowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(eventTime.ToString(CamtrapDPConstants.DateTimeFormats.CamtrapDateTimeFormat), includeObservationComma));
                                             includeObservationComma = true;
                                             break;
 

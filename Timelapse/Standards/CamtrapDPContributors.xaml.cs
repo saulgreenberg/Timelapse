@@ -15,7 +15,7 @@ namespace Timelapse.Standards
     /// Initialized by a json Contributors object
     /// Returns a modified json Contributors object
     /// </summary>
-    public partial class CamptrapDPContributors : Window
+    public partial class CamptrapDPContributors 
     {
         #region Properties and Variables: JsonContributorsList, Fields
         // The initial and final tring of contributors, in json format

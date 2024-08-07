@@ -12,7 +12,7 @@ namespace Timelapse.Standards
     /// <summary>
     /// Interaction logic for CamtrapDPKeywords.xaml
     /// </summary>
-    public partial class CamtrapDPKeywords : Window
+    public partial class CamtrapDPKeywords 
     {
         #region Properties and Variables: JsonKeywordsList, KeywordsList, and Fields
         public string JsonKeywordsList { get; set; }

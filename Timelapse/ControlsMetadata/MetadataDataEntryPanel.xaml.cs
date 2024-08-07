@@ -706,7 +706,6 @@ namespace Timelapse.ControlsMetadata
             {
                 // Becomes a noop if there is no level for this control
                 InitializePanelWithControls(Level, GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataControlsByLevel[Level]);
-                MetadataRow metadataRow = FileDatabase.MetadataTablesGetRow(Level, SubPath);
 
                 // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements
                 AutofillFieldsIfCamtrapDPStandards();
@@ -898,11 +897,6 @@ namespace Timelapse.ControlsMetadata
                     }
                 }
             }
-        }
-
-        private void ButtonLatLong_Click(object sender, RoutedEventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         // See above - Raise a dialog box allowing the user to construct and/or edit a list of contributors

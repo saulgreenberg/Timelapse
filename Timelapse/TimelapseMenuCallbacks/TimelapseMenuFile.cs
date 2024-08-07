@@ -50,7 +50,7 @@ namespace Timelapse
         }
         #endregion
 
-        #region Loading image sets
+        #region Loading and adding image sets
         // Load template, images, and video files...
         private async void MenuItemLoadImages_Click(object sender, RoutedEventArgs e)
         {
@@ -223,7 +223,7 @@ namespace Timelapse
         }
         #endregion
 
-        #region Export/Import CSV file
+        #region Export/Import image CSV file
         // Export data for this image set as a .csv file
         // Export data for this image set as a .csv file and preview in Excel 
         private async void MenuItemExportCsv_Click(object sender, RoutedEventArgs e)
@@ -271,8 +271,6 @@ namespace Timelapse
             {
                 // Show the Busy indicator
                 BusyCancelIndicator.IsBusy = true;
-
-                // TODO SAULXXX CHANGE TRUE TO STATE VARIABLE CONTAINING A PREFERENCE TO INCLUDE THE METADATA FOLDER LOCATIONS AT THE BEGINNING OF THE CSV
                 if (false == await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, selectedCSVFilePath,
                         State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolder))
                 {
@@ -378,10 +376,10 @@ namespace Timelapse
         }
         #endregion
 
+        #region Export All data to CSV
         private async void MenuItem_ExportAllDataToCSV_Click(object sender, RoutedEventArgs e)
         {
             if (DataHandler?.FileDatabase == null || false == DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()) return;
-
 
             // If we are not viewing all files, generate a warning and exit.
             int filesTotalCount = DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.All);
@@ -395,27 +393,23 @@ namespace Timelapse
 
             // Get the folder path
             string initialFolderPath = DataHandler.FileDatabase.FolderPath;
-            // Get a folder path from the user
-            // Get a folder path from the user
 
             if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog(
                     $"Select a folder to contain the {File.CsvExportFolder} folder and its csv files",
                     initialFolderPath, out string csvExportFolder))
             {
                 StatusBar.SetMessage("Csv file export cancelled.");
-                // Hide the Busy indicator
-                BusyCancelIndicator.IsBusy = false;
                 return;
             }
 
+            // Create the export folder and ensure it exists
             csvExportFolder = Path.Combine(csvExportFolder, File.CsvExportFolder);
-            // Create a the export folder (if needed)
             if (false == Directory.Exists(csvExportFolder))
             {
                 Directory.CreateDirectory(csvExportFolder);
             }
 
-            // For error checking
+            // Lists used For error checking
             List<string> filesThatExist = new List<string>();
             List<string> filesThatExistReadOnly = new List<string>();
 
@@ -462,17 +456,11 @@ namespace Timelapse
                 if (false == Dialogs.OverwriteListOfExistingFiles(this, filesThatExist))
                 {
                     StatusBar.SetMessage("Csv file export cancelled.");
-                    // Hide the Busy indicator
-                    BusyCancelIndicator.IsBusy = false;
                     return;
                 }
             }
 
-            // TO FIX
-            // Backup the csv file if it exists, as the export will overwrite it. 
-            //this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, imageFilePath)
-            //    ? "Backup of csv file made."
-            //    : "No csv file backup was made.");
+            // TODO We don't currently backup existing csv files if the export will overwrite it. But not sure we really need to
 
             // Export the Image data
             try
@@ -493,6 +481,7 @@ namespace Timelapse
             catch (Exception exception)
             {
                 // Can't write the spreadsheet file
+                BusyCancelIndicator.IsBusy = false;
                 Dialogs.MenuFileCantWriteSpreadsheetFileDialog(this, imageFilePath, exception.GetType().FullName, exception.Message);
                 StatusBar.SetMessage("Csv file export cancelled.");
                 return;
@@ -502,7 +491,6 @@ namespace Timelapse
             {
                 // Show the Busy indicator
                 BusyCancelIndicator.IsBusy = true;
-
                 if (false == await CsvReaderWriter.ExportMetadataToCsv(DataHandler.FileDatabase, csvExportFolder, State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates))
                 {
                     // Hide the Busy indicator
@@ -510,7 +498,7 @@ namespace Timelapse
                     Dialogs.FileCantOpen(GlobalReferences.MainWindow, csvExportFolder, true);
                     return;
                 }
-                // Hide the Busy indicator
+                // Data files successfully exported
                 BusyCancelIndicator.IsBusy = false;
                 Dialogs.AllDataExportedToCSV(this, csvExportFolder, filesToBeWritten, true);
             }
@@ -518,97 +506,15 @@ namespace Timelapse
             {
                 // Can't write the spreadsheet file
                 BusyCancelIndicator.IsBusy = false;
-                // Hide the Busy indicator
                 Dialogs.FileCantOpen(GlobalReferences.MainWindow, csvExportFolder, true);
             }
         }
-        //private async void OLDMenuItem_ExportFolderDataToCSV_Click(object sender, RoutedEventArgs e)
-        //{
-        //    // Generate the candidate file name/path 
-        //    if (this.DataHandler?.FileDatabase == null) return;
+        #endregion
 
-        //    string initialFolderPath = this.DataHandler.FileDatabase.FolderPath;
-        //    // Get a folder path from the user
-        //    if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Export and save all your data as CSV files", initialFolderPath, out string selectedCSVFolderPath))
-        //    {
-        //        this.StatusBar.SetMessage("Csv file export cancelled.");
-        //        // Hide the Busy indicator
-        //        this.BusyCancelIndicator.IsBusy = false;
-        //        return;
-        //    }
-
-        //    List<string> filesToBeWritten = new List<string>();
-        //    List<string> filesThatExist = new List<string>();
-        //    List<string> filesThatExistReadOnly = new List<string>();
-        //    foreach (MetadataInfoRow infoRow in this.DataHandler.FileDatabase.MetadataInfo)
-        //    {
-        //        string tentativeFileName = Path.Combine(selectedCSVFolderPath, infoRow.Alias + ".csv");
-        //        string tempAlias = ControlsMetadata.MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
-        //        filesToBeWritten.Add(tempAlias + ".csv");
-        //        if (File.Exists(tentativeFileName))
-        //        {
-        //            filesThatExist.Add(tempAlias + ".csv");
-        //            if (new FileInfo(tentativeFileName).Attributes.HasFlag(FileAttributes.ReadOnly))
-        //            {
-        //                filesThatExistReadOnly.Add(tempAlias + ".csv");
-        //            }
-        //        }
-        //    }
-
-        //    if (filesThatExistReadOnly.Count > 0)
-        //    {
-        //        Dialogs.FilesCannotBeModified(this, filesThatExistReadOnly);
-        //        this.StatusBar.SetMessage("Csv file export cancelled.");
-        //        // Hide the Busy indicator
-        //        this.BusyCancelIndicator.IsBusy = false;
-        //        return;
-        //    }
-        //    if (filesThatExist.Count > 0)
-        //    {
-        //        // The file exists ...
-        //        if (false == Dialogs.OverwriteListOfExistingFiles(this, filesThatExist))
-        //        {
-        //            this.StatusBar.SetMessage("Csv file export cancelled.");
-        //            // Hide the Busy indicator
-        //            this.BusyCancelIndicator.IsBusy = false;
-        //            return;
-        //        }
-        //    }
-
-
-        //    // Backup the csv file if it exists, as the export will overwrite it. 
-        //    //this.StatusBar.SetMessage(FileBackup.TryCreateBackup(this.FolderPath, selectedCSVFilePath)
-        //    //    ? "Backup of csv file made."
-        //    //    : "No csv file backup was made.");
-        //    try
-        //    {
-        //        // Show the Busy indicator
-        //        this.BusyCancelIndicator.IsBusy = true;
-
-        //        if (false == await CsvReaderWriter.ExportMetadataToCsv(this.DataHandler.FileDatabase, selectedCSVFolderPath, this.State.CSVDateTimeOptions, this.State.CSVInsertSpaceBeforeDates))
-        //        {
-        //            // Hide the Busy indicator
-        //            this.BusyCancelIndicator.IsBusy = false;
-        //            Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
-        //            return;
-        //        }
-        //        // Hide the Busy indicator
-        //        this.BusyCancelIndicator.IsBusy = false;
-        //        Dialogs.AllDataExportedToCSV(this, selectedCSVFolderPath, filesToBeWritten);
-        //    }
-        //    catch
-        //    {
-        //        // Can't write the spreadsheet file
-        //        this.BusyCancelIndicator.IsBusy = false;
-        //        // Hide the Busy indicator
-        //        Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFolderPath, true);
-        //    }
-        //}
-
+        #region Export Camtrap files
         private async void MenuItem_ExportCamtrapDP_Click(object sender, RoutedEventArgs e)
         {
             if (DataHandler?.FileDatabase == null || false == DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()) return;
-
 
             // We want to show the prompt only if the promptState is true, and we are  viewing all images
             int filesTotalCount = DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.All);
@@ -642,7 +548,6 @@ namespace Timelapse
             }
 
             // Write all the data into the expected camtrapDP files
-
             // where those files convert the Timelapse data into the exact CamtrapDP specs
             // Export the data package
             string dataPackageFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPDataPackageJsonFilename);
@@ -660,19 +565,21 @@ namespace Timelapse
             }
 
             // Export the deployment csv file
-            string bboxAsJson = CamtrapDPHelpers.CalculateLatLongBoundingBoxFromDeployments(DataHandler.FileDatabase);
             string deploymentFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPDeploymentCSVFilename);
             List<string> deploymentMessages = await CamtrapDPExportFiles.ExportCamtrapDPDeploymentToCsv(DataHandler.FileDatabase, deploymentFilePath);
             if (null == deploymentMessages)
             {
                 Dialogs.MenuFileExportFailedForUnknownReasonDialog(GlobalReferences.MainWindow, deploymentFilePath);
+                StatusBar.SetMessage("Export cancelled.");
+                return;
             }
-            else if (deploymentMessages.Count > 0)
+            if (deploymentMessages.Count > 0)
             {
                 deploymentMessages.Insert(0, $"{Environment.NewLine}In {File.CamtrapDPDeploymentCSVFilename}:");
             }
 
             // Export the media and observations csv file
+            // This has a progress indicator as it could be a big file
             string mediaFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPMediaCSVFilename);
             string observationsFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPObservationsCSVFilename);
 
@@ -682,8 +589,10 @@ namespace Timelapse
             if (null == mediaObservationsMessages)
             {
                 Dialogs.MenuFileExportFailedForUnknownReasonDialog(GlobalReferences.MainWindow, $"{Environment.NewLine}{mediaFilePath} and {observationsFilePath}:");
+                StatusBar.SetMessage("Export cancelled.");
+                return;
             }
-            else if (mediaObservationsMessages.Count > 0)
+            if (mediaObservationsMessages.Count > 0)
             {
                 mediaObservationsMessages.Insert(0, $"{Environment.NewLine}In {File.CamtrapDPMediaCSVFilename} and {File.CamtrapDPObservationsCSVFilename}:");
             }
@@ -706,6 +615,8 @@ namespace Timelapse
                 StatusBar.SetMessage("Export completed.");
             }
         }
+        #endregion
+
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {

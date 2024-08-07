@@ -13,7 +13,7 @@ namespace Timelapse.Standards
     /// <summary>
     /// Interaction logic for CamtrapDPSOurces.xaml
     /// </summary>
-    public partial class CamtrapDPSources : Window
+    public partial class CamtrapDPSources 
     {
         #region Properties and Variables: JsonSourcesList, SourcesList, and Fields
         public string JsonSourcesList { get; set; }

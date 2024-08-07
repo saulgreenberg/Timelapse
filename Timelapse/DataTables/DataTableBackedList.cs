@@ -69,7 +69,7 @@ namespace Timelapse.DataTables
         /// <summary>
         /// Return a count of the number of rows in the DataTable
         /// </summary>
-        public int RowCount => DataTable?.Rows == null ? 0 : DataTable.Rows.Count;
+        public int RowCount => DataTable?.Rows.Count ?? 0;
 
         #endregion
 

@@ -13,7 +13,7 @@ namespace Timelapse.Standards
     /// <summary>
     /// Interaction logic for CamtrapDPLicenses.xaml
     /// </summary>
-    public partial class CamtrapDPLicenses : Window
+    public partial class CamtrapDPLicenses 
     {
         #region Properties and Variables: JsonLicensesList, and Fields
         // The list of licenses, in json format

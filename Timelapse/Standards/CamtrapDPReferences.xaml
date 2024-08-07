@@ -24,7 +24,7 @@
                 <LineBreak/>
                 <Run Text="Reference*" FontWeight ="Bold" FontStyle="Italic"/> is a free-form reference, ideally including a DOI and following a standard reference formatting style. e.g.,
             </TextBlock>
-        <TextBlock Grid.Row="0" Margin="20,0,0,5">
+        <TextBlock Margin="20,0,0,5">
         Greenberg, S., Godin, T. and Whittington, J. (2019) User Interface Design Patterns for Wildlife-Related Camera Trap Image Analysis. 
         <LineBreak/>
         Ecology and Evolution, Vol. 9 Issue 24:13706-13730. Wiley, December 2.  https://doi.org/10.1002/ece3.5767

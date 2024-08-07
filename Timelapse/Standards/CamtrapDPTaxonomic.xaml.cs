@@ -16,7 +16,7 @@ namespace Timelapse.Standards
     /// <summary>
     /// Interaction logic for CamtrapDPTaxonomic.xaml
     /// </summary>
-    public partial class CamtrapDPTaxonomic : Window
+    public partial class CamtrapDPTaxonomic 
     {
         #region Properties and Variables: JsonTaxonomicList, TaxonomicList, and Fields
         // The json list will eventally contain a serialized taxonomic object

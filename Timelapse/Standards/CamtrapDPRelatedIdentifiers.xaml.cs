@@ -13,7 +13,7 @@ namespace Timelapse.Standards
     /// <summary>
     /// Interaction logic for CamtrapDPRelatedIdentifiers.xaml
     /// </summary>
-    public partial class CamtrapDPRelatedIdentifiers : Window
+    public partial class CamtrapDPRelatedIdentifiers 
     {
         #region Properties and Variables: JsonRelatedIdentifiersList, Fields
         // The initial and final tring of contributors, in json format
