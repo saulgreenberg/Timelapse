@@ -1,4 +1,5 @@
 ﻿using System;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 
@@ -10,7 +11,7 @@ namespace Timelapse.Recognition
     public class RecognitionSelections
     {
         #region Public Properties
-        public bool Enabled => this.UseRecognition;
+        public bool Enabled => UseRecognition;
 
         // Whether or not image recognition should be used
         public bool UseRecognition { get; set; }
@@ -35,8 +36,8 @@ namespace Timelapse.Recognition
         // The Confidence thresholds, used by the select user interface
         public double ConfidenceThreshold1ForUI
         {
-            get => this.CurrentDetectionThreshold;
-            set => this.CurrentDetectionThreshold = value;
+            get => CurrentDetectionThreshold;
+            set => CurrentDetectionThreshold = value;
         }
 
         public double ConfidenceThreshold2ForUI { get; set; }
@@ -49,7 +50,7 @@ namespace Timelapse.Recognition
                 const double justAboveZero = 0.00001;
                 double lowerBound;
                 double upperBound;
-                if (this.InterpretAllDetectionsAsEmpty)
+                if (InterpretAllDetectionsAsEmpty)
                 {
                     // For Empty category, we want to invert the confidence 
                     // e.g confidence of 1 is returned as confidence of 0
@@ -59,21 +60,21 @@ namespace Timelapse.Recognition
                     // If Threshold2 is .99 in the UI for empty items, we invert that, but to just above 0
                     // so we capture all the non-zero items (i.e., all images with detections in that range) as otherwise it could
                     //  omit the rare image with a max detection between 0 and .01
-                    lowerBound = (Math.Abs(this.ConfidenceThreshold2ForUI - 0.99) < .0001) ? justAboveZero : 1.0 - this.ConfidenceThreshold2ForUI;
-                    upperBound = 1.0 - this.ConfidenceThreshold1ForUI;
+                    lowerBound = (Math.Abs(ConfidenceThreshold2ForUI - 0.99) < .0001) ? justAboveZero : 1.0 - ConfidenceThreshold2ForUI;
+                    upperBound = 1.0 - ConfidenceThreshold1ForUI;
 
                 }
-                else if (this.AllDetections)
+                else if (AllDetections)
                 {
                     // We don't want All detections to include images with no detections (i.e., Confidence range includes 0), so if we see a zero, we 
                     // alter that to just above zero.
-                    lowerBound = this.ConfidenceThreshold1ForUI == 0 ? justAboveZero : this.ConfidenceThreshold1ForUI;
-                    upperBound = this.ConfidenceThreshold2ForUI == 0 ? justAboveZero : this.ConfidenceThreshold2ForUI;
+                    lowerBound = ConfidenceThreshold1ForUI == 0 ? justAboveZero : ConfidenceThreshold1ForUI;
+                    upperBound = ConfidenceThreshold2ForUI == 0 ? justAboveZero : ConfidenceThreshold2ForUI;
                 }
                 else
                 {
-                    lowerBound = this.ConfidenceThreshold1ForUI;
-                    upperBound = this.ConfidenceThreshold2ForUI;
+                    lowerBound = ConfidenceThreshold1ForUI;
+                    upperBound = ConfidenceThreshold2ForUI;
                 }
                 return new Tuple<double, double>(lowerBound, upperBound);
             }
@@ -81,37 +82,37 @@ namespace Timelapse.Recognition
 
         private static double TypicalDetectionThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
+                ? RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
                 : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold();
 
         private double _currentDetectionThreshold = -1;
         public double CurrentDetectionThreshold
         {
-            set => this._currentDetectionThreshold = value;
+            set => _currentDetectionThreshold = value;
             get =>
-                this._currentDetectionThreshold < 0
+                _currentDetectionThreshold < 0
                     ? TypicalDetectionThreshold
-                    : this._currentDetectionThreshold;
+                    : _currentDetectionThreshold;
         }
 
         private static double TypicalClassificationThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
+                ? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
                 : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalClassificationThreshold();
 
         private double _currentClassificationThreshold = -1;
         public double CurrentClassificationThreshold
         {
-            set => this._currentClassificationThreshold = value;
+            set => _currentClassificationThreshold = value;
             get =>
-                this._currentClassificationThreshold < 0
+                _currentClassificationThreshold < 0
                     ? TypicalClassificationThreshold
-                    : this._currentClassificationThreshold;
+                    : _currentClassificationThreshold;
         }
 
         public static double ConservativeDetectionThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
+                ? RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
                 : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
 
         #endregion
@@ -119,18 +120,18 @@ namespace Timelapse.Recognition
         #region Constructor - Initializes various defaults
         public RecognitionSelections()
         {
-            this.ClearAllDetectionsUses();
+            ClearAllDetectionsUses();
 
             // We don't know the recognition type yet
-            this.RecognitionType = RecognitionType.Empty;
+            RecognitionType = RecognitionType.Empty;
 
-            this.DetectionCategory = "1";
-            this.ConfidenceThreshold2ForUI = 1;
+            DetectionCategory = "1";
+            ConfidenceThreshold2ForUI = 1;
 
-            this.ClassificationCategory = "1";
+            ClassificationCategory = "1";
 
-            this.InterpretAllDetectionsAsEmpty = false;
-            this.RankByConfidence = false;
+            InterpretAllDetectionsAsEmpty = false;
+            RankByConfidence = false;
         }
         #endregion
 
@@ -138,7 +139,7 @@ namespace Timelapse.Recognition
         // Bulk disabling of detection selection criteria
         public void ClearAllDetectionsUses()
         {
-            this.UseRecognition = false;
+            UseRecognition = false;
         }
         #endregion
     }

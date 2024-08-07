@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.ExifTool;
 
@@ -65,9 +66,9 @@ namespace Timelapse.State
         #region Constructor
         public TimelapseState()
         {
-            this.FirstTimeFileLoading = true;
-            this.ExifToolManager = new ExifToolManager();
-            this.Reset();
+            FirstTimeFileLoading = true;
+            ExifToolManager = new ExifToolManager();
+            Reset();
         }
         #endregion
 
@@ -77,13 +78,13 @@ namespace Timelapse.State
         /// </summary>
         public void Reset()
         {
-            this.DifferenceThreshold = Constant.ImageValues.DifferenceThresholdDefault;
-            this.FileNavigatorSliderDragging = false;
-            this.MouseOverCounter = null;
-            this.MostRecentDragEvent = DateTime.UtcNow - this.Throttles.DesiredIntervalBetweenRenders;
-            this.BoundingBoxThresholdOveride = 1;
-            this.ResetKeyRepeat();
-            this.BoundingBoxDisplayThresholdResetToDefault();
+            DifferenceThreshold = ImageValues.DifferenceThresholdDefault;
+            FileNavigatorSliderDragging = false;
+            MouseOverCounter = null;
+            MostRecentDragEvent = DateTime.UtcNow - Throttles.DesiredIntervalBetweenRenders;
+            BoundingBoxThresholdOveride = 1;
+            ResetKeyRepeat();
+            BoundingBoxDisplayThresholdResetToDefault();
         }
 
         public void BoundingBoxDisplayThresholdResetToValueInDataBase()
@@ -93,14 +94,14 @@ namespace Timelapse.State
             if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null
                 && GlobalReferences.MainWindow.DataHandler.FileDatabase.DetectionsExists()
                 && true == GlobalReferences.MainWindow?.DataHandler?.FileDatabase.TryGetBoundingBoxDisplayThreshold(out float threshold)
-                && Math.Abs(threshold - Constant.RecognizerValues.Undefined) > 0.1)
+                && Math.Abs(threshold - RecognizerValues.Undefined) > 0.1)
             {
-                this.BoundingBoxDisplayThreshold = threshold;
+                BoundingBoxDisplayThreshold = threshold;
             }
             else
             {
                 // We don't have a way to calculate the bounding box threshold, so just use this default for now
-                this.BoundingBoxDisplayThresholdResetToDefault();
+                BoundingBoxDisplayThresholdResetToDefault();
             }
         }
         public void BoundingBoxDisplayThresholdResetToDefault()
@@ -111,20 +112,20 @@ namespace Timelapse.State
                 || false == GlobalReferences.MainWindow.DataHandler?.FileDatabase.DetectionsExists())
             {
                 // We don't have a way to calculate the bounding box threshold, so just use this default for now
-                this.BoundingBoxDisplayThreshold = 0.5;
+                BoundingBoxDisplayThreshold = 0.5;
                 return;
             }
 
             // Calculate the bounding box threshold from the typical and conservative values as specified in the  recognition file
             float typicalThreshold = GlobalReferences.MainWindow.DataHandler != null
                 ? GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold()
-                : Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+                : RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
 
             float conservativeThreshold = GlobalReferences.MainWindow.DataHandler != null
                 ? GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold()
-                : Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+                : RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
 
-            this.BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
+            BoundingBoxDisplayThreshold = 0.4f * (typicalThreshold - conservativeThreshold) + conservativeThreshold;
         }
         #endregion;
 
@@ -134,9 +135,9 @@ namespace Timelapse.State
         /// </summary>
         public void ResetKeyRepeat()
         {
-            this.keyRepeatCount = 0;
-            this.IsKeyRepeat = false;
-            this.mostRecentKey = null;
+            keyRepeatCount = 0;
+            IsKeyRepeat = false;
+            mostRecentKey = null;
         }
 
         /// <summary>
@@ -149,17 +150,17 @@ namespace Timelapse.State
             // check mostRecentKey for null as key delivery is not entirely deterministic
             // it's possible WPF will send the first key as a repeat if the user holds a key down or starts typing while the main window is opening
             // Note that we check the isrepeat from both the key event, and the IsKeyRepeat key that we track due to bugs in how AvalonDock returns erroneous IsRepeat values.
-            if (key != null && key.IsRepeat && this.IsKeyRepeat && this.mostRecentKey != null && this.mostRecentKey.IsRepeat && (key.Key == this.mostRecentKey.Key))
+            if (key != null && key.IsRepeat && IsKeyRepeat && mostRecentKey != null && mostRecentKey.IsRepeat && (key.Key == mostRecentKey.Key))
             {
-                ++this.keyRepeatCount;
+                ++keyRepeatCount;
             }
             else
             {
-                this.keyRepeatCount = 0;
-                this.IsKeyRepeat = true;
+                keyRepeatCount = 0;
+                IsKeyRepeat = true;
             }
-            this.mostRecentKey = key;
-            return this.keyRepeatCount;
+            mostRecentKey = key;
+            return keyRepeatCount;
         }
         #endregion
     }

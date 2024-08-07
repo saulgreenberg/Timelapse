@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.SearchingAndSorting
@@ -18,8 +19,8 @@ namespace Timelapse.SearchingAndSorting
         {
             List<SortTerm> sortTerms = new List<SortTerm>
             {
-                new SortTerm(Constant.DatabaseColumn.RelativePath, Constant.SortTermValues.RelativePathDisplayLabel, Constant.DatabaseColumn.RelativePath, Constant.BooleanValue.True),
-                new SortTerm(Constant.DatabaseColumn.DateTime, Constant.SortTermValues.DateDisplayLabel, Constant.DatabaseColumn.DateTime, Constant.BooleanValue.True)
+                new SortTerm(DatabaseColumn.RelativePath, SortTermValues.RelativePathDisplayLabel, DatabaseColumn.RelativePath, BooleanValue.True),
+                new SortTerm(DatabaseColumn.DateTime, SortTermValues.DateDisplayLabel, DatabaseColumn.DateTime, BooleanValue.True)
             };
             return sortTerms;
         }
@@ -36,17 +37,17 @@ namespace Timelapse.SearchingAndSorting
             // - Remove the 2nd DateTiime
             // - Add Id as it is missing
             bool firstDateTimeSeen = false;
-            sortTerms.Add(new SortTerm(Constant.DatabaseColumn.ID, Constant.DatabaseColumn.ID, Sql.IntegerType, Constant.BooleanValue.True));
+            sortTerms.Add(new SortTerm(DatabaseColumn.ID, DatabaseColumn.ID, Sql.IntegerType, BooleanValue.True));
 
             foreach (SearchTerm searchTerm in searchTerms)
             {
                 // Necessary modifications:
                 // - Exclude RelativePath           
-                if (searchTerm.DataLabel == Constant.DatabaseColumn.File)
+                if (searchTerm.DataLabel == DatabaseColumn.File)
                 {
-                    sortTerms.Add(new SortTerm(searchTerm.DataLabel, Constant.SortTermValues.FileDisplayLabel, searchTerm.ControlType, Constant.BooleanValue.True));
+                    sortTerms.Add(new SortTerm(searchTerm.DataLabel, SortTermValues.FileDisplayLabel, searchTerm.ControlType, BooleanValue.True));
                 }
-                else if (searchTerm.DataLabel == Constant.DatabaseColumn.DateTime)
+                else if (searchTerm.DataLabel == DatabaseColumn.DateTime)
                 {
                     // Skip the second DateTime
                     if (firstDateTimeSeen)
@@ -54,14 +55,14 @@ namespace Timelapse.SearchingAndSorting
                         continue;
                     }
                     firstDateTimeSeen = true;
-                    sortTerms.Add(new SortTerm(searchTerm.DataLabel, Constant.SortTermValues.DateDisplayLabel, searchTerm.ControlType, Constant.BooleanValue.True));
+                    sortTerms.Add(new SortTerm(searchTerm.DataLabel, SortTermValues.DateDisplayLabel, searchTerm.ControlType, BooleanValue.True));
                 }
 
-                sortTerms.Add(searchTerm.DataLabel == Constant.DatabaseColumn.RelativePath
-                    ? new SortTerm(searchTerm.DataLabel, Constant.SortTermValues.RelativePathDisplayLabel,
-                        searchTerm.ControlType, Constant.BooleanValue.True)
+                sortTerms.Add(searchTerm.DataLabel == DatabaseColumn.RelativePath
+                    ? new SortTerm(searchTerm.DataLabel, SortTermValues.RelativePathDisplayLabel,
+                        searchTerm.ControlType, BooleanValue.True)
                     : new SortTerm(searchTerm.DataLabel, searchTerm.Label, searchTerm.ControlType,
-                        Constant.BooleanValue.True));
+                        BooleanValue.True));
             }
             return sortTerms;
         }

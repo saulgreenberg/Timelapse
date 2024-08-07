@@ -14,60 +14,60 @@ namespace Timelapse
         private void TryViewPreviousOrNextDifference()
         {
             // Only allow differencing in single image mode.
-            if (!this.IsDisplayingActiveSingleImage())
+            if (!IsDisplayingActiveSingleImage())
             {
                 return;
             }
 
             // Note:  No matter what image we are viewing, the source image should have  been cached before entering this function\
             // If it isn't (or if its a video), abort
-            if (this.DataHandler == null ||
-                this.DataHandler.ImageCache == null ||
-                this.DataHandler.ImageCache.Current == null ||
-                this.DataHandler.ImageCache.Current.IsVideo)
+            if (DataHandler == null ||
+                DataHandler.ImageCache == null ||
+                DataHandler.ImageCache.Current == null ||
+                DataHandler.ImageCache.Current.IsVideo)
             {
-                this.StatusBar.SetMessage("Differences can't be shown for videos, missing, or corrupt files");
+                StatusBar.SetMessage("Differences can't be shown for videos, missing, or corrupt files");
                 return;
             }
 
             // Go to the next image in the cycle we want to show.
-            this.DataHandler.ImageCache.MoveToNextStateInPreviousNextDifferenceCycle();
+            DataHandler.ImageCache.MoveToNextStateInPreviousNextDifferenceCycle();
 
             // If we are supposed to display the unaltered image, do it and get out of here.
             // The unaltered image will always be cached at this point, so there is no need to check.
-            if (this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered)
+            if (DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered)
             {
-                this.MarkableCanvas.SetDisplayImage(this.DataHandler.ImageCache.GetCurrentImage);
+                MarkableCanvas.SetDisplayImage(DataHandler.ImageCache.GetCurrentImage);
 
                 // Check if its a corrupted image
-                if (!this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
+                if (!DataHandler.ImageCache.Current.IsDisplayable(FolderPath))
                 {
                     // TO DO AS WE MAY HAVE TO GET THE INDEX OF THE NEXT IN CYCLE IMAGE???
-                    this.StatusBar.SetMessage("Difference can't be shown: the current file is likely missing or corrupted");
+                    StatusBar.SetMessage("Difference can't be shown: the current file is likely missing or corrupted");
                 }
                 else
                 {
-                    this.StatusBar.ClearMessage();
+                    StatusBar.ClearMessage();
                 }
                 return;
             }
 
             // Generate and cache difference image if needed
-            if (this.DataHandler.ImageCache.GetCurrentImage == null)
+            if (DataHandler.ImageCache.GetCurrentImage == null)
             {
-                ImageDifferenceResultEnum result = this.DataHandler.ImageCache.TryCalculateDifference();
+                ImageDifferenceResultEnum result = DataHandler.ImageCache.TryCalculateDifference();
                 switch (result)
                 {
                     case ImageDifferenceResultEnum.CurrentImageNotAvailable:
                     case ImageDifferenceResultEnum.NextImageNotAvailable:
                     case ImageDifferenceResultEnum.PreviousImageNotAvailable:
                     case ImageDifferenceResultEnum.NotCalculable:
-                        this.StatusBar.SetMessage(
-                            $"Difference can't be shown: the {(this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file is a video, missing, corrupt, or a different size");
+                        StatusBar.SetMessage(
+                            $"Difference can't be shown: the {(DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file is a video, missing, corrupt, or a different size");
                         return;
                     case ImageDifferenceResultEnum.Success:
-                        this.StatusBar.SetMessage(
-                            $"Viewing difference from {(this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file.");
+                        StatusBar.SetMessage(
+                            $"Viewing difference from {(DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file.");
                         break;
                     default:
                         throw new NotSupportedException($"Unhandled difference result {result}.");
@@ -77,9 +77,9 @@ namespace Timelapse
             // display the differenced image
             // the magnifying glass always displays the original non-diferenced image so ImageToDisplay is updated and ImageToMagnify left unchnaged
             // this allows the user to examine any particular differenced area and see what it really looks like in the non-differenced image. 
-            this.MarkableCanvas.SetDisplayImage(this.DataHandler.ImageCache.GetCurrentImage);
-            this.StatusBar.SetMessage(
-                $"Viewing difference from {(this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file.");
+            MarkableCanvas.SetDisplayImage(DataHandler.ImageCache.GetCurrentImage);
+            StatusBar.SetMessage(
+                $"Viewing difference from {(DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Previous ? "previous" : "next")} file.");
         }
         #endregion
 
@@ -88,45 +88,45 @@ namespace Timelapse
         private void TryViewCombinedDifference()
         {
             // Only allow differencing in single image mode.
-            if (!this.IsDisplayingActiveSingleImage())
+            if (!IsDisplayingActiveSingleImage())
             {
                 return;
             }
 
-            if (this.DataHandler == null ||
-                this.DataHandler.ImageCache == null ||
-                this.DataHandler.ImageCache.Current == null ||
-                this.DataHandler.ImageCache.Current.IsVideo)
+            if (DataHandler == null ||
+                DataHandler.ImageCache == null ||
+                DataHandler.ImageCache.Current == null ||
+                DataHandler.ImageCache.Current.IsVideo)
             {
-                this.StatusBar.SetMessage("Combined differences can't be shown for videos, missing, or corrupt files");
+                StatusBar.SetMessage("Combined differences can't be shown for videos, missing, or corrupt files");
                 return;
             }
 
             // If we are in any state other than the unaltered state, go to the unaltered state, otherwise the combined diff state
-            this.DataHandler.ImageCache.MoveToNextStateInCombinedDifferenceCycle();
-            if (this.DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered)
+            DataHandler.ImageCache.MoveToNextStateInCombinedDifferenceCycle();
+            if (DataHandler.ImageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered)
             {
-                this.MarkableCanvas.SetDisplayImage(this.DataHandler.ImageCache.GetCurrentImage);
-                this.StatusBar.ClearMessage();
+                MarkableCanvas.SetDisplayImage(DataHandler.ImageCache.GetCurrentImage);
+                StatusBar.ClearMessage();
                 return;
             }
 
             // Generate and cache difference image if needed
-            if (this.DataHandler.ImageCache.GetCurrentImage == null)
+            if (DataHandler.ImageCache.GetCurrentImage == null)
             {
-                ImageDifferenceResultEnum result = this.DataHandler.ImageCache.TryCalculateCombinedDifference(this.State.DifferenceThreshold);
+                ImageDifferenceResultEnum result = DataHandler.ImageCache.TryCalculateCombinedDifference(State.DifferenceThreshold);
                 switch (result)
                 {
                     case ImageDifferenceResultEnum.CurrentImageNotAvailable:
-                        this.StatusBar.SetMessage("Combined difference can't be shown: the current file is a video, missing, corrupt, or a different size");
+                        StatusBar.SetMessage("Combined difference can't be shown: the current file is a video, missing, corrupt, or a different size");
                         return;
                     case ImageDifferenceResultEnum.NextImageNotAvailable:
                     case ImageDifferenceResultEnum.NotCalculable:
                     case ImageDifferenceResultEnum.PreviousImageNotAvailable:
-                        this.StatusBar.SetMessage("Combined differences can't be shown: surrounding files include a video, missing, corrupt, or a different size file");
+                        StatusBar.SetMessage("Combined differences can't be shown: surrounding files include a video, missing, corrupt, or a different size file");
                         return;
                     case ImageDifferenceResultEnum.Success:
-                        this.StatusBar.SetMessage("Viewing differences from both the next and previous files");
+                        StatusBar.SetMessage("Viewing differences from both the next and previous files");
                         break;
                     default:
                         throw new NotSupportedException($"Unhandled combined difference result {result}.");
@@ -134,8 +134,8 @@ namespace Timelapse
             }
 
             // display differenced image
-            this.MarkableCanvas.SetDisplayImage(this.DataHandler.ImageCache.GetCurrentImage);
-            this.StatusBar.SetMessage("Viewing differences from both the next and previous files");
+            MarkableCanvas.SetDisplayImage(DataHandler.ImageCache.GetCurrentImage);
+            StatusBar.SetMessage("Viewing differences from both the next and previous files");
         }
         #endregion
     }

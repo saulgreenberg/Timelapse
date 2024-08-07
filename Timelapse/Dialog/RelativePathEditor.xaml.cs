@@ -1,6 +1,6 @@
 ﻿using System.Windows;
-using Timelapse.Database;
 using System.Windows.Input;
+using Timelapse.Database;
 using Timelapse.DataStructures;
 
 namespace Timelapse.Dialog
@@ -11,11 +11,11 @@ namespace Timelapse.Dialog
     public partial class RelativePathEditor 
     {
         private readonly FileDatabase FileDatabase;
-        public RelativePathEditor(Window owner, Timelapse.Database.FileDatabase fileDatabase) : base(owner)
+        public RelativePathEditor(Window owner, FileDatabase fileDatabase) : base(owner)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.FileDatabase = fileDatabase;
+            Owner = owner;
+            FileDatabase = fileDatabase;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -23,38 +23,38 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             
             // Set up a progress handler for long-running atomic operation
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
             Mouse.OverrideCursor = Cursors.Wait;
-            this.BusyCancelIndicator.Reset(true);
+            BusyCancelIndicator.Reset(true);
 
-            bool result = await this.RelativePathControl.AsyncInitialize(this, this.FileDatabase, this.ProgressHandler, GlobalReferences.CancelTokenSource);
+            bool result = await RelativePathControl.AsyncInitialize(this, FileDatabase, ProgressHandler, GlobalReferences.CancelTokenSource);
 
-            this.BusyCancelIndicator.Reset(false);
+            BusyCancelIndicator.Reset(false);
             Mouse.OverrideCursor = null;
             if (result == false)
             {
                 // Abort this, likely due to a user's progress cancel event
-                this.DialogResult = false;
+                DialogResult = false;
             }
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = this.RelativePathControl.WereEditsMade;
+            DialogResult = RelativePathControl.WereEditsMade;
         }
 
         private void SortButton_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.RebuildTreeAndNodes(true);
+            RelativePathControl.RebuildTreeAndNodes(true);
         }
 
         private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.ExpandTreeView(true);
+            RelativePathControl.ExpandTreeView(true);
         }
         private void ContractAll_Click(object sender, RoutedEventArgs e)
         {
-            this.RelativePathControl.ExpandTreeView(false);
+            RelativePathControl.ExpandTreeView(false);
         }
 
         // Used for debugging

@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 
 namespace Timelapse.Standards
 {
     public class CamtrapDPDataPackage
     {
         // Resources: Currently hard-wired to 3 Resources representing the deployment, media, and observations
-        public List<resources> resources = new List<resources>()
-        {
-        };
+        public List<resources> resources = new List<resources>();
 
         public string profile;
         public string name;
@@ -53,7 +49,7 @@ namespace Timelapse.Standards
         //    new taxonomic(),
         //};
 
-        public List<relatedIdentifiers> relatedIdentifiers = new List<relatedIdentifiers>()
+        public List<relatedIdentifiers> relatedIdentifiers = new List<relatedIdentifiers>
         {
             new relatedIdentifiers(),
         };

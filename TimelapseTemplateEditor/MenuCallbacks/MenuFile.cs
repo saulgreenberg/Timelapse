@@ -19,7 +19,6 @@ namespace TimelapseTemplateEditor
 {
     public partial class TemplateEditorWindow
     {
-
         #region MenuTestSomeCode_Click
         private async void MenuTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
@@ -39,7 +38,6 @@ namespace TimelapseTemplateEditor
             List<StandardsRow> observationsRows = GetStandardRowsFromCamtrapDPJson(observationsTemplate, false, usedDataLabels);
             observationsRows.AddRange(GetStandardRowsFromCamtrapDPJson(mediaTemplate, false, usedDataLabels));
 
-
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(deploymentRows, observationsRows, Aliases);
 
@@ -47,19 +45,18 @@ namespace TimelapseTemplateEditor
         }
         #endregion
 
-
-
+        #region  MenuFileNewTemplate
         // Creates a new database file of a user chosen name in a user chosen location.
         private async void MenuFileNewTemplate_Click(object sender, RoutedEventArgs e)
         {
             await CreateNewTemplateFile();
             this.TemplateUI.RowControls.IsEnabled = true;
         }
+        #endregion
 
-
-        #region MenuFileNewBaseOnStandard
-        // Create an alberta metadata standard template
-        private void MenuFileNewBasedOnStandard_Click(object sender, RoutedEventArgs e)
+        #region MenuFileNewFromStandardResourceFile
+        // Create a template based on a standard by copying that standard's template from a resource file
+        private void MenuFileNewFromStandardResourceFile_Click(object sender, RoutedEventArgs e)
         {
             string rtfPath = string.Empty;
             string templatePath = string.Empty;
@@ -93,11 +90,9 @@ namespace TimelapseTemplateEditor
             CreateNewTemplateFileFromResource(templatePath);
             this.TemplateUI.RowControls.IsEnabled = true;
         }
-
- 
         #endregion
 
-        #region MenuFileNewBasedOnStandardProgramatically
+        #region MenuFileNewFromStandard - Programatically, various standards
         // Create an alberta metadata standard template programmatically
         private async void MenuFileNewAlbertaMetadataStandardProgramatically_Click(object sender, RoutedEventArgs e)
         {
@@ -111,22 +106,11 @@ namespace TimelapseTemplateEditor
             }
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(AlbertaMetadataStandard.FolderMetadataRows, AlbertaMetadataStandard.ImageTemplateRows, AlbertaMetadataStandard.Aliases);
-            this.TemplateUI.RowControls.IsEnabled = true;
-            Globals.TemplateDataGridControl.DoLayoutUpdated(true);
-        }
-
-        // Create a practice image set template programmatically
-        private async void MenuFileNewPracticeImageSetStandard_Click(object sender, RoutedEventArgs e)
-        {
-            ShowRtfFile show = new ShowRtfFile(this, "The Practice Image Set Tutorial Standard",
-                "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
-                "pack://application:,,,/Resources/PracticeImageSetTutorialStandardOverview.rtf");
-            if (false == show.ShowDialog())
-            {
-                return;
-            }
-            await CreateNewTemplateFile();
-            DoCreateMetadataStandardFields(PracticeImageSetMetadataExample.FolderMetadataRows, PracticeImageSetMetadataExample.ImageTemplateRows, PracticeImageSetMetadataExample.Aliases);
+            
+            // Set the standard being used, if any. This avoids excessive calls to the database
+            templateDatabase.UpdateStandard(AlbertaMetadataStandard.Standard);
+            this.standardType = AlbertaMetadataStandard.Standard; 
+            
             this.TemplateUI.RowControls.IsEnabled = true;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
@@ -143,9 +127,11 @@ namespace TimelapseTemplateEditor
             }
             await CreateNewTemplateFile();
             DoCreateMetadataStandardFields(CamtrapDPStandard.FolderMetadataRows, CamtrapDPStandard.ImageTemplateRows, CamtrapDPStandard.Aliases);
+
             // Set the standard being used, if any. This avoids excessive calls to the database
             templateDatabase.UpdateStandard(CamtrapDPStandard.Standard);
             this.standardType = CamtrapDPStandard.Standard;
+
             this.TemplateUI.RowControls.IsEnabled = false;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
@@ -155,6 +141,23 @@ namespace TimelapseTemplateEditor
         {
             await CreateNewTemplateFile();
             this.DoCreateMetadataStandardFields(AllControlsStandard.FolderMetadataRows, AllControlsStandard.ImageTemplateRows, AllControlsStandard.Aliases);
+            this.TemplateUI.RowControls.IsEnabled = true;
+            Globals.TemplateDataGridControl.DoLayoutUpdated(true);
+        }
+
+
+        // Create a practice image set template programmatically
+        private async void MenuFileNewPracticeImageSetStandard_Click(object sender, RoutedEventArgs e)
+        {
+            ShowRtfFile show = new ShowRtfFile(this, "The Practice Image Set Tutorial Standard",
+                "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
+                "pack://application:,,,/Resources/PracticeImageSetTutorialStandardOverview.rtf");
+            if (false == show.ShowDialog())
+            {
+                return;
+            }
+            await CreateNewTemplateFile();
+            DoCreateMetadataStandardFields(PracticeImageSetMetadataExample.FolderMetadataRows, PracticeImageSetMetadataExample.ImageTemplateRows, PracticeImageSetMetadataExample.Aliases);
             this.TemplateUI.RowControls.IsEnabled = true;
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
         }
@@ -243,7 +246,7 @@ namespace TimelapseTemplateEditor
         }
         #endregion
 
-        #region MenuFileClose / MenuFileExi
+        #region MenuFileClose / MenuFileExit
         // Closes the template and clears various states to allow another template to be created or opened.
         private void MenuFileClose_Click(object sender, RoutedEventArgs e)
         {

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 using Timelapse.Util;
@@ -9,8 +10,8 @@ namespace Timelapse.DataTables
     {
         public int Level
         {
-            get => this.Row.GetIntegerField(Constant.Control.Level);
-            set => this.Row.SetField(Constant.Control.Level, value);
+            get => Row.GetIntegerField(Control.Level);
+            set => Row.SetField(Control.Level, value);
         }
 
         #region Constructors
@@ -33,7 +34,7 @@ namespace Timelapse.DataTables
             // i.e., differences were detected between at least one value between this control row and the passed in one,
             // in either the base call or for Level value
             return base.UpdateThisControlRowToMatch(metadataControlRowToMatch) ||
-                   this.Level != metadataControlRowToMatch.Level;
+                   Level != metadataControlRowToMatch.Level;
         }
         #endregion
 
@@ -43,7 +44,7 @@ namespace Timelapse.DataTables
         public override ColumnTuplesWithWhere CreateColumnTuplesWithWhereByID()
         {
             ColumnTuplesWithWhere ctww = base.CreateColumnTuplesWithWhereByID();
-            ctww.Columns.Add(new ColumnTuple(Constant.Control.Level, this.Level));
+            ctww.Columns.Add(new ColumnTuple(Control.Level, Level));
             return ctww;
         }
         #endregion

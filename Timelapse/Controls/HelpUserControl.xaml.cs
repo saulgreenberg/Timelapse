@@ -5,7 +5,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using System.Windows.Resources;
+using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
@@ -24,8 +26,8 @@ namespace Timelapse.Controls
             DependencyProperty.Register(nameof(HelpFile), typeof(string), typeof(HelpUserControl));
         public string HelpFile
         {
-            get => this.GetValue(HelpFileProperty) as string;
-            set => this.SetValue(HelpFileProperty, value);
+            get => GetValue(HelpFileProperty) as string;
+            set => SetValue(HelpFileProperty, value);
         }
 
         // Set this (before the control is loaded) to a non-English (US or CAD) language, which will be used to add a warning about regions to the document.
@@ -37,17 +39,17 @@ namespace Timelapse.Controls
         #region Constructor / Loaded
         public HelpUserControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            this.CreateFlowDocument();
+            CreateFlowDocument();
 
             // Check to see if a language has been set. If so, warn the user that they may be better off setting en-US or en-CAN as the region
-            if (!string.IsNullOrEmpty(this.WarningRegionLanguage))
+            if (!string.IsNullOrEmpty(WarningRegionLanguage))
             {
-                this.InsertCultureWarning();
+                InsertCultureWarning();
             }
         }
         #endregion
@@ -91,7 +93,7 @@ namespace Timelapse.Controls
             Run run5 = new Run
             {
                 FontWeight = FontWeights.Bold,
-                Text = this.WarningRegionLanguage,
+                Text = WarningRegionLanguage,
             };
 
             Run run6 = new Run
@@ -109,14 +111,14 @@ namespace Timelapse.Controls
             p1.Inlines.Add(run5);
             p1.Inlines.Add(run6);
 
-            if (null != this.flowDocument.Blocks.FirstBlock)
+            if (null != flowDocument.Blocks.FirstBlock)
             {
-                TracePrint.NullException(nameof(this.flowDocument.Blocks.FirstBlock));
-                this.flowDocument.Blocks.InsertBefore(this.flowDocument.Blocks.FirstBlock, p1);
+                TracePrint.NullException(nameof(flowDocument.Blocks.FirstBlock));
+                flowDocument.Blocks.InsertBefore(flowDocument.Blocks.FirstBlock, p1);
             }
             else
             {
-                this.flowDocument.Blocks.Add(p1);
+                flowDocument.Blocks.Add(p1);
             }
         }
         #endregion
@@ -125,11 +127,11 @@ namespace Timelapse.Controls
         // Create a flow document containing the contents of the resource specified in HelpFile
         private void CreateFlowDocument()
         {
-            this.flowDocument = new FlowDocument();
+            flowDocument = new FlowDocument();
             try
             {
                 // create a string containing the help text from the rtf help file
-                StreamResourceInfo sri = Application.GetResourceStream(new Uri(this.HelpFile));
+                StreamResourceInfo sri = Application.GetResourceStream(new Uri(HelpFile));
                 if (null == sri)
                 {
                     TracePrint.NullException(nameof(sri));
@@ -145,7 +147,7 @@ namespace Timelapse.Controls
                 writer.Flush();
 
                 // Load the entire text into the Flow Document
-                TextRange textRange = new TextRange(this.flowDocument.ContentStart, this.flowDocument.ContentEnd);
+                TextRange textRange = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd);
                 textRange.Load(stream, DataFormats.Rtf);
 
                 // We can now displose of the reader and write as we no longer need them.
@@ -155,22 +157,22 @@ namespace Timelapse.Controls
             catch
             {
                 // We couldn't get the help file. Display a generic message instead
-                this.flowDocument.FontFamily = new FontFamily("Segui UI");
-                this.flowDocument.FontSize = 14;
+                flowDocument.FontFamily = new FontFamily("Segui UI");
+                flowDocument.FontSize = 14;
                 Paragraph p1 = new Paragraph();
                 p1.Inlines.Add("Brief instructions are currently unavailable.");
                 p1.Inlines.Add(Environment.NewLine + Environment.NewLine);
                 p1.Inlines.Add("If you need help, please download and read the ");
                 Hyperlink h1 = new Hyperlink();
                 h1.Inlines.Add("Timelapse Tutorial Manual");
-                h1.NavigateUri = Constant.ExternalLinks.UserManualLink;
-                h1.RequestNavigate += this.Link_RequestNavigate;
+                h1.NavigateUri = ExternalLinks.UserManualLink;
+                h1.RequestNavigate += Link_RequestNavigate;
                 p1.Inlines.Add(h1);
-                this.flowDocument.Blocks.Add(p1);
+                flowDocument.Blocks.Add(p1);
             }
             // Add the document to the FlowDocumentScollViewer, converting hyperlinks to active links
-            this.SubscribeToAllHyperlinks(this.flowDocument);
-            this.ScrollViewer.Document = this.flowDocument;
+            SubscribeToAllHyperlinks(flowDocument);
+            ScrollViewer.Document = flowDocument;
         }
         #endregion
 
@@ -180,7 +182,7 @@ namespace Timelapse.Controls
             var hyperlinks = GetVisuals(myflowDocument).OfType<Hyperlink>();
             foreach (var link in hyperlinks)
             {
-                link.RequestNavigate += this.Link_RequestNavigate;
+                link.RequestNavigate += Link_RequestNavigate;
             }
         }
 
@@ -197,7 +199,7 @@ namespace Timelapse.Controls
         }
 
         // Load the Uri provided in a web browser  
-        private void Link_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void Link_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             ProcessExecution.TryProcessStart(e.Uri);
             e.Handled = true;

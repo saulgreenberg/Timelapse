@@ -1,10 +1,11 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
-using Timelapse.Enums;
 using Timelapse.DataTables;
+using Timelapse.Enums;
 
 namespace Timelapse.ControlsMetadata
 {
@@ -14,30 +15,30 @@ namespace Timelapse.ControlsMetadata
     public class MetadataDataEntryFlag : MetadataDataEntryControl<CheckBox, Label>
     {
         #region Public Properties
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the Content of the Flag</summary>
-        public override string Content => (this.ContentControl.IsChecked != null && (bool)this.ContentControl.IsChecked) 
-            ? Constant.BooleanValue.True 
-            : Constant.BooleanValue.False;
+        public override string Content => (ContentControl.IsChecked != null && (bool)ContentControl.IsChecked) 
+            ? BooleanValue.True 
+            : BooleanValue.False;
 
         // This override has slightly different code compared to the other DataEntry types.. 
         private bool contentReadOnly;
         public override bool ContentReadOnly
         {
-            get => this.contentReadOnly;
+            get => contentReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.contentReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    contentReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.contentReadOnly = value;
+                    contentReadOnly = value;
                 }
             }
         }
@@ -47,9 +48,9 @@ namespace Timelapse.ControlsMetadata
         public MetadataDataEntryFlag(MetadataControlRow control, DataEntryControls styleProvider, string tooltip)
             : base(control, styleProvider, ControlContentStyleEnum.FlagCheckBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
-            this.ControlType = control.Type;
+            ControlType = control.Type;
             // Callback used to allow Enter to select the highlit item
-            this.ContentControl.PreviewKeyDown += this.ContentControl_PreviewKeyDown;
+            ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
         }
         #endregion
 
@@ -80,12 +81,12 @@ namespace Timelapse.ControlsMetadata
         public override void SetContentAndTooltip(string value)
         {
             // Ensure that we always have a valid true/false value, wehre anything other than true is considered false. 
-            bool newBoolValue = null != value && value.ToLower() == Constant.BooleanValue.True;
+            bool newBoolValue = null != value && value.ToLower() == BooleanValue.True;
 
             // The checkbox will be checked depending on whether the value is true or false 
             // and the tooltip will be set to true or false
-            this.ContentControl.IsChecked = newBoolValue;
-            this.ContentControl.ToolTip = newBoolValue.ToString(); 
+            ContentControl.IsChecked = newBoolValue;
+            ContentControl.ToolTip = newBoolValue.ToString(); 
         }
         #endregion
     }

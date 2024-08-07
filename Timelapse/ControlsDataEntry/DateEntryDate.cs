@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
@@ -15,33 +16,33 @@ namespace Timelapse.ControlsDataEntry
         public DataEntryDate(ControlRow control, DataEntryControls styleProvider, DateTime defaultValue) :
             base(control, styleProvider, DateTimeFormatEnum.DateOnly, defaultValue)
         {
-            this.ContentControl.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
-            this.ContentControl.Format = Xceed.Wpf.Toolkit.DateTimeFormat.Custom;
-            this.ContentControl.FormatString = Timelapse.Constant.Time.DateDisplayFormat;
-            this.ContentControl.TimePickerVisibility = Visibility.Collapsed;
+            ContentControl.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
+            ContentControl.Format = DateTimeFormat.Custom;
+            ContentControl.FormatString = Time.DateDisplayFormat;
+            ContentControl.TimePickerVisibility = Visibility.Collapsed;
         }
 
         public override void SetContentAndTooltip(string value)
         {
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
+            if (ContentControl.Template.FindName("PART_TextBox", ContentControl) is WatermarkTextBox textBox)
             {
                 if (value == null)
                 {
-                    textBox.Text = Constant.Unicode.Ellipsis;
+                    textBox.Text = Unicode.Ellipsis;
                 }
                 else
                 {
                     textBox.Text = DateTimeHandler.TryParseDateDatabaseAndDisplayFormats(value, out DateTime dateTime2)
                         ? DateTimeHandler.ToStringDisplayDatePortion(dateTime2)
                         : value;
-                    this.ContentControl.Text = textBox.Text;
+                    ContentControl.Text = textBox.Text;
                 }
             }
             else
             {
-                this.ContentControl.Text = value;
+                ContentControl.Text = value;
             }
-            this.ContentControl.ToolTip = value ?? "Edit to change the " + this.Label + " for the selected image";
+            ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for the selected image";
         }
         #endregion
     }

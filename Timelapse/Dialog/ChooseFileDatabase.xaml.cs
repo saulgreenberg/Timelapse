@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -21,9 +23,9 @@ namespace Timelapse.Dialog
             // Check the arguments for null 
             ThrowIf.IsNullArgument(fileDatabasePaths, nameof(fileDatabasePaths));
 
-            this.InitializeComponent();
-            this.Owner = owner;
-            this.SelectedFile = string.Empty;
+            InitializeComponent();
+            Owner = owner;
+            SelectedFile = string.Empty;
 
             // file_names contains an array of .ddb files. We add each to the listbox.
             // by default, the first item in the listbox is shown selected.
@@ -37,9 +39,9 @@ namespace Timelapse.Dialog
                 {
                     defaultDatabaseIndex = index;
                 }
-                this.FileDatabases.Items.Add(databaseName);
+                FileDatabases.Items.Add(databaseName);
             }
-            this.FileDatabases.SelectedIndex = defaultDatabaseIndex;
+            FileDatabases.SelectedIndex = defaultDatabaseIndex;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -47,33 +49,33 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             // marking the OK button IsDefault to associate it with dialog completion also gives it initial focus
             // It's more helpful to put focus on the database list as this saves having to tab to the list as a first step.
-            this.FileDatabases.Focus();
+            FileDatabases.Focus();
         }
         #endregion
 
         #region Callbacks
-        private void FileDatabases_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void FileDatabases_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (this.FileDatabases.SelectedIndex != -1)
+            if (FileDatabases.SelectedIndex != -1)
             {
-                this.OkButton_Click(sender, e);
+                OkButton_Click(sender, e);
             }
         }
 
-        private void FileDatabases_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void FileDatabases_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.OkButton.IsEnabled = this.FileDatabases.SelectedIndex != -1;
+            OkButton.IsEnabled = FileDatabases.SelectedIndex != -1;
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.SelectedFile = this.FileDatabases.SelectedItem.ToString(); // The selected file
-            this.DialogResult = true;
+            SelectedFile = FileDatabases.SelectedItem.ToString(); // The selected file
+            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

@@ -14,8 +14,8 @@ namespace Timelapse.EventArguments
 
         public FilePlayerEventArgs(DirectionEnum direction, FilePlayerSelectionEnum selection)
         {
-            this.Direction = direction;
-            this.Selection = selection;
+            Direction = direction;
+            Selection = selection;
         }
     }
 }

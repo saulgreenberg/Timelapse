@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using Newtonsoft.Json;
 using Timelapse.Dialog;
+using Timelapse.Util;
 
 namespace Timelapse.Standards
 {
@@ -28,13 +28,13 @@ namespace Timelapse.Standards
 
         public Fields ReferenceField { get; set; } =
             new Fields("Reference",
-                $"A free-form reference, ideally including a DOI and following a standard reference formatting style.");
+                "A free-form reference, ideally including a DOI and following a standard reference formatting style.");
         #endregion
 
         #region Private variables
-        private bool dontUpdate = false;
+        private bool dontUpdate;
         private bool setFocus = true;
-        private bool resetSelectedIndexToSavedIndex = false;
+        private bool resetSelectedIndexToSavedIndex;
         private int dataGridSelectedRow = -1;
         #endregion 
 
@@ -42,8 +42,8 @@ namespace Timelapse.Standards
         public CamtrapDPReferences(Window owner, string jsonReferencesList)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.JsonReferencesList = jsonReferencesList;
+            Owner = owner;
+            JsonReferencesList = jsonReferencesList;
         }
 
         private void CamptrapDP_OnLoaded(object sender, RoutedEventArgs e)
@@ -58,7 +58,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.ReferencesList = new ObservableCollection<string>(JsonConvert.DeserializeObject<List<string>>(JsonReferencesList));
+                ReferencesList = new ObservableCollection<string>(JsonConvert.DeserializeObject<List<string>>(JsonReferencesList));
             }
             catch (Exception)
             {
@@ -67,14 +67,14 @@ namespace Timelapse.Standards
             }
 
             DataGrid_Refresh();
-            if (this.dataGrid.Items.Count == 0)
+            if (dataGrid.Items.Count == 0)
             {
-                this.NewRow_OnClick(null, null);
+                NewRow_OnClick(null, null);
             }
-            if (this.dataGrid.Items.Count > 0)
+            if (dataGrid.Items.Count > 0)
             {
-                this.dataGrid.SelectedIndex = 0;
-                this.dataGridSelectedRow = this.dataGrid.SelectedIndex;
+                dataGrid.SelectedIndex = 0;
+                dataGridSelectedRow = dataGrid.SelectedIndex;
             }
         }
         #endregion
@@ -83,12 +83,12 @@ namespace Timelapse.Standards
         // Refresh the data grid to show the current itmes in the references list
         private void DataGrid_Refresh()
         {
-            this.dontUpdate = true;
-            this.dataGrid.ItemsSource = null;
-            this.dataGrid.Items.Clear();
-            this.dataGrid.ItemsSource = this.ReferencesList;
-            this.dontUpdate = false;
-            dataGrid.SelectedIndex = this.dataGridSelectedRow < this.dataGrid.Items.Count ? this.dataGridSelectedRow : -1;
+            dontUpdate = true;
+            dataGrid.ItemsSource = null;
+            dataGrid.Items.Clear();
+            dataGrid.ItemsSource = ReferencesList;
+            dontUpdate = false;
+            dataGrid.SelectedIndex = dataGridSelectedRow < dataGrid.Items.Count ? dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
         }
 
@@ -96,41 +96,41 @@ namespace Timelapse.Standards
         // The enable state of the Delete button should also reflect whether there is a row to delete
         private void DataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.dontUpdate)
+            if (dontUpdate)
             {
                 return;
             }
 
             if (resetSelectedIndexToSavedIndex)
             {
-                this.dontUpdate = true;
-                dataGrid.SelectedIndex = this.dataGridSelectedRow;
-                this.dontUpdate = false;
+                dontUpdate = true;
+                dataGrid.SelectedIndex = dataGridSelectedRow;
+                dontUpdate = false;
             }
             else
             {
-                this.dataGridSelectedRow = dataGrid.SelectedIndex;
+                dataGridSelectedRow = dataGrid.SelectedIndex;
             }
 
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.dontUpdate = true;
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ReferencesList.Count)
+            dontUpdate = true;
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < ReferencesList.Count)
             {
-                this.DeleteRow.IsEnabled = true;
-                string references_ = this.ReferencesList[dataGrid.SelectedIndex];
-                this.DataFieldReference.Text = references_;
+                DeleteRow.IsEnabled = true;
+                string references_ = ReferencesList[dataGrid.SelectedIndex];
+                DataFieldReference.Text = references_;
             }
             else
             {
-                this.DeleteRow.IsEnabled = false;
+                DeleteRow.IsEnabled = false;
 
-                this.dontUpdate = true;
-                this.DataFieldReference.Text = string.Empty;
+                dontUpdate = true;
+                DataFieldReference.Text = string.Empty;
             }
-            this.dontUpdate = false;
-            if (this.setFocus)
+            dontUpdate = false;
+            if (setFocus)
             {
-                this.DataFieldReference.Focus();
+                DataFieldReference.Focus();
             }
         }
         #endregion
@@ -138,29 +138,29 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.ReferencesList.Add(string.Empty);
-            dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
+            ReferencesList.Add(string.Empty);
+            dataGrid.SelectedIndex = dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DataFieldReference.Focus();
+            DataFieldReference.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.ReferencesList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < ReferencesList.Count)
             {
-                this.dontUpdate = true;
-                this.ReferencesList.RemoveAt(dataGrid.SelectedIndex);
-                this.dontUpdate = false;
+                dontUpdate = true;
+                ReferencesList.RemoveAt(dataGrid.SelectedIndex);
+                dontUpdate = false;
                 // When a row is deleted, select the last row if there is one.
                 dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
                 if (dataGrid.SelectedIndex == -1)
                 {
                     // This will clear the edit fields if nothing is selected
-                    this.setFocus = false;
+                    setFocus = false;
                     DataGrid_OnSelectionChanged(null, null);
-                    this.setFocus = true;
+                    setFocus = true;
                 }
             }
         }
@@ -172,7 +172,7 @@ namespace Timelapse.Standards
 
         private void Done_OnClick(object sender, RoutedEventArgs e)
         {
-            this.JsonSerialize();
+            JsonSerialize();
             DialogResult = true;
         }
         #endregion
@@ -182,26 +182,26 @@ namespace Timelapse.Standards
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (this.dontUpdate)
+            if (dontUpdate)
             {
                 return;
             }
-            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.ReferencesList.Count)
+            if (sender is TextBox tb && dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < ReferencesList.Count)
             {
                 switch (tb.Name)
                 {
                     case "DataFieldReference":
                         resetSelectedIndexToSavedIndex = true;
-                        this.ReferencesList[dataGrid.SelectedIndex] = tb.Text;
+                        ReferencesList[dataGrid.SelectedIndex] = tb.Text;
                         resetSelectedIndexToSavedIndex = false;
                         break;
                 }
             }
-            this.setFocus = false;
+            setFocus = false;
             DataGrid_Refresh();
-            dataGrid.SelectedIndex = this.dataGridSelectedRow;
-            dataGrid.SelectedItem = this.dataGridSelectedRow;
-            this.setFocus = true;
+            dataGrid.SelectedIndex = dataGridSelectedRow;
+            dataGrid.SelectedItem = dataGridSelectedRow;
+            setFocus = true;
         }
         #endregion
 
@@ -211,7 +211,7 @@ namespace Timelapse.Standards
             // If an item is an empty string, remove it (to make for a cleaner json)
             // Note that we could put in a check for required fields here...
             List<string> referencesListForExport = new List<string>();
-            foreach (string reference in this.ReferencesList)
+            foreach (string reference in ReferencesList)
             {
                 if (false == string.IsNullOrWhiteSpace(reference))
                 {
@@ -223,8 +223,8 @@ namespace Timelapse.Standards
             {
                 NullValueHandling = NullValueHandling.Ignore,
             };
-            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
-            this.JsonReferencesList = JsonConvert.SerializeObject(referencesListForExport, settings);
+            settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
+            JsonReferencesList = JsonConvert.SerializeObject(referencesListForExport, settings);
         }
         #endregion
 
@@ -237,8 +237,8 @@ namespace Timelapse.Standards
 
             public Fields(string label, string tooltip)
             {
-                this.Label = label;
-                this.Tooltip = tooltip;
+                Label = label;
+                Tooltip = tooltip;
             }
         }
         #endregion

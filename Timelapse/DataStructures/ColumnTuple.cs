@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.DataStructures
@@ -29,7 +30,7 @@ namespace Timelapse.DataStructures
         #region Constructors - different forms for different types
         // Bool value
         public ColumnTuple(string column, bool value)
-            : this(column, value ? Constant.BooleanValue.True : Constant.BooleanValue.False)
+            : this(column, value ? BooleanValue.True : BooleanValue.False)
         {
         }
 
@@ -58,15 +59,15 @@ namespace Timelapse.DataStructures
         // String value
         public ColumnTuple(string column, string value)
         {
-            this.Name = column;
-            this.Value = value;
+            Name = column;
+            Value = value;
         }
 
         // Float value
         public ColumnTuple(string column, float value)
         {
-            this.Name = column;
-            this.Value = value.ToString(CultureInfo.InvariantCulture);
+            Name = column;
+            Value = value.ToString(CultureInfo.InvariantCulture);
         }
         #endregion
     }

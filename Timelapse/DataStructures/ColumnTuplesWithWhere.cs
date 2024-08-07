@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.DataStructures
@@ -26,30 +27,30 @@ namespace Timelapse.DataStructures
         #region Constructors
         public ColumnTuplesWithWhere()
         {
-            this.Columns = new List<ColumnTuple>();
+            Columns = new List<ColumnTuple>();
         }
 
         public ColumnTuplesWithWhere(List<ColumnTuple> columns)
         {
-            this.Columns = columns;
+            Columns = columns;
         }
 
         public ColumnTuplesWithWhere(List<ColumnTuple> columns, long id)
             : this(columns)
         {
-            this.SetWhere(id);
+            SetWhere(id);
         }
 
         public ColumnTuplesWithWhere(List<ColumnTuple> columns, ColumnTuple tuple)
             : this(columns)
         {
-            this.SetWhere(tuple);
+            SetWhere(tuple);
         }
 
         public ColumnTuplesWithWhere(ColumnTuple column, string field)
         {
-            this.SetWhere(column, field);
-            this.Columns = new List<ColumnTuple>
+            SetWhere(column, field);
+            Columns = new List<ColumnTuple>
             {
                 column
             };
@@ -59,13 +60,13 @@ namespace Timelapse.DataStructures
         {
             if (useNotEqualCondition)
             {
-                this.SetWhereNotEquals(column, field);
+                SetWhereNotEquals(column, field);
             }
             else
             {
-                this.SetWhere(column, field);
+                SetWhere(column, field);
             }
-            this.Columns = new List<ColumnTuple>
+            Columns = new List<ColumnTuple>
             {
                 column
             };
@@ -76,7 +77,7 @@ namespace Timelapse.DataStructures
         // Long: ID = Long
         public void SetWhere(long id)
         {
-            this.Where = Constant.DatabaseColumn.ID + " = " + id;
+            Where = DatabaseColumn.ID + " = " + id;
         }
 
         // ColumnTuple: columnName = Value
@@ -84,7 +85,7 @@ namespace Timelapse.DataStructures
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
-            this.Where = $"{columnTuple.Name} = {Sql.Quote(columnTuple.Value)}";
+            Where = $"{columnTuple.Name} = {Sql.Quote(columnTuple.Value)}";
         }
 
         // ColumnTuple: columnName = field
@@ -93,20 +94,20 @@ namespace Timelapse.DataStructures
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
-            this.Where = $"{columnTuple.Name} = {Sql.Quote(field)}";
+            Where = $"{columnTuple.Name} = {Sql.Quote(field)}";
         }
 
         // FILE = file AND RELATIVEPATH = relativePath
         public void SetWhere(string relativePath, string file)
         {
-            this.Where = $"{Constant.DatabaseColumn.File} = {Sql.Quote(file)}";
-            this.Where += $" AND {Constant.DatabaseColumn.RelativePath} = {Sql.Quote(relativePath)}";
+            Where = $"{DatabaseColumn.File} = {Sql.Quote(file)}";
+            Where += $" AND {DatabaseColumn.RelativePath} = {Sql.Quote(relativePath)}";
         }
 
         // FILE = file
         public void SetWhere(string file)
         {
-            this.Where = $"{Constant.DatabaseColumn.File} = {Sql.Quote(file)}";
+            Where = $"{DatabaseColumn.File} = {Sql.Quote(file)}";
         }
 
         // ColumnTuple: columnName <> field
@@ -115,7 +116,7 @@ namespace Timelapse.DataStructures
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
-            this.Where = $"{columnTuple.Name} <> {Sql.Quote(field)}";
+            Where = $"{columnTuple.Name} <> {Sql.Quote(field)}";
         }
         #endregion
     }

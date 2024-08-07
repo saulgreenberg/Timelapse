@@ -31,19 +31,19 @@ namespace Timelapse.ExifTool
                 TracePrint.StackTrace(1);
                 // throw new ArgumentNullException(nameof(response));
                 // Treat it as a failure case?
-                this.IsSuccess = false;
-                this.Result = string.Empty;
+                IsSuccess = false;
+                Result = string.Empty;
                 return;
             }
 
-            this.IsSuccess = response.ToLowerInvariant().Contains(ExifToolWrapper.SuccessMessage);
-            this.Result = response;
+            IsSuccess = response.ToLowerInvariant().Contains(ExifToolWrapper.SuccessMessage);
+            Result = response;
         }
 
         public ExifToolResponse(bool b, string r)
         {
-            this.IsSuccess = b;
-            this.Result = r;
+            IsSuccess = b;
+            Result = r;
         }
 
         //to use ExifToolResponse directly in if (discarding response)
@@ -94,7 +94,7 @@ namespace Timelapse.ExifTool
             if (string.IsNullOrEmpty(path))
             {
                 if (File.Exists(ExeName)) //in current directory
-                    this.ExifToolPath = Path.GetFullPath(ExeName);
+                    ExifToolPath = Path.GetFullPath(ExeName);
                 else
                 {
                     try
@@ -103,27 +103,27 @@ namespace Timelapse.ExifTool
                         if (dir == null)
                         {
                             TracePrint.NullException(nameof(dir));
-                            this.ExifToolPath = ExeName;
+                            ExifToolPath = ExeName;
                         }
                         else
                         {
-                            this.ExifToolPath = Path.Combine(dir, ExeName);
+                            ExifToolPath = Path.Combine(dir, ExeName);
                         }
                     }
                     catch (Exception xcp)
                     {
                         Debug.WriteLine(xcp.ToString());
-                        this.ExifToolPath = ExeName;
+                        ExifToolPath = ExeName;
                     }
                 }
             }
             else
-                this.ExifToolPath = path;
+                ExifToolPath = path;
 
-            if (!File.Exists(this.ExifToolPath))
+            if (!File.Exists(ExifToolPath))
                 throw new ExifToolException($"{ExeName} not found");
 
-            this._psi = new ProcessStartInfo
+            _psi = new ProcessStartInfo
             {
                 FileName = ExifToolPath,
                 Arguments = faster ? ArgumentsFaster : Arguments,
@@ -134,7 +134,7 @@ namespace Timelapse.ExifTool
                 RedirectStandardInput = true
             };
 
-            this.Status = ExeStatus.Stopped;
+            Status = ExeStatus.Stopped;
         }
 
         private void OutputDataReceived(object sender, DataReceivedEventArgs e)
@@ -142,22 +142,22 @@ namespace Timelapse.ExifTool
             if (string.IsNullOrEmpty(e?.Data))
                 return;
 
-            if (this.Status == ExeStatus.Starting)
+            if (Status == ExeStatus.Starting)
             {
-                this.ExifToolVersion = e.Data;
-                this._waitHandle.Set();
+                ExifToolVersion = e.Data;
+                _waitHandle.Set();
 
                 return;
             }
 
-            if (string.Equals(e.Data, $"{{ready{this._cmdCnt}}}", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(e.Data, $"{{ready{_cmdCnt}}}", StringComparison.OrdinalIgnoreCase))
             {
-                this._waitHandle.Set();
+                _waitHandle.Set();
 
                 return;
             }
 
-            this._output.AppendLine(e.Data);
+            _output.AppendLine(e.Data);
         }
 
         //the error message has no 'ready' or other terminator so we must assume it has a single line (or it is received fast enough)
@@ -168,91 +168,91 @@ namespace Timelapse.ExifTool
 
             if (string.Equals(e.Data, ExitMessage, StringComparison.OrdinalIgnoreCase))
             {
-                this._proc?.StandardInput.WriteLine();
+                _proc?.StandardInput.WriteLine();
 
                 return;
             }
 
-            this._error.AppendLine(e.Data);
-            this._waitForErrorHandle.Set();
+            _error.AppendLine(e.Data);
+            _waitForErrorHandle.Set();
         }
 
         public void Start()
         {
-            this._stopRequested = false;
+            _stopRequested = false;
 
-            if (this.Status != ExeStatus.Stopped)
+            if (Status != ExeStatus.Stopped)
                 throw new ExifToolException("Process is not stopped");
 
-            this.Status = ExeStatus.Starting;
+            Status = ExeStatus.Starting;
 
-            this._proc = new Process { StartInfo = _psi, EnableRaisingEvents = true };
-            this._proc.OutputDataReceived += this.OutputDataReceived;
-            this._proc.ErrorDataReceived += this.ErrorDataReceived;
-            this._proc.Exited += this.ProcExited;
-            this._proc.Start();
+            _proc = new Process { StartInfo = _psi, EnableRaisingEvents = true };
+            _proc.OutputDataReceived += OutputDataReceived;
+            _proc.ErrorDataReceived += ErrorDataReceived;
+            _proc.Exited += ProcExited;
+            _proc.Start();
 
-            this._proc.BeginOutputReadLine();
-            this._proc.BeginErrorReadLine();
-            this._proc.StandardInput.AutoFlush = true;
+            _proc.BeginOutputReadLine();
+            _proc.BeginErrorReadLine();
+            _proc.StandardInput.AutoFlush = true;
 
-            this._waitHandle.Reset();
-            this._proc.StandardInput.Write("-ver\n-execute0000\n");
-            this._waitHandle.WaitOne();
+            _waitHandle.Reset();
+            _proc.StandardInput.Write("-ver\n-execute0000\n");
+            _waitHandle.WaitOne();
 
-            this.Status = ExeStatus.Ready;
+            Status = ExeStatus.Ready;
         }
 
         //detect if process was killed
         private void ProcExited(object sender, EventArgs e)
         {
-            if (this._proc != null)
+            if (_proc != null)
             {
-                this._proc.Dispose();
-                this._proc = null;
+                _proc.Dispose();
+                _proc = null;
             }
 
-            this.Status = ExeStatus.Stopped;
+            Status = ExeStatus.Stopped;
 
             try
             {
-                this._waitHandle.Set();
+                _waitHandle.Set();
             }
             catch
             {
                 TracePrint.CatchException("Acceptable catch.");
             }
-            if (!this._stopRequested && this.Resurrect)
-                this.Start();
+            if (!_stopRequested && Resurrect)
+                Start();
         }
 
         public void Stop()
         {
-            this._stopRequested = true;
+            _stopRequested = true;
 
-            if (this.Status != ExeStatus.Ready)
+            if (Status != ExeStatus.Ready)
             {
                 Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
                 // throw new ExifToolException("Process must be ready"); 
                 return;
 
             }
-            this.Status = ExeStatus.Stopping;
+            Status = ExeStatus.Stopping;
 
-            this._waitHandle.Reset();
-            this._proc.StandardInput.Write("-stay_open\nFalse\n");
+            _waitHandle.Reset();
+            _proc.StandardInput.Write("-stay_open\nFalse\n");
 
-            if (!this._waitHandle.WaitOne(TimeSpan.FromSeconds(this.SecondsToWaitForStop)))
+            if (!_waitHandle.WaitOne(TimeSpan.FromSeconds(SecondsToWaitForStop)))
             {
-                if (this._proc != null)
+                if (_proc != null)
                 {
                     try
                     {
-                        this._proc.Kill();
-                        this._proc.WaitForExit((int)(1000 * this.SecondsToWaitForStop / 2));
-                        if (this._proc != null)
+                        _proc.Kill();
+                        _proc.WaitForExit((int)(1000 * SecondsToWaitForStop / 2));
+                        if (_proc != null)
                         {
-                            this._proc.Dispose();
+                            _proc.Dispose();
                         }
                     }
                     catch (Exception xcp)
@@ -260,10 +260,10 @@ namespace Timelapse.ExifTool
                         Debug.WriteLine(xcp.ToString());
                     }
 
-                    this._proc = null;
+                    _proc = null;
                 }
 
-                this.Status = ExeStatus.Stopped;
+                Status = ExeStatus.Stopped;
             }
         }
 
@@ -276,8 +276,8 @@ namespace Timelapse.ExifTool
             //string b = Encoding.UTF8.GetString(ba);
             //proc.StandardInput.Write("-charset\nfilename=UTF8\n{0}\n-execute{1}\n", args.Length == 0 ? b : string.Format(b, args), cmdCnt);
 
-            this._proc.StandardInput.Write("{0}\n-execute{1}\n", args.Length == 0 ? cmd : string.Format(cmd, args), this._cmdCnt);
-            this._waitHandle.WaitOne();
+            _proc.StandardInput.Write("{0}\n-execute{1}\n", args.Length == 0 ? cmd : string.Format(cmd, args), _cmdCnt);
+            _waitHandle.WaitOne();
         }
 
         //http://u88.n24.queensu.ca/exiftool/forum/index.php?topic=8382.0
@@ -288,11 +288,11 @@ namespace Timelapse.ExifTool
             {
                 using (var sw = new StreamWriter(argFile))
                 {
-                    sw.WriteLine(args.Length == 0 ? cmd : string.Format(cmd, args), this._cmdCnt);
+                    sw.WriteLine(args.Length == 0 ? cmd : string.Format(cmd, args), _cmdCnt);
                 }
 
-                this._proc.StandardInput.Write("-charset\nfilename=UTF8\n-@\n{0}\n-execute{1}\n", argFile, this._cmdCnt);
-                this._waitHandle.WaitOne();
+                _proc.StandardInput.Write("-charset\nfilename=UTF8\n-@\n{0}\n-execute{1}\n", argFile, _cmdCnt);
+                _waitHandle.WaitOne();
             }
             finally
             {
@@ -300,38 +300,38 @@ namespace Timelapse.ExifTool
             }
         }
 
-        public ExifToolResponse SendCommand(string cmd, params object[] args) => this.SendCommand(this.Method, cmd, args);
+        public ExifToolResponse SendCommand(string cmd, params object[] args) => SendCommand(Method, cmd, args);
 
         private ExifToolResponse SendCommand(CommunicationMethod method, string cmd, params object[] args)
         {
-            if (this.Status != ExeStatus.Ready)
+            if (Status != ExeStatus.Ready)
                 throw new ExifToolException("Process must be ready");
 
             ExifToolResponse resp;
-            lock (this._lockObj)
+            lock (_lockObj)
             {
-                this._waitHandle.Reset();
-                this._waitForErrorHandle.Reset();
+                _waitHandle.Reset();
+                _waitForErrorHandle.Reset();
 
                 if (method == CommunicationMethod.ViaFile)
-                    this.SendViaFile(cmd, args);
+                    SendViaFile(cmd, args);
                 else
-                    this.DirectSend(cmd, args);
+                    DirectSend(cmd, args);
 
                 //if no output then probably there is an error, so wait at most SecondsToWaitForError for the error message to arrive 
-                if (this._output.Length == 0)
+                if (_output.Length == 0)
                 {
-                    this._waitForErrorHandle.WaitOne(TimeSpan.FromSeconds(this.SecondsToWaitForError));
-                    resp = new ExifToolResponse(false, this._error.ToString());
-                    this._error.Clear();
+                    _waitForErrorHandle.WaitOne(TimeSpan.FromSeconds(SecondsToWaitForError));
+                    resp = new ExifToolResponse(false, _error.ToString());
+                    _error.Clear();
                 }
                 else
                 {
-                    resp = new ExifToolResponse(true, this._output.ToString());
-                    this._output.Clear();
+                    resp = new ExifToolResponse(true, _output.ToString());
+                    _output.Clear();
                 }
 
-                this._cmdCnt++;
+                _cmdCnt++;
             }
 
             if (!resp.IsSuccess && method == CommunicationMethod.Auto)
@@ -339,7 +339,7 @@ namespace Timelapse.ExifTool
                 string err = resp.Result.ToLowerInvariant();
 
                 if (err.Contains("file not found") || err.Contains("invalid filename encoding"))
-                    return this.SendCommand(CommunicationMethod.ViaFile, cmd, args);
+                    return SendCommand(CommunicationMethod.ViaFile, cmd, args);
             }
 
             return resp;
@@ -347,7 +347,7 @@ namespace Timelapse.ExifTool
 
         // ReSharper disable once UnusedMember.Global
         public ExifToolResponse SetExifInto(string path, string key, string val, bool overwriteOriginal = true) =>
-            this.SetExifInto(path, new Dictionary<string, string> { [key] = val }, overwriteOriginal);
+            SetExifInto(path, new Dictionary<string, string> { [key] = val }, overwriteOriginal);
 
         public ExifToolResponse SetExifInto(string path, Dictionary<string, string> data, bool overwriteOriginal = true)
         {
@@ -378,7 +378,7 @@ namespace Timelapse.ExifTool
             }
 
             cmd.Append(path);
-            var cmdRes = this.SendCommand(cmd.ToString());
+            var cmdRes = SendCommand(cmd.ToString());
 
             //if failed return as it is, if it's success must check the response
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
@@ -395,7 +395,7 @@ namespace Timelapse.ExifTool
 
             var tagsTable = tagsToKeep?.ToDictionary(x => x, x => 1);
             bool filter = tagsTable != null && tagsTable.Count > 0;
-            var cmdRes = this.SendCommand(path);
+            var cmdRes = SendCommand(path);
             if (!cmdRes)
             {
                 return res;
@@ -438,7 +438,7 @@ namespace Timelapse.ExifTool
 
             var tagsTable = tagsToKeep?.ToDictionary(x => x, x => 1);
             bool filter = tagsTable?.Count > 0;
-            var cmdRes = this.SendCommand(path);
+            var cmdRes = SendCommand(path);
             if (!cmdRes)
             {
                 return res;
@@ -466,7 +466,7 @@ namespace Timelapse.ExifTool
             if (!File.Exists(source) || !File.Exists(dest))
                 return new ExifToolResponse(false, $"'{source}' or '{dest}' not found");
 
-            var cmdRes = this.SendCommand("{0}-tagsFromFile\n{1}\n{2}", backup ? "" : "-overwrite_original\n", source, dest);
+            var cmdRes = SendCommand("{0}-tagsFromFile\n{1}\n{2}", backup ? "" : "-overwrite_original\n", source, dest);
 
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
         }
@@ -477,7 +477,7 @@ namespace Timelapse.ExifTool
             if (!File.Exists(path))
                 return new ExifToolResponse(false, $"'{path}' not found");
 
-            var cmdRes = this.SendCommand("{0}-all=\n{1}", backup ? "" : "-overwrite_original\n", path);
+            var cmdRes = SendCommand("{0}-all=\n{1}", backup ? "" : "-overwrite_original\n", path);
 
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
         }
@@ -488,7 +488,7 @@ namespace Timelapse.ExifTool
             if (!File.Exists(path))
                 return null;
 
-            var cmdRes = this.SendCommand("-DateTimeOriginal\n-s3\n{0}", path);
+            var cmdRes = SendCommand("-DateTimeOriginal\n-s3\n{0}", path);
             if (!cmdRes)
                 return null;
 
@@ -507,7 +507,7 @@ namespace Timelapse.ExifTool
             if (!File.Exists(path))
                 return 1;
 
-            var cmdRes = this.SendCommand("-Orientation\n-n\n-s3\n{0}", path);
+            var cmdRes = SendCommand("-Orientation\n-n\n-s3\n{0}", path);
             if (!cmdRes)
                 return 1;
 
@@ -518,7 +518,7 @@ namespace Timelapse.ExifTool
         }
 
         // ReSharper disable once UnusedMember.Global
-        public int GetOrientationDeg(string path) => OrientationPos2Deg(this.GetOrientation(path));
+        public int GetOrientationDeg(string path) => OrientationPos2Deg(GetOrientation(path));
 
         public ExifToolResponse SetOrientation(string path, int ori, bool overwriteOriginal = true)
         {
@@ -532,14 +532,14 @@ namespace Timelapse.ExifTool
                 cmd.Append("-overwrite_original\n");
 
             cmd.Append(path);
-            var cmdRes = this.SendCommand(cmd.ToString());
+            var cmdRes = SendCommand(cmd.ToString());
 
             return cmdRes ? new ExifToolResponse(cmdRes.Result) : cmdRes;
         }
 
         // ReSharper disable once UnusedMember.Global
         public ExifToolResponse SetOrientationDeg(string path, int ori, bool overwriteOriginal = true) =>
-            this.SetOrientation(path, OrientationDeg2Pos(ori), overwriteOriginal);
+            SetOrientation(path, OrientationDeg2Pos(ori), overwriteOriginal);
 
         #region Static orientation helpers
 
@@ -657,17 +657,17 @@ namespace Timelapse.ExifTool
 
         public void Dispose()
         {
-            Debug.Assert(this.Status == ExeStatus.Ready || this.Status == ExeStatus.Stopped, "Invalid state");
+            Debug.Assert(Status == ExeStatus.Ready || Status == ExeStatus.Stopped, "Invalid state");
 
-            if (this._proc != null && this.Status == ExeStatus.Ready)
-                this.Stop();
-            if (this._waitHandle != null)
+            if (_proc != null && Status == ExeStatus.Ready)
+                Stop();
+            if (_waitHandle != null)
             {
-                this._waitHandle.Dispose();
+                _waitHandle.Dispose();
             }
-            if (this._waitForErrorHandle != null)
+            if (_waitForErrorHandle != null)
             {
-                this._waitForErrorHandle.Dispose();
+                _waitForErrorHandle.Dispose();
             }
         }
 

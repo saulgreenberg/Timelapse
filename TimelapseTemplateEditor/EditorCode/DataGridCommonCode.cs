@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,7 +16,6 @@ using Timelapse.DataTables;
 using Timelapse.Standards;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
-using Xceed.Wpf.Toolkit.Core.Converters;
 using Control = Timelapse.Constant.Control;
 
 namespace TimelapseTemplateEditor.EditorCode
@@ -333,10 +333,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 foreach (ComboBoxItem item in comboBox.Items)
                 {
                     string itemType = (string)item.Content;
-                    item.Visibility = itemType == DatabaseColumn.File ||
-                                      itemType == DatabaseColumn.RelativePath ||
-                                      itemType == DatabaseColumn.DateTime ||
-                                      itemType == DatabaseColumn.DeleteFlag
+                    item.Visibility = IsCondition.IsStandardControlType(itemType)
                         ? Visibility.Collapsed
                         : Visibility.Visible;
                 }

@@ -1,15 +1,17 @@
-﻿using System.Windows.Controls;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+using Xceed.Wpf.Toolkit.Primitives;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -20,29 +22,29 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+        public override Point TopLeft => ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the content of the choice.</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public override bool ContentReadOnly
         {
             // A hack, as the CheckComboBox does not contain an IsReadOnly field
-            get => this.ContentControl.IsEditable;
+            get => ContentControl.IsEditable;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsEnabled = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsEnabled = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsEditable = value;
+                    ContentControl.IsEditable = value;
                 }
             }
         }
@@ -56,15 +58,15 @@ namespace Timelapse.ControlsDataEntry
             ThrowIf.IsNullArgument(control, nameof(control));
 
             // The behaviour of the combo box
-            this.ContentControl.Focusable = true;
-            this.ContentControl.IsEditable = false;
-            this.ContentControl.IsTextSearchEnabled = true;
+            ContentControl.Focusable = true;
+            ContentControl.IsEditable = false;
+            ContentControl.IsTextSearchEnabled = true;
 
-            this.ContentControl.ItemSelectionChanged += ContentControl_ItemSelectionChanged;
-            this.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
-            this.ContentControl.Opened += ContentControl_DropDownOpened;
-            this.ContentControl.Closed += ContentControl_DropDownClosed;
-            this.ContentControl.MouseUp += ContentControl_MouseUp;
+            ContentControl.ItemSelectionChanged += ContentControl_ItemSelectionChanged;
+            ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
+            ContentControl.Opened += ContentControl_DropDownOpened;
+            ContentControl.Closed += ContentControl_DropDownClosed;
+            ContentControl.MouseUp += ContentControl_MouseUp;
 
             // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end 
             Choices choices = Choices.ChoicesFromJson(control.List);
@@ -74,14 +76,14 @@ namespace Timelapse.ControlsDataEntry
                 {
                     continue;
                 }
-                this.ContentControl.Items.Add(choice);
+                ContentControl.Items.Add(choice);
             }
-            this.ContentControl.SelectedItem = control.DefaultValue;
+            ContentControl.SelectedItem = control.DefaultValue;
         }
 
         private void ContentControl_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            this.ContentControl.Focus();
+            ContentControl.Focus();
         }
         #endregion
 
@@ -92,7 +94,7 @@ namespace Timelapse.ControlsDataEntry
         // To fix that, we remove the observable collection when the drop down is closed.
         private void ContentControl_DropDownOpened(object sender, RoutedEventArgs e)
         {
-            this.SetMenuToList(this.ContentControl.Text);
+            SetMenuToList(ContentControl.Text);
             //ObservableCollection<string> itemsList = new ObservableCollection<string>(this.ContentControl.Text.Split(',').ToList());
             //this.ContentControl.SelectedItemsOverride = itemsList;
         }
@@ -100,15 +102,15 @@ namespace Timelapse.ControlsDataEntry
         private void ContentControl_DropDownClosed(object sender, RoutedEventArgs e)
         {
             // As setting the override to null clears the content control text, we save and then restore the content control tex.
-            string savedContent = this.ContentControl.Text;
-            this.ContentControl.SelectedItemsOverride = null;
-            this.ContentControl.Text = savedContent;
-            this.ContentControl.Focus();
+            string savedContent = ContentControl.Text;
+            ContentControl.SelectedItemsOverride = null;
+            ContentControl.Text = savedContent;
+            ContentControl.Focus();
         }
         #endregion
 
         #region Event Handlers: ItemSelectionChanged
-        private void ContentControl_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
+        private void ContentControl_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
         {
             // Invoked:
             // - every time a dropdown is open, for each checked item (yes, somewhat inefficient but...),
@@ -119,7 +121,7 @@ namespace Timelapse.ControlsDataEntry
                 List<string> list = new List<string>();
                 foreach (string item in checkComboBox.SelectedItemsOverride)
                 {
-                    if (item != Constant.Unicode.Ellipsis)
+                    if (item != Unicode.Ellipsis)
                     {
                         list.Add(item);
                     }
@@ -169,7 +171,7 @@ namespace Timelapse.ControlsDataEntry
         public void SetMenuToList(string commaSeparatedList)
         {
             ObservableCollection<string> itemsList = new ObservableCollection<string>(commaSeparatedList.Split(',').ToList());
-            this.ContentControl.SelectedItemsOverride = itemsList;
+            ContentControl.SelectedItemsOverride = itemsList;
         }
 
         #region Setting Content and Tooltip
@@ -180,8 +182,8 @@ namespace Timelapse.ControlsDataEntry
             // Used to signify the indeterminate state in no or multiple selections in the overview.
             if (value == null)
             {
-                this.ContentControl.Text = Constant.Unicode.Ellipsis;
-                this.ContentControl.ToolTip = "Select an item to change the " + this.Label + " for all selected images";
+                ContentControl.Text = Unicode.Ellipsis;
+                ContentControl.ToolTip = "Select an item to change the " + Label + " for all selected images";
                 return;
             }
             value = value.Trim();
@@ -189,9 +191,9 @@ namespace Timelapse.ControlsDataEntry
 
             if (ContentControl.Text != value)
             {
-                this.ContentControl.Text = value;
+                ContentControl.Text = value;
 
-                this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+                ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
             }
         }
         #endregion
@@ -218,14 +220,14 @@ namespace Timelapse.ControlsDataEntry
         // Flash the content area of the control
         public override void FlashContentControl()
         {
-            Border contentHost = (Border)this.ContentControl.Template.FindName("PART_Border", this.ContentControl);
+            Border contentHost = (Border)ContentControl.Template.FindName("PART_Border", ContentControl);
             if (contentHost != null)
             {
                 TextBlock tb = VisualChildren.GetVisualChild<TextBlock>(contentHost);
                 if (tb != null)
                 {
                     tb.Background = new SolidColorBrush(Colors.White);
-                    tb.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimation());
+                    tb.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimation());
                 }
             }
         }
@@ -233,30 +235,30 @@ namespace Timelapse.ControlsDataEntry
         public override void ShowPreviewControlValue(string value)
         {
             // Create the popup overlay
-            if (this.PopupPreview == null)
+            if (PopupPreview == null)
             {
                 // We want to expose the arrow on the choice menu, so subtract its width and move the horizontal offset over
                 double arrowWidth = 20;
-                double width = this.ContentControl.Width - arrowWidth;
+                double width = ContentControl.Width - arrowWidth;
                 double horizontalOffset = -arrowWidth / 2;
 
                 // Padding is used to align the text so it begins at the same spot as the control's text
                 Thickness padding = new Thickness(5.5, 6.5, 0, 0);
 
-                this.PopupPreview = this.CreatePopupPreview(this.ContentControl, padding, width, horizontalOffset);
+                PopupPreview = CreatePopupPreview(ContentControl, padding, width, horizontalOffset);
             }
             // Show the popup
-            this.ShowPopupPreview(value);
+            ShowPopupPreview(value);
         }
 
         public override void HidePreviewControlValue()
         {
-            this.HidePopupPreview();
+            HidePopupPreview();
         }
 
         public override void FlashPreviewControlValue()
         {
-            this.FlashPopupPreview();
+            FlashPopupPreview();
         }
         #endregion
     }

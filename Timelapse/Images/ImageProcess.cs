@@ -1,8 +1,11 @@
-﻿using ImageProcessor;
-using System.Drawing;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using ImageProcessor;
+using ImageProcessor.Imaging;
+using ImageProcessor.Imaging.Filters.EdgeDetection;
 
 namespace Timelapse.Images
 {
@@ -32,17 +35,17 @@ namespace Timelapse.Images
                         {
                             if (useGamma)
                             {
-                                System.Drawing.Image drawingImage = System.Drawing.Image.FromStream(inImageStream);
+                                Image drawingImage = Image.FromStream(inImageStream);
                                 drawingImage.RotateFlip(rotateFlip);
-                                System.Drawing.Bitmap bitmap = AdjustGamma(drawingImage, gammaValue);
-                                bitmap.Save(outImageStream, System.Drawing.Imaging.ImageFormat.Bmp);
+                                Bitmap bitmap = AdjustGamma(drawingImage, gammaValue);
+                                bitmap.Save(outImageStream, ImageFormat.Bmp);
                             }
                             else
                             {
                                 if (detectEdges)
                                 {
                                     // Load, resize, set the format and quality and save an image.
-                                    ImageProcessor.Imaging.Filters.EdgeDetection.ScharrEdgeFilter edger = new ImageProcessor.Imaging.Filters.EdgeDetection.ScharrEdgeFilter();
+                                    ScharrEdgeFilter edger = new ScharrEdgeFilter();
                                     imageFactory.Load(inImageStream)
                                                 .DetectEdges(edger)
                                                 .Contrast(contrast)
@@ -52,7 +55,7 @@ namespace Timelapse.Images
                                 }
                                 else if (sharpen)
                                 {
-                                    ImageProcessor.Imaging.GaussianLayer gaussian = new ImageProcessor.Imaging.GaussianLayer(5, 3);
+                                    GaussianLayer gaussian = new GaussianLayer(5, 3);
                                     // Load, resize, set the format and quality and save an image.
                                     imageFactory.Load(inImageStream)
                                                 .GaussianSharpen(gaussian)
@@ -88,7 +91,7 @@ namespace Timelapse.Images
         #region Private methods - Adjust Gamma
         // Adjust the gamma. Useful values are between .1 and 3, neutral is 1
         // WORKS WELL
-        private static System.Drawing.Bitmap AdjustGamma(System.Drawing.Image image, float gamma)
+        private static Bitmap AdjustGamma(Image image, float gamma)
         {
             if (gamma <= 0)
             {
@@ -97,27 +100,27 @@ namespace Timelapse.Images
             }
 
             // Set the ImageAttributes object's gamma value.
-            using (System.Drawing.Imaging.ImageAttributes attributes = new System.Drawing.Imaging.ImageAttributes())
+            using (ImageAttributes attributes = new ImageAttributes())
             {
                 attributes.SetGamma(gamma);
 
                 // Draw the image onto the new bitmap
                 // while applying the new gamma value.
-                System.Drawing.Point[] points =
+                Point[] points =
                 {
-                new System.Drawing.Point(0, 0),
-                new System.Drawing.Point(image.Width, 0),
-                new System.Drawing.Point(0, image.Height),
+                new Point(0, 0),
+                new Point(image.Width, 0),
+                new Point(0, image.Height),
             };
-                System.Drawing.Rectangle rect =
-                    new System.Drawing.Rectangle(0, 0, image.Width, image.Height);
+                Rectangle rect =
+                    new Rectangle(0, 0, image.Width, image.Height);
 
                 // Make the result bitmap.
-                System.Drawing.Bitmap bm = new System.Drawing.Bitmap(image.Width, image.Height);
-                using (System.Drawing.Graphics gr = System.Drawing.Graphics.FromImage(bm))
+                Bitmap bm = new Bitmap(image.Width, image.Height);
+                using (Graphics gr = Graphics.FromImage(bm))
                 {
                     gr.DrawImage(image, points, rect,
-                        System.Drawing.GraphicsUnit.Pixel, attributes);
+                        GraphicsUnit.Pixel, attributes);
                 }
 
                 // Return the result.

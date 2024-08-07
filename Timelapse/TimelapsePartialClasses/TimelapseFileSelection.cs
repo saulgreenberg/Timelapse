@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -17,22 +18,22 @@ namespace Timelapse
         #region Partial Methods - FilesSelectAndShow, various invokingforms
         private async Task FilesSelectAndShowAsync()
         {
-            if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
+            if (DataHandler == null || DataHandler.FileDatabase == null)
             {
                 TracePrint.PrintMessage("FilesSelectAndShow: Expected a file database to be available.");
                 return;
             }
-            await this.FilesSelectAndShowAsync(this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
+            await FilesSelectAndShowAsync(DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
         }
 
         private async Task FilesSelectAndShowAsync(FileSelectionEnum selection)
         {
-            long fileID = Constant.DatabaseValues.DefaultFileID;
-            if (this.DataHandler != null && this.DataHandler.ImageCache != null && this.DataHandler.ImageCache.Current != null)
+            long fileID = DatabaseValues.DefaultFileID;
+            if (DataHandler != null && DataHandler.ImageCache != null && DataHandler.ImageCache.Current != null)
             {
-                fileID = this.DataHandler.ImageCache.Current.ID;
+                fileID = DataHandler.ImageCache.Current.ID;
             }
-            await this.FilesSelectAndShowAsync(fileID, selection).ConfigureAwait(true);
+            await FilesSelectAndShowAsync(fileID, selection).ConfigureAwait(true);
         }
 
         #endregion
@@ -42,7 +43,7 @@ namespace Timelapse
         {
             // change selection
             // if the data grid is bound the file database automatically updates its contents on SelectFiles()
-            if (this.DataHandler?.FileDatabase == null)
+            if (DataHandler?.FileDatabase == null)
             {
                 TracePrint.PrintMessage("FilesSelectAndShow() should not be reachable with a null data handler.  Is a menu item wrongly enabled?");
                 return false;
@@ -52,9 +53,9 @@ namespace Timelapse
             Mouse.OverrideCursor = Cursors.Wait;
             if (selection == FileSelectionEnum.Missing)
             {
-                this.BusyCancelIndicator.Reset(true);
+                BusyCancelIndicator.Reset(true);
                 bool result = await FilesSelectAndShowMissingAsync();
-                this.BusyCancelIndicator.Reset(false);
+                BusyCancelIndicator.Reset(false);
                 if (false == result)
                 {
                     // Either cancelled or no missing files were found. Dialog message for no missing file is handled in the above method
@@ -67,28 +68,28 @@ namespace Timelapse
                 // A  selection other than Missing files.
                 // Select Files is a slow operation as it runs a query over all files and returns everything it finds as datatables stored in memory.
                 // As we don't know how long it will take, we display an indeterminate progress bar
-                this.BusyCancelIndicator.EnableForSelection(true);
-                await this.DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
-                this.BusyCancelIndicator.EnableForSelection(false);
-                this.DataHandler.FileDatabase.BindToDataGrid();
+                BusyCancelIndicator.EnableForSelection(true);
+                await DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
+                BusyCancelIndicator.EnableForSelection(false);
+                DataHandler.FileDatabase.BindToDataGrid();
             }
             Mouse.OverrideCursor = null;
 
-            if ((this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles < 1) && (selection != FileSelectionEnum.All))
+            if ((DataHandler.FileDatabase.CountAllCurrentlySelectedFiles < 1) && (selection != FileSelectionEnum.All))
             {
                 // A final check that there is actually some files returned in the above selection process.
                 // If not, the reset the selection to all files.
                 // Tell the user that we are resetting the selection to all files
                 Dialogs.FileSelectionResettngSelectionToAllFilesDialog(this, selection);
 
-                this.StatusBar.SetMessage("Resetting selection to All files.");
+                StatusBar.SetMessage("Resetting selection to All files.");
                 selection = FileSelectionEnum.All;
 
                 // PEFORMANCE: The standard select files operation in FilesSelectAndShow
-                this.BusyCancelIndicator.EnableForSelection(true);
-                await this.DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
-                this.BusyCancelIndicator.EnableForSelection(false);
-                this.DataHandler.FileDatabase.BindToDataGrid();
+                BusyCancelIndicator.EnableForSelection(true);
+                await DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
+                BusyCancelIndicator.EnableForSelection(false);
+                DataHandler.FileDatabase.BindToDataGrid();
             }
 
             // Change the selection to reflect what the user selected. Update the menu state accordingly
@@ -115,8 +116,8 @@ namespace Timelapse
                     throw new NotSupportedException($"Unhandled file selection {selection}.");
             }
             // Show feedback of the status description in both the status bar and the data entry control panel title
-            this.StatusBar.SetView(status);
-            this.DataEntryControlPanel.Title = $"Image data ({status} selected)";
+            StatusBar.SetView(status);
+            DataEntryControlPanel.Title = $"Image data ({status} selected)";
 
             // Reset the Episodes, as it may change based on the current selection
             Episodes.Episodes.Reset();
@@ -124,35 +125,35 @@ namespace Timelapse
             // Display the specified file or, if it's no longer selected, the next closest one
             // FileShow() handles empty image sets, so those don't need to be checked for here.
             // After a selection changes, set the slider to represent the index and the count of the current selection
-            this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
-            this.FileNavigatorSlider.Maximum = this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;  // Reset the slider to the size of images in this set
-            if (this.FileNavigatorSlider.Maximum <= 50)
+            FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
+            FileNavigatorSlider.Maximum = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;  // Reset the slider to the size of images in this set
+            if (FileNavigatorSlider.Maximum <= 50)
             {
-                this.FileNavigatorSlider.IsSnapToTickEnabled = true;
-                this.FileNavigatorSlider.TickFrequency = 1.0;
+                FileNavigatorSlider.IsSnapToTickEnabled = true;
+                FileNavigatorSlider.TickFrequency = 1.0;
             }
             else
             {
-                this.FileNavigatorSlider.IsSnapToTickEnabled = false;
-                this.FileNavigatorSlider.TickFrequency = 0.02 * this.FileNavigatorSlider.Maximum;
+                FileNavigatorSlider.IsSnapToTickEnabled = false;
+                FileNavigatorSlider.TickFrequency = 0.02 * FileNavigatorSlider.Maximum;
             }
 
             // Reset the ThumbnailGrid selection after every change in the selection
-            if (this.IsDisplayingMultipleImagesInOverview())
+            if (IsDisplayingMultipleImagesInOverview())
             {
-                this.MarkableCanvas.ThumbnailGrid.SelectInitialCellOnly();
+                MarkableCanvas.ThumbnailGrid.SelectInitialCellOnly();
             }
 
-            this.DataEntryControls.AutocompletionPopulateAllNotesWithFileTableValues(this.DataHandler.FileDatabase);
+            DataEntryControls.AutocompletionPopulateAllNotesWithFileTableValues(DataHandler.FileDatabase);
 
             // Always force an update after a selection
-            this.FileShow(this.DataHandler.FileDatabase.GetFileOrNextFileIndex(imageID), true);
+            FileShow(DataHandler.FileDatabase.GetFileOrNextFileIndex(imageID), true);
 
             // Update the status bar accordingly
-            this.StatusBar.SetCurrentFile(this.DataHandler.ImageCache.CurrentRow + 1);  // We add 1 because its a 0-based list
-            this.StatusBar.SetCount(this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles);
-            this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
-            this.DataHandler.FileDatabase.FileSelectionEnum = selection;    // Remember the current selection
+            StatusBar.SetCurrentFile(DataHandler.ImageCache.CurrentRow + 1);  // We add 1 because its a 0-based list
+            StatusBar.SetCount(DataHandler.FileDatabase.CountAllCurrentlySelectedFiles);
+            FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
+            DataHandler.FileDatabase.FileSelectionEnum = selection;    // Remember the current selection
             return true;
         }
         #endregion
@@ -169,7 +170,7 @@ namespace Timelapse
                 FileDatabase.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
             });
             //IProgress<ProgressBarArguments> progress = progressHandler;
-            SelectMissingFilesResultEnum resultEnum = await this.DataHandler.FileDatabase.SelectMissingFilesFromCurrentlySelectedFiles(progressHandler, GlobalReferences.CancelTokenSource);
+            SelectMissingFilesResultEnum resultEnum = await DataHandler.FileDatabase.SelectMissingFilesFromCurrentlySelectedFiles(progressHandler, GlobalReferences.CancelTokenSource);
 
             if (SelectMissingFilesResultEnum.NoMissingFiles == resultEnum)
             {

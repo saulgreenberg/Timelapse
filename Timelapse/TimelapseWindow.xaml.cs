@@ -1,9 +1,9 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +13,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
 using Timelapse.ControlsMetadata;
@@ -31,6 +33,9 @@ using ToastNotifications;
 using ToastNotifications.Lifetime;
 using ToastNotifications.Position;
 using Xceed.Wpf.Toolkit;
+using Arguments = Timelapse.DataStructures.Arguments;
+using Control = Timelapse.Constant.Control;
+using File = System.IO.File;
 
 namespace Timelapse
 {
@@ -48,15 +53,13 @@ namespace Timelapse
         {
             get
             {
-                if (this.DataHandler == null)
+                if (DataHandler == null)
                 {
                     Debug.Print("Weird error in FullSubFolderPath - datahandler is null");
                     return string.Empty;
                 }
-                else
-                {
-                    return this.DataHandler.FileDatabase.FolderPath;
-                }
+
+                return DataHandler.FileDatabase.FolderPath;
             }
         }
 
@@ -101,87 +104,87 @@ namespace Timelapse
         public TimelapseWindow()
         {
 
-            AppDomain.CurrentDomain.UnhandledException += this.OnUnhandledException;
-            this.InitializeComponent();
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            InitializeComponent();
 
             // Get the command line arguments, if any
             // this.Arguments = new DataStructures.Arguments(Environment.GetCommandLineArgs());
 
             // Register MarkableCanvas callbacks
-            this.MarkableCanvas.PreviewMouseDown += this.MarkableCanvas_PreviewMouseDown;
-            this.MarkableCanvas.MouseEnter += this.MarkableCanvas_MouseEnter;
-            this.MarkableCanvas.MarkerEvent += this.MarkableCanvas_RaiseMarkerEvent;
-            this.MarkableCanvas.ThumbnailGrid.DoubleClick += this.ThumbnailGrid_DoubleClick;
-            this.MarkableCanvas.ThumbnailGrid.SelectionChanged += this.ThumbanilGrid_SelectionChanged;
-            this.MarkableCanvas.SwitchedToThumbnailGridViewEventAction += this.SwitchedToThumbnailGrid;
-            this.MarkableCanvas.SwitchedToSingleImageViewEventAction += this.SwitchedToSingleImagesView;
+            MarkableCanvas.PreviewMouseDown += MarkableCanvas_PreviewMouseDown;
+            MarkableCanvas.MouseEnter += MarkableCanvas_MouseEnter;
+            MarkableCanvas.MarkerEvent += MarkableCanvas_RaiseMarkerEvent;
+            MarkableCanvas.ThumbnailGrid.DoubleClick += ThumbnailGrid_DoubleClick;
+            MarkableCanvas.ThumbnailGrid.SelectionChanged += ThumbanilGrid_SelectionChanged;
+            MarkableCanvas.SwitchedToThumbnailGridViewEventAction += SwitchedToThumbnailGrid;
+            MarkableCanvas.SwitchedToSingleImageViewEventAction += SwitchedToSingleImagesView;
 
             // Save/restore the focus whenever we leave / enter the control grid (which contains controls pluse the copy previous button, or the file navigator
-            this.ControlGrid.MouseEnter += this.FocusRestoreOn_MouseEnter;
-            this.ControlGrid.MouseLeave += this.FocusSaveOn_MouseLeave;
+            ControlGrid.MouseEnter += FocusRestoreOn_MouseEnter;
+            ControlGrid.MouseLeave += FocusSaveOn_MouseLeave;
 
             // Set the window's title
-            this.Title = Constant.Defaults.MainWindowBaseTitle;
+            Title = Defaults.MainWindowBaseTitle;
 
             // Create the speech synthesiser
-            this.speechSynthesizer = new SpeechSynthesizer();
+            speechSynthesizer = new SpeechSynthesizer();
 
             // Recall user's state from prior sessions
-            this.State = new TimelapseState();
-            this.State.ReadSettingsFromRegistry();
-            Episodes.Episodes.TimeThreshold = this.State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
-            this.MarkableCanvas.SetBookmark(this.State.BookmarkScale, this.State.BookmarkTranslation);
-            this.MenuItemAudioFeedback.IsChecked = this.State.AudioFeedback;
+            State = new TimelapseState();
+            State.ReadSettingsFromRegistry();
+            Episodes.Episodes.TimeThreshold = State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
+            MarkableCanvas.SetBookmark(State.BookmarkScale, State.BookmarkTranslation);
+            MenuItemAudioFeedback.IsChecked = State.AudioFeedback;
 
             // Populate the global references so we can access these from other objects without going thorugh the hassle of passing arguments around
             // Yup, poor practice but...
             GlobalReferences.MainWindow = this; // So other classes can access methods here
-            GlobalReferences.BusyCancelIndicator = this.BusyCancelIndicator; // So other classes can access methods here
+            GlobalReferences.BusyCancelIndicator = BusyCancelIndicator; // So other classes can access methods here
             GlobalReferences.CancelTokenSource = new CancellationTokenSource();     // Set the CancellationToken/Source. Only set globally
-            GlobalReferences.TimelapseState = this.State;
+            GlobalReferences.TimelapseState = State;
 
             // Populate the most recent image set list
-            this.RecentFileSets_Refresh();
+            RecentFileSets_Refresh();
 
             // Timer to force the image to update to the current slider position when the user pauses while dragging the  slider 
-            this.timerFileNavigator = new DispatcherTimer()
+            timerFileNavigator = new DispatcherTimer
             {
-                Interval = this.State.Throttles.DesiredIntervalBetweenRenders
+                Interval = State.Throttles.DesiredIntervalBetweenRenders
             };
-            this.timerFileNavigator.Tick += this.TimerFileNavigator_Tick;
+            timerFileNavigator.Tick += TimerFileNavigator_Tick;
 
             // Timer to force the focus to the last saved focused control
-            this.timerRestoreFocusOnLastRememberedItem = new DispatcherTimer()
+            timerRestoreFocusOnLastRememberedItem = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(0)
             };
-            this.timerRestoreFocusOnLastRememberedItem.Tick += (o, args) =>
+            timerRestoreFocusOnLastRememberedItem.Tick += (o, args) =>
             {
                 // Sets the focus on the last remembered focused element, if any
                 FocusRestoreOn_MouseEnter(null, null);
-                this.timerRestoreFocusOnLastRememberedItem.Stop();
+                timerRestoreFocusOnLastRememberedItem.Stop();
             };
 
             // Callback to ensure Video AutoPlay stops when the user clicks on it
-            this.FileNavigatorSlider.PreviewMouseDown += this.ContentControl_MouseDown;
-            this.FileNavigatorSliderReset();
+            FileNavigatorSlider.PreviewMouseDown += ContentControl_MouseDown;
+            FileNavigatorSliderReset();
 
             // Timer activated / deactivated by Video Autoplay media control buttons
-            this.FilePlayerTimer.Tick += this.FilePlayerTimer_Tick;
+            FilePlayerTimer.Tick += FilePlayerTimer_Tick;
 
-            this.DataGridSelectionsTimer.Tick += this.DataGridSelectionsTimer_Tick;
-            this.DataGridSelectionsTimer.Interval = Constant.ThrottleValues.DataGridTimerInterval;
+            DataGridSelectionsTimer.Tick += DataGridSelectionsTimer_Tick;
+            DataGridSelectionsTimer.Interval = ThrottleValues.DataGridTimerInterval;
 
             // Get the window and its size from its previous location
             // SAULXX: Note that this is actually redundant, as if AvalonLayout_TryLoad succeeds it will do it again.
             // Maybe integrate this call with that?
-            this.Top = this.State.TimelapseWindowPosition.Y;
-            this.Left = this.State.TimelapseWindowPosition.X;
-            this.Height = this.State.TimelapseWindowPosition.Height;
-            this.Width = this.State.TimelapseWindowPosition.Width;
+            Top = State.TimelapseWindowPosition.Y;
+            Left = State.TimelapseWindowPosition.X;
+            Height = State.TimelapseWindowPosition.Height;
+            Width = State.TimelapseWindowPosition.Width;
 
             // Mute the harmless 'System.Windows.Data Error: 4 : Cannot find source for binding with reference' (I think its from Avalon dock)
-            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = System.Diagnostics.SourceLevels.Critical;
+            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Critical;
         }
         #endregion
 
@@ -189,37 +192,37 @@ namespace Timelapse
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Abort if some of the required dependencies are missing
-            if (Dependencies.AreRequiredBinariesPresent(Constant.VersionUpdates.ApplicationName, Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
+            if (Dependencies.AreRequiredBinariesPresent(VersionUpdates.ApplicationName, Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
             {
-                Dialogs.DependencyFilesMissingDialog(Constant.VersionUpdates.ApplicationName, missingAssemblies);
+                Dialogs.DependencyFilesMissingDialog(VersionUpdates.ApplicationName, missingAssemblies);
                 Application.Current.Shutdown();
             }
 
             // Check for updates at least once a day
-            if (DateTime.Now.Year != this.State.MostRecentCheckForUpdates.Year ||
-            DateTime.Now.Month != this.State.MostRecentCheckForUpdates.Month ||
-            DateTime.Now.Day != this.State.MostRecentCheckForUpdates.Day)
+            if (DateTime.Now.Year != State.MostRecentCheckForUpdates.Year ||
+            DateTime.Now.Month != State.MostRecentCheckForUpdates.Month ||
+            DateTime.Now.Day != State.MostRecentCheckForUpdates.Day)
             {
-                VersionChecks updater = new VersionChecks(this, Constant.VersionUpdates.ApplicationName, Constant.VersionUpdates.LatestVersionFileNameXML);
+                VersionChecks updater = new VersionChecks(this, VersionUpdates.ApplicationName, VersionUpdates.LatestVersionFileNameXML);
                 updater.TryCheckForNewVersionAndDisplayResultsAsNeeded(false);
-                this.State.MostRecentCheckForUpdates = DateTime.Now;
+                State.MostRecentCheckForUpdates = DateTime.Now;
             }
-            if (this.State.FirstTimeFileLoading)
+            if (State.FirstTimeFileLoading)
             {
                 // Load the previously saved layout. If there is none, TryLoad will default to a reasonable layout and window size/position.
-                this.AvalonLayout_TryLoad(Constant.AvalonLayoutTags.LastUsed);
+                this.AvalonLayout_TryLoad(AvalonLayoutTags.LastUsed);
                 //FolderMetadataPane.IsEnabled = false; // Needed as Try Load will set it to true if that was its last state
-                this.State.FirstTimeFileLoading = false;
+                State.FirstTimeFileLoading = false;
             }
 
             if (!SystemStatus.CheckAndGetLangaugeAndCulture(out _, out _, out string displayname))
             {
-                this.HelpDocument.WarningRegionLanguage = displayname;
+                HelpDocument.WarningRegionLanguage = displayname;
             }
 
             // By default, we now set everything to use the Invariant culture, although this 
             // isn't tested to ensure it works
-            Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
             // Add a context menu to the data controls that allows a user to restore default values to the current or selected file
             // I originally had this in the XAML, but for some reason it complains if put there.
@@ -227,75 +230,75 @@ namespace Timelapse
             MenuItem menuItemRestoreDefaults = new MenuItem();
 
             menuItemRestoreDefaults.Click += MenuItemRestoreDefaultValues_Click;
-            menuRestoreDefaults.Opened += this.MenuRestoreDefaults_Opened;
+            menuRestoreDefaults.Opened += MenuRestoreDefaults_Opened;
             menuRestoreDefaults.Items.Add(menuItemRestoreDefaults);
-            this.DataEntryControls.ContextMenu = menuRestoreDefaults;
-            this.DataEntryControlPanel.IsVisible = false;
-            this.InstructionPane.IsActive = true;
-            this.EnableOrDisableMenusAndControls();
+            DataEntryControls.ContextMenu = menuRestoreDefaults;
+            DataEntryControlPanel.IsVisible = false;
+            InstructionPane.IsActive = true;
+            EnableOrDisableMenusAndControls();
 
             // If Timelapse was started with a -viewonly argument, set it up to initially be in viewonly mode
-            if (this.Arguments.IsViewOnly)
+            if (Arguments.IsViewOnly)
             {
-                this.State.IsViewOnly = true;
+                State.IsViewOnly = true;
                 // Disable the data entry panel, the copy previous values button, the data entry panels' context menu etc.
                 // Individual controls are disabled in the DataEntryX panel
-                this.DataEntryControls.ContextMenu = null;
-                this.CopyPreviousValuesButton.Visibility = Visibility.Collapsed;
+                DataEntryControls.ContextMenu = null;
+                CopyPreviousValuesButton.Visibility = Visibility.Collapsed;
             }
 
-            if (false == string.IsNullOrEmpty(this.Arguments.Template))
+            if (false == string.IsNullOrEmpty(Arguments.Template))
             {
                 // If its not a valid template, display a dialog and abort
-                if (false == Dialogs.DialogIsFileValid(this, this.Arguments.Template))
+                if (false == Dialogs.DialogIsFileValid(this, Arguments.Template))
                 {
                     return;
                 }
-                if (File.Exists(this.Arguments.Template))
+                if (File.Exists(Arguments.Template))
                 {
                     Mouse.OverrideCursor = Cursors.Wait;
-                    this.StatusBar.SetMessage("Loading images, please wait...");
-                    Tuple<bool, string> results = await this.TryOpenTemplateAndBeginLoadFoldersAsync(this.Arguments.Template).ConfigureAwait(true);
+                    StatusBar.SetMessage("Loading images, please wait...");
+                    Tuple<bool, string> results = await TryOpenTemplateAndBeginLoadFoldersAsync(Arguments.Template).ConfigureAwait(true);
                     if (results.Item1 == false)
                     {
                         // SAULXXX SHOULD BAIL HERE AS IT FAILED OPENING THE TEMPLATE AND/OR DATABASE
                     }
-                    if (false == string.IsNullOrEmpty(this.Arguments.RelativePath))
+                    if (false == string.IsNullOrEmpty(Arguments.RelativePath))
                     {
                         // Set and only use the relative path as a search term
-                        this.DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
-                        this.DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm(this.Arguments.RelativePath);
-                        if (null == this.DataHandler?.ImageCache?.Current)
+                        DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
+                        DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm(Arguments.RelativePath);
+                        if (null == DataHandler?.ImageCache?.Current)
                         {
-                            await this.FilesSelectAndShowAsync(FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
+                            await FilesSelectAndShowAsync(FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
                         }
                         else
                         {
-                            await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
+                            await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
                         }
                     }
-                    this.StatusBar.SetMessage("Image set is now loaded.");
+                    StatusBar.SetMessage("Image set is now loaded.");
                     Mouse.OverrideCursor = null;
 
-                    if (this.Arguments.ConstrainToRelativePath)
+                    if (Arguments.ConstrainToRelativePath)
                     {
                         // Tell user that its a constrained relative path,
                         // Also, set the File menus so that users cannot close and reopen a new image set
                         // This is to avoid confusion as to how the user may mis-interpret the argument state given another image set
-                        Dialogs.ArgumentRelativePathDialog(this, this.Arguments.RelativePath);
-                        this.MenuItemExit.Header = "Close image set and exit Timelapse";
-                        this.MenuFileCloseImageSet.Visibility = Visibility.Collapsed;
+                        Dialogs.ArgumentRelativePathDialog(this, Arguments.RelativePath);
+                        MenuItemExit.Header = "Close image set and exit Timelapse";
+                        MenuFileCloseImageSet.Visibility = Visibility.Collapsed;
                     }
                 }
                 else
                 {
                     // We can't open the template. Show a message and ignore the arguments (by clearing them)
-                    Dialogs.ArgumentTemplatePathDialog(this, this.Arguments.Template, this.Arguments.RelativePath);
-                    this.Arguments = new Arguments(null);
+                    Dialogs.ArgumentTemplatePathDialog(this, Arguments.Template, Arguments.RelativePath);
+                    Arguments = new Arguments(null);
                 }
             }
 
-            if (this.State.IsViewOnly)
+            if (State.IsViewOnly)
             {
                 Dialogs.OpeningMessageViewOnly(this);
             }
@@ -311,7 +314,7 @@ namespace Timelapse
             //}
 
             // Initialize the Toast notifier, where we set its position, width, etc.
-            this.ToastNotifier = new Notifier(cfg =>
+            ToastNotifier = new Notifier(cfg =>
             {
                 cfg.PositionProvider = new WindowPositionProvider(
                     parentWindow: Application.Current.MainWindow,
@@ -329,21 +332,21 @@ namespace Timelapse
 
         private void Window_LocationChanged(object sender, EventArgs e)
         {
-            this.FindBoxSetVisibility(false);
+            FindBoxSetVisibility(false);
         }
 
         // On exiting, save various attributes so we can use recover them later
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.CloseTimelapseAndSaveState(true);
+            CloseTimelapseAndSaveState(true);
         }
 
         private void DeleteTheDeletedFilesFolderIfNeeded()
         {
-            string deletedFolderPath = Path.Combine(this.DataHandler.FileDatabase.FolderPath, Constant.File.DeletedFilesFolder);
+            string deletedFolderPath = Path.Combine(DataHandler.FileDatabase.FolderPath, Constant.File.DeletedFilesFolder);
             string[] extensions = { Constant.File.JpgFileExtension, Constant.File.ASFFileExtension, Constant.File.AviFileExtension, Constant.File.MovFileExtension, Constant.File.Mp4FileExtension };
             int howManyDeletedFiles = Directory.Exists(deletedFolderPath) 
-                ? Directory.GetFiles(deletedFolderPath, "*.*", SearchOption.AllDirectories).Where(f => extensions.Contains(System.IO.Path.GetExtension(f).ToLower()))
+                ? Directory.GetFiles(deletedFolderPath, "*.*", SearchOption.AllDirectories).Where(f => extensions.Contains(Path.GetExtension(f).ToLower()))
                     .ToArray().Length
                 :0;
 
@@ -355,12 +358,12 @@ namespace Timelapse
 
             // We either have auto deletion, or ask the user. Check both cases.
             // If its auto deletion, then set the flag to delete
-            bool deleteTheDeletedFolder = this.State.DeleteFolderManagement == DeleteFolderManagementEnum.AutoDeleteOnExit;
+            bool deleteTheDeletedFolder = State.DeleteFolderManagement == DeleteFolderManagementEnum.AutoDeleteOnExit;
 
             // if its ask the user, then set the flag according to the response
-            if (this.State.DeleteFolderManagement == DeleteFolderManagementEnum.AskToDeleteOnExit)
+            if (State.DeleteFolderManagement == DeleteFolderManagementEnum.AskToDeleteOnExit)
             {
-                Dialog.DeleteDeleteFolder deleteDeletedFolders = new Dialog.DeleteDeleteFolder(howManyDeletedFiles)
+                DeleteDeleteFolder deleteDeletedFolders = new DeleteDeleteFolder(howManyDeletedFiles)
                 {
                     Owner = this
                 };
@@ -376,24 +379,24 @@ namespace Timelapse
         #region Disposing
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                this.DataHandler?.Dispose();
-                this.MetadataDataHandler?.Dispose();
-                this.speechSynthesizer?.Dispose();
+                DataHandler?.Dispose();
+                MetadataDataHandler?.Dispose();
+                speechSynthesizer?.Dispose();
             }
-            this.disposed = true;
+            disposed = true;
         }
         #endregion
 
@@ -410,7 +413,7 @@ namespace Timelapse
                 ExceptionShutdownDialog dialog = new ExceptionShutdownDialog(this, "Timelapse", e);
                 dialog.ShowDialog();
                 // force a shutdown. While some bugs could be recoverable, its dangerous to keep things running. 
-                this.Close();
+                Close();
                 Application.Current.Shutdown();
             }
         }
@@ -424,91 +427,91 @@ namespace Timelapse
         {
             // Add data entry callbacks to all editable controls. When the user changes an image's attribute using a particular control,
             // the callback updates the matching field for that image in the database.
-            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
+            foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
-                string controlType = this.DataHandler.FileDatabase.FileTableColumnsByDataLabel[pair.Key].ControlType;
+                string controlType = DataHandler.FileDatabase.FileTableColumnsByDataLabel[pair.Key].ControlType;
                 switch (controlType)
                 {
-                    case Constant.Control.Counter:
+                    case Control.Counter:
                         DataEntryCounter counter = (DataEntryCounter)pair.Value;
-                        counter.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        counter.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
-                        counter.Container.MouseEnter += this.CounterControl_MouseEnter;
-                        counter.Container.MouseLeave += this.CounterControl_MouseLeave;
-                        counter.LabelControl.Click += this.CounterControl_Click;
+                        counter.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        counter.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
+                        counter.Container.MouseEnter += CounterControl_MouseEnter;
+                        counter.Container.MouseLeave += CounterControl_MouseLeave;
+                        counter.LabelControl.Click += CounterControl_Click;
                         break;
-                    case Constant.Control.IntegerAny:
+                    case Control.IntegerAny:
                         DataEntryIntegerAny integerAny = (DataEntryIntegerAny)pair.Value;
-                        integerAny.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        integerAny.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        integerAny.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        integerAny.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.IntegerPositive:
+                    case Control.IntegerPositive:
                         DataEntryIntegerPositive integerPositive = (DataEntryIntegerPositive)pair.Value;
-                        integerPositive.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        integerPositive.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        integerPositive.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        integerPositive.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.DecimalAny:
+                    case Control.DecimalAny:
                         DataEntryDecimalAny decimalAny = (DataEntryDecimalAny)pair.Value;
-                        decimalAny.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        decimalAny.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        decimalAny.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        decimalAny.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.DecimalPositive:
+                    case Control.DecimalPositive:
                         DataEntryDecimalPositive decimalPositive = (DataEntryDecimalPositive)pair.Value;
-                        decimalPositive.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        decimalPositive.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        decimalPositive.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        decimalPositive.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.Flag:
-                    case Constant.DatabaseColumn.DeleteFlag:
+                    case Control.Flag:
+                    case DatabaseColumn.DeleteFlag:
                         DataEntryFlag flag = (DataEntryFlag)pair.Value;
-                        flag.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        flag.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        flag.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        flag.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.FixedChoice:
+                    case Control.FixedChoice:
                         DataEntryChoice choice = (DataEntryChoice)pair.Value;
-                        choice.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        choice.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        choice.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        choice.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.MultiChoice:
+                    case Control.MultiChoice:
                         DataEntryMultiChoice multichoice = (DataEntryMultiChoice)pair.Value;
-                        multichoice.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        multichoice.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        multichoice.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        multichoice.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.Note:
-                    case Constant.DatabaseColumn.File:
-                    case Constant.DatabaseColumn.RelativePath:
+                    case Control.Note:
+                    case DatabaseColumn.File:
+                    case DatabaseColumn.RelativePath:
                         DataEntryNote note = (DataEntryNote)pair.Value;
-                        note.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        note.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        note.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        note.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.AlphaNumeric:
+                    case Control.AlphaNumeric:
                         DataEntryAlphaNumeric alphaNumeric = (DataEntryAlphaNumeric)pair.Value;
-                        alphaNumeric.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        alphaNumeric.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        alphaNumeric.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        alphaNumeric.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.MultiLine:
+                    case Control.MultiLine:
                         DataEntryMultiLine multiLine = (DataEntryMultiLine)pair.Value;
-                        multiLine.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        multiLine.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        multiLine.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        multiLine.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.DatabaseColumn.DateTime:
+                    case DatabaseColumn.DateTime:
                         DataEntryDateTime dateTime = (DataEntryDateTime)pair.Value;
-                        dateTime.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        dateTime.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        dateTime.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        dateTime.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.DateTime_:
+                    case Control.DateTime_:
                         DataEntryDateTimeCustom dateTimeCustom = (DataEntryDateTimeCustom)pair.Value;
-                        dateTimeCustom.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        dateTimeCustom.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        dateTimeCustom.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        dateTimeCustom.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.Date_:
+                    case Control.Date_:
                         DataEntryDate date = (DataEntryDate)pair.Value;
-                        date.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        date.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        date.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        date.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
-                    case Constant.Control.Time_:
+                    case Control.Time_:
                         DataEntryTime time = (DataEntryTime)pair.Value;
-                        time.ContentControl.PreviewMouseDown += this.ContentControl_MouseDown;
-                        time.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+                        time.ContentControl.PreviewMouseDown += ContentControl_MouseDown;
+                        time.ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
                         break;
                     default:
                         TracePrint.PrintMessage($"Unhandled control type '{controlType}' in SetUserInterfaceCallbacks.");
@@ -521,7 +524,7 @@ namespace Timelapse
         // to ensure the FilePlayer is stopped when the user clicks into it
         private void ContentControl_MouseDown(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            FilePlayer_Stop(); // In case the FilePlayer is going
         }
 
 
@@ -549,13 +552,13 @@ namespace Timelapse
                     doubleUpDown.Value = null;
                 }
             }
-            else if (eventArgs.Key == Key.Tab && sender is Xceed.Wpf.Toolkit.MultiLineTextEditor multiline)
+            else if (eventArgs.Key == Key.Tab && sender is MultiLineTextEditor multiline)
             {
                 multiline.IsOpen = false;
                 multiline.Focus();
                 Keyboard.Focus(multiline);
-                this.MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
-                this.timerRestoreFocusOnLastRememberedItem.Start();
+                MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
+                timerRestoreFocusOnLastRememberedItem.Start();
             }
 
             else if (eventArgs.Key == Key.Tab && sender is CheckComboBox checkComboBox)
@@ -563,16 +566,16 @@ namespace Timelapse
                 checkComboBox.IsDropDownOpen = false;
                 checkComboBox.Focus();
                 Keyboard.Focus(checkComboBox);
-                this.MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
-                this.timerRestoreFocusOnLastRememberedItem.Start();
+                MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
+                timerRestoreFocusOnLastRememberedItem.Start();
             }
             // We need to allow returns from the MultiLineTextEditor, otherwise the return resets the focus to the markable canvas.
             // Maybe modify this so it only does this if the return is in the Multiline Edit popup window?
             else if (eventArgs.Key == Key.Enter && false == sender is MultiLineTextEditor)
             {
-                this.TrySetKeyboardFocusToMarkableCanvas(false, eventArgs);
+                TrySetKeyboardFocusToMarkableCanvas(false, eventArgs);
                 eventArgs.Handled = true;
-                this.FilePlayer_Stop(); // In case the FilePlayer is going
+                FilePlayer_Stop(); // In case the FilePlayer is going
             }
 
             // The 'empty else' means don't check to see if a textbox or control has the focus, as we want to reset the focus elsewhere
@@ -591,24 +594,24 @@ namespace Timelapse
         /// <param name="e">event information</param>
         private void CounterControl_Click(object sender, RoutedEventArgs e)
         {
-            this.MarkableCanvas_UpdateMarkers();
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            MarkableCanvas_UpdateMarkers();
+            FilePlayer_Stop(); // In case the FilePlayer is going
         }
 
         /// <summary>Highlight the markers associated with a counter when the mouse enters it</summary>
         private void CounterControl_MouseEnter(object sender, MouseEventArgs e)
         {
             Panel panel = (Panel)sender;
-            this.State.MouseOverCounter = ((DataEntryCounter)panel.Tag).DataLabel;
-            this.MarkableCanvas_UpdateMarkers();
+            State.MouseOverCounter = ((DataEntryCounter)panel.Tag).DataLabel;
+            MarkableCanvas_UpdateMarkers();
         }
 
         /// <summary>Remove marker highlighting associated with a counter when the mouse leaves it</summary>
         private void CounterControl_MouseLeave(object sender, MouseEventArgs e)
         {
             // Recolor the marks
-            this.State.MouseOverCounter = null;
-            this.MarkableCanvas_UpdateMarkers();
+            State.MouseOverCounter = null;
+            MarkableCanvas_UpdateMarkers();
         }
 
         // When the Control Grid size changes, reposition the CopyPrevious Button depending on the width/height ratio
@@ -617,20 +620,20 @@ namespace Timelapse
             if (e.NewSize.Height + 212 > e.NewSize.Width) // We include 250, as otherwise it will bounce around as repositioning the button changes the size
             {
                 // Place the button at the bottom right of the grid
-                Grid.SetRow(this.CopyPreviousValuesButton, 1);
-                Grid.SetColumn(this.CopyPreviousValuesButton, 0);
-                this.CopyPreviousValuesButton.HorizontalAlignment = HorizontalAlignment.Stretch;
-                this.CopyPreviousValuesButton.VerticalAlignment = VerticalAlignment.Top;
-                this.CopyPreviousValuesButton.Margin = new Thickness(0, 5, 0, 5);
+                Grid.SetRow(CopyPreviousValuesButton, 1);
+                Grid.SetColumn(CopyPreviousValuesButton, 0);
+                CopyPreviousValuesButton.HorizontalAlignment = HorizontalAlignment.Stretch;
+                CopyPreviousValuesButton.VerticalAlignment = VerticalAlignment.Top;
+                CopyPreviousValuesButton.Margin = new Thickness(0, 5, 0, 5);
             }
             else
             {
                 // Place the button at the right of the grid
-                Grid.SetRow(this.CopyPreviousValuesButton, 0);
-                Grid.SetColumn(this.CopyPreviousValuesButton, 1);
-                this.CopyPreviousValuesButton.HorizontalAlignment = HorizontalAlignment.Right;
-                this.CopyPreviousValuesButton.VerticalAlignment = VerticalAlignment.Stretch;
-                this.CopyPreviousValuesButton.Margin = new Thickness(5, 0, 5, 0);
+                Grid.SetRow(CopyPreviousValuesButton, 0);
+                Grid.SetColumn(CopyPreviousValuesButton, 1);
+                CopyPreviousValuesButton.HorizontalAlignment = HorizontalAlignment.Right;
+                CopyPreviousValuesButton.VerticalAlignment = VerticalAlignment.Stretch;
+                CopyPreviousValuesButton.Margin = new Thickness(5, 0, 5, 0);
             }
         }
         #endregion
@@ -644,7 +647,7 @@ namespace Timelapse
             // remove image sets which are no longer present from the most recently used list
             // probably overkill to perform this check on every refresh rather than once at application launch, but it's not particularly expensive
             List<string> invalidPaths = new List<string>();
-            foreach (string recentImageSetPath in this.State.MostRecentImageSets)
+            foreach (string recentImageSetPath in State.MostRecentImageSets)
             {
                 if (File.Exists(recentImageSetPath) == false)
                 {
@@ -654,7 +657,7 @@ namespace Timelapse
 
             foreach (string path in invalidPaths)
             {
-                bool result = this.State.MostRecentImageSets.TryRemove(path);
+                bool result = State.MostRecentImageSets.TryRemove(path);
                 if (!result)
                 {
                     TracePrint.PrintMessage(
@@ -663,19 +666,19 @@ namespace Timelapse
             }
 
             // Enable the menu only when there are items in it and only if the load menu is also enabled (i.e., that we haven't loaded anything yet)
-            this.MenuItemRecentImageSets.IsEnabled = this.State.MostRecentImageSets.Count > 0 && this.MenuItemLoadFiles.IsEnabled;
-            this.MenuItemRecentImageSets.Items.Clear();
+            MenuItemRecentImageSets.IsEnabled = State.MostRecentImageSets.Count > 0 && MenuItemLoadFiles.IsEnabled;
+            MenuItemRecentImageSets.Items.Clear();
 
             // add menu items most recently used image sets
             int index = 1;
-            foreach (string recentImageSetPath in this.State.MostRecentImageSets)
+            foreach (string recentImageSetPath in State.MostRecentImageSets)
             {
                 // Create a menu item for each path
                 MenuItem recentImageSetItem = new MenuItem();
-                recentImageSetItem.Click += this.MenuItemRecentImageSet_Click;
+                recentImageSetItem.Click += MenuItemRecentImageSet_Click;
                 recentImageSetItem.Header = $"_{index++} {recentImageSetPath}";
                 recentImageSetItem.ToolTip = recentImageSetPath;
-                this.MenuItemRecentImageSets.Items.Add(recentImageSetItem);
+                MenuItemRecentImageSets.Items.Add(recentImageSetItem);
             }
         }
         #endregion
@@ -691,7 +694,7 @@ namespace Timelapse
                 folderSelectionDialog.IsFolderPicker = true;
                 folderSelectionDialog.Multiselect = false;
                 folderSelectionDialog.InitialDirectory = folderSelectionDialog.DefaultDirectory;
-                folderSelectionDialog.FolderChanging += this.FolderSelectionDialog_FolderChanging;
+                folderSelectionDialog.FolderChanging += FolderSelectionDialog_FolderChanging;
                 if (folderSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     IEnumerable<string> folderPaths = folderSelectionDialog.FileNames;
@@ -709,7 +712,7 @@ namespace Timelapse
         private void FolderSelectionDialog_FolderChanging(object sender, CommonFileDialogFolderChangeEventArgs e)
         {
             // require folders to be loaded be either the same folder as the .tdb and .ddb or subfolders of it
-            if (e.Folder.StartsWith(this.FolderPath, StringComparison.OrdinalIgnoreCase) == false)
+            if (e.Folder.StartsWith(FolderPath, StringComparison.OrdinalIgnoreCase) == false)
             {
                 e.Cancel = true;
             }
@@ -722,7 +725,7 @@ namespace Timelapse
         {
             // Because switching to the data grid generates a scroll event, we need to ignore it as it will 
             // otherwise turn off the data grid timer
-            this.DataGridPane_IsActiveChanged(false);
+            DataGridPane_IsActiveChanged(false);
         }
 
         // Format the datetime column using the database format rather than the default datagrid format for date time.
@@ -730,24 +733,24 @@ namespace Timelapse
         {
             if (e.PropertyType == typeof(DateTime) && e.Column is DataGridTextColumn column)
             {
-                column.Binding.StringFormat = Constant.Time.DateTimeDatabaseFormat;
+                column.Binding.StringFormat = Time.DateTimeDatabaseFormat;
             }
         }
 
         public void DataGridPane_IsActiveChanged(bool forceUpdate)
         {
             // Don't update anything if we don't have any files to display
-            if (this.DataHandler == null || this.DataHandler.FileDatabase == null)
+            if (DataHandler == null || DataHandler.FileDatabase == null)
             {
-                this.DataGrid.ItemsSource = null;
+                DataGrid.ItemsSource = null;
                 return;
             }
 
-            if (forceUpdate || this.DataGridPane.IsActive || this.DataGridPane.IsFloating || this.DataGridPane.IsVisible)
+            if (forceUpdate || DataGridPane.IsActive || DataGridPane.IsFloating || DataGridPane.IsVisible)
             {
-                this.DataHandler.FileDatabase.BindToDataGrid(this.DataGrid, null);
+                DataHandler.FileDatabase.BindToDataGrid(DataGrid, null);
             }
-            this.DataGridSelectionsTimer_Reset();
+            DataGridSelectionsTimer_Reset();
         }
         #endregion
 
@@ -755,70 +758,70 @@ namespace Timelapse
         // Check to see if we are displaying at least one image in an active image set pane (not in the overview)
         private bool IsDisplayingActiveSingleImage()
         {
-            return this.IsDisplayingSingleImage() && this.ImageSetPane.IsActive;
+            return IsDisplayingSingleImage() && ImageSetPane.IsActive;
         }
 
         // Check to see if we are displaying at least one image (not in the overview), regardless of whether the ImageSetPane is active
         private bool IsDisplayingSingleImage()
         {
             // Always false If we are in the overiew
-            if (this.MarkableCanvas.IsThumbnailGridVisible) return false;
+            if (MarkableCanvas.IsThumbnailGridVisible) return false;
 
             // True only if we are displaying at least one file in an image set
-            return this.IsFileDatabaseAvailable() &&
-                   this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0;
+            return IsFileDatabaseAvailable() &&
+                   DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0;
         }
 
         private bool IsDisplayingMultipleImagesInOverview()
         {
-            return this.MarkableCanvas.IsThumbnailGridVisible && this.ImageSetPane.IsActive;
+            return MarkableCanvas.IsThumbnailGridVisible && ImageSetPane.IsActive;
         }
 
         private void SwitchedToThumbnailGrid()
         {
-            this.FilePlayer_Stop();
-            this.FilePlayer.SwitchFileMode(false);
-            this.MetadataUI.IsActive = false;
+            FilePlayer_Stop();
+            FilePlayer.SwitchFileMode(false);
+            MetadataUI.IsActive = false;
 
             // Refresh the CopyPreviousButton and its Previews as needed
-            this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+            CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
 
             // Hide the episode text
-            this.EpisodeText.Visibility = Visibility.Hidden;
+            EpisodeText.Visibility = Visibility.Hidden;
         }
 
         private void SwitchedToSingleImagesView()
         {
-            this.FilePlayer.SwitchFileMode(true);
-            this.DataGridSelectionsTimer_Reset();
-            this.MetadataUI.IsActive = true;
+            FilePlayer.SwitchFileMode(true);
+            DataGridSelectionsTimer_Reset();
+            MetadataUI.IsActive = true;
 
             // Refresh the CopyPreviousButton and its Previews as needed
-            this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+            CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
 
-            if (this.DataHandler != null)
+            if (DataHandler != null)
             {
-                this.DisplayEpisodeTextInImageIfWarranted(this.DataHandler.ImageCache.CurrentRow);
+                DisplayEpisodeTextInImageIfWarranted(DataHandler.ImageCache.CurrentRow);
             }
         }
 
         // If the DoubleClick on the ThumbnailGrid selected an image or video, display it.
         private void ThumbnailGrid_DoubleClick(object sender, ThumbnailGridEventArgs e)
         {
-            if (e.ImageRow != null && this.DataHandler.ImageCache.Current != null)
+            if (e.ImageRow != null && DataHandler.ImageCache.Current != null)
             {
                 // Switch to either the video or image view as needed
-                if (this.DataHandler.ImageCache.Current.IsVideo && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath))
+                if (DataHandler.ImageCache.Current.IsVideo && DataHandler.ImageCache.Current.IsDisplayable(FolderPath))
                 {
-                    this.MarkableCanvas.SwitchToVideoView();
+                    MarkableCanvas.SwitchToVideoView();
                 }
                 else
                 {
-                    this.MarkableCanvas.SwitchToImageView();
+                    MarkableCanvas.SwitchToImageView();
                 }
-                this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
-                this.FileShow(this.DataHandler.FileDatabase.GetFileOrNextFileIndex(e.ImageRow.ID));
-                this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
+                FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
+                FileShow(DataHandler.FileDatabase.GetFileOrNextFileIndex(e.ImageRow.ID));
+                FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
             }
         }
         #endregion
@@ -832,7 +835,7 @@ namespace Timelapse
             {
                 if (sender is DataGridRow row)
                 {
-                    this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
+                    FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
                     if (!(row.Item is DataRowView rowView))
                     {
                         // Shouldn't happen
@@ -840,13 +843,13 @@ namespace Timelapse
                         return;
                     }
                     long fileID = (long)rowView.Row.ItemArray[0];
-                    this.FileShow(this.DataHandler.FileDatabase.GetFileOrNextFileIndex(fileID));
-                    this.FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
+                    FileShow(DataHandler.FileDatabase.GetFileOrNextFileIndex(fileID));
+                    FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
 
                     // The datagrid isn't floating: Switch from the dataGridPane view to the ImagesetPane view
-                    if (!this.DataGridPane.IsFloating)
+                    if (!DataGridPane.IsFloating)
                     {
-                        this.ImageSetPane.IsActive = true;
+                        ImageSetPane.IsActive = true;
                     }
                 }
             }
@@ -857,7 +860,7 @@ namespace Timelapse
         // However, because user selections can change rapidly (e.g., by dragging within the overview), we throttle the refresh using a timer 
         private void ThumbanilGrid_SelectionChanged(object sender, ThumbnailGridEventArgs e)
         {
-            this.DataGridSelectionsTimer_Reset();
+            DataGridSelectionsTimer_Reset();
         }
 
         // If the DataGrid is visible, refresh it so its selected rows match the selections in the Overview. 
@@ -865,53 +868,53 @@ namespace Timelapse
         {
             try
             {
-                if (this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles == 0)
+                if (DataHandler.FileDatabase.CountAllCurrentlySelectedFiles == 0)
                 {
-                    this.DataGrid.UpdateLayout();
+                    DataGrid.UpdateLayout();
 
-                    this.DataGridSelectionsTimer.Stop();
+                    DataGridSelectionsTimer.Stop();
                     return;
                 }
                 //this.DataGrid.UpdateLayout(); // Doesn't seem to be needed, but just in case...
                 List<Tuple<long, int>> IdRowIndex = new List<Tuple<long, int>>();
-                if (this.IsDisplayingSingleImage())
+                if (IsDisplayingSingleImage())
                 {
                     // Only the current row is  selected in the single images view, so just use that.
-                    int currentRowIndex = this.DataHandler.ImageCache.CurrentRow;
-                    IdRowIndex.Add(new Tuple<long, int>(this.DataHandler.FileDatabase.FileTable[currentRowIndex].ID, currentRowIndex));
+                    int currentRowIndex = DataHandler.ImageCache.CurrentRow;
+                    IdRowIndex.Add(new Tuple<long, int>(DataHandler.FileDatabase.FileTable[currentRowIndex].ID, currentRowIndex));
                 }
                 else
                 {
                     // multiple selections are possible in the 
-                    foreach (int rowIndex in this.MarkableCanvas.ThumbnailGrid.GetSelected())
+                    foreach (int rowIndex in MarkableCanvas.ThumbnailGrid.GetSelected())
                     {
-                        IdRowIndex.Add(new Tuple<long, int>(this.DataHandler.FileDatabase.FileTable[rowIndex].ID, rowIndex));
+                        IdRowIndex.Add(new Tuple<long, int>(DataHandler.FileDatabase.FileTable[rowIndex].ID, rowIndex));
                     }
                 }
-                if (this.DataGrid.Items.Count > 0)
+                if (DataGrid.Items.Count > 0)
                 {
-                    this.DataGrid.SelectAndScrollIntoView(IdRowIndex);
+                    DataGrid.SelectAndScrollIntoView(IdRowIndex);
                 }
 
                 //this.DataGrid.UpdateLayout(); // Doesn't seem to be needed, but just in case...
-                this.DataGridSelectionsTimer_Reset();
+                DataGridSelectionsTimer_Reset();
             }
             catch
             {
                 // The above can fail, for example, if an image is deleted while this is triggered...
                 // If this happens, its no big deal as we can just reset the timer and it will try again later when
                 // things have (hopefully) caught up...
-                this.DataGridSelectionsTimer_Reset();
+                DataGridSelectionsTimer_Reset();
             }
         }
 
         // Reset the timer, where we start it up again if the datagrid pane is active, floating or visible
         private void DataGridSelectionsTimer_Reset()
         {
-            this.DataGridSelectionsTimer.Stop();
-            if (this.DataGridPane.IsActive || this.DataGridPane.IsFloating)
+            DataGridSelectionsTimer.Stop();
+            if (DataGridPane.IsActive || DataGridPane.IsFloating)
             {
-                this.DataGridSelectionsTimer.Start();
+                DataGridSelectionsTimer.Start();
             }
         }
 
@@ -922,7 +925,7 @@ namespace Timelapse
             // Stop the timer only if we are actually scrolling, i.e., if the scrolbar thumb has changed positions
             if (e.VerticalChange != 0)
             {
-                this.DataGridSelectionsTimer.Stop();
+                DataGridSelectionsTimer.Stop();
             }
         }
         #endregion
@@ -937,7 +940,7 @@ namespace Timelapse
         {
             if (DragDropFile.IsTemplateFileDragging(dropEvent, out string templateDatabasePath))
             {
-                if (this.IsFileDatabaseAvailable())
+                if (IsFileDatabaseAvailable())
                 {
                     // This method is currently a placeholder until we need to do some updating
                     if (false == Dialogs.CloseTemplateAndOpenNewTemplate(this, templateDatabasePath))
@@ -950,9 +953,9 @@ namespace Timelapse
                 // If its a valid template, load the images. Otherwise, just display the appropriate error dialog
                 if (Dialogs.DialogIsFileValid(this, templateDatabasePath))
                 {
-                    if (false == await this.DoLoadImages(templateDatabasePath))
+                    if (false == await DoLoadImages(templateDatabasePath))
                     {
-                        this.StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                        StatusBar.SetMessage("Aborted. Images were not added to the image set.");
                     }
                     Mouse.OverrideCursor = null;
                 }
@@ -965,8 +968,8 @@ namespace Timelapse
         // Returns whether there is an open file database
         private bool IsFileDatabaseAvailable()
         {
-            if (this.DataHandler == null ||
-                this.DataHandler.FileDatabase == null)
+            if (DataHandler == null ||
+                DataHandler.FileDatabase == null)
             {
                 return false;
             }
@@ -976,7 +979,7 @@ namespace Timelapse
         // Returns the currently active counter control, otherwise null
         private DataEntryCounter FindSelectedCounter()
         {
-            foreach (DataEntryControl control in this.DataEntryControls.Controls)
+            foreach (DataEntryControl control in DataEntryControls.Controls)
             {
                 if (control is DataEntryCounter counter)
                 {
@@ -992,10 +995,10 @@ namespace Timelapse
         // Say the given text
         public void Speak(string text)
         {
-            if (this.State.AudioFeedback)
+            if (State.AudioFeedback)
             {
-                this.speechSynthesizer.SpeakAsyncCancelAll();
-                this.speechSynthesizer.SpeakAsync(text);
+                speechSynthesizer.SpeakAsyncCancelAll();
+                speechSynthesizer.SpeakAsync(text);
             }
         }
 

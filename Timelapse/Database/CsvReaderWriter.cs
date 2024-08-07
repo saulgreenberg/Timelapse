@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
 using Timelapse.ControlsMetadata;
@@ -32,7 +32,7 @@ namespace Timelapse.Database
             Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
             {
                 // Update the progress bar
-                CsvReaderWriter.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+                UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
             });
             IProgress<ProgressBarArguments> progress = progressHandler;
             return await Task.Run(() =>
@@ -51,40 +51,35 @@ namespace Timelapse.Database
                         // The append sequence results in a leading comma except for the first column.
                         StringBuilder header = new StringBuilder();
                         bool includeComma = false;
-                        if (true)
-                        {
-                            // Add each level's name as a column at the beginning of the table
 
-                            foreach (MetadataInfoRow infoRow in database.MetadataInfo)
-                            {
-                                string alias = MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
-                                header.Append(CSVHelpers.CSVToCommaSeparatedValue(alias, includeComma));
-                                includeComma = true;
-                            }
+                        // Add each level's name as a column at the beginning of the table
+                        foreach (MetadataInfoRow infoRow in database.MetadataInfo)
+                        {
+                            string alias = MetadataUI.CreateTemporaryAliasIfNeeded(infoRow.Level, infoRow.Alias);
+                            header.Append(CSVHelpers.CSVToCommaSeparatedValue(alias, includeComma));
+                            includeComma = true;
                         }
 
                         if (csvIncludeRootFolderColumn)
                         {
-                            dataLabelsToExport.Insert(0, Constant.DatabaseColumn.RootFolder);
+                            dataLabelsToExport.Insert(0, DatabaseColumn.RootFolder);
                         }
 
                         foreach (string dataLabel in dataLabelsToExport)
                         {
-                            if (dataLabel == Constant.DatabaseColumn.DateTime && csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
+                            if (dataLabel == DatabaseColumn.DateTime && csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                             {
-                                header.Append(CSVHelpers.CSVToCommaSeparatedValue(Constant.ControlDeprecated.DateLabel, includeComma));
-                                includeComma = true;
-                                header.Append(CSVHelpers.CSVToCommaSeparatedValue(Constant.ControlDeprecated.TimeLabel, includeComma));
+                                header.Append(CSVHelpers.CSVToCommaSeparatedValue(ControlDeprecated.DateLabel, includeComma));
+                                header.Append(CSVHelpers.CSVToCommaSeparatedValue(ControlDeprecated.TimeLabel, true));
                             }
                             else
                             {
                                 header.Append(CSVHelpers.CSVToCommaSeparatedValue(dataLabel, includeComma));
-                                includeComma = true;
                             }
+                            includeComma = true;
                         }
 
                         fileWriter.WriteLine(header.ToString());
-
 
                         // For each row in the data table, write out the columns in the same order as the 
                         // data labels in the template file (again, skipping the ones we don't use and special casing the date/time data)
@@ -121,7 +116,7 @@ namespace Timelapse.Database
                             {
 
                                 // Check for these standard controls, as represented by a fixed data label
-                                if (dataLabel == Constant.DatabaseColumn.RootFolder)
+                                if (dataLabel == DatabaseColumn.RootFolder)
                                 {
                                     // Export the data as is
                                     csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(rootFolder, includeComma));
@@ -131,7 +126,7 @@ namespace Timelapse.Database
                                 {
                                     DataEntryControl control = controls.ControlsByDataLabelForExport[dataLabel];
 
-                                    if (dataLabel == Constant.DatabaseColumn.DateTime)
+                                    if (dataLabel == DatabaseColumn.DateTime)
                                     {
                                         if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                         {
@@ -276,7 +271,7 @@ namespace Timelapse.Database
             Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
             {
                 // Update the progress bar
-                CsvReaderWriter.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+                UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
             });
             IProgress<ProgressBarArguments> progress = progressHandler;
             return await Task.Run(() =>
@@ -293,7 +288,7 @@ namespace Timelapse.Database
                         string filePath = Path.Combine(folderPath, alias + ".csv");
 
                         // Get the rows for this level
-                        DataTables.DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
+                        DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
                             ? null
                             : value;
 
@@ -340,7 +335,7 @@ namespace Timelapse.Database
                             {
                                 includeComma = false;
                                 StringBuilder rowBuilder = new StringBuilder();
-                                List<string> cascadingPaths = FilesFolders.SplitAsCascadingRelativePath(row[Constant.DatabaseColumn.FolderDataPath]);
+                                List<string> cascadingPaths = FilesFolders.SplitAsCascadingRelativePath(row[DatabaseColumn.FolderDataPath]);
                                 if (level > 1)
                                 {
                                     // corrects the above function, which returns a blank if the path is blank, but no blank if an actual path is provided
@@ -364,7 +359,7 @@ namespace Timelapse.Database
                                     string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                     switch (dataLabelAndType.Value)
                                     {
-                                        case Constant.Control.DateTime_:
+                                        case Control.DateTime_:
                                             // Export the DateTime_ column as determined by the options
                                             if (DateTime.TryParse(row[dataLabelAndType.Key], out DateTime dateTime))
                                             {
@@ -394,7 +389,7 @@ namespace Timelapse.Database
                                             }
 
                                             break;
-                                        case Constant.Control.Date_:
+                                        case Control.Date_:
                                             // Export the  Date_ column as determined by the options
                                             if (DateTime.TryParse(row[dataLabelAndType.Key], out DateTime date))
                                             {
@@ -416,7 +411,7 @@ namespace Timelapse.Database
                                             }
 
                                             break;
-                                        case Constant.Control.Time_:
+                                        case Control.Time_:
                                             // Export the  Time_ column
                                             rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(row[dataLabelAndType.Key], includeComma));
                                             includeComma = true;
@@ -463,7 +458,7 @@ namespace Timelapse.Database
             Progress<ProgressBarArguments> progressHandler = new Progress<ProgressBarArguments>(value =>
             {
                 // Update the progress bar
-                CsvReaderWriter.UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+                UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
             });
             IProgress<ProgressBarArguments> progress = progressHandler;
 
@@ -523,7 +518,7 @@ namespace Timelapse.Database
                 {
                     // For every row...
                     nextRowIndex++;
-                    string currentPath = Path.Combine(rowDict[Constant.DatabaseColumn.RelativePath], rowDict[Constant.DatabaseColumn.File]); // the path of the current row 
+                    string currentPath = Path.Combine(rowDict[DatabaseColumn.RelativePath], rowDict[DatabaseColumn.File]); // the path of the current row 
 
                     #region Handle duplicates
                     // Duplicates are special cases, where we have to update each set of duplicates separately as a chunk.
@@ -572,8 +567,8 @@ namespace Timelapse.Database
                         // If it is a duplicate, add it to the list.
                         Dictionary<string, string> nextRow = sortedRowDictionaryList[nextRowIndex];
                         string examinedPath =
-                            Path.Combine(nextRow[Constant.DatabaseColumn.RelativePath],
-                                nextRow[Constant.DatabaseColumn.File]); // the path of a surrounding row currently being examined to see if its a duplicate
+                            Path.Combine(nextRow[DatabaseColumn.RelativePath],
+                                nextRow[DatabaseColumn.File]); // the path of a surrounding row currently being examined to see if its a duplicate
                         if (examinedPath == currentPath)
                         {
                             // Yup, its the beginning of a sequence.
@@ -613,8 +608,8 @@ namespace Timelapse.Database
                     {
                         string type;
                         // For every column ...
-                        if (header == Constant.ControlDeprecated.DateLabel || header == Constant.ControlDeprecated.TimeLabel || header == Constant.ControlDeprecated.Folder ||
-                            header == Constant.ControlDeprecated.ImageQuality || header == Constant.DatabaseColumn.RootFolder)
+                        if (header == ControlDeprecated.DateLabel || header == ControlDeprecated.TimeLabel || header == ControlDeprecated.Folder ||
+                            header == ControlDeprecated.ImageQuality || header == DatabaseColumn.RootFolder)
                         {
                             // We have to treat the deprecated headers (Date, Time, Folder, ImageQuality) differently as they won't be in the template.
                             // Similarly, RootFolder is a special case.It is not in the template, but generated on CSV export on the fly.
@@ -627,21 +622,21 @@ namespace Timelapse.Database
                         }
 
                         // process each column but only if its of the specific type
-                        if (Util.IsCondition.IsControlType_AnyNonRequired(type))
+                        if (IsCondition.IsControlType_AnyNonRequired(type))
                         {
-                            if (type == Constant.Control.DateTime_)
+                            if (type == Control.DateTime_)
                             {
                                 // Translate the various datetime formats into the database format
                                 string strDateTime = rowDict[header];
-                                if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime dateTimeCustom))
+                                if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime dateTimeCustom))
                                 {
                                     imageToUpdate.Columns.Add(new ColumnTuple(header, dateTimeCustom));
                                 }
-                                else if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTimeCustom))
+                                else if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTimeCustom))
                                 {
                                     imageToUpdate.Columns.Add(new ColumnTuple(header, dateTimeCustom));
                                 }
-                                else if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out dateTimeCustom))
+                                else if (DateTime.TryParseExact(strDateTime, Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out dateTimeCustom))
                                 {
                                     imageToUpdate.Columns.Add(new ColumnTuple(header, dateTimeCustom));
                                 }
@@ -649,7 +644,7 @@ namespace Timelapse.Database
                                 else
                                 {
                                     // Shouldnt happen as error checking of date format was done before this.
-                                    imageToUpdate.Columns.Add(new ColumnTuple(header, Constant.ControlDefault.DateTimeCustomDefaultValue));
+                                    imageToUpdate.Columns.Add(new ColumnTuple(header, ControlDefault.DateTimeCustomDefaultValue));
                                 }
                             }
                             else
@@ -666,40 +661,40 @@ namespace Timelapse.Database
                             // DateTime:
                             // - yyyy-MM-ddTHH:mm:ss (includes T separator): 
                             // - yyyy-MM-dd HH:mm:ss (excludes T separator) 
-                            if (type == Constant.DatabaseColumn.DateTime)
+                            if (type == DatabaseColumn.DateTime)
                             {
                                 string strDateTime = rowDict[header];
-                                if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out dateTime))
+                                if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out dateTime))
                                 {
                                     // Standard DateTime
                                     // Debug.Print("Standard: " + dateTime.ToString());
                                 }
-                                else if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
+                                else if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
                                 {
                                     // Standard DateTime wit T separator
                                     // Debug.Print("StandardT: " + dateTime.ToString());
                                 }
                             }
-                            else if (type == Constant.ControlDeprecated.DateLabel)
+                            else if (type == ControlDeprecated.DateLabel)
                             {
                                 // Date only
                                 string strDateTime = rowDict[header];
-                                if (DateTime.TryParseExact(strDateTime, Constant.Time.DateDisplayFormats, provider, DateTimeStyles.None, out DateTime tempDateTime))
+                                if (DateTime.TryParseExact(strDateTime, Time.DateDisplayFormats, provider, DateTimeStyles.None, out DateTime tempDateTime))
                                 {
                                     datePortion = tempDateTime;
                                 }
                             }
-                            else if (type == Constant.ControlDeprecated.TimeLabel)
+                            else if (type == ControlDeprecated.TimeLabel)
                             {
                                 // Time only
                                 string strDateTime = rowDict[header];
-                                if (DateTime.TryParseExact(strDateTime, Constant.Time.TimeFormats, provider, DateTimeStyles.None, out DateTime tempDateTime))
+                                if (DateTime.TryParseExact(strDateTime, Time.TimeFormats, provider, DateTimeStyles.None, out DateTime tempDateTime))
                                 {
                                     //Debug.Print("Time only: " + tempDateTime.ToString());
                                     timePortion = tempDateTime;
                                 }
                             }
-                            else if (type == Constant.DatabaseColumn.RootFolder || type == Constant.ControlDeprecated.Folder || type == Constant.ControlDeprecated.ImageQuality)
+                            else if (type == DatabaseColumn.RootFolder || type == ControlDeprecated.Folder || type == ControlDeprecated.ImageQuality)
                             {
                                 // Skip the Folder, RootFolder and ImageQuality columns,
                                 // as Folder / RootFolder data should not be updated, and ImageQuality is deprecated and thus ignored.
@@ -722,7 +717,7 @@ namespace Timelapse.Database
                         }
 
                         // We should now have a valid dateTime. Add it to the database. 
-                        imageToUpdate.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.DateTime, dateTime));
+                        imageToUpdate.Columns.Add(new ColumnTuple(DatabaseColumn.DateTime, dateTime));
                         // Debug.Print("Wrote DateTime: " + dateTime.ToString());
                     }
                     else if (dateTime == DateTime.MinValue && datePortion == DateTime.MinValue)
@@ -748,13 +743,13 @@ namespace Timelapse.Database
                     // Add to the query only if there are columns to add!
                     if (imageToUpdate.Columns.Count > 0)
                     {
-                        if (rowDict.ContainsKey(Constant.DatabaseColumn.RelativePath) && !string.IsNullOrWhiteSpace(rowDict[Constant.DatabaseColumn.RelativePath]))
+                        if (rowDict.ContainsKey(DatabaseColumn.RelativePath) && !string.IsNullOrWhiteSpace(rowDict[DatabaseColumn.RelativePath]))
                         {
-                            imageToUpdate.SetWhere(rowDict[Constant.DatabaseColumn.RelativePath], rowDict[Constant.DatabaseColumn.File]);
+                            imageToUpdate.SetWhere(rowDict[DatabaseColumn.RelativePath], rowDict[DatabaseColumn.File]);
                         }
                         else
                         {
-                            imageToUpdate.SetWhere(rowDict[Constant.DatabaseColumn.File]);
+                            imageToUpdate.SetWhere(rowDict[DatabaseColumn.File]);
                         }
 
                         imagesToUpdate.Add(imageToUpdate);
@@ -777,8 +772,8 @@ namespace Timelapse.Database
                 {
                     // Need to check IF THIS WORKS FOR files with no date-time fields!
                     importErrors.Add($"The Date/Time was not be updated for {dateTimeErrors} / {totalFilesProcessed} files. ");
-                    if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.DateTime) || (dataLabelsFromCSV.Contains(Constant.ControlDeprecated.DateLabel) &&
-                                                                                         dataLabelsFromCSV.Contains(Constant.ControlDeprecated.TimeLabel)))
+                    if (dataLabelsFromCSV.Contains(DatabaseColumn.DateTime) || (dataLabelsFromCSV.Contains(ControlDeprecated.DateLabel) &&
+                                                                                dataLabelsFromCSV.Contains(ControlDeprecated.TimeLabel)))
                     {
                         importErrors.Add("- some date / time values in the DateTime, Date or Time columns are in an unexpected format (see manual)");
                     }
@@ -805,29 +800,29 @@ namespace Timelapse.Database
             // Similarly, we add (and we will skip over)
             // - Folder and ImageQuality (both deprecated columns that could exist in CSV files pre v2.3)
             // - RootFolder (which isn't in the Template)
-            dataLabelsFromDB.Add(Constant.DatabaseColumn.RootFolder);
-            dataLabelsFromDB.Add(Constant.ControlDeprecated.DateLabel);
-            dataLabelsFromDB.Add(Constant.ControlDeprecated.TimeLabel);
-            dataLabelsFromDB.Add(Constant.ControlDeprecated.Folder);
-            dataLabelsFromDB.Add(Constant.ControlDeprecated.ImageQuality);
+            dataLabelsFromDB.Add(DatabaseColumn.RootFolder);
+            dataLabelsFromDB.Add(ControlDeprecated.DateLabel);
+            dataLabelsFromDB.Add(ControlDeprecated.TimeLabel);
+            dataLabelsFromDB.Add(ControlDeprecated.Folder);
+            dataLabelsFromDB.Add(ControlDeprecated.ImageQuality);
 
             List<string> dataLabelsInHeaderButNotFileDatabase = dataLabelsFromCSV.Except(dataLabelsFromDB).ToList();
 
             // Abort if the File and Relative Path columns are missing from the CSV file 
             // While the CSV data labels can be a subset of the DB data labels,
             // the File and Relative Path are a required CSV datalabel, as we can't match the DB data row without it.
-            if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.File) == false || dataLabelsFromCSV.Contains(Constant.DatabaseColumn.RelativePath) == false)
+            if (dataLabelsFromCSV.Contains(DatabaseColumn.File) == false || dataLabelsFromCSV.Contains(DatabaseColumn.RelativePath) == false)
             {
                 importErrors.Add("CSV columns necessary to locate your image or video files are missing: ");
-                if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.File) == false)
+                if (dataLabelsFromCSV.Contains(DatabaseColumn.File) == false)
                 {
-                    importErrors.Add($"- the '{Constant.DatabaseColumn.File}' column.");
+                    importErrors.Add($"- the '{DatabaseColumn.File}' column.");
                 }
 
-                if (dataLabelsFromCSV.Contains(Constant.DatabaseColumn.RelativePath) == false)
+                if (dataLabelsFromCSV.Contains(DatabaseColumn.RelativePath) == false)
                 {
                     importErrors.Add(
-                        $"- the '{Constant.DatabaseColumn.RelativePath}' column (You still need it even if your files are all in your root folder).");
+                        $"- the '{DatabaseColumn.RelativePath}' column (You still need it even if your files are all in your root folder).");
                 }
 
                 abort = true;
@@ -881,12 +876,12 @@ namespace Timelapse.Database
                 // For every column
                 foreach (string csvHeader in dataLabelsFromCSV)
                 {
-                    if (csvHeader == Constant.ControlDeprecated.DateLabel
-                        || csvHeader == Constant.ControlDeprecated.TimeLabel
-                        || csvHeader == Constant.DatabaseColumn.DateTime
-                        || csvHeader == Constant.ControlDeprecated.Folder
-                        || csvHeader == Constant.DatabaseColumn.RootFolder
-                        || csvHeader == Constant.ControlDeprecated.ImageQuality)
+                    if (csvHeader == ControlDeprecated.DateLabel
+                        || csvHeader == ControlDeprecated.TimeLabel
+                        || csvHeader == DatabaseColumn.DateTime
+                        || csvHeader == ControlDeprecated.Folder
+                        || csvHeader == DatabaseColumn.RootFolder
+                        || csvHeader == ControlDeprecated.ImageQuality)
                     {
                         // Date/Time/DateTime checking is handled elsewhere, while Folder, RootFolder and ImageQuality are skipped
                         continue;
@@ -895,14 +890,14 @@ namespace Timelapse.Database
                     ControlRow controlRow = fileDatabase.GetControlFromControls(csvHeader);
                     string controlRowType = controlRow.Type;
                     CultureInfo provider = CultureInfo.InvariantCulture;
-                    if (Util.IsCondition.IsControlType_AnyNonRequired(controlRowType))
+                    if (IsCondition.IsControlType_AnyNonRequired(controlRowType))
                     {
                         string content = rowDict[csvHeader];
                         // Validate the data as needed for each of these columns in the row
                         switch (controlRowType)
                         {
-                            case Constant.Control.Flag:
-                            case Constant.DatabaseColumn.DeleteFlag:
+                            case Control.Flag:
+                            case DatabaseColumn.DeleteFlag:
                                 if (!Boolean.TryParse(content, out _))
                                 {
                                     // Flag values must be true or false, but its not. So raise an error
@@ -911,8 +906,8 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.Counter:
-                            case Constant.Control.IntegerAny:
+                            case Control.Counter:
+                            case Control.IntegerAny:
                                 if (!string.IsNullOrWhiteSpace(content) && !Int32.TryParse(content, out _))
                                 {
                                     // Counters must be integers / blanks 
@@ -921,7 +916,7 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.IntegerPositive:
+                            case Control.IntegerPositive:
                                 if (!string.IsNullOrWhiteSpace(content) && !(Int32.TryParse(content, out int parsedResult) && parsedResult >= 0))
                                 {
                                     // Counters must be positive integers / blanks 
@@ -932,7 +927,7 @@ namespace Timelapse.Database
 
                                 break;
 
-                            case Constant.Control.DecimalAny:
+                            case Control.DecimalAny:
                                 if (!string.IsNullOrWhiteSpace(content) && !Double.TryParse(content, out _))
                                 {
                                     // Counters must be decimals / blanks 
@@ -941,7 +936,7 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.DecimalPositive:
+                            case Control.DecimalPositive:
                                 if (!string.IsNullOrWhiteSpace(content) && !(Double.TryParse(content, out double parsedDoublePositiveResult) && parsedDoublePositiveResult >= 0))
                                 {
                                     // Counters must be positive integers / blanks 
@@ -952,9 +947,9 @@ namespace Timelapse.Database
 
                                 break;
 
-                            case Constant.Control.AlphaNumeric:
+                            case Control.AlphaNumeric:
                                 // Succeeds if its empty or only alphanumeric characters are present
-                                if (false == (string.IsNullOrWhiteSpace(content) || Util.IsCondition.IsAlphaNumeric(content)))
+                                if (false == (string.IsNullOrWhiteSpace(content) || IsCondition.IsAlphaNumeric(content)))
                                 {
                                     // Alphanumeric must be letters, numbers and/or -_ 
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must contain only letters, numbers, dashes and underscore, but is '{2}'",
@@ -963,7 +958,7 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.FixedChoice:
+                            case Control.FixedChoice:
                                 // We allow empty values, even though it may not be a list option
                                 if (false == string.IsNullOrWhiteSpace(content) && Choices.ChoicesFromJson(controlRow.List).Contains(content) == false)
                                 {
@@ -974,7 +969,7 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.MultiChoice:
+                            case Control.MultiChoice:
                                 // Only valid choices are permitted. Slso allow empty values.
                                 if (false == string.IsNullOrWhiteSpace(content))
                                 {
@@ -994,10 +989,10 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.DateTime_:
-                                if (false == DateTime.TryParseExact(content, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime _) &&
-                                    false == DateTime.TryParseExact(content, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out _) &&
-                                    false == DateTime.TryParseExact(content, Constant.Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out _))
+                            case Control.DateTime_:
+                                if (false == DateTime.TryParseExact(content, Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime _) &&
+                                    false == DateTime.TryParseExact(content, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out _) &&
+                                    false == DateTime.TryParseExact(content, Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out _))
                                 {
                                     // Multi Choices must be in the Choice List
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must be in one of the expected data formats, but '{2}' isn't.", csvHeader,
@@ -1006,9 +1001,9 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.Date_:
-                                if (false == DateTime.TryParseExact(content, Constant.Time.DateDisplayFormat, provider, DateTimeStyles.None, out DateTime _) &&
-                                    false == DateTime.TryParseExact(content, Constant.Time.DateDatabaseFormat, provider, DateTimeStyles.None, out DateTime _))
+                            case Control.Date_:
+                                if (false == DateTime.TryParseExact(content, Time.DateDisplayFormat, provider, DateTimeStyles.None, out DateTime _) &&
+                                    false == DateTime.TryParseExact(content, Time.DateDatabaseFormat, provider, DateTimeStyles.None, out DateTime _))
                                 {
                                     // Date must be in the display or databae format
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must be in one of the expected date formats, but '{2}' isn't.", csvHeader,
@@ -1017,8 +1012,8 @@ namespace Timelapse.Database
                                 }
 
                                 break;
-                            case Constant.Control.Time_:
-                                if (false == DateTime.TryParseExact(content, Constant.Time.TimeFormat, provider, DateTimeStyles.None, out DateTime _))
+                            case Control.Time_:
+                                if (false == DateTime.TryParseExact(content, Time.TimeFormat, provider, DateTimeStyles.None, out DateTime _))
                                 {
                                     // Date must be in the display or databae format
                                     importErrors.Add(String.Format("- error in row {1} as {0} values must be in the expected time format, but '{2}' isn't.", csvHeader, rowNumber,
@@ -1094,16 +1089,16 @@ namespace Timelapse.Database
                 ColumnTuplesWithWhere imageToUpdate = new ColumnTuplesWithWhere();
                 foreach (string header in rowDict.Keys)
                 {
-                    if (header == Constant.DatabaseColumn.RootFolder || header == Constant.ControlDeprecated.Folder || header == Constant.ControlDeprecated.ImageQuality)
+                    if (header == DatabaseColumn.RootFolder || header == ControlDeprecated.Folder || header == ControlDeprecated.ImageQuality)
                     {
                         // Skip the Folder, RootFolder and ImageQuality columns,
                         // Folder / RootFolderdata should not be updated, and ImageQuality is deprecated and thus ignored.
                         continue;
                     }
 
-                    if (header == Constant.ControlDeprecated.DateLabel
-                        || header == Constant.ControlDeprecated.TimeLabel
-                        || header == Constant.DatabaseColumn.DateTime)
+                    if (header == ControlDeprecated.DateLabel
+                        || header == ControlDeprecated.TimeLabel
+                        || header == DatabaseColumn.DateTime)
                     {
                         //NEW
                         // check if its a date/ time / DateTime control and handle that as these are special cases
@@ -1112,34 +1107,34 @@ namespace Timelapse.Database
                         // DateTime:
                         // - yyyy-MM-ddTHH:mm:ss (includes T separator): 
                         // - yyyy-MM-dd HH:mm:ss (excludes T separator) 
-                        if (header == Constant.DatabaseColumn.DateTime)
+                        if (header == DatabaseColumn.DateTime)
                         {
                             string strDateTime = rowDict[header];
-                            if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out dateTime))
+                            if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out dateTime))
                             {
                                 // Standard DateTime
                                 // Debug.Print("Standard: " + dateTime.ToString());
                             }
-                            else if (DateTime.TryParseExact(strDateTime, Constant.Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
+                            else if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
                             {
                                 // Standard DateTime wit T separator
                                 // Debug.Print("StandardT: " + dateTime.ToString());
                             }
                         }
-                        else if (header == Constant.ControlDeprecated.DateLabel)
+                        else if (header == ControlDeprecated.DateLabel)
                         {
                             // Date only
                             string strDateTime = rowDict[header];
-                            if (DateTime.TryParseExact(strDateTime, Constant.Time.DateDisplayFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
+                            if (DateTime.TryParseExact(strDateTime, Time.DateDisplayFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
                             {
                                 datePortion = tempDateTime;
                             }
                         }
-                        else if (header == Constant.ControlDeprecated.TimeLabel)
+                        else if (header == ControlDeprecated.TimeLabel)
                         {
                             // Time only
                             string strDateTime = rowDict[header];
-                            if (DateTime.TryParseExact(strDateTime, Constant.Time.TimeFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
+                            if (DateTime.TryParseExact(strDateTime, Time.TimeFormat, provider, DateTimeStyles.None, out DateTime tempDateTime))
                             {
                                 //Debug.Print("Time only: " + tempDateTime.ToString());
                                 timePortion = tempDateTime;
@@ -1151,15 +1146,15 @@ namespace Timelapse.Database
                     ControlRow controlRow = fileDatabase.GetControlFromControls(header);
                     // process each column but only if its of the specific type
                     if (controlRow != null &&
-                        (controlRow.Type == Constant.Control.Flag ||
-                         controlRow.Type != Constant.DatabaseColumn.DeleteFlag ||
-                         controlRow.Type == Constant.Control.Counter ||
-                         controlRow.Type == Constant.Control.IntegerAny ||
-                         controlRow.Type == Constant.Control.IntegerPositive ||
-                         controlRow.Type == Constant.Control.DecimalAny ||
-                         controlRow.Type == Constant.Control.DecimalPositive ||
-                         controlRow.Type == Constant.Control.FixedChoice ||
-                         controlRow.Type == Constant.Control.MultiLine
+                        (controlRow.Type == Control.Flag ||
+                         controlRow.Type != DatabaseColumn.DeleteFlag ||
+                         controlRow.Type == Control.Counter ||
+                         controlRow.Type == Control.IntegerAny ||
+                         controlRow.Type == Control.IntegerPositive ||
+                         controlRow.Type == Control.DecimalAny ||
+                         controlRow.Type == Control.DecimalPositive ||
+                         controlRow.Type == Control.FixedChoice ||
+                         controlRow.Type == Control.MultiLine
                         ))
                     {
                         imageToUpdate.Columns.Add(new ColumnTuple(header, rowDict[header]));
@@ -1177,7 +1172,7 @@ namespace Timelapse.Database
                     }
 
                     // We should now have a valid dateTime. Add it to the database. 
-                    imageToUpdate.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.DateTime, dateTime));
+                    imageToUpdate.Columns.Add(new ColumnTuple(DatabaseColumn.DateTime, dateTime));
                     // Debug.Print("Wrote DateTime: " + dateTime.ToString());
                 }
 

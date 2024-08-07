@@ -4,11 +4,14 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Resources;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using File = System.IO.File;
 
 namespace Timelapse.Util
 {
@@ -35,10 +38,8 @@ namespace Timelapse.Util
                 }
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public static bool TryMoveFileIfExists(string sourceFilePath, string destinationFilePath)
@@ -56,10 +57,8 @@ namespace Timelapse.Util
                 }
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public static MoveFolderResultEnum TryMoveFolderIfExists(string sourceFolderPath, string destinationFolderPath)
@@ -81,11 +80,9 @@ namespace Timelapse.Util
                     }
                     return MoveFolderResultEnum.Success;
                 }
-                else
-                {
-                    TracePrint.PrintMessage($"Move not done: the source folder '{sourceFolderPath} does not exists.");
-                    return MoveFolderResultEnum.FailAsSourceFolderDoesNotExist;
-                }
+
+                TracePrint.PrintMessage($"Move not done: the source folder '{sourceFolderPath} does not exists.");
+                return MoveFolderResultEnum.FailAsSourceFolderDoesNotExist;
             }
             catch (Exception exception)
             {
@@ -146,11 +143,11 @@ namespace Timelapse.Util
             // Test: Check for invalid file locations
             // Disallowed are Drive letter roots and System/Hidden folders
             string extension = Path.GetExtension(filePath);
-            if (FilesFolders.IsFolderPathADriveLetter(Path.GetDirectoryName(filePath)))
+            if (IsFolderPathADriveLetter(Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInRootDriveFolder;
             }
-            if (FilesFolders.IsFolderSystemOrHidden(Path.GetDirectoryName(filePath)))
+            if (IsFolderSystemOrHidden(Path.GetDirectoryName(filePath)))
             {
                 return DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder;
             }
@@ -168,17 +165,17 @@ namespace Timelapse.Util
             {
                 // Template tests for .tdb files
                 // Template Test: at least one row exists with the type file (to ensure its not an empty table)
-                if (0 == db.ScalarGetCountFromSelect(Sql.SelectCountStarFrom + Constant.DBTables.Template + Sql.Where + Sql.TypeEquals + Sql.Quote(Constant.DatabaseColumn.File)))
+                if (0 == db.ScalarGetCountFromSelect(Sql.SelectCountStarFrom + DBTables.Template + Sql.Where + Sql.TypeEquals + Sql.Quote(DatabaseColumn.File)))
                 {
                     return DatabaseFileErrorsEnum.InvalidDatabase;
                 }
 
                 // Template Test: TemplateInfo exists (and from prior tests at least one row with the type file)
-                if (db.TableExists(Constant.DBTables.TemplateInfo))
+                if (db.TableExists(DBTables.TemplateInfo))
                 {
                     // Check if its a template that was opened with a pre2.3 version of Timelapse, which would re-insert the UTCOffset type...
                     // If so, this would have to be fixed.
-                    string typeQuery = Sql.Select + Constant.Control.Type + Sql.From + Constant.DBTables.Template + Sql.Where + Constant.Control.Type + Sql.Equal + Sql.Quote(Constant.ControlDeprecated.UtcOffsetLabel);
+                    string typeQuery = Sql.Select + Control.Type + Sql.From + DBTables.Template + Sql.Where + Control.Type + Sql.Equal + Sql.Quote(ControlDeprecated.UtcOffsetLabel);
                     DataTable table = db.GetDataTableFromSelect(typeQuery);
                     if (table.Rows.Count > 0)
                     {
@@ -190,7 +187,7 @@ namespace Timelapse.Util
                 }
 
                 // Test: Template exists (only) (and from prior tests no TemplateIno)
-                if (db.TableExists(Constant.DBTables.Template))
+                if (db.TableExists(DBTables.Template))
                 {
                     // High probability that its a good db, but pre version 2.3.0.0 as the TemplateInfo table does not exist
                     return DatabaseFileErrorsEnum.PreVersion2300;
@@ -200,27 +197,27 @@ namespace Timelapse.Util
             {
                 // Test Data .ddb file 
                 // Data Test: basic test to make sure it seems to be a valid ddb
-                if (false == db.TableExists(Constant.DBTables.FileData))
+                if (false == db.TableExists(DBTables.FileData))
                 {
                     return DatabaseFileErrorsEnum.InvalidDatabase;
                 }
 
                 // Test: if its missing the VersionCompatability column, its pre 2.3.0.0
-                if (false == db.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.VersionCompatabily))
+                if (false == db.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.VersionCompatabily))
                 {
                     return DatabaseFileErrorsEnum.PreVersion2300;
                 }
 
                 // Test: Get the versionCompatability value and test if its 2.3.0.0 or later
-                string versionQuery = Sql.Select + Constant.DatabaseColumn.VersionCompatabily + Sql.From + Constant.DBTables.ImageSet + Sql.Where + Constant.DatabaseColumn.ID + Sql.Equal + Sql.Quote(Constant.DatabaseValues.ImageSetRowID.ToString());
+                string versionQuery = Sql.Select + DatabaseColumn.VersionCompatabily + Sql.From + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + Sql.Equal + Sql.Quote(DatabaseValues.ImageSetRowID.ToString());
                 DataTable table = db.GetDataTableFromSelect(versionQuery);
                 if (table.Rows.Count > 0)
                 {
-                    string thisVersion = (string)table.Rows[0][Constant.DatabaseColumn.VersionCompatabily];
-                    if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(thisVersion, Constant.DatabaseValues.VersionNumberMinimum))
+                    string thisVersion = (string)table.Rows[0][DatabaseColumn.VersionCompatabily];
+                    if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(thisVersion, DatabaseValues.VersionNumberMinimum))
                     {
                         // But - Special case as UTCOffset column could be added if the DB was opened with a pre2.3 version of Timelapse.
-                        if (db.SchemaIsColumnInTable(Constant.DBTables.FileData, Constant.ControlDeprecated.UtcOffsetLabel))
+                        if (db.SchemaIsColumnInTable(DBTables.FileData, ControlDeprecated.UtcOffsetLabel))
                         {
                             return DatabaseFileErrorsEnum.PreVersion2300;
                         }
@@ -231,15 +228,11 @@ namespace Timelapse.Util
                         {
                             return DatabaseFileErrorsEnum.Ok;
                         }
-                        else
-                        {
-                            return DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
-                        }
+
+                        return DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
                     }
-                    else
-                    {
-                        return DatabaseFileErrorsEnum.PreVersion2300;
-                    }
+
+                    return DatabaseFileErrorsEnum.PreVersion2300;
                 }
             }
 
@@ -386,7 +379,7 @@ namespace Timelapse.Util
         public static async Task<List<string>> AsyncGetAllFoldersExceptBackupAndDeletedFolders(string rootFolderPath, string rootFolderPrefix)
         {
             // Get all the physcial folders under the root folder (excepting backups and deleted folders)
-            return await Task.Run(() => FilesFolders.GetAllFoldersExceptBackupAndDeletedFolders(rootFolderPath, new List<string>(), rootFolderPrefix));
+            return await Task.Run(() => GetAllFoldersExceptBackupAndDeletedFolders(rootFolderPath, new List<string>(), rootFolderPrefix));
         }
 
         /// <summary>
@@ -464,7 +457,7 @@ namespace Timelapse.Util
                 return null;
             }
             List<string> allFolderPaths = new List<string>();
-            Util.FilesFolders.GetAllFoldersContainingAnImageOrVideo(rootPath, allFolderPaths, rootPath);
+            GetAllFoldersContainingAnImageOrVideo(rootPath, allFolderPaths, rootPath);
             Dictionary<string, List<string>> matchingFolders = new Dictionary<string, List<string>>();
             foreach (string missingFolderPath in missingFolderPaths)
             {
@@ -491,7 +484,7 @@ namespace Timelapse.Util
             }
 
             List<string> allFolderPaths = new List<string>();
-            Util.FilesFolders.GetAllFoldersContainingAnImageOrVideo(rootPath, allFolderPaths, rootPath);
+            GetAllFoldersContainingAnImageOrVideo(rootPath, allFolderPaths, rootPath);
             Dictionary<string, List<string>> matchingFolders = new Dictionary<string, List<string>>();
             foreach (string missingFolderPath in missingFolderPaths)
             {
@@ -725,7 +718,7 @@ namespace Timelapse.Util
                 return false;
             }
 
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
+            foreach (string extension in new List<string> { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 List<FileInfo> fileInfoList = new List<FileInfo>();
                 try
@@ -803,8 +796,8 @@ namespace Timelapse.Util
         {
             try
             {
-                StreamResourceInfo standard = System.Windows.Application.GetResourceStream(new Uri(resourcePackPath));
-                using (Stream file = System.IO.File.Create(filePath))
+                StreamResourceInfo standard = Application.GetResourceStream(new Uri(resourcePackPath));
+                using (Stream file = File.Create(filePath))
                 {
                     if (standard?.Stream == null)
                     {
@@ -879,7 +872,7 @@ namespace Timelapse.Util
             {
                 return;
             }
-            foreach (string extension in new List<string>() { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
+            foreach (string extension in new List<string> { Constant.File.JpgFileExtension, Constant.File.AviFileExtension, Constant.File.Mp4FileExtension, Constant.File.ASFFileExtension, Constant.File.MovFileExtension })
             {
                 // GetFiles has a 'bug', where it can match an extension even if there are more letters after the extension. 
                 // That is, if we are looking for *.jpg, it will not only return *.jpg files, but files such as *.jpgXXX
@@ -914,8 +907,8 @@ namespace Timelapse.Util
             {
                 // Skip the following folders
                 if (subDir.Name == Constant.File.BackupFolder || subDir.Name == Constant.File.DeletedFilesFolder
-                    || subDir.Name == Constant.File.VideoThumbnailFolderName
-                    || subDir.Name == Constant.File.NetworkRecycleBin)
+                                                              || subDir.Name == Constant.File.VideoThumbnailFolderName
+                                                              || subDir.Name == Constant.File.NetworkRecycleBin)
                 {
                     continue;
                 }

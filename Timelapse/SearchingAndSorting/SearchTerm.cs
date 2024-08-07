@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.SearchingAndSorting
@@ -22,13 +23,13 @@ namespace Timelapse.SearchingAndSorting
         #region Constructors
         public SearchTerm()
         {
-            this.ControlType = string.Empty;
-            this.DatabaseValue = string.Empty;
-            this.DataLabel = string.Empty;
-            this.Label = string.Empty;
-            this.List = null;
-            this.Operator = string.Empty;
-            this.UseForSearching = false;
+            ControlType = string.Empty;
+            DatabaseValue = string.Empty;
+            DataLabel = string.Empty;
+            Label = string.Empty;
+            List = null;
+            Operator = string.Empty;
+            UseForSearching = false;
         }
 
         public SearchTerm(SearchTerm other)
@@ -36,27 +37,27 @@ namespace Timelapse.SearchingAndSorting
             // Check the arguments for null 
             ThrowIf.IsNullArgument(other, nameof(other));
 
-            this.ControlType = other.ControlType;
-            this.DatabaseValue = other.DatabaseValue;
-            this.DataLabel = other.DataLabel;
-            this.Label = other.Label;
-            this.List = other.List == null 
+            ControlType = other.ControlType;
+            DatabaseValue = other.DatabaseValue;
+            DataLabel = other.DataLabel;
+            Label = other.Label;
+            List = other.List == null 
                 ? null 
                 : new List<string>(other.List);
-            this.Operator = other.Operator;
-            this.UseForSearching = other.UseForSearching;
+            Operator = other.Operator;
+            UseForSearching = other.UseForSearching;
         }
         #endregion
 
         #region Public Methods - Get values to Convert DateTime / UTCOffset
         public DateTime GetDateTime()
         {
-            if (this.DataLabel != Constant.DatabaseColumn.DateTime)
+            if (DataLabel != DatabaseColumn.DateTime)
             {
                 throw new NotSupportedException(
-                    $"Attempt to retrieve date/time from a SearchTerm with data label {this.DataLabel}.");
+                    $"Attempt to retrieve date/time from a SearchTerm with data label {DataLabel}.");
             }
-            return DateTimeHandler.TryParseDatabaseDateTime(this.DatabaseValue, out DateTime dateTime)
+            return DateTimeHandler.TryParseDatabaseDateTime(DatabaseValue, out DateTime dateTime)
                 ? dateTime
                 : DateTime.MinValue;
         }
@@ -65,12 +66,12 @@ namespace Timelapse.SearchingAndSorting
         #region Public Methods - Set Values - to Convert DateTime / UTCOffset
         public void SetDatabaseValue(DateTime dateTime)
         {
-            if (this.DataLabel != Constant.DatabaseColumn.DateTime)
+            if (DataLabel != DatabaseColumn.DateTime)
             {
                 throw new NotSupportedException(
-                    $"Attempt to retrieve date/time from a SearchTerm with data label {this.DataLabel}.");
+                    $"Attempt to retrieve date/time from a SearchTerm with data label {DataLabel}.");
             }
-            this.DatabaseValue = DateTimeHandler.ToStringDatabaseDateTime(dateTime);
+            DatabaseValue = DateTimeHandler.ToStringDatabaseDateTime(dateTime);
         }
 
         // Return a cloned copy of the provided search term
@@ -78,13 +79,13 @@ namespace Timelapse.SearchingAndSorting
         {
             return new SearchTerm
             {
-                ControlType = this.ControlType,
-                DatabaseValue = this.DatabaseValue,
-                DataLabel = this.DataLabel,
-                Label = this.Label,
-                List = new List<string>(this.List),
-                Operator = this.Operator,
-                UseForSearching = this.UseForSearching
+                ControlType = ControlType,
+                DatabaseValue = DatabaseValue,
+                DataLabel = DataLabel,
+                Label = Label,
+                List = new List<string>(List),
+                Operator = Operator,
+                UseForSearching = UseForSearching
             };
         }
         #endregion

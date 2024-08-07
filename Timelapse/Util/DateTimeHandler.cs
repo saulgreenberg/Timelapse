@@ -1,11 +1,12 @@
-﻿using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using MetadataExtractor.Formats.Exif.Makernotes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.Exif.Makernotes;
+using Timelapse.Constant;
 using MetadataDirectory = MetadataExtractor.Directory;
 namespace Timelapse.Util
 {
@@ -22,7 +23,7 @@ namespace Timelapse.Util
         public static bool TryParseDatabaseDateTime(string dateTimeAsString, out DateTime dateTime)
         {
             // Parse from yyyy-MM-dd HH:mm:ss | 2021-04-05 18:05:01
-            if (false == DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateTimeDatabaseFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeDatabaseFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -33,7 +34,7 @@ namespace Timelapse.Util
         public static bool TryParseDatabaseDate(string dateAsString, out DateTime dateTime)
         {
             // Parse from yyyy-MM-dd | 2021-04-05
-            if (false == DateTime.TryParseExact(dateAsString, Constant.Time.DateDatabaseFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(dateAsString, Time.DateDatabaseFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -44,7 +45,7 @@ namespace Timelapse.Util
         public static bool TryParseDatabaseTime(string timeAsString, out DateTime dateTime)
         {
             // Parse from HH:mm:ss | 18:05:01
-            if (false == DateTime.TryParseExact(timeAsString, Constant.Time.TimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(timeAsString, Time.TimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -55,7 +56,7 @@ namespace Timelapse.Util
         public static bool TryParseDisplayDateTime(string dateTimeAsString, out DateTime dateTime)
         {
             // Parse from dd-MMM-yyyy HH:mm:ss | 05-Apr-2021 18:05:01
-            if (false == DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateTimeDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -69,21 +70,19 @@ namespace Timelapse.Util
         // ReSharper disable once UnusedMember.Global
         public static bool TryParseDisplayDate(string dateTimeAsString, out DateTime dateTime)
         {
-            if (DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (DateTime.TryParseExact(dateTimeAsString, Time.DateDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 return true;
             }
-            else
-            {
-                dateTime = DateTime.MinValue;
-                return false;
-            }
+
+            dateTime = DateTime.MinValue;
+            return false;
         }
 
         public static bool TryParseDateTimeDatabaseAndDisplayFormats(string dateTimeAsString, out DateTime dateTime)
         {
             // Various possible (complete) date/time formats
-            if (false == DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateTimeDatabaseAndDisplayFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeDatabaseAndDisplayFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -94,7 +93,7 @@ namespace Timelapse.Util
         public static bool TryParseDateDatabaseAndDisplayFormats(string dateTimeAsString, out DateTime dateTime)
         {
             // Various possible (complete) date/time formats
-            if (false == DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateDatabaseAndDisplayFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateDatabaseAndDisplayFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -105,7 +104,7 @@ namespace Timelapse.Util
         public static bool TryParseMetadataDateTaken(string dateTimeAsString, out DateTime dateTime)
         {
             // Various possible (complete) date/time formats
-            if (false == DateTime.TryParseExact(dateTimeAsString, Constant.Time.DateTimeMetadataFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeMetadataFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -118,35 +117,35 @@ namespace Timelapse.Util
 
         public static string DateTimeDatabaseStringToDisplayString(string databaseString)
         {
-            return DateTimeHandler.TryParseDatabaseDateTime(databaseString, out DateTime dateTime)
+            return TryParseDatabaseDateTime(databaseString, out DateTime dateTime)
                 ? ToStringDisplayDateTime(dateTime)
                 : string.Empty;
         }
 
         public static string DateTimeDisplayStringToDataBaseString(string displayString)
         {
-            return DateTimeHandler.TryParseDisplayDateTime(displayString, out DateTime dateTime)
+            return TryParseDisplayDateTime(displayString, out DateTime dateTime)
                 ? ToStringDatabaseDateTime(dateTime)
                 : string.Empty;
         }
 
         public static string DateDisplayStringToDataBaseString(string displayString)
         {
-            return DateTimeHandler.TryParseDisplayDate(displayString, out DateTime dateTime)
+            return TryParseDisplayDate(displayString, out DateTime dateTime)
                 ? ToStringDatabaseDate(dateTime)
                 : string.Empty;
         }
 
         public static string DateDatabaseStringToDisplayString(string databaseString)
         {
-            return DateTimeHandler.TryParseDatabaseDate(databaseString, out DateTime dateTime)
+            return TryParseDatabaseDate(databaseString, out DateTime dateTime)
                 ? ToStringDisplayDatePortion(dateTime)
                 : string.Empty;
         }
 
         public static string TimeDatabaseStringToDisplayString(string databaseString)
         {
-            return DateTimeHandler.TryParseDatabaseTime(databaseString, out DateTime dateTime)
+            return TryParseDatabaseTime(databaseString, out DateTime dateTime)
                 ? ToStringTime(dateTime)
                 : string.Empty;
         }
@@ -159,42 +158,42 @@ namespace Timelapse.Util
         public static string ToStringDatabaseDateTime(DateTime dateTime)
         {
             // yyyy-MM-dd HH:mm:ss | 2021-04-05 18:05:01
-            return dateTime.ToString(Constant.Time.DateTimeDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            return dateTime.ToString(Time.DateTimeDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"));
         }
 
         public static string ToStringDatabaseDate(DateTime dateTime)
         {
             // yyyy-MM-dd | 2021-04-05
-            return dateTime.ToString(Constant.Time.DateDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            return dateTime.ToString(Time.DateDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"));
         }
 
         public static string ToStringDisplayDateTime(DateTime dateTime)
         {
             // dd-MMM-yyyy HH:mm:ss | 05-Apr-2021 18:05:01
-            return dateTime.ToString(Constant.Time.DateTimeDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            return dateTime.ToString(Time.DateTimeDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"));
         }
 
         public static string ToStringDisplayDatePortion(DateTime date)
         {
             // dd-MMM-yyyy | 05-Apr-2021
-            return date.ToString(Constant.Time.DateDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            return date.ToString(Time.DateDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"));
         }
         public static string ToStringTime(DateTime dateTime)
         {
             // HH:mm:ss | 18:05:01
-            return dateTime.ToString(Constant.Time.TimeFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            return dateTime.ToString(Time.TimeFormat, CultureInfo.CreateSpecificCulture("en-US"));
         }
 
         public static string ToStringCSVDateTimeWithTSeparator(DateTime dateTime)
         {
             //  yyyy-MM-dd'T'HH:mm:ss | 2021-04-05'T'18:05:01
-            return dateTime.ToString(Constant.Time.DateTimeCSVWithTSeparator, CultureInfo.CreateSpecificCulture("en-US"));
+            return dateTime.ToString(Time.DateTimeCSVWithTSeparator, CultureInfo.CreateSpecificCulture("en-US"));
         }
 
         public static string ToStringCSVDateTimeWithoutTSeparator(DateTime dateTime)
         {
             //  yyyy-MM-dd' 'HH:mm:ss' | 2021-04-05' '18:05:01
-            return dateTime.ToString(Constant.Time.DateTimeCSVWithoutTSeparator, CultureInfo.CreateSpecificCulture("en-US"));
+            return dateTime.ToString(Time.DateTimeCSVWithoutTSeparator, CultureInfo.CreateSpecificCulture("en-US"));
         }
         #endregion
 
@@ -251,7 +250,7 @@ namespace Timelapse.Util
         public static bool TrySwapDayMonth(DateTime imageDate, out DateTime swappedDate)
         {
             swappedDate = DateTime.MinValue;
-            if (imageDate.Day > Constant.Time.MonthsInYear)
+            if (imageDate.Day > Time.MonthsInYear)
             {
                 return false;
             }

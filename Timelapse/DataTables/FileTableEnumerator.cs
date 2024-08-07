@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Timelapse.Constant;
 using Timelapse.Database;
 
 namespace Timelapse.DataTables
@@ -15,29 +16,29 @@ namespace Timelapse.DataTables
 
         public FileTableEnumerator(FileDatabase fileDatabase) //, int startingPosition)
         {
-            this.Database = fileDatabase;
+            Database = fileDatabase;
         }
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        object IEnumerator.Current => this.Current;
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Go to the next image, returning false if we can't (e.g., if we are at the end) 
         /// </summary>
         public bool MoveNext()
         {
-            return this.TryMoveToFile(this.CurrentRow + 1);
+            return TryMoveToFile(CurrentRow + 1);
         }
 
         public virtual void Reset()
         {
-            this.Current = null;
-            this.CurrentRow = Constant.DatabaseValues.InvalidRow;
+            Current = null;
+            CurrentRow = DatabaseValues.InvalidRow;
         }
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace Timelapse.DataTables
         /// </summary>
         public bool MovePrevious()
         {
-            return this.TryMoveToFile(this.CurrentRow - 1);
+            return TryMoveToFile(CurrentRow - 1);
         }
 
         /// <summary>
@@ -54,11 +55,11 @@ namespace Timelapse.DataTables
         /// </summary>
         public virtual bool TryMoveToFile(int imageRowIndex)
         {
-            if (this.Database.IsFileRowInRange(imageRowIndex))
+            if (Database.IsFileRowInRange(imageRowIndex))
             {
-                this.CurrentRow = imageRowIndex;
+                CurrentRow = imageRowIndex;
                 // rebuild ImageProperties regardless of whether the row changed or not as this seek may be a refresh after a database change
-                this.Current = this.Database.FileTable[imageRowIndex];
+                Current = Database.FileTable[imageRowIndex];
                 return true;
             }
 

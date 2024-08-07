@@ -20,33 +20,33 @@ namespace Timelapse.Dialog
                 throw new ArgumentException("A title must be specified for the message box.", nameof(title));
             }
 
-            this.InitializeComponent();
-            this.Message.Title = title;
-            this.Owner = owner ?? throw new ArgumentNullException(nameof(owner));
-            this.Title = title;
+            InitializeComponent();
+            Message.Title = title;
+            Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            Title = title;
 
             switch (buttonType)
             {
                 case MessageBoxButton.OK:
-                    this.OkButton.IsCancel = true;
-                    this.CancelButton.IsCancel = false;
-                    this.CancelButton.IsEnabled = false;
-                    this.NoButton.IsEnabled = false;
+                    OkButton.IsCancel = true;
+                    CancelButton.IsCancel = false;
+                    CancelButton.IsEnabled = false;
+                    NoButton.IsEnabled = false;
                     break;
                 case MessageBoxButton.OKCancel:
-                    this.CancelButton.Visibility = Visibility.Visible;
+                    CancelButton.Visibility = Visibility.Visible;
                     break;
                 case MessageBoxButton.YesNo:
-                    this.OkButton.Content = "_Yes";
-                    this.CancelButton.Content = "_No";
-                    this.CancelButton.Visibility = Visibility.Visible;
+                    OkButton.Content = "_Yes";
+                    CancelButton.Content = "_No";
+                    CancelButton.Visibility = Visibility.Visible;
                     break;
                 case MessageBoxButton.YesNoCancel:
-                    this.OkButton.Content = "_Yes";
-                    this.NoButton.Content = "_No";
-                    this.NoButton.Visibility = Visibility.Visible;
-                    this.NoButton.IsEnabled = true;
-                    this.CancelButton.Visibility = Visibility.Visible;
+                    OkButton.Content = "_Yes";
+                    NoButton.Content = "_No";
+                    NoButton.Visibility = Visibility.Visible;
+                    NoButton.IsEnabled = true;
+                    CancelButton.Visibility = Visibility.Visible;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(buttonType), $"Unhandled button type {buttonType}.");
@@ -67,7 +67,7 @@ namespace Timelapse.Dialog
             {
                 // The RelativePathControl seems to be invoking this twice, which generates and error
                 // Not sure why, so that is why there is a try catch here.
-                this.DialogResult = true;
+                DialogResult = true;
             }
             catch
             {
@@ -77,7 +77,7 @@ namespace Timelapse.Dialog
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
 
         // Only if this is a Yes/No/Cancel dialog, then a 
@@ -85,7 +85,7 @@ namespace Timelapse.Dialog
         // - no returns false, with IsNoSelected true
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
             IsNoSelected = true;
         }
         #endregion

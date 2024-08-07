@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.Images
@@ -31,7 +33,7 @@ namespace Timelapse.Images
         #region Constructors
         public BoundingBox(float x1, float y1, float width, float height, float confidence, string detectionCategory, string detectionLabel, List<KeyValuePair<string, string>> classifications)
         {
-            this.SetValues(x1, y1, width, height, confidence, detectionCategory, detectionLabel, classifications);
+            SetValues(x1, y1, width, height, confidence, detectionCategory, detectionLabel, classifications);
         }
         public BoundingBox(string coordinates, float confidence, string detectionCategory, string detectionLabel, List<KeyValuePair<string, string>> classifications)
         {
@@ -41,8 +43,8 @@ namespace Timelapse.Images
 
             // Data should always be using decimal places, so use invariant culture.
             // float[] coords = Array.ConvertAll(coordinates.Split(','), float.Parse);  // This crashed before when the culture used a comma for the decimal
-            float[] coords = Array.ConvertAll(coordinates.Split(','), s => float.Parse(s, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture));
-            this.SetValues(coords[0], coords[1], coords[2], coords[3], confidence, detectionCategory, detectionLabel, classifications);
+            float[] coords = Array.ConvertAll(coordinates.Split(','), s => float.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture));
+            SetValues(coords[0], coords[1], coords[2], coords[3], confidence, detectionCategory, detectionLabel, classifications);
         }
         #endregion
 
@@ -57,12 +59,12 @@ namespace Timelapse.Images
         #region Private Utilities
         private void SetValues(float x1, float y1, float width, float height, float confidence, string detectionCategory, string detectionlabel, List<KeyValuePair<string, string>> classifications)
         {
-            this.Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Constant.Defaults.StandardColour);
-            this.Rectangle = new Rect(new Point(x1, y1), new Point(x1 + width, y1 + height));
-            this.Confidence = confidence;
-            this.DetectionCategory = detectionCategory;
-            this.DetectionLabel = detectionlabel;
-            this.Classifications = classifications;
+            Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Defaults.StandardColour);
+            Rectangle = new Rect(new Point(x1, y1), new Point(x1 + width, y1 + height));
+            Confidence = confidence;
+            DetectionCategory = detectionCategory;
+            DetectionLabel = detectionlabel;
+            Classifications = classifications;
         }
         #endregion
     }

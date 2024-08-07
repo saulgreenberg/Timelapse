@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using Timelapse.Constant;
 
 namespace Timelapse.Controls
 {
@@ -84,17 +85,17 @@ namespace Timelapse.Controls
         private static string SetSortAlterTextAsNeeded(string sortTerm, bool isAscending)
         {
             // Add an up or down arrow to indicate sorting direction
-            string specialCharacter = isAscending ? Constant.Unicode.UpArrow : Constant.Unicode.DownArrow;
+            string specialCharacter = isAscending ? Unicode.UpArrow : Unicode.DownArrow;
 
             switch (sortTerm)
             {
                 // Note that the string format Constants include the position to insert the special character.
-                case Constant.DatabaseColumn.ID:
-                    return String.Format(Constant.SortTermValues.IDStatusBarLabel, specialCharacter);
-                case Constant.DatabaseColumn.DateTime:
-                    return String.Format(Constant.SortTermValues.DateStatusBarLabel, specialCharacter);
-                case Constant.DatabaseColumn.File:
-                    return String.Format(Constant.SortTermValues.FileStatusBarLabel, specialCharacter);
+                case DatabaseColumn.ID:
+                    return String.Format(SortTermValues.IDStatusBarLabel, specialCharacter);
+                case DatabaseColumn.DateTime:
+                    return String.Format(SortTermValues.DateStatusBarLabel, specialCharacter);
+                case DatabaseColumn.File:
+                    return String.Format(SortTermValues.FileStatusBarLabel, specialCharacter);
                 default:
                     return $"{sortTerm}{specialCharacter}";
             }

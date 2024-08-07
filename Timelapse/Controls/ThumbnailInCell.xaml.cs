@@ -22,9 +22,9 @@ namespace Timelapse.Controls
         // ImageHeight is calculated from the width * the image's aspect ratio, but checks for nulls, etc. 
         // Note: while the image width should always be the cell width, the height depends on the aspect ratio
         public double ImageHeight =>
-            (this.Image == null || this.Image.Source == null || this.Image.Source.Width == 0)
+            (Image == null || Image.Source == null || Image.Source.Width == 0)
                 ? 0
-                : this.Image.Width * this.Image.Source.Height / this.Image.Source.Width;
+                : Image.Width * Image.Source.Height / Image.Source.Width;
 
         public int Row { get; set; }
         public int Column { get; set; }
@@ -41,12 +41,12 @@ namespace Timelapse.Controls
         // Bounding boxes for detection. Whenever one is set, it is redrawn
         public BoundingBoxes BoundingBoxes
         {
-            get => this.boundingBoxes;
+            get => boundingBoxes;
             set
             {
                 // update and render bounding boxes
-                this.boundingBoxes = value;
-                this.RefreshBoundingBoxes(true);
+                boundingBoxes = value;
+                RefreshBoundingBoxes(true);
             }
         }
 
@@ -54,28 +54,28 @@ namespace Timelapse.Controls
         private bool isSelected;
         public bool IsSelected
         {
-            get => this.isSelected;
+            get => isSelected;
             set
             {
-                this.isSelected = value;
+                isSelected = value;
                 // Show or hide the checkmark 
-                if (this.isSelected)
+                if (isSelected)
                 {
-                    this.Cell.Background = this.selectedBrush;
-                    this.SelectionTextBlock.Text = "\u2713"; // Checkmark in unicode
-                    this.SelectionTextBlock.Background.Opacity = 0.7;
+                    Cell.Background = selectedBrush;
+                    SelectionTextBlock.Text = "\u2713"; // Checkmark in unicode
+                    SelectionTextBlock.Background.Opacity = 0.7;
                 }
                 else
                 {
-                    this.Cell.Background = this.unselectedBrush;
-                    this.SelectionTextBlock.Text = "   ";
-                    this.SelectionTextBlock.Background.Opacity = 0.35;
+                    Cell.Background = unselectedBrush;
+                    SelectionTextBlock.Text = "   ";
+                    SelectionTextBlock.Background.Opacity = 0.35;
                 }
             }
         }
 
         // Path is the RelativePath/FileName of the image file
-        public string Path => (this.ImageRow == null) ? string.Empty : System.IO.Path.Combine(this.ImageRow.RelativePath, this.ImageRow.File);
+        public string Path => (ImageRow == null) ? string.Empty : System.IO.Path.Combine(ImageRow.RelativePath, ImageRow.File);
 
         public string RootFolder { get; set; }
         #endregion
@@ -92,16 +92,16 @@ namespace Timelapse.Controls
         #region Constructor: Width / height is the desired size of the image
         public ThumbnailInCell(double cellWidth, double cellHeight)
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
-            this.CellHeight = cellHeight;
-            this.CellWidth = cellWidth;
+            CellHeight = cellHeight;
+            CellWidth = cellWidth;
 
-            this.Image.Width = cellWidth;
-            this.Image.MinWidth = cellWidth;
-            this.Image.MaxWidth = cellWidth;
+            Image.Width = cellWidth;
+            Image.MinWidth = cellWidth;
+            Image.MaxWidth = cellWidth;
 
-            this.RootFolder = string.Empty;
+            RootFolder = string.Empty;
         }
 
         // I tried to create a clone so we can add duplicates, but its commented out for now as it doesn't seem to
@@ -129,12 +129,12 @@ namespace Timelapse.Controls
         private void ThumbnailInCell_Loaded(object sender, RoutedEventArgs e)
         {
             // Heuristic for setting font sizes
-            this.SetTextFontSize();
-            this.AdjustMargin();
-            if (this.ImageRow.IsVideo)
+            SetTextFontSize();
+            AdjustMargin();
+            if (ImageRow.IsVideo)
             {
-                this.InitializePlayButton();
-                this.PlayButton.Visibility = Visibility.Visible;
+                InitializePlayButton();
+                PlayButton.Visibility = Visibility.Visible;
             }
         }
         #endregion
@@ -144,19 +144,19 @@ namespace Timelapse.Controls
         public BitmapSource GetThumbnail(double cellWidth, double cellHeight)
         {
             BitmapSource bf;
-            if (this.ImageRow.IsVideo == false)
+            if (ImageRow.IsVideo == false)
             {
                 // Calculate scale factor to ensure that images of different aspect ratios completely fit in the cell
-                double desiredHeight = cellWidth / this.ImageRow.GetBitmapAspectRatioFromFile(this.RootFolder);
+                double desiredHeight = cellWidth / ImageRow.GetBitmapAspectRatioFromFile(RootFolder);
                 double scale = Math.Min(cellWidth / cellWidth, cellHeight / desiredHeight); // 1st term is ScaleWidth, 2nd term is ScaleHeight
                 double finalDesiredWidth = (cellWidth * scale - 8);  // Subtract another 2 pixels for the grid border (I think)
 
-                bf = this.ImageRow.LoadBitmap(this.RootFolder, Convert.ToInt32(finalDesiredWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
+                bf = ImageRow.LoadBitmap(RootFolder, Convert.ToInt32(finalDesiredWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
             }
             else
             {
                 // Get it from the video - for some reason the scale adjustment doesn't seem to be needed, not sure why.
-                bf = this.ImageRow.LoadBitmap(this.RootFolder, Convert.ToInt32(cellWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
+                bf = ImageRow.LoadBitmap(RootFolder, Convert.ToInt32(cellWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
             }
             return bf;
         }
@@ -165,8 +165,8 @@ namespace Timelapse.Controls
         {
             try
             {
-                this.Image.Source = bitmapSource;
-                this.IsBitmapSet = true;
+                Image.Source = bitmapSource;
+                IsBitmapSet = true;
             }
             catch // (Exception e)
             {
@@ -179,9 +179,9 @@ namespace Timelapse.Controls
         #region Episodes and Bounding Boxes and Duplicates
         public void RefreshBoundingBoxesDuplicatesAndEpisodeInfo(FileTable fileTable, int fileIndex)
         {
-            this.RefreshEpisodeInfo(fileTable, fileIndex);
-            this.RefreshBoundingBoxes(true);
-            this.RefreshDuplicateInfo(fileTable, fileIndex);
+            RefreshEpisodeInfo(fileTable, fileIndex);
+            RefreshBoundingBoxes(true);
+            RefreshDuplicateInfo(fileTable, fileIndex);
         }
 
         /// <summary>
@@ -190,28 +190,28 @@ namespace Timelapse.Controls
         /// 
         public void RefreshBoundingBoxes(bool visibility)
         {
-            if (visibility && this.Image?.Source != null)
+            if (visibility && Image?.Source != null)
             {
                 // Remove existing bounding boxes, if any. Then try to redraw them
                 // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
-                this.bboxCanvas.Children.Clear();
-                this.Cell.Children.Remove(this.bboxCanvas);
+                bboxCanvas.Children.Clear();
+                Cell.Children.Remove(bboxCanvas);
                 try
                 {
                     // Checking if this thread has access to the object.
-                    if (this.Dispatcher.CheckAccess())
+                    if (Dispatcher.CheckAccess())
                     {
                         // This sometimes fails (but not on my machine) with a System.InvalidOperationException: The calling thread cannot access this object because a different thread owns it. 
-                        this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.Image.Width,
-                            this.ImageHeight);
+                        BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width,
+                            ImageHeight);
                     }
                     else
                     {
-                        this.Dispatcher.Invoke(() =>
+                        Dispatcher.Invoke(() =>
                         {
                             TracePrint.PrintMessage("In RefreshBoundingBoxes: using the displatcher to avoid the 'calling thread cannot access this object' exception.");
-                            this.BoundingBoxes.DrawBoundingBoxesInCanvas(this.bboxCanvas, this.Image.Width,
-                                this.ImageHeight);
+                            BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width,
+                                ImageHeight);
                         });
                     }
                 }
@@ -220,13 +220,13 @@ namespace Timelapse.Controls
                     return;
                 }
 
-                this.Cell.Children.Add(this.bboxCanvas);
+                Cell.Children.Add(bboxCanvas);
             }
             else
             {
                 // There is no image visible, so remove the bounding boxes
-                this.bboxCanvas.Children.Clear();
-                this.Cell.Children.Remove(this.bboxCanvas);
+                bboxCanvas.Children.Clear();
+                Cell.Children.Remove(bboxCanvas);
             }
         }
 
@@ -237,11 +237,11 @@ namespace Timelapse.Controls
             {
                 return;
             }
-            double canvasHeight = this.CellHeight / 5;
-            double canvasWidth = this.CellWidth;
+            double canvasHeight = CellHeight / 5;
+            double canvasWidth = CellWidth;
             double ellipseDiameter = canvasHeight * .7;
             double ellipseRadius = ellipseDiameter / 2;
-            this.PlayButton.Height = canvasHeight;
+            PlayButton.Height = canvasHeight;
 
             Ellipse ellipse = new Ellipse
             {
@@ -270,8 +270,8 @@ namespace Timelapse.Controls
             };
             Canvas.SetLeft(triangle, canvasWidth / 2 - ellipseDiameter / 2);
 
-            this.PlayButton.Children.Add(ellipse);
-            this.PlayButton.Children.Add(triangle);
+            PlayButton.Children.Add(ellipse);
+            PlayButton.Children.Add(triangle);
         }
 
         // Get and display the episode text if various conditions are met
@@ -279,9 +279,9 @@ namespace Timelapse.Controls
         {
             if (Keyboard.IsKeyDown(Key.H))
             {
-                this.EpisodeTextBlock.Visibility = Visibility.Hidden;
-                this.FileNameTextBlock.Visibility = Visibility.Hidden;
-                this.TimeTextBlock.Visibility = Visibility.Hidden;
+                EpisodeTextBlock.Visibility = Visibility.Hidden;
+                FileNameTextBlock.Visibility = Visibility.Hidden;
+                TimeTextBlock.Visibility = Visibility.Hidden;
                 return;
             }
             if (Episodes.Episodes.ShowEpisodes)
@@ -298,24 +298,24 @@ namespace Timelapse.Controls
 
                 if (episode.Item1 == int.MaxValue)
                 {
-                    this.EpisodeTextBlock.Text = "\u221E";
+                    EpisodeTextBlock.Text = "\u221E";
                 }
                 else
                 {
-                    this.EpisodeTextBlock.Text = (episode.Item2 == 1) ? "Single" : $"{episode.Item1}/{episode.Item2}";
+                    EpisodeTextBlock.Text = (episode.Item2 == 1) ? "Single" : $"{episode.Item1}/{episode.Item2}";
                 }
-                this.EpisodeTextBlock.Foreground = (episode.Item1 == 1) ? Brushes.Red : Brushes.Black;
-                this.EpisodeTextBlock.FontWeight = (episode.Item1 == 1 && episode.Item2 != 1) ? FontWeights.Bold : FontWeights.Normal;
+                EpisodeTextBlock.Foreground = (episode.Item1 == 1) ? Brushes.Red : Brushes.Black;
+                EpisodeTextBlock.FontWeight = (episode.Item1 == 1 && episode.Item2 != 1) ? FontWeights.Bold : FontWeights.Normal;
 
                 // Filename without the extention and Time in HH: MM
                 // This was on request from a user, who needed to scan for the first/last image in a timelapse capture sequence
-                this.FileNameTextBlock.Text = System.IO.Path.GetFileNameWithoutExtension(this.ImageRow.File);
-                string timeInHHMM = this.ImageRow.DateTime.ToString("hh:mm");
-                this.TimeTextBlock.Text = " (" + timeInHHMM + ")";
+                FileNameTextBlock.Text = System.IO.Path.GetFileNameWithoutExtension(ImageRow.File);
+                string timeInHHMM = ImageRow.DateTime.ToString("hh:mm");
+                TimeTextBlock.Text = " (" + timeInHHMM + ")";
             }
-            this.EpisodeTextBlock.Visibility = Episodes.Episodes.ShowEpisodes ? Visibility.Visible : Visibility.Hidden;
-            this.FileNameTextBlock.Visibility = this.EpisodeTextBlock.Visibility;
-            this.TimeTextBlock.Visibility = this.EpisodeTextBlock.Visibility;
+            EpisodeTextBlock.Visibility = Episodes.Episodes.ShowEpisodes ? Visibility.Visible : Visibility.Hidden;
+            FileNameTextBlock.Visibility = EpisodeTextBlock.Visibility;
+            TimeTextBlock.Visibility = EpisodeTextBlock.Visibility;
         }
 
         // Get and display the episode text if various conditions are met
@@ -323,7 +323,7 @@ namespace Timelapse.Controls
         {
             if (Keyboard.IsKeyDown(Key.H))
             {
-                this.DuplicateIndicatorInOverview.Visibility = Visibility.Hidden;
+                DuplicateIndicatorInOverview.Visibility = Visibility.Hidden;
                 return;
             }
 
@@ -337,12 +337,12 @@ namespace Timelapse.Controls
             Point duplicateSequence = GlobalReferences.MainWindow.DuplicatesCheckIfDuplicateAndGetSequenceNumberIfAny(imageRow, fileIndex);
             if (duplicateSequence.Y > 1)
             {
-                this.DuplicateIndicatorInOverview.Visibility = Visibility.Visible;
-                this.DuplicateIndicatorInOverview.Text = $"Duplicate: {duplicateSequence.X}/{duplicateSequence.Y}";
+                DuplicateIndicatorInOverview.Visibility = Visibility.Visible;
+                DuplicateIndicatorInOverview.Text = $"Duplicate: {duplicateSequence.X}/{duplicateSequence.Y}";
             }
             else
             {
-                this.DuplicateIndicatorInOverview.Visibility = Visibility.Collapsed;
+                DuplicateIndicatorInOverview.Visibility = Visibility.Collapsed;
             }
         }
         #endregion
@@ -351,14 +351,14 @@ namespace Timelapse.Controls
         // Set the font size of the text for the info panel's children
         private void SetTextFontSize()
         {
-            int fontSize = this.CellHeight / 10 > 30 ? 30 : (int)this.CellHeight / 10;
-            this.SelectionTextBlock.FontSize = fontSize;
-            this.FileNameTextBlock.FontSize = fontSize;
-            this.TimeTextBlock.FontSize = fontSize;
-            this.EpisodeTextBlock.FontSize = fontSize;
+            int fontSize = CellHeight / 10 > 30 ? 30 : (int)CellHeight / 10;
+            SelectionTextBlock.FontSize = fontSize;
+            FileNameTextBlock.FontSize = fontSize;
+            TimeTextBlock.FontSize = fontSize;
+            EpisodeTextBlock.FontSize = fontSize;
 
             // This (more or less) fits in the available space 
-            this.DuplicateIndicatorInOverview.FontSize = fontSize / 2.5;
+            DuplicateIndicatorInOverview.FontSize = fontSize / 2.5;
         }
 
         // Most images have a black bar at its bottom and top. We want to align 
@@ -367,8 +367,8 @@ namespace Timelapse.Controls
         // Also, values are hard-coded vs. dynamic. Ok until we change the standard width or layout of the display space.
         private void AdjustMargin()
         {
-            int margin = (int)Math.Ceiling(this.CellHeight / 25) + 1;
-            this.InfoPanel.Margin = new Thickness(0, margin, margin, 0);
+            int margin = (int)Math.Ceiling(CellHeight / 25) + 1;
+            InfoPanel.Margin = new Thickness(0, margin, margin, 0);
         }
         #endregion
     }

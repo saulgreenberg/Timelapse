@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.IO;
-using Timelapse.Database;
-using Timelapse.Util;
-using System.Threading.Tasks;
-using System.Windows.Documents;
 using Timelapse.ControlsMetadata;
+using Timelapse.Database;
 using Timelapse.DataTables;
-using Timelapse.Extensions;
 using Timelapse.Dialog;
+using Timelapse.Extensions;
+using Timelapse.Util;
 
 // ReSharper disable EmptyGeneralCatchClause
 namespace Timelapse.Controls
@@ -30,7 +31,7 @@ namespace Timelapse.Controls
 
         private int metadataInfoRowCount;
         private string RootFolder => FileDatabase.FolderPath;
-        private DataTableBackedList<MetadataInfoRow> MetadataInfo => this.FileDatabase.MetadataInfo;
+        private DataTableBackedList<MetadataInfoRow> MetadataInfo => FileDatabase.MetadataInfo;
         
         // A list of the relative paths contained by the Timelapse database, passed into the control.
         // As its in the database, each of these complete relative paths must be associated with one or more images. 
@@ -61,7 +62,7 @@ namespace Timelapse.Controls
         // Needs to be invoked externally, usually immediately after the control is created. However, it can be re-invoked 
         // any time, which is usually used for testing purposes (e.g., to see if the changes to the treeview mirror the changes in the database)
         public async Task<bool> AsyncInitialize(MetadataFolderComplianceViewer owner, FileDatabase fileDatabase, List<string> addedRelativePathList,
-            System.IProgress<ProgressBarArguments> progressHandler, System.Threading.CancellationTokenSource cancelTokenSource)
+            IProgress<ProgressBarArguments> progressHandler, CancellationTokenSource cancelTokenSource)
         {
             if (addedRelativePathList.Count == 0 && null == fileDatabase)
             {
@@ -71,22 +72,22 @@ namespace Timelapse.Controls
                 return false;
             }
 
-            this.FileDatabase = fileDatabase;
-            this.ParentDialogWindow = owner;
+            FileDatabase = fileDatabase;
+            ParentDialogWindow = owner;
 
-            this.metadataInfoRowCount = this.MetadataInfo.RowCount;
+            metadataInfoRowCount = MetadataInfo.RowCount;
 
             // Start: Wrap long operations to show progress: 
             // Get the relative paths from the database
             if (addedRelativePathList.Count == 0)
             {
-                this.RelativePaths = await BusyCancelIndicator.ProgressWrapper(this.FileDatabase.AsyncGetRelativePaths, progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
+                RelativePaths = await BusyCancelIndicator.ProgressWrapper(FileDatabase.AsyncGetRelativePaths, progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
             }
             else
             {
-                this.RelativePaths = addedRelativePathList;
+                RelativePaths = addedRelativePathList;
             }
-            if (this.RelativePaths == null)
+            if (RelativePaths == null)
             {
                 return false;
             }
@@ -100,9 +101,9 @@ namespace Timelapse.Controls
 
             // Build the initial relative path list from the relative paths
             // Because they are in the database, these RelativePaths indicate that Timelapse associates that path with images, so containsImages will be true.
-            foreach (string path in this.RelativePaths)
+            foreach (string path in RelativePaths)
             {
-                this.MyPathList.Items.Add(new PathItem(path, true));
+                MyPathList.Items.Add(new PathItem(path, true));
             }
 
             // Now build addition paths based on the parent subfolders found in each relativePath.
@@ -110,10 +111,10 @@ namespace Timelapse.Controls
             // For example, if a/b/c is in the database, we know that a/b/c has images. However, unless they are also represented
             // by a RelativePath, we also need to  add a and a/b in the path list. 
             PathList pathListKnownToTimelapse = new PathList();
-            foreach (PathItem item in this.MyPathList.Items)
+            foreach (PathItem item in MyPathList.Items)
             {
                 pathListKnownToTimelapse.Items.Add(item);
-                string parent = this.GetParent(item.Path);
+                string parent = GetParent(item.Path);
                 while (parent != string.Empty)
                 {
                     if (false == pathListKnownToTimelapse.Items.Any(s =>
@@ -121,13 +122,13 @@ namespace Timelapse.Controls
                     {
                         pathListKnownToTimelapse.Items.Add(new PathItem(parent, false));
                     }
-                    parent = this.GetParent(parent);
+                    parent = GetParent(parent);
                 }
             }
-            this.MyPathList.Items.AddRange(pathListKnownToTimelapse.Items);
+            MyPathList.Items.AddRange(pathListKnownToTimelapse.Items);
 
             // The above could create duplicate entries. So remove duplicate entries by path
-            this.MyPathList.Items = this.MyPathList.Items.GroupBy(x => x).Select(d => d.First()).ToList();
+            MyPathList.Items = MyPathList.Items.GroupBy(x => x).Select(d => d.First()).ToList();
 
             // At this point, we should have a pathlist that distinguishes :
             // - all relative paths and their component paths that are somehow covered in the Timelapse Database 
@@ -139,7 +140,7 @@ namespace Timelapse.Controls
             // Note that we set containsImages to false. While the physical folders may actually contain images, they are not known to Timelapse.
             foreach (string folder in physicalFolders)
             {
-                if (this.MyPathList.Items.Any(s => s.Path.Equals(folder, StringComparison.OrdinalIgnoreCase)))
+                if (MyPathList.Items.Any(s => s.Path.Equals(folder, StringComparison.OrdinalIgnoreCase)))
                 {
                     continue;
                 }
@@ -147,7 +148,7 @@ namespace Timelapse.Controls
             }
 
             // Finally, sort and rebuild the tree and node structure from these paths. 
-            this.RebuildTreeAndNodes(true);
+            RebuildTreeAndNodes(true);
             return true;
         }
         #endregion
@@ -164,18 +165,18 @@ namespace Timelapse.Controls
             if (sortTree)
             {
                 // Sort the tree if directed to do so
-                this.MyPathList.OrderInPlace();
+                MyPathList.OrderInPlace();
             }
 
             // Create the initial Root Folder node.
             // This node is a special case, where we independently have to check and set
             // - if the root folder exists(it should always exist)
             // - if it containsImages (indicated by an "" in the list) 
-            PathItem rootPathItem = this.MyPathList.Items.FirstOrDefault(s => string.IsNullOrWhiteSpace(s.Path));
+            PathItem rootPathItem = MyPathList.Items.FirstOrDefault(s => string.IsNullOrWhiteSpace(s.Path));
             bool rootNodeContainsImages = rootPathItem != null && rootPathItem.ContainsImages;
             Node rootNode = new Node
             {
-                FolderExists = Directory.Exists(this.RootFolder),
+                FolderExists = Directory.Exists(RootFolder),
                 ContainsImages = rootNodeContainsImages,
             };
 
@@ -183,7 +184,7 @@ namespace Timelapse.Controls
             // - AddPath breaks down a path into its components (i.e., strings separated by '\') to children sub-nodes as well
             //   - For example, if a path is a/b/c, nodes would be created for a, a/b, a/b/c
             //   - AddPath also checks to see if that path or path component was previously created, and if so it does not duplicate it.
-            foreach (PathItem nodePathItem in this.MyPathList.Items)
+            foreach (PathItem nodePathItem in MyPathList.Items)
             {
                 // Add the nodes to the root node to mirror the PathList hierarchy
                 rootNode.AddPath(nodePathItem);
@@ -197,7 +198,7 @@ namespace Timelapse.Controls
             }
 
             // Create the initial TreeViewItem representing the root folder.
-            Grid sp = CreateTreeViewItemHeaderAsStackPanel(rootNode, this.RootFolderName, rootNodeContainsImages, rootNode.FolderExists);
+            Grid sp = CreateTreeViewItemHeaderAsStackPanel(rootNode, RootFolderName, rootNodeContainsImages, rootNode.FolderExists);
             TreeViewItem tvi = new TreeViewItem
             {
                 Header = sp,
@@ -210,11 +211,11 @@ namespace Timelapse.Controls
             tvi.ContextMenu = TreeViewItemCreateContextMenu(tvi, rootNode.FolderExists);
 
             // Add children to the root TreeViewItem to match the node structure hierarchy
-            this.TraverseNodeAndAddToTreeViewItem(tvi, rootNode, dictIsExpandedState);
+            TraverseNodeAndAddToTreeViewItem(tvi, rootNode, dictIsExpandedState);
 
             // Adjust the  size of each column in each TreeView row to provide an aligned multicolumn effect
-            this.maxLevelAliasPixelWidth = Math.Max(70, this.maxLevelAliasPixelWidth);
-            foreach (Grid grid in this.TreeViewGridRows)
+            maxLevelAliasPixelWidth = Math.Max(70, maxLevelAliasPixelWidth);
+            foreach (Grid grid in TreeViewGridRows)
             {
                 // Icon
                 ColumnDefinition c0 = new ColumnDefinition
@@ -224,12 +225,12 @@ namespace Timelapse.Controls
                 // Foldername
                 ColumnDefinition c1 = new ColumnDefinition
                 {
-                    Width = new GridLength(this.maxFolderNamePixelWidth, GridUnitType.Pixel),
+                    Width = new GridLength(maxFolderNamePixelWidth, GridUnitType.Pixel),
                 };
                 // Alias
                 ColumnDefinition c2 = new ColumnDefinition
                 {
-                    Width = new GridLength(this.maxLevelAliasPixelWidth, GridUnitType.Pixel),
+                    Width = new GridLength(maxLevelAliasPixelWidth, GridUnitType.Pixel),
                 };
                 ColumnDefinition c3 = new ColumnDefinition
                 {
@@ -244,8 +245,8 @@ namespace Timelapse.Controls
 
             // Clear the treeView, in case it has been previously populated;
             // and add the (now populated) TreeViewItem to the treeView
-            this.TreeView.Items.Clear();
-            this.TreeView.Items.Add(tvi);
+            TreeView.Items.Clear();
+            TreeView.Items.Add(tvi);
 
         }
 
@@ -256,7 +257,7 @@ namespace Timelapse.Controls
             // first time through, so use "" instead of "Root Folder"
             string newpath = dictIsExpandedState.Count == 0
                 ? path
-                : Path.Combine(path, this.GetTextBlockFromTreeViewItem(parentItem).Text);
+                : Path.Combine(path, GetTextBlockFromTreeViewItem(parentItem).Text);
             dictIsExpandedState.Add(newpath, parentItem.IsExpanded);
 
             // Start recursion on all subnodes.
@@ -276,8 +277,8 @@ namespace Timelapse.Controls
                 // This node is a child item as the path isn't empty
                 // So we need to create a new TreeViewItem representing that path, which will be added as a child the existing TreeViewItem
                 // The tag is used to associate a node with its respective TreeViewItem
-                node.FolderExists = Directory.Exists(Path.Combine(this.RootFolder, node.Path));
-                Grid FolderGrid = this.CreateTreeViewItemHeaderAsStackPanel(node, node.Name, node.ContainsImages, node.FolderExists);
+                node.FolderExists = Directory.Exists(Path.Combine(RootFolder, node.Path));
+                Grid FolderGrid = CreateTreeViewItemHeaderAsStackPanel(node, node.Name, node.ContainsImages, node.FolderExists);
                 tvi = new TreeViewItem
                 {
                     Header = FolderGrid,
@@ -308,10 +309,10 @@ namespace Timelapse.Controls
         // Expand or collapse all tree view items
         public void ExpandTreeView(bool expandTheTreeViewItem)
         {
-            if (this.TreeView.Items.Count > 0)
+            if (TreeView.Items.Count > 0)
             {
-                TreeViewItem tvi = (TreeViewItem)this.TreeView.Items[0];
-                this.ExpandTreeView(tvi, expandTheTreeViewItem);
+                TreeViewItem tvi = (TreeViewItem)TreeView.Items[0];
+                ExpandTreeView(tvi, expandTheTreeViewItem);
                 tvi.IsExpanded = true; // always expand the root node
             }
         }
@@ -376,13 +377,10 @@ namespace Timelapse.Controls
                 // If the folder doesn't exists, flash the node and don't start the editing operation
                 if (node.FolderExists)
                 {
-                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootFolder,
+                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(RootFolder,
                         node.Path));
                 }
-                else
-                {
-                    //FLASH FLASH FLASH
-                }
+                //FLASH FLASH FLASH
             }
         }
         #endregion
@@ -395,7 +393,7 @@ namespace Timelapse.Controls
             string warning = string.Empty;
 
             Grid grid = new Grid();
-            this.TreeViewGridRows.Add(grid);
+            TreeViewGridRows.Add(grid);
 
             // 1. Generate the appropriate icon for the treeview
             BitmapImage folderIcon;
@@ -428,15 +426,15 @@ namespace Timelapse.Controls
             Grid.SetColumn(tbFolderName, 1);
             grid.Children.Add(tbFolderName);
             // Accumulate the maximum  width of all folder names, used to aligned columns in the treeview
-            this.maxFolderNamePixelWidth = Math.Max(tbFolderName.MeasureStringWidth(text) + (19*level), maxFolderNamePixelWidth);
+            maxFolderNamePixelWidth = Math.Max(tbFolderName.MeasureStringWidth(text) + (19*level), maxFolderNamePixelWidth);
 
 
             // 3. Generate thise level's Alias name
             string alias;
 
-            if (level < this.metadataInfoRowCount)
+            if (level < metadataInfoRowCount)
             {
-                alias = MetadataUI.CreateTemporaryAliasIfNeeded(level+1, this.MetadataInfo[level].Alias);
+                alias = MetadataUI.CreateTemporaryAliasIfNeeded(level+1, MetadataInfo[level].Alias);
             }
             else
             {
@@ -444,7 +442,7 @@ namespace Timelapse.Controls
                 warning += "Extra undefined level. ";
             }
 
-            TextBlock tbLevelAliasName = new TextBlock() { Margin = new Thickness(-19 * level + 30, 0, 0, 0) };
+            TextBlock tbLevelAliasName = new TextBlock { Margin = new Thickness(-19 * level + 30, 0, 0, 0) };
             tbLevelAliasName.Inlines.Add(new Run
             {
                 Text = alias,
@@ -455,7 +453,7 @@ namespace Timelapse.Controls
             Grid.SetColumn(tbLevelAliasName, 2);
             grid.Children.Add(tbLevelAliasName);
             // Accumulate the maximum  width of all aliases, used to aligned columns in the treeview
-            this.maxLevelAliasPixelWidth = Math.Max(tbLevelAliasName.MeasureStringWidth(alias), this.maxLevelAliasPixelWidth);
+            maxLevelAliasPixelWidth = Math.Max(tbLevelAliasName.MeasureStringWidth(alias), maxLevelAliasPixelWidth);
 
             //// 4. Generate the warning message
             //if (node.Children.Count == 0 && level < this.metadataInfoRowCount - 1 && containsPhotos)
@@ -464,15 +462,15 @@ namespace Timelapse.Controls
             //}
 
             string lastLevelAlias = "lowest defined";
-            if (containsPhotos && this.metadataInfoRowCount - 1 != level)
+            if (containsPhotos && metadataInfoRowCount - 1 != level)
             {
-                lastLevelAlias = MetadataUI.CreateTemporaryAliasIfNeeded(this.metadataInfoRowCount - 1, this.MetadataInfo[metadataInfoRowCount - 1].Alias);
+                lastLevelAlias = MetadataUI.CreateTemporaryAliasIfNeeded(metadataInfoRowCount - 1, MetadataInfo[metadataInfoRowCount - 1].Alias);
                 warning += $"Only {lastLevelAlias} folders should contain images.";
             }
 
             if (!string.IsNullOrWhiteSpace(warning))
             {
-                TextBlock tbWarning = new TextBlock() { Margin = new Thickness(-19 * level + 40, 0, 0, 0) };
+                TextBlock tbWarning = new TextBlock { Margin = new Thickness(-19 * level + 40, 0, 0, 0) };
                 tbWarning.Inlines.Add(new Run
                 {
                     Text = warning,
@@ -486,10 +484,10 @@ namespace Timelapse.Controls
                 grid.Children.Add(tbWarning);
 
                 // Change which message is displayed in the parent window.
-                this.ParentDialogWindow.MessageDivergence.Visibility = Visibility.Visible;
-                this.ParentDialogWindow.MessageDivergence.Reason += $"{lastLevelAlias} folder level.";
-                this.ParentDialogWindow.MessageNoDivergence.Visibility = Visibility.Collapsed;
-                this.ParentDialogWindow.CancelButton.Visibility = Visibility.Visible;
+                ParentDialogWindow.MessageDivergence.Visibility = Visibility.Visible;
+                ParentDialogWindow.MessageDivergence.Reason += $"{lastLevelAlias} folder level.";
+                ParentDialogWindow.MessageNoDivergence.Visibility = Visibility.Collapsed;
+                ParentDialogWindow.CancelButton.Visibility = Visibility.Visible;
             }
             return grid;
         }
@@ -565,14 +563,14 @@ namespace Timelapse.Controls
             public bool ContainsImages { get; set; }
             public bool FolderExists { get; set; }
 
-            private readonly char[] charSeparators = new char[] { '\\' };
+            private readonly char[] charSeparators = { '\\' };
 
             public void AddPath(PathItem pathItem)
             {
                 string path = pathItem.Path;
                 bool containsPhotos = pathItem.ContainsImages;
                 // Split the path into its constituent names e.g., a\b would be a, b
-                string[] names = pathItem.Path.Split(this.charSeparators, StringSplitOptions.RemoveEmptyEntries);
+                string[] names = pathItem.Path.Split(charSeparators, StringSplitOptions.RemoveEmptyEntries);
 
                 // For each constutuent part
                 Node currentNode = this;
@@ -627,7 +625,7 @@ namespace Timelapse.Controls
 
             public void OrderInPlace()
             {
-                this.Items = this.Items.OrderBy(s => s.Path).ToList();
+                Items = Items.OrderBy(s => s.Path).ToList();
             }
         }
         #endregion

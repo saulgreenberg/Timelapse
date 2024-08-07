@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using Timelapse.Constant;
 
 namespace Timelapse.Images
 {
@@ -51,13 +52,13 @@ namespace Timelapse.Images
         /// </summary>
         public Marker(string dataLabel, Point point)
         {
-            this.Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Constant.Defaults.StandardColour);
-            this.DataLabel = dataLabel;
-            this.Emphasise = false;
-            this.LabelShownPreviously = true;
-            this.Position = point;
-            this.ShowLabel = false;
-            this.Tooltip = string.Empty;
+            Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Defaults.StandardColour);
+            DataLabel = dataLabel;
+            Emphasise = false;
+            LabelShownPreviously = true;
+            Position = point;
+            ShowLabel = false;
+            Tooltip = string.Empty;
         }
         #endregion
 

@@ -2,8 +2,10 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.Util
 {
@@ -45,9 +47,9 @@ namespace Timelapse.Util
             {
                 return false;
             }
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotLetterDigitUnderscoreCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotLetterDigitUnderscoreCharacters);
         }
-        
+
         public static bool IsAlphaNumericIncludingGlobCharacters(string str)
         {
             if (str == null)
@@ -55,7 +57,7 @@ namespace Timelapse.Util
                 return false;
             }
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotAlphaNumericDashUnderscoresGlobCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotAlphaNumericDashUnderscoresGlobCharacters);
         }
         #endregion
 
@@ -69,30 +71,30 @@ namespace Timelapse.Util
             {
                 return false;
             }
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotDigitCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotDigitCharacters);
         }
 
         public static bool IsIntegerCharacters(string text)
         {
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(text, Constant.RegExExpressions.NotIntegerCharacters);
+            return !Regex.IsMatch(text, RegExExpressions.NotIntegerCharacters);
         }
 
         public static bool IsIntegerPositiveCharacters(string text)
         {
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(text, Constant.RegExExpressions.NotIntegerPositiveCharacters);
+            return !Regex.IsMatch(text, RegExExpressions.NotIntegerPositiveCharacters);
         }
         public static bool IsDecimalCharacters(string text)
         {
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(text, Constant.RegExExpressions.NotDecimalCharacters);
+            return !Regex.IsMatch(text, RegExExpressions.NotDecimalCharacters);
         }
 
         public static bool IsDecimalPositiveCharacters(string text)
         {
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(text, Constant.RegExExpressions.NotDecimalPositiveCharacters);
+            return !Regex.IsMatch(text, RegExExpressions.NotDecimalPositiveCharacters);
         }
         #endregion
 
@@ -104,7 +106,7 @@ namespace Timelapse.Util
                 return false;
             }
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotDateTimeCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotDateTimeCharacters);
         }
 
         public static bool IsDateDataBaseFormatCharacters(string str)
@@ -114,7 +116,7 @@ namespace Timelapse.Util
                 return false;
             }
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotDateCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotDateCharacters);
         }
 
         public static bool IsTimeCharacters(string str)
@@ -124,7 +126,7 @@ namespace Timelapse.Util
                 return false;
             }
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotTimeCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotTimeCharacters);
         }
         #endregion
 
@@ -137,6 +139,12 @@ namespace Timelapse.Util
         #endregion
 
         #region Type matches - true when the string matches the indicated data type
+        // Standard controls are the ones required by Timelapse:. File, RelativePath, DateTime, DeleteFlag
+        public static bool IsStandardControlType(string controlType)
+        {
+            return Control.StandardTypes.Contains(controlType);
+        }
+
         public static bool IsAlphaNumeric(string str)
         {
             if (str == null)
@@ -144,7 +152,7 @@ namespace Timelapse.Util
                 return false;
             }
             // we have to negate it as the regular expression returns true only if any other characters are matched 
-            return !Regex.IsMatch(str, Constant.RegExExpressions.NotAlphaNumericDashUnderscoresCharacters);
+            return !Regex.IsMatch(str, RegExExpressions.NotAlphaNumericDashUnderscoresCharacters);
         }
 
         public static bool IsInteger(string text)
@@ -159,11 +167,11 @@ namespace Timelapse.Util
 
         public static bool IsDecimal(string text)
         {
-            return Double.TryParse(text, out _);  
+            return Double.TryParse(text, out _);
         }
         public static bool IsDecimalPositive(string text)
         {
-            return Double.TryParse(text, out double doubleNumber) && doubleNumber >= 0; 
+            return Double.TryParse(text, out double doubleNumber) && doubleNumber >= 0;
         }
 
         public static bool IsBoolean(string str)
@@ -194,19 +202,19 @@ namespace Timelapse.Util
         // Is the type one of the number types?
         public static bool IsNumberType(string type)
         {
-            return type == Constant.Control.Counter || type == Constant.Control.IntegerAny || type == Constant.Control.IntegerPositive ||
-             type == Constant.Control.DecimalAny || type == Constant.Control.DecimalPositive;
+            return type == Control.Counter || type == Control.IntegerAny || type == Control.IntegerPositive ||
+             type == Control.DecimalAny || type == Control.DecimalPositive;
         }
 
         // Is the type one of the Date types?
         public static bool IsDateTimeType(string type)
         {
-            return type == Constant.DatabaseColumn.DateTime || type == Constant.Control.DateTime_ || type == Constant.Control.Date_ || type == Constant.Control.Time_;
+            return type == DatabaseColumn.DateTime || type == Control.DateTime_ || type == Control.Date_ || type == Control.Time_;
         }
 
         public static bool IsChoicesType(string type)
         {
-            return type == Constant.Control.FixedChoice || type == Constant.Control.MultiChoice;
+            return type == Control.FixedChoice || type == Control.MultiChoice;
         }
         #endregion
 
@@ -214,33 +222,33 @@ namespace Timelapse.Util
         // True iff the control is a note or multiline.
         public static bool IsControlType_Note_MultiLine(string controlRowType)
         {
-            return controlRowType == Constant.Control.Note || controlRowType == Constant.Control.MultiLine;
+            return controlRowType == Control.Note || controlRowType == Control.MultiLine;
         }
 
         // True iff the control is a note or multiline or alphanumeric.
         public static bool IsControlType_Note_Multiline_Alphanumeric(string controlRowType)
         {
-            return controlRowType == Constant.Control.Note || controlRowType == Constant.Control.MultiLine || controlRowType == Constant.Control.AlphaNumeric;
+            return controlRowType == Control.Note || controlRowType == Control.MultiLine || controlRowType == Control.AlphaNumeric;
         }
 
         // True iff the control is a standard custom control (i.e., not a required control)
         public static bool IsControlType_AnyNonRequired(string controlRowType)
         {
-            return controlRowType == Constant.DatabaseColumn.DeleteFlag ||
-                   controlRowType == Constant.Control.Note ||
-                   controlRowType == Constant.Control.MultiLine ||
-                   controlRowType == Constant.Control.AlphaNumeric ||
-                   controlRowType == Constant.Control.Flag ||
-                   controlRowType == Constant.Control.Counter ||
-                   controlRowType == Constant.Control.IntegerAny ||
-                   controlRowType == Constant.Control.IntegerPositive ||
-                   controlRowType == Constant.Control.DecimalAny ||
-                   controlRowType == Constant.Control.DecimalPositive ||
-                   controlRowType == Constant.Control.FixedChoice ||
-                   controlRowType == Constant.Control.MultiChoice ||
-                   controlRowType == Constant.Control.DateTime_ ||
-                   controlRowType == Constant.Control.Date_ ||
-                   controlRowType == Constant.Control.Time_;
+            return controlRowType == DatabaseColumn.DeleteFlag ||
+                   controlRowType == Control.Note ||
+                   controlRowType == Control.MultiLine ||
+                   controlRowType == Control.AlphaNumeric ||
+                   controlRowType == Control.Flag ||
+                   controlRowType == Control.Counter ||
+                   controlRowType == Control.IntegerAny ||
+                   controlRowType == Control.IntegerPositive ||
+                   controlRowType == Control.DecimalAny ||
+                   controlRowType == Control.DecimalPositive ||
+                   controlRowType == Control.FixedChoice ||
+                   controlRowType == Control.MultiChoice ||
+                   controlRowType == Control.DateTime_ ||
+                   controlRowType == Control.Date_ ||
+                   controlRowType == Control.Time_;
         }
         #endregion
 
@@ -268,7 +276,7 @@ namespace Timelapse.Util
                 case FilePathTypeEnum.Backup:
                     // Backup files created from a ddb or tdb file have a new folder and time stamp added to its length
                     // Note that the file name is already accounted for in the file path
-                    filePath = Path.Combine(filePath, Constant.File.BackupFolder, ".2022-12-11.16-02-14");
+                    filePath = Path.Combine(filePath, File.BackupFolder, ".2022-12-11.16-02-14");
                     break;
                 case FilePathTypeEnum.Deleted:
                     // Deleted files created from a ddb or tdb file are located in a new folder under the root folder.
@@ -291,7 +299,7 @@ namespace Timelapse.Util
                 TracePrint.StackTrace(1);
                 return false;
             }
-            return IsPathEndingWithAShortFileName(filePath) || filePath.Length > Constant.File.MaxPathLength;
+            return IsPathEndingWithAShortFileName(filePath) || filePath.Length > File.MaxPathLength;
         }
 
         // Checks if the path or file name (excluding extension) ends with a short file name,

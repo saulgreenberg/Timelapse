@@ -4,13 +4,16 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Timelapse.Controls;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Xceed.Wpf.Toolkit.Primitives;
+using Control = Timelapse.Constant.Control;
+using ThumbnailGrid = Timelapse.Controls.ThumbnailGrid;
 
 namespace Timelapse.ControlsMetadata
 {
@@ -33,10 +36,10 @@ namespace Timelapse.ControlsMetadata
         #region Loading
         public MetadataDataEntryHandler(FileDatabase fileDatabase)
         {
-            this.disposed = false;
+            disposed = false;
             //this.ImageCache = new ImageCache(fileDatabase);
-            this.FileDatabase = fileDatabase;  // We need a reference to the database if we are going to update it.
-            this.IsProgrammaticControlUpdate = false;
+            FileDatabase = fileDatabase;  // We need a reference to the database if we are going to update it.
+            IsProgrammaticControlUpdate = false;
         }
 
         #endregion
@@ -58,84 +61,84 @@ namespace Timelapse.ControlsMetadata
                 string controlType = pair.Value.ControlType;
                 switch (controlType)
                 {
-                    case Constant.Control.Note:
+                    case Control.Note:
                         MetadataDataEntryNote note = (MetadataDataEntryNote)pair.Value;
                         note.ContentControl.LostKeyboardFocus += NoteControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(note);
+                        SetContextMenuCallbacks(note);
                         break;
 
-                    case Constant.Control.MultiLine:
+                    case Control.MultiLine:
                         MetadataDataEntryMultiLine multiLine = (MetadataDataEntryMultiLine)pair.Value;
                         multiLine.ContentControl.TextHasChanged += MultiLineControl_TextHasChanged;
                         //multiLine.ContentControl.LostKeyboardFocus += MultiLineControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(multiLine);
+                        SetContextMenuCallbacks(multiLine);
                         break;
 
-                    case Constant.Control.AlphaNumeric:
+                    case Control.AlphaNumeric:
                         MetadataDataEntryAlphaNumeric alphaNumeric = (MetadataDataEntryAlphaNumeric)pair.Value;
                         alphaNumeric.ContentControl.LostKeyboardFocus += AlphaNumericControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(alphaNumeric);
+                        SetContextMenuCallbacks(alphaNumeric);
                         break;
 
-                    case Constant.Control.IntegerAny:
+                    case Control.IntegerAny:
                         MetadataDataEntryIntegerAny integerAny = (MetadataDataEntryIntegerAny)pair.Value;
                         integerAny.ContentControl.LostKeyboardFocus += IntegerAnyControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(integerAny);
+                        SetContextMenuCallbacks(integerAny);
                         break;
 
-                    case Constant.Control.IntegerPositive:
+                    case Control.IntegerPositive:
                         MetadataDataEntryIntegerPositive integerPositive = (MetadataDataEntryIntegerPositive)pair.Value;
                         integerPositive.ContentControl.LostKeyboardFocus += IntegerPositiveControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(integerPositive);
+                        SetContextMenuCallbacks(integerPositive);
                         break;
 
-                    case Constant.Control.DecimalAny:
+                    case Control.DecimalAny:
                         MetadataDataEntryDecimalAny decimalAny = (MetadataDataEntryDecimalAny)pair.Value;
                         decimalAny.ContentControl.LostKeyboardFocus += DecimalAnyControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(decimalAny);
+                        SetContextMenuCallbacks(decimalAny);
                         break;
 
-                    case Constant.Control.DecimalPositive:
+                    case Control.DecimalPositive:
                         MetadataDataEntryDecimalPositive decimalPositive = (MetadataDataEntryDecimalPositive)pair.Value;
                         decimalPositive.ContentControl.LostKeyboardFocus += DecimalPositiveControl_LostKeyboardFocus;
-                        this.SetContextMenuCallbacks(decimalPositive);
+                        SetContextMenuCallbacks(decimalPositive);
                         break;
 
-                    case Constant.Control.FixedChoice:
+                    case Control.FixedChoice:
                         MetadataDataEntryFixedChoice choice = (MetadataDataEntryFixedChoice)pair.Value;
-                        choice.ContentControl.SelectionChanged += this.FixedChoiceControl_SelectionChanged;
-                        this.SetContextMenuCallbacks(choice);
+                        choice.ContentControl.SelectionChanged += FixedChoiceControl_SelectionChanged;
+                        SetContextMenuCallbacks(choice);
                         break;
 
-                    case Constant.Control.MultiChoice:
+                    case Control.MultiChoice:
                         MetadataDataEntryMultiChoice multiChoice = (MetadataDataEntryMultiChoice)pair.Value;
-                        multiChoice.ContentControl.ItemSelectionChanged += this.MultiChoice_ItemSelectionChanged;
-                        this.SetContextMenuCallbacks(multiChoice);
+                        multiChoice.ContentControl.ItemSelectionChanged += MultiChoice_ItemSelectionChanged;
+                        SetContextMenuCallbacks(multiChoice);
                         break;
 
-                    case Constant.Control.DateTime_:
+                    case Control.DateTime_:
                         MetadataDataEntryDateTimeCustom dateTimeCustom = (MetadataDataEntryDateTimeCustom)pair.Value;
-                        dateTimeCustom.ContentControl.ValueChanged += this.DateTimeCustom_ValueChanged;
-                        this.SetContextMenuCallbacks(dateTimeCustom);
+                        dateTimeCustom.ContentControl.ValueChanged += DateTimeCustom_ValueChanged;
+                        SetContextMenuCallbacks(dateTimeCustom);
                         break;
 
-                    case Constant.Control.Date_:
+                    case Control.Date_:
                         MetadataDataEntryDate date = (MetadataDataEntryDate)pair.Value;
-                        date.ContentControl.ValueChanged += this.Date_ValueChanged;
-                        this.SetContextMenuCallbacks(date);
+                        date.ContentControl.ValueChanged += Date_ValueChanged;
+                        SetContextMenuCallbacks(date);
                         break;
 
-                    case Constant.Control.Time_:
+                    case Control.Time_:
                         MetadataDataEntryTime time = (MetadataDataEntryTime)pair.Value;
-                        time.ContentControl.ValueChanged += this.Time_ValueChanged;
-                        this.SetContextMenuCallbacks(time);
+                        time.ContentControl.ValueChanged += Time_ValueChanged;
+                        SetContextMenuCallbacks(time);
                         break;
 
-                    case Constant.Control.Flag:
+                    case Control.Flag:
                         MetadataDataEntryFlag flag = (MetadataDataEntryFlag)pair.Value;
-                        flag.ContentControl.Checked += this.FlagControl_CheckedChanged;
-                        flag.ContentControl.Unchecked += this.FlagControl_CheckedChanged;
-                        this.SetContextMenuCallbacks(flag);
+                        flag.ContentControl.Checked += FlagControl_CheckedChanged;
+                        flag.ContentControl.Unchecked += FlagControl_CheckedChanged;
+                        SetContextMenuCallbacks(flag);
                         break;
                 }
             }
@@ -164,23 +167,23 @@ namespace Timelapse.ControlsMetadata
                 // Debug.Print("Ignorable error in Clipboard.SetText (see MetadataDataEntryHandler:SetContextMenuCallbacks in ");
             }
 
-            MenuItem menuItemCopy = new MenuItem()
+            MenuItem menuItemCopy = new MenuItem
             {
                 IsCheckable = false,
                 Header = "Copy",
                 ToolTip = "Copy will copy this field's entire content to the clipboard",
                 Tag = control
             };
-            menuItemCopy.Click += this.MenuItemCopyToClipboard_Click;
+            menuItemCopy.Click += MenuItemCopyToClipboard_Click;
 
-            MenuItem menuItemPaste = new MenuItem()
+            MenuItem menuItemPaste = new MenuItem
             {
                 IsCheckable = false,
                 Header = "Paste",
                 ToolTip = "Paste will replace this field's content with the clipboard's content",
                 Tag = control
             };
-            menuItemPaste.Click += this.MenuItemPasteFromClipboard_Click;
+            menuItemPaste.Click += MenuItemPasteFromClipboard_Click;
 
             // MetadataDataEntrHandler.PropagateFromLastValueIndex and CopyForwardIndex must be kept in sync with the add order here
             // Add the context menu to the control
@@ -188,7 +191,7 @@ namespace Timelapse.ControlsMetadata
             menu.Items.Add(menuItemCopy);
             menu.Items.Add(menuItemPaste);
             control.Container.ContextMenu = menu;
-            control.Container.PreviewMouseRightButtonDown += this.Container_PreviewMouseRightButtonDown;
+            control.Container.PreviewMouseRightButtonDown += Container_PreviewMouseRightButtonDown;
 
             if (control is MetadataDataEntryNote note)
             {
@@ -230,7 +233,7 @@ namespace Timelapse.ControlsMetadata
             {
                 dateTimeCustom.ContentControl.ContextMenu = menu;
                 // We also need to set the dateTimePicker's TextBox as otherwise the standard copy/paste will be displayed
-                TextBox tb = Util.VisualChildren.GetVisualChild<TextBox>(dateTimeCustom.ContentControl);
+                TextBox tb = VisualChildren.GetVisualChild<TextBox>(dateTimeCustom.ContentControl);
                 if (tb != null)
                 {
                     tb.ContextMenu = menu;
@@ -240,7 +243,7 @@ namespace Timelapse.ControlsMetadata
             {
                 date.ContentControl.ContextMenu = menu;
                 // We also need to set the dateTimePicker's TextBox as otherwise the standard copy/paste will be displayed
-                TextBox tb = Util.VisualChildren.GetVisualChild<TextBox>(date.ContentControl);
+                TextBox tb = VisualChildren.GetVisualChild<TextBox>(date.ContentControl);
                 if (tb != null)
                 {
                     tb.ContextMenu = menu;
@@ -250,7 +253,7 @@ namespace Timelapse.ControlsMetadata
             {
                 time.ContentControl.ContextMenu = menu;
                 // We also need to set the dateTimePicker's TextBox as otherwise the standard copy/paste will be displayed
-                TextBox tb = Util.VisualChildren.GetVisualChild<TextBox>(time.ContentControl);
+                TextBox tb = VisualChildren.GetVisualChild<TextBox>(time.ContentControl);
                 if (tb != null)
                 {
                     tb.ContextMenu = menu;
@@ -309,7 +312,7 @@ namespace Timelapse.ControlsMetadata
             }
             string newContent = Clipboard.GetText().Trim();
             control.SetContentAndTooltip(newContent);
-            this.UpdateMetadataTableAndMetadataDatabase(control);
+            UpdateMetadataTableAndMetadataDatabase(control);
         }
 
         // Enable or disable particular context menu items
@@ -326,8 +329,8 @@ namespace Timelapse.ControlsMetadata
                 TracePrint.NullException(nameof(stackPanel));
                 return;
             }
-            MenuItem menuItemCopyToClipboard = (MenuItem)stackPanel.ContextMenu.Items[MetadataDataEntryHandler.CopyToClipboardIndex];
-            MenuItem menuItemPasteFromClipboard = (MenuItem)stackPanel.ContextMenu.Items[MetadataDataEntryHandler.PasteFromClipboardIndex];
+            MenuItem menuItemCopyToClipboard = (MenuItem)stackPanel.ContextMenu.Items[CopyToClipboardIndex];
+            MenuItem menuItemPasteFromClipboard = (MenuItem)stackPanel.ContextMenu.Items[PasteFromClipboardIndex];
 
             // Behaviour: 
             // - if the ThumbnailInCell is visible, disable Copy to all / Copy forward / Propagate if a single item isn't selected
@@ -336,7 +339,7 @@ namespace Timelapse.ControlsMetadata
 
             // Enable Copy menu if
             // - its not empty / white space and not in the overview with different contents (i.e., ellipsis is showing)
-            menuItemCopyToClipboard.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Constant.Unicode.Ellipsis);
+            menuItemCopyToClipboard.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Unicode.Ellipsis);
 
             // Enable Paste menu only if
             // - the clipboard is not empty or white space, 
@@ -413,7 +416,7 @@ namespace Timelapse.ControlsMetadata
                 else if (control is MetadataDataEntryAlphaNumeric)
                 {
                     // Only alphanumeric characters are valid
-                    menuItemPasteFromClipboard.IsEnabled = Util.IsCondition.IsAlphaNumeric(clipboardText);
+                    menuItemPasteFromClipboard.IsEnabled = IsCondition.IsAlphaNumeric(clipboardText);
                 }
                 else if (control is MetadataDataEntryFixedChoice fixedChoice)
                 {
@@ -465,7 +468,7 @@ namespace Timelapse.ControlsMetadata
                 // Alter the paste header to show the text that will be pasted e.g Paste 'Lion'
                 if (menuItemPasteFromClipboard.IsEnabled)
                 {
-                    menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Constant.Unicode.Ellipsis : clipboardText) + "'";
+                    menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Unicode.Ellipsis : clipboardText) + "'";
                 }
                 else
                 {
@@ -477,7 +480,7 @@ namespace Timelapse.ControlsMetadata
                 if (menuItemCopyToClipboard.IsEnabled)
                 {
                     string content = control.Content.Trim();
-                    menuItemCopyToClipboard.Header = "Copy '" + (content.Length > 20 ? content.Substring(0, 20) + Constant.Unicode.Ellipsis : content) + "'";
+                    menuItemCopyToClipboard.Header = "Copy '" + (content.Length > 20 ? content.Substring(0, 20) + Unicode.Ellipsis : content) + "'";
                 }
                 else
                 {
@@ -499,7 +502,7 @@ namespace Timelapse.ControlsMetadata
             {
                 MetadataDataEntryNote control = (MetadataDataEntryNote)textBox.Tag;
                 control.SetContentAndTooltip(control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -510,7 +513,7 @@ namespace Timelapse.ControlsMetadata
             {
                 MetadataDataEntryMultiLine control = (MetadataDataEntryMultiLine)editor.Tag;
                 control.SetContentAndTooltip(control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
         
@@ -522,7 +525,7 @@ namespace Timelapse.ControlsMetadata
                 // Check if there are any non-valid letters in the textBox
                 MetadataDataEntryAlphaNumeric control = (MetadataDataEntryAlphaNumeric)textBox.Tag;
                 control.SetContentAndTooltip(control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -533,7 +536,7 @@ namespace Timelapse.ControlsMetadata
                 // Check if there are any non-valid letters in the textBox
                 MetadataDataEntryIntegerAny control = (MetadataDataEntryIntegerAny)integerUpDown.Tag;
                 control.SetContentAndTooltip (string.IsNullOrWhiteSpace(control.ContentControl.Text) ? "0" : control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -544,7 +547,7 @@ namespace Timelapse.ControlsMetadata
                 // Check if there are any non-valid letters in the textBox
                 MetadataDataEntryIntegerPositive control = (MetadataDataEntryIntegerPositive)integerUpDown.Tag;
                 control.SetContentAndTooltip(string.IsNullOrWhiteSpace(control.ContentControl.Text) ? "0" : control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -555,7 +558,7 @@ namespace Timelapse.ControlsMetadata
                 // Check if there are any non-valid letters in the textBox
                 MetadataDataEntryDecimalAny control = (MetadataDataEntryDecimalAny)doubleUpDown.Tag;
                 control.SetContentAndTooltip(string.IsNullOrWhiteSpace(control.ContentControl.Text) ? "0" : control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -566,7 +569,7 @@ namespace Timelapse.ControlsMetadata
                 // Check if there are any non-valid letters in the textBox
                 MetadataDataEntryDecimalPositive control = (MetadataDataEntryDecimalPositive)doubleUpDown.Tag;
                 control.SetContentAndTooltip(string.IsNullOrWhiteSpace(control.ContentControl.Text) ? "0" : control.ContentControl.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -578,12 +581,12 @@ namespace Timelapse.ControlsMetadata
                 // Get the control, but because it doesn't contain the select value yet, we need to put it in explicitly.
                 MetadataDataEntryFixedChoice control = (MetadataDataEntryFixedChoice)comboBox.Tag;
                 control.SetContentAndTooltip((string)cbi.Content);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
         // When a multiChoice changes, update the particular choice field(s) in the database
-        private void MultiChoice_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
+        private void MultiChoice_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
         {
             if (sender is CheckComboBox checkComboBox)
             {
@@ -606,7 +609,7 @@ namespace Timelapse.ControlsMetadata
 
                 // Not sure why a comma is being inserted in the beginning of the text, but this fixes it.
                 control.SetContentAndTooltip(checkComboBox.Text.TrimStart(','));
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -617,7 +620,7 @@ namespace Timelapse.ControlsMetadata
                 // Get the control, but because it doesn't contain the select value yet, we need to put it in explicitly.
                 MetadataDataEntryDateTimeCustom control = (MetadataDataEntryDateTimeCustom)dateTimePicker.Tag;
                 control.SetContentAndTooltip(dateTimePicker.Value);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -628,7 +631,7 @@ namespace Timelapse.ControlsMetadata
                 // Get the control, but because it doesn't contain the select value yet, we need to put it in explicitly.
                 MetadataDataEntryDate control = (MetadataDataEntryDate)dateTimePicker.Tag;
                 control.SetContentAndTooltip(dateTimePicker.Value);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -639,22 +642,22 @@ namespace Timelapse.ControlsMetadata
                 // Get the control, but because it doesn't contain the select value yet, we need to put it in explicitly.
                 MetadataDataEntryTime control = (MetadataDataEntryTime)timePicker.Tag;
                 control.SetContentAndTooltip(timePicker.Text);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
         //  Flag: Update the structure/database with the new value (if its different)
         private void FlagControl_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
             if (sender is CheckBox checkBox)
             {
                 MetadataDataEntryControl control = (MetadataDataEntryControl)checkBox.Tag;
-                control.SetContentAndTooltip(checkBox.IsChecked == true ? Constant.BooleanValue.True : Constant.BooleanValue.False);
-                this.UpdateMetadataTableAndMetadataDatabase(control);
+                control.SetContentAndTooltip(checkBox.IsChecked == true ? BooleanValue.True : BooleanValue.False);
+                UpdateMetadataTableAndMetadataDatabase(control);
             }
         }
 
@@ -666,10 +669,10 @@ namespace Timelapse.ControlsMetadata
         public void UpdateMetadataTableAndMetadataDatabase(MetadataDataEntryControl control)
         {
             // Now, update the similar entry in the MetadataTable structure
-            DataTableBackedList<MetadataRow> rows = this.FileDatabase.MetadataTablesByLevel[control.ParentPanel.Level];
+            DataTableBackedList<MetadataRow> rows = FileDatabase.MetadataTablesByLevel[control.ParentPanel.Level];
             foreach (MetadataRow row in rows)
             {
-                if (row[Constant.DatabaseColumn.FolderDataPath] == control.ParentPanel.SubPath)
+                if (row[DatabaseColumn.FolderDataPath] == control.ParentPanel.SubPath)
                 {
                     if (row[control.DataLabel] == control.Content)
                     {
@@ -707,10 +710,10 @@ namespace Timelapse.ControlsMetadata
             }
 
             //columnToUpdate.SetWhere(new ColumnTuple(Constant.DatabaseColumn.FolderDataPath, control.ParentPanel.RelativePathToCurrentFolder));
-            columnToUpdate.SetWhere(new ColumnTuple(Constant.DatabaseColumn.FolderDataPath, control.ParentPanel.SubPath));
+            columnToUpdate.SetWhere(new ColumnTuple(DatabaseColumn.FolderDataPath, control.ParentPanel.SubPath));
 
 
-            this.FileDatabase.Database.Update(tableName, columnToUpdate);
+            FileDatabase.Database.Update(tableName, columnToUpdate);
         }
 
         #endregion
@@ -740,7 +743,7 @@ namespace Timelapse.ControlsMetadata
 
                 if (parent != null)
                 {
-                    return MetadataDataEntryHandler.TryFindFocusedControl(parent, out focusedControl);
+                    return TryFindFocusedControl(parent, out focusedControl);
                 }
             }
             focusedControl = null;
@@ -779,22 +782,22 @@ namespace Timelapse.ControlsMetadata
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                this.FileDatabase?.Dispose();
+                FileDatabase?.Dispose();
             }
-            this.disposed = true;
+            disposed = true;
         }
         #endregion
     }

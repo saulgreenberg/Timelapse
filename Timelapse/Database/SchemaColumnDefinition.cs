@@ -48,9 +48,9 @@ namespace Timelapse.Database
             {
                 throw new ArgumentOutOfRangeException(nameof(type));
             }
-            this.DefaultValue = defaultValue;
-            this.Name = name;
-            this.Type = type;
+            DefaultValue = defaultValue;
+            Name = name;
+            Type = type;
         }
         #endregion
 
@@ -61,10 +61,10 @@ namespace Timelapse.Database
         /// <returns></returns>
         public override string ToString()
         {
-            string columnDefinition = $"{this.Name} {this.Type}";
-            if (this.DefaultValue != null)
+            string columnDefinition = $"{Name} {Type}";
+            if (DefaultValue != null)
             {
-                columnDefinition += " DEFAULT " + Sql.Quote(this.DefaultValue);
+                columnDefinition += " DEFAULT " + Sql.Quote(DefaultValue);
             }
             return columnDefinition;
         }

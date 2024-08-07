@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Recognition;
@@ -76,8 +77,8 @@ namespace Timelapse.Database
             SQLiteWrapper destinationDdb, int levelsToIgnore)
         {
             // Check if both have MetadataInfo tables
-            bool sourceDdbMetadataInfoExists = sourceDdb.TableExists(Constant.DBTables.MetadataInfo);
-            bool destinationDdbMetadataInfoExists = destinationDdb.TableExists(Constant.DBTables.MetadataInfo);
+            bool sourceDdbMetadataInfoExists = sourceDdb.TableExists(DBTables.MetadataInfo);
+            bool destinationDdbMetadataInfoExists = destinationDdb.TableExists(DBTables.MetadataInfo);
 
             // Check: Does the sourceDdb contain metadata tables
             if (false == sourceDdbMetadataInfoExists)
@@ -203,7 +204,7 @@ namespace Timelapse.Database
 
             // Get a list of  relative paths in the Ddb that have the pathPrefix
             List<string> relativePathsInDdb =
-                MergeDatabases.GetDistinctRootsFromRelativePath(Ddb, pathPrefixFromRootToSourceDdb);
+                GetDistinctRootsFromRelativePath(Ddb, pathPrefixFromRootToSourceDdb);
 
             //    If its empty, then the destination ddb does not have any images in the sourceDdb folder
             //    If one is returned, then the destination ddb has one or more images in the sourceDdb folder or its subfolders
@@ -238,13 +239,13 @@ namespace Timelapse.Database
 
             // Part 5. Handle the various Recognition Tables portion
             // Note that the two classification tables are only included in the checkout process if there is something in them
-            if (sourceDdb.TableExists(Constant.DBTables.Detections))
+            if (sourceDdb.TableExists(DBTables.Detections))
             {
                 query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine;
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
 
-                bool checkoutClassificationsTable = sourceDdb.TableExistsAndNotEmpty(Constant.DBTables.Classifications);
-                bool checkoutClassificationCategoriesTable = sourceDdb.TableExistsAndNotEmpty(Constant.DBTables.Classifications);
+                bool checkoutClassificationsTable = sourceDdb.TableExistsAndNotEmpty(DBTables.Classifications);
+                bool checkoutClassificationCategoriesTable = sourceDdb.TableExistsAndNotEmpty(DBTables.Classifications);
                 query += QueryCheckoutRecognitionTables(attachedSourceDB, relativePath, checkoutClassificationsTable, checkoutClassificationCategoriesTable) + Environment.NewLine;
                 query += Sql.PragmaForeignKeysOn + Sql.Semicolon + Environment.NewLine;
             }
@@ -288,11 +289,11 @@ namespace Timelapse.Database
         private static string QueryCheckoutMergeDataTable(SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePath)
         {
             string queryPhrase = string.Empty;
-            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
+            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(DBTables.FileData);
             queryPhrase += QueryAttachDatabaseAs(sourceDdbPath, attachedSourceDB) + Environment.NewLine;
-            queryPhrase += QueryCheckoutCreateTableFromRelativePathInExistingTable(tempDataTable, attachedSourceDB, Constant.DBTables.FileData, relativePath, Constant.DatabaseColumn.RelativePath) + Environment.NewLine;
-            queryPhrase += QueryCheckoutTrimRelativePath(tempDataTable, relativePath, Constant.DatabaseColumn.RelativePath) + Environment.NewLine;
-            queryPhrase += QueryCheckoutInsertTable2DataIntoTable1(tempDataTable, Constant.DBTables.FileData, currentDataLabels) + Environment.NewLine;
+            queryPhrase += QueryCheckoutCreateTableFromRelativePathInExistingTable(tempDataTable, attachedSourceDB, DBTables.FileData, relativePath, DatabaseColumn.RelativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutTrimRelativePath(tempDataTable, relativePath, DatabaseColumn.RelativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutInsertTable2DataIntoTable1(tempDataTable, DBTables.FileData, currentDataLabels) + Environment.NewLine;
             return queryPhrase;
         }
 
@@ -344,19 +345,19 @@ namespace Timelapse.Database
         //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
         private static string QueryCheckoutMarkersTable(string attachedSourceDB, string tempMarkersTable, string relativePath)
         {
-            string attachedMarkersTable = attachedSourceDB + Sql.Dot + Constant.DBTables.Markers;
-            string attachedDataTable = attachedSourceDB + Sql.Dot + Constant.DBTables.FileData;
+            string attachedMarkersTable = attachedSourceDB + Sql.Dot + DBTables.Markers;
+            string attachedDataTable = attachedSourceDB + Sql.Dot + DBTables.FileData;
             string queryPhrase = string.Empty;
             queryPhrase += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As
-                + Sql.Select + Constant.DBTables.Markers + Sql.DotStar + Sql.From + attachedMarkersTable
+                + Sql.Select + DBTables.Markers + Sql.DotStar + Sql.From + attachedMarkersTable
                 + Sql.Join + attachedDataTable + Sql.On
-                + attachedMarkersTable + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.ID
+                + attachedMarkersTable + Sql.Dot + DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + DatabaseColumn.ID
                 + Sql.And + Sql.OpenParenthesis
-                + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
                 + Sql.Or
-                + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
                 + Sql.CloseParenthesis + Sql.Semicolon;
-            queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable) + Environment.NewLine;
+            queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.Markers, tempMarkersTable) + Environment.NewLine;
             return queryPhrase;
         }
 
@@ -364,14 +365,14 @@ namespace Timelapse.Database
         private static string QueryCheckoutImageSetTable(string attachedSourceDB)
         {
             string queryPhrase = string.Empty;
-            queryPhrase += Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.QuickPasteTerms + Sql.Equal
-                                      + Sql.OpenParenthesis + Sql.Select + Constant.DatabaseColumn.QuickPasteTerms +
-                                      Sql.From + attachedSourceDB + Sql.Dot + Constant.DBTables.ImageSet + Sql.Where +
-                                      Constant.DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
-            queryPhrase += Sql.Update + Constant.DBTables.ImageSet + Sql.Set + Constant.DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal
-                           + Sql.OpenParenthesis + Sql.Select + Constant.DatabaseColumn.BoundingBoxDisplayThreshold +
-                           Sql.From + attachedSourceDB + Sql.Dot + Constant.DBTables.ImageSet + Sql.Where +
-                           Constant.DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
+            queryPhrase += Sql.Update + DBTables.ImageSet + Sql.Set + DatabaseColumn.QuickPasteTerms + Sql.Equal
+                                      + Sql.OpenParenthesis + Sql.Select + DatabaseColumn.QuickPasteTerms +
+                                      Sql.From + attachedSourceDB + Sql.Dot + DBTables.ImageSet + Sql.Where +
+                                      DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
+            queryPhrase += Sql.Update + DBTables.ImageSet + Sql.Set + DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal
+                           + Sql.OpenParenthesis + Sql.Select + DatabaseColumn.BoundingBoxDisplayThreshold +
+                           Sql.From + attachedSourceDB + Sql.Dot + DBTables.ImageSet + Sql.Where +
+                           DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
             return queryPhrase;
         }
 
@@ -379,49 +380,49 @@ namespace Timelapse.Database
         //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
         private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationsTable, bool checkoutClassificationCategoriesTable)
         {
-            string attachedDataTable = attachedSourceDB + Sql.Dot + Constant.DBTables.FileData;
+            string attachedDataTable = attachedSourceDB + Sql.Dot + DBTables.FileData;
 
             // Copy the Detections table matching the ids and relative paths
             string tmpDetections = "tmpDetections";
-            string attachedDetections = attachedSourceDB + Sql.Dot + Constant.DBTables.Detections;
+            string attachedDetections = attachedSourceDB + Sql.Dot + DBTables.Detections;
             string queryPhrase = string.Empty;
             queryPhrase += Sql.CreateTemporaryTable + tmpDetections + Sql.As
-                           + Sql.Select + Constant.DBTables.Detections + Sql.DotStar + Sql.From + attachedDetections
+                           + Sql.Select + DBTables.Detections + Sql.DotStar + Sql.From + attachedDetections
                            + Sql.Join + attachedDataTable + Sql.On
-                           + attachedDetections + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.ID
+                           + attachedDetections + Sql.Dot + DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + DatabaseColumn.ID
                            + Sql.And + Sql.OpenParenthesis
-                           + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                           + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
                            + Sql.Or
-                           + attachedDataTable + Sql.Dot + Constant.DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                           + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
                            + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
-            queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Detections, tmpDetections) + Environment.NewLine;
+            queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.Detections, tmpDetections) + Environment.NewLine;
 
 
             // Copy the Detection Categories table
-            queryPhrase += QueryCheckoutCopyCompleteTable("tmpDetectionCategories", Constant.DBTables.DetectionCategories, attachedSourceDB);
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpDetectionCategories", DBTables.DetectionCategories, attachedSourceDB);
 
             // Copy the Info table 
-            queryPhrase += QueryCheckoutCopyCompleteTable("tmpInfo", Constant.DBTables.Info, attachedSourceDB);
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpInfo", DBTables.Info, attachedSourceDB);
 
             // Copy the Classifications table matching the detection ids of the just copied detection table if not empty
             if (checkoutClassificationsTable)
             {
                 string tmpClassifications = "tmpClassifications";
-                string attachedClassifications = attachedSourceDB + Sql.Dot + Constant.DBTables.Classifications;
+                string attachedClassifications = attachedSourceDB + Sql.Dot + DBTables.Classifications;
                 queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
-                               + Sql.Select + Constant.DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
+                               + Sql.Select + DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
                                + Sql.Join + tmpDetections + Sql.On
-                               + attachedClassifications + Sql.Dot + Constant.ClassificationColumns.DetectionID
-                               + Sql.Equal + tmpDetections + Sql.Dot + Constant.DetectionColumns.DetectionID
+                               + attachedClassifications + Sql.Dot + ClassificationColumns.DetectionID
+                               + Sql.Equal + tmpDetections + Sql.Dot + DetectionColumns.DetectionID
                                + Sql.Semicolon + Environment.NewLine;
 
-                queryPhrase += QueryInsertTable2DataIntoTable1(Constant.DBTables.Classifications, tmpClassifications) + Environment.NewLine;
+                queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.Classifications, tmpClassifications) + Environment.NewLine;
             }
 
             // Copy the Classification Categories table if not empty
             if (checkoutClassificationCategoriesTable)
             {
-                queryPhrase += QueryCheckoutCopyCompleteTable("tmpClassificationCategories", Constant.DBTables.ClassificationCategories, attachedSourceDB);
+                queryPhrase += QueryCheckoutCopyCompleteTable("tmpClassificationCategories", DBTables.ClassificationCategories, attachedSourceDB);
             }
             return queryPhrase;
         }
@@ -455,8 +456,8 @@ namespace Timelapse.Database
             // and then trim the relative path to remove unneeded levels
             queryPhrase += QueryCheckoutPopulateTableFromRelativePathInExistingTable(
                 destLevelTableName, attachedSourceDB, srcLevelTableName, relativePath,
-                            Constant.DatabaseColumn.FolderDataPath);
-            queryPhrase += QueryCheckoutTrimRelativePath(destLevelTableName, relativePath, Constant.DatabaseColumn.FolderDataPath) + Environment.NewLine;
+                            DatabaseColumn.FolderDataPath);
+            queryPhrase += QueryCheckoutTrimRelativePath(destLevelTableName, relativePath, DatabaseColumn.FolderDataPath) + Environment.NewLine;
             return queryPhrase;
         }
         #endregion
@@ -476,13 +477,13 @@ namespace Timelapse.Database
         {
             // Delete entries from the DataTable whose RelativePath begins with the (folder) path from the root folder.
             // This returns the Ids of all deleted entries
-            string where = Constant.DatabaseColumn.RelativePath
+            string where = DatabaseColumn.RelativePath
                            + Sql.Like
                            + Sql.Quote(relativePathDifference + @"\" + "%") // like root/*
                            + Sql.Or
-                           + Constant.DatabaseColumn.RelativePath + Sql.Equal
+                           + DatabaseColumn.RelativePath + Sql.Equal
                            + Sql.Quote(relativePathDifference); // or equals root 
-            DataTable dtDeletedIds = destinationDdb.DeleteRowsReturningIds(Constant.DBTables.FileData, where, Constant.DatabaseColumn.ID);
+            DataTable dtDeletedIds = destinationDdb.DeleteRowsReturningIds(DBTables.FileData, where, DatabaseColumn.ID);
 
             // Use the Ids of the deleted entries to remove corresponding entries (if they exist) from the Markers table
             if (dtDeletedIds.Rows.Count > 0)
@@ -490,9 +491,9 @@ namespace Timelapse.Database
                 List<string> idClauses = new List<string>();
                 foreach (DataRow row in dtDeletedIds.Rows)
                 {
-                    idClauses.Add(Constant.DatabaseColumn.ID + " = " + row[0]);
+                    idClauses.Add(DatabaseColumn.ID + " = " + row[0]);
                 }
-                destinationDdb.Delete(Constant.DBTables.Markers, idClauses);
+                destinationDdb.Delete(DBTables.Markers, idClauses);
                 // Debug.Print($"Ddb deleted {idClauses.Count} entries in the folder {relativePathDifference}");
             }
             //else
@@ -524,13 +525,13 @@ namespace Timelapse.Database
 
                     // Delete entries from each Levels table whose RelativePath begins with the (folder) path from the root folder.
                     // This returns the Ids of all deleted entries
-                    string where = Constant.DatabaseColumn.FolderDataPath
+                    string where = DatabaseColumn.FolderDataPath
                                    + Sql.Like
                                    + Sql.Quote(relativePathDifference + @"\" + "%") // like root/*
                                    + Sql.Or
-                                   + Constant.DatabaseColumn.FolderDataPath + Sql.Equal
+                                   + DatabaseColumn.FolderDataPath + Sql.Equal
                                    + Sql.Quote(relativePathDifference); // or equals root 
-                    destinationDdb.DeleteRowsReturningIds(metadataTable, where, Constant.DatabaseColumn.ID);
+                    destinationDdb.DeleteRowsReturningIds(metadataTable, where, DatabaseColumn.ID);
                 }
             }
             return DatabaseFileErrorsEnum.Ok;
@@ -559,7 +560,7 @@ namespace Timelapse.Database
             // Part 2. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
             //    This will guarantee that there are no duplicate primary keys.
             //    Note: if there are no entries in the database, this function returns 0 
-            long offsetId = destinationDdb.ScalarGetMaxLongValue(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
+            long offsetId = destinationDdb.ScalarGetMaxLongValue(DBTables.FileData, DatabaseColumn.ID);
 
             // Part 3. Handle the DataTable portion
             query += QueryPhraseMergeDataTable(offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference);
@@ -568,7 +569,7 @@ namespace Timelapse.Database
             query += QueryPhraseMergeMarkersTable(offsetId, destinationDdb, attachedSourceDB, tempMarkersTable);
 
             // Part 5. Handle the various Recognition Tables portion
-            bool destinationRecognitionsExist = destinationDdb.TableExists(Constant.DBTables.Detections);
+            bool destinationRecognitionsExist = destinationDdb.TableExists(DBTables.Detections);
             Tuple<DatabaseFileErrorsEnum, string, bool> resultTuple = QueryPhrasePrepareMergeRecognitionTablesAsNeeded(
                 query,
                 destinationDdb,
@@ -592,10 +593,10 @@ namespace Timelapse.Database
 
             // Part 7. Now update the various MetadataTables if and as needed
             // If the MetadataTableInfo exists in the destination
-            if (destinationDdb.TableExists(Constant.DBTables.MetadataInfo))
+            if (destinationDdb.TableExists(DBTables.MetadataInfo))
             {
                 SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceDdbPath);
-                DataTable destInfoTable = destinationDdb.GetDataTableFromSelect($"{Sql.SelectStarFrom} {Constant.DBTables.MetadataInfo} {Sql.OrderBy} {Constant.Control.Level}");
+                DataTable destInfoTable = destinationDdb.GetDataTableFromSelect($"{Sql.SelectStarFrom} {DBTables.MetadataInfo} {Sql.OrderBy} {Control.Level}");
                 int maxLevel = destInfoTable.Rows.Count;
                 int startLevel = levelsToIgnore + 1;
                 for (int srcLevel = 1, destLevel = startLevel; destLevel <= maxLevel; srcLevel++, destLevel++)
@@ -615,13 +616,13 @@ namespace Timelapse.Database
             destinationDdb.ExecuteNonQuery(query);
 
             // Part 9. Check if there are any Detections. If not, delete all the recognition tables as they are no longer relevant
-            if (destinationDdb.TableExistsAndEmpty(Constant.DBTables.Detections))
+            if (destinationDdb.TableExistsAndEmpty(DBTables.Detections))
             {
-                destinationDdb.DropTable(Constant.DBTables.Detections);
-                destinationDdb.DropTable(Constant.DBTables.Classifications);
-                destinationDdb.DropTable(Constant.DBTables.DetectionCategories);
-                destinationDdb.DropTable(Constant.DBTables.ClassificationCategories);
-                destinationDdb.DropTable(Constant.DBTables.Info);
+                destinationDdb.DropTable(DBTables.Detections);
+                destinationDdb.DropTable(DBTables.Classifications);
+                destinationDdb.DropTable(DBTables.DetectionCategories);
+                destinationDdb.DropTable(DBTables.ClassificationCategories);
+                destinationDdb.DropTable(DBTables.Info);
             }
             return DatabaseFileErrorsEnum.Ok;
         }
@@ -653,17 +654,17 @@ namespace Timelapse.Database
         {
             // Get the relative paths
             DataTable dtRelativePathsInDdb =
-                ddb.GetDataTableFromSelect(Sql.SelectDistinct + Constant.DatabaseColumn.RelativePath + Sql.From +
-                                           Constant.DBTables.FileData
-                                           + Sql.Where + Constant.DatabaseColumn.RelativePath + Sql.Equal +
+                ddb.GetDataTableFromSelect(Sql.SelectDistinct + DatabaseColumn.RelativePath + Sql.From +
+                                           DBTables.FileData
+                                           + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal +
                                            Sql.Quote(pathPrefix)
-                                           + Sql.Or + Constant.DatabaseColumn.RelativePath + Sql.Like +
+                                           + Sql.Or + DatabaseColumn.RelativePath + Sql.Like +
                                            Sql.Quote(pathPrefix + "\\%"));
 
             List<string> relativePathRoots = new List<string>();
             foreach (DataRow row in dtRelativePathsInDdb.Rows)
             {
-                string rootFolder = MergeDatabases.GetRootFolder((string)row[0]);
+                string rootFolder = GetRootFolder((string)row[0]);
                 if (false == relativePathRoots.Contains(rootFolder))
                 {
                     relativePathRoots.Add(rootFolder);
@@ -747,28 +748,28 @@ namespace Timelapse.Database
             double typical_detection_threshold, double conservative_detection_threshold,
             double typical_classification_threshold)
         {
-            return Sql.Update + Constant.DBTables.Info + Sql.Set
-                   + Constant.InfoColumns.Detector + Sql.Equal + Sql.Quote(detector) + Sql.Comma
-                   + Constant.InfoColumns.DetectorVersion + Sql.Equal + Sql.Quote(megadetector_version) + Sql.Comma
-                   + Constant.InfoColumns.DetectionCompletionTime + Sql.Equal + Sql.Quote(detection_completion_time) +
+            return Sql.Update + DBTables.Info + Sql.Set
+                   + InfoColumns.Detector + Sql.Equal + Sql.Quote(detector) + Sql.Comma
+                   + InfoColumns.DetectorVersion + Sql.Equal + Sql.Quote(megadetector_version) + Sql.Comma
+                   + InfoColumns.DetectionCompletionTime + Sql.Equal + Sql.Quote(detection_completion_time) +
                    Sql.Comma
-                   + Constant.InfoColumns.Classifier + Sql.Equal + Sql.Quote(classifier) + Sql.Comma
-                   + Constant.InfoColumns.ClassificationCompletionTime + Sql.Equal +
+                   + InfoColumns.Classifier + Sql.Equal + Sql.Quote(classifier) + Sql.Comma
+                   + InfoColumns.ClassificationCompletionTime + Sql.Equal +
                    Sql.Quote(classification_completion_time) + Sql.Comma
-                   + Constant.InfoColumns.TypicalDetectionThreshold + Sql.Equal +
+                   + InfoColumns.TypicalDetectionThreshold + Sql.Equal +
                    (Math.Round(typical_detection_threshold * 100) / 100) + Sql.Comma
-                   + Constant.InfoColumns.ConservativeDetectionThreshold + Sql.Equal +
+                   + InfoColumns.ConservativeDetectionThreshold + Sql.Equal +
                    (Math.Round(conservative_detection_threshold * 100) / 100) + Sql.Comma
-                   + Constant.InfoColumns.TypicalClassificationThreshold + Sql.Equal +
+                   + InfoColumns.TypicalClassificationThreshold + Sql.Equal +
                    (Math.Round(typical_classification_threshold * 100) / 100)
                    + Sql.Semicolon;
         }
 
         private static string UpdateImageSetTableWithUndefinedBoundingBox()
         {
-            return Sql.Update + Constant.DBTables.ImageSet + Sql.Set
-                   + Constant.DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal +
-                   Constant.RecognizerValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
+            return Sql.Update + DBTables.ImageSet + Sql.Set
+                   + DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal +
+                   RecognizerValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
         }
 
         private static void DictionaryReplaceSecondDictWithFirstDictElements(Dictionary<string, string> first,
@@ -800,16 +801,16 @@ namespace Timelapse.Database
         private static string QueryPhraseMergeDataTable(long offsetId, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePathDifference)
         {
             string query = string.Empty;
-            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(Constant.DBTables.FileData);
+            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(DBTables.FileData);
             query += QueryAttachDatabaseAs(sourceDdbPath, attachedSourceDB) + Environment.NewLine;
-            query += QueryCreateTemporaryTableFromExistingTable(tempDataTable, attachedSourceDB, Constant.DBTables.FileData) + Environment.NewLine;
+            query += QueryCreateTemporaryTableFromExistingTable(tempDataTable, attachedSourceDB, DBTables.FileData) + Environment.NewLine;
             if (offsetId > 0)
             {
                 // Add the offset to the IDs to make sure IDs don't conflict with existing IDs
-                query += QueryAddOffsetToIDInTable(tempDataTable, Constant.DatabaseColumn.ID, offsetId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tempDataTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
             }
-            query += QueryAddPrefixToRelativePathInTable(tempDataTable, relativePathDifference, Constant.DatabaseColumn.RelativePath) + Environment.NewLine;
-            query += QueryInsertTable2DataIntoTable1(Constant.DBTables.FileData, tempDataTable, currentDataLabels) + Environment.NewLine;
+            query += QueryAddPrefixToRelativePathInTable(tempDataTable, relativePathDifference, DatabaseColumn.RelativePath) + Environment.NewLine;
+            query += QueryInsertTable2DataIntoTable1(DBTables.FileData, tempDataTable, currentDataLabels) + Environment.NewLine;
             return query;
         }
 
@@ -832,7 +833,7 @@ namespace Timelapse.Database
             // Get the columns in order
             // Form: select name from pragma_table_info('MarkersTable')  as tblInfo 
             string queryGetColumnName = Sql.SelectNameFromPragmaTableInfo + Sql.OpenParenthesis +
-                                        Sql.Quote(Constant.DBTables.Markers) + Sql.CloseParenthesis + Sql.As +
+                                        Sql.Quote(DBTables.Markers) + Sql.CloseParenthesis + Sql.As +
                                         Sql.TBLINFO;
             DataTable dataTable = destinationDdb.GetDataTableFromSelect(queryGetColumnName);
             string columns = string.Empty;
@@ -848,13 +849,13 @@ namespace Timelapse.Database
             }
 
             query += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As + Sql.Select + columns + Sql.From +
-                     attachedSourceDB + Sql.Dot + Constant.DBTables.Markers + Sql.Semicolon + Environment.NewLine;
+                     attachedSourceDB + Sql.Dot + DBTables.Markers + Sql.Semicolon + Environment.NewLine;
             if (offsetId > 0)
             {
                 // Add the offset to the IDd to make sure IDs don't conflict with existing IDs
-                query += QueryAddOffsetToIDInTable(tempMarkersTable, Constant.DatabaseColumn.ID, offsetId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tempMarkersTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
             }
-            query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Markers, tempMarkersTable) + Environment.NewLine;
+            query += QueryInsertTable2DataIntoTable1(DBTables.Markers, tempMarkersTable) + Environment.NewLine;
             return query;
         }
 
@@ -875,7 +876,7 @@ namespace Timelapse.Database
             // Create a connection to the sourceDdbPath
             // and check if the sourceDdb file has any recognitions (by seeing if a Detections table exists)
             SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceDdbPath);
-            bool sourceDetectionsExists = sourceDdb.TableExists(Constant.DBTables.Detections);
+            bool sourceDetectionsExists = sourceDdb.TableExists(DBTables.Detections);
 
             // Condition 1. The sourceDdb doesn't have recognitions. So no need to update detections
             //              regardless of whether the destination has or doesn't have recognitions.
@@ -908,16 +909,16 @@ namespace Timelapse.Database
 
                 // Import the Detection Categories, Classification Categories and Info from the sourceDdb
                 // To do this, we first create temporary tables from the sourceDdb 
-                query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedSourceDB, Constant.DBTables.Info) + Environment.NewLine;
+                query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedSourceDB, DBTables.Info) + Environment.NewLine;
                 query += QueryCreateTemporaryTableFromExistingTable(tempDetectionCategoriesTable, attachedSourceDB,
-                    Constant.DBTables.DetectionCategories) + Environment.NewLine;
+                    DBTables.DetectionCategories) + Environment.NewLine;
                 query += QueryCreateTemporaryTableFromExistingTable(tempClassificationCategoriesTable, attachedSourceDB,
-                             Constant.DBTables.ClassificationCategories) + Environment.NewLine;
+                             DBTables.ClassificationCategories) + Environment.NewLine;
 
                 // Now we insert those tables into the current database
-                query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.DetectionCategories, attachedSourceDB) + Environment.NewLine;
-                query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.ClassificationCategories, attachedSourceDB) + Environment.NewLine;
-                query += QueryInsertTableDataFromAnotherDatabase(Constant.DBTables.Info, attachedSourceDB) + Environment.NewLine;
+                query += QueryInsertTableDataFromAnotherDatabase(DBTables.DetectionCategories, attachedSourceDB) + Environment.NewLine;
+                query += QueryInsertTableDataFromAnotherDatabase(DBTables.ClassificationCategories, attachedSourceDB) + Environment.NewLine;
+                query += QueryInsertTableDataFromAnotherDatabase(DBTables.Info, attachedSourceDB) + Environment.NewLine;
 
                 //// Update the various dictionaries to reflect their current values
                 //DictionaryReplaceSecondDictWithFirstDictElements(sourceInfoDictionary, infoDictionary);
@@ -941,14 +942,14 @@ namespace Timelapse.Database
                 RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(destinationInfoDictionary, sourceInfoDictionary);
 
             query += UpdateInfoTableWithValues(
-                (string)mergedInfoDictionary[Constant.InfoColumns.Detector],
-                (string)mergedInfoDictionary[Constant.InfoColumns.DetectorVersion],
-                (string)mergedInfoDictionary[Constant.InfoColumns.DetectionCompletionTime],
-                (string)mergedInfoDictionary[Constant.InfoColumns.Classifier],
-                (string)mergedInfoDictionary[Constant.InfoColumns.ClassificationCompletionTime],
-                Convert.ToDouble(mergedInfoDictionary[Constant.InfoColumns.TypicalDetectionThreshold]),
-                Convert.ToDouble(mergedInfoDictionary[Constant.InfoColumns.ConservativeDetectionThreshold]),
-                Convert.ToDouble(mergedInfoDictionary[Constant.InfoColumns.TypicalClassificationThreshold]));
+                (string)mergedInfoDictionary[InfoColumns.Detector],
+                (string)mergedInfoDictionary[InfoColumns.DetectorVersion],
+                (string)mergedInfoDictionary[InfoColumns.DetectionCompletionTime],
+                (string)mergedInfoDictionary[InfoColumns.Classifier],
+                (string)mergedInfoDictionary[InfoColumns.ClassificationCompletionTime],
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalDetectionThreshold]),
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.ConservativeDetectionThreshold]),
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalClassificationThreshold]));
             query += UpdateImageSetTableWithUndefinedBoundingBox();
 
             // Update the various dictionaries to reflect their current values
@@ -958,16 +959,16 @@ namespace Timelapse.Database
             if (sourceDetectionCategories.Count > 0 || detectionCategories.Count > 0)
             {
                 // There is something to add
-                if (Util.Dictionaries.MergeDictionaries(sourceDetectionCategories, destinationDetectionCategories,
+                if (Dictionaries.MergeDictionaries(sourceDetectionCategories, destinationDetectionCategories,
                         out Dictionary<string, string> mergedDetectionCategories))
                 {
                     // Clear the DetectionCategories table as we will be completely replacing it
-                    query += Sql.DeleteFrom + Constant.DBTables.DetectionCategories + Sql.Semicolon + Environment.NewLine;
+                    query += Sql.DeleteFrom + DBTables.DetectionCategories + Sql.Semicolon + Environment.NewLine;
 
                     // update the classification categories in the table.
-                    query += Sql.InsertInto + Constant.DBTables.DetectionCategories
-                                            + Sql.OpenParenthesis + Constant.DetectionCategoriesColumns.Category +
-                                            Sql.Comma + Constant.DetectionCategoriesColumns.Label +
+                    query += Sql.InsertInto + DBTables.DetectionCategories
+                                            + Sql.OpenParenthesis + DetectionCategoriesColumns.Category +
+                                            Sql.Comma + DetectionCategoriesColumns.Label +
                                             Sql.CloseParenthesis + Sql.Values;
                     foreach (KeyValuePair<string, string> kvp in mergedDetectionCategories)
                     {
@@ -994,17 +995,17 @@ namespace Timelapse.Database
             if (sourceClassificationCategories.Count > 0 || destinationClassificationCategories.Count > 0)
             {
                 // There is something to add
-                if (Util.Dictionaries.MergeDictionaries(sourceClassificationCategories,
+                if (Dictionaries.MergeDictionaries(sourceClassificationCategories,
                         classificationCategories,
                         out Dictionary<string, string> mergedClassificationCategories))
                 {
                     // Clear the ClassificationCategories table as we will be completely replacing it
-                    query += Sql.DeleteFrom + Constant.DBTables.ClassificationCategories + Sql.Semicolon + Environment.NewLine;
+                    query += Sql.DeleteFrom + DBTables.ClassificationCategories + Sql.Semicolon + Environment.NewLine;
 
                     // update the classification categories in the table.
-                    query += Sql.InsertInto + Constant.DBTables.ClassificationCategories
-                                            + Sql.OpenParenthesis + Constant.ClassificationCategoriesColumns.Category +
-                                            Sql.Comma + Constant.ClassificationCategoriesColumns.Label +
+                    query += Sql.InsertInto + DBTables.ClassificationCategories
+                                            + Sql.OpenParenthesis + ClassificationCategoriesColumns.Category +
+                                            Sql.Comma + ClassificationCategoriesColumns.Label +
                                             Sql.CloseParenthesis + Sql.Values;
                     foreach (KeyValuePair<string, string> kvp in mergedClassificationCategories)
                     {
@@ -1043,36 +1044,36 @@ namespace Timelapse.Database
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
             // The offeset should be 0 if there are no detections in the main DB, as we will be creating the detection table and then just adding to it.
             long offsetDetectionId = destinationRecognitionsExist
-                ? destinationDdb.ScalarGetMaxLongValue(Constant.DBTables.Detections, Constant.DetectionColumns.DetectionID)
+                ? destinationDdb.ScalarGetMaxLongValue(DBTables.Detections, DetectionColumns.DetectionID)
                 : 0;
 
-            query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, Constant.DBTables.Detections) + Environment.NewLine;
+            query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, DBTables.Detections) + Environment.NewLine;
             if (offsetId > 0)
             {
-                query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DatabaseColumn.ID, offsetId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tempDetectionsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
             }
             if (offsetDetectionId > 0)
             {
-                query += QueryAddOffsetToIDInTable(tempDetectionsTable, Constant.DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tempDetectionsTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
-            query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
+            query += QueryInsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
 
             // Similar to the above, we also update the classifications
             // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???
             int offsetClassificationId = (destinationRecognitionsExist)
-                ? destinationDdb.ScalarGetMaxIntValue(Constant.DBTables.Classifications, Constant.ClassificationColumns.ClassificationID)
+                ? destinationDdb.ScalarGetMaxIntValue(DBTables.Classifications, ClassificationColumns.ClassificationID)
                 : 0;
-            query += QueryCreateTemporaryTableFromExistingTable(tempClassificationsTable, attachedSourceDB, Constant.DBTables.Classifications) + Environment.NewLine;
+            query += QueryCreateTemporaryTableFromExistingTable(tempClassificationsTable, attachedSourceDB, DBTables.Classifications) + Environment.NewLine;
             if (offsetClassificationId > 0)
             {
-                query += QueryAddOffsetToIDInTable(tempClassificationsTable, Constant.ClassificationColumns.ClassificationID, offsetClassificationId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tempClassificationsTable, ClassificationColumns.ClassificationID, offsetClassificationId) + Environment.NewLine;
             }
 
             if (offsetDetectionId > 0)
             {
-                query += QueryAddOffsetToIDInTable(tempClassificationsTable, Constant.ClassificationColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tempClassificationsTable, ClassificationColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
-            query += QueryInsertTable2DataIntoTable1(Constant.DBTables.Classifications, tempClassificationsTable) + Environment.NewLine;
+            query += QueryInsertTable2DataIntoTable1(DBTables.Classifications, tempClassificationsTable) + Environment.NewLine;
             return query;
         }
 
@@ -1080,13 +1081,13 @@ namespace Timelapse.Database
             string attachedSourceDB, string srcTableName, string destTableName, string relativePathDifference)
         {
             string tmpLevelsTable = $"tmp{srcTableName}";
-            long offsetId = destinationDdb.ScalarGetMaxLongValue(destTableName, Constant.DatabaseColumn.ID);
+            long offsetId = destinationDdb.ScalarGetMaxLongValue(destTableName, DatabaseColumn.ID);
             string query = QueryCreateTemporaryTableFromExistingTable(tmpLevelsTable, attachedSourceDB, srcTableName) + Environment.NewLine;
             if (offsetId > 0)
             {
-                query += QueryAddOffsetToIDInTable(tmpLevelsTable, Constant.DatabaseColumn.ID, offsetId) + Environment.NewLine;
+                query += QueryAddOffsetToIDInTable(tmpLevelsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
             }
-            query += QueryAddPrefixToRelativePathInTable(tmpLevelsTable, relativePathDifference, Constant.DatabaseColumn.FolderDataPath) + Environment.NewLine;
+            query += QueryAddPrefixToRelativePathInTable(tmpLevelsTable, relativePathDifference, DatabaseColumn.FolderDataPath) + Environment.NewLine;
             query += QueryInsertTable2DataIntoTable1(destTableName, tmpLevelsTable) + Environment.NewLine;
             return query;
         }

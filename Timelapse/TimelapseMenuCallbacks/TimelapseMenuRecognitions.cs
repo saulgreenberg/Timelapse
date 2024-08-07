@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -22,27 +22,27 @@ namespace Timelapse
         #region Recognitions Submenu Opening 
         private void MenuItemRecognitions_SubmenuOpening(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            FilePlayer_Stop(); // In case the FilePlayer is going
             bool detectionsExist = false;
-            if (this.DataHandler?.FileDatabase != null)
+            if (DataHandler?.FileDatabase != null)
             {
-                detectionsExist = this.DataHandler.FileDatabase.DetectionsExists();
+                detectionsExist = DataHandler.FileDatabase.DetectionsExists();
             }
             // Enable / disable various menu items depending on whether we are looking at the single image view or overview
-            this.MenuItemPopulateWithDetectionCounts.IsEnabled = detectionsExist;
-            this.MenuBoundingBoxSetOptions.IsEnabled = detectionsExist;
+            MenuItemPopulateWithDetectionCounts.IsEnabled = detectionsExist;
+            MenuBoundingBoxSetOptions.IsEnabled = detectionsExist;
         }
         #endregion
 
         #region Populate a data field with detection counts
         private void MenuItemPopulateDataFieldWithDetectionCounts_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataHandler?.FileDatabase?.Database != null && this.DataHandler.FileDatabase.DetectionsExists())
+            if (DataHandler?.FileDatabase?.Database != null && DataHandler.FileDatabase.DetectionsExists())
             {
-                PopulateFieldWithDetectionCounts dialog = new PopulateFieldWithDetectionCounts(this, this.DataHandler.FileDatabase);
+                PopulateFieldWithDetectionCounts dialog = new PopulateFieldWithDetectionCounts(this, DataHandler.FileDatabase);
                 if (true == dialog.ShowDialog())
                 {
-                    this.FileShow(this.DataHandler.ImageCache.CurrentRow, true);
+                    FileShow(DataHandler.ImageCache.CurrentRow, true);
                 }
             }
         }
@@ -50,12 +50,12 @@ namespace Timelapse
 
         private void MenuBoundingBoxSetOptions_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataHandler?.FileDatabase?.Database != null && this.DataHandler.FileDatabase.DetectionsExists())
+            if (DataHandler?.FileDatabase?.Database != null && DataHandler.FileDatabase.DetectionsExists())
             {
-                RecognitionOptionsForBoundingBox dialog = new RecognitionOptionsForBoundingBox(this, this.State);
+                RecognitionOptionsForBoundingBox dialog = new RecognitionOptionsForBoundingBox(this, State);
                 if (true == dialog.ShowDialog())
                 {
-                    this.FileShow(this.DataHandler.ImageCache.CurrentRow, true);
+                    FileShow(DataHandler.ImageCache.CurrentRow, true);
                 }
             }
         }
@@ -66,12 +66,12 @@ namespace Timelapse
             //
             // 1. Get the Json file from the user
             //
-            string jsonFileName = Constant.File.RecognitionJsonDataFileName;
+            string jsonFileName = File.RecognitionJsonDataFileName;
             if (false == Dialogs.TryGetFileFromUserUsingOpenFileDialog(
                       "Select a .json file that contains the recognition data. It will be merged into the current image set",
-                      Path.Combine(this.DataHandler.FileDatabase.FolderPath, jsonFileName),
-                      String.Format("JSon files (*{0})|*{0}", Constant.File.JsonFileExtension),
-                      Constant.File.JsonFileExtension,
+                      Path.Combine(DataHandler.FileDatabase.FolderPath, jsonFileName),
+                      String.Format("JSon files (*{0})|*{0}", File.JsonFileExtension),
+                      File.JsonFileExtension,
                       out string jsonFilePath))
             {
                 return;
@@ -81,21 +81,21 @@ namespace Timelapse
             // 2. Read recognitions from the Json file.
             //    Note that this has its own progress handler
             //
-            this.BusyCancelIndicator.IsBusy = true;
-            using (Recognizer jsonRecognitions = await this.DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
+            BusyCancelIndicator.IsBusy = true;
+            using (Recognizer jsonRecognitions = await DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
             {
                 if (jsonRecognitions == null)
                 {
                     // Abort. The json file could not be read.
                     Dialogs.MenuFileRecognizersDataCouldNotBeReadDialog(this);
-                    this.BusyCancelIndicator.Reset(false);
+                    BusyCancelIndicator.Reset(false);
                     return;
                 }
 
                 if (jsonRecognitions.info == null)
                 {
                     // A null info signals that the operation was cancelled. 
-                    this.BusyCancelIndicator.Reset(false);
+                    BusyCancelIndicator.Reset(false);
                     return;
                 }
 
@@ -118,15 +118,15 @@ namespace Timelapse
                 //    - json recognizer file was found in a sub-folder somewhere under the root folder
                 //    - json recognizer's image paths do not have the sub-folder prefix
                 //    - at least one file is found that matches a path comprising and added sub-folder prefix
-                string subFolderPrefix = RecognitionUtilities.GetRecognizersFileSubfolderPathIfAny(this.DataHandler.FileDatabase.FolderPath, jsonFilePath);
+                string subFolderPrefix = RecognitionUtilities.GetRecognizersFileSubfolderPathIfAny(DataHandler.FileDatabase.FolderPath, jsonFilePath);
                 if (false == string.IsNullOrEmpty(subFolderPrefix))
                 {
-                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
                     {
-                        this.BusyCancelIndicator.Reset(false);
+                        BusyCancelIndicator.Reset(false);
                         return;
                     }
 
@@ -137,7 +137,7 @@ namespace Timelapse
                         // Automatically add the prefix, so do so.
                         if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
                         {
-                            this.BusyCancelIndicator.Reset(false);
+                            BusyCancelIndicator.Reset(false);
                             return;
                         }
 
@@ -166,7 +166,7 @@ namespace Timelapse
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
-                            this.BusyCancelIndicator.Reset(false);
+                            BusyCancelIndicator.Reset(false);
                             return;
                         }
                     }
@@ -176,12 +176,12 @@ namespace Timelapse
                 else
                 {
                     // Likely outside the root folder. Check the paths again, and generate an error message if needed
-                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, this.DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
                     {
-                        this.BusyCancelIndicator.Reset(false);
+                        BusyCancelIndicator.Reset(false);
                         return;
                     }
 
@@ -191,7 +191,7 @@ namespace Timelapse
                         if (false == Dialogs.RecognizerNoMatchToExistingFiles(this, sampleFile))
                         {
                             // The user decided to abort the operation 
-                            this.BusyCancelIndicator.Reset(false);
+                            BusyCancelIndicator.Reset(false);
                             return;
                         }
                     }
@@ -205,10 +205,10 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
-                RecognizerImportResultEnum result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
+                RecognizerImportResultEnum result = await DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
                 if (result == RecognizerImportResultEnum.Cancelled)
                 {
-                    this.BusyCancelIndicator.Reset(false);
+                    BusyCancelIndicator.Reset(false);
                     return;
                 }
 
@@ -218,18 +218,18 @@ namespace Timelapse
                 if (result == RecognizerImportResultEnum.Success)
                 {
                     // Only reset these if we actually imported some detections, as otherwise nothing has changed.
-                    GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
-                    if (this.DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
+                    GlobalReferences.DetectionsExists = DataHandler.FileDatabase.DetectionsExists();
+                    if (DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
                     {
-                        this.DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
+                        DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
                     }
                     // Reset the BoundingBox threshold to its new values.
-                    this.State.BoundingBoxDisplayThresholdResetToDefault();
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    State.BoundingBoxDisplayThresholdResetToDefault();
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
 
                 // Hide the Busy indicator
-                this.BusyCancelIndicator.Reset(false);
+                BusyCancelIndicator.Reset(false);
 
                 //
                 // 6. Check for incompatible detections (and delete old recognition data if needed) and/or Report the status.
@@ -240,17 +240,17 @@ namespace Timelapse
                     RecognitionsDeleteOldData messageBox = new RecognitionsDeleteOldData(this, result);
                     if (true == messageBox.ShowDialog())
                     {
-                        if (this.DataHandler?.FileDatabase == null)
+                        if (DataHandler?.FileDatabase == null)
                         {
                             //Shouldn't happen
-                            TracePrint.NullException(nameof(this.DataHandler.FileDatabase));
+                            TracePrint.NullException(nameof(DataHandler.FileDatabase));
                             return;
                         }
                         // Try again by deleting the old recognition data 
-                        result = await this.DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
+                        result = await DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, false, progress, GlobalReferences.CancelTokenSource);
                         if (result == RecognizerImportResultEnum.Cancelled)
                         {
-                            this.BusyCancelIndicator.Reset(false);
+                            BusyCancelIndicator.Reset(false);
                         }
                     }
                     else
@@ -275,9 +275,9 @@ namespace Timelapse
                 {
                     // Some folders missing - show which folder paths in the DB are not in the recognizer file
                     // Trim the uneeded path from the jsonFilePath
-                    string trimmedJsonPath = null == this.DataHandler?.FileDatabase?.FolderPath
+                    string trimmedJsonPath = null == DataHandler?.FileDatabase?.FolderPath
                         ? jsonFilePath
-                        : Path.GetDirectoryName(jsonFilePath.Substring(this.DataHandler.FileDatabase.FolderPath.Length + 1));
+                        : Path.GetDirectoryName(jsonFilePath.Substring(DataHandler.FileDatabase.FolderPath.Length + 1));
                     Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, trimmedJsonPath, details);
                 }
                 else
@@ -340,11 +340,11 @@ namespace Timelapse
         // Download and install ecoassist. 
         private void MenuItemEcoAssistDownload_Click(object sender, RoutedEventArgs e)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),  Constant.EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),  EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
 
             // If an installation already exists, check with the user to see if he/she wants to continue...
-            if (File.Exists(ecoAssistExecutable1) || File.Exists(ecoAssistExecutable2))
+            if (System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2))
             {
                 if (false == Dialogs.EcoAssistAlreadyDownloaded(this))
                 {
@@ -355,24 +355,24 @@ namespace Timelapse
             // Give the user information about the installation...
             if (true == Dialogs.EcoAssistInstallationInformaton(this))
             {
-                ProcessExecution.TryProcessStart(new Uri(Constant.EcoAssist.EcoAssistDownload));
+                ProcessExecution.TryProcessStart(new Uri(EcoAssist.EcoAssistDownload));
             }
         }
 
         private void MenuItemEcoAssistUninstall_Click(object sender, RoutedEventArgs e)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Constant.EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
 
             // If an installation already exists, check with the user to see if he/she wants to continue...
-            if (false == File.Exists(ecoAssistExecutable1) && false == File.Exists(ecoAssistExecutable2))
+            if (false == System.IO.File.Exists(ecoAssistExecutable1) && false == System.IO.File.Exists(ecoAssistExecutable2))
             {
                 if (false == Dialogs.EcoAssistNotInstalled(this))
                 {
                     return;
                 }
             }
-            ProcessExecution.TryProcessStart(new Uri(Constant.EcoAssist.EcoAssistUninstallDownload));
+            ProcessExecution.TryProcessStart(new Uri(EcoAssist.EcoAssistUninstallDownload));
         }
 
         private void MenuItemEcoAssistRun_Click(object sender, RoutedEventArgs e)
@@ -380,7 +380,7 @@ namespace Timelapse
             string homepath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string initialFolderPath = this.DataHandler?.FileDatabase?.FolderPath ?? myDocuments;
+            string initialFolderPath = DataHandler?.FileDatabase?.FolderPath ?? myDocuments;
             // Since we don't have an image set, ask the user to select the folder.
             // Or maybe we should always do that, where we use the initial folder as the root folder if the image set is open.
             if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Run EcoAssist on the selected folder", initialFolderPath, out string selectedFolderPath))
@@ -388,7 +388,7 @@ namespace Timelapse
                 return;
             }
 
-            string cmd = $@"/k (cd /d {programFiles} && ""{Path.Combine(programFiles, Constant.EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || (cd /d {homepath} && ""{homepath}\EcoAssist_files\EcoAssist\open.bat"" timelapse ""{selectedFolderPath}"" ) ";
+            string cmd = $@"/k (cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || (cd /d {homepath} && ""{homepath}\EcoAssist_files\EcoAssist\open.bat"" timelapse ""{selectedFolderPath}"" ) ";
             if (false == ProcessExecution.TryProcessRunCommand(cmd))
             {
                 Dialogs.EcoAssistCouldNotBeStarted(this);
@@ -402,18 +402,18 @@ namespace Timelapse
                     FreezeOnMouseEnter = true, // set the option to prevent notification disappearing automatically if user move cursor on it
                     UnfreezeOnMouseLeave = true
                 };
-                this.ToastNotifier.ShowInformation("The EcoAssist application should appear shortly in a separate window (about 2-20 seconds)", toastOptions);
+                ToastNotifier.ShowInformation("The EcoAssist application should appear shortly in a separate window (about 2-20 seconds)", toastOptions);
             }
         }
         #endregion
 
         private void MenuItem_OnEcoAssistSubmenuOpened(object sender, RoutedEventArgs e)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Constant.EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Constant.EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
 
             // Enable runing ecoassist only if the Ecoassist executable seems to be installed.
-            this.MenuItemEcoAssistRun.IsEnabled = File.Exists(ecoAssistExecutable1) || File.Exists(ecoAssistExecutable2);
+            MenuItemEcoAssistRun.IsEnabled = System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2);
         }
     }
 }

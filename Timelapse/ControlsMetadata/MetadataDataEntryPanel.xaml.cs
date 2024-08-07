@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -57,10 +58,10 @@ namespace Timelapse.ControlsMetadata
         public MetadataDataEntryPanel(int level, TabItem parentTab)
         {
             InitializeComponent();
-            this.Level = level;
-            this.ParentTab = parentTab;
-            DataTableBackedList<MetadataInfoRow> metadataInfo = this.FileDatabase.MetadataInfo;
-            this.ExpectedImageLevel = metadataInfo == null ? 1 : metadataInfo[metadataInfo.RowCount - 1].Level;
+            Level = level;
+            ParentTab = parentTab;
+            DataTableBackedList<MetadataInfoRow> metadataInfo = FileDatabase.MetadataInfo;
+            ExpectedImageLevel = metadataInfo == null ? 1 : metadataInfo[metadataInfo.RowCount - 1].Level;
         }
         #endregion
 
@@ -69,9 +70,9 @@ namespace Timelapse.ControlsMetadata
         {
             // Always clear the children 
             // This clears things if this is invoked after all rows have been removed and prepares things if things have been changed or added
-            this.ControlsPanel.Children.Clear();
-            this.LookupControlByItsDataLabel.Clear();
-            this.TabControlOrderList.Clear();
+            ControlsPanel.Children.Clear();
+            LookupControlByItsDataLabel.Clear();
+            TabControlOrderList.Clear();
 
             // Return if no data for that level exists. 
             // e.g., when a new level is just being created, or when a level has no controls or no data is associated with it,
@@ -84,7 +85,7 @@ namespace Timelapse.ControlsMetadata
             // add it to this level's data structure and/or data table
             Dictionary<string, string> dataLabelsAndValues = new Dictionary<string, string>
             {
-                { Constant.DatabaseColumn.FolderDataPath, this.SubPath }
+                { DatabaseColumn.FolderDataPath, SubPath }
             };
 
             DataEntryControls styleProvider = new DataEntryControls();
@@ -222,11 +223,11 @@ namespace Timelapse.ControlsMetadata
                             {
                                     Value = DateTime.TryParse(metadataControlRow.DefaultValue, out DateTime tempDateTime)
                                         ? tempDateTime
-                                        : Constant.ControlDefault.DateTimeCustomDefaultValue
+                                        : ControlDefault.DateTimeCustomDefaultValue
                             },
                             ContentReadOnly = false
                         };
-                        MetadataDataEntryPanel.ConfigureFormatForDateTimeCustom(dateTimeCustomControl.ContentControl);
+                        ConfigureFormatForDateTimeCustom(dateTimeCustomControl.ContentControl);
                         dateTimeCustomControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimeCustomControl.ContentControl.Value));
                         controlToAdd = dateTimeCustomControl;
                         // DateTime values are stored in the database in a format different from what is displayed to the user (i.e., what is stored as the control's content),
@@ -245,11 +246,11 @@ namespace Timelapse.ControlsMetadata
                             {
                                 Value = DateTime.TryParse(metadataControlRow.DefaultValue, out DateTime tempDate)
                                     ? tempDate
-                                    : Constant.ControlDefault.DateTimeCustomDefaultValue
+                                    : ControlDefault.DateTimeCustomDefaultValue
                             },
                             ContentReadOnly = false
                         };
-                        MetadataDataEntryPanel.ConfigureFormatForDate(dateControl.ContentControl);
+                        ConfigureFormatForDate(dateControl.ContentControl);
                         dateControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateControl.ContentControl.Value));
                         controlToAdd = dateControl;
                         // DateTime values are stored in the database in a format different from what is displayed to the user (i.e., what is stored as the control's content),
@@ -269,11 +270,11 @@ namespace Timelapse.ControlsMetadata
                             {
                                 Value = DateTime.TryParse(metadataControlRow.DefaultValue, out DateTime tempTime)
                                     ? tempTime
-                                    : Constant.ControlDefault.DateTimeCustomDefaultValue
+                                    : ControlDefault.DateTimeCustomDefaultValue
                             },
                             ContentReadOnly = false
                         };
-                        MetadataDataEntryPanel.ConfigureFormatForTime(timeControl.ContentControl);
+                        ConfigureFormatForTime(timeControl.ContentControl);
                         timeControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime((DateTime)timeControl.ContentControl.Value));
                         controlToAdd = timeControl;
                         // Maybe don't add it if its invisible?
@@ -307,33 +308,33 @@ namespace Timelapse.ControlsMetadata
                 controlToAdd.ParentPanel = this;
 
                 // Add the control to the Control panel
-                this.ControlsPanel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+                ControlsPanel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
                 Grid.SetRow(controlToAdd.Container, row++);
-                this.ControlsPanel.Children.Add(controlToAdd.Container);
+                ControlsPanel.Children.Add(controlToAdd.Container);
 
                 // Add the control to the lookup dictionary so we can find it quickly via its data label
-                this.LookupControlByItsDataLabel.Add(controlToAdd.DataLabel, controlToAdd);
-                this.TabControlOrderList.Add(controlToAdd);
+                LookupControlByItsDataLabel.Add(controlToAdd.DataLabel, controlToAdd);
+                TabControlOrderList.Add(controlToAdd);
                 // Track the datalabel and its contents so we can add it as a row if needed
                 dataLabelsAndValues.Add(controlToAdd.DataLabel, alternateContent ?? controlToAdd.Content);
 
             }
 
-            this.RenderFieldsIfCamtrapDPStandards();
+            RenderFieldsIfCamtrapDPStandards();
 
             // Format each control for displaying one per line: label, control, then a description derived from the tooltip. To do so:
-            MetadataDataEntryPanel.FormatControlsEachOnASingleLine(this.ControlsPanel.Children);
+            FormatControlsEachOnASingleLine(ControlsPanel.Children);
 
             // Its possible that no Metadata table structure entry exists for this filePath
             // So we need to test for that, and if its missing add it to both.
-            MetadataRow metadataRow = this.FileDatabase.MetadataTablesGetRow(this.Level, this.SubPath);
+            MetadataRow metadataRow = FileDatabase.MetadataTablesGetRow(Level, SubPath);
             if (metadataRow == null)
             {
-                this.FileDatabase.MetadataTablesAndDatabaseUpsertRow(this.Level, this.SubPath, dataLabelsAndValues);
+                FileDatabase.MetadataTablesAndDatabaseUpsertRow(Level, SubPath, dataLabelsAndValues);
             }
 
             // Now activate the control with its callback
-            GlobalReferences.MainWindow.MetadataDataHandler.SetDataEntryCallbacks(this.LookupControlByItsDataLabel);
+            GlobalReferences.MainWindow.MetadataDataHandler.SetDataEntryCallbacks(LookupControlByItsDataLabel);
         }
 
         #endregion
@@ -349,10 +350,10 @@ namespace Timelapse.ControlsMetadata
         private void SetRelativePathToCurrentFolder(string imageFolderPath)
         {
             // set the relativePath to the level's portion of the passed in relativePath
-            this.SubPath = MetadataDataEntryPanel.GetSubPathByLevel(this.Level, imageFolderPath);
+            SubPath = GetSubPathByLevel(Level, imageFolderPath);
 
             // Abort if we are in the same relativePath as the previous one, as nothing needs to be reset
-            if (imageFolderPath == this.relativePathToCurrentFolder) return;
+            if (imageFolderPath == relativePathToCurrentFolder) return;
 
             // Determine if the image is at the expected level and set the status accordingly.
 
@@ -364,46 +365,46 @@ namespace Timelapse.ControlsMetadata
                 ? 0 : string.Empty == imageFolderPath
                     ? 1 : imageFolderPath.Split(Path.DirectorySeparatorChar).Length + 1;
             ImageLevelLocationStatusEnum imageLevelLocationStatus = ImageLevelLocationStatusEnum.Okay;
-            if (levelsInPath == this.ExpectedImageLevel)
+            if (levelsInPath == ExpectedImageLevel)
             {
                 imageLevelLocationStatus = ImageLevelLocationStatusEnum.Okay;
             }
-            else if (levelsInPath < this.ExpectedImageLevel)
+            else if (levelsInPath < ExpectedImageLevel)
             {
                 // If the current level does not exist in the path, then set the status accordingly.
-                imageLevelLocationStatus = levelsInPath >= this.Level
+                imageLevelLocationStatus = levelsInPath >= Level
                 ? ImageLevelLocationStatusEnum.LocatedBeforeExpectedLeafLevel
                 : ImageLevelLocationStatusEnum.LevelDoesNotExistInImagePath;
             }
-            else if (levelsInPath > this.ExpectedImageLevel)
+            else if (levelsInPath > ExpectedImageLevel)
             {
                 imageLevelLocationStatus = ImageLevelLocationStatusEnum.LocatedAfterExpectedLeafLevel;
             }
 
             // User Interface stuff: Set the 'Folder' field to the current subpath
-            Run run = this.SubPath == null || imageLevelLocationStatus == ImageLevelLocationStatusEnum.LevelDoesNotExistInImagePath
+            Run run = SubPath == null || imageLevelLocationStatus == ImageLevelLocationStatusEnum.LevelDoesNotExistInImagePath
                 ? new Run
                 {
                     Foreground = Brushes.Crimson,
                     FontStyle = FontStyles.Italic,
                     Text = "No such sub-folder"
                 }
-                : string.IsNullOrWhiteSpace(this.SubPath)
+                : string.IsNullOrWhiteSpace(SubPath)
                     ? new Run { Text = "[Root folder]" }
-                    : new Run { Text = this.SubPath };
-            MetadataDataEntryPanel.TextBlockSetContents(TextBlockRelativePathToCurrentImage, run);
+                    : new Run { Text = SubPath };
+            TextBlockSetContents(TextBlockRelativePathToCurrentImage, run);
             TextBlockRelativePathToCurrentImage.ToolTip = TextBlockRelativePathToCurrentImage.Text;
 
             // Update the stored relative path.
             relativePathToCurrentFolder = imageFolderPath;
 
             // If no controls are visible and this level should show data, then initialize it to display the controls
-            if (ControlsPanel.Children.Count == 0 && this.FileDatabase.MetadataTablesIsLevelAndRelativePathPresent(this.Level, this.SubPath))
+            if (ControlsPanel.Children.Count == 0 && FileDatabase.MetadataTablesIsLevelAndRelativePathPresent(Level, SubPath))
             {
-                this.InitializePanelWithControls(this.Level, this.FileDatabase.MetadataControlsByLevel[this.Level]);
+                InitializePanelWithControls(Level, FileDatabase.MetadataControlsByLevel[Level]);
             }
-            this.TrySyncControlRowFromMetadata();
-            this.SetPanelAppearance(imageLevelLocationStatus);
+            TrySyncControlRowFromMetadata();
+            SetPanelAppearance(imageLevelLocationStatus);
         }
         #endregion
 
@@ -549,23 +550,23 @@ namespace Timelapse.ControlsMetadata
         // - if so, whether the current RelativePathToCurrentFolder is present in the database 
         private void SetPanelAppearance(ImageLevelLocationStatusEnum imageLevelLocationStatus)
         {
-            if (false == this.FileDatabase.MetadataTablesIsLevelPresent(this.Level)
-                || false == (this.FileDatabase.MetadataControlsByLevel.ContainsKey(this.Level)
-                             && this.FileDatabase.MetadataControlsByLevel[this.Level].RowCount > 0))
+            if (false == FileDatabase.MetadataTablesIsLevelPresent(Level)
+                || false == (FileDatabase.MetadataControlsByLevel.ContainsKey(Level)
+                             && FileDatabase.MetadataControlsByLevel[Level].RowCount > 0))
             {
                 // This level table is not present in the database, nor are any controls associated with that level
                 // While we show that level as a tab, the user cannot do anything in it.
-                this.SetPanelAppearance(false, false, imageLevelLocationStatus);
+                SetPanelAppearance(false, false, imageLevelLocationStatus);
             }
-            else if (this.FileDatabase.MetadataTablesIsLevelAndRelativePathPresent(this.Level, this.SubPath))
+            else if (FileDatabase.MetadataTablesIsLevelAndRelativePathPresent(Level, SubPath))
             {
                 // this level and the current RelativePathToCurrentFolder are present in the database
-                this.SetPanelAppearance(true, true, imageLevelLocationStatus);
+                SetPanelAppearance(true, true, imageLevelLocationStatus);
             }
             else
             {
                 // this level is present but the current relative path is not
-                this.SetPanelAppearance(true, false, imageLevelLocationStatus);
+                SetPanelAppearance(true, false, imageLevelLocationStatus);
             }
         }
         private void SetPanelAppearance(bool levelPresent, bool currentFolderPresent, ImageLevelLocationStatusEnum imageLevelLocationStatus)
@@ -573,7 +574,7 @@ namespace Timelapse.ControlsMetadata
             // Colors: Light blue color indicates controls are present
             //         VeryLightGrey indiates no data for that level,
             //         Ivory indiates indicates it needs to be initialized,
-            SolidColorBrush greenBrush = Constant.Colours.VeryLightBlue;
+            SolidColorBrush greenBrush = Colours.VeryLightBlue;
             Brush brushToUse;
             bool showAsterix = false; // We set this to true when we want to add an asterix after the tab name if the panel is not initialized
             // Change appearance depending upon a level being present, and/or if there are nocontrols associated with it.
@@ -582,50 +583,50 @@ namespace Timelapse.ControlsMetadata
                 // The level is  defined in the template, and the data fields are being displayed for this folder
 
                 // AddMetadata button not needed as already initialized
-                this.ButtonAddMetadata.Visibility = Visibility.Collapsed;
+                ButtonAddMetadata.Visibility = Visibility.Collapsed;
 
-                this.GridIfControlsAbsent.Visibility = Visibility.Collapsed;
-                this.GridIfControlsPresent.Visibility = Visibility.Visible;
-                this.MetadataControlsContainer.Visibility = Visibility.Visible;
+                GridIfControlsAbsent.Visibility = Visibility.Collapsed;
+                GridIfControlsPresent.Visibility = Visibility.Visible;
+                MetadataControlsContainer.Visibility = Visibility.Visible;
                 brushToUse = greenBrush;
-                this.MetadataControlsContainer.Background = brushToUse;
+                MetadataControlsContainer.Background = brushToUse;
             }
             else if (levelPresent)
             {
                 // While the level is present, the current folder is not defined in the template
 
                 // AddMetadata button displayed as long as this is a valid location
-                this.ButtonAddMetadata.IsEnabled = imageLevelLocationStatus != ImageLevelLocationStatusEnum.LevelDoesNotExistInImagePath;
-                this.ButtonAddMetadata.Visibility = Visibility.Visible;
-                this.GridIfControlsAbsent.Visibility = Visibility.Collapsed;
-                this.GridIfControlsPresent.Visibility = Visibility.Visible;
-                this.MetadataControlsContainer.Visibility = Visibility.Collapsed;
+                ButtonAddMetadata.IsEnabled = imageLevelLocationStatus != ImageLevelLocationStatusEnum.LevelDoesNotExistInImagePath;
+                ButtonAddMetadata.Visibility = Visibility.Visible;
+                GridIfControlsAbsent.Visibility = Visibility.Collapsed;
+                GridIfControlsPresent.Visibility = Visibility.Visible;
+                MetadataControlsContainer.Visibility = Visibility.Collapsed;
                 brushToUse = Colours.PaleWhite;
                 showAsterix = true;
             }
             else
             {
                 // The level is not defined in the template, so we don't show its controls
-                this.GridIfControlsAbsent.Visibility = Visibility.Visible;
-                this.GridIfControlsPresent.Visibility = Visibility.Collapsed;
-                this.MetadataControlsContainer.Visibility = Visibility.Collapsed;
-                brushToUse = Constant.Colours.VeryLightGrey;
-                this.ButtonAddMetadata.IsEnabled = false;
-                this.ButtonAddMetadata.Visibility = Visibility.Collapsed;
+                GridIfControlsAbsent.Visibility = Visibility.Visible;
+                GridIfControlsPresent.Visibility = Visibility.Collapsed;
+                MetadataControlsContainer.Visibility = Visibility.Collapsed;
+                brushToUse = Colours.VeryLightGrey;
+                ButtonAddMetadata.IsEnabled = false;
+                ButtonAddMetadata.Visibility = Visibility.Collapsed;
             }
 
             // Finally, if we are in view only, make sure that the button is disabled 
             // to disallow initialization
             if (GlobalReferences.TimelapseState.IsViewOnly)
             {
-                this.ButtonAddMetadata.IsEnabled = false;
+                ButtonAddMetadata.IsEnabled = false;
             }
 
             // Color the rest of the panel accordingly
-            this.ParentTab.Background = brushToUse;
-            this.Background = brushToUse;
-            this.FirstContainer.Background = brushToUse;
-            if (this.ParentTab.Header is TextBlock tb)
+            ParentTab.Background = brushToUse;
+            Background = brushToUse;
+            FirstContainer.Background = brushToUse;
+            if (ParentTab.Header is TextBlock tb)
             {
                 tb.Background = brushToUse;
 
@@ -640,16 +641,16 @@ namespace Timelapse.ControlsMetadata
                     // The image is in a subfolder earlier than the expected one. Display warning.
                     tb.FontStyle = FontStyles.Normal;
                     tb.Foreground = Brushes.Black;
-                    DataTableBackedList<MetadataInfoRow> metadataInfo = this.FileDatabase.MetadataInfo;
+                    DataTableBackedList<MetadataInfoRow> metadataInfo = FileDatabase.MetadataInfo;
                     if (metadataInfo == null)
                     {
-                        this.TBProblem.Text = "Warning: Image is not in the expected subfolder.";
+                        TBProblem.Text = "Warning: Image is not in the expected subfolder.";
                     }
                     else
                     {
                         int lastRow = metadataInfo.RowCount;
                         string expectedLevelName = lastRow == 0 ? "the expected " : $"{MetadataUI.CreateTemporaryAliasIfNeeded(lastRow, metadataInfo[lastRow - 1].Alias)}-";
-                        this.TBProblem.Text = $"Warning: Images should be located in {expectedLevelName}level subfolders.";
+                        TBProblem.Text = $"Warning: Images should be located in {expectedLevelName}level subfolders.";
                     }
                 }
                 else if (imageLevelLocationStatus == ImageLevelLocationStatusEnum.LevelDoesNotExistInImagePath)
@@ -658,16 +659,16 @@ namespace Timelapse.ControlsMetadata
                     // Note that the initialize button should have been disabled as well
                     tb.FontStyle = FontStyles.Italic;
                     tb.Foreground = Brushes.Gray;
-                    DataTableBackedList<MetadataInfoRow> metadataInfo = this.FileDatabase.MetadataInfo;
+                    DataTableBackedList<MetadataInfoRow> metadataInfo = FileDatabase.MetadataInfo;
                     if (metadataInfo == null)
                     {
-                        this.TBProblem.Text = "Warning: Image does not contain this level's folder in its path.";
+                        TBProblem.Text = "Warning: Image does not contain this level's folder in its path.";
                     }
                     else
                     {
                         int lastRow = metadataInfo.RowCount;
-                        string expectedLevelName = lastRow == 0 ? "this level's " : $"a {MetadataUI.CreateTemporaryAliasIfNeeded(this.Level, metadataInfo[lastRow - 1].Alias)}-level ";
-                        this.TBProblem.Text = $"Warning: Image does not contain {expectedLevelName} folder in its path.";
+                        string expectedLevelName = lastRow == 0 ? "this level's " : $"a {MetadataUI.CreateTemporaryAliasIfNeeded(Level, metadataInfo[lastRow - 1].Alias)}-level ";
+                        TBProblem.Text = $"Warning: Image does not contain {expectedLevelName} folder in its path.";
                     }
                 }
                 else if (imageLevelLocationStatus == ImageLevelLocationStatusEnum.LocatedAfterExpectedLeafLevel)
@@ -675,16 +676,16 @@ namespace Timelapse.ControlsMetadata
                     // The image is in a subfolder after than the expected one. Display warning.
                     tb.FontStyle = FontStyles.Normal;
                     tb.Foreground = Brushes.Black;
-                    DataTableBackedList<MetadataInfoRow> metadataInfo = this.FileDatabase.MetadataInfo;
+                    DataTableBackedList<MetadataInfoRow> metadataInfo = FileDatabase.MetadataInfo;
                     if (metadataInfo == null)
                     {
-                        this.TBProblem.Text = "Warning: Image is not in the expected subfolder.";
+                        TBProblem.Text = "Warning: Image is not in the expected subfolder.";
                     }
                     else
                     {
                         int lastRow = metadataInfo.RowCount;
-                        string expectedLevelName = lastRow == 0 ? "the expected " : $"{MetadataUI.CreateTemporaryAliasIfNeeded(this.Level, metadataInfo[lastRow - 1].Alias)}-";
-                        this.TBProblem.Text = $"Warning: Images should be located in {expectedLevelName}level subfolders.";
+                        string expectedLevelName = lastRow == 0 ? "the expected " : $"{MetadataUI.CreateTemporaryAliasIfNeeded(Level, metadataInfo[lastRow - 1].Alias)}-";
+                        TBProblem.Text = $"Warning: Images should be located in {expectedLevelName}level subfolders.";
                     }
                 }
                 else
@@ -692,7 +693,7 @@ namespace Timelapse.ControlsMetadata
                     // The image is in the expected subfolder.
                     tb.FontStyle = FontStyles.Normal;
                     tb.Foreground = Brushes.Black;
-                    this.TBProblem.Text = string.Empty;
+                    TBProblem.Text = string.Empty;
                 }
             }
         }
@@ -701,30 +702,30 @@ namespace Timelapse.ControlsMetadata
         #region Button callbacks
         private void AddMetadata_OnClick(object sender, RoutedEventArgs e)
         {
-            if (GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataControlsByLevel.ContainsKey(this.Level))
+            if (GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataControlsByLevel.ContainsKey(Level))
             {
                 // Becomes a noop if there is no level for this control
-                this.InitializePanelWithControls(this.Level, GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataControlsByLevel[this.Level]);
-                MetadataRow metadataRow = this.FileDatabase.MetadataTablesGetRow(this.Level, this.SubPath);
+                InitializePanelWithControls(Level, GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataControlsByLevel[Level]);
+                MetadataRow metadataRow = FileDatabase.MetadataTablesGetRow(Level, SubPath);
 
                 // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements
-                this.AutofillFieldsIfCamtrapDPStandards();
+                AutofillFieldsIfCamtrapDPStandards();
 
-                this.TrySyncControlRowFromMetadata();
-                this.SetPanelAppearance(ImageLevelLocationStatusEnum.Okay);
+                TrySyncControlRowFromMetadata();
+                SetPanelAppearance(ImageLevelLocationStatusEnum.Okay);
             }
         }
 
         public bool TrySyncControlRowFromMetadata()
         {
 
-            if (false == this.FileDatabase.MetadataTablesIsLevelPresent(this.Level))
+            if (false == FileDatabase.MetadataTablesIsLevelPresent(Level))
             {
                 // The level isn't present
                 return false;
             }
 
-            MetadataRow metadataRow = this.FileDatabase.MetadataTablesGetRow(this.Level, this.SubPath);
+            MetadataRow metadataRow = FileDatabase.MetadataTablesGetRow(Level, SubPath);
             if (metadataRow == null)
             {
                 // the row isn't present
@@ -733,7 +734,7 @@ namespace Timelapse.ControlsMetadata
 
             foreach (string dataLabel in metadataRow.DataLabels)
             {
-                if (dataLabel == Constant.DatabaseColumn.FolderDataPath)
+                if (dataLabel == DatabaseColumn.FolderDataPath)
                 {
                     // We don't want to update the MetadataFolder, and its not in the lookup control anyways.
                     continue;
@@ -765,14 +766,14 @@ namespace Timelapse.ControlsMetadata
         // the user to construct and/or edit a list of contributors
         private void RenderFieldsIfCamtrapDPStandards()
         {
-            if (this.FileDatabase.MetadataTablesIsCamtrapDPStandard())
+            if (FileDatabase.MetadataTablesIsCamtrapDPStandard())
             {
                 // Data package level
-                if (this.Level == 1)
+                if (Level == 1)
                 {
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Contributors, out var contributorsControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Contributors, out var contributorsControl))
                     {
-                        Button button = new Button()
+                        Button button = new Button
                         {
                             Content = "Click to edit a list of Contributors",
                             Visibility = Visibility.Visible,
@@ -784,9 +785,9 @@ namespace Timelapse.ControlsMetadata
                         contributorsControl.GetContentControl.Visibility = Visibility.Collapsed;
                         contributorsControl.Container.Children.Insert(1, button);
                     }
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Sources, out var sourcesControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Sources, out var sourcesControl))
                     {
-                        Button button = new Button()
+                        Button button = new Button
                         {
                             Content = "Click to edit a list of Sources",
                             Visibility = Visibility.Visible,
@@ -799,9 +800,9 @@ namespace Timelapse.ControlsMetadata
                         sourcesControl.Container.Children.Insert(1, button);
                     }
 
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Licenses, out var licensesControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Licenses, out var licensesControl))
                     {
-                        Button button = new Button()
+                        Button button = new Button
                         {
                             Content = "Click to edit a list of Licenses",
                             Visibility = Visibility.Visible,
@@ -814,9 +815,9 @@ namespace Timelapse.ControlsMetadata
                         licensesControl.Container.Children.Insert(1, button);
                     }
 
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Taxonomic, out var taxonomicControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Taxonomic, out var taxonomicControl))
                     {
-                        Button button = new Button()
+                        Button button = new Button
                         {
                             Content = "Click to edit a list of Taxonomic definitions",
                             Visibility = Visibility.Visible,
@@ -829,9 +830,9 @@ namespace Timelapse.ControlsMetadata
                         taxonomicControl.Container.Children.Insert(1, button);
                     }
 
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.RelatedIdentifiers, out var relatedIdentifiersControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.RelatedIdentifiers, out var relatedIdentifiersControl))
                     {
-                        Button button = new Button()
+                        Button button = new Button
                         {
                             Content = "Click to edit a list of Related identifiers",
                             Visibility = Visibility.Visible,
@@ -844,9 +845,9 @@ namespace Timelapse.ControlsMetadata
                         relatedIdentifiersControl.Container.Children.Insert(1, button);
                     }
 
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.References, out var referencesControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.References, out var referencesControl))
                     {
-                        Button button = new Button()
+                        Button button = new Button
                         {
                             Content = "Click to edit a list of References",
                             Visibility = Visibility.Visible,
@@ -859,10 +860,10 @@ namespace Timelapse.ControlsMetadata
                         referencesControl.Container.Children.Insert(1, button);
                     }
 
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
                     {
-                        StackPanel spatialPanel = new StackPanel(){Orientation=Orientation.Horizontal};
-                        Button buttonLatLong = new Button()
+                        StackPanel spatialPanel = new StackPanel {Orientation=Orientation.Horizontal};
+                        Button buttonLatLong = new Button
                         {
                             Content = "From lat/long",
                             ToolTip = $"Generates a GeoJson as a bounding box containing all your deployments' latitude/longitude coordinates.{Environment.NewLine}" +
@@ -874,7 +875,7 @@ namespace Timelapse.ControlsMetadata
                             Padding = new Thickness(5, 0, 5, 0),
                             HorizontalContentAlignment = HorizontalAlignment.Left,
                         };
-                        Button buttonGeoJson = new Button()
+                        Button buttonGeoJson = new Button
                         {
                             Content = "Edit with GeoJson.IO",
                             ToolTip = $"Opens a web browser on http://Geojson.IO{Environment.NewLine}" +
@@ -908,12 +909,12 @@ namespace Timelapse.ControlsMetadata
         // and set the contributors string to the json representation of that list
         public void Contributors_Click(object sender, RoutedEventArgs eventArgs)
         {
-            if (this.Level == 1) // It should always be the DataPackage level 1
+            if (Level == 1) // It should always be the DataPackage level 1
             {
                 // Get and set the Contributors json
-                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Contributors, out var contributorsControl))
+                if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Contributors, out var contributorsControl))
                 {
-                    Standards.CamptrapDPContributors contributorDialog = new Standards.CamptrapDPContributors(GlobalReferences.MainWindow, contributorsControl.Content);
+                    CamptrapDPContributors contributorDialog = new CamptrapDPContributors(GlobalReferences.MainWindow, contributorsControl.Content);
                     if (true == contributorDialog.ShowDialog())
                     {
                         contributorsControl.SetContentAndTooltip(contributorDialog.JsonContributorsList);
@@ -925,12 +926,12 @@ namespace Timelapse.ControlsMetadata
 
         public void Sources_Click(object sender, RoutedEventArgs eventArgs)
         {
-            if (this.Level == 1) // It should always be the DataPackage level 1
+            if (Level == 1) // It should always be the DataPackage level 1
             {
                 // Get and set the Sources json
-                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Sources, out var sourcesControl))
+                if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Sources, out var sourcesControl))
                 {
-                    Standards.CamtrapDPSources sourcesDialog = new Standards.CamtrapDPSources(GlobalReferences.MainWindow, sourcesControl.Content);
+                    CamtrapDPSources sourcesDialog = new CamtrapDPSources(GlobalReferences.MainWindow, sourcesControl.Content);
                     if (true == sourcesDialog.ShowDialog())
                     {
                         sourcesControl.SetContentAndTooltip(sourcesDialog.JsonSourcesList);
@@ -942,12 +943,12 @@ namespace Timelapse.ControlsMetadata
 
         public void Licenses_Click(object sender, RoutedEventArgs eventArgs)
         {
-            if (this.Level == 1) // It should always be the DataPackage level 1
+            if (Level == 1) // It should always be the DataPackage level 1
             {
                 // Get and set the Sources json
-                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Licenses, out var licensesControl))
+                if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Licenses, out var licensesControl))
                 {
-                    Standards.CamtrapDPLicenses licensesDialog = new Standards.CamtrapDPLicenses(GlobalReferences.MainWindow, licensesControl.Content);
+                    CamtrapDPLicenses licensesDialog = new CamtrapDPLicenses(GlobalReferences.MainWindow, licensesControl.Content);
                     if (true == licensesDialog.ShowDialog())
                     {
                         licensesControl.SetContentAndTooltip(licensesDialog.JsonLicensesList);
@@ -959,12 +960,12 @@ namespace Timelapse.ControlsMetadata
 
         public void Taxonomic_Click(object sender, RoutedEventArgs eventArgs)
         {
-            if (this.Level == 1) // It should always be the DataPackage level 1
+            if (Level == 1) // It should always be the DataPackage level 1
             {
                 // Get and set the Sources json
-                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Taxonomic, out var taxonomicControl))
+                if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Taxonomic, out var taxonomicControl))
                 {
-                    Standards.CamtrapDPTaxonomic taxonomicDialog = new Standards.CamtrapDPTaxonomic(GlobalReferences.MainWindow, taxonomicControl.Content);
+                    CamtrapDPTaxonomic taxonomicDialog = new CamtrapDPTaxonomic(GlobalReferences.MainWindow, taxonomicControl.Content);
                     if (true == taxonomicDialog.ShowDialog())
                     {
                         taxonomicControl.SetContentAndTooltip(taxonomicDialog.JsonTaxonomicList);
@@ -976,12 +977,12 @@ namespace Timelapse.ControlsMetadata
 
         public void RelatedIdentifiers_Click(object sender, RoutedEventArgs eventArgs)
         {
-            if (this.Level == 1) // It should always be the DataPackage level 1
+            if (Level == 1) // It should always be the DataPackage level 1
             {
                 // Get and set the Sources json
-                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.RelatedIdentifiers, out var relatedIdentifiersControl))
+                if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.RelatedIdentifiers, out var relatedIdentifiersControl))
                 {
-                    Standards.CamtrapDPRelatedIdentifiers licensesDialog = new Standards.CamtrapDPRelatedIdentifiers(GlobalReferences.MainWindow, relatedIdentifiersControl.Content);
+                    CamtrapDPRelatedIdentifiers licensesDialog = new CamtrapDPRelatedIdentifiers(GlobalReferences.MainWindow, relatedIdentifiersControl.Content);
                     if (true == licensesDialog.ShowDialog())
                     {
                         relatedIdentifiersControl.SetContentAndTooltip(licensesDialog.JsonRelatedIdentifiersList);
@@ -994,12 +995,12 @@ namespace Timelapse.ControlsMetadata
 
         public void References_Click(object sender, RoutedEventArgs eventArgs)
         {
-            if (this.Level == 1) // It should always be the DataPackage level 1
+            if (Level == 1) // It should always be the DataPackage level 1
             {
                 // Get and set the Sources json
-                if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.References, out var referencesControl))
+                if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.References, out var referencesControl))
                 {
-                    Standards.CamtrapDPReferences referencesDialog = new Standards.CamtrapDPReferences(GlobalReferences.MainWindow, referencesControl.Content);
+                    CamtrapDPReferences referencesDialog = new CamtrapDPReferences(GlobalReferences.MainWindow, referencesControl.Content);
                     if (true == referencesDialog.ShowDialog())
                     {
                         referencesControl.SetContentAndTooltip(referencesDialog.JsonReferencesList);
@@ -1014,22 +1015,22 @@ namespace Timelapse.ControlsMetadata
             string command = "https://GeoJson.IO";
             string jsonParameterCode = "/#data=data:application/json,";
             Dialogs.CamtrapDPSpatialCoverageInstructions(GlobalReferences.MainWindow);
-            if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
+            if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
             {
                 if (false == string.IsNullOrWhiteSpace(spatialControl.Content))
                 {
                     command += jsonParameterCode + Uri.EscapeDataString(spatialControl.Content);
                 }
-                Util.ProcessExecution.TryProcessStart(new Uri(command));
+                ProcessExecution.TryProcessStart(new Uri(command));
             } 
         }
 
         public void SpatialLatLong_Click(object sender, RoutedEventArgs eventArgs)
         {
             Dialogs.CamtrapDPSpatialCoverageInstructions(GlobalReferences.MainWindow);
-            string jsonAsString = CamtrapDPHelpers.CalculateLatLongBoundingBoxFromDeployments(this.FileDatabase);
+            string jsonAsString = CamtrapDPHelpers.CalculateLatLongBoundingBoxFromDeployments(FileDatabase);
             // Set the package created date
-            if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
+            if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
             {
                 spatialControl.SetContentAndTooltip(jsonAsString);
             }
@@ -1038,28 +1039,28 @@ namespace Timelapse.ControlsMetadata
         // If we are using the Camtrap standard, autofill some of the fields to match the standards requirements
         private void AutofillFieldsIfCamtrapDPStandards()
         {
-            if (this.FileDatabase.MetadataTablesIsCamtrapDPStandard())
+            if (FileDatabase.MetadataTablesIsCamtrapDPStandard())
             {
                 // Data package level
-                if (this.Level == 1)
+                if (Level == 1)
                 {
                     // Set the package ID
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.IdAlias, out var idControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.IdAlias, out var idControl))
                     {
                         idControl.SetContentAndTooltip(Guid.NewGuid().ToString());
                         GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(idControl);
                     }
 
                     // Set the package created date
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.DataPackage.Created, out var createdControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Created, out var createdControl))
                     {
-                        createdControl.SetContentAndTooltip(Util.DateTimeHandler.ToStringDatabaseDateTime(DateTime.Now));
+                        createdControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime(DateTime.Now));
                         GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(createdControl);
                     }
                 }
 
                 // Deployment level
-                if (this.Level == 2)
+                if (Level == 2)
                 {
                     // Set the DeploymentID to a GUID
                     // NOW DONE IN CSV FILE
@@ -1070,7 +1071,7 @@ namespace Timelapse.ControlsMetadata
                     //    GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(deploymentIDControl);
                     //}
                     // Set the LocationID to a GUID
-                    if (LookupControlByItsDataLabel.TryGetValue(Standards.CamtrapDPConstants.Deployment.LocationID, out var locationIDControl))
+                    if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.Deployment.LocationID, out var locationIDControl))
                     {
                         locationIDControl.SetContentAndTooltip(Guid.NewGuid().ToString());
                         GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(locationIDControl);
@@ -1188,7 +1189,7 @@ namespace Timelapse.ControlsMetadata
         // Move the focus to the next or previous control in this panel
         private void TryMoveFocusToNextControl(MetadataDataEntryControl inputElement, KeyEventArgs e)
         {
-            int index = this.TabControlOrderList.IndexOf(inputElement);
+            int index = TabControlOrderList.IndexOf(inputElement);
             if (index >= 0)
             {
                 // Find the next or previous index (depending on whether a shift is presentits a tab or shift tab
@@ -1196,16 +1197,16 @@ namespace Timelapse.ControlsMetadata
                 if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 {
                     nextIndex = index == 0
-                        ? this.TabControlOrderList.Count - 1
+                        ? TabControlOrderList.Count - 1
                         : index - 1;
                 }
                 else
                 {
-                    nextIndex = index < this.TabControlOrderList.Count - 1
+                    nextIndex = index < TabControlOrderList.Count - 1
                         ? index + 1
                         : 0;
                 }
-                Keyboard.Focus(this.TabControlOrderList[nextIndex].GetContentControl);
+                Keyboard.Focus(TabControlOrderList[nextIndex].GetContentControl);
                 e.Handled = true;
             }
         }
@@ -1225,10 +1226,10 @@ namespace Timelapse.ControlsMetadata
 
             dateTimePicker.AutoCloseCalendar = true;
             dateTimePicker.Format = DateTimeFormat.Custom;
-            dateTimePicker.FormatString = Constant.Time.DateTimeDisplayFormat;
+            dateTimePicker.FormatString = Time.DateTimeDisplayFormat;
             dateTimePicker.TimeFormat = DateTimeFormat.Custom;
-            dateTimePicker.TimeFormatString = Constant.Time.TimeFormat;
-            dateTimePicker.CultureInfo = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            dateTimePicker.TimeFormatString = Time.TimeFormat;
+            dateTimePicker.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
         }
 
         public static void ConfigureFormatForDate(DateTimePicker dateTimePicker)
@@ -1236,9 +1237,9 @@ namespace Timelapse.ControlsMetadata
             ThrowIf.IsNullArgument(dateTimePicker, nameof(dateTimePicker));
 
             dateTimePicker.AutoCloseCalendar = true; dateTimePicker.AutoCloseCalendar = true;
-            dateTimePicker.CultureInfo = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            dateTimePicker.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
             dateTimePicker.Format = DateTimeFormat.Custom;
-            dateTimePicker.FormatString = Constant.Time.DateDisplayFormat;
+            dateTimePicker.FormatString = Time.DateDisplayFormat;
             dateTimePicker.TimePickerVisibility = Visibility.Collapsed;
         }
 
@@ -1246,9 +1247,9 @@ namespace Timelapse.ControlsMetadata
         {
             ThrowIf.IsNullArgument(timePicker, nameof(timePicker));
 
-            timePicker.CultureInfo = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            timePicker.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
             timePicker.Format = DateTimeFormat.Custom;
-            timePicker.FormatString = Constant.Time.TimeFormat;
+            timePicker.FormatString = Time.TimeFormat;
             timePicker.TimeInterval = TimeSpan.FromMinutes(15);
             timePicker.StartTime = TimeSpan.FromHours(9);
             timePicker.MaxDropDownHeight = 250;

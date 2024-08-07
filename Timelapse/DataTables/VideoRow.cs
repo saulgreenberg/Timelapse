@@ -22,7 +22,7 @@ namespace Timelapse.DataTables
         // We can't easily tell if a video is displayable. Instead, just see if the file exists.
         public override bool IsDisplayable(string pathToRootFolder)
         {
-            return System.IO.File.Exists(Path.Combine(pathToRootFolder, this.RelativePath, this.File));
+            return System.IO.File.Exists(Path.Combine(pathToRootFolder, RelativePath, File));
         }
 
         // This will be invoked only on a video file, so always returns true
@@ -35,7 +35,7 @@ namespace Timelapse.DataTables
         public override BitmapSource LoadBitmap(string imageFolderPath, int? desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
             // Invoke the static version. The only change is that we get the full file path and pass that as a parameter
-            return BitmapUtilities.GetBitmapFromVideoFile(this.GetFilePath(imageFolderPath), desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
+            return BitmapUtilities.GetBitmapFromVideoFile(GetFilePath(imageFolderPath), desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
         }
         #endregion
     }

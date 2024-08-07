@@ -1,13 +1,8 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Xceed.Wpf.AvalonDock.Themes;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Timelapse.Util
 {
@@ -18,7 +13,7 @@ namespace Timelapse.Util
         // Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
         public static bool TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors)
         {
-            parsedFile = CSVHelpers.CSVFileReadAndParseAsListOfRows(filePath);
+            parsedFile = CSVFileReadAndParseAsListOfRows(filePath);
 
             // Abort if the CSV file could not be read 
             if (parsedFile == null)
@@ -36,7 +31,8 @@ namespace Timelapse.Util
                 importErrors.Add($"The file '{Path.GetFileName(filePath)}' appears to be empty.");
                 return false;
             }
-            else if (parsedFile.Count < 2)
+
+            if (parsedFile.Count < 2)
             {
                 importErrors.Add($"The file '{Path.GetFileName(filePath)}' does not contain any data.");
                 return false;
@@ -114,7 +110,7 @@ namespace Timelapse.Util
                 return includeComma ? "," : string.Empty;
             }
 
-            char[] charArray = new char[] { '\"', ',', '\r', '\n' };
+            char[] charArray = { '\"', ',', '\r', '\n' };
             if (value.IndexOfAny(charArray) > -1)
             {
                 // commas, double quotation marks, line feeds (\x0A), and carriage returns (\x0D) require leading and ending double quotation marks be added

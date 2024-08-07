@@ -3,7 +3,6 @@ using Timelapse.ControlsDataEntry;
 using Timelapse.DataTables;
 using Timelapse.Util;
 
-
 namespace Timelapse.ControlsMetadata
 {
     // DecimalPositive: Any positive real number as input. Comprises:
@@ -16,8 +15,8 @@ namespace Timelapse.ControlsMetadata
         public MetadataDataEntryDecimalPositive(MetadataControlRow control, DataEntryControls styleProvider, string tooltip) :
             base(control, styleProvider, tooltip, true)
         {
-            this.ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_DecimalPositiveCharacterOnly;
-            DataObject.AddPastingHandler(this.ContentControl, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfDecimalPositive);
+            ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_DecimalPositiveCharacterOnly;
+            DataObject.AddPastingHandler(ContentControl, ValidationCallbacks.Paste_OnlyIfDecimalPositive);
         }
         #endregion
     }

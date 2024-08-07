@@ -10,6 +10,7 @@ using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Xceed.Wpf.Toolkit;
+using Control = Timelapse.Constant.Control;
 
 namespace Timelapse.Dialog
 {
@@ -60,22 +61,22 @@ namespace Timelapse.Dialog
             DataTableBackedList<ControlRow> tdbControls, DataTableBackedList<ControlRow> ddbControls)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.TemplateSyncResults = templateSyncResults;
+            Owner = owner;
+            TemplateSyncResults = templateSyncResults;
 
-            this.TdbMetadataInfo = tdbMetadataInfo;
-            this.DdbMetadataInfo = ddbMetadataInfo;
-            this.TdbMetadataControlsByLevel = tdbMetadataControlsByLevel;
-            this.DdbMetadataControlsByLevel = ddbMetadataControlsByLevel;
-            this.TdbControls = tdbControls;
-            this.DdbControls = ddbControls;
+            TdbMetadataInfo = tdbMetadataInfo;
+            DdbMetadataInfo = ddbMetadataInfo;
+            TdbMetadataControlsByLevel = tdbMetadataControlsByLevel;
+            DdbMetadataControlsByLevel = ddbMetadataControlsByLevel;
+            TdbControls = tdbControls;
+            DdbControls = ddbControls;
         }
 
         // Position the window relative to its parent
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            if (this.TemplateSyncResults.ControlSynchronizationErrorsByLevel.Count > 0)
+            if (TemplateSyncResults.ControlSynchronizationErrorsByLevel.Count > 0)
             {
                 GenerateIncompatibleDataFields();
             }
@@ -85,7 +86,7 @@ namespace Timelapse.Dialog
                 GenerateDataFieldDifferencesPage();
             }
 
-            this.AdjustUIAppearance();
+            AdjustUIAppearance();
         }
         #endregion
 
@@ -93,16 +94,16 @@ namespace Timelapse.Dialog
         // Displays an error message plus list of incompatible data fields on the data fields page.
         private void GenerateIncompatibleDataFields()
         {
-            this.MessageDataFieldsIncompatible.Visibility = Visibility.Visible;
+            MessageDataFieldsIncompatible.Visibility = Visibility.Visible;
 
             // Add the details
             int row = 0;
-            int lastLevel = this.TemplateSyncResults.InfoRowsCommon.Count;
+            int lastLevel = TemplateSyncResults.InfoRowsCommon.Count;
 
             // Yes. display differences as collected in the warnings.
             TextBlock tb = new TextBlock();
-            this.TextBlockAddHeader(tb, $"{Environment.NewLine}The incompatible data fields defined in your template differ as follows", 14);
-            this.CreateRow(DataFieldGrid, tb, ++row);
+            TextBlockAddHeader(tb, $"{Environment.NewLine}The incompatible data fields defined in your template differ as follows", 14);
+            CreateRow(DataFieldGrid, tb, ++row);
             for (int level = 0; level <= lastLevel; level++)
             {
                 // SAULXXX Check - Original was warnings but this method is only invoked if its on Errors, so I think this version is correct.
@@ -113,7 +114,7 @@ namespace Timelapse.Dialog
                 }
 
                 // Print the level name if there are any differences
-                this.AddLevelSeparator(level, level == 0 ? "Image data" : this.TdbMetadataInfo[level - 1].Alias, ++row);
+                AddLevelSeparator(level, level == 0 ? "Image data" : TdbMetadataInfo[level - 1].Alias, ++row);
                 tb = null;
                 foreach (string errorMessage in TemplateSyncResults.ControlSynchronizationErrorsByLevel[level])
                 {
@@ -122,14 +123,14 @@ namespace Timelapse.Dialog
                     {
                         // So we don't add a line feed at the beginning
                         tb = new TextBlock();
-                        this.TextBlockAddPlainLine(tb, errorMessage, false);
+                        TextBlockAddPlainLine(tb, errorMessage, false);
                     }
                     else
                     {
-                        this.TextBlockAddPlainLine(tb, errorMessage);
+                        TextBlockAddPlainLine(tb, errorMessage);
                     }
                 }
-                this.CreateRow(DataFieldGrid, tb, ++row);
+                CreateRow(DataFieldGrid, tb, ++row);
             }
         }
         #endregion
@@ -141,39 +142,39 @@ namespace Timelapse.Dialog
         {
             int row = -1;
             TextBlock instructions = new TextBlock();
-            this.TextBlockAddHeader(instructions, $"If you choose 'Open using New template', Timelapse will update the folder levels as follows.{Environment.NewLine}");
+            TextBlockAddHeader(instructions, $"If you choose 'Open using New template', Timelapse will update the folder levels as follows.{Environment.NewLine}");
 
             // Check: No level changes? 
-            if (this.TemplateSyncResults.InfoRowsInDdbToDelete.Count == 0
-                && this.TemplateSyncResults.InfoRowsInDdbToRenumber.Count == 0
-                && this.TemplateSyncResults.InfoRowsInTdbToAdd.Count == 0
-                && this.TemplateSyncResults.InfoRowsWithNameChanges.Count == 0)
+            if (TemplateSyncResults.InfoRowsInDdbToDelete.Count == 0
+                && TemplateSyncResults.InfoRowsInDdbToRenumber.Count == 0
+                && TemplateSyncResults.InfoRowsInTdbToAdd.Count == 0
+                && TemplateSyncResults.InfoRowsWithNameChanges.Count == 0)
             {
                 return;
             }
 
             // Check: only difference is an appended level?
-            if (this.TemplateSyncResults.InfoHierarchyTdbDiffersOnlyWithAppendedLevels)
+            if (TemplateSyncResults.InfoHierarchyTdbDiffersOnlyWithAppendedLevels)
             {
                 TextBlock problem = new TextBlock();
-                this.TextBlockAddHeader(problem, "Warning: A new folder level definition was added to the bottom level,", 14);
-                this.TextBlockAddPlainLine(problem, $"Your folder hierarchy should be adjusted, if needed, to include a similar sub-folder level.{Environment.NewLine}");
-                this.CreateRow(this.LevelGrid, problem, ++row);
+                TextBlockAddHeader(problem, "Warning: A new folder level definition was added to the bottom level,", 14);
+                TextBlockAddPlainLine(problem, $"Your folder hierarchy should be adjusted, if needed, to include a similar sub-folder level.{Environment.NewLine}");
+                CreateRow(LevelGrid, problem, ++row);
             }
 
             // Show differences between new and old folder levels
             TextBlock information = new TextBlock();
-            this.TextBlockAddHeader(information, $"The folder hierarchy defined in your templates differ as follows.{Environment.NewLine}", 14);
-            this.CreateRow(this.LevelGrid, information, ++row);
+            TextBlockAddHeader(information, $"The folder hierarchy defined in your templates differ as follows.{Environment.NewLine}", 14);
+            CreateRow(LevelGrid, information, ++row);
 
-            this.CreateRow(this.LevelGrid,
+            CreateRow(LevelGrid,
                 new TextBlock { Text = "New template", FontStyle = FontStyles.Italic, FontWeight = FontWeights.Bold, FontSize = 14 },
                 new TextBlock { Text = "Original template", FontStyle = FontStyles.Italic, FontWeight = FontWeights.Bold, FontSize = 14 },
                 ++row);
 
-            this.CreateRow(this.LevelGrid,
-                GenerateTdbHierarchicalList(this.TdbMetadataInfo, this.TemplateSyncResults),
-                GenerateDdbHierarchicalList(this.DdbMetadataInfo, this.TemplateSyncResults),
+            CreateRow(LevelGrid,
+                GenerateTdbHierarchicalList(TdbMetadataInfo, TemplateSyncResults),
+                GenerateDdbHierarchicalList(DdbMetadataInfo, TemplateSyncResults),
                 ++row);
         }
         #endregion
@@ -183,38 +184,38 @@ namespace Timelapse.Dialog
         public void GenerateDataFieldDifferencesPage()
         {
             int row = 0;
-            int lastLevel = this.TemplateSyncResults.InfoRowsCommon.Count;
+            int lastLevel = TemplateSyncResults.InfoRowsCommon.Count;
             bool deletionsPresent = false;
 
             // Check: No data field changes or warnings?
-            if (false == this.TemplateSyncResults.SyncRequiredAsDataLabelsDiffer && TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count == 0)
+            if (false == TemplateSyncResults.SyncRequiredAsDataLabelsDiffer && TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count == 0)
             {
                 return;
             }
 
             // Check: Only warnings?
-            if (false == this.TemplateSyncResults.SyncRequiredAsDataLabelsDiffer && TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count > 0)
+            if (false == TemplateSyncResults.SyncRequiredAsDataLabelsDiffer && TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count > 0)
             {
                 //Yes. Hide the column headers as we don't need them, then print a message saying so
-                this.DataFieldGrid.RowDefinitions[0].Height = new GridLength(0);
+                DataFieldGrid.RowDefinitions[0].Height = new GridLength(0);
             }
 
             // Check: Data label differences?
-            if (this.TemplateSyncResults.SyncRequiredAsDataLabelsDiffer)
+            if (TemplateSyncResults.SyncRequiredAsDataLabelsDiffer)
             {
                 // Iterate through each level, checking and collecting changes (if any) between their datafields
                 // Level 0 is the image data fields.
                 for (int level = 0; level <= lastLevel; level++)
                 {
                     // Check: Level 1 and above? If the level hierarchies are incompatible, there is no point showing their differences
-                    if (level > 0 && this.TemplateSyncResults.InfoHierarchyIncompatibleDifferences)
+                    if (level > 0 && TemplateSyncResults.InfoHierarchyIncompatibleDifferences)
                     {
                         break;
                     }
 
                     // Check: Is this a new (added) level in Tdb, or a Deleted levels in Ddb?
-                    if (this.TemplateSyncResults.InfoRowsInTdbToAdd.Any(s => s.Level == level) ||
-                        this.TemplateSyncResults.InfoRowsInDdbToDelete.Any(s => s.Level == level))
+                    if (TemplateSyncResults.InfoRowsInTdbToAdd.Any(s => s.Level == level) ||
+                        TemplateSyncResults.InfoRowsInDdbToDelete.Any(s => s.Level == level))
                     {
                         // We can ignore any data labels from such levels as the level message summarizes them
                         // Also, there is no point in listing all added data fields in the new level
@@ -225,70 +226,70 @@ namespace Timelapse.Dialog
                     // Build the interface showing datalabels in terms of whether they can be added and renamed, added only, or deleted only.
                     inDdbOnly.Clear();
                     inTdbOnly.Clear();
-                    if (this.TemplateSyncResults.SyncRequiredAsDataLabelsDiffer)
+                    if (TemplateSyncResults.SyncRequiredAsDataLabelsDiffer)
                     {
                         // Collect the data labels that are only in the ddb or only in the tdb
-                        foreach (string type in Constant.Control.ControlTypes)
+                        foreach (string type in Control.ControlTypes)
                         {
-                            AddResultIfThereIsSomethingToAdd(this.inDdbOnly, type, level, this.TemplateSyncResults.DataLabelsInDdbButNotTdbByLevel);
-                            AddResultIfThereIsSomethingToAdd(this.inTdbOnly, type, level, this.TemplateSyncResults.DataLabelsInTdbButNotDdbByLevel);
+                            AddResultIfThereIsSomethingToAdd(inDdbOnly, type, level, TemplateSyncResults.DataLabelsInDdbButNotTdbByLevel);
+                            AddResultIfThereIsSomethingToAdd(inTdbOnly, type, level, TemplateSyncResults.DataLabelsInTdbButNotDdbByLevel);
                         }
 
                         // Print the level name if there are any differences
-                        if ((this.TemplateSyncResults.DataLabelsInDdbButNotTdbByLevel.ContainsKey(level) &&
-                             this.TemplateSyncResults.DataLabelsInDdbButNotTdbByLevel[level].Count != 0) ||
-                            (this.TemplateSyncResults.DataLabelsInTdbButNotDdbByLevel.ContainsKey(level) &&
-                             this.TemplateSyncResults.DataLabelsInTdbButNotDdbByLevel[level].Count != 0))
+                        if ((TemplateSyncResults.DataLabelsInDdbButNotTdbByLevel.ContainsKey(level) &&
+                             TemplateSyncResults.DataLabelsInDdbButNotTdbByLevel[level].Count != 0) ||
+                            (TemplateSyncResults.DataLabelsInTdbButNotDdbByLevel.ContainsKey(level) &&
+                             TemplateSyncResults.DataLabelsInTdbButNotDdbByLevel[level].Count != 0))
                         {
                             string tempAlias =
                                 level == 0
                                     ? "Image data"
-                                    : MetadataUI.CreateTemporaryAliasIfNeeded(level, this.TdbMetadataInfo[level - 1].Alias); // levels are 1-based, so first is 0
-                            this.AddLevelSeparator(level, tempAlias, ++row);
+                                    : MetadataUI.CreateTemporaryAliasIfNeeded(level, TdbMetadataInfo[level - 1].Alias); // levels are 1-based, so first is 0
+                            AddLevelSeparator(level, tempAlias, ++row);
                         }
 
                         // We want to display data fields ordered by type, so we iterate through each type looking 
                         // for changes, and then display that change.
                         // TODO We should be allowing certain types to be considered together, e.g. Multiline, Text are equivalent
-                        foreach (string type in Constant.Control.ControlTypes)
+                        foreach (string type in Control.ControlTypes)
                         {
                             // Changed items that can be renamed
-                            int inTdbOnlyCount = this.inTdbOnly.TryGetValue(type, out var _) ? this.inTdbOnly[type].Count : 0;
-                            int inDdbOnlyCount = this.inDdbOnly.TryGetValue(type, out var value1) ? value1.Count : 0;
+                            int inTdbOnlyCount = inTdbOnly.TryGetValue(type, out var _) ? inTdbOnly[type].Count : 0;
+                            int inDdbOnlyCount = inDdbOnly.TryGetValue(type, out var value1) ? value1.Count : 0;
 
                             if (inTdbOnlyCount > 0 && inDdbOnlyCount > 0)
                             {
                                 // Display the ddb datalabels that can be added or renamed
-                                foreach (string datalabel in this.inDdbOnly[type].Keys)
+                                foreach (string datalabel in inDdbOnly[type].Keys)
                                 {
                                     string label = GetLabelFromControls(level, datalabel, false);
-                                    this.CreateRow(level, datalabel, label, type, ++row, false, this.actionDelete);
+                                    CreateRow(level, datalabel, label, type, ++row, false, actionDelete);
                                     deletionsPresent = true;
                                 }
 
                                 // Displays the tdb datalabels that can be added or renamed
-                                foreach (string datalabel in this.inTdbOnly[type].Keys)
+                                foreach (string datalabel in inTdbOnly[type].Keys)
                                 {
                                     string label = GetLabelFromControls(level, datalabel, true);
-                                    this.CreateRow(level, datalabel, label, type, ++row, true, this.actionAdd);
+                                    CreateRow(level, datalabel, label, type, ++row, true, actionAdd);
                                 }
                             }
                             else if (inTdbOnlyCount > 0)
                             {
                                 // Displays the tdb datalabels that can be added or renamed
-                                foreach (string datalabel in this.inTdbOnly[type].Keys)
+                                foreach (string datalabel in inTdbOnly[type].Keys)
                                 {
                                     string label = GetLabelFromControls(level, datalabel, true);
-                                    this.CreateRow(level, datalabel, label, type, ++row, true, this.actionAdd);
+                                    CreateRow(level, datalabel, label, type, ++row, true, actionAdd);
                                 }
                             }
                             else if (inDdbOnlyCount > 0)
                             {
                                 // Display the ddb datalabels that can be added or renamed
-                                foreach (string datalabel in this.inDdbOnly[type].Keys)
+                                foreach (string datalabel in inDdbOnly[type].Keys)
                                 {
                                     string label = GetLabelFromControls(level, datalabel, false);
-                                    this.CreateRow(level, datalabel, label, type, ++row, true, this.actionDelete);
+                                    CreateRow(level, datalabel, label, type, ++row, true, actionDelete);
                                     deletionsPresent = true;
                                 }
                             }
@@ -308,7 +309,7 @@ namespace Timelapse.Dialog
                 // Add a warning if some deletions are present
                 if (deletionsPresent)
                 {
-                    this.PageDataField.Description += $"{Environment.NewLine}WARNING: Deleting a data field also deletes data previously entered in that field, if any.";
+                    PageDataField.Description += $"{Environment.NewLine}WARNING: Deleting a data field also deletes data previously entered in that field, if any.";
                 }
             }
 
@@ -317,8 +318,8 @@ namespace Timelapse.Dialog
             {
                 // Yes. display minor differences as collected in the warnings.
                 TextBlock tb = new TextBlock();
-                this.TextBlockAddHeader(tb, $"{Environment.NewLine}Minor differences (no changes will be made to your data)", 14);
-                this.CreateRow(DataFieldGrid, tb, ++row);
+                TextBlockAddHeader(tb, $"{Environment.NewLine}Minor differences (no changes will be made to your data)", 14);
+                CreateRow(DataFieldGrid, tb, ++row);
 
                 // Now add the warnings
                 for (int level = 0; level <= lastLevel; level++)
@@ -326,7 +327,7 @@ namespace Timelapse.Dialog
                     if (TemplateSyncResults.ControlSynchronizationWarningsByLevel.TryGetValue(level, out var _))
                     {
                         // Print the level name if there are any differences
-                        this.AddLevelSeparator(level, level == 0 ? "Image data" : this.TdbMetadataInfo[level - 1].Alias, ++row);
+                        AddLevelSeparator(level, level == 0 ? "Image data" : TdbMetadataInfo[level - 1].Alias, ++row);
                         tb = null;
                         foreach (string warning in TemplateSyncResults.ControlSynchronizationWarningsByLevel[level])
                         {
@@ -334,14 +335,14 @@ namespace Timelapse.Dialog
                             {
                                 // So we don't add a line feed at the beginning
                                 tb = new TextBlock();
-                                this.TextBlockAddPlainLine(tb, warning, false);
+                                TextBlockAddPlainLine(tb, warning, false);
                             }
                             else
                             {
-                                this.TextBlockAddPlainLine(tb, warning);
+                                TextBlockAddPlainLine(tb, warning);
                             }
                         }
-                        this.CreateRow(DataFieldGrid, tb, ++row);
+                        CreateRow(DataFieldGrid, tb, ++row);
                     }
                 }
 
@@ -355,18 +356,18 @@ namespace Timelapse.Dialog
             {
                 if (isTdb)
                 {
-                    return this.TdbControls.FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--";
+                    return TdbControls.FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--";
                 }
-                return this.DdbControls.FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--";
+                return DdbControls.FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--";
             }
 
             if (isTdb)
             {
-                return this.TdbMetadataControlsByLevel.TryGetValue(level, out var _)
-                    ? this.TdbMetadataControlsByLevel[level].FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--"
+                return TdbMetadataControlsByLevel.TryGetValue(level, out var _)
+                    ? TdbMetadataControlsByLevel[level].FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--"
                     : "--";
             }
-            return this.DdbMetadataControlsByLevel.TryGetValue(level, out var value1)
+            return DdbMetadataControlsByLevel.TryGetValue(level, out var value1)
                 ? value1.FirstOrDefault(s => s.DataLabel == dataLabel)?.Label ?? "--"
                 : "--";
 
@@ -556,7 +557,7 @@ namespace Timelapse.Dialog
             {
                 Height = new GridLength(27)
             };
-            this.DataFieldGrid.RowDefinitions.Add(rd);
+            DataFieldGrid.RowDefinitions.Add(rd);
             TextBlock tb = new TextBlock
             {
                 FontWeight = FontWeights.Medium,
@@ -569,7 +570,7 @@ namespace Timelapse.Dialog
             Grid.SetRow(tb, row);
             Grid.SetColumn(tb, 0);
             Grid.SetColumnSpan(tb, 6);
-            this.DataFieldGrid.Children.Add(tb);
+            DataFieldGrid.Children.Add(tb);
         }
         #endregion
 
@@ -577,15 +578,15 @@ namespace Timelapse.Dialog
         // A single textblock spanning the first 2 columns
         private void CreateRow(Grid grid, TextBlock tb, int row)
         {
-            this.CreateRow(grid, tb, row, 0, 6);
+            CreateRow(grid, tb, row, 0, 6);
         }
 
 
         // two textblocks atop the first and second column respectively
         private void CreateRow(Grid grid, TextBlock tb1, TextBlock tb2, int row)
         {
-            this.CreateRow(grid, tb1, row, 0, 1);
-            this.CreateRow(grid, tb2, row, 1, 1);
+            CreateRow(grid, tb1, row, 0, 1);
+            CreateRow(grid, tb2, row, 1, 1);
         }
 
 
@@ -639,8 +640,8 @@ namespace Timelapse.Dialog
                 Height = new GridLength(25),
                 Tag = level
             };
-            this.DataFieldGrid.RowDefinitions.Add(rd);
-            this.actionRows.Add(row);
+            DataFieldGrid.RowDefinitions.Add(rd);
+            actionRows.Add(row);
 
             // Type
             TextBlock textblockType = new TextBlock
@@ -651,7 +652,7 @@ namespace Timelapse.Dialog
             };
             Grid.SetColumn(textblockType, 0);
             Grid.SetRow(textblockType, row);
-            this.DataFieldGrid.Children.Add(textblockType);
+            DataFieldGrid.Children.Add(textblockType);
 
             // Data label
             TextBlock textblockDataLabel = new TextBlock
@@ -662,7 +663,7 @@ namespace Timelapse.Dialog
             };
             Grid.SetColumn(textblockDataLabel, 1);
             Grid.SetRow(textblockDataLabel, row);
-            this.DataFieldGrid.Children.Add(textblockDataLabel);
+            DataFieldGrid.Children.Add(textblockDataLabel);
 
             // Label
             TextBlock textblockLabel = new TextBlock
@@ -673,7 +674,7 @@ namespace Timelapse.Dialog
             };
             Grid.SetColumn(textblockLabel, 2);
             Grid.SetRow(textblockLabel, row);
-            this.DataFieldGrid.Children.Add(textblockLabel);
+            DataFieldGrid.Children.Add(textblockLabel);
 
             // Add or Delete command without renaming
             if (addOrDeleteOnly)
@@ -689,7 +690,7 @@ namespace Timelapse.Dialog
 
                 Grid.SetColumn(labelActionDefaultAction, 3);
                 Grid.SetRow(labelActionDefaultAction, row);
-                this.DataFieldGrid.Children.Add(labelActionDefaultAction);
+                DataFieldGrid.Children.Add(labelActionDefaultAction);
                 return;
             }
 
@@ -704,7 +705,7 @@ namespace Timelapse.Dialog
             };
             Grid.SetColumn(radiobuttonActionDefaultAction, 3);
             Grid.SetRow(radiobuttonActionDefaultAction, row);
-            this.DataFieldGrid.Children.Add(radiobuttonActionDefaultAction);
+            DataFieldGrid.Children.Add(radiobuttonActionDefaultAction);
 
             // Combobox showing renaming possibilities
             ComboBox comboboxRenameMenu = new ComboBox
@@ -718,7 +719,7 @@ namespace Timelapse.Dialog
                 IsEnabled = false
             };
 
-            foreach (string str in this.inTdbOnly[type].Keys)
+            foreach (string str in inTdbOnly[type].Keys)
             {
                 ComboBoxItem item = new ComboBoxItem
                 {
@@ -730,10 +731,10 @@ namespace Timelapse.Dialog
 
             Grid.SetColumn(comboboxRenameMenu, 5);
             Grid.SetRow(comboboxRenameMenu, row);
-            this.DataFieldGrid.Children.Add(comboboxRenameMenu);
-            this.comboBoxes.Add(comboboxRenameMenu);
+            DataFieldGrid.Children.Add(comboboxRenameMenu);
+            comboBoxes.Add(comboboxRenameMenu);
 
-            comboboxRenameMenu.SelectionChanged += this.CbRenameMenu_SelectionChanged;
+            comboboxRenameMenu.SelectionChanged += CbRenameMenu_SelectionChanged;
 
             RadioButton radiobuttonRenameAction = new RadioButton
             {
@@ -745,11 +746,11 @@ namespace Timelapse.Dialog
             };
             Grid.SetColumn(radiobuttonRenameAction, 4);
             Grid.SetRow(radiobuttonRenameAction, row);
-            this.DataFieldGrid.Children.Add(radiobuttonRenameAction);
+            DataFieldGrid.Children.Add(radiobuttonRenameAction);
 
             // Enable and disable the combobox depending upon which radiobutton is selected
-            radiobuttonRenameAction.Checked += this.RbRenameAction_CheckChanged;
-            radiobuttonRenameAction.Unchecked += this.RbRenameAction_CheckChanged;
+            radiobuttonRenameAction.Checked += RbRenameAction_CheckChanged;
+            radiobuttonRenameAction.Unchecked += RbRenameAction_CheckChanged;
         }
         #endregion
 
@@ -763,11 +764,11 @@ namespace Timelapse.Dialog
         {
             List<string> selectedDataLabels = new List<string>();
 
-            foreach (int row in this.actionRows)
+            foreach (int row in actionRows)
             {
                 // Retrieve selected items, but only if the rename radio button is enabled and checked
                 // retrieve selected items, but only if the rename radio button is checked
-                UIElement uiComboBox = this.GetUIElement(row, 5);
+                UIElement uiComboBox = GetUIElement(row, 5);
                 if (uiComboBox is ComboBox cb && cb.IsEnabled)
                 {
                     ComboBoxItem cbi = cb.SelectedItem as ComboBoxItem;
@@ -786,15 +787,15 @@ namespace Timelapse.Dialog
                 }
 
                 // If this is a Delete action row and a previously selected data label matches it, hide it. 
-                if (!(this.GetUIElement(row, 3) is Label labelAction) || labelAction.Content.ToString() != this.actionAdd)
+                if (!(GetUIElement(row, 3) is Label labelAction) || labelAction.Content.ToString() != actionAdd)
                 {
                     continue;
                 }
 
                 // Retrieve the data label
-                if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
+                if (GetUIElement(row, 1) is TextBlock textblockDataLabel)
                 {
-                    this.DataFieldGrid.RowDefinitions[row].Height = selectedDataLabels.Contains(textblockDataLabel.Text) ? new GridLength(0) : new GridLength(25);
+                    DataFieldGrid.RowDefinitions[row].Height = selectedDataLabels.Contains(textblockDataLabel.Text) ? new GridLength(0) : new GridLength(25);
                 }
             }
         }
@@ -805,10 +806,10 @@ namespace Timelapse.Dialog
         {
             List<string> problemDataLabels = new List<string>();
 
-            foreach (int row in this.actionRows)
+            foreach (int row in actionRows)
             {
                 // We are only interested in Renamed items, which would only occur if the combobox is enabeld
-                UIElement uiComboBox = this.GetUIElement(row, 5);
+                UIElement uiComboBox = GetUIElement(row, 5);
                 if (uiComboBox != null)
                 {
                     if (uiComboBox is ComboBox cb && cb.IsEnabled)
@@ -817,7 +818,7 @@ namespace Timelapse.Dialog
                         if (cb.SelectedItem == null || cb.SelectedItem.ToString() == string.Empty)
                         {
                             // Retrieve the data label and add it as an problem 
-                            if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
+                            if (GetUIElement(row, 1) is TextBlock textblockDataLabel)
                             {
                                 problemDataLabels.Add(textblockDataLabel.Text);
                             }
@@ -848,7 +849,7 @@ namespace Timelapse.Dialog
         // returns null if no such element exists.
         private UIElement GetUIElement(int row, int column)
         {
-            return this.DataFieldGrid.Children
+            return DataFieldGrid.Children
                 .Cast<UIElement>()
                 .FirstOrDefault(e => Grid.GetRow(e) == row && Grid.GetColumn(e) == column);
         }
@@ -860,40 +861,40 @@ namespace Timelapse.Dialog
         {
             GridLength activeGridHeight = new GridLength(25);
 
-            foreach (int row in this.actionRows)
+            foreach (int row in actionRows)
             {
                 // Check if row is active
-                if (this.DataFieldGrid.RowDefinitions[row].Height != activeGridHeight)
+                if (DataFieldGrid.RowDefinitions[row].Height != activeGridHeight)
                 {
                     continue;
                 }
 
                 int level = -1;
-                if (this.DataFieldGrid.RowDefinitions[row].Tag is int i)
+                if (DataFieldGrid.RowDefinitions[row].Tag is int i)
                 {
                     level = i;
                 }
                 // Retrieve the data label
                 string datalabel = string.Empty;
-                if (this.GetUIElement(row, 1) is TextBlock textblockDataLabel)
+                if (GetUIElement(row, 1) is TextBlock textblockDataLabel)
                 {
                     datalabel = textblockDataLabel.Text;
                 }
 
                 // Retrieve the command type
                 // Add action 
-                if (this.GetUIElement(row, 3) is Label labelAction && labelAction.Content.ToString() == this.actionAdd)
+                if (GetUIElement(row, 3) is Label labelAction && labelAction.Content.ToString() == actionAdd)
                 {
-                    if (false == this.TemplateSyncResults.DataLabelsToAddByLevel.ContainsKey(level))
+                    if (false == TemplateSyncResults.DataLabelsToAddByLevel.ContainsKey(level))
                     {
-                        this.TemplateSyncResults.DataLabelsToAddByLevel.Add(level, new List<string>());
+                        TemplateSyncResults.DataLabelsToAddByLevel.Add(level, new List<string>());
                     }
-                    this.TemplateSyncResults.DataLabelsToAddByLevel[level].Add(datalabel);
+                    TemplateSyncResults.DataLabelsToAddByLevel[level].Add(datalabel);
                     continue;
                 }
 
                 // Before checking for Delete actions, we need to first check to see if it has been renamed with a valid value
-                UIElement uiComboBox = this.GetUIElement(row, 5);
+                UIElement uiComboBox = GetUIElement(row, 5);
                 if (uiComboBox != null)
                 {
                     if (uiComboBox is ComboBox cb && cb.IsEnabled)
@@ -903,21 +904,21 @@ namespace Timelapse.Dialog
                         {
                             if (cbi != null)
                             {
-                                if (false == this.TemplateSyncResults.DataLabelsToRenameByLevel.ContainsKey(level))
+                                if (false == TemplateSyncResults.DataLabelsToRenameByLevel.ContainsKey(level))
                                 {
-                                    this.TemplateSyncResults.DataLabelsToRenameByLevel.Add(level, new List<KeyValuePair<string, string>>());
+                                    TemplateSyncResults.DataLabelsToRenameByLevel.Add(level, new List<KeyValuePair<string, string>>());
                                 }
-                                this.TemplateSyncResults.DataLabelsToRenameByLevel[level].Add(new KeyValuePair<string, string>(datalabel, cbi.Content.ToString()));
+                                TemplateSyncResults.DataLabelsToRenameByLevel[level].Add(new KeyValuePair<string, string>(datalabel, cbi.Content.ToString()));
                             }
                             else
                             {
                                 // Shouldn't happen. Not sure if unknown value workaround will work
                                 TracePrint.NullException(nameof(cbi));
-                                if (false == this.TemplateSyncResults.DataLabelsToRenameByLevel.ContainsKey(level))
+                                if (false == TemplateSyncResults.DataLabelsToRenameByLevel.ContainsKey(level))
                                 {
-                                    this.TemplateSyncResults.DataLabelsToRenameByLevel.Add(level, new List<KeyValuePair<string, string>>());
+                                    TemplateSyncResults.DataLabelsToRenameByLevel.Add(level, new List<KeyValuePair<string, string>>());
                                 }
-                                this.TemplateSyncResults.DataLabelsToRenameByLevel[level].Add(new KeyValuePair<string, string>(datalabel, "Unknown value"));
+                                TemplateSyncResults.DataLabelsToRenameByLevel[level].Add(new KeyValuePair<string, string>(datalabel, "Unknown value"));
                             }
                             continue;
                         }
@@ -925,11 +926,11 @@ namespace Timelapse.Dialog
                 }
 
                 // If we arrived here, it must be an ACTION_DELETED
-                if (false == this.TemplateSyncResults.DataLabelsToDeleteByLevel.ContainsKey(level))
+                if (false == TemplateSyncResults.DataLabelsToDeleteByLevel.ContainsKey(level))
                 {
-                    this.TemplateSyncResults.DataLabelsToDeleteByLevel.Add(level, new List<string>());
+                    TemplateSyncResults.DataLabelsToDeleteByLevel.Add(level, new List<string>());
                 }
-                this.TemplateSyncResults.DataLabelsToDeleteByLevel[level].Add(datalabel);
+                TemplateSyncResults.DataLabelsToDeleteByLevel[level].Add(datalabel);
             }
         }
         #endregion
@@ -943,7 +944,7 @@ namespace Timelapse.Dialog
                 if (rb.Tag is ComboBox cb)
                 {
                     cb.IsEnabled = (rb.IsChecked == true);
-                    this.ShowHideItemsAsNeeded();
+                    ShowHideItemsAsNeeded();
                 }
             }
         }
@@ -959,7 +960,7 @@ namespace Timelapse.Dialog
             }
             ComboBoxItem selecteditem = (ComboBoxItem)activeComboBox.SelectedItem;
             string datalabelSelected = selecteditem.Content.ToString();
-            foreach (ComboBox combobox in this.comboBoxes)
+            foreach (ComboBox combobox in comboBoxes)
             {
                 if (activeComboBox != combobox)
                 {
@@ -973,31 +974,31 @@ namespace Timelapse.Dialog
                     }
                 }
             }
-            this.ShowHideItemsAsNeeded();
+            ShowHideItemsAsNeeded();
         }
 
         private void UseOldTemplate_Click(object sender, RoutedEventArgs e)
         {
-            this.UseTdbTemplate = false;
-            this.DialogResult = true;
+            UseTdbTemplate = false;
+            DialogResult = true;
         }
 
         private void UseNewTemplateButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.AreRenamedEntriesValid() == false)
+            if (AreRenamedEntriesValid() == false)
             {
                 e.Handled = true;
                 return;
             }
-            this.UpdateTemplateSyncResultsBasedOnSettings();
-            this.UseTdbTemplate = true;
-            this.DialogResult = true;
+            UpdateTemplateSyncResultsBasedOnSettings();
+            UseTdbTemplate = true;
+            DialogResult = true;
         }
 
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
         #endregion
 
@@ -1007,14 +1008,14 @@ namespace Timelapse.Dialog
         private void AdjustUIAppearance()
         {
             // Check: No level changes? 
-            bool hierarchyDiffers = false == (this.TemplateSyncResults.InfoRowsInDdbToDelete.Count == 0
-                                        && this.TemplateSyncResults.InfoRowsInDdbToRenumber.Count == 0
-                                        && this.TemplateSyncResults.InfoRowsInTdbToAdd.Count == 0
-                                        && this.TemplateSyncResults.InfoRowsWithNameChanges.Count == 0);
-            bool dataFieldDiffers = this.TemplateSyncResults.SyncRequiredAsDataLabelsDiffer || TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count > 0;
-            bool hierarchyIncompatible = this.TemplateSyncResults.InfoHierarchyIncompatibleDifferences;
+            bool hierarchyDiffers = false == (TemplateSyncResults.InfoRowsInDdbToDelete.Count == 0
+                                        && TemplateSyncResults.InfoRowsInDdbToRenumber.Count == 0
+                                        && TemplateSyncResults.InfoRowsInTdbToAdd.Count == 0
+                                        && TemplateSyncResults.InfoRowsWithNameChanges.Count == 0);
+            bool dataFieldDiffers = TemplateSyncResults.SyncRequiredAsDataLabelsDiffer || TemplateSyncResults.ControlSynchronizationWarningsByLevel.Count > 0;
+            bool hierarchyIncompatible = TemplateSyncResults.InfoHierarchyIncompatibleDifferences;
 
-            if (this.TemplateSyncResults.ControlSynchronizationErrorsByLevel.Count > 0)
+            if (TemplateSyncResults.ControlSynchronizationErrorsByLevel.Count > 0)
             {
                 // Show error message as some data fields are not compatable
                 // Hide the column headers
@@ -1025,9 +1026,9 @@ namespace Timelapse.Dialog
                 PageDataField.PreviousPage = PageIntro;
 
                 // Don't allow the new template to be used
-                this.PageDataFieldNewTemplateButton.Visibility = Visibility.Collapsed;
+                PageDataFieldNewTemplateButton.Visibility = Visibility.Collapsed;
                 // remove the grey banner from the top of the page to make the error message clearer
-                this.PageDataField.PageType = WizardPageType.Blank;
+                PageDataField.PageType = WizardPageType.Blank;
             }
             else if (dataFieldDiffers && false == hierarchyDiffers)
             {
@@ -1043,8 +1044,8 @@ namespace Timelapse.Dialog
                 // - the hierarchy page
                 // - the incompatble templates error message
                 // remove the grey banner from the top of the hierarchy difference page to make the error message clearer
-                this.MessageLevelsIncompatible.Visibility = Visibility.Visible;
-                this.PageHierarchy.PageType = WizardPageType.Blank;
+                MessageLevelsIncompatible.Visibility = Visibility.Visible;
+                PageHierarchy.PageType = WizardPageType.Blank;
                 //if (dataFieldDiffers)
                 //{
                 //    // Show the differences page as differences exist.
@@ -1059,16 +1060,16 @@ namespace Timelapse.Dialog
                 //else
                 //{
                 // Change the hint
-                this.MessageLevelsIncompatible.Hint = "Select:" +
+                MessageLevelsIncompatible.Hint = "Select:" +
                     $"{Environment.NewLine}    \u2022 Open using Original Template:    leave your data fields and data unchanged" +
                     $"{Environment.NewLine}    \u2022 Cancel:                                          exits this Wizard without opening your file.";
 
                 // Dont allow the user to select the Use new template button
-                this.PageHierarchyNewTemplateButton.Visibility = Visibility.Collapsed;
+                PageHierarchyNewTemplateButton.Visibility = Visibility.Collapsed;
 
                 // Since there are no data field differences, set the hierarchy page as the last page.
-                this.PageHierarchy.NextButtonVisibility = WizardPageButtonVisibility.Collapsed;
-                this.PageHierarchy.FinishButtonVisibility = WizardPageButtonVisibility.Collapsed;
+                PageHierarchy.NextButtonVisibility = WizardPageButtonVisibility.Collapsed;
+                PageHierarchy.FinishButtonVisibility = WizardPageButtonVisibility.Collapsed;
                 //}
             }
             else if (hierarchyDiffers)
@@ -1079,17 +1080,17 @@ namespace Timelapse.Dialog
                 {
                     // Show the differences page as differences exist.
                     // Don't show the hierarchy page buttons, as we want the user to continue to the differences page
-                    this.PageHierarchyOldTemplateButton.Visibility = Visibility.Collapsed;
-                    this.PageHierarchyNewTemplateButton.Visibility = Visibility.Collapsed;
+                    PageHierarchyOldTemplateButton.Visibility = Visibility.Collapsed;
+                    PageHierarchyNewTemplateButton.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
                     // Don't show the differences page as no differences exist.
-                    this.PageHierarchy.NextButtonVisibility = WizardPageButtonVisibility.Collapsed;
-                    this.PageHierarchy.FinishButtonVisibility = WizardPageButtonVisibility.Collapsed;
+                    PageHierarchy.NextButtonVisibility = WizardPageButtonVisibility.Collapsed;
+                    PageHierarchy.FinishButtonVisibility = WizardPageButtonVisibility.Collapsed;
 
                     // Modify the  hint
-                    this.PageHierarchy.Description +=
+                    PageHierarchy.Description +=
                         $"{Environment.NewLine}    \u2022 Open using New Template:          (if present) updates your data file to match the template" +
                         $"{Environment.NewLine}    \u2022 Open using Original Template:    leave your data fields and data unchanged" +
                         $"{Environment.NewLine}    \u2022 Cancel:                                          exits this Wizard without opening your file.";
@@ -1098,8 +1099,8 @@ namespace Timelapse.Dialog
             else
             {
                 // No differences in the hierarchy, so show only the datafield page
-                this.PageIntro.NextPage = PageDataField;
-                this.PageDataField.PreviousPage = PageIntro;
+                PageIntro.NextPage = PageDataField;
+                PageDataField.PreviousPage = PageIntro;
             }
         }
 

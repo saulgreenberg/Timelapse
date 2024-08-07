@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataCommon;
 using Timelapse.Database;
@@ -43,46 +46,46 @@ namespace Timelapse.Dialog
             // Check the arguments for null 
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
 
-            this.InitializeComponent();
+            InitializeComponent();
             this.fileDatabase = fileDatabase;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
             // Set up the initial UI and values
-            this.latestImageDateTime = DateTime.MinValue;
-            this.earliestImageDateTime = DateTime.MaxValue;
+            latestImageDateTime = DateTime.MinValue;
+            earliestImageDateTime = DateTime.MaxValue;
 
             // Search the images for the two images with the earliest and latest data/time date 
 
-            if (this.fileDatabase.FileTable.RowCount == 0)
+            if (fileDatabase.FileTable.RowCount == 0)
             {
                 // Shouldn't happen, as the menu should be disabled when there are no images
-                TracePrint.UnexpectedException(nameof(this.fileDatabase.FileTable.RowCount) + " should have had at least one element");
+                TracePrint.UnexpectedException(nameof(fileDatabase.FileTable.RowCount) + " should have had at least one element");
                 return;
             }
 
             ImageRow latestImageRow = null;
             ImageRow earliestImageRow = null;
-            foreach (ImageRow image in this.fileDatabase.FileTable)
+            foreach (ImageRow image in fileDatabase.FileTable)
             {
                 DateTime currentImageDateTime = image.DateTime;
 
                 // If the current image's date is later, then it is a candidate latest image  
-                if (currentImageDateTime >= this.latestImageDateTime)
+                if (currentImageDateTime >= latestImageDateTime)
                 {
                     latestImageRow = image;
-                    this.latestImageDateTime = currentImageDateTime;
+                    latestImageDateTime = currentImageDateTime;
                 }
 
                 // If the current image's date is earlier, then it is a candidate earliest image  
-                if (currentImageDateTime <= this.earliestImageDateTime)
+                if (currentImageDateTime <= earliestImageDateTime)
                 {
                     earliestImageRow = image;
-                    this.earliestImageDateTime = currentImageDateTime;
+                    earliestImageDateTime = currentImageDateTime;
                 }
             }
 
@@ -94,29 +97,29 @@ namespace Timelapse.Dialog
                 return;
             }
             // ConfigureFormatForDateTimeCustom the earliest date (in datetime picker) and its image
-            this.earliestImageName.Content = earliestImageRow.File;
-            this.earliestImageDate.Content = DateTimeHandler.ToStringDisplayDateTime(this.earliestImageDateTime);
-            this.imageEarliest.Source = earliestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out _);
+            earliestImageName.Content = earliestImageRow.File;
+            earliestImageDate.Content = DateTimeHandler.ToStringDisplayDateTime(earliestImageDateTime);
+            imageEarliest.Source = earliestImageRow.LoadBitmap(fileDatabase.FolderPath, out _);
 
             // ConfigureFormatForDateTimeCustom the latest date (in datetime picker) and its image
-            this.latestImageName.Content = latestImageRow.File;
-            CreateControls.Configure(this.dateTimePickerLatestDateTime, DateTimeFormatEnum.DateAndTime, this.latestImageDateTime);
-            this.dateTimePickerLatestDateTime.ValueChanged += this.DateTimePicker_ValueChanged;
-            this.imageLatest.Source = latestImageRow.LoadBitmap(this.fileDatabase.FolderPath, out _);
+            latestImageName.Content = latestImageRow.File;
+            CreateControls.Configure(dateTimePickerLatestDateTime, DateTimeFormatEnum.DateAndTime, latestImageDateTime);
+            dateTimePickerLatestDateTime.ValueChanged += DateTimePicker_ValueChanged;
+            imageLatest.Source = latestImageRow.LoadBitmap(fileDatabase.FolderPath, out _);
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.DialogResult = this.Token.IsCancellationRequested || this.IsAnyDataUpdated;
+            DialogResult = Token.IsCancellationRequested || IsAnyDataUpdated;
         }
 
         // Label and size the datagrid column headers
         private void DatagridFeedback_AutoGeneratedColumns(object sender, EventArgs e)
         {
-            this.FeedbackGrid.Columns[0].Header = "File name (only for files whose date was changed)";
-            this.FeedbackGrid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            this.FeedbackGrid.Columns[1].Header = "Old date  \x2192  New date \x2192 Delta";
-            this.FeedbackGrid.Columns[1].Width = new DataGridLength(2, DataGridLengthUnitType.Star);
+            FeedbackGrid.Columns[0].Header = "File name (only for files whose date was changed)";
+            FeedbackGrid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            FeedbackGrid.Columns[1].Header = "Old date  \x2192  New date \x2192 Delta";
+            FeedbackGrid.Columns[1].Width = new DataGridLength(2, DataGridLengthUnitType.Star);
         }
         #endregion
 
@@ -128,7 +131,7 @@ namespace Timelapse.Dialog
             // at the very least, the calling function will need to run FilesSelectAndShow to either
             // reload the FileTable with the updated data, or to reset the FileTable back to its original form
             // if the operation was cancelled.
-            this.IsAnyDataUpdated = true;
+            IsAnyDataUpdated = true;
 
             // Reread the Date/Times from each file 
             return await Task.Run(() =>
@@ -136,34 +139,34 @@ namespace Timelapse.Dialog
                 // Collects feedback to display in a datagrid after the operation is done
                 ObservableCollection<DateTimeFeedbackTuple> feedbackRows = new ObservableCollection<DateTimeFeedbackTuple>();
 
-                this.DatabaseUpdateFileDates(this.Progress, intervalFromOldestToNewestImage, newestImageAdjustment, feedbackRows);
+                DatabaseUpdateFileDates(Progress, intervalFromOldestToNewestImage, newestImageAdjustment, feedbackRows);
 
                 // Provide feedback if the operation was cancelled during the database update
                 if (Token.IsCancellationRequested)
                 {
                     feedbackRows.Clear();
                     feedbackRows.Add(new DateTimeFeedbackTuple("Cancelled", "No changes were made"));
-                    this.IsAnyDataUpdated = false;
+                    IsAnyDataUpdated = false;
                     return feedbackRows;
                 }
                 return feedbackRows;
-            }, this.Token).ConfigureAwait(continueOnCapturedContext: true); // Set to true as we need to continue in the UI context
+            }, Token).ConfigureAwait(continueOnCapturedContext: true); // Set to true as we need to continue in the UI context
         }
 
         private void DatabaseUpdateFileDates(IProgress<ProgressBarArguments> progress, TimeSpan intervalFromOldestToNewestImage, TimeSpan newestImageAdjustment, ObservableCollection<DateTimeFeedbackTuple> feedbackRows)
         {
             if (intervalFromOldestToNewestImage == TimeSpan.Zero)
             {
-                this.fileDatabase.UpdateAdjustedFileTimes(newestImageAdjustment);
+                fileDatabase.UpdateAdjustedFileTimes(newestImageAdjustment);
             }
             else
             {
                 // Note that this passes a function which is invoked by the fileDatabase method. 
                 // This not only calculates the new times, but updates the progress bar as the fileDatabase method iterates through the files.
-                this.fileDatabase.UpdateAdjustedFileTimes(
+                fileDatabase.UpdateAdjustedFileTimes(
                    (fileName, fileIndex, count, imageDateTime) =>
                    {
-                       double imagePositionInInterval = (imageDateTime - this.earliestImageDateTime).Ticks / (double)intervalFromOldestToNewestImage.Ticks;
+                       double imagePositionInInterval = (imageDateTime - earliestImageDateTime).Ticks / (double)intervalFromOldestToNewestImage.Ticks;
                        Debug.Assert((-0.0000001 < imagePositionInInterval) && (imagePositionInInterval < 1.0000001),
                            $"Interval position {imagePositionInInterval} is not between 0.0 and 1.0.");
                        TimeSpan adjustment = TimeSpan.FromTicks((long)(imagePositionInInterval * newestImageAdjustment.Ticks)); // Used to have a  .5 increment, I think to force rounding upwards                                                                                                        // TimeSpan.Duration means we do these checks on the absolute value (positive) of the Timespan, as slow clocks will have negative adjustments.
@@ -179,14 +182,14 @@ namespace Timelapse.Dialog
                        }
 
                        // Update the progress bar every time interval to indicate what file we are working on
-                       TimeSpan intervalFromLastRefresh = DateTime.Now - this.lastRefreshDateTime;
-                       if (intervalFromLastRefresh > Constant.ThrottleValues.ProgressBarRefreshInterval)
+                       TimeSpan intervalFromLastRefresh = DateTime.Now - lastRefreshDateTime;
+                       if (intervalFromLastRefresh > ThrottleValues.ProgressBarRefreshInterval)
                        {
                            int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
                            progress.Report(new ProgressBarArguments(percentDone,
                                $"Pass 1: Calculating new date/times for {fileIndex} / {count} files", true, false));
-                           Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
-                           this.lastRefreshDateTime = DateTime.Now;
+                           Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                           lastRefreshDateTime = DateTime.Now;
                        }
 
                        if (fileIndex >= count)
@@ -195,13 +198,13 @@ namespace Timelapse.Dialog
                            // This really should be somehow signalled from the invoking method (ideally ExecuteNonQueryWrappedInBeginEnd every update interval), but this is a reasonable workaround.
                            progress.Report(new ProgressBarArguments(100,
                                $"Pass 2: Updating {feedbackRows.Count} files. Please wait...", false, true));
-                           Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                           Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                        }
                        return imageDateTime + adjustment; // Returns the new time
                    },
                    0,
-                   this.fileDatabase.CountAllCurrentlySelectedFiles - 1,
-                   this.Token);
+                   fileDatabase.CountAllCurrentlySelectedFiles - 1,
+                   Token);
             }
         }
         #endregion
@@ -211,7 +214,7 @@ namespace Timelapse.Dialog
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
             // A few checks just to make sure we actually have something to do...
-            if (this.dateTimePickerLatestDateTime.Value.HasValue == false)
+            if (dateTimePickerLatestDateTime.Value.HasValue == false)
             {
                 // We don't have a valid date, so nothing really to do.
                 // This should not happen
@@ -220,54 +223,54 @@ namespace Timelapse.Dialog
             }
 
             // ConfigureFormatForDateTimeCustom the UI's initial state
-            this.CancelButton.IsEnabled = false;
-            this.CancelButton.Visibility = Visibility.Hidden;
-            this.StartDoneButton.Content = "_Done";
-            this.StartDoneButton.Click -= this.Start_Click;
-            this.StartDoneButton.Click += this.DoneButton_Click;
-            this.StartDoneButton.IsEnabled = false;
-            this.BusyCancelIndicator.IsBusy = true;
-            this.WindowCloseButtonIsEnabled(false);
+            CancelButton.IsEnabled = false;
+            CancelButton.Visibility = Visibility.Hidden;
+            StartDoneButton.Content = "_Done";
+            StartDoneButton.Click -= Start_Click;
+            StartDoneButton.Click += DoneButton_Click;
+            StartDoneButton.IsEnabled = false;
+            BusyCancelIndicator.IsBusy = true;
+            WindowCloseButtonIsEnabled(false);
 
-            TimeSpan newestImageAdjustment = this.dateTimePickerLatestDateTime.Value.Value - this.latestImageDateTime;
-            TimeSpan intervalFromOldestToNewestImage = this.latestImageDateTime - this.earliestImageDateTime;
+            TimeSpan newestImageAdjustment = dateTimePickerLatestDateTime.Value.Value - latestImageDateTime;
+            TimeSpan intervalFromOldestToNewestImage = latestImageDateTime - earliestImageDateTime;
             if (newestImageAdjustment == TimeSpan.Zero)
             {
                 // nothing to do
-                this.DialogResult = false;
+                DialogResult = false;
                 return;
             }
 
             // This call does all the actual updating...
-            ObservableCollection<DateTimeFeedbackTuple> feedbackRows = await this.TaskLinearCorrectionAsync(newestImageAdjustment, intervalFromOldestToNewestImage).ConfigureAwait(true);
+            ObservableCollection<DateTimeFeedbackTuple> feedbackRows = await TaskLinearCorrectionAsync(newestImageAdjustment, intervalFromOldestToNewestImage).ConfigureAwait(true);
 
             // Hide the busy indicator and update the UI, e.g., to show which files have changed dates
             // Provide summary feedback 
-            if (this.IsAnyDataUpdated && this.Token.IsCancellationRequested == false)
+            if (IsAnyDataUpdated && Token.IsCancellationRequested == false)
             {
                 string message =
-                    $"Updated {feedbackRows.Count}/{this.fileDatabase.CountAllCurrentlySelectedFiles} files whose dates have changed.";
+                    $"Updated {feedbackRows.Count}/{fileDatabase.CountAllCurrentlySelectedFiles} files whose dates have changed.";
                 feedbackRows.Insert(0, (new DateTimeFeedbackTuple("---", message)));
             }
 
-            this.BusyCancelIndicator.IsBusy = false;
-            this.PrimaryPanel.Visibility = Visibility.Collapsed;
-            this.FeedbackPanel.Visibility = Visibility.Visible;
-            this.FeedbackGrid.ItemsSource = feedbackRows;
-            this.StartDoneButton.IsEnabled = true;
-            this.WindowCloseButtonIsEnabled(true);
+            BusyCancelIndicator.IsBusy = false;
+            PrimaryPanel.Visibility = Visibility.Collapsed;
+            FeedbackPanel.Visibility = Visibility.Visible;
+            FeedbackGrid.ItemsSource = feedbackRows;
+            StartDoneButton.IsEnabled = true;
+            WindowCloseButtonIsEnabled(true);
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
             // We return false if the database was not altered, i.e., if this was all a no-op
-            this.DialogResult = this.IsAnyDataUpdated;
+            DialogResult = IsAnyDataUpdated;
         }
 
         // Cancel - do nothing
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
 
@@ -276,7 +279,7 @@ namespace Timelapse.Dialog
         {
             // Because of the bug in the DateTimePicker, we have to get the changed value from the string
             // as DateTimePicker.Value.Value can have the old date rather than the new one.
-            if (DateTimeHandler.TryParseDisplayDateTime(this.dateTimePickerLatestDateTime.Text, out DateTime newDateTime) == false)
+            if (DateTimeHandler.TryParseDisplayDateTime(dateTimePickerLatestDateTime.Text, out DateTime newDateTime) == false)
             {
                 // If we can't parse the date,  do nothing.
                 // Debug.Print("DateTimeLinearCorrection|ValueChanged: Could not parse the date:" + this.dateTimePickerLatestDateTime.Text);
@@ -284,20 +287,20 @@ namespace Timelapse.Dialog
             }
 
             // Inform the user if the date picker date goes below the earlest time,  
-            if (this.dateTimePickerLatestDateTime.Value != null && this.dateTimePickerLatestDateTime.Value.Value <= this.earliestImageDateTime)
+            if (dateTimePickerLatestDateTime.Value != null && dateTimePickerLatestDateTime.Value.Value <= earliestImageDateTime)
             {
                 Dialogs.DateTimeNewTimeShouldBeLaterThanEarlierTimeDialog(this);
             }
 
             // Enable the Ok button only if the latest time has actually changed from its original version
-            TimeSpan newestImageAdjustment = newDateTime - this.latestImageDateTime;
-            this.StartDoneButton.IsEnabled = newestImageAdjustment != TimeSpan.Zero;
+            TimeSpan newestImageAdjustment = newDateTime - latestImageDateTime;
+            StartDoneButton.IsEnabled = newestImageAdjustment != TimeSpan.Zero;
         }
 
         // Mitigates a bug where ValueChanged is not triggered when the date/time is changed
-        private void DateTimePickerLatestDateTime_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void DateTimePickerLatestDateTime_MouseLeave(object sender, MouseEventArgs e)
         {
-            this.DateTimePicker_ValueChanged(null, null);
+            DateTimePicker_ValueChanged(null, null);
         }
         #endregion
 

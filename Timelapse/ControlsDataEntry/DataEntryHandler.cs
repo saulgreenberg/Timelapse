@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Timelapse.Controls;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -14,6 +13,11 @@ using Timelapse.Dialog;
 using Timelapse.Images;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Xceed.Wpf.Toolkit.Primitives;
+using Control = Timelapse.Constant.Control;
+using File = System.IO.File;
+using MarkableCanvas = Timelapse.Images.MarkableCanvas;
+using ThumbnailGrid = Timelapse.Controls.ThumbnailGrid;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -45,10 +49,10 @@ namespace Timelapse.ControlsDataEntry
         #region Loadin
         public DataEntryHandler(FileDatabase fileDatabase)
         {
-            this.disposed = false;
-            this.ImageCache = new ImageCache(fileDatabase);
-            this.FileDatabase = fileDatabase;  // We need a reference to the database if we are going to update it.
-            this.IsProgrammaticControlUpdate = false;
+            disposed = false;
+            ImageCache = new ImageCache(fileDatabase);
+            FileDatabase = fileDatabase;  // We need a reference to the database if we are going to update it.
+            IsProgrammaticControlUpdate = false;
         }
 
         #endregion
@@ -67,30 +71,30 @@ namespace Timelapse.ControlsDataEntry
             // the callback updates the matching field for that file in the database.
             foreach (KeyValuePair<string, DataEntryControl> pair in controlsByDataLabel)
             {
-                string controlType = this.FileDatabase.FileTableColumnsByDataLabel[pair.Key].ControlType;
+                string controlType = FileDatabase.FileTableColumnsByDataLabel[pair.Key].ControlType;
                 switch (controlType)
                 {
-                    case Constant.Control.Note:
-                    case Constant.DatabaseColumn.File:
-                    case Constant.DatabaseColumn.RelativePath:
+                    case Control.Note:
+                    case DatabaseColumn.File:
+                    case DatabaseColumn.RelativePath:
                         DataEntryNote note = (DataEntryNote)pair.Value;
-                        note.ContentControl.TextAutocompleted += this.NoteControl_TextAutocompleted;
+                        note.ContentControl.TextAutocompleted += NoteControl_TextAutocompleted;
                         //if (controlType == Constant.Control.Note)
                         //{
-                        this.SetContextMenuCallbacks(note);
+                        SetContextMenuCallbacks(note);
                         //}
                         break;
-                    case Constant.Control.MultiLine:
+                    case Control.MultiLine:
                         DataEntryMultiLine multiLine = (DataEntryMultiLine)pair.Value;
                         multiLine.ContentControl.TextHasChanged += MultiLineControl_TextHasChanged;
-                        this.SetContextMenuCallbacks(multiLine);
+                        SetContextMenuCallbacks(multiLine);
                         break;
-                    case Constant.Control.AlphaNumeric:
+                    case Control.AlphaNumeric:
                         DataEntryAlphaNumeric alphaNumeric = (DataEntryAlphaNumeric)pair.Value;
-                        alphaNumeric.ContentControl.TextAutocompleted += this.AlphaNumericControl_TextAutocompleted;
-                        this.SetContextMenuCallbacks(alphaNumeric);
+                        alphaNumeric.ContentControl.TextAutocompleted += AlphaNumericControl_TextAutocompleted;
+                        SetContextMenuCallbacks(alphaNumeric);
                         break;
-                    case Constant.DatabaseColumn.DateTime:
+                    case DatabaseColumn.DateTime:
                         // Note. There are several issues with the XCEED DateTimePicker. In particular, the date in the 
                         // text date area is not well coordinated with the date in the calendar, i.e., the two aren't necessarily in
                         // sync. As well, changing a date on the calendar doesnt' appear to trigger the DateTimeContro_ValueChanged event
@@ -100,8 +104,8 @@ namespace Timelapse.ControlsDataEntry
                         // SAULXXX DateTimePicker Workaround. 
                         // We need to access the calendar part of the DateTimePicker, but 
                         // we can't do that until the control is loaded.
-                        dateTime.ContentControl.Loaded += this.DateTimePicker_Loaded;
-                        dateTime.ContentControl.ValueChanged += this.DateTimeControl_ValueChanged;
+                        dateTime.ContentControl.Loaded += DateTimePicker_Loaded;
+                        dateTime.ContentControl.ValueChanged += DateTimeControl_ValueChanged;
                         // We need the lines below as otherwise it will show the panel's context menu, which is confusing, instead of nothing
                         dateTime.ContentControl.ContextMenu = new ContextMenu
                         {
@@ -109,62 +113,62 @@ namespace Timelapse.ControlsDataEntry
                         };
 
                         break;
-                    case Constant.DatabaseColumn.DeleteFlag:
-                    case Constant.Control.Flag:
+                    case DatabaseColumn.DeleteFlag:
+                    case Control.Flag:
                         DataEntryFlag flag = (DataEntryFlag)pair.Value;
-                        flag.ContentControl.Checked += this.FlagControl_CheckedChanged;
-                        flag.ContentControl.Unchecked += this.FlagControl_CheckedChanged;
-                        this.SetContextMenuCallbacks(flag);
+                        flag.ContentControl.Checked += FlagControl_CheckedChanged;
+                        flag.ContentControl.Unchecked += FlagControl_CheckedChanged;
+                        SetContextMenuCallbacks(flag);
                         break;
-                    case Constant.Control.FixedChoice:
+                    case Control.FixedChoice:
                         DataEntryChoice choice = (DataEntryChoice)pair.Value;
-                        choice.ContentControl.SelectionChanged += this.ChoiceControl_SelectionChanged;
-                        this.SetContextMenuCallbacks(choice);
+                        choice.ContentControl.SelectionChanged += ChoiceControl_SelectionChanged;
+                        SetContextMenuCallbacks(choice);
                         break;
-                    case Constant.Control.MultiChoice:
+                    case Control.MultiChoice:
                         DataEntryMultiChoice multiChoice = (DataEntryMultiChoice)pair.Value;
                         multiChoice.ContentControl.ItemSelectionChanged += MultiChoiceControl_ItemSelectionChanged;
-                        this.SetContextMenuCallbacks(multiChoice);
+                        SetContextMenuCallbacks(multiChoice);
                         break;
-                    case Constant.Control.Counter:
+                    case Control.Counter:
                         DataEntryCounter counter = (DataEntryCounter)pair.Value;
-                        counter.ContentControl.ValueChanged += this.IntegerControl_ValueChanged;
-                        this.SetContextMenuCallbacks(counter);
+                        counter.ContentControl.ValueChanged += IntegerControl_ValueChanged;
+                        SetContextMenuCallbacks(counter);
                         break;
-                    case Constant.Control.IntegerAny:
+                    case Control.IntegerAny:
                         DataEntryIntegerAny integerAny = (DataEntryIntegerAny)pair.Value;
-                        integerAny.ContentControl.ValueChanged += this.IntegerControl_ValueChanged;
-                        this.SetContextMenuCallbacks(integerAny);
+                        integerAny.ContentControl.ValueChanged += IntegerControl_ValueChanged;
+                        SetContextMenuCallbacks(integerAny);
                         break;
-                    case Constant.Control.IntegerPositive:
+                    case Control.IntegerPositive:
                         DataEntryIntegerPositive integerPositive = (DataEntryIntegerPositive)pair.Value;
-                        integerPositive.ContentControl.ValueChanged += this.IntegerControl_ValueChanged;
-                        this.SetContextMenuCallbacks(integerPositive);
+                        integerPositive.ContentControl.ValueChanged += IntegerControl_ValueChanged;
+                        SetContextMenuCallbacks(integerPositive);
                         break;
-                    case Constant.Control.DecimalAny:
+                    case Control.DecimalAny:
                         DataEntryDecimalAny decimalAny = (DataEntryDecimalAny)pair.Value;
-                        decimalAny.ContentControl.ValueChanged += this.DecimalControl_ValueChanged;
-                        this.SetContextMenuCallbacks(decimalAny);
+                        decimalAny.ContentControl.ValueChanged += DecimalControl_ValueChanged;
+                        SetContextMenuCallbacks(decimalAny);
                         break;
-                    case Constant.Control.DecimalPositive:
+                    case Control.DecimalPositive:
                         DataEntryDecimalPositive decimalPositive = (DataEntryDecimalPositive)pair.Value;
-                        decimalPositive.ContentControl.ValueChanged += this.DecimalControl_ValueChanged;
-                        this.SetContextMenuCallbacks(decimalPositive);
+                        decimalPositive.ContentControl.ValueChanged += DecimalControl_ValueChanged;
+                        SetContextMenuCallbacks(decimalPositive);
                         break;
-                    case Constant.Control.DateTime_:
+                    case Control.DateTime_:
                         DataEntryDateTimeCustom dateTimeCustom = (DataEntryDateTimeCustom)pair.Value;
-                        dateTimeCustom.ContentControl.ValueChanged += this.DateTimeCustomControl_ValueChanged;
-                        this.SetContextMenuCallbacks(dateTimeCustom);
+                        dateTimeCustom.ContentControl.ValueChanged += DateTimeCustomControl_ValueChanged;
+                        SetContextMenuCallbacks(dateTimeCustom);
                         break;
-                    case Constant.Control.Date_:
+                    case Control.Date_:
                         DataEntryDate date = (DataEntryDate)pair.Value;
-                        date.ContentControl.ValueChanged += this.DateControl_ValueChanged;
-                        this.SetContextMenuCallbacks(date);
+                        date.ContentControl.ValueChanged += DateControl_ValueChanged;
+                        SetContextMenuCallbacks(date);
                         break;
-                    case Constant.Control.Time_:
+                    case Control.Time_:
                         DataEntryTime time = (DataEntryTime)pair.Value;
-                        time.ContentControl.ValueChanged += this.TimeControl_ValueChanged;
-                        this.SetContextMenuCallbacks(time);
+                        time.ContentControl.ValueChanged += TimeControl_ValueChanged;
+                        SetContextMenuCallbacks(time);
                         break;
 
                 }
@@ -182,7 +186,7 @@ namespace Timelapse.ControlsDataEntry
             {
                 calendar.Tag = dateTimePicker;
                 calendar.IsTodayHighlighted = false; // Don't highlight today's date, as it could be confusing given what this control is used for.
-                calendar.SelectedDatesChanged += this.Calendar_SelectedDatesChanged;
+                calendar.SelectedDatesChanged += Calendar_SelectedDatesChanged;
             }
         }
 
@@ -195,7 +199,7 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
 
-            MenuItem menuItemPropagateFromLastValue = new MenuItem()
+            MenuItem menuItemPropagateFromLastValue = new MenuItem
             {
                 IsCheckable = false,
                 Tag = control,
@@ -206,41 +210,41 @@ namespace Timelapse.ControlsDataEntry
             {
                 menuItemPropagateFromLastValue.Header = "Propagate from the last non-zero value to here";
             }
-            menuItemPropagateFromLastValue.Click += this.MenuItemPropagateFromLastValue_Click;
+            menuItemPropagateFromLastValue.Click += MenuItemPropagateFromLastValue_Click;
 
-            MenuItem menuItemCopyForward = new MenuItem()
+            MenuItem menuItemCopyForward = new MenuItem
             {
                 IsCheckable = false,
                 Header = "Copy forward to end",
                 ToolTip = "The value of this field will be copied forward from this file to the last file in this set",
                 Tag = control
             };
-            menuItemCopyForward.Click += this.MenuItemPropagateForward_Click;
-            MenuItem menuItemCopyCurrentValue = new MenuItem()
+            menuItemCopyForward.Click += MenuItemPropagateForward_Click;
+            MenuItem menuItemCopyCurrentValue = new MenuItem
             {
                 IsCheckable = false,
                 Header = "Copy to all",
                 Tag = control
             };
-            menuItemCopyCurrentValue.Click += this.MenuItemCopyCurrentValueToAll_Click;
+            menuItemCopyCurrentValue.Click += MenuItemCopyCurrentValueToAll_Click;
 
-            MenuItem menuItemCopy = new MenuItem()
+            MenuItem menuItemCopy = new MenuItem
             {
                 IsCheckable = false,
                 Header = "Copy",
                 ToolTip = "Copy will copy this field's entire content to the clipboard",
                 Tag = control
             };
-            menuItemCopy.Click += this.MenuItemCopyToClipboard_Click;
+            menuItemCopy.Click += MenuItemCopyToClipboard_Click;
 
-            MenuItem menuItemPaste = new MenuItem()
+            MenuItem menuItemPaste = new MenuItem
             {
                 IsCheckable = false,
                 Header = "Paste",
                 ToolTip = "Paste will replace this field's content with the clipboard's content",
                 Tag = control
             };
-            menuItemPaste.Click += this.MenuItemPasteFromClipboard_Click;
+            menuItemPaste.Click += MenuItemPasteFromClipboard_Click;
 
             // DataEntrHandler.PropagateFromLastValueIndex and CopyForwardIndex must be kept in sync with the add order here
             ContextMenu menu = new ContextMenu();
@@ -253,11 +257,11 @@ namespace Timelapse.ControlsDataEntry
             menu.Items.Add(menuItemPaste);
 
             control.Container.ContextMenu = menu;
-            control.Container.PreviewMouseRightButtonDown += this.Container_PreviewMouseRightButtonDown;
+            control.Container.PreviewMouseRightButtonDown += Container_PreviewMouseRightButtonDown;
 
             // For the File/RelativePath controls, all which are read only, hide the irrelevant menu items.
             // This could be made more efficient by simply not creating those items, but given the low case we just left it as is.
-            if (control.DataLabel == Constant.DatabaseColumn.File || control.DataLabel == Constant.DatabaseColumn.RelativePath)
+            if (control.DataLabel == DatabaseColumn.File || control.DataLabel == DatabaseColumn.RelativePath)
             {
                 if (control is DataEntryNote note)
                 {
@@ -366,10 +370,10 @@ namespace Timelapse.ControlsDataEntry
             string valueToCopy = checkForZero ? "0" : string.Empty;
 
             // Search for the row with some value in it, starting from the previous row
-            int currentRowIndex = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
+            int currentRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
             for (int previousIndex = currentRowIndex - 1; previousIndex >= 0; previousIndex--)
             {
-                ImageRow file = this.FileDatabase.FileTable[previousIndex];
+                ImageRow file = FileDatabase.FileTable[previousIndex];
                 if (file == null)
                 {
                     continue;
@@ -383,7 +387,7 @@ namespace Timelapse.ControlsDataEntry
                 if (valueToCopy.Length > 0)
                 {
                     if ((checkForZero && !valueToCopy.Equals("0")) ||             // Skip over non-zero values for counters
-                        (isFlag && !valueToCopy.Equals(Constant.BooleanValue.False, StringComparison.OrdinalIgnoreCase)) || // Skip over false values for flags
+                        (isFlag && !valueToCopy.Equals(BooleanValue.False, StringComparison.OrdinalIgnoreCase)) || // Skip over false values for flags
                         (!checkForZero && !isFlag))
                     {
                         indexToCopyFrom = previousIndex;    // We found a non-empty value
@@ -414,7 +418,7 @@ namespace Timelapse.ControlsDataEntry
             // Update the affected files. Note that we start on the row after the one with a value in it to the current row.
             Mouse.OverrideCursor = Cursors.Wait;
             //this.FileDatabase.UpdateFiles(valueSource, control.DataLabel, indexToCopyFrom + 1, currentRowIndex);
-            this.FileDatabase.UpdateFiles(valueSource, control, indexToCopyFrom + 1, currentRowIndex);
+            FileDatabase.UpdateFiles(valueSource, control, indexToCopyFrom + 1, currentRowIndex);
             control.SetContentAndTooltip(newContent);
             Mouse.OverrideCursor = null;
         }
@@ -434,7 +438,7 @@ namespace Timelapse.ControlsDataEntry
 
             // Display a dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control 
             bool checkForZero = control is DataEntryCounter;
-            int filesAffected = this.FileDatabase.CountAllCurrentlySelectedFiles;
+            int filesAffected = FileDatabase.CountAllCurrentlySelectedFiles;
             if (Dialogs.DataEntryConfirmCopyCurrentValueToAllDialog(Application.Current.MainWindow, control.Content, filesAffected, checkForZero) != true)
             {
                 return;
@@ -442,8 +446,8 @@ namespace Timelapse.ControlsDataEntry
 
             // Update all files to match the value of the control (identified by the data label) in the currently selected image row.
             Mouse.OverrideCursor = Cursors.Wait;
-            ImageRow imageRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.Current : this.FileDatabase.FileTable[this.ThumbnailGrid.GetSelected()[0]];
-            this.FileDatabase.UpdateFiles(imageRow, control);
+            ImageRow imageRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.Current : FileDatabase.FileTable[ThumbnailGrid.GetSelected()[0]];
+            FileDatabase.UpdateFiles(imageRow, control);
             Mouse.OverrideCursor = null;
         }
 
@@ -460,8 +464,8 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
 
-            int currentRowIndex = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
-            int imagesAffected = this.FileDatabase.CountAllCurrentlySelectedFiles - currentRowIndex - 1;
+            int currentRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
+            int imagesAffected = FileDatabase.CountAllCurrentlySelectedFiles - currentRowIndex - 1;
             if (imagesAffected == 0)
             {
                 // Display a dialog box saying there is nothing to copy forward. 
@@ -472,7 +476,7 @@ namespace Timelapse.ControlsDataEntry
             }
 
             // Display the appropriate dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control 
-            ImageRow imageRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.Current : this.FileDatabase.FileTable[this.ThumbnailGrid.GetSelected()[0]];
+            ImageRow imageRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.Current : FileDatabase.FileTable[ThumbnailGrid.GetSelected()[0]];
             if (imageRow == null)
             {
                 TracePrint.NullException(nameof(imageRow));
@@ -487,9 +491,9 @@ namespace Timelapse.ControlsDataEntry
 
             // Update the files from the next row (as we are copying from the current row) to the end.
             Mouse.OverrideCursor = Cursors.Wait;
-            int nextRowIndex = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow + 1 : this.ThumbnailGrid.GetSelected()[0] + 1;
+            int nextRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow + 1 : ThumbnailGrid.GetSelected()[0] + 1;
             //this.FileDatabase.UpdateFiles(imageRow, control.DataLabel, nextRowIndex, this.FileDatabase.CountAllCurrentlySelectedFiles - 1);
-            this.FileDatabase.UpdateFiles(imageRow, control, nextRowIndex, this.FileDatabase.CountAllCurrentlySelectedFiles - 1);
+            FileDatabase.UpdateFiles(imageRow, control, nextRowIndex, FileDatabase.CountAllCurrentlySelectedFiles - 1);
             Mouse.OverrideCursor = null;
         }
 
@@ -542,7 +546,7 @@ namespace Timelapse.ControlsDataEntry
             }
 
             control.SetContentAndTooltip(newContent);
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, newContent);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, newContent);
         }
 
         // Enable or disable particular context menu items
@@ -559,23 +563,23 @@ namespace Timelapse.ControlsDataEntry
                 TracePrint.NullException(nameof(stackPanel));
                 return;
             }
-            MenuItem menuItemCopyToAll = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.CopyToAllIndex];
-            MenuItem menuItemCopyForward = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.CopyForwardIndex];
-            MenuItem menuItemPropagateFromLastValue = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.PropagateFromLastValueIndex];
-            MenuItem menuItemCopyToClipboard = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.CopyToClipboardIndex];
-            MenuItem menuItemPasteFromClipboard = (MenuItem)stackPanel.ContextMenu.Items[DataEntryHandler.PasteFromClipboardIndex];
+            MenuItem menuItemCopyToAll = (MenuItem)stackPanel.ContextMenu.Items[CopyToAllIndex];
+            MenuItem menuItemCopyForward = (MenuItem)stackPanel.ContextMenu.Items[CopyForwardIndex];
+            MenuItem menuItemPropagateFromLastValue = (MenuItem)stackPanel.ContextMenu.Items[PropagateFromLastValueIndex];
+            MenuItem menuItemCopyToClipboard = (MenuItem)stackPanel.ContextMenu.Items[CopyToClipboardIndex];
+            MenuItem menuItemPasteFromClipboard = (MenuItem)stackPanel.ContextMenu.Items[PasteFromClipboardIndex];
 
             // Behaviour: 
             // - if the ThumbnailInCell is visible, disable Copy to all / Copy forward / Propagate if a single item isn't selected
             // - otherwise enable the menu item only if the resulting action is coherent
-            bool enabledIsPossible = this.ThumbnailGrid.IsVisible == false || this.ThumbnailGrid.SelectedCount() == 1;
+            bool enabledIsPossible = ThumbnailGrid.IsVisible == false || ThumbnailGrid.SelectedCount() == 1;
             menuItemCopyToAll.IsEnabled = enabledIsPossible;
-            menuItemCopyForward.IsEnabled = enabledIsPossible && (menuItemCopyForward.IsEnabled = this.IsCopyForwardPossible());
-            menuItemPropagateFromLastValue.IsEnabled = enabledIsPossible && this.IsCopyFromLastNonEmptyValuePossible(control);
+            menuItemCopyForward.IsEnabled = enabledIsPossible && (menuItemCopyForward.IsEnabled = IsCopyForwardPossible());
+            menuItemPropagateFromLastValue.IsEnabled = enabledIsPossible && IsCopyFromLastNonEmptyValuePossible(control);
 
             // Enable Copy menu if
             // - its not empty / white space and not in the overview with different contents (i.e., ellipsis is showing)
-            menuItemCopyToClipboard.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Constant.Unicode.Ellipsis);
+            menuItemCopyToClipboard.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Unicode.Ellipsis);
 
             // Enable Paste menu only if
             // - the clipboard is not empty or white space, 
@@ -601,7 +605,7 @@ namespace Timelapse.ControlsDataEntry
                 if (control is DataEntryAlphaNumeric)
                 {
                     // Any string is valid
-                    menuItemPasteFromClipboard.IsEnabled = Util.IsCondition.IsAlphaNumeric(clipboardText);
+                    menuItemPasteFromClipboard.IsEnabled = IsCondition.IsAlphaNumeric(clipboardText);
                 }
                 else if (control is DataEntryNote || control is DataEntryMultiLine)
                 {
@@ -731,11 +735,11 @@ namespace Timelapse.ControlsDataEntry
 
                     if (control is DataEntryDateTimeCustom || control is DataEntryDate || control is DataEntryTime)
                     {
-                        menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Constant.Unicode.Ellipsis : dateTimeCustomPasteHeader) + "'";
+                        menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Unicode.Ellipsis : dateTimeCustomPasteHeader) + "'";
                     }
                     else 
                     {
-                        menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Constant.Unicode.Ellipsis : clipboardText) + "'";
+                        menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Unicode.Ellipsis : clipboardText) + "'";
                     }
                 }
                 else
@@ -748,7 +752,7 @@ namespace Timelapse.ControlsDataEntry
                 if (menuItemCopyToClipboard.IsEnabled)
                 {
                     string content = control.Content.Trim();
-                    menuItemCopyToClipboard.Header = "Copy '" + (content.Length > 20 ? content.Substring(0, 20) + Constant.Unicode.Ellipsis : content) + "'";
+                    menuItemCopyToClipboard.Header = "Copy '" + (content.Length > 20 ? content.Substring(0, 20) + Unicode.Ellipsis : content) + "'";
                 }
                 else
                 {
@@ -762,14 +766,14 @@ namespace Timelapse.ControlsDataEntry
         #region Helpers for Copy Forward/Backwards etc.
         public bool IsCopyForwardPossible()
         {
-            if (this.ImageCache.Current == null)
+            if (ImageCache.Current == null)
             {
                 return false;
             }
 
             // The current row depends on wheter we are in the thumbnail grid or the normal view
-            int currentRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
-            int filesAffected = this.FileDatabase.CountAllCurrentlySelectedFiles - currentRow - 1;
+            int currentRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
+            int filesAffected = FileDatabase.CountAllCurrentlySelectedFiles - currentRow - 1;
             return (filesAffected > 0);
         }
 
@@ -792,13 +796,13 @@ namespace Timelapse.ControlsDataEntry
             try
             {
                 // The current row depends on wheter we are in the thumbnail grid or the normal view
-                int currentRow = (this.ThumbnailGrid.IsVisible == false) ? this.ImageCache.CurrentRow : this.ThumbnailGrid.GetSelected()[0];
+                int currentRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
                 for (int fileIndex = currentRow - 1; fileIndex >= 0; fileIndex--)
                 {
                     // ReSharper disable once RedundantAssignment
                     currentIndex = fileIndex;
                     // Search for the row with some value in it, starting from the previous row
-                    string valueToCopy = this.FileDatabase.FileTable[fileIndex].GetValueDatabaseString(control.DataLabel);
+                    string valueToCopy = FileDatabase.FileTable[fileIndex].GetValueDatabaseString(control.DataLabel);
                     if (string.IsNullOrWhiteSpace(valueToCopy) == false)
                     {
                         // for flags, we skip over falses
@@ -838,7 +842,7 @@ namespace Timelapse.ControlsDataEntry
         private void DateTimeControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             // Debug.Print("DateTimeControl_ValueChanged triggered");
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -849,7 +853,7 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
             // Update file data table and write the new DateTime, Date, and Time to the database
-            this.DateTimeUpdate(dateTimePicker, dateTimePicker.Value.Value);
+            DateTimeUpdate(dateTimePicker, dateTimePicker.Value.Value);
 
             // SAULXXX DateTimePicker Workaround. 
             // There is a bug (?) in the dateTimePicker where it doesn't update the calendar to the
@@ -858,14 +862,14 @@ namespace Timelapse.ControlsDataEntry
             // The fix below updates the calendar to the current date.
             if (dateTimePicker.Template.FindName("PART_Calendar", dateTimePicker) is Calendar calendar)
             {
-                this.IsProgrammaticControlUpdate = true;
+                IsProgrammaticControlUpdate = true;
                 calendar.DisplayDate = dateTimePicker.Value.Value;
                 calendar.SelectedDate = dateTimePicker.Value.Value;
                 if (calendar.Template.FindName("PART_TimePicker", calendar) is TimePicker timepicker)
                 {
                     timepicker.Value = dateTimePicker.Value.Value;
                 }
-                this.IsProgrammaticControlUpdate = false;
+                IsProgrammaticControlUpdate = false;
             }
         }
 
@@ -874,7 +878,7 @@ namespace Timelapse.ControlsDataEntry
         // and updates the database
         private void Calendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -896,13 +900,13 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
             TimeSpan timespan = dateTimePicker.Value.Value.TimeOfDay;
-            this.IsProgrammaticControlUpdate = true;
+            IsProgrammaticControlUpdate = true;
             dateTimePicker.Value = calendar.SelectedDate + timespan; // + dateTimePicker.Value.Value.TimeOfDay;
 
             // Update file data table and write the new DateTime, Date, and Time to the database
             if (dateTimePicker.Value != null)
             {
-                this.DateTimeUpdate(dateTimePicker, (DateTime)dateTimePicker.Value);
+                DateTimeUpdate(dateTimePicker, (DateTime)dateTimePicker.Value);
             }
             else
             {
@@ -910,28 +914,28 @@ namespace Timelapse.ControlsDataEntry
             }
 
             // Debug.Print("Got calendar event " + calendar.SelectedDate.ToString());
-            this.IsProgrammaticControlUpdate = false;
+            IsProgrammaticControlUpdate = false;
         }
 
         // Helper method for above DateTime changes.
         private void DateTimeUpdate(DateTimePicker dateTimePicker, DateTime dateTime)
         {
             // update file data table and write the new DateTime, Date, and Time to the database
-            if (this.ImageCache?.Current == null)
+            if (ImageCache?.Current == null)
             {
                 return;
             }
-            this.ImageCache.Current.SetDateTime(dateTime);
+            ImageCache.Current.SetDateTime(dateTime);
             dateTimePicker.ToolTip = DateTimeHandler.ToStringDisplayDateTime(dateTime);
 
-            List<ColumnTuplesWithWhere> imageToUpdate = new List<ColumnTuplesWithWhere>() { this.ImageCache.Current.GetDateTimeColumnTuples() };
-            this.FileDatabase.UpdateFiles(imageToUpdate);
+            List<ColumnTuplesWithWhere> imageToUpdate = new List<ColumnTuplesWithWhere> { ImageCache.Current.GetDateTimeColumnTuples() };
+            FileDatabase.UpdateFiles(imageToUpdate);
         }
 
         // When the text in a particular note box changes, update the particular note field(s) in the database 
         private void NoteControl_TextAutocompleted(object sender, TextChangedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -940,13 +944,13 @@ namespace Timelapse.ControlsDataEntry
             control.ContentChanged = true;
 
             // Note that  trailing whitespace is removed only from the database as further edits may use it.
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
         }
 
         // When the text in a particular note box changes, update the particular note field(s) in the database 
         private void AlphaNumericControl_TextAutocompleted(object sender, TextChangedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -955,29 +959,29 @@ namespace Timelapse.ControlsDataEntry
             control.ContentChanged = true;
 
             // Note that  trailing whitespace is removed only from the database as further edits may use it.
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
         }
 
         // When the text in a multiLine control changes, update the particular field(s) in the database
         private void MultiLineControl_TextHasChanged(object sender, EventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
-            DataEntryMultiLine control = (DataEntryMultiLine)((Xceed.Wpf.Toolkit.MultiLineTextEditor)sender).Tag;
+            DataEntryMultiLine control = (DataEntryMultiLine)((MultiLineTextEditor)sender).Tag;
             {
                 control.ContentChanged = true;
 
                 // Note that  trailing whitespace is removed only from the database as further edits may use it.
-                this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
+                UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
             }
         }
 
         // When the number in a particular counter or integer box changes, update the particular field(s) in the database
         private void IntegerControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -985,13 +989,13 @@ namespace Timelapse.ControlsDataEntry
             // Get the key identifying the control, and then add its value to the database
             DataEntryControl control = (DataEntryControl)integerUpDown.Tag;
             control.SetContentAndTooltip(integerUpDown.Value.ToString());
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }
 
         // When the number in a particular decimal box changes, update the particular decimal field(s) in the database
         private void DecimalControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -999,13 +1003,13 @@ namespace Timelapse.ControlsDataEntry
             // Get the key identifying the control, and then add its value to the database
             DataEntryControl control = (DataEntryControl)doubleUpDown.Tag;
             control.SetContentAndTooltip(doubleUpDown.Value.ToString());
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }
 
         // When a choice changes, update the particular choice field(s) in the database
         private void ChoiceControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -1024,12 +1028,12 @@ namespace Timelapse.ControlsDataEntry
             {
                 control.SetContentAndTooltip(cbi.Content.ToString());
             }
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }
 
-        private void MultiChoiceControl_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
+        private void MultiChoiceControl_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -1038,13 +1042,13 @@ namespace Timelapse.ControlsDataEntry
             // Get the key identifying the control, and then add its value to the database
             DataEntryControl control = (DataEntryControl)checkComboBox.Tag;
             control.SetContentAndTooltip(checkComboBox.Text.TrimStart(','));
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }
 
         // When a flag changes, update the particular flag field(s) in the database
         private void FlagControl_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -1055,13 +1059,13 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
             DataEntryControl control = (DataEntryControl)checkBox.Tag;
-            string value = checkBox.IsChecked == true ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+            string value = checkBox.IsChecked == true ? BooleanValue.True : BooleanValue.False;
             control.SetContentAndTooltip(value);
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
         }
         private void DateTimeCustomControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -1072,15 +1076,15 @@ namespace Timelapse.ControlsDataEntry
             }
             DataEntryControl control = (DataEntryControl)dateTimePicker.Tag;
 
-            string value = Util.DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimePicker.Value);
+            string value = DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimePicker.Value);
             control.SetContentAndTooltip(value);
             //this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
         }
 
         private void DateControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -1091,14 +1095,14 @@ namespace Timelapse.ControlsDataEntry
             }
             DataEntryControl control = (DataEntryControl)dateTimePicker.Tag;
 
-            string value = Util.DateTimeHandler.ToStringDatabaseDate((DateTime)dateTimePicker.Value);
+            string value = DateTimeHandler.ToStringDatabaseDate((DateTime)dateTimePicker.Value);
             control.SetContentAndTooltip(value);
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
         }
 
         private void TimeControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.IsProgrammaticControlUpdate)
+            if (IsProgrammaticControlUpdate)
             {
                 return;
             }
@@ -1109,9 +1113,9 @@ namespace Timelapse.ControlsDataEntry
             }
             DataEntryControl control = (DataEntryControl)timePicker.Tag;
 
-            string value = Util.DateTimeHandler.ToStringTime((DateTime)timePicker.Value);
+            string value = DateTimeHandler.ToStringTime((DateTime)timePicker.Value);
             control.SetContentAndTooltip(value);
-            this.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
         }
         #endregion
 
@@ -1120,19 +1124,19 @@ namespace Timelapse.ControlsDataEntry
         // depending upon whether we are in the single image or  theThumbnailGrid view respectively.
         private void UpdateRowsDependingOnThumbnailGridState(string datalabel, string content)
         {
-            if (this.ThumbnailGrid.IsVisible == false && this.ThumbnailGrid.IsGridActive == false)
+            if (ThumbnailGrid.IsVisible == false && ThumbnailGrid.IsGridActive == false)
             {
                 // Only a single image is displayed: update the database for the current row with the control's value
-                if (this.ImageCache?.Current == null)
+                if (ImageCache?.Current == null)
                 {
                     return;
                 }
-                this.FileDatabase.UpdateFile(this.ImageCache.Current.ID, datalabel, content);
+                FileDatabase.UpdateFile(ImageCache.Current.ID, datalabel, content);
             }
             else
             {
                 // Multiple images are displayed: update the database for all selected rows with the control's value
-                this.FileDatabase.UpdateFiles(this.ThumbnailGrid.GetSelected(), datalabel, content.Trim());
+                FileDatabase.UpdateFiles(ThumbnailGrid.GetSelected(), datalabel, content.Trim());
             }
         }
         #endregion
@@ -1173,7 +1177,7 @@ namespace Timelapse.ControlsDataEntry
 
                 if (parent != null)
                 {
-                    return DataEntryHandler.TryFindFocusedControl(parent, out focusedControl);
+                    return TryFindFocusedControl(parent, out focusedControl);
                 }
             }
             focusedControl = null;
@@ -1183,7 +1187,7 @@ namespace Timelapse.ControlsDataEntry
         // If the is a common (trimmed) data value for the provided data label in the given fileIDs, return that value, otherwise null.
         public string GetValueDisplayStringCommonToFileIds(string dataLabel)
         {
-            List<int> fileIds = this.ThumbnailGrid.GetSelected();
+            List<int> fileIds = ThumbnailGrid.GetSelected();
             // There used to be a bug in this code, which resulted from this being invoked in SwitchToThumbnailGridView() when the grid was already being displayed.
             //  I have kept the try/catch in just in case it rears its ugly head elsewhere. Commented out Debug statements are here just in case we need to reexamine it.
             try
@@ -1195,7 +1199,7 @@ namespace Timelapse.ControlsDataEntry
                 }
 
                 // This can cause the crash, when the id in fileIds[0] doesn't exist
-                ImageRow imageRow = this.FileDatabase.FileTable[fileIds[0]];
+                ImageRow imageRow = FileDatabase.FileTable[fileIds[0]];
 
                 // The above line is what causes the crash, when the id in fileIds[0] doesn't exist
                 // Debug.Print("Success: " + dataLabel + ": " + fileIds[0]);
@@ -1208,7 +1212,7 @@ namespace Timelapse.ControlsDataEntry
                 int fileIdsCount = fileIds.Count;
                 for (int i = 1; i < fileIdsCount; i++)
                 {
-                    imageRow = this.FileDatabase.FileTable[fileIds[i]];
+                    imageRow = FileDatabase.FileTable[fileIds[i]];
                     string new_contents = imageRow.GetValueDisplayString(dataLabel);
                     new_contents = new_contents.Trim();
                     if (new_contents != contents)
@@ -1260,31 +1264,31 @@ namespace Timelapse.ControlsDataEntry
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                this.FileDatabase?.Dispose();
+                FileDatabase?.Dispose();
             }
-            this.disposed = true;
+            disposed = true;
         }
 
         public void DisposeAsNeeded()
         {
             try
             {
-                this.Dispose();
-                this.ImageCache = null;
-                this.FileDatabase = null;
+                Dispose();
+                ImageCache = null;
+                FileDatabase = null;
             }
             catch
             {

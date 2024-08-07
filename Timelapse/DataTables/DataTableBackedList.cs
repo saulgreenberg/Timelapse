@@ -27,27 +27,27 @@ namespace Timelapse.DataTables
         public DataTableBackedList(DataTable dataTable, Func<DataRow, TRow> createRow)
         {
             this.createRow = createRow;
-            this.DataTable = dataTable;
-            this.disposed = false;
+            DataTable = dataTable;
+            disposed = false;
         }
         #endregion
 
         #region Public Methods - Modify the DataTable by adding/removing a row: NewRow, RemoveAt
         public TRow NewRow()
         {
-            DataRow row = this.DataTable.NewRow();
-            return this.createRow(row);
+            DataRow row = DataTable.NewRow();
+            return createRow(row);
         }
 
         // Given a populated row, add it
         public void AddRow(DataRow row)
         {
-            this.DataTable.Rows.Add(row.ItemArray);
+            DataTable.Rows.Add(row.ItemArray);
         }
 
         public void RemoveAt(int index)
         {
-            this.DataTable.Rows.RemoveAt(index);
+            DataTable.Rows.RemoveAt(index);
         }
         #endregion
 
@@ -59,7 +59,7 @@ namespace Timelapse.DataTables
         {
             get
             {
-                foreach (DataColumn column in this.DataTable.Columns)
+                foreach (DataColumn column in DataTable.Columns)
                 {
                     yield return column.ColumnName;
                 }
@@ -69,7 +69,7 @@ namespace Timelapse.DataTables
         /// <summary>
         /// Return a count of the number of rows in the DataTable
         /// </summary>
-        public int RowCount => this.DataTable?.Rows == null ? 0 : DataTable.Rows.Count;
+        public int RowCount => DataTable?.Rows == null ? 0 : DataTable.Rows.Count;
 
         #endregion
 
@@ -82,16 +82,14 @@ namespace Timelapse.DataTables
         {
             get
             {
-                if (index < this.DataTable.Rows.Count)
+                if (index < DataTable.Rows.Count)
                 {
-                    return this.createRow(this.DataTable.Rows[index]);
+                    return createRow(DataTable.Rows[index]);
                 }
-                else
-                {
-                    Debug.Print(
-                        $"in DataTableBackedList:this. Datatable count is {this.DataTable.Rows.Count}, but index is out of bounds at: {index}");
-                    return null;
-                }
+
+                Debug.Print(
+                    $"in DataTableBackedList:this. Datatable count is {DataTable.Rows.Count}, but index is out of bounds at: {index}");
+                return null;
             }
         }
 
@@ -107,12 +105,12 @@ namespace Timelapse.DataTables
             //}
             try
             {
-                DataRow row = this.DataTable.Rows.Find(id);
+                DataRow row = DataTable.Rows.Find(id);
                 if (row == null)
                 {
                     return null;
                 }
-                return this.createRow(row);
+                return createRow(row);
             }
             catch
             {
@@ -124,7 +122,7 @@ namespace Timelapse.DataTables
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(row, nameof(row));
-            return row.GetIndex(this.DataTable);
+            return row.GetIndex(DataTable);
         }
         #endregion
 
@@ -134,14 +132,14 @@ namespace Timelapse.DataTables
             if (dataGrid != null)
             {
 
-                dataGrid.DataContext = this.DataTable;
-                dataGrid.ItemsSource = this.DataTable.DefaultView;
+                dataGrid.DataContext = DataTable;
+                dataGrid.ItemsSource = DataTable.DefaultView;
             }
             // refresh data grid binding
             if (onRowChanged != null)
             {
-                this.DataTable.RowChanged -= onRowChanged;
-                this.DataTable.RowChanged += onRowChanged;
+                DataTable.RowChanged -= onRowChanged;
+                DataTable.RowChanged += onRowChanged;
             }
         }
 
@@ -155,45 +153,45 @@ namespace Timelapse.DataTables
             // Manipulation of data in a DataTable from within a foreach is common practice, suggesting whatever framework issue which invalidates the enumerator 
             // manifests only infrequently, but MSDN is ambiguous as to the level of support.  Enumerators returning the same row multiple times has been observed,
             // skipping of rows has not been.
-            if (null == this.DataTable?.Rows)
+            if (null == DataTable?.Rows)
             {
                 yield return null;
             }
             else
             {
-                int rowCount = this.DataTable.Rows.Count;
+                int rowCount = DataTable.Rows.Count;
                 for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
                 {
-                    yield return this.createRow(this.DataTable.Rows[rowIndex]);
+                    yield return createRow(DataTable.Rows[rowIndex]);
                 }
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
         #endregion
 
         #region Disposing
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
-            if (disposing && this.DataTable != null)
+            if (disposing && DataTable != null)
             {
-                this.DataTable.Dispose();
+                DataTable.Dispose();
             }
-            this.disposed = true;
+            disposed = true;
         }
 
         public void DisposeAsNeeded(DataRowChangeEventHandler eventHandler)
@@ -201,13 +199,13 @@ namespace Timelapse.DataTables
             try
             {
                 // Release the DataTable
-                this.DataTable.Rows.Clear();
+                DataTable.Rows.Clear();
                 if (eventHandler != null)
                 {
-                    this.DataTable.RowChanged -= eventHandler;
+                    DataTable.RowChanged -= eventHandler;
                 }
-                this.Dispose();
-                this.DataTable = null;
+                Dispose();
+                DataTable = null;
             }
             catch
             {

@@ -1,5 +1,5 @@
-﻿using MetadataExtractor;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using MetadataExtractor;
 using Timelapse.DataStructures;
 
 namespace Timelapse.Util
@@ -39,11 +39,8 @@ namespace Timelapse.Util
                             //metadataDictionary.Add(metadata.Key, metadata); // Use this form If we want the key to be Directory.TagName
                             metadataDictionary.Add(metadata.Name, metadata); // Use this form If we want the key to be TagName
                         }
-                        else
-                        {
-                            // If you want to see if any Quicktime multiple Track Headers exist but where not added, just uncomment this line.
-                            // TracePrint.PrintMessage(String.Format("ImageMetadata Dictionary: Duplicate metadata key: {0}:{1} (Note that Quicktime may have multiple Track Headers)", metadataDirectory.Name, metadata.Key));
-                        }
+                        // If you want to see if any Quicktime multiple Track Headers exist but where not added, just uncomment this line.
+                        // TracePrint.PrintMessage(String.Format("ImageMetadata Dictionary: Duplicate metadata key: {0}:{1} (Note that Quicktime may have multiple Track Headers)", metadataDirectory.Name, metadata.Key));
                     }
                 }
             }

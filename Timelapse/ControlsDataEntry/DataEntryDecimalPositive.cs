@@ -14,8 +14,8 @@ namespace Timelapse.ControlsDataEntry
         public DataEntryDecimalPositive(ControlRow control, DataEntryControls styleProvider) :
             base(control, styleProvider, true)
         {
-            this.ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_DecimalPositiveCharacterOnly;
-            DataObject.AddPastingHandler(this.ContentControl, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfDecimalPositive);
+            ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_DecimalPositiveCharacterOnly;
+            DataObject.AddPastingHandler(ContentControl, ValidationCallbacks.Paste_OnlyIfDecimalPositive);
         }
         #endregion
     }

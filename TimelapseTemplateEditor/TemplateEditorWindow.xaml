@@ -41,7 +41,7 @@
                 <!-- New based on as standard-->
                 <MenuItem Name="MenuFileNewTemplateFromStandard" Header="_New template based on a standard..." ToolTip="Create a new data template file based on a particular standard">
                     <MenuItem Name="MenuFileNewAlbertaMetadataStandard" Header="_Alberta Metadata Standard..." 
-                              Click="MenuFileNewBasedOnStandard_Click" 
+                              Click="MenuFileNewFromStandardResourceFile_Click" 
                               Tag ="AlbertaMetadataStandards"
                               ToolTip="Create a new data template file based on the Alberta Metadata Standard. You can edit it afterwards if desired.">
                         <MenuItem.Icon>
@@ -60,7 +60,7 @@
 
                     <MenuItem Name="MenuFileNewCameratrapDP" Header="_CamtrapDP..." 
                               Visibility ="Visible"
-                              Click="MenuFileNewBasedOnStandard_Click" 
+                              Click="MenuFileNewFromStandardResourceFile_Click" 
                               Tag ="CamtrapDP"
                               ToolTip="Create a new data template file based on the CamtrapDP standard. You can edit it afterwards if desired.">
                         <MenuItem.Icon>

@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
@@ -17,10 +18,10 @@ namespace Timelapse
         #region Window - Restore sub-menu opening
         private void MenuItemWindowLoadCustom_SubmenuOpening(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
-            this.MenuItemWindowCustom1Load.IsEnabled = this.State.IsRegistryKeyExists(Constant.AvalonLayoutTags.Custom1);
-            this.MenuItemWindowCustom2Load.IsEnabled = this.State.IsRegistryKeyExists(Constant.AvalonLayoutTags.Custom2);
-            this.MenuItemWindowCustom3Load.IsEnabled = this.State.IsRegistryKeyExists(Constant.AvalonLayoutTags.Custom3);
+            FilePlayer_Stop(); // In case the FilePlayer is going
+            MenuItemWindowCustom1Load.IsEnabled = State.IsRegistryKeyExists(AvalonLayoutTags.Custom1);
+            MenuItemWindowCustom2Load.IsEnabled = State.IsRegistryKeyExists(AvalonLayoutTags.Custom2);
+            MenuItemWindowCustom3Load.IsEnabled = State.IsRegistryKeyExists(AvalonLayoutTags.Custom3);
         }
         #endregion
 
@@ -35,11 +36,11 @@ namespace Timelapse
             string layout = mi.Tag.ToString();
             this.AvalonLayout_TryLoad(layout);
 
-            if (null != this.DataHandler?.FileDatabase?.FileSelectionEnum)
+            if (null != DataHandler?.FileDatabase?.FileSelectionEnum)
             {
                 // Change the title of the data panel to indicate the selection
                 string status;
-                switch (this.DataHandler?.FileDatabase?.FileSelectionEnum)
+                switch (DataHandler?.FileDatabase?.FileSelectionEnum)
                 {
                     case FileSelectionEnum.All:
                         status = "All files";
@@ -62,22 +63,22 @@ namespace Timelapse
                 }
 
                 // Show feedback of the status description in both the status bar and the data entry control panel title
-                this.StatusBar.SetView(status);
-                this.DataEntryControlPanel.Title = "Image data ";
+                StatusBar.SetView(status);
+                DataEntryControlPanel.Title = "Image data ";
                 if (false == string.IsNullOrWhiteSpace(status))
                 {
-                    this.DataEntryControlPanel.Title += $"({status} selected)";
+                    DataEntryControlPanel.Title += $"({status} selected)";
                 }
             }
 
             // If an image set is currently loaded, make the image set pane the active pane
-            if (this.IsFileDatabaseAvailable())
+            if (IsFileDatabaseAvailable())
             {
-                this.ImageSetPane.IsActive = true;
+                ImageSetPane.IsActive = true;
             }
             else
             {
-                this.InstructionPane.IsActive = true;
+                InstructionPane.IsActive = true;
             }
         }
         #endregion
@@ -95,10 +96,10 @@ namespace Timelapse
                 return;
             }
 
-            bool visibilityState = this.DataEntryControlPanel.IsVisible;
-            this.DataEntryControlPanel.IsVisible = true;
+            bool visibilityState = DataEntryControlPanel.IsVisible;
+            DataEntryControlPanel.IsVisible = true;
             this.AvalonLayout_TrySave(mi.Tag.ToString());
-            this.DataEntryControlPanel.IsVisible = visibilityState;
+            DataEntryControlPanel.IsVisible = visibilityState;
         }
     }
     #endregion

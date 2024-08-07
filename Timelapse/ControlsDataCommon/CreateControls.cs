@@ -9,6 +9,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Control = System.Windows.Controls.Control;
 
 namespace Timelapse.ControlsDataCommon
 {
@@ -35,10 +36,10 @@ namespace Timelapse.ControlsDataCommon
             {
                 ToolTip = tooltip,
                 Height = 26,
-                Width = Constant.ControlDefault.NoteDefaultWidth,
+                Width = ControlDefault.NoteDefaultWidth,
             };
 
-            CreateControls.Configure(alphaNumeric,  defaultValue);
+            Configure(alphaNumeric,  defaultValue);
             alphaNumeric.GotFocus += Control_GotFocus;
             alphaNumeric.LostFocus += Control_LostFocus;
             return alphaNumeric;
@@ -48,7 +49,7 @@ namespace Timelapse.ControlsDataCommon
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(alphaNumeric, nameof(alphaNumeric));
-            alphaNumeric.Text = defaultValue ?? Constant.ControlDefault.NoteDefaultValue;
+            alphaNumeric.Text = defaultValue ?? ControlDefault.NoteDefaultValue;
         }
         #endregion
 
@@ -74,15 +75,15 @@ namespace Timelapse.ControlsDataCommon
             switch (dateTimeFormat)
             {
                 case DateTimeFormatEnum.DateOnly:
-                    dateTimePicker.Width = Constant.ControlDefault.Date_DefaultWidth;
+                    dateTimePicker.Width = ControlDefault.Date_DefaultWidth;
                     dateTimePicker.TimePickerVisibility = Visibility.Collapsed;
                     break; 
                 case DateTimeFormatEnum.DateAndTime:
                 default:
-                    dateTimePicker.Width = Constant.ControlDefault.DateTimeDefaultWidth;
+                    dateTimePicker.Width = ControlDefault.DateTimeDefaultWidth;
                     break;
             }
-            CreateControls.Configure(dateTimePicker, dateTimeFormat, defaultValue);
+            Configure(dateTimePicker, dateTimeFormat, defaultValue);
             dateTimePicker.GotFocus += Control_GotFocus;
             dateTimePicker.LostFocus += Control_LostFocus;
             return dateTimePicker;
@@ -95,21 +96,21 @@ namespace Timelapse.ControlsDataCommon
 
             dateTimePicker.AutoCloseCalendar = true;
             dateTimePicker.Format = DateTimeFormat.Custom;
-            dateTimePicker.CultureInfo = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            dateTimePicker.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
 
             switch (dateTimeFormat)
             {
                 case DateTimeFormatEnum.DateOnly:
-                    dateTimePicker.FormatString = Constant.Time.DateDisplayFormat;
+                    dateTimePicker.FormatString = Time.DateDisplayFormat;
                     break;
                 case DateTimeFormatEnum.DateAndTime:
                 default:
-                    dateTimePicker.FormatString = Constant.Time.DateTimeDisplayFormat;
+                    dateTimePicker.FormatString = Time.DateTimeDisplayFormat;
                     dateTimePicker.TimeFormat = DateTimeFormat.Custom;
-                    dateTimePicker.TimeFormatString = Constant.Time.TimeFormat;
+                    dateTimePicker.TimeFormatString = Time.TimeFormat;
                     break;
             }
-            dateTimePicker.Value = defaultValue ?? Constant.ControlDefault.DateTimeCustomDefaultValue;
+            dateTimePicker.Value = defaultValue ?? ControlDefault.DateTimeCustomDefaultValue;
         }
         #endregion
 
@@ -140,7 +141,7 @@ namespace Timelapse.ControlsDataCommon
                 StartTime = TimeSpan.FromHours(9),
                 MaxDropDownHeight = 250
             };
-            CreateControls.Configure(timePicker, defaultValue);
+            Configure(timePicker, defaultValue);
             timePicker.GotFocus += Control_GotFocus;
             timePicker.LostFocus += Control_LostFocus;
             return timePicker;
@@ -150,10 +151,10 @@ namespace Timelapse.ControlsDataCommon
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(timePicker, nameof(timePicker));
-            timePicker.CultureInfo = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
+            timePicker.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
             timePicker.Format = DateTimeFormat.Custom;
             timePicker.FormatString = Time.TimeFormat;
-            timePicker.Value = defaultValue ?? Constant.ControlDefault.Time_DefaultValue;
+            timePicker.Value = defaultValue ?? ControlDefault.Time_DefaultValue;
             timePicker.TimeInterval = TimeSpan.FromMinutes(15);
         }
         #endregion
@@ -185,7 +186,7 @@ namespace Timelapse.ControlsDataCommon
         // Highlight control when it gets the focus (simulates aspects of tab control in Timelapse)
         private static void Control_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Control control)
+            if (sender is Control control)
             {
                 control.BorderThickness = new Thickness(Constant.Control.BorderThicknessHighlight);
                 control.BorderBrush = Constant.Control.BorderColorHighlight;
@@ -199,7 +200,7 @@ namespace Timelapse.ControlsDataCommon
         // Remove the highlight by restoring the original border appearance
         private static void Control_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Control control)
+            if (sender is Control control)
             {
                 control.BorderThickness = new Thickness(Constant.Control.BorderThicknessNormal);
                 control.BorderBrush = Constant.Control.BorderColorNormal;

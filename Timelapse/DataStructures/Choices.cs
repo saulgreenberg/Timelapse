@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
+using Newtonsoft.Json;
 using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.DataStructures
@@ -19,14 +19,14 @@ namespace Timelapse.DataStructures
         #region Public properties
         public bool IncludeEmptyChoice
         {
-            get => this.ChoicesInternal.IncludeEmptyChoice;
-            set => this.ChoicesInternal.IncludeEmptyChoice = value;
+            get => ChoicesInternal.IncludeEmptyChoice;
+            set => ChoicesInternal.IncludeEmptyChoice = value;
         }
 
         public List<string> ChoiceList
         {
-            get => this.ChoicesInternal.ChoiceListNonEmpty;
-            set => this.ChoicesInternal.ChoiceListNonEmpty = value;
+            get => ChoicesInternal.ChoiceListNonEmpty;
+            set => ChoicesInternal.ChoiceListNonEmpty = value;
         }
 
         // the list, including the optional empty item
@@ -34,24 +34,24 @@ namespace Timelapse.DataStructures
         {
             get
             {
-                if (this.IncludeEmptyChoice == false)
+                if (IncludeEmptyChoice == false)
                 {
                     // No empty item
-                    return this.ChoiceList ?? (this.ChoiceList = new List<string>());
+                    return ChoiceList ?? (ChoiceList = new List<string>());
                 }
                 // Build and return the choice list with an empty item at the beginning
-                List<string> choiceListWithEmpty = new List<string>(this.ChoiceList);
+                List<string> choiceListWithEmpty = new List<string>(ChoiceList);
                 choiceListWithEmpty.Insert(0, Environment.NewLine);
                 return choiceListWithEmpty;
             }
         }
 
         public string GetAsJson =>
-            this.ChoiceList.Count == 0
+            ChoiceList.Count == 0
                 ? string.Empty
                 : JsonConvert.SerializeObject(ChoicesInternal);
 
-        public string GetAsTextboxList => String.Join(Environment.NewLine, this.ChoiceList);
+        public string GetAsTextboxList => String.Join(Environment.NewLine, ChoiceList);
 
         #endregion
 
@@ -59,9 +59,9 @@ namespace Timelapse.DataStructures
         // First form initializes the properties to the values provided as text,
         public Choices()
         {
-            this.ChoicesInternal = new ChoicesInternalPart();
-            this.ChoiceList = new List<string>();
-            this.IncludeEmptyChoice = true;
+            ChoicesInternal = new ChoicesInternalPart();
+            ChoiceList = new List<string>();
+            IncludeEmptyChoice = true;
         }
 
         // Second form initializes the properties to the values provided as text,
@@ -79,9 +79,9 @@ namespace Timelapse.DataStructures
             List<string> choiceList = string.IsNullOrWhiteSpace(choiceText)
                 ? new List<string>()
                 : choiceText.Split(NewLineDelimiter, StringSplitOptions.None).ToList();
-            this.ChoicesInternal = new ChoicesInternalPart();
-            this.ChoiceList = choiceList;
-            this.IncludeEmptyChoice = includeEmptyChoice;
+            ChoicesInternal = new ChoicesInternalPart();
+            ChoiceList = choiceList;
+            IncludeEmptyChoice = includeEmptyChoice;
         }
         #endregion
 
@@ -124,13 +124,13 @@ namespace Timelapse.DataStructures
             }
 
             comboBox.Items.Clear();
-            if (this.IncludeEmptyChoice)
+            if (IncludeEmptyChoice)
             {
                 // Add an empty choice followed by a separator 
                 comboBox.Items.Add(string.Empty);
                 comboBox.Items.Add(new Separator());
             }
-            foreach (string choice in this.ChoiceList)
+            foreach (string choice in ChoiceList)
             {
                 // Add each non-empty string
                 comboBox.Items.Add(choice);
@@ -148,13 +148,13 @@ namespace Timelapse.DataStructures
             }
 
             checkComboBox.Items.Clear();
-            if (this.IncludeEmptyChoice)
+            if (IncludeEmptyChoice)
             {
                 // Add an empty choice followed by a separator 
                 checkComboBox.Items.Add(string.Empty);
                 checkComboBox.Items.Add(new Separator());
             }
-            foreach (string choice in this.ChoiceList)
+            foreach (string choice in ChoiceList)
             {
                 // Add each non-empty string
                 checkComboBox.Items.Add(choice);
@@ -163,11 +163,11 @@ namespace Timelapse.DataStructures
 
         public bool Contains(string itemToCheck)
         {
-            if (string.IsNullOrEmpty(itemToCheck) && this.IncludeEmptyChoice)
+            if (string.IsNullOrEmpty(itemToCheck) && IncludeEmptyChoice)
             {
                 return true;
             }
-            return this.ChoiceList.Contains(itemToCheck);
+            return ChoiceList.Contains(itemToCheck);
         }
         #endregion
 

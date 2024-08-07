@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Exif.Makernotes;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
@@ -34,34 +35,34 @@ namespace Timelapse.DataTables
             // Original code is in comments
             //get { return (this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime)); }
             //private set { this.Row.SetField(Constant.DatabaseColumn.DateTime, value); }
-            get => DateTime.SpecifyKind(this.Row.GetDateTimeField(Constant.DatabaseColumn.DateTime), DateTimeKind.Unspecified);
-            private set => this.Row.SetField(Constant.DatabaseColumn.DateTime, DateTime.SpecifyKind(value, DateTimeKind.Unspecified));
+            get => DateTime.SpecifyKind(Row.GetDateTimeField(DatabaseColumn.DateTime), DateTimeKind.Unspecified);
+            private set => Row.SetField(DatabaseColumn.DateTime, DateTime.SpecifyKind(value, DateTimeKind.Unspecified));
         }
 
         // Get a version of the date/time suitable to display to the user 
-        public string DateTimeAsDisplayable => DateTimeHandler.ToStringDisplayDateTime(this.DateTime);
-        public string DateAsDisplayable => DateTimeHandler.ToStringDisplayDatePortion(this.DateTime);
-        public string TimeAsDisplayable => DateTimeHandler.ToStringTime(this.DateTime);
+        public string DateTimeAsDisplayable => DateTimeHandler.ToStringDisplayDateTime(DateTime);
+        public string DateAsDisplayable => DateTimeHandler.ToStringDisplayDatePortion(DateTime);
+        public string TimeAsDisplayable => DateTimeHandler.ToStringTime(DateTime);
 
         // Get the date/time  - This version is a null op!
-        public DateTime DateTimeIncorporatingOffsetPLAINVERSION => this.DateTime;
+        public DateTime DateTimeIncorporatingOffsetPLAINVERSION => DateTime;
 
         public bool DeleteFlag
         {
-            get => this.Row.GetBooleanField(Constant.DatabaseColumn.DeleteFlag);
-            set => this.Row.SetField(Constant.DatabaseColumn.DeleteFlag, value);
+            get => Row.GetBooleanField(DatabaseColumn.DeleteFlag);
+            set => Row.SetField(DatabaseColumn.DeleteFlag, value);
         }
 
         public string File
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.File);
-            set => this.Row.SetField(Constant.DatabaseColumn.File, value);
+            get => Row.GetStringField(DatabaseColumn.File);
+            set => Row.SetField(DatabaseColumn.File, value);
         }
 
         public string RelativePath
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.RelativePath);
-            set => this.Row.SetField(Constant.DatabaseColumn.RelativePath, value);
+            get => Row.GetStringField(DatabaseColumn.RelativePath);
+            set => Row.SetField(DatabaseColumn.RelativePath, value);
         }
         #endregion
 
@@ -75,12 +76,12 @@ namespace Timelapse.DataTables
         #region Public Methods - Various boolean tests
         public bool FileExists(string pathToRootFolder)
         {
-            return System.IO.File.Exists(Path.Combine(pathToRootFolder, this.RelativePath, this.File));
+            return System.IO.File.Exists(Path.Combine(pathToRootFolder, RelativePath, File));
         }
 
         public virtual bool IsDisplayable(string pathToRootFolder)
         {
-            return BitmapUtilities.IsBitmapFileDisplayable(Path.Combine(pathToRootFolder, this.RelativePath, this.File));
+            return BitmapUtilities.IsBitmapFileDisplayable(Path.Combine(pathToRootFolder, RelativePath, File));
         }
 
         // This will be invoked only on an image file, so always returns false
@@ -90,7 +91,7 @@ namespace Timelapse.DataTables
         // Check if a datalabel is present in the ImageRow
         public bool Contains(string dataLabel)
         {
-            return this.Row.Table.Columns.Contains(dataLabel);
+            return Row.Table.Columns.Contains(dataLabel);
         }
         #endregion
 
@@ -99,7 +100,7 @@ namespace Timelapse.DataTables
         // Return a FileInfo to the full path of the file
         public FileInfo GetFileInfo(string rootFolderPath)
         {
-            return new FileInfo(this.GetFilePath(rootFolderPath));
+            return new FileInfo(GetFilePath(rootFolderPath));
         }
 
         // Given the root folder path, 
@@ -107,43 +108,43 @@ namespace Timelapse.DataTables
         public string GetFilePath(string rootFolderPath)
         {
             // see RelativePath remarks in constructor
-            return string.IsNullOrEmpty(this.RelativePath)
-                ? Path.Combine(rootFolderPath, this.File)
-                : Path.Combine(rootFolderPath, this.RelativePath, this.File);
+            return string.IsNullOrEmpty(RelativePath)
+                ? Path.Combine(rootFolderPath, File)
+                : Path.Combine(rootFolderPath, RelativePath, File);
         }
 
         // Given a data label, get its value as a string as it exists in the database
         public string GetValueDatabaseString(string dataLabel)
         {
-            return (dataLabel == Constant.DatabaseColumn.DateTime)
-               ? DateTimeHandler.ToStringDatabaseDateTime(this.DateTime)
-               : this.GetValueDisplayString(dataLabel);
+            return (dataLabel == DatabaseColumn.DateTime)
+               ? DateTimeHandler.ToStringDatabaseDateTime(DateTime)
+               : GetValueDisplayString(dataLabel);
         }
 
         // Should be invoked only with the csvDateTimeOptions to one of the DateTime column formats
         public string GetValueCSVDateTimeWithTSeparatorString()
         {
             // Convert this.DateTime (a DateTimeOffset) to a DateTime, where we add in the offset amount
-            return DateTimeHandler.ToStringCSVDateTimeWithTSeparator(this.DateTime);
+            return DateTimeHandler.ToStringCSVDateTimeWithTSeparator(DateTime);
         }
 
         // Should be invoked only with the csvDateTimeOptions to one of the DateTime column formats
         public string GetValueCSVDateTimeWithoutTSeparatorString()
         {
             // Convert this.DateTime (a DateTimeOffset) to a DateTime
-            return DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(this.DateTime);
+            return DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(DateTime);
         }
 
         public string GetValueCSVDateString()
         {
             // Convert this.DateTime to a displayable Date for the CSV file
-            return DateTimeHandler.ToStringDisplayDatePortion(this.DateTime);
+            return DateTimeHandler.ToStringDisplayDatePortion(DateTime);
         }
 
         public string GetValueCSVTimeString()
         {
             // Convert this.DateTime to a displayable Date for the CSV file
-            return DateTimeHandler.ToStringTime(this.DateTime);
+            return DateTimeHandler.ToStringTime(DateTime);
         }
 
         // Given a control and its data label, get its value as a string to display to the user in the UI
@@ -153,10 +154,10 @@ namespace Timelapse.DataTables
         {
             switch (dataLabel)
             {
-                case Constant.DatabaseColumn.DateTime:
-                    return this.DateTimeAsDisplayable;
+                case DatabaseColumn.DateTime:
+                    return DateTimeAsDisplayable;
                 default:
-                    return this.Row.GetStringField(dataLabel);
+                    return Row.GetStringField(dataLabel);
             }
         }
         #endregion
@@ -168,13 +169,13 @@ namespace Timelapse.DataTables
         {
             switch (dataLabel)
             {
-                case Constant.DatabaseColumn.DateTime:
-                    this.DateTime = DateTimeHandler.TryParseDatabaseDateTime(value, out DateTime dateTime)
+                case DatabaseColumn.DateTime:
+                    DateTime = DateTimeHandler.TryParseDatabaseDateTime(value, out DateTime dateTime)
                         ? dateTime
                         : DateTime.MinValue;
                     break;
                 default:
-                    this.Row.SetField(dataLabel, value);
+                    Row.SetField(dataLabel, value);
                     break;
             }
         }
@@ -183,9 +184,9 @@ namespace Timelapse.DataTables
         #region Public Methods - Duplicate an Image Row object with its core values
         public ImageRow DuplicateRowWithCoreValues(ImageRow duplicate)
         {
-            duplicate.File = this.File;
-            duplicate.RelativePath = this.RelativePath;
-            duplicate.DateTime = this.DateTime;
+            duplicate.File = File;
+            duplicate.RelativePath = RelativePath;
+            duplicate.DateTime = DateTime;
             return duplicate;
         }
         #endregion
@@ -195,9 +196,9 @@ namespace Timelapse.DataTables
         // Where identifies the ID of the current image row - note that this is done in the GetDateTimeColumnTuples()
         public override ColumnTuplesWithWhere CreateColumnTuplesWithWhereByID()
         {
-            ColumnTuplesWithWhere columnTuples = this.GetDateTimeColumnTuples();
-            columnTuples.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.File, this.File));
-            columnTuples.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.RelativePath, this.RelativePath));
+            ColumnTuplesWithWhere columnTuples = GetDateTimeColumnTuples();
+            columnTuples.Columns.Add(new ColumnTuple(DatabaseColumn.File, File));
+            columnTuples.Columns.Add(new ColumnTuple(DatabaseColumn.RelativePath, RelativePath));
             return columnTuples;
         }
 
@@ -207,9 +208,9 @@ namespace Timelapse.DataTables
         {
             List<ColumnTuple> columnTuples = new List<ColumnTuple>(4)
             {
-                new ColumnTuple(Constant.DatabaseColumn.DateTime, this.DateTime),
+                new ColumnTuple(DatabaseColumn.DateTime, DateTime),
             };
-            return new ColumnTuplesWithWhere(columnTuples, this.ID);
+            return new ColumnTuplesWithWhere(columnTuples, ID);
         }
         #endregion
 
@@ -219,7 +220,7 @@ namespace Timelapse.DataTables
         {
             // There was still a UTCOffset conversionissues, so this kinda fixes it.
             //this.DateTime = dateTime;
-            this.DateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+            DateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
         }
 
         public void SetDateTimeFromFileInfo(string folderPath)
@@ -230,12 +231,12 @@ namespace Timelapse.DataTables
             // in the image file on the computer having a write time which is before its creation time.  Check both and take the lesser 
             // of the two to provide a best effort default.  In most cases it's desirable to see if a more accurate time can be obtained
             // from the image's EXIF metadata.
-            FileInfo fileInfo = this.GetFileInfo(folderPath);
+            FileInfo fileInfo = GetFileInfo(folderPath);
             DateTime earliestTime = fileInfo.CreationTime < fileInfo.LastWriteTime
                 ? fileInfo.CreationTime
                 : fileInfo.LastWriteTime;
             earliestTime = earliestTime.ToLocalTime();
-            this.SetDateTime(earliestTime);
+            SetDateTime(earliestTime);
         }
         #endregion
 
@@ -250,13 +251,13 @@ namespace Timelapse.DataTables
                 if (metadataOnLoad.MetadataToolSelected == MetadataToolEnum.MetadataExtractor)
                 {
                     // MetadataExtractor - specific code
-                    metadata = ImageMetadataDictionary.LoadMetadata(this.GetFilePath(folderPath));
+                    metadata = ImageMetadataDictionary.LoadMetadata(GetFilePath(folderPath));
                 }
                 else // if metadataToolSelected == MetadataToolEnum.ExifTool
                 {
                     // ExifTool specific code - we transform the ExifTool results into the same dictionary structure used by the MetadataExtractor
                     metadata.Clear();
-                    Dictionary<string, string> exifData = GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(this.GetFilePath(folderPath), metadataOnLoad.Tags);
+                    Dictionary<string, string> exifData = GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(GetFilePath(folderPath), metadataOnLoad.Tags);
 
                     foreach (KeyValuePair<string, string> kvp in exifData)
                     {
@@ -271,7 +272,7 @@ namespace Timelapse.DataTables
                     // Key is the metadata tag, Value is the data label
                     if (metadata.TryGetValue(kvp.Key, out var value))
                     {
-                        this.Row.SetField(kvp.Value, value.Value);
+                        Row.SetField(kvp.Value, value.Value);
                     }
                 }
             }
@@ -290,7 +291,7 @@ namespace Timelapse.DataTables
 
                 // Performance tweaks. Reading in sequential scan, does this speed up? Under the covers, the MetadataExtractor is using a sequential read, allowing skip forward but not random access.
                 // Exif is small, do we need a big block?
-                using (FileStream fS = new FileStream(this.GetFilePath(folderPath), FileMode.Open, FileAccess.Read, FileShare.Read, 64, FileOptions.SequentialScan))
+                using (FileStream fS = new FileStream(GetFilePath(folderPath), FileMode.Open, FileAccess.Read, FileShare.Read, 64, FileOptions.SequentialScan))
                 {
                     metadataDirectories = ImageMetadataReader.ReadMetadata(fS);
                 }
@@ -313,13 +314,13 @@ namespace Timelapse.DataTables
                 DateTime exifDateTime = dateTimeOriginal;
 
                 // get the current date time
-                DateTime currentDateTime = this.DateTime;
+                DateTime currentDateTime = DateTime;
                 // measure the extent to which the file time and 'image taken' metadata are consistent
                 bool dateAdjusted = currentDateTime.Date != exifDateTime.Date;
                 bool timeAdjusted = currentDateTime.TimeOfDay != exifDateTime.TimeOfDay;
                 if (dateAdjusted || timeAdjusted)
                 {
-                    this.SetDateTime(exifDateTime);
+                    SetDateTime(exifDateTime);
                 }
 
                 // At least with several Bushnell Trophy HD and Aggressor models (119677C, 119775C, 119777C) file times are sometimes
@@ -364,7 +365,7 @@ namespace Timelapse.DataTables
         // CODECLEANUP Should this method really be part of an image row? 
         public bool TryMoveFileToDeletedFilesFolder(string folderPath, bool backupDeletedFile)
         {
-            string sourceFilePath = this.GetFilePath(folderPath);
+            string sourceFilePath = GetFilePath(folderPath);
             if (!System.IO.File.Exists(sourceFilePath))
             {
                 return false;  // If there is no source file, its a missing file so we can't back it up
@@ -394,10 +395,10 @@ namespace Timelapse.DataTables
             }
 
             // Get the sub-folder path from the root folder to the image, so we can reconstruct its path
-            string destinationFolderPath = Path.Combine(deletedFilesFolderPath, this.RelativePath);
+            string destinationFolderPath = Path.Combine(deletedFilesFolderPath, RelativePath);
 
             // If we can't create the destinaton folder sub-folder, we use the root delete folder
-            string destinationFilePath = Path.Combine(deletedFilesFolderPath, destinationFolderPath, this.File);
+            string destinationFilePath = Path.Combine(deletedFilesFolderPath, destinationFolderPath, File);
             if (!Directory.Exists(destinationFolderPath))
             {
                 try
@@ -410,7 +411,7 @@ namespace Timelapse.DataTables
                 {
                     // If we can't create that folder, fall back to just putting the image into the main Deleted folder
                     TracePrint.PrintMessage("Could not create " + destinationFilePath + Environment.NewLine + exception.Message + ": " + exception);
-                    destinationFilePath = Path.Combine(deletedFilesFolderPath, this.File);
+                    destinationFilePath = Path.Combine(deletedFilesFolderPath, File);
                 }
             }
 
@@ -431,20 +432,20 @@ namespace Timelapse.DataTables
         public BitmapSource LoadBitmap(string baseFolderPath, out bool isCorruptOrMissing)
         {
             // ImageDimension doesn't do anything in this context, as the full size image is returned
-            return this.LoadBitmap(baseFolderPath, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out isCorruptOrMissing);
+            return LoadBitmap(baseFolderPath, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out isCorruptOrMissing);
         }
 
         // LoadBitmap Wrapper: defaults to Persistent, Decode to the given width
         public virtual BitmapSource LoadBitmap(string baseFolderPath, int? desiredWidth, out bool isCorruptOrMissing)
         {
-            return this.LoadBitmap(baseFolderPath, desiredWidth, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out isCorruptOrMissing);
+            return LoadBitmap(baseFolderPath, desiredWidth, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out isCorruptOrMissing);
         }
 
         // LoadBitmap Wrapper: If Ephemeral, generate a low-res thumbnail suitable for previewing. Otherwise full size
         public virtual BitmapSource LoadBitmap(string baseFolderPath, ImageDisplayIntentEnum imageExpectedUsage, out bool isCorruptOrMissing)
         {
-            return this.LoadBitmap(baseFolderPath,
-                     imageExpectedUsage == ImageDisplayIntentEnum.Ephemeral ? (int?)Constant.ImageValues.PreviewWidth128 : null,
+            return LoadBitmap(baseFolderPath,
+                     imageExpectedUsage == ImageDisplayIntentEnum.Ephemeral ? (int?)ImageValues.PreviewWidth128 : null,
                      imageExpectedUsage,
                      ImageDimensionEnum.UseWidth,
                      out isCorruptOrMissing);
@@ -459,7 +460,7 @@ namespace Timelapse.DataTables
             // 'out' arguments not allowed in tasks, so it returns a tuple containg the bitmap and the isCorruptOrMissingflag flag indicating bitmap retrieval state 
             return Task.Run(() =>
             {
-                BitmapSource bitmap = this.LoadBitmap(baseFolderPath, imageExpectedUsage == ImageDisplayIntentEnum.Ephemeral ? (int?)Constant.ImageValues.PreviewWidth128 : null,
+                BitmapSource bitmap = LoadBitmap(baseFolderPath, imageExpectedUsage == ImageDisplayIntentEnum.Ephemeral ? (int?)ImageValues.PreviewWidth128 : null,
                                                imageExpectedUsage,
                                                ImageDimensionEnum.UseWidth,
                                                out bool isCorruptOrMissing);
@@ -473,7 +474,7 @@ namespace Timelapse.DataTables
         public virtual BitmapSource LoadBitmap(string rootFolderPath, int? desiredWidthOrHeight, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum imageDimension, out bool isCorruptOrMissing)
         {
             // Invoke the static version. The only change is that we get the full file path and pass that as a parameter
-            return BitmapUtilities.GetBitmapFromImageFile(this.GetFilePath(rootFolderPath), desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
+            return BitmapUtilities.GetBitmapFromImageFile(GetFilePath(rootFolderPath), desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
         }
 
         // Return the aspect ratio (as Width/Height) of a bitmap or its placeholder as efficiently as possible
@@ -482,7 +483,7 @@ namespace Timelapse.DataTables
         // So it should only be invoked if we know the file is an image
         public virtual double GetBitmapAspectRatioFromFile(string rootFolderPath)
         {
-            return BitmapUtilities.GetBitmapAspectRatioFromImageFile(this.GetFilePath(rootFolderPath));
+            return BitmapUtilities.GetBitmapAspectRatioFromImageFile(GetFilePath(rootFolderPath));
         }
         #endregion
     }

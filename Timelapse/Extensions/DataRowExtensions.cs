@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Diagnostics;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.Extensions
@@ -60,7 +61,7 @@ namespace Timelapse.Extensions
 
         public static long GetID(this DataRow row)
         {
-            return row.GetLongField(Constant.DatabaseColumn.ID);
+            return row.GetLongField(DatabaseColumn.ID);
         }
 
         public static int GetIntegerField(this DataRow row, string column)

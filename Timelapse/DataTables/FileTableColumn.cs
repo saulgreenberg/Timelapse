@@ -1,4 +1,5 @@
-﻿using Timelapse.Util;
+﻿using Timelapse.Constant;
+using Timelapse.Util;
 
 namespace Timelapse.DataTables
 {
@@ -31,8 +32,8 @@ namespace Timelapse.DataTables
             // Check the arguments for null 
             ThrowIf.IsNullArgument(control, nameof(control));
 
-            this.ControlType = control.Type;
-            this.DataLabel = control.DataLabel;
+            ControlType = control.Type;
+            DataLabel = control.DataLabel;
         }
         #endregion
 
@@ -45,32 +46,32 @@ namespace Timelapse.DataTables
 
             switch (control.Type)
             {
-                case Constant.Control.Note:
-                case Constant.Control.AlphaNumeric:
-                case Constant.Control.MultiLine:
-                case Constant.DatabaseColumn.File:
-                case Constant.DatabaseColumn.RelativePath:
+                case Control.Note:
+                case Control.AlphaNumeric:
+                case Control.MultiLine:
+                case DatabaseColumn.File:
+                case DatabaseColumn.RelativePath:
                     return new FileTableNoteColumn(control);
-                case Constant.Control.Counter:
-                case Constant.Control.IntegerAny:
-                case Constant.Control.IntegerPositive:
+                case Control.Counter:
+                case Control.IntegerAny:
+                case Control.IntegerPositive:
                     return new FileTableCounterColumn(control);
-                case Constant.Control.DecimalAny:
-                case Constant.Control.DecimalPositive:
+                case Control.DecimalAny:
+                case Control.DecimalPositive:
                     return new FileTableDecimalColumn(control);
-                case Constant.DatabaseColumn.DateTime:
+                case DatabaseColumn.DateTime:
                     return new FileTableDateTimeColumn(control);
-                case Constant.DatabaseColumn.DeleteFlag:
-                case Constant.Control.Flag:
+                case DatabaseColumn.DeleteFlag:
+                case Control.Flag:
                     return new FileTableFlagColumn(control);
-                case Constant.Control.FixedChoice:
-                case Constant.Control.MultiChoice:
+                case Control.FixedChoice:
+                case Control.MultiChoice:
                     return new FileTableChoiceColumn(control);
-                case Constant.Control.DateTime_:
+                case Control.DateTime_:
                     return new FileTableDateTimeColumn(control);
-                case Constant.Control.Date_:
+                case Control.Date_:
                     return new FileTableDateColumn(control);
-                case Constant.Control.Time_:
+                case Control.Time_:
                     return new FileTableTimeColumn(control);
                 default:
                     return null;

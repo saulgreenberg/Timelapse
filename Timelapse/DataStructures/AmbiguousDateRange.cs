@@ -21,10 +21,10 @@
         #region Constructor
         public AmbiguousDateRange(int startRange, int endRange, int count, bool swapDates)
         {
-            this.StartIndex = startRange;
-            this.EndIndex = endRange;
-            this.SwapDates = swapDates;
-            this.Count = count;
+            StartIndex = startRange;
+            EndIndex = endRange;
+            SwapDates = swapDates;
+            Count = count;
         }
         #endregion
     }

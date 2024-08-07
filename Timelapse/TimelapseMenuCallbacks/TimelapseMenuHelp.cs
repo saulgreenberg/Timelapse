@@ -13,7 +13,7 @@ namespace Timelapse
         #region Help sub-menu opening
         private void Help_SubmenuOpening(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            FilePlayer_Stop(); // In case the FilePlayer is going
         }
         #endregion
 
@@ -144,7 +144,7 @@ namespace Timelapse
             AboutTimelapse about = new AboutTimelapse(this);
             if ((about.ShowDialog() == true) && about.MostRecentCheckForUpdate.HasValue)
             {
-                this.State.MostRecentCheckForUpdates = about.MostRecentCheckForUpdate.Value;
+                State.MostRecentCheckForUpdates = about.MostRecentCheckForUpdate.Value;
             }
         }
         #endregion

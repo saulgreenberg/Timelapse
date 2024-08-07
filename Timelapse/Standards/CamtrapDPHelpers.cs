@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Point = System.Windows.Point;
-using System.Linq;
-using System.Runtime.InteropServices;
 using Timelapse.Database;
 using Timelapse.DataTables;
 
@@ -130,7 +125,7 @@ namespace Timelapse.Standards
         #region Get a bounding box around the various deployment's lat/long coordinates
         public static string CalculateLatLongBoundingBoxFromDeployments(FileDatabase fileDatabase)
         {
-            DataTables.DataTableBackedList<MetadataRow> rows = false == fileDatabase.MetadataTablesByLevel.TryGetValue(2, out var value)
+            DataTableBackedList<MetadataRow> rows = false == fileDatabase.MetadataTablesByLevel.TryGetValue(2, out var value)
                 ? null
                 : value;
             if (rows == null) return null;
@@ -169,7 +164,7 @@ namespace Timelapse.Standards
             if (pointCount == 0)
             {
                 // No points, so return an empty geojson
-                return $"{{\"type\": \"FeatureCollection\",\"features\": []}}";
+                return "{\"type\": \"FeatureCollection\",\"features\": []}";
             }
 
             if (pointCount == 1)
@@ -179,7 +174,7 @@ namespace Timelapse.Standards
                     $"{{\"type\": \"FeatureCollection\",\"features\": [{{\"type\": \"Feature\",\"properties\": {{}},\"geometry\": {{\"coordinates\": [{minLongitude},{minLatitude}],\"type\": \"Point\"}}}}]}}";
             }
             // multiple points, so return the bounding box containing all of them
-            return $"{{\"type\": \"FeatureCollection\",\"features\": " +
+            return "{\"type\": \"FeatureCollection\",\"features\": " +
                    $"{Environment.NewLine}[{{\"type\": \"Feature\"," +
                    $"{Environment.NewLine}\"properties\": {{}}," +
                    $"{Environment.NewLine}\"geometry\": {{\"coordinates\": [[" +

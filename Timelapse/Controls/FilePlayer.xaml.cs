@@ -27,57 +27,57 @@ namespace Timelapse.Controls
         public void OnFilePlayerChange(object sender, FilePlayerEventArgs e)
         {
             // If there exist any subscribers call the event
-            this.FilePlayerChange?.Invoke(this, e);
+            FilePlayerChange?.Invoke(this, e);
         }
         #endregion
 
         #region Constructor
         public FilePlayer()
         {
-            this.InitializeComponent();
-            this.SwitchFileMode(true);
+            InitializeComponent();
+            SwitchFileMode(true);
         }
         #endregion
 
         #region Public methods
         public void Stop()
         {
-            this.StopButton.IsChecked = true;
+            StopButton.IsChecked = true;
         }
 
         // Enable or Disable the backwards controls
         public void BackwardsControlsEnabled(bool isEnabled)
         {
-            this.FirstFile.IsEnabled = isEnabled;
-            this.PlayBackwardsFast.IsEnabled = isEnabled;
-            this.PlayBackwardsSlow.IsEnabled = isEnabled;
-            this.StepBackwards.IsEnabled = isEnabled;
-            this.RowUp.IsEnabled = isEnabled;
-            this.PageUp.IsEnabled = isEnabled;
+            FirstFile.IsEnabled = isEnabled;
+            PlayBackwardsFast.IsEnabled = isEnabled;
+            PlayBackwardsSlow.IsEnabled = isEnabled;
+            StepBackwards.IsEnabled = isEnabled;
+            RowUp.IsEnabled = isEnabled;
+            PageUp.IsEnabled = isEnabled;
         }
 
         // Enable or Disable the forward controls
         public void ForwardsControlsEnabled(bool isEnabled)
         {
-            this.StepForward.IsEnabled = isEnabled;
-            this.PlayForwardFast.IsEnabled = isEnabled;
-            this.PlayForwardSlow.IsEnabled = isEnabled;
-            this.LastFile.IsEnabled = isEnabled;
-            this.RowDown.IsEnabled = isEnabled;
-            this.PageDown.IsEnabled = isEnabled;
+            StepForward.IsEnabled = isEnabled;
+            PlayForwardFast.IsEnabled = isEnabled;
+            PlayForwardSlow.IsEnabled = isEnabled;
+            LastFile.IsEnabled = isEnabled;
+            RowDown.IsEnabled = isEnabled;
+            PageDown.IsEnabled = isEnabled;
         }
 
         public void SwitchFileMode(bool isSingleMode)
         {
-            this.RowDown.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
-            this.RowUp.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
-            this.PageDown.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
-            this.PageUp.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
+            RowDown.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
+            RowUp.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
+            PageDown.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
+            PageUp.Visibility = isSingleMode ? Visibility.Collapsed : Visibility.Visible;
 
-            this.PlayForwardSlow.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
-            this.PlayForwardFast.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
-            this.PlayBackwardsSlow.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
-            this.PlayBackwardsFast.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
+            PlayForwardSlow.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
+            PlayForwardFast.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
+            PlayBackwardsSlow.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
+            PlayBackwardsFast.Visibility = isSingleMode ? Visibility.Visible : Visibility.Collapsed;
         }
         #endregion
 
@@ -87,77 +87,77 @@ namespace Timelapse.Controls
             if (sender is RadioButton button == false)
             {
                 TracePrint.NullException(nameof(button));
-                this.Selection = FilePlayerSelectionEnum.Stop;
+                Selection = FilePlayerSelectionEnum.Stop;
                 return;
             }
 
             switch ((string)button.Tag)
             {
                 case "First":
-                    this.Direction = DirectionEnum.Previous;
-                    this.Selection = FilePlayerSelectionEnum.First;
+                    Direction = DirectionEnum.Previous;
+                    Selection = FilePlayerSelectionEnum.First;
                     break;
                 case "PageUp":
-                    this.Direction = DirectionEnum.Previous;
-                    this.Selection = FilePlayerSelectionEnum.Page;
+                    Direction = DirectionEnum.Previous;
+                    Selection = FilePlayerSelectionEnum.Page;
                     break;
                 case "RowUp":
-                    this.Direction = DirectionEnum.Previous;
-                    this.Selection = FilePlayerSelectionEnum.Row;
+                    Direction = DirectionEnum.Previous;
+                    Selection = FilePlayerSelectionEnum.Row;
                     break;
                 case "PlayBackwardsFast":
-                    this.Direction = DirectionEnum.Previous;
-                    this.Selection = FilePlayerSelectionEnum.PlayFast;
+                    Direction = DirectionEnum.Previous;
+                    Selection = FilePlayerSelectionEnum.PlayFast;
                     break;
                 case "PlayBackwardsSlow":
-                    this.Direction = DirectionEnum.Previous;
-                    this.Selection = FilePlayerSelectionEnum.PlaySlow;
+                    Direction = DirectionEnum.Previous;
+                    Selection = FilePlayerSelectionEnum.PlaySlow;
                     break;
                 case "StepBackwards":
-                    this.Direction = DirectionEnum.Previous;
-                    this.Selection = FilePlayerSelectionEnum.Step;
+                    Direction = DirectionEnum.Previous;
+                    Selection = FilePlayerSelectionEnum.Step;
                     break;
                 case "Stop":
-                    this.Selection = FilePlayerSelectionEnum.Stop;
+                    Selection = FilePlayerSelectionEnum.Stop;
                     break;
                 case "StepForward":
-                    this.Direction = DirectionEnum.Next;
-                    this.Selection = FilePlayerSelectionEnum.Step;
+                    Direction = DirectionEnum.Next;
+                    Selection = FilePlayerSelectionEnum.Step;
                     break;
                 case "PlayForwardSlow":
-                    this.Direction = DirectionEnum.Next;
-                    this.Selection = FilePlayerSelectionEnum.PlaySlow;
+                    Direction = DirectionEnum.Next;
+                    Selection = FilePlayerSelectionEnum.PlaySlow;
                     break;
                 case "PlayForwardFast":
-                    this.Direction = DirectionEnum.Next;
-                    this.Selection = FilePlayerSelectionEnum.PlayFast;
+                    Direction = DirectionEnum.Next;
+                    Selection = FilePlayerSelectionEnum.PlayFast;
                     break;
                 case "PageDown":
-                    this.Direction = DirectionEnum.Next;
-                    this.Selection = FilePlayerSelectionEnum.Page;
+                    Direction = DirectionEnum.Next;
+                    Selection = FilePlayerSelectionEnum.Page;
                     break;
                 case "RowDown":
-                    this.Direction = DirectionEnum.Next;
-                    this.Selection = FilePlayerSelectionEnum.Row;
+                    Direction = DirectionEnum.Next;
+                    Selection = FilePlayerSelectionEnum.Row;
                     break;
                 case "Last":
-                    this.Direction = DirectionEnum.Next;
-                    this.Selection = FilePlayerSelectionEnum.Last;
+                    Direction = DirectionEnum.Next;
+                    Selection = FilePlayerSelectionEnum.Last;
                     break;
                 default:
-                    this.Selection = FilePlayerSelectionEnum.Stop;
+                    Selection = FilePlayerSelectionEnum.Stop;
                     break;
             }
             // Raise the event
-            this.OnFilePlayerChange(this, new FilePlayerEventArgs(this.Direction, this.Selection));
+            OnFilePlayerChange(this, new FilePlayerEventArgs(Direction, Selection));
         }
 
         private void FilePlayer_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Space)
             {
-                this.Selection = FilePlayerSelectionEnum.Stop;
-                this.OnFilePlayerChange(this, new FilePlayerEventArgs(this.Direction, this.Selection));
+                Selection = FilePlayerSelectionEnum.Stop;
+                OnFilePlayerChange(this, new FilePlayerEventArgs(Direction, Selection));
                 e.Handled = true;
             }
         }

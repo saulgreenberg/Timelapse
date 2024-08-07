@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using Microsoft.Win32;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Timelapse.Extensions;
@@ -60,15 +61,15 @@ namespace Timelapse.State
         #endregion
 
         #region Constructors
-        public TimelapseUserRegistrySettings() : this(Constant.WindowRegistryKeys.RootKey)
+        public TimelapseUserRegistrySettings() : this(WindowRegistryKeys.RootKey)
         {
         }
 
         internal TimelapseUserRegistrySettings(string registryKey)
             : base(registryKey)
         {
-            this.Throttles = new Throttles();
-            this.ReadSettingsFromRegistry();
+            Throttles = new Throttles();
+            ReadSettingsFromRegistry();
         }
         #endregion
 
@@ -78,56 +79,56 @@ namespace Timelapse.State
         /// </summary>
         public void ReadSettingsFromRegistry()
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
-                this.AudioFeedback = registryKey.GetBoolean(Constant.WindowRegistryKeys.AudioFeedback, false);
-                this.BookmarkScale = new Point(registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkScaleX, 1.0), registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkScaleY, 1.0));
-                this.BookmarkTranslation = new Point(registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkTranslationX, 1.0), registryKey.GetDouble(Constant.WindowRegistryKeys.BookmarkTranslationY, 1.0));
-                this.BoundingBoxAnnotate = registryKey.GetBoolean(Constant.WindowRegistryKeys.BoundingBoxAnnotate, false);
-                this.BoundingBoxColorBlindFriendlyColors = registryKey.GetBoolean(Constant.WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, false);
-                this.CSVDateTimeOptions = registryKey.GetEnum(Constant.WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn);
-                if (this.CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeUTCWithOffset)
+                AudioFeedback = registryKey.GetBoolean(WindowRegistryKeys.AudioFeedback, false);
+                BookmarkScale = new Point(registryKey.GetDouble(WindowRegistryKeys.BookmarkScaleX, 1.0), registryKey.GetDouble(WindowRegistryKeys.BookmarkScaleY, 1.0));
+                BookmarkTranslation = new Point(registryKey.GetDouble(WindowRegistryKeys.BookmarkTranslationX, 1.0), registryKey.GetDouble(WindowRegistryKeys.BookmarkTranslationY, 1.0));
+                BoundingBoxAnnotate = registryKey.GetBoolean(WindowRegistryKeys.BoundingBoxAnnotate, false);
+                BoundingBoxColorBlindFriendlyColors = registryKey.GetBoolean(WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, false);
+                CSVDateTimeOptions = registryKey.GetEnum(WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn);
+                if (CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeUTCWithOffset)
                 {
                     // We no longer use the above option, so revert it to the default CSV setting
-                    this.CSVDateTimeOptions = CSVDateTimeOptionsEnum.DateAndTimeColumns;
-                    this.CSVInsertSpaceBeforeDates = true;
+                    CSVDateTimeOptions = CSVDateTimeOptionsEnum.DateAndTimeColumns;
+                    CSVInsertSpaceBeforeDates = true;
                 }
-                this.CSVIncludeFolderColumn = registryKey.GetBoolean(Constant.WindowRegistryKeys.CSVIncludeFolderColumn, true);
-                this.CSVInsertSpaceBeforeDates = registryKey.GetBoolean(Constant.WindowRegistryKeys.CSVInsertSpaceBeforeDates, true);
-                this.CustomSelectionTermCombiningOperator = registryKey.GetEnum(Constant.WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionOperatorEnum.And);
-                this.DarkPixelRatioThreshold = registryKey.GetDouble(Constant.WindowRegistryKeys.DarkPixelRatio, Constant.ImageValues.DarkPixelRatioThresholdDefault);
-                this.DarkPixelThreshold = registryKey.GetInteger(Constant.WindowRegistryKeys.DarkPixelThreshold, Constant.ImageValues.DarkPixelThresholdDefault);
-                this.DeleteFolderManagement = (DeleteFolderManagementEnum)registryKey.GetInteger(Constant.WindowRegistryKeys.DeleteFolderManagementValue, (int)DeleteFolderManagementEnum.ManualDelete);
-                this.EpisodeTimeThreshold = registryKey.GetTimeSpanAsSeconds(Constant.WindowRegistryKeys.EpisodeTimeThreshold, TimeSpan.FromSeconds(Constant.EpisodeDefaults.TimeThresholdDefault));
-                this.EpisodeMaxRangeToSearch = registryKey.GetInteger(Constant.WindowRegistryKeys.EpisodeMaxRangeToSearch, Constant.EpisodeDefaults.DefaultRangeToSearch);
-                this.FilePlayerSlowValue = registryKey.GetDouble(Constant.WindowRegistryKeys.FilePlayerSlowValue, Constant.FilePlayerValues.PlaySlowDefault.TotalSeconds);
-                this.FilePlayerFastValue = registryKey.GetDouble(Constant.WindowRegistryKeys.FilePlayerFastValue, Constant.FilePlayerValues.PlayFastDefault.TotalSeconds);
-                this.MagnifyingGlassOffsetLensEnabled = registryKey.GetBoolean(Constant.WindowRegistryKeys.MagnifyingGlassOffsetLensEnabled, true);
-                this.MagnifyingGlassZoomFactor = registryKey.GetDouble(Constant.WindowRegistryKeys.MagnifyingGlassZoomFactor, Constant.MarkableCanvas.MagnifyingGlassDefaultZoom);
-                this.ImageMetadataAskOnLoad = registryKey.GetBoolean(Constant.WindowRegistryKeys.ImageMetadataAskOnLoad, false);
-                this.MostRecentCheckForUpdates = registryKey.GetDateTime(Constant.WindowRegistryKeys.MostRecentCheckForUpdates, DateTime.Now);
-                this.MostRecentImageSets = registryKey.GetRecencyOrderedList(Constant.WindowRegistryKeys.MostRecentlyUsedImageSets);
-                this.OffsetLensZoomFactor = registryKey.GetDouble(Constant.WindowRegistryKeys.OffsetLensZoomFactor, Constant.MarkableCanvas.OffsetLensDefaultZoom);
-                this.QuickPasteWindowPosition = registryKey.GetRect(Constant.WindowRegistryKeys.QuickPasteWindowPosition, new Rect(0.0, 0.0, 0.0, 0.0));
-                this.SuppressAmbiguousDatesDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressAmbiguousDatesDialog, false);
-                this.SuppressCsvExportDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressCsvExportDialog, false);
-                this.SuppressCsvImportPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressCsvImportPrompt, false);
-                this.SuppressHowDuplicatesWork = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressHowDuplicatesWorkDialog, false);
-                this.SuppressOpeningMessageDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressOpeningMessageDialog, false);
-                this.SuppressOpeningWithOlderTimelapseVersionDialog = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressOpeningWithOlderTimelapseVersionDialog, false);
-                this.SuppressSelectedAmbiguousDatesPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedAmbiguousDatesPrompt, false);
-                this.SuppressSelectedCsvExportPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedCsvExportPrompt, false);
-                this.SuppressSelectedDarkThresholdPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedDarkThresholdPrompt, false);
-                this.SuppressSelectedDateTimeFixedCorrectionPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedDateTimeFixedCorrectionPrompt, false);
-                this.SuppressSelectedDateTimeLinearCorrectionPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedDateTimeLinearCorrectionPrompt, false);
-                this.SuppressSelectedDaylightSavingsCorrectionPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedDaylightSavingsCorrectionPrompt, false);
-                this.SuppressSelectedPopulateFieldFromMetadataPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, false);
-                this.SuppressSelectedRereadDatesFromFilesPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, false);
-                this.SuppressWarningToUpdateDBFilesToSQLPrompt = registryKey.GetBoolean(Constant.WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, false);
-                this.TabOrderIncludeDateTime = registryKey.GetBoolean(Constant.WindowRegistryKeys.TabOrderIncludeDateTime, false);
-                this.TabOrderIncludeDeleteFlag = registryKey.GetBoolean(Constant.WindowRegistryKeys.TabOrderIncludeDeleteFlag, false);
-                this.Throttles.SetDesiredImageRendersPerSecond(registryKey.GetDouble(Constant.WindowRegistryKeys.DesiredImageRendersPerSecond, Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondDefault));
-                this.TimelapseWindowPosition = registryKey.GetRect(Constant.WindowRegistryKeys.TimelapseWindowPosition, new Rect(0.0, 0.0, 1350.0, 900.0));
+                CSVIncludeFolderColumn = registryKey.GetBoolean(WindowRegistryKeys.CSVIncludeFolderColumn, true);
+                CSVInsertSpaceBeforeDates = registryKey.GetBoolean(WindowRegistryKeys.CSVInsertSpaceBeforeDates, true);
+                CustomSelectionTermCombiningOperator = registryKey.GetEnum(WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionOperatorEnum.And);
+                DarkPixelRatioThreshold = registryKey.GetDouble(WindowRegistryKeys.DarkPixelRatio, ImageValues.DarkPixelRatioThresholdDefault);
+                DarkPixelThreshold = registryKey.GetInteger(WindowRegistryKeys.DarkPixelThreshold, ImageValues.DarkPixelThresholdDefault);
+                DeleteFolderManagement = (DeleteFolderManagementEnum)registryKey.GetInteger(WindowRegistryKeys.DeleteFolderManagementValue, (int)DeleteFolderManagementEnum.ManualDelete);
+                EpisodeTimeThreshold = registryKey.GetTimeSpanAsSeconds(WindowRegistryKeys.EpisodeTimeThreshold, TimeSpan.FromSeconds(EpisodeDefaults.TimeThresholdDefault));
+                EpisodeMaxRangeToSearch = registryKey.GetInteger(WindowRegistryKeys.EpisodeMaxRangeToSearch, EpisodeDefaults.DefaultRangeToSearch);
+                FilePlayerSlowValue = registryKey.GetDouble(WindowRegistryKeys.FilePlayerSlowValue, FilePlayerValues.PlaySlowDefault.TotalSeconds);
+                FilePlayerFastValue = registryKey.GetDouble(WindowRegistryKeys.FilePlayerFastValue, FilePlayerValues.PlayFastDefault.TotalSeconds);
+                MagnifyingGlassOffsetLensEnabled = registryKey.GetBoolean(WindowRegistryKeys.MagnifyingGlassOffsetLensEnabled, true);
+                MagnifyingGlassZoomFactor = registryKey.GetDouble(WindowRegistryKeys.MagnifyingGlassZoomFactor, MarkableCanvas.MagnifyingGlassDefaultZoom);
+                ImageMetadataAskOnLoad = registryKey.GetBoolean(WindowRegistryKeys.ImageMetadataAskOnLoad, false);
+                MostRecentCheckForUpdates = registryKey.GetDateTime(WindowRegistryKeys.MostRecentCheckForUpdates, DateTime.Now);
+                MostRecentImageSets = registryKey.GetRecencyOrderedList(WindowRegistryKeys.MostRecentlyUsedImageSets);
+                OffsetLensZoomFactor = registryKey.GetDouble(WindowRegistryKeys.OffsetLensZoomFactor, MarkableCanvas.OffsetLensDefaultZoom);
+                QuickPasteWindowPosition = registryKey.GetRect(WindowRegistryKeys.QuickPasteWindowPosition, new Rect(0.0, 0.0, 0.0, 0.0));
+                SuppressAmbiguousDatesDialog = registryKey.GetBoolean(WindowRegistryKeys.SuppressAmbiguousDatesDialog, false);
+                SuppressCsvExportDialog = registryKey.GetBoolean(WindowRegistryKeys.SuppressCsvExportDialog, false);
+                SuppressCsvImportPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressCsvImportPrompt, false);
+                SuppressHowDuplicatesWork = registryKey.GetBoolean(WindowRegistryKeys.SuppressHowDuplicatesWorkDialog, false);
+                SuppressOpeningMessageDialog = registryKey.GetBoolean(WindowRegistryKeys.SuppressOpeningMessageDialog, false);
+                SuppressOpeningWithOlderTimelapseVersionDialog = registryKey.GetBoolean(WindowRegistryKeys.SuppressOpeningWithOlderTimelapseVersionDialog, false);
+                SuppressSelectedAmbiguousDatesPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedAmbiguousDatesPrompt, false);
+                SuppressSelectedCsvExportPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedCsvExportPrompt, false);
+                SuppressSelectedDarkThresholdPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedDarkThresholdPrompt, false);
+                SuppressSelectedDateTimeFixedCorrectionPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedDateTimeFixedCorrectionPrompt, false);
+                SuppressSelectedDateTimeLinearCorrectionPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedDateTimeLinearCorrectionPrompt, false);
+                SuppressSelectedDaylightSavingsCorrectionPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedDaylightSavingsCorrectionPrompt, false);
+                SuppressSelectedPopulateFieldFromMetadataPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, false);
+                SuppressSelectedRereadDatesFromFilesPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, false);
+                SuppressWarningToUpdateDBFilesToSQLPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, false);
+                TabOrderIncludeDateTime = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDateTime, false);
+                TabOrderIncludeDeleteFlag = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDeleteFlag, false);
+                Throttles.SetDesiredImageRendersPerSecond(registryKey.GetDouble(WindowRegistryKeys.DesiredImageRendersPerSecond, ThrottleValues.DesiredMaximumImageRendersPerSecondDefault));
+                TimelapseWindowPosition = registryKey.GetRect(WindowRegistryKeys.TimelapseWindowPosition, new Rect(0.0, 0.0, 1350.0, 900.0));
             }
         }
 
@@ -138,7 +139,7 @@ namespace Timelapse.State
         /// <returns></returns>
         public bool IsRegistryKeyExists(string key)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 return !string.IsNullOrEmpty(registryKey.GetString(key, string.Empty));
             }
@@ -149,7 +150,7 @@ namespace Timelapse.State
         /// </summary>
         public string GetFromRegistry(string key)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 return registryKey.GetString(key, string.Empty);
             }
@@ -162,9 +163,9 @@ namespace Timelapse.State
         /// <returns>Rect</returns>
         public Rect GetTimelapseWindowPositionAndSizeFromRegistryRect(string key)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
-                return registryKey.GetRect(key, new Rect(0.0, 0.0, Constant.AvalonDockValues.DefaultTimelapseWindowWidth, Constant.AvalonDockValues.DefaultTimelapseWindowHeight));
+                return registryKey.GetRect(key, new Rect(0.0, 0.0, AvalonDockValues.DefaultTimelapseWindowWidth, AvalonDockValues.DefaultTimelapseWindowHeight));
             }
         }
 
@@ -175,7 +176,7 @@ namespace Timelapse.State
         /// <returns>True if maximized, else false</returns>
         public bool GetTimelapseWindowMaximizeStateFromRegistryBool(string key)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 return registryKey.GetBoolean(key, false);
             }
@@ -188,52 +189,52 @@ namespace Timelapse.State
         /// </summary>
         public void WriteSettingsToRegistry()
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
-                registryKey.Write(Constant.WindowRegistryKeys.AudioFeedback, this.AudioFeedback);
-                registryKey.Write(Constant.WindowRegistryKeys.BookmarkScaleX, this.BookmarkScale.X);
-                registryKey.Write(Constant.WindowRegistryKeys.BookmarkScaleY, this.BookmarkScale.Y);
-                registryKey.Write(Constant.WindowRegistryKeys.BookmarkTranslationX, this.BookmarkTranslation.X);
-                registryKey.Write(Constant.WindowRegistryKeys.BookmarkTranslationY, this.BookmarkTranslation.Y);
-                registryKey.Write(Constant.WindowRegistryKeys.BoundingBoxAnnotate, this.BoundingBoxAnnotate);
-                registryKey.Write(Constant.WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, this.BoundingBoxColorBlindFriendlyColors);
-                registryKey.Write(Constant.WindowRegistryKeys.CSVDateTimeOptions, this.CSVDateTimeOptions.ToString());
-                registryKey.Write(Constant.WindowRegistryKeys.CSVIncludeFolderColumn, this.CSVIncludeFolderColumn.ToString());
-                registryKey.Write(Constant.WindowRegistryKeys.CSVInsertSpaceBeforeDates, this.CSVInsertSpaceBeforeDates);
-                registryKey.Write(Constant.WindowRegistryKeys.CustomSelectionTermCombiningOperator, this.CustomSelectionTermCombiningOperator.ToString());
-                registryKey.Write(Constant.WindowRegistryKeys.DarkPixelRatio, this.DarkPixelRatioThreshold);
-                registryKey.Write(Constant.WindowRegistryKeys.DarkPixelThreshold, this.DarkPixelThreshold);
-                registryKey.Write(Constant.WindowRegistryKeys.DeleteFolderManagementValue, (int)this.DeleteFolderManagement);
-                registryKey.Write(Constant.WindowRegistryKeys.EpisodeTimeThreshold, this.EpisodeTimeThreshold);
-                registryKey.Write(Constant.WindowRegistryKeys.EpisodeMaxRangeToSearch, this.EpisodeMaxRangeToSearch);
-                registryKey.Write(Constant.WindowRegistryKeys.FilePlayerSlowValue, this.FilePlayerSlowValue);
-                registryKey.Write(Constant.WindowRegistryKeys.FilePlayerFastValue, this.FilePlayerFastValue);
-                registryKey.Write(Constant.WindowRegistryKeys.DesiredImageRendersPerSecond, this.Throttles.DesiredImageRendersPerSecond);
-                registryKey.Write(Constant.WindowRegistryKeys.MagnifyingGlassOffsetLensEnabled, this.MagnifyingGlassOffsetLensEnabled);
-                registryKey.Write(Constant.WindowRegistryKeys.MagnifyingGlassZoomFactor, this.MagnifyingGlassZoomFactor);
-                registryKey.Write(Constant.WindowRegistryKeys.ImageMetadataAskOnLoad, this.ImageMetadataAskOnLoad);
-                registryKey.Write(Constant.WindowRegistryKeys.OffsetLensZoomFactor, this.OffsetLensZoomFactor);
-                registryKey.Write(Constant.WindowRegistryKeys.MostRecentCheckForUpdates, this.MostRecentCheckForUpdates);
-                registryKey.Write(Constant.WindowRegistryKeys.MostRecentlyUsedImageSets, this.MostRecentImageSets);
-                registryKey.Write(Constant.WindowRegistryKeys.QuickPasteWindowPosition, this.QuickPasteWindowPosition);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressAmbiguousDatesDialog, this.SuppressAmbiguousDatesDialog);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressCsvExportDialog, this.SuppressCsvExportDialog);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressCsvImportPrompt, this.SuppressCsvImportPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressHowDuplicatesWorkDialog, this.SuppressHowDuplicatesWork);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressOpeningMessageDialog, this.SuppressOpeningMessageDialog);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressOpeningWithOlderTimelapseVersionDialog, this.SuppressOpeningWithOlderTimelapseVersionDialog);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedAmbiguousDatesPrompt, this.SuppressSelectedAmbiguousDatesPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedCsvExportPrompt, this.SuppressSelectedCsvExportPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedDarkThresholdPrompt, this.SuppressSelectedDarkThresholdPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedDateTimeFixedCorrectionPrompt, this.SuppressSelectedDateTimeFixedCorrectionPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedDateTimeLinearCorrectionPrompt, this.SuppressSelectedDateTimeLinearCorrectionPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedDaylightSavingsCorrectionPrompt, this.SuppressSelectedDaylightSavingsCorrectionPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, this.SuppressSelectedPopulateFieldFromMetadataPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, this.SuppressSelectedRereadDatesFromFilesPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, this.SuppressWarningToUpdateDBFilesToSQLPrompt);
-                registryKey.Write(Constant.WindowRegistryKeys.TabOrderIncludeDateTime, this.TabOrderIncludeDateTime);
-                registryKey.Write(Constant.WindowRegistryKeys.TabOrderIncludeDeleteFlag, this.TabOrderIncludeDeleteFlag);
-                registryKey.Write(Constant.WindowRegistryKeys.TimelapseWindowPosition, this.TimelapseWindowPosition);
+                registryKey.Write(WindowRegistryKeys.AudioFeedback, AudioFeedback);
+                registryKey.Write(WindowRegistryKeys.BookmarkScaleX, BookmarkScale.X);
+                registryKey.Write(WindowRegistryKeys.BookmarkScaleY, BookmarkScale.Y);
+                registryKey.Write(WindowRegistryKeys.BookmarkTranslationX, BookmarkTranslation.X);
+                registryKey.Write(WindowRegistryKeys.BookmarkTranslationY, BookmarkTranslation.Y);
+                registryKey.Write(WindowRegistryKeys.BoundingBoxAnnotate, BoundingBoxAnnotate);
+                registryKey.Write(WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, BoundingBoxColorBlindFriendlyColors);
+                registryKey.Write(WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptions.ToString());
+                registryKey.Write(WindowRegistryKeys.CSVIncludeFolderColumn, CSVIncludeFolderColumn.ToString());
+                registryKey.Write(WindowRegistryKeys.CSVInsertSpaceBeforeDates, CSVInsertSpaceBeforeDates);
+                registryKey.Write(WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionTermCombiningOperator.ToString());
+                registryKey.Write(WindowRegistryKeys.DarkPixelRatio, DarkPixelRatioThreshold);
+                registryKey.Write(WindowRegistryKeys.DarkPixelThreshold, DarkPixelThreshold);
+                registryKey.Write(WindowRegistryKeys.DeleteFolderManagementValue, (int)DeleteFolderManagement);
+                registryKey.Write(WindowRegistryKeys.EpisodeTimeThreshold, EpisodeTimeThreshold);
+                registryKey.Write(WindowRegistryKeys.EpisodeMaxRangeToSearch, EpisodeMaxRangeToSearch);
+                registryKey.Write(WindowRegistryKeys.FilePlayerSlowValue, FilePlayerSlowValue);
+                registryKey.Write(WindowRegistryKeys.FilePlayerFastValue, FilePlayerFastValue);
+                registryKey.Write(WindowRegistryKeys.DesiredImageRendersPerSecond, Throttles.DesiredImageRendersPerSecond);
+                registryKey.Write(WindowRegistryKeys.MagnifyingGlassOffsetLensEnabled, MagnifyingGlassOffsetLensEnabled);
+                registryKey.Write(WindowRegistryKeys.MagnifyingGlassZoomFactor, MagnifyingGlassZoomFactor);
+                registryKey.Write(WindowRegistryKeys.ImageMetadataAskOnLoad, ImageMetadataAskOnLoad);
+                registryKey.Write(WindowRegistryKeys.OffsetLensZoomFactor, OffsetLensZoomFactor);
+                registryKey.Write(WindowRegistryKeys.MostRecentCheckForUpdates, MostRecentCheckForUpdates);
+                registryKey.Write(WindowRegistryKeys.MostRecentlyUsedImageSets, MostRecentImageSets);
+                registryKey.Write(WindowRegistryKeys.QuickPasteWindowPosition, QuickPasteWindowPosition);
+                registryKey.Write(WindowRegistryKeys.SuppressAmbiguousDatesDialog, SuppressAmbiguousDatesDialog);
+                registryKey.Write(WindowRegistryKeys.SuppressCsvExportDialog, SuppressCsvExportDialog);
+                registryKey.Write(WindowRegistryKeys.SuppressCsvImportPrompt, SuppressCsvImportPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressHowDuplicatesWorkDialog, SuppressHowDuplicatesWork);
+                registryKey.Write(WindowRegistryKeys.SuppressOpeningMessageDialog, SuppressOpeningMessageDialog);
+                registryKey.Write(WindowRegistryKeys.SuppressOpeningWithOlderTimelapseVersionDialog, SuppressOpeningWithOlderTimelapseVersionDialog);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedAmbiguousDatesPrompt, SuppressSelectedAmbiguousDatesPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedCsvExportPrompt, SuppressSelectedCsvExportPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedDarkThresholdPrompt, SuppressSelectedDarkThresholdPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedDateTimeFixedCorrectionPrompt, SuppressSelectedDateTimeFixedCorrectionPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedDateTimeLinearCorrectionPrompt, SuppressSelectedDateTimeLinearCorrectionPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedDaylightSavingsCorrectionPrompt, SuppressSelectedDaylightSavingsCorrectionPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, SuppressSelectedPopulateFieldFromMetadataPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, SuppressSelectedRereadDatesFromFilesPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, SuppressWarningToUpdateDBFilesToSQLPrompt);
+                registryKey.Write(WindowRegistryKeys.TabOrderIncludeDateTime, TabOrderIncludeDateTime);
+                registryKey.Write(WindowRegistryKeys.TabOrderIncludeDeleteFlag, TabOrderIncludeDeleteFlag);
+                registryKey.Write(WindowRegistryKeys.TimelapseWindowPosition, TimelapseWindowPosition);
             }
         }
 
@@ -244,7 +245,7 @@ namespace Timelapse.State
         /// <param name="value"></param>
         public void WriteToRegistry(string key, string value)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 registryKey.Write(key, value);
             }
@@ -253,7 +254,7 @@ namespace Timelapse.State
         // ReSharper disable once UnusedMember.Global
         public void WriteToRegistry(string key, double value)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 registryKey.Write(key, value);
             }
@@ -261,7 +262,7 @@ namespace Timelapse.State
 
         public void WriteToRegistry(string key, Rect value)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 registryKey.Write(key, value);
             }
@@ -269,7 +270,7 @@ namespace Timelapse.State
 
         public void WriteToRegistry(string key, bool value)
         {
-            using (RegistryKey registryKey = this.OpenRegistryKey())
+            using (RegistryKey registryKey = OpenRegistryKey())
             {
                 registryKey.Write(key, value);
             }

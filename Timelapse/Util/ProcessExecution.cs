@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Media;
 
 namespace Timelapse.Util
 {
@@ -29,7 +30,7 @@ namespace Timelapse.Util
                 catch
                 {
                     // Error. A noop so we catch it cleanly but still leave the dialog running
-                    System.Media.SystemSounds.Beep.Play();
+                    SystemSounds.Beep.Play();
                     return false;
                 }
                 return true;
@@ -46,7 +47,7 @@ namespace Timelapse.Util
                 return false;
             }
             ProcessStartInfo processStartInfo = new ProcessStartInfo(uri.AbsoluteUri);
-            return ProcessExecution.TryProcessStart(processStartInfo);
+            return TryProcessStart(processStartInfo);
         }
 
         /// Try to open the filepath with whatever default program is used to openn that file
@@ -63,7 +64,7 @@ namespace Timelapse.Util
             {
                 FileName = filePath
             };
-            return ProcessExecution.TryProcessStart(processStartInfo);
+            return TryProcessStart(processStartInfo);
         }
 
         // Run an arbitrary command within an (invisible) cmd window.
@@ -101,7 +102,7 @@ namespace Timelapse.Util
                 FileName = "explorer.exe",
                 Arguments = folderPath
             };
-            return ProcessExecution.TryProcessStart(processStartInfo);
+            return TryProcessStart(processStartInfo);
         }
 
         /// Try to open file explorer with the file selected.
@@ -120,7 +121,7 @@ namespace Timelapse.Util
                 FileName = "explorer.exe",
                 Arguments = $"/e, /select, \"{filePath}\""
             };
-            return ProcessExecution.TryProcessStart(processStartInfo);
+            return TryProcessStart(processStartInfo);
         }
         #endregion
     }

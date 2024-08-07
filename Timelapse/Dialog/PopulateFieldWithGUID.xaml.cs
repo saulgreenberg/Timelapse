@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -35,82 +37,82 @@ namespace Timelapse.Dialog
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
             // Construct a list showing the available note fields in the combobox
-            foreach (ControlRow control in this.fileDatabase.Controls)
+            foreach (ControlRow control in fileDatabase.Controls)
             {
-                if (Util.IsCondition.IsControlType_Note_Multiline_Alphanumeric(control.Type))
+                if (IsCondition.IsControlType_Note_Multiline_Alphanumeric(control.Type))
                 {
-                    this.ComboBoxSelectNoteField.Items.Add(control.Label);
+                    ComboBoxSelectNoteField.Items.Add(control.Label);
                 }
             }
-            if (this.ComboBoxSelectNoteField.Items.Count == 0)
+            if (ComboBoxSelectNoteField.Items.Count == 0)
             {
-                this.ShowFeedbackPanelOnly();
+                ShowFeedbackPanelOnly();
             }
-            else if (this.ComboBoxSelectNoteField.Items.Count == 1)
+            else if (ComboBoxSelectNoteField.Items.Count == 1)
             {
-                this.ComboBoxSelectNoteField.SelectedIndex = 0;
+                ComboBoxSelectNoteField.SelectedIndex = 0;
             }
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.DialogResult = !nothingUpdated;
+            DialogResult = !nothingUpdated;
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
-            if ((string)this.StartDoneButton.Content == "Done")
+            if ((string)StartDoneButton.Content == "Done")
             {
-                this.DialogResult = !nothingUpdated;
+                DialogResult = !nothingUpdated;
                 return;
             }
-            this.BusyCancelIndicator.IsBusy = true;
-            bool isCompleted = await this.PopulateGUIDAsync(this.fileDatabase, this.dataFieldLabel);
-            this.BusyCancelIndicator.IsBusy = false;
+            BusyCancelIndicator.IsBusy = true;
+            bool isCompleted = await PopulateGUIDAsync(fileDatabase, dataFieldLabel);
+            BusyCancelIndicator.IsBusy = false;
 
             if (isCompleted)
             {
-                this.TextBlockFeedbackLine1.Text = totalImages == imagesUpdatedWithGUID
+                TextBlockFeedbackLine1.Text = totalImages == imagesUpdatedWithGUID
                     ? $"Guids were added to the {dataFieldLabel} field for all {totalImages} selected images."
                     : $"Guids were added to the {dataFieldLabel} field for {imagesUpdatedWithGUID} out of {totalImages} selected images.";
                 double totalImagesNotUpdated = totalImages - imagesUpdatedWithGUID;
-                this.TextBlockFeedbackLine2.Text = totalImagesNotUpdated > 0
+                TextBlockFeedbackLine2.Text = totalImagesNotUpdated > 0
                         ? $"{totalImagesNotUpdated} images were not updated as their {dataFieldLabel} field had non-empty contents."
                         : string.Empty;
-                this.nothingUpdated = imagesUpdatedWithGUID == 0;
+                nothingUpdated = imagesUpdatedWithGUID == 0;
             }
             else
             {
-                this.TextBlockFeedbackLine1.Text = "Operation cancelled.";
-                this.TextBlockFeedbackLine2.Text = "No data fields were updated";
-                this.nothingUpdated = true;
+                TextBlockFeedbackLine1.Text = "Operation cancelled.";
+                TextBlockFeedbackLine2.Text = "No data fields were updated";
+                nothingUpdated = true;
             }
-            this.ShowFeedbackPanelOnly();
-            this.CancelButton.Visibility = Visibility.Collapsed;
-            this.StartDoneButton.Content = "Done";
+            ShowFeedbackPanelOnly();
+            CancelButton.Visibility = Visibility.Collapsed;
+            StartDoneButton.Content = "Done";
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
 
         private void ComboBoxSelectDataField_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox cb)
             {
-                this.dataFieldLabel = ((string)cb.SelectedValue).Trim();
-                this.StartDoneButton.IsEnabled = !string.IsNullOrEmpty(this.dataFieldLabel);
+                dataFieldLabel = ((string)cb.SelectedValue).Trim();
+                StartDoneButton.IsEnabled = !string.IsNullOrEmpty(dataFieldLabel);
             }
         }
 
         private void ShowFeedbackPanelOnly()
         {
-            this.PrimaryPanel.Visibility = Visibility.Collapsed;
-            this.FeedbackPanel.Visibility = Visibility.Visible;
+            PrimaryPanel.Visibility = Visibility.Collapsed;
+            FeedbackPanel.Visibility = Visibility.Visible;
         }
 
         private async Task<bool> PopulateGUIDAsync(FileDatabase fileDatabase_, string dataLabel)
@@ -122,7 +124,7 @@ namespace Timelapse.Dialog
 
                 // This tuple list will hold the id, key and value that we will want to update in the database
                 List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-                this.totalImages = fileDatabase_.CountAllCurrentlySelectedFiles;
+                totalImages = fileDatabase_.CountAllCurrentlySelectedFiles;
                 for (int imageIndex = 0; imageIndex < totalImages; ++imageIndex)
                 {
                     // Provide feedback if the operation was cancelled during the database update
@@ -137,25 +139,25 @@ namespace Timelapse.Dialog
                         // Skip non-empty fields
                         continue;
                     }
-                    ColumnTuplesWithWhere imageUpdate = new ColumnTuplesWithWhere(new List<ColumnTuple>() { new ColumnTuple(dataLabel, Guid.NewGuid().ToString()) }, image.ID);
+                    ColumnTuplesWithWhere imageUpdate = new ColumnTuplesWithWhere(new List<ColumnTuple> { new ColumnTuple(dataLabel, Guid.NewGuid().ToString()) }, image.ID);
                     imagesToUpdate.Add(imageUpdate);
                     imagesUpdatedWithGUID++;
 
-                    if (this.ReadyToRefresh())
+                    if (ReadyToRefresh())
                     {
                         // ReSharper disable once PossibleLossOfFraction
                         int percentDone = Convert.ToInt32(imageIndex / totalImages * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                        Progress.Report(new ProgressBarArguments(percentDone,
                             $"{imageIndex}/{totalImages} images. Processing {image.File}", true, false));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                 }
-                this.Progress.Report(new ProgressBarArguments(100,
+                Progress.Report(new ProgressBarArguments(100,
                     $"Writing metadata for {totalImages} files. Please wait...", false, true));
-                Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 fileDatabase_.UpdateFiles(imagesToUpdate);
                 return true;
-            }, this.Token).ConfigureAwait(true);
+            }, Token).ConfigureAwait(true);
             return result;
 
         }

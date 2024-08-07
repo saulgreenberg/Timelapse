@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Timelapse.Constant;
+using File = System.IO.File;
 
 namespace Timelapse.Util
 {
@@ -11,7 +13,7 @@ namespace Timelapse.Util
     public static class Dependencies
     {
         #region Private Lists of required files
-        private static readonly List<string> CommonRequiredBinaries = new List<string>()
+        private static readonly List<string> CommonRequiredBinaries = new List<string>
         {
             // Exiftool
             "exiftool(-k).exe",
@@ -40,7 +42,7 @@ namespace Timelapse.Util
             "Xceed.Wpf.Toolkit.dll",
         };
 
-        private static readonly List<string> TimelapseRequiredBinaries = new List<string>()
+        private static readonly List<string> TimelapseRequiredBinaries = new List<string>
         {
             "Microsoft.WindowsAPICodePack.dll", // required by Microsoft.WindowsAPICodePack.Shell.dll
             "Microsoft.WindowsAPICodePack.Shell.dll", // just for TimelapseWindow's use of CommonOpenFileDialog
@@ -49,7 +51,7 @@ namespace Timelapse.Util
             "NReco.VideoConverter.dll"
         };
 
-        private static readonly List<string> EditorRequiredBinaries = new List<string>()
+        private static readonly List<string> EditorRequiredBinaries = new List<string>
         {
             "Timelapse.exe"
         };
@@ -74,7 +76,7 @@ namespace Timelapse.Util
                 // That shouldn't happen
                 return false;
             }
-            foreach (string binaryName in Dependencies.CommonRequiredBinaries)
+            foreach (string binaryName in CommonRequiredBinaries)
             {
                 if (File.Exists(Path.Combine(directoryContainingCurrentExecutable, binaryName)) == false)
                 {
@@ -83,9 +85,9 @@ namespace Timelapse.Util
                 }
             }
 
-            if (applicationName == Constant.VersionUpdates.ApplicationName)
+            if (applicationName == VersionUpdates.ApplicationName)
             {
-                foreach (string binaryName in Dependencies.TimelapseRequiredBinaries)
+                foreach (string binaryName in TimelapseRequiredBinaries)
                 {
                     if (File.Exists(Path.Combine(directoryContainingCurrentExecutable, binaryName)) == false)
                     {
@@ -96,7 +98,7 @@ namespace Timelapse.Util
             }
             else
             {
-                foreach (string binaryName in Dependencies.EditorRequiredBinaries)
+                foreach (string binaryName in EditorRequiredBinaries)
                 {
                     if (File.Exists(Path.Combine(directoryContainingCurrentExecutable, binaryName)) == false)
                     {

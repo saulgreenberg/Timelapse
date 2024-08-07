@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.ControlsDataCommon;
 using Timelapse.DataTables;
 using Timelapse.Util;
@@ -22,15 +24,15 @@ namespace Timelapse.ControlsDataEntry
             base(control, autocompletions, styleProvider)
         {
             // Add these handlers
-            this.ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
-            this.ContentControl.PreviewTextInput += ContentControl_PreviewTextInput;
-            this.ContentControl.TextChanged += ContentControl_TextChanged;
+            ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
+            ContentControl.PreviewTextInput += ContentControl_PreviewTextInput;
+            ContentControl.TextChanged += ContentControl_TextChanged;
         }
         #endregion
 
         #region Callbacks: Limit text entry (including pasting) to alphanumeric text
         // Limit how spaces are used. (PreviewTextInput allows spaces to go through so we have to do it here) 
-        private void ContentControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs keyEvent)
+        private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
             if (processEvents)
             {
@@ -39,7 +41,7 @@ namespace Timelapse.ControlsDataEntry
         }
 
         // Allow only alphanumeric characters (although editing characters like backspace etc still go through)
-        private void ContentControl_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs args)
+        private void ContentControl_PreviewTextInput(object sender, TextCompositionEventArgs args)
         {
             if (processEvents)
             {
@@ -52,13 +54,13 @@ namespace Timelapse.ControlsDataEntry
         {
             if (processEvents)
             {
-                this.processEvents = false;
+                processEvents = false;
                 if (sender is TextBox textBox)
                 {
                     Window window = textBox.FindParentOfType<Window>();
                     ControlsDataHelpersCommon.AlphaNumericHandleAlphaNumericTextChange(window, this, args);
                 }
-                this.processEvents = true;
+                processEvents = true;
             }
         }
 
@@ -71,18 +73,18 @@ namespace Timelapse.ControlsDataEntry
             // Used to signify the indeterminate state in no or multiple selections in the overview.
             if (value == null)
             {
-                this.processEvents = false;
-                this.ContentControl.Text = Constant.Unicode.Ellipsis;
-                this.ContentControl.ToolTip = "Edit to change the " + this.Label + " for all selected images";
-                this.processEvents = true;
+                processEvents = false;
+                ContentControl.Text = Unicode.Ellipsis;
+                ContentControl.ToolTip = "Edit to change the " + Label + " for all selected images";
+                processEvents = true;
                 return;
             }
 
             // Set the alphanumeric to the value provided  
             // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..
-            this.ContentChanged = this.ContentControl.Text != value;
-            this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? this.LabelControl.ToolTip : value;
+            ContentChanged = ContentControl.Text != value;
+            ContentControl.Text = value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? LabelControl.ToolTip : value;
         }
         #endregion
     }

@@ -13,8 +13,8 @@
         #region Constructor
         public DateTimeFeedbackTuple(string fileName, string message)
         {
-            this.FileName = fileName;
-            this.Message = message;
+            FileName = fileName;
+            Message = message;
         }
         #endregion
     }

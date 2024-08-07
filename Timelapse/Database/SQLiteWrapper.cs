@@ -4,13 +4,14 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using File = System.IO.File;
 
 namespace Timelapse.Database
 {
@@ -43,8 +44,8 @@ namespace Timelapse.Database
                 DateTimeKind = DateTimeKind.Utc,
                 ForeignKeys = true // Enable foreign keys
             };
-            this.connectionString = connectionStringBuilder.ConnectionString;
-            this.FilePath = inputFile;
+            connectionString = connectionStringBuilder.ConnectionString;
+            FilePath = inputFile;
         }
         #endregion
 
@@ -63,9 +64,9 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(columnDefinitions, nameof(columnDefinitions));
 
             // Just in case the table exists, we will want to remove it before trying to create it.
-            if (this.TableExists(tableName))
+            if (TableExists(tableName))
             {
-                this.DropTable(tableName);
+                DropTable(tableName);
             }
 
             string query = Sql.CreateTable + tableName + Sql.OpenParenthesis + Environment.NewLine;               // CREATE TABLE <tablename> (
@@ -75,7 +76,7 @@ namespace Timelapse.Database
             }
             query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);         // remove last comma / new line and replace with );
             query += Sql.CloseParenthesis + Sql.Semicolon;
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
         #endregion
 
@@ -84,7 +85,7 @@ namespace Timelapse.Database
 
         public bool IndexExists(string indexName)
         {
-            return 0 != this.ScalarGetCountFromSelect(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote(indexName));
+            return 0 != ScalarGetCountFromSelect(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote(indexName));
         }
 
         // Create a single index named indexName if it doesn't already exist
@@ -92,7 +93,7 @@ namespace Timelapse.Database
         {
             // Form: CREATE INDEX IF NOT EXISTS indexName ON tableName  (column1, column2...);
             string query = Sql.CreateIndex + Sql.IfNotExists + indexName + Sql.On + tableName + Sql.OpenParenthesis + columnNames + Sql.CloseParenthesis;
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
 
         // Drop a single index named indexName if it exists
@@ -100,7 +101,7 @@ namespace Timelapse.Database
         {
             // Form: DROP INDEX IF EXISTS indexName 
             string query = Sql.DropIndex + Sql.IfExists + indexName;
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
 
         // Create multiple indexes wrapped in a begin / end 
@@ -112,7 +113,7 @@ namespace Timelapse.Database
             {
                 queries.Add(Sql.CreateIndex + Sql.IfNotExists + tuple.Item1 + Sql.On + tuple.Item2 + Sql.OpenParenthesis + tuple.Item3 + Sql.CloseParenthesis);
             }
-            this.ExecuteNonQueryWrappedInBeginEnd(queries);
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
         #endregion
 
@@ -139,7 +140,7 @@ namespace Timelapse.Database
             try
             {
                 // Open the connection
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
 
@@ -149,7 +150,7 @@ namespace Timelapse.Database
                         //Debug.Print(query);
                         using (SQLiteDataReader reader = command.ExecuteReader())
                         {
-                            dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
+                            dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
                             dataTable.Load(reader);
                             return dataTable;
                         }
@@ -221,7 +222,7 @@ namespace Timelapse.Database
 
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {
-            using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+            using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
             {
                 connection.Open();
                 using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -250,7 +251,7 @@ namespace Timelapse.Database
             // Debug.Print("Scalar: " + query);
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -319,7 +320,7 @@ namespace Timelapse.Database
             }
 
             // Now try to invoke the batch queries
-            this.ExecuteNonQueryWrappedInBeginEnd(queries, progress, progressString, 10000);
+            ExecuteNonQueryWrappedInBeginEnd(queries, progress, progressString, 10000);
         }
         #endregion
 
@@ -355,7 +356,7 @@ namespace Timelapse.Database
             query = query.Substring(0, query.Length - Sql.Comma.Length); // Remove the last comma
             query += $"{Sql.Where} {primaryKeyTuple.Name} {Sql.Equal} {primaryKeyTuple.Value}";
 
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
         #endregion
 
@@ -366,7 +367,7 @@ namespace Timelapse.Database
         public void SetColumnToACommonValue(string tableName, string columnName, string value)
         {
             string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Quote(value);
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
 
         // Trims all the white space from the data held in the list of column_names in table_name
@@ -385,7 +386,7 @@ namespace Timelapse.Database
                 string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Trim + Sql.OpenParenthesis + columnName + Sql.CloseParenthesis + Sql.Semicolon;
                 queries.Add(query);
             }
-            this.ExecuteNonQueryWrappedInBeginEnd(queries);
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
 
         // Update particular column values in the table, where
@@ -403,7 +404,7 @@ namespace Timelapse.Database
                 string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Quote(kvp.Value) + Sql.Where + columnName + Sql.Equal + Sql.Quote(kvp.Key) + Sql.Semicolon;
                 queries.Add(query);
             }
-            this.ExecuteNonQueryWrappedInBeginEnd(queries);
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
 
         // Convert all nulls in the list of column_names in table_name
@@ -422,7 +423,7 @@ namespace Timelapse.Database
                 string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + "''" + Sql.Where + columnName + Sql.IsNull + Sql.Semicolon; // Form: UPDATE tablename SET columname = '' WHERE columnname IS NULL;
                 queries.Add(query);
             }
-            this.ExecuteNonQueryWrappedInBeginEnd(queries);
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
 
         public void Update(string tableName, List<ColumnTuplesWithWhere> updateQueryList)
@@ -440,7 +441,7 @@ namespace Timelapse.Database
                 }
                 queries.Add(query);
             }
-            this.ExecuteNonQueryWrappedInBeginEnd(queries);
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
 
         /// <summary>
@@ -461,7 +462,7 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(columnsToUpdate, nameof(columnsToUpdate));
 
             string query = CreateUpdateQuery(tableName, columnsToUpdate);
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
 
         // UPDATE table_name SET 
@@ -473,7 +474,7 @@ namespace Timelapse.Database
 
             string query = Sql.Update + tableName + Sql.Set;
             query += $" {columnToUpdate.Name} = {Sql.Quote(columnToUpdate.Value)}";
-            this.ExecuteNonQuery(query);
+            ExecuteNonQuery(query);
         }
 
         // Return a single update query as a string
@@ -535,8 +536,8 @@ namespace Timelapse.Database
                 query += Sql.Where;                   // WHERE
                 query += where;                                 // where
             }
-            this.GetDataTableFromSelect(query);
-            this.ExecuteNonQuery(query);
+            GetDataTableFromSelect(query);
+            ExecuteNonQuery(query);
         }
 
         public DataTable DeleteRowsReturningIds(string tableName, string where, string whatToReturn)
@@ -552,7 +553,7 @@ namespace Timelapse.Database
 
             //query += Sql.Returning + Sql.Quote(whatToReturn);
             query += Sql.Returning + whatToReturn;
-            return this.GetDataTableFromSelect(query);
+            return GetDataTableFromSelect(query);
         }
 
         /// <summary>
@@ -588,7 +589,7 @@ namespace Timelapse.Database
             // Now try to invoke the batch queries
             if (queries.Count > 0)
             {
-                this.ExecuteNonQueryWrappedInBeginEnd(queries);
+                ExecuteNonQueryWrappedInBeginEnd(queries);
             }
         }
 
@@ -620,7 +621,7 @@ namespace Timelapse.Database
             queries += Sql.PragmaForeignKeysOn + ";";
 
             // Invoke the batched queries
-            this.ExecuteNonQuery(queries);
+            ExecuteNonQuery(queries);
         }
         #endregion
 
@@ -632,13 +633,13 @@ namespace Timelapse.Database
         /// <returns>The number of items selected.</returns>
         public int ScalarGetCountFromSelect(string query)
         {
-            object obj = this.GetScalarFromSelect(query);
+            object obj = GetScalarFromSelect(query);
             return (obj == DBNull.Value) ? 0 : Convert.ToInt32(obj);
         }
 
         public long ScalarGetLongFromSelect(string query)
         {
-            object obj = this.GetScalarFromSelect(query);
+            object obj = GetScalarFromSelect(query);
             return (obj == DBNull.Value) ? 0 : Convert.ToInt64(obj);
         }
 
@@ -647,7 +648,7 @@ namespace Timelapse.Database
         // For example, Select EXISTS ( SELECT 1 FROM DataTable WHERE DeleteFlag='true') returnes 1 if any matching row exists else 0
         public bool ScalarBoolFromOneOrZero(string query)
         {
-            return (Convert.ToInt32(this.GetScalarFromSelect(query)) == 1);
+            return (Convert.ToInt32(GetScalarFromSelect(query)) == 1);
         }
 
         // Get the Maximum value of the field from the datatable  
@@ -655,7 +656,7 @@ namespace Timelapse.Database
         // The field should contain an int value
         public int ScalarGetMaxIntValue(string dataTable, string intfield)
         {
-            return this.ScalarGetCountFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
+            return ScalarGetCountFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
         }
 
         // Get the Maximum value of the field from the datatable  
@@ -663,13 +664,13 @@ namespace Timelapse.Database
         // The field should contain an int value
         public long ScalarGetMaxLongValue(string dataTable, string intfield)
         {
-            return this.ScalarGetLongFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
+            return ScalarGetLongFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
         }
 
         // Return a scalar float value, or null if things go wrong.
         public float? ScalarGetFloatValue(string dataTable, string floatfield)
         {
-            object obj = this.GetScalarFromSelect(Sql.Select + floatfield + Sql.From + dataTable);
+            object obj = GetScalarFromSelect(Sql.Select + floatfield + Sql.From + dataTable);
             if (obj == DBNull.Value)
             {
                 return null;
@@ -693,7 +694,7 @@ namespace Timelapse.Database
             }
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -737,13 +738,13 @@ namespace Timelapse.Database
             string mostRecentStatement = null;
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     if (progress != null)
                     {
                         progress.Report(new ProgressBarArguments(0, progressString, false, true));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                     }
 
                     using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -761,7 +762,7 @@ namespace Timelapse.Database
                                 int percent = Convert.ToInt32(i * 100.0 / statementsCount);
                                 progress.Report(new ProgressBarArguments(percent,
                                     $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
-                                Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                                Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
 
                             }
                             // capture the most recent statement so it's available for debugging
@@ -796,7 +797,7 @@ namespace Timelapse.Database
                                     int percent = Convert.ToInt32(i * 100.0 / statementsCount);
                                     progress.Report(new ProgressBarArguments(percent,
                                         $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
-                                    Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                                 }
                             }
                             i++;
@@ -973,14 +974,14 @@ namespace Timelapse.Database
         public void SchemaRenameTable(string originalTableName, string newTableName)
         {
             // Some basic error checking to make sure we can do the operation
-            if (false == this.TableExists(originalTableName))
+            if (false == TableExists(originalTableName))
             {
                 return;
             }
            
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     // Rename the table
@@ -1001,8 +1002,8 @@ namespace Timelapse.Database
             try
             {
                 // Create an empty table with the schema based on columnDefinitions
-                this.CreateTable(destTable, columnDefinitions);
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                CreateTable(destTable, columnDefinitions);
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
 
@@ -1027,7 +1028,7 @@ namespace Timelapse.Database
             try
             {
                 // Open the connection
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     using (SQLiteDataReader reader = GetSchema(connection, tableName))
@@ -1055,7 +1056,7 @@ namespace Timelapse.Database
             try
             {
                 // Open the connection
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     using (SQLiteDataReader reader = GetSchema(connection, tableName))
@@ -1080,7 +1081,7 @@ namespace Timelapse.Database
         {
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
@@ -1101,7 +1102,7 @@ namespace Timelapse.Database
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnDefinition, nameof(columnDefinition));
 
-            this.ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
+            ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
         }
 
         /// <summary>
@@ -1116,7 +1117,7 @@ namespace Timelapse.Database
 
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
 
@@ -1133,7 +1134,7 @@ namespace Timelapse.Database
                     // If columnNumber would result in the column being inserted at the end of the table, then use the more efficient method to do so.
                     if (columnNumber >= columnNames.Count)
                     {
-                        this.SchemaAddColumnToEndOfTable(tableName, columnDefinition);
+                        SchemaAddColumnToEndOfTable(tableName, columnDefinition);
                         return;
                     }
 
@@ -1178,7 +1179,7 @@ namespace Timelapse.Database
 
             try
             {
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     // Some basic error checking to make sure we can do the operation
@@ -1229,7 +1230,7 @@ namespace Timelapse.Database
             {
                 { SchemaAttributesEnum.Name, newColumnName }
             };
-            this.SchemaAlterColumn(sourceTable, currentColumnName, attributes);
+            SchemaAlterColumn(sourceTable, currentColumnName, attributes);
         }
 
         // Alter the column schema
@@ -1255,7 +1256,7 @@ namespace Timelapse.Database
                 {
                     newColumnName = key.Trim();
                 }
-                using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                 {
                     connection.Open();
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
@@ -1438,7 +1439,7 @@ namespace Timelapse.Database
         /// </summary>
         public void DropTable(string tableName)
         {
-            using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+            using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
             {
                 connection.Open();
                 DropTable(connection, tableName);
@@ -1449,7 +1450,7 @@ namespace Timelapse.Database
             // Turn foreign keys oof, do the operaton, then turn it backon. 
             // This is because if we drop a table that has foreign keys in it, we need to make sure foreign keys are off
             // as otherwise it will delete the foreign key table contents.
-            SQLiteWrapper.PragmaSetForeignKeys(connection, false);
+            PragmaSetForeignKeys(connection, false);
 
             // Drop the table
             string sql = Sql.DropTable + Sql.IfExists + tableName;
@@ -1458,7 +1459,7 @@ namespace Timelapse.Database
                 command.ExecuteNonQuery();
             }
 
-            SQLiteWrapper.PragmaSetForeignKeys(connection, true);
+            PragmaSetForeignKeys(connection, true);
         }
         #endregion
 
@@ -1477,7 +1478,7 @@ namespace Timelapse.Database
         public bool TableExists(string tableName)
         {
             string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
-            using (DataTable datatable = this.GetDataTableFromSelect(query))
+            using (DataTable datatable = GetDataTableFromSelect(query))
             {
                 bool rowsExist = datatable.Rows.Count != 0;
                 return rowsExist;
@@ -1487,7 +1488,7 @@ namespace Timelapse.Database
         public bool TableExistsAndNotEmpty(string tableName)
         {
             string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
-            using (DataTable datatable = this.GetDataTableFromSelect(query))
+            using (DataTable datatable = GetDataTableFromSelect(query))
             {
                 if (datatable.Rows.Count == 0)
                 {
@@ -1496,7 +1497,7 @@ namespace Timelapse.Database
                 }
                 query = $"SELECT COUNT(*)_ FROM {tableName}";
                 // If > 0 elements, then it both exists and has content so return true otherwise false
-                return this.ScalarGetCountFromSelect(query) != 0;
+                return ScalarGetCountFromSelect(query) != 0;
             }
         }
 
@@ -1504,7 +1505,7 @@ namespace Timelapse.Database
         public bool TableExistsAndEmpty(string tableName)
         {
             string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
-            using (DataTable datatable = this.GetDataTableFromSelect(query))
+            using (DataTable datatable = GetDataTableFromSelect(query))
             {
                 if (datatable.Rows.Count == 0)
                 {
@@ -1513,7 +1514,7 @@ namespace Timelapse.Database
                 }
                 query = $"SELECT COUNT(*)_ FROM {tableName}";
                 // If 0 elements, then its empty so return true otherwise false
-                return this.ScalarGetCountFromSelect(query) == 0;
+                return ScalarGetCountFromSelect(query) == 0;
             }
         }
         #endregion
@@ -1529,7 +1530,7 @@ namespace Timelapse.Database
                 using (DataTable dataTable = new DataTable())
                 {
                     // Open the connection
-                    using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
+                    using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
                     {
                         connection.Open();
                         using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -1537,16 +1538,14 @@ namespace Timelapse.Database
                             command.CommandText = Sql.PragmaQuickCheck;
                             using (SQLiteDataReader reader = command.ExecuteReader())
                             {
-                                dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
+                                dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
                                 dataTable.Load(reader);
                                 if (dataTable.Rows.Count == 1 && String.Equals((string)dataTable.Rows[0].ItemArray[0], Sql.Ok, StringComparison.OrdinalIgnoreCase))
                                 {
                                     return true;
                                 }
-                                else
-                                {
-                                    return false;
-                                }
+
+                                return false;
                             }
                         }
                     }

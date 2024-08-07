@@ -1,6 +1,6 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 
@@ -11,20 +11,20 @@ namespace Timelapse.DataTables
         #region Public Properties
         public int Level
         {
-            get => this.Row.GetIntegerField(Constant.Control.Level);
-            set => this.Row.SetField(Constant.Control.Level, value);
+            get => Row.GetIntegerField(Control.Level);
+            set => Row.SetField(Control.Level, value);
         }
 
         public string Guid
         {
-            get => this.Row.GetStringField(Constant.Control.Guid);
-            set => this.Row.SetField(Constant.Control.Guid, value);
+            get => Row.GetStringField(Control.Guid);
+            set => Row.SetField(Control.Guid, value);
         }
 
         public string Alias
         {
-            get => this.Row.GetStringField(Constant.Control.Alias);
-            set => this.Row.SetField(Constant.Control.Alias, value);
+            get => Row.GetStringField(Control.Alias);
+            set => Row.SetField(Control.Alias, value);
         }
         #endregion
 
@@ -52,19 +52,19 @@ namespace Timelapse.DataTables
             bool synchronizationMadeChanges = false;
 
 
-            if (this.Level != controlRowToMatch.Level)
+            if (Level != controlRowToMatch.Level)
             {
-                this.Level = controlRowToMatch.Level;
+                Level = controlRowToMatch.Level;
                 synchronizationMadeChanges = true;
             }
-            if (this.Guid != controlRowToMatch.Guid)
+            if (Guid != controlRowToMatch.Guid)
             {
-                this.Guid = controlRowToMatch.Guid;
+                Guid = controlRowToMatch.Guid;
                 synchronizationMadeChanges = true;
             }
-            if (this.Alias != controlRowToMatch.Alias)
+            if (Alias != controlRowToMatch.Alias)
             {
-                this.Alias = controlRowToMatch.Alias;
+                Alias = controlRowToMatch.Alias;
                 synchronizationMadeChanges = true;
             }
             return synchronizationMadeChanges;
@@ -80,11 +80,11 @@ namespace Timelapse.DataTables
         {
             List<ColumnTuple> columnTuples = new List<ColumnTuple>
             {
-                new ColumnTuple(Constant.Control.Level, this.Level),
-                new ColumnTuple(Constant.Control.Guid, this.Guid),
-                new ColumnTuple(Constant.Control.Alias, this.Alias)
+                new ColumnTuple(Control.Level, Level),
+                new ColumnTuple(Control.Guid, Guid),
+                new ColumnTuple(Control.Alias, Alias)
             };
-            return new ColumnTuplesWithWhere(columnTuples, this.ID);
+            return new ColumnTuplesWithWhere(columnTuples, ID);
         }
         #endregion
     }

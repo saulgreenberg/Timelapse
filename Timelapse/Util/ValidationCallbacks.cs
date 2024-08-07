@@ -1,8 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Timelapse.DataStructures;
 using Timelapse.ControlsDataCommon;
+using Timelapse.DataStructures;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
 
@@ -73,7 +73,7 @@ namespace Timelapse.Util
         {
             if (sender is IntegerUpDown integerUpDown)
             {
-                TextBox textBox = Util.VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
+                TextBox textBox = VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
                 if (null != textBox)
                 {
                     ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(textBox, e, true);
@@ -86,7 +86,7 @@ namespace Timelapse.Util
             TextBox textBox = null;
             if (sender is IntegerUpDown integerUpDown)
             {
-                textBox = Util.VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
+                textBox = VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
             }
             else if (sender is TextBox textBoxTemp)
             {
@@ -105,7 +105,7 @@ namespace Timelapse.Util
             TextBox textBox = null;
             if (sender is IntegerUpDown integerUpDown)
             {
-                textBox = Util.VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
+                textBox = VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
             }
             else if (sender is TextBox textBoxTemp)
             {
@@ -122,7 +122,7 @@ namespace Timelapse.Util
         {
             if (sender is DoubleUpDown doubleUpDown)
             {
-                TextBox textBox = Util.VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
+                TextBox textBox = VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
                 if (null != textBox)
                 {
                     ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(textBox, e, true);
@@ -135,7 +135,7 @@ namespace Timelapse.Util
             TextBox textBox = null;
             if (sender is DoubleUpDown doubleUpDown)
             {
-                textBox = Util.VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
+                textBox = VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
             }
             else if (sender is TextBox textBoxTemp)
             {
@@ -152,7 +152,7 @@ namespace Timelapse.Util
             TextBox textBox = null;
             if (sender is DoubleUpDown doubleUpDown)
             {
-                textBox = Util.VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
+                textBox = VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
             }
             else if (sender is TextBox textBoxTemp)
             {

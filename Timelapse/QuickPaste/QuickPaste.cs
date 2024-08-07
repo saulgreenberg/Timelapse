@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -13,7 +14,7 @@ namespace Timelapse.QuickPaste
         #region Public Methods - QuickPaste Import from DB
         public static List<QuickPasteEntry> QuickPasteImportFromDB(FileDatabase fileDatabase, string ddbFile)
         {
-            return QuickPasteOperations.QuickPasteEntriesFromJSON(fileDatabase, FileDatabase.TryGetQuickPasteJSONFromDatabase(ddbFile));
+            return QuickPasteEntriesFromJSON(fileDatabase, FileDatabase.TryGetQuickPasteJSONFromDatabase(ddbFile));
         }
         #endregion
 
@@ -30,7 +31,7 @@ namespace Timelapse.QuickPaste
             }
 
             // Create a quick paste entry for each non-standard control.
-            QuickPasteEntry quickPasteEntry = new QuickPasteEntry()
+            QuickPasteEntry quickPasteEntry = new QuickPasteEntry
             {
                 Title = title,
                 Items = new List<QuickPasteItem>()
@@ -43,21 +44,21 @@ namespace Timelapse.QuickPaste
                 {
                     // User defined control types are the potential items to paste
                     // 'Use' is initially set to whether the control is copyable
-                    case Constant.DatabaseColumn.DeleteFlag:
-                    case Constant.Control.FixedChoice:
-                    case Constant.Control.MultiChoice:
-                    case Constant.Control.Note:
-                    case Constant.Control.MultiLine:
-                    case Constant.Control.AlphaNumeric:
-                    case Constant.Control.Flag:
-                    case Constant.Control.Counter:
-                    case Constant.Control.IntegerAny:
-                    case Constant.Control.IntegerPositive:
-                    case Constant.Control.DecimalAny:
-                    case Constant.Control.DecimalPositive:
-                    case Constant.Control.DateTime_:
-                    case Constant.Control.Date_:
-                    case Constant.Control.Time_:
+                    case DatabaseColumn.DeleteFlag:
+                    case Control.FixedChoice:
+                    case Control.MultiChoice:
+                    case Control.Note:
+                    case Control.MultiLine:
+                    case Control.AlphaNumeric:
+                    case Control.Flag:
+                    case Control.Counter:
+                    case Control.IntegerAny:
+                    case Control.IntegerPositive:
+                    case Control.DecimalAny:
+                    case Control.DecimalPositive:
+                    case Control.DateTime_:
+                    case Control.Date_:
+                    case Control.Time_:
                         quickPasteEntry.Items.Add(new QuickPasteItem(
                             row.DataLabel,
                             row.Label,
@@ -155,7 +156,7 @@ namespace Timelapse.QuickPaste
                 bool isUsed = false;
 
                 // Create a new entry with the same title as the old entry, and with an empty Items list
-                QuickPasteEntry newQuickPasteEntry = new QuickPasteEntry()
+                QuickPasteEntry newQuickPasteEntry = new QuickPasteEntry
                 {
                     Title = oldQuickPasteEntry.Title,
                     Items = new List<QuickPasteItem>()
@@ -166,21 +167,21 @@ namespace Timelapse.QuickPaste
                     switch (row.Type)
                     {
                         // We only consider the non-standard controls as quickpaste candidates
-                        case Constant.DatabaseColumn.DeleteFlag:
-                        case Constant.Control.FixedChoice:
-                        case Constant.Control.MultiChoice:
-                        case Constant.Control.Note:
-                        case Constant.Control.MultiLine:
-                        case Constant.Control.AlphaNumeric:
-                        case Constant.Control.Flag:
-                        case Constant.Control.Counter:
-                        case Constant.Control.IntegerAny:
-                        case Constant.Control.IntegerPositive:
-                        case Constant.Control.DecimalAny:
-                        case Constant.Control.DecimalPositive:
-                        case Constant.Control.DateTime_:
-                        case Constant.Control.Date_:
-                        case Constant.Control.Time_:
+                        case DatabaseColumn.DeleteFlag:
+                        case Control.FixedChoice:
+                        case Control.MultiChoice:
+                        case Control.Note:
+                        case Control.MultiLine:
+                        case Control.AlphaNumeric:
+                        case Control.Flag:
+                        case Control.Counter:
+                        case Control.IntegerAny:
+                        case Control.IntegerPositive:
+                        case Control.DecimalAny:
+                        case Control.DecimalPositive:
+                        case Control.DateTime_:
+                        case Control.Date_:
+                        case Control.Time_:
                             // Searh the old Items list to see if the control is there. If so, copy it to the new Items list
                             foreach (QuickPasteItem oldItem in oldQuickPasteEntry.Items)
                             {
@@ -201,7 +202,7 @@ namespace Timelapse.QuickPaste
                             // If we arrive here, it means that we have a control with no matching entry. So we should add that
                             if (noItemsMatch)
                             {
-                                string value = (row.Type == Constant.Control.Flag || row.Type == Constant.DatabaseColumn.DeleteFlag) ? "False" : string.Empty;
+                                string value = (row.Type == Control.Flag || row.Type == DatabaseColumn.DeleteFlag) ? "False" : string.Empty;
                                 newQuickPasteEntry.Items.Add(new QuickPasteItem(row.DataLabel, row.Label, value, false, row.Type));
                             }
                             break;

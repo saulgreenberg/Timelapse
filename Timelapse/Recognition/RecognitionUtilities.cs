@@ -5,9 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
+using Timelapse.Util;
+using File = System.IO.File;
 
 namespace Timelapse.Recognition
 {
@@ -17,17 +20,17 @@ namespace Timelapse.Recognition
         public static void GenerateRecognitionDictionariesFromDB(string ddbPath, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
         {
             SQLiteWrapper db = new SQLiteWrapper(ddbPath);
-            RecognitionUtilities.GenerateRecognitionDictionariesFromDB(db, infoDictionary, detectionCategoriesDictionary, classificationCategoriesDictionary);
+            GenerateRecognitionDictionariesFromDB(db, infoDictionary, detectionCategoriesDictionary, classificationCategoriesDictionary);
         }
 
         public static void GenerateRecognitionDictionariesFromDB(SQLiteWrapper db, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
         {
-            if (false == db.TableExists(Constant.DBTables.Info))
+            if (false == db.TableExists(DBTables.Info))
             {
                 // There are no detection-based tables in this database
                 return;
             }
-            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Info))
+            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.Info))
             {
                 Dictionary<string, object> tmpDict = new Dictionary<string, object>();
                 if (dataTable.Rows.Count != 0)
@@ -43,22 +46,22 @@ namespace Timelapse.Recognition
                 }
             }
 
-            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.DetectionCategories))
+            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.DetectionCategories))
             {
                 int dataTableRowCount = dataTable.Rows.Count;
                 for (int i = 0; i < dataTableRowCount; i++)
                 {
                     DataRow row = dataTable.Rows[i];
-                    detectionCategoriesDictionary.Add((string)row[Constant.DetectionCategoriesColumns.Category], (string)row[Constant.DetectionCategoriesColumns.Label]);
+                    detectionCategoriesDictionary.Add((string)row[DetectionCategoriesColumns.Category], (string)row[DetectionCategoriesColumns.Label]);
                 }
             }
-            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.ClassificationCategories))
+            using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationCategories))
             {
                 int dataTableRowCount = dataTable.Rows.Count;
                 for (int i = 0; i < dataTableRowCount; i++)
                 {
                     DataRow row = dataTable.Rows[i];
-                    classificationCategoriesDictionary.Add((string)row[Constant.ClassificationCategoriesColumns.Category], (string)row[Constant.ClassificationCategoriesColumns.Label]);
+                    classificationCategoriesDictionary.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
                 }
             }
         }
@@ -73,7 +76,7 @@ namespace Timelapse.Recognition
             {
                 return false;
             }
-            if (source == Constant.RecognizerValues.MDVersionUnknown)
+            if (source == RecognizerValues.MDVersionUnknown)
             {
                 return true;
             }
@@ -87,12 +90,12 @@ namespace Timelapse.Recognition
             {
                 return true;
             }
-            if (source == Constant.RecognizerValues.MDVersionUnknown || string.IsNullOrWhiteSpace(source))
+            if (source == RecognizerValues.MDVersionUnknown || string.IsNullOrWhiteSpace(source))
             {
                 return true;
             }
 
-            if (destination == Constant.RecognizerValues.MDVersionUnknown || string.IsNullOrWhiteSpace(destination))
+            if (destination == RecognizerValues.MDVersionUnknown || string.IsNullOrWhiteSpace(destination))
             {
                 return false;
             }
@@ -112,24 +115,24 @@ namespace Timelapse.Recognition
             }
             info info = new info();
             info.SetInfoDefaults();
-            info.detector = (string)infoDict2[Constant.InfoColumns.Detector];
-            info.detection_completion_time = (string)infoDict2[Constant.InfoColumns.DetectionCompletionTime];
-            info.detector_metadata.megadetector_version = (string)infoDict2[Constant.InfoColumns.DetectorVersion];
-            info.classifier = (string)infoDict2[Constant.InfoColumns.Classifier];
-            info.classification_completion_time = (string)infoDict2[Constant.InfoColumns.ClassificationCompletionTime];
+            info.detector = (string)infoDict2[InfoColumns.Detector];
+            info.detection_completion_time = (string)infoDict2[InfoColumns.DetectionCompletionTime];
+            info.detector_metadata.megadetector_version = (string)infoDict2[InfoColumns.DetectorVersion];
+            info.classifier = (string)infoDict2[InfoColumns.Classifier];
+            info.classification_completion_time = (string)infoDict2[InfoColumns.ClassificationCompletionTime];
 
             // Handle the case where the threshold values are not well formed doubles.
-            info.detector_metadata.typical_detection_threshold = Util.Numbers.ToFloatOrDefault(infoDict2[Constant.InfoColumns.TypicalDetectionThreshold], 
-                    Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown);
+            info.detector_metadata.typical_detection_threshold = Numbers.ToFloatOrDefault(infoDict2[InfoColumns.TypicalDetectionThreshold], 
+                    RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown);
 
             info.detector_metadata.conservative_detection_threshold =
-               Util.Numbers.ToFloatOrDefault(infoDict2[Constant.InfoColumns.ConservativeDetectionThreshold], Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown);
+               Numbers.ToFloatOrDefault(infoDict2[InfoColumns.ConservativeDetectionThreshold], RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown);
 
             info.classifier_metadata.typical_classification_threshold =
-                Util.Numbers.ToFloatOrDefault(infoDict2[Constant.InfoColumns.TypicalClassificationThreshold],
-                    Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown);
+                Numbers.ToFloatOrDefault(infoDict2[InfoColumns.TypicalClassificationThreshold],
+                    RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown);
 
-            return RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(infoDict1, info);
+            return GenerateBestRecognitionInfoFromTwoInfos(infoDict1, info);
         }
 
         // Given a dictionary and a Recognizer info structure, merge them in a way that combines the best of both into one.
@@ -137,20 +140,20 @@ namespace Timelapse.Recognition
         {
             Dictionary<string, object> infoDictFromJsonInfo = new Dictionary<string, object>
             {
-                {Constant.InfoColumns.InfoID, 1},
-                {Constant.InfoColumns.Detector, info.detector ?? Constant.RecognizerValues.DetectorUnknown},
-                {Constant.InfoColumns.DetectionCompletionTime, info.detection_completion_time ?? Constant.RecognizerValues.DetectionCompletionTimeUnknown},
-                {Constant.InfoColumns.DetectorVersion, info.detector_metadata.megadetector_version ?? Constant.RecognizerValues.MDVersionUnknown},
-                {Constant.InfoColumns.TypicalDetectionThreshold, info.detector_metadata.typical_detection_threshold ?? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown},
-                {Constant.InfoColumns.ConservativeDetectionThreshold, info.detector_metadata.conservative_detection_threshold ?? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown},
-                {Constant.InfoColumns.Classifier, string.IsNullOrEmpty(info.classifier)
+                {InfoColumns.InfoID, 1},
+                {InfoColumns.Detector, info.detector ?? RecognizerValues.DetectorUnknown},
+                {InfoColumns.DetectionCompletionTime, info.detection_completion_time ?? RecognizerValues.DetectionCompletionTimeUnknown},
+                {InfoColumns.DetectorVersion, info.detector_metadata.megadetector_version ?? RecognizerValues.MDVersionUnknown},
+                {InfoColumns.TypicalDetectionThreshold, info.detector_metadata.typical_detection_threshold ?? RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown},
+                {InfoColumns.ConservativeDetectionThreshold, info.detector_metadata.conservative_detection_threshold ?? RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown},
+                {InfoColumns.Classifier, string.IsNullOrEmpty(info.classifier)
                     ? string.Empty
                     : info.classifier},
-                {Constant.InfoColumns.ClassificationCompletionTime,
+                {InfoColumns.ClassificationCompletionTime,
                     string.IsNullOrEmpty(info.classification_completion_time)
                     ? string.Empty
                     : info.classification_completion_time},
-                {Constant.InfoColumns.TypicalClassificationThreshold, info.classifier_metadata.typical_classification_threshold ?? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown},
+                {InfoColumns.TypicalClassificationThreshold, info.classifier_metadata.typical_classification_threshold ?? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown},
             };
             return DetermineRecognitionInfoToUse(infoDict1, infoDictFromJsonInfo);
         }
@@ -163,112 +166,112 @@ namespace Timelapse.Recognition
             Dictionary<string, object> updatedDict = new Dictionary<string, object>
             {
                 // Use the same InfoID, which should always be 1
-                { Constant.InfoColumns.InfoID, infoDict1[Constant.InfoColumns.InfoID] }
+                { InfoColumns.InfoID, infoDict1[InfoColumns.InfoID] }
             };
 
             // Populate the dict with the latest detector version, if known.If they are the same, prefer the 2nd dictionary
-            string i1DetectorVersion = infoDict1.TryGetValue(Constant.InfoColumns.DetectorVersion, out object i1dv)
+            string i1DetectorVersion = infoDict1.TryGetValue(InfoColumns.DetectorVersion, out object i1dv)
                 ? i1dv == null
-                    ? Constant.RecognizerValues.MDVersionUnknown : i1dv.ToString()
-                    : Constant.RecognizerValues.MDVersionUnknown;
-            string i2DetectorVersion = infoDict2.TryGetValue(Constant.InfoColumns.DetectorVersion, out object i2dv)
+                    ? RecognizerValues.MDVersionUnknown : i1dv.ToString()
+                    : RecognizerValues.MDVersionUnknown;
+            string i2DetectorVersion = infoDict2.TryGetValue(InfoColumns.DetectorVersion, out object i2dv)
                     ? i2dv == null
-                        ? Constant.RecognizerValues.MDVersionUnknown
+                        ? RecognizerValues.MDVersionUnknown
                         : i2dv.ToString()
-                    : Constant.RecognizerValues.MDVersionUnknown;
+                    : RecognizerValues.MDVersionUnknown;
             bool i2Preferred = IsMegadetectorVersionSameHigherInDestination(i1DetectorVersion, i2DetectorVersion);
-            updatedDict.Add(Constant.InfoColumns.DetectorVersion, i2Preferred ? i2DetectorVersion : i1DetectorVersion);
+            updatedDict.Add(InfoColumns.DetectorVersion, i2Preferred ? i2DetectorVersion : i1DetectorVersion);
 
             // Populate the dict with the preferred detector name
-            string i1Detector = infoDict1.TryGetValue(Constant.InfoColumns.Detector, out object i1d)
+            string i1Detector = infoDict1.TryGetValue(InfoColumns.Detector, out object i1d)
                 ? i1d == null
-                    ? Constant.RecognizerValues.DetectorUnknown
+                    ? RecognizerValues.DetectorUnknown
                     : i1d.ToString()
-                : Constant.RecognizerValues.DetectorUnknown;
-            string i2Detector = infoDict2.TryGetValue(Constant.InfoColumns.Detector, out object i2d)
+                : RecognizerValues.DetectorUnknown;
+            string i2Detector = infoDict2.TryGetValue(InfoColumns.Detector, out object i2d)
                  ? i2d == null
-                    ? Constant.RecognizerValues.DetectorUnknown
+                    ? RecognizerValues.DetectorUnknown
                     : i2d.ToString()
-                 : Constant.RecognizerValues.DetectorUnknown;
-            updatedDict.Add(Constant.InfoColumns.Detector, i2Preferred ? i2Detector : i1Detector);
+                 : RecognizerValues.DetectorUnknown;
+            updatedDict.Add(InfoColumns.Detector, i2Preferred ? i2Detector : i1Detector);
 
             // Populate the dict with the preferred detection completion time
-            string i1DetectionCompletionTime = infoDict1.TryGetValue(Constant.InfoColumns.DetectionCompletionTime, out object i1dct)
+            string i1DetectionCompletionTime = infoDict1.TryGetValue(InfoColumns.DetectionCompletionTime, out object i1dct)
                 ? i1dct == null
-                    ? Constant.RecognizerValues.DetectionCompletionTimeUnknown
+                    ? RecognizerValues.DetectionCompletionTimeUnknown
                     : i1dct.ToString()
-                : Constant.RecognizerValues.DetectionCompletionTimeUnknown;
-            string i2DetectionCompletionTime = infoDict2.TryGetValue(Constant.InfoColumns.DetectionCompletionTime, out object i2dct)
+                : RecognizerValues.DetectionCompletionTimeUnknown;
+            string i2DetectionCompletionTime = infoDict2.TryGetValue(InfoColumns.DetectionCompletionTime, out object i2dct)
                 ? i2dct == null
-                    ? Constant.RecognizerValues.DetectionCompletionTimeUnknown
+                    ? RecognizerValues.DetectionCompletionTimeUnknown
                     : i2dct.ToString()
-                : Constant.RecognizerValues.DetectionCompletionTimeUnknown;
-            updatedDict.Add(Constant.InfoColumns.DetectionCompletionTime, i2Preferred ? i2DetectionCompletionTime : i1DetectionCompletionTime);
+                : RecognizerValues.DetectionCompletionTimeUnknown;
+            updatedDict.Add(InfoColumns.DetectionCompletionTime, i2Preferred ? i2DetectionCompletionTime : i1DetectionCompletionTime);
 
             // Populate the dict with the preferred classifier 
-            string i1Classifier = infoDict1.TryGetValue(Constant.InfoColumns.Classifier, out object i1c)
+            string i1Classifier = infoDict1.TryGetValue(InfoColumns.Classifier, out object i1c)
                 ? i1c == null
-                    ? Constant.RecognizerValues.ClassifierUnknown
+                    ? RecognizerValues.ClassifierUnknown
                     : i1c.ToString()
-                : Constant.RecognizerValues.ClassifierUnknown;
-            string i2Classifier = infoDict2.TryGetValue(Constant.InfoColumns.Classifier, out object i2c)
+                : RecognizerValues.ClassifierUnknown;
+            string i2Classifier = infoDict2.TryGetValue(InfoColumns.Classifier, out object i2c)
                 ? i2c == null
-                    ? Constant.RecognizerValues.ClassifierUnknown
+                    ? RecognizerValues.ClassifierUnknown
                     : i2c.ToString()
-                : Constant.RecognizerValues.ClassifierUnknown;
-            updatedDict.Add(Constant.InfoColumns.Classifier, i2Preferred ? i2Classifier : i1Classifier);
+                : RecognizerValues.ClassifierUnknown;
+            updatedDict.Add(InfoColumns.Classifier, i2Preferred ? i2Classifier : i1Classifier);
 
             // Populate the dict with the preferred classification completion time
-            string i1ClassificationCompletionTime = infoDict1.TryGetValue(Constant.InfoColumns.ClassificationCompletionTime, out object i1cct)
+            string i1ClassificationCompletionTime = infoDict1.TryGetValue(InfoColumns.ClassificationCompletionTime, out object i1cct)
                 ? i1cct == null
-                    ? Constant.RecognizerValues.DetectionCompletionTimeUnknown
+                    ? RecognizerValues.DetectionCompletionTimeUnknown
                     : i1cct.ToString()
-                : Constant.RecognizerValues.DetectionCompletionTimeUnknown;
-            string i2ClassificationCompletionTime = infoDict2.TryGetValue(Constant.InfoColumns.ClassificationCompletionTime, out object i2cct)
+                : RecognizerValues.DetectionCompletionTimeUnknown;
+            string i2ClassificationCompletionTime = infoDict2.TryGetValue(InfoColumns.ClassificationCompletionTime, out object i2cct)
                 ? i2cct == null
-                    ? Constant.RecognizerValues.ClassificationCompletionTimeUnknown
+                    ? RecognizerValues.ClassificationCompletionTimeUnknown
                     : i2cct.ToString()
-                : Constant.RecognizerValues.ClassificationCompletionTimeUnknown;
-            updatedDict.Add(Constant.InfoColumns.ClassificationCompletionTime, i2Preferred ? i2ClassificationCompletionTime : i1ClassificationCompletionTime);
+                : RecognizerValues.ClassificationCompletionTimeUnknown;
+            updatedDict.Add(InfoColumns.ClassificationCompletionTime, i2Preferred ? i2ClassificationCompletionTime : i1ClassificationCompletionTime);
 
             // Populate the dict with the smaller of the two typical detection thresholds
-            float i1TypicalDetectionThreshold = infoDict1.TryGetValue(Constant.InfoColumns.TypicalDetectionThreshold, out object i1tdt)
+            float i1TypicalDetectionThreshold = infoDict1.TryGetValue(InfoColumns.TypicalDetectionThreshold, out object i1tdt)
                 ? i1tdt == null
-                    ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
+                    ? RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
                     : Convert.ToSingle(i1tdt)
-                : Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
-            float i2TypicalDetectionThreshold = infoDict2.TryGetValue(Constant.InfoColumns.TypicalDetectionThreshold, out object i2tdt)
+                : RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+            float i2TypicalDetectionThreshold = infoDict2.TryGetValue(InfoColumns.TypicalDetectionThreshold, out object i2tdt)
                 ? i2tdt == null
-                    ? Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
+                    ? RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
                     : Convert.ToSingle(i2tdt)
-                : Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
-            updatedDict.Add(Constant.InfoColumns.TypicalDetectionThreshold, Math.Min(i1TypicalDetectionThreshold, i2TypicalDetectionThreshold));
+                : RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+            updatedDict.Add(InfoColumns.TypicalDetectionThreshold, Math.Min(i1TypicalDetectionThreshold, i2TypicalDetectionThreshold));
 
             // Populate the dict with the smaller of the two typical classification thresholds
-            float i1TypicalClassificationThreshold = infoDict1.TryGetValue(Constant.InfoColumns.TypicalClassificationThreshold, out object i1tct)
+            float i1TypicalClassificationThreshold = infoDict1.TryGetValue(InfoColumns.TypicalClassificationThreshold, out object i1tct)
                 ? i1tct == null
-                    ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
+                    ? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
                     : Convert.ToSingle(i1tct)
-                : Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
-            float i2TypicalClassificationThreshold = infoDict2.TryGetValue(Constant.InfoColumns.TypicalClassificationThreshold, out object i2tct)
+                : RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+            float i2TypicalClassificationThreshold = infoDict2.TryGetValue(InfoColumns.TypicalClassificationThreshold, out object i2tct)
                 ? i2tct == null
-                    ? Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
+                    ? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
                     : Convert.ToSingle(i2tct)
-                : Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
-            updatedDict.Add(Constant.InfoColumns.TypicalClassificationThreshold, Math.Min(i1TypicalClassificationThreshold, i2TypicalClassificationThreshold));
+                : RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+            updatedDict.Add(InfoColumns.TypicalClassificationThreshold, Math.Min(i1TypicalClassificationThreshold, i2TypicalClassificationThreshold));
 
             // Populate the dict with the smaller of the two conservative classification thresholds
-            float i1ConservativeDetectionThreshold = infoDict1.TryGetValue(Constant.InfoColumns.ConservativeDetectionThreshold, out object i1cdt)
+            float i1ConservativeDetectionThreshold = infoDict1.TryGetValue(InfoColumns.ConservativeDetectionThreshold, out object i1cdt)
                 ? i1cdt == null
-                    ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
+                    ? RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
                     : Convert.ToSingle(i1cdt)
-                : Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
-            float i2TConservativeDetectionThreshold = infoDict2.TryGetValue(Constant.InfoColumns.ConservativeDetectionThreshold, out object i2cdt)
+                : RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+            float i2TConservativeDetectionThreshold = infoDict2.TryGetValue(InfoColumns.ConservativeDetectionThreshold, out object i2cdt)
                 ? i2cdt == null
-                    ? Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
+                    ? RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
                     : Convert.ToSingle(i2cdt)
-                : Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
-            updatedDict.Add(Constant.InfoColumns.ConservativeDetectionThreshold, Math.Min(i1ConservativeDetectionThreshold, i2TConservativeDetectionThreshold));
+                : RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+            updatedDict.Add(InfoColumns.ConservativeDetectionThreshold, Math.Min(i1ConservativeDetectionThreshold, i2TConservativeDetectionThreshold));
 
             return updatedDict;
         }
@@ -280,7 +283,7 @@ namespace Timelapse.Recognition
         // If the JsonFilePath is the same as or outside of the rootFolderPath, return an empty string
         public static string GetRecognizersFileSubfolderPathIfAny(string rootFolderPath, string jsonFilePath)
         {
-            Tuple<string, string, string> splitPath = Util.FilesFolders.SplitFullPath(rootFolderPath, jsonFilePath);
+            Tuple<string, string, string> splitPath = FilesFolders.SplitFullPath(rootFolderPath, jsonFilePath);
             if (splitPath == null)
             {
                 // file is outside of root folder and its subfolders
@@ -320,7 +323,7 @@ namespace Timelapse.Recognition
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new ProgressBarArguments(percentDone,
                             $"Checking image paths ({i:N0}/{sTotalImages}...)", true, false));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
                     {
@@ -329,26 +332,26 @@ namespace Timelapse.Recognition
                         results = RecognizerPathTestResults.PathsRelativeToRootFolder;
                         break;
                     }
-                    else if (File.Exists(Path.Combine(rootFolderPath, image.file)))
+
+                    if (File.Exists(Path.Combine(rootFolderPath, image.file)))
                     {
                         // Probable that Recognizer is relative to the root folder: At least one file is in the unaltered path.
                         // Debug.Print("Probable that Recognizer is relative to the root folder: At least one file is in the unaltered path.");
                         results = RecognizerPathTestResults.PathsRelativeToRootFolder;
                         break;
                     }
-                    else if (nonEmptySubfolder && File.Exists(Path.Combine(rootFolderPath, subFolderPrefix, image.file)))
+
+                    if (nonEmptySubfolder && File.Exists(Path.Combine(rootFolderPath, subFolderPrefix, image.file)))
                     {
                         // Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix
                         // Debug.Print("Probable that json is relative to the provided sub-folder: At lease one file is in the path altered by addeding the subfolder prefix.");
                         results = RecognizerPathTestResults.PathsRelativeToSubFolder;
                         break;
                     }
-                    else
-                    {
-                        // No hard evidence one way or another, so keep checking subsequent files
-                        // Still, there is weak evidence that json was started in this subfolder as sample path does not have the subfolder prefix.
-                        // Perhaps ask the user?
-                    }
+
+                    // No hard evidence one way or another, so keep checking subsequent files
+                    // Still, there is weak evidence that json was started in this subfolder as sample path does not have the subfolder prefix.
+                    // Perhaps ask the user?
                     i++;
                 }
             }).ConfigureAwait(true);
@@ -381,7 +384,7 @@ namespace Timelapse.Recognition
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new ProgressBarArguments(percentDone,
                             $"Correcting image recognition paths ({i:N0}/{sTotalImages}...", false, false));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Add the prefix to the path
                     image.file = Path.Combine(subFolderPrefix, image.file);

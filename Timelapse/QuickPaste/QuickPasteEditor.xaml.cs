@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataCommon;
 using Timelapse.ControlsDataEntry;
@@ -15,8 +16,10 @@ using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Xceed.Wpf.Toolkit.Primitives;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
+using Control = Timelapse.Constant.Control;
 using Style = System.Windows.Style;
 using TextBox = System.Windows.Controls.TextBox;
 
@@ -54,8 +57,8 @@ namespace Timelapse.QuickPaste
         #region Constructor, Loaded
         public QuickPasteEditor(QuickPasteEntry quickPasteEntry, FileDatabase fileDatabase, DataEntryControls dataEntryControls)
         {
-            this.InitializeComponent();
-            this.QuickPasteEntry = quickPasteEntry;
+            InitializeComponent();
+            QuickPasteEntry = quickPasteEntry;
             this.fileDatabase = fileDatabase;
             this.dataEntryControls = dataEntryControls;
         }
@@ -67,11 +70,11 @@ namespace Timelapse.QuickPaste
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Display the title of the QuickPasteEntry
-            this.QuickPasteTitle.Text = this.QuickPasteEntry.Title;
-            this.QuickPasteTitle.TextChanged += this.QuickPasteTitle_TextChanged;
+            QuickPasteTitle.Text = QuickPasteEntry.Title;
+            QuickPasteTitle.TextChanged += QuickPasteTitle_TextChanged;
 
             // Build the grid rows, each displaying successive items in the QuickPasteItems list
-            this.BuildRows();
+            BuildRows();
         }
         #endregion
 
@@ -79,7 +82,7 @@ namespace Timelapse.QuickPaste
         // Title: Update the QuickPasteEntry's title
         private void QuickPasteTitle_TextChanged(object sender, TextChangedEventArgs e)
         {
-            this.QuickPasteEntry.Title = this.QuickPasteTitle.Text;
+            QuickPasteEntry.Title = QuickPasteTitle.Text;
         }
 
         // Use: Invoked when the user clicks the checkbox to enable or disable the data row
@@ -94,8 +97,8 @@ namespace Timelapse.QuickPaste
             // Enable or disable the controls on that row to reflect whether the checkbox is checked or unchecked
             int row = Grid.GetRow(cbox);
 
-            TextBlock label = this.GetGridElement<TextBlock>(GridColumnLabel, row);
-            UIElement value = this.GetGridElement<UIElement>(GridColumnValue, row);
+            TextBlock label = GetGridElement<TextBlock>(GridColumnLabel, row);
+            UIElement value = GetGridElement<UIElement>(GridColumnValue, row);
             if (cbox.IsChecked != null && cbox.IsChecked == true)
             {
                 label.Foreground = Brushes.Black;
@@ -110,7 +113,7 @@ namespace Timelapse.QuickPaste
             // Update the QuickPaste row data structure to reflect the current checkbox state
             QuickPasteItem quickPasteRow = (QuickPasteItem)cbox.Tag;
             quickPasteRow.Use = cbox.IsChecked == true;
-            this.Note.Visibility = this.QuickPasteEntry.IsAtLeastOneItemPastable() ? Visibility.Collapsed : Visibility.Visible;
+            Note.Visibility = QuickPasteEntry.IsAtLeastOneItemPastable() ? Visibility.Collapsed : Visibility.Visible;
         }
 
 
@@ -176,7 +179,7 @@ namespace Timelapse.QuickPaste
         }
 
         // Essentiallly the same as the one in ControlsDataHandlersCommon, except it also modifies the Quickpaste item value
-        private void MultiChoice_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
+        private void MultiChoice_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
         {
             if(sender is CheckComboBox checkComboBox == false)
             {
@@ -245,7 +248,7 @@ namespace Timelapse.QuickPaste
             if (sender is Button button)
             {
                 bool useState = button.Name == "UseAll";
-                foreach (CheckBox cb in this.UseCheckboxes)
+                foreach (CheckBox cb in UseCheckboxes)
                 {
                     cb.IsChecked = useState;
                 }
@@ -257,12 +260,12 @@ namespace Timelapse.QuickPaste
         // Apply the selection if the Ok button is clicked
         private void OkButton_Click(object sender, RoutedEventArgs args)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs args)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
 
@@ -273,15 +276,15 @@ namespace Timelapse.QuickPaste
             // We start after the GridRowInitialRow
             int gridRowIndex = GridRowInitialRow;
 
-            foreach (QuickPasteItem quickPasteItem in this.QuickPasteEntry.Items)
+            foreach (QuickPasteItem quickPasteItem in QuickPasteEntry.Items)
             {
                 ++gridRowIndex;
-                RowDefinition gridRow = new RowDefinition()
+                RowDefinition gridRow = new RowDefinition
                 {
                     Height = GridLength.Auto
                 };
-                this.QuickPasteGridRows.RowDefinitions.Add(gridRow);
-                this.BuildRow(quickPasteItem, gridRowIndex);
+                QuickPasteGridRows.RowDefinitions.Add(gridRow);
+                BuildRow(quickPasteItem, gridRowIndex);
             }
         }
 
@@ -292,7 +295,7 @@ namespace Timelapse.QuickPaste
         {
             // USE Column: A checkbox to indicate whether the current search row should be used as part of the search
             Thickness thickness = new Thickness(0, 2, 0, 2);
-            CheckBox useCurrentRow = new CheckBox()
+            CheckBox useCurrentRow = new CheckBox
             {
                 Margin = thickness,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -300,16 +303,16 @@ namespace Timelapse.QuickPaste
                 IsChecked = quickPasteItem.Use,
                 Tag = quickPasteItem
             };
-            useCurrentRow.Checked += this.UseCurrentRow_CheckChanged;
-            useCurrentRow.Unchecked += this.UseCurrentRow_CheckChanged;
-            this.UseCheckboxes.Add(useCurrentRow);
+            useCurrentRow.Checked += UseCurrentRow_CheckChanged;
+            useCurrentRow.Unchecked += UseCurrentRow_CheckChanged;
+            UseCheckboxes.Add(useCurrentRow);
 
             Grid.SetRow(useCurrentRow, gridRowIndex);
             Grid.SetColumn(useCurrentRow, GridColumnUse);
-            this.QuickPasteGridRows.Children.Add(useCurrentRow);
+            QuickPasteGridRows.Children.Add(useCurrentRow);
 
             // LABEL column: The label associated with the control (Note: not the data label)
-            TextBlock controlLabel = new TextBlock()
+            TextBlock controlLabel = new TextBlock
             {
                 Margin = new Thickness(5),
                 Text = quickPasteItem.Label,
@@ -317,16 +320,16 @@ namespace Timelapse.QuickPaste
             };
             Grid.SetRow(controlLabel, gridRowIndex);
             Grid.SetColumn(controlLabel, GridColumnLabel);
-            this.QuickPasteGridRows.Children.Add(controlLabel);
+            QuickPasteGridRows.Children.Add(controlLabel);
 
             // VALUES Columns below
             // Note/Alphanumeric Value column:
             // - presented as an editable AutocompleteTextBox field 
-            if (quickPasteItem.ControlType == Constant.Control.Note ||
-                quickPasteItem.ControlType == Constant.Control.AlphaNumeric)
+            if (quickPasteItem.ControlType == Control.Note ||
+                quickPasteItem.ControlType == Control.AlphaNumeric)
             {
                 // The controls above use a text field, so they can be constructed as a textbox
-                AutocompleteTextBox textBoxValue = new AutocompleteTextBox()
+                AutocompleteTextBox textBoxValue = new AutocompleteTextBox
                 {
                     Autocompletions = null,
                     Text = quickPasteItem.Value,
@@ -339,32 +342,32 @@ namespace Timelapse.QuickPaste
                     Tag = quickPasteItem
                 };
 
-                if (quickPasteItem.ControlType == Constant.Control.Note)
+                if (quickPasteItem.ControlType == Control.Note)
                 {
-                    textBoxValue.Autocompletions = this.dataEntryControls.AutocompletionGetForNote(quickPasteItem.DataLabel);
+                    textBoxValue.Autocompletions = dataEntryControls.AutocompletionGetForNote(quickPasteItem.DataLabel);
                 }
-                else if (quickPasteItem.ControlType == Constant.Control.AlphaNumeric)
+                else if (quickPasteItem.ControlType == Control.AlphaNumeric)
                 {
-                    textBoxValue.Autocompletions = this.dataEntryControls.AutocompletionGetForNote(quickPasteItem.DataLabel);
-                    textBoxValue.PreviewKeyDown += Util.ValidationCallbacks.PreviewKeyDown_TextBoxNoSpaces;
-                    textBoxValue.PreviewTextInput += Util.ValidationCallbacks.PreviewInput_AlphaNumericCharacterOnly;
-                    textBoxValue.TextChanged += Util.ValidationCallbacks.TextChanged_AlphaNumericTextOnly;
-                    DataObject.AddPastingHandler(textBoxValue, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfAlphaNumeric);
+                    textBoxValue.Autocompletions = dataEntryControls.AutocompletionGetForNote(quickPasteItem.DataLabel);
+                    textBoxValue.PreviewKeyDown += ValidationCallbacks.PreviewKeyDown_TextBoxNoSpaces;
+                    textBoxValue.PreviewTextInput += ValidationCallbacks.PreviewInput_AlphaNumericCharacterOnly;
+                    textBoxValue.TextChanged += ValidationCallbacks.TextChanged_AlphaNumericTextOnly;
+                    DataObject.AddPastingHandler(textBoxValue, ValidationCallbacks.Paste_OnlyIfAlphaNumeric);
                 }
-                textBoxValue.TextChanged += this.Note_TextChanged;
+                textBoxValue.TextChanged += Note_TextChanged;
                 textBoxValue.GotFocus += ControlsDataHelpersCommon.Control_GotFocus;
                 textBoxValue.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
                 Grid.SetRow(textBoxValue, gridRowIndex);
                 Grid.SetColumn(textBoxValue, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(textBoxValue);
+                QuickPasteGridRows.Children.Add(textBoxValue);
             }
 
             // MultiLine Value column:
             // - presented as an editable AutocompleteTextBox field 
-            else if (quickPasteItem.ControlType == Constant.Control.MultiLine)
+            else if (quickPasteItem.ControlType == Control.MultiLine)
             {
                 // The control above use a text field, so they can be constructed as a textbox
-                MultiLineTextEditor textBoxValue = new MultiLineTextEditor()
+                MultiLineTextEditor textBoxValue = new MultiLineTextEditor
                 {
                     Text = quickPasteItem.Value,
                     Height = ValuesHeight,
@@ -374,22 +377,22 @@ namespace Timelapse.QuickPaste
                     VerticalContentAlignment = VerticalAlignment.Center,
                     IsEnabled = quickPasteItem.Use,
                     Tag = quickPasteItem,
-                    Style = (Style)this.dataEntryControls.FindResource("MultiLineBox"),
+                    Style = (Style)dataEntryControls.FindResource("MultiLineBox"),
                 };
                 textBoxValue.TextHasChanged += MultiLine_TextHasChanged;
                 Grid.SetRow(textBoxValue, gridRowIndex);
                 Grid.SetColumn(textBoxValue, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(textBoxValue);
+                QuickPasteGridRows.Children.Add(textBoxValue);
             }
 
             // Counter/IntegerAny Value column
             // - presented as an editable IntegerUpDown field 
-            else if (quickPasteItem.ControlType == Constant.Control.Counter ||
-                     quickPasteItem.ControlType == Constant.Control.IntegerAny ||
-                     quickPasteItem.ControlType == Constant.Control.IntegerPositive)
+            else if (quickPasteItem.ControlType == Control.Counter ||
+                     quickPasteItem.ControlType == Control.IntegerAny ||
+                     quickPasteItem.ControlType == Control.IntegerPositive)
             {
                 // The controls above use an integer field, so they can be constructed as a integerUpDown
-                IntegerUpDown textBoxValue = new IntegerUpDown()
+                IntegerUpDown textBoxValue = new IntegerUpDown
                 {
                     Text = quickPasteItem.Value,
                     Height = ValuesHeight,
@@ -399,38 +402,38 @@ namespace Timelapse.QuickPaste
                     IsEnabled = quickPasteItem.Use,
                     Tag = quickPasteItem,
                 };
-                if (quickPasteItem.ControlType == Constant.Control.Counter ||
-                    quickPasteItem.ControlType == Constant.Control.IntegerPositive)
+                if (quickPasteItem.ControlType == Control.Counter ||
+                    quickPasteItem.ControlType == Control.IntegerPositive)
                 {
                     // these controls should not allow negative values
                     textBoxValue.Minimum = 0;
                 }
-                textBoxValue.PreviewKeyDown += Timelapse.Util.ValidationCallbacks.PreviewKeyDown_IntegerUpDownNoSpaces;
-                if (quickPasteItem.ControlType == Constant.Control.IntegerAny)
+                textBoxValue.PreviewKeyDown += ValidationCallbacks.PreviewKeyDown_IntegerUpDownNoSpaces;
+                if (quickPasteItem.ControlType == Control.IntegerAny)
                 {
-                    textBoxValue.PreviewTextInput += Timelapse.Util.ValidationCallbacks.PreviewInput_IntegerCharacterOnly;
-                    DataObject.AddPastingHandler(textBoxValue, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfIntegerAny);
+                    textBoxValue.PreviewTextInput += ValidationCallbacks.PreviewInput_IntegerCharacterOnly;
+                    DataObject.AddPastingHandler(textBoxValue, ValidationCallbacks.Paste_OnlyIfIntegerAny);
                 }
                 else
                 {
-                    textBoxValue.PreviewTextInput += Timelapse.Util.ValidationCallbacks.PreviewInput_IntegerPositiveCharacterOnly;
-                    DataObject.AddPastingHandler(textBoxValue, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfIntegerPositive);
+                    textBoxValue.PreviewTextInput += ValidationCallbacks.PreviewInput_IntegerPositiveCharacterOnly;
+                    DataObject.AddPastingHandler(textBoxValue, ValidationCallbacks.Paste_OnlyIfIntegerPositive);
                 }
-                textBoxValue.ValueChanged += this.CounterOrInteger_TextChanged;
+                textBoxValue.ValueChanged += CounterOrInteger_TextChanged;
                 textBoxValue.GotFocus += ControlsDataHelpersCommon.Control_GotFocus;
                 textBoxValue.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
                 Grid.SetRow(textBoxValue, gridRowIndex);
                 Grid.SetColumn(textBoxValue, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(textBoxValue);
+                QuickPasteGridRows.Children.Add(textBoxValue);
             }
 
             // DecimalAny  DecimalPositive Value column
             // - presented as an editable IntegerUpDown field 
-            else if (quickPasteItem.ControlType == Constant.Control.DecimalAny ||
-                     quickPasteItem.ControlType == Constant.Control.DecimalPositive)
+            else if (quickPasteItem.ControlType == Control.DecimalAny ||
+                     quickPasteItem.ControlType == Control.DecimalPositive)
             {
                 // The controls above use an integer field, so they can be constructed as a integerUpDown
-                DoubleUpDown textBoxValue = new DoubleUpDown()
+                DoubleUpDown textBoxValue = new DoubleUpDown
                 {
                     Text = quickPasteItem.Value,
                     Height = ValuesHeight,
@@ -440,58 +443,58 @@ namespace Timelapse.QuickPaste
                     IsEnabled = quickPasteItem.Use,
                     Tag = quickPasteItem,
                 };
-                if (quickPasteItem.ControlType == Constant.Control.DecimalPositive)
+                if (quickPasteItem.ControlType == Control.DecimalPositive)
                 {
                     // these controls should not allow negative values
                     textBoxValue.Minimum = 0;
                 }
-                textBoxValue.PreviewKeyDown += Timelapse.Util.ValidationCallbacks.PreviewKeyDown_DecimalUpDownNoSpaces;
-                if (quickPasteItem.ControlType == Constant.Control.DecimalAny)
+                textBoxValue.PreviewKeyDown += ValidationCallbacks.PreviewKeyDown_DecimalUpDownNoSpaces;
+                if (quickPasteItem.ControlType == Control.DecimalAny)
                 {
-                    textBoxValue.PreviewTextInput += Timelapse.Util.ValidationCallbacks.PreviewInput_DecimalCharacterOnly;
-                    DataObject.AddPastingHandler(textBoxValue, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfDecimalAny);
+                    textBoxValue.PreviewTextInput += ValidationCallbacks.PreviewInput_DecimalCharacterOnly;
+                    DataObject.AddPastingHandler(textBoxValue, ValidationCallbacks.Paste_OnlyIfDecimalAny);
                 }
                 else
                 {
-                    textBoxValue.PreviewTextInput += Timelapse.Util.ValidationCallbacks.PreviewInput_DecimalPositiveCharacterOnly;
-                    DataObject.AddPastingHandler(textBoxValue, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfDecimalPositive);
+                    textBoxValue.PreviewTextInput += ValidationCallbacks.PreviewInput_DecimalPositiveCharacterOnly;
+                    DataObject.AddPastingHandler(textBoxValue, ValidationCallbacks.Paste_OnlyIfDecimalPositive);
                 }
-                textBoxValue.ValueChanged += this.Decimal_TextChanged;
+                textBoxValue.ValueChanged += Decimal_TextChanged;
                 textBoxValue.GotFocus += ControlsDataHelpersCommon.Control_GotFocus;
                 textBoxValue.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
                 Grid.SetRow(textBoxValue, gridRowIndex);
                 Grid.SetColumn(textBoxValue, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(textBoxValue);
+                QuickPasteGridRows.Children.Add(textBoxValue);
             }
 
             // Flags Value column
             // - presented as an editable Checkbox field 
-            else if (quickPasteItem.ControlType == Constant.Control.Flag ||
-                     quickPasteItem.ControlType == Constant.DatabaseColumn.DeleteFlag)
+            else if (quickPasteItem.ControlType == Control.Flag ||
+                     quickPasteItem.ControlType == DatabaseColumn.DeleteFlag)
             {
                 // Flags present checkable checkboxes
-                CheckBox flagCheckBox = new CheckBox()
+                CheckBox flagCheckBox = new CheckBox
                 {
                     VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = HorizontalAlignment.Left,
-                    IsChecked = !string.IsNullOrEmpty(quickPasteItem.Value) && !string.Equals(quickPasteItem.Value, Constant.BooleanValue.False, StringComparison.OrdinalIgnoreCase),
+                    IsChecked = !string.IsNullOrEmpty(quickPasteItem.Value) && !string.Equals(quickPasteItem.Value, BooleanValue.False, StringComparison.OrdinalIgnoreCase),
                     IsEnabled = quickPasteItem.Use,
                     Tag = quickPasteItem
                 };
-                flagCheckBox.Checked += this.Flag_CheckedOrUnchecked;
-                flagCheckBox.Unchecked += this.Flag_CheckedOrUnchecked;
+                flagCheckBox.Checked += Flag_CheckedOrUnchecked;
+                flagCheckBox.Unchecked += Flag_CheckedOrUnchecked;
                 Grid.SetRow(flagCheckBox, gridRowIndex);
                 Grid.SetColumn(flagCheckBox, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(flagCheckBox);
+                QuickPasteGridRows.Children.Add(flagCheckBox);
             }
 
             // FixedChoice Value column
             // - presented as an editable ComboBox field 
-            else if (quickPasteItem.ControlType == Constant.Control.FixedChoice)
+            else if (quickPasteItem.ControlType == Control.FixedChoice)
             {
                 // Choices use choiceboxes
-                ControlRow controlRow = this.fileDatabase.GetControlFromControls(quickPasteItem.DataLabel);
-                ComboBox comboBoxValue = new ComboBox()
+                ControlRow controlRow = fileDatabase.GetControlFromControls(quickPasteItem.DataLabel);
+                ComboBox comboBoxValue = new ComboBox
                 {
                     Height = ValuesHeight,
                     Width = ValuesWidth,
@@ -501,21 +504,21 @@ namespace Timelapse.QuickPaste
                 };
                 // Populate the combobox menu
                 Choices.ChoicesFromJson(controlRow.List).SetComboBoxItems(comboBoxValue);
-                comboBoxValue.SelectionChanged += this.FixedChoice_SelectionChanged;
+                comboBoxValue.SelectionChanged += FixedChoice_SelectionChanged;
                 comboBoxValue.GotFocus += ControlsDataHelpersCommon.Control_GotFocus;
                 comboBoxValue.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
                 Grid.SetRow(comboBoxValue, gridRowIndex);
                 Grid.SetColumn(comboBoxValue, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(comboBoxValue);
+                QuickPasteGridRows.Children.Add(comboBoxValue);
             }
 
             // MultiChoice Value column
             // - presented as an editable checkComboBox field 
-            else if (quickPasteItem.ControlType == Constant.Control.MultiChoice)
+            else if (quickPasteItem.ControlType == Control.MultiChoice)
             {
                 // Choices use choiceboxes
-                ControlRow controlRow = this.fileDatabase.GetControlFromControls(quickPasteItem.DataLabel);
-                CheckComboBox checkComboBox = new CheckComboBox()
+                ControlRow controlRow = fileDatabase.GetControlFromControls(quickPasteItem.DataLabel);
+                CheckComboBox checkComboBox = new CheckComboBox
                 {
                     Height = ValuesHeight,
                     Width = ValuesWidth,
@@ -539,7 +542,7 @@ namespace Timelapse.QuickPaste
                 checkComboBox.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
                 Grid.SetRow(checkComboBox, gridRowIndex);
                 Grid.SetColumn(checkComboBox, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(checkComboBox);
+                QuickPasteGridRows.Children.Add(checkComboBox);
                 checkComboBox.ItemSelectionChanged += MultiChoice_ItemSelectionChanged;
                 checkComboBox.Text = quickPasteItem.Value;
             }
@@ -547,51 +550,51 @@ namespace Timelapse.QuickPaste
  
             // DateTime_ Value column
             // - presented as an editable datetime field 
-            else if (quickPasteItem.ControlType == Constant.Control.DateTime_)
+            else if (quickPasteItem.ControlType == Control.DateTime_)
             {
                 // DateTime_ present DateTimePickers
                 DateTimePicker dateTimePicker = DateTimeHandler.TryParseDisplayDateTime(quickPasteItem.Value, out DateTime dateTime)
-                    ? ControlsDataCommon.CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, dateTime)
-                    : ControlsDataCommon.CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, Constant.ControlDefault.DateTimeCustomDefaultValue);
+                    ? CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, dateTime)
+                    : CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, ControlDefault.DateTimeCustomDefaultValue);
                 dateTimePicker.Tag = quickPasteItem;
                 dateTimePicker.Width = ValuesWidth;
                 dateTimePicker.ValueChanged += DateTimePicker_ValueChanged;
                 Grid.SetRow(dateTimePicker, gridRowIndex);
                 Grid.SetColumn(dateTimePicker, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(dateTimePicker);
+                QuickPasteGridRows.Children.Add(dateTimePicker);
             }
 
             // Date_ Value column
             // - presented as an editable datetime field 
-            else if (quickPasteItem.ControlType == Constant.Control.Date_)
+            else if (quickPasteItem.ControlType == Control.Date_)
             {
                 // Date_ present DateTimePickers
 
                 DateTimePicker dateTimePicker = DateTimeHandler.TryParseDisplayDate(quickPasteItem.Value, out DateTime date)
-                    ? ControlsDataCommon.CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, date)
-                    : ControlsDataCommon.CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, Constant.ControlDefault.Time_DefaultValue);
+                    ? CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, date)
+                    : CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, ControlDefault.Time_DefaultValue);
 
                 dateTimePicker.Tag = quickPasteItem;
                 dateTimePicker.Width = ValuesWidth;
                 dateTimePicker.ValueChanged += DateTimePicker_ValueChanged;
                 Grid.SetRow(dateTimePicker, gridRowIndex);
                 Grid.SetColumn(dateTimePicker, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(dateTimePicker);
+                QuickPasteGridRows.Children.Add(dateTimePicker);
             }
-            else if (quickPasteItem.ControlType == Constant.Control.Time_)
+            else if (quickPasteItem.ControlType == Control.Time_)
             {
                 // Time_ presents TimePickers
 
                 TimePicker timePicker = DateTimeHandler.TryParseDatabaseTime(quickPasteItem.Value, out DateTime time)
-                    ? ControlsDataCommon.CreateControls.CreateTimePicker(String.Empty, time)
-                    : ControlsDataCommon.CreateControls.CreateTimePicker(String.Empty, Constant.ControlDefault.Time_DefaultValue);
+                    ? CreateControls.CreateTimePicker(String.Empty, time)
+                    : CreateControls.CreateTimePicker(String.Empty, ControlDefault.Time_DefaultValue);
 
                 timePicker.Tag = quickPasteItem;
                 timePicker.Width = ValuesWidth;
                 timePicker.ValueChanged += TimePicker_ValueChanged;
                 Grid.SetRow(timePicker, gridRowIndex);
                 Grid.SetColumn(timePicker, GridColumnValue);
-                this.QuickPasteGridRows.Children.Add(timePicker);
+                QuickPasteGridRows.Children.Add(timePicker);
             }
             else
             {
@@ -599,7 +602,7 @@ namespace Timelapse.QuickPaste
                 throw new NotSupportedException(
                     $"Unhandled control type in QuickPasteEditor '{quickPasteItem.ControlType}'.");
             }
-            this.Note.Visibility = this.QuickPasteEntry.IsAtLeastOneItemPastable() ? Visibility.Collapsed : Visibility.Visible;
+            Note.Visibility = QuickPasteEntry.IsAtLeastOneItemPastable() ? Visibility.Collapsed : Visibility.Visible;
         }
 
         #endregion
@@ -608,7 +611,7 @@ namespace Timelapse.QuickPaste
         // Get the corresponding grid element from a given column, row, 
         private TElement GetGridElement<TElement>(int column, int row) where TElement : UIElement
         {
-            return (TElement)this.QuickPasteGridRows.Children.Cast<UIElement>().First(control => Grid.GetRow(control) == row && Grid.GetColumn(control) == column);
+            return (TElement)QuickPasteGridRows.Children.Cast<UIElement>().First(control => Grid.GetRow(control) == row && Grid.GetColumn(control) == column);
         }
         #endregion
     }

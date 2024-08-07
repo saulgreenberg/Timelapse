@@ -16,11 +16,11 @@ namespace Timelapse.Dialog
         /// </summary>
         public EditLog(string text, Window owner)
         {
-            this.InitializeComponent();
-            this.Owner = owner;
+            InitializeComponent();
+            Owner = owner;
 
-            this.Log.Text = text;
-            this.OkButton.IsEnabled = false;
+            Log.Text = text;
+            OkButton.IsEnabled = false;
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -31,19 +31,19 @@ namespace Timelapse.Dialog
         #region Callback - TextChanged
         private void LogTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            this.OkButton.IsEnabled = true;
+            OkButton.IsEnabled = true;
         }
         #endregion
 
         #region Callback -Dialog Buttons
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

@@ -14,7 +14,7 @@ namespace Timelapse.Dialog
         #region Constructor, Loaded
         public DeleteDeleteFolder(int howManyDeleteFiles)
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             // If there are no files, just abort
             this.howManyDeleteFiles = howManyDeleteFiles;
@@ -24,20 +24,20 @@ namespace Timelapse.Dialog
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.Message.What =
-                $"Your 'DeletedFiles' sub-folder contains backups of {this.howManyDeleteFiles} 'deleted' image or video files.";
+            Message.What =
+                $"Your 'DeletedFiles' sub-folder contains backups of {howManyDeleteFiles} 'deleted' image or video files.";
         }
         #endregion
 
         #region Callbacks - Dialog Buttons
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

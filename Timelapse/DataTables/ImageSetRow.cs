@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using Newtonsoft.Json;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 using Timelapse.SearchingAndSorting;
@@ -16,50 +17,50 @@ namespace Timelapse.DataTables
         // Name of the root folder containing the template
         public string RootFolder
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.RootFolder);
-            set => this.Row.SetField(Constant.DatabaseColumn.RootFolder, value);
+            get => Row.GetStringField(DatabaseColumn.RootFolder);
+            set => Row.SetField(DatabaseColumn.RootFolder, value);
         }
 
         // Most recently selected File by its ID
         public long MostRecentFileID
         {
-            get => this.Row.GetLongStringField(Constant.DatabaseColumn.MostRecentFileID);
-            set => this.Row.SetField(Constant.DatabaseColumn.MostRecentFileID, value);
+            get => Row.GetLongStringField(DatabaseColumn.MostRecentFileID);
+            set => Row.SetField(DatabaseColumn.MostRecentFileID, value);
         }
 
         // The log contains text that the user can set, which can serve as notes
         public string Log
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.Log);
-            set => this.Row.SetField(Constant.DatabaseColumn.Log, value);
+            get => Row.GetStringField(DatabaseColumn.Log);
+            set => Row.SetField(DatabaseColumn.Log, value);
         }
 
         // The most recent timelapse version used to open the files
         public string VersionCompatability
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.VersionCompatabily);
-            set => this.Row.SetField(Constant.DatabaseColumn.VersionCompatabily, value);
+            get => Row.GetStringField(DatabaseColumn.VersionCompatabily);
+            set => Row.SetField(DatabaseColumn.VersionCompatabily, value);
         }
 
         // JSON description of the QuickPasteEntries.
         public string QuickPasteAsJSON
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.QuickPasteTerms);
-            set => this.Row.SetField(Constant.DatabaseColumn.QuickPasteTerms, value);
+            get => Row.GetStringField(DatabaseColumn.QuickPasteTerms);
+            set => Row.SetField(DatabaseColumn.QuickPasteTerms, value);
         }
 
         // JSON description of the SearchTerms
         public string SearchTermsAsJSON
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.SearchTerms);
-            set => this.Row.SetField(Constant.DatabaseColumn.SearchTerms, value);
+            get => Row.GetStringField(DatabaseColumn.SearchTerms);
+            set => Row.SetField(DatabaseColumn.SearchTerms, value);
         }
 
         // The standard contains the name of the standard used to create the template,otherwise empty
         public string Standard
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.Standard);
-            set => this.Row.SetField(Constant.DatabaseColumn.Standard, value);
+            get => Row.GetStringField(DatabaseColumn.Standard);
+            set => Row.SetField(DatabaseColumn.Standard, value);
         }
         #endregion
 
@@ -80,8 +81,8 @@ namespace Timelapse.DataTables
         // This is not accessed directly, but rather by the Get/SetSortTerm functions
         private string SortTermsAsJsonString
         {
-            get => this.Row.GetStringField(Constant.DatabaseColumn.SortTerms);
-            set => this.Row.SetField(Constant.DatabaseColumn.SortTerms, value);
+            get => Row.GetStringField(DatabaseColumn.SortTerms);
+            set => Row.SetField(DatabaseColumn.SortTerms, value);
         }
         #endregion
 
@@ -100,16 +101,16 @@ namespace Timelapse.DataTables
             List<ColumnTuple> columnTuples = new List<ColumnTuple>
             {
                 //new ColumnTuple(Constant.DatabaseColumn.Selection, (int)this.FileSelection),
-                new ColumnTuple(Constant.DatabaseColumn.RootFolder,this.RootFolder),
-                new ColumnTuple(Constant.DatabaseColumn.Log, this.Log),
-                new ColumnTuple(Constant.DatabaseColumn.MostRecentFileID, this.MostRecentFileID),
-                new ColumnTuple(Constant.DatabaseColumn.VersionCompatabily, this.VersionCompatability),
-                new ColumnTuple(Constant.DatabaseColumn.SortTerms, this.SortTermsAsJsonString),
-                new ColumnTuple(Constant.DatabaseColumn.SearchTerms, this.SearchTermsAsJSON),
-                new ColumnTuple(Constant.DatabaseColumn.QuickPasteTerms, this.QuickPasteAsJSON),
-                new ColumnTuple(Constant.DatabaseColumn.Standard, this.Standard)
+                new ColumnTuple(DatabaseColumn.RootFolder,RootFolder),
+                new ColumnTuple(DatabaseColumn.Log, Log),
+                new ColumnTuple(DatabaseColumn.MostRecentFileID, MostRecentFileID),
+                new ColumnTuple(DatabaseColumn.VersionCompatabily, VersionCompatability),
+                new ColumnTuple(DatabaseColumn.SortTerms, SortTermsAsJsonString),
+                new ColumnTuple(DatabaseColumn.SearchTerms, SearchTermsAsJSON),
+                new ColumnTuple(DatabaseColumn.QuickPasteTerms, QuickPasteAsJSON),
+                new ColumnTuple(DatabaseColumn.Standard, Standard)
             };
-            return new ColumnTuplesWithWhere(columnTuples, this.ID);
+            return new ColumnTuplesWithWhere(columnTuples, ID);
         }
         #endregion
 
@@ -119,14 +120,14 @@ namespace Timelapse.DataTables
         {
             try
             {
-                this.SortTerms = JsonConvert.DeserializeObject<List<SortTerm>>(this.SortTermsAsJsonString);
-                return this.SortTerms[whichOne];
+                SortTerms = JsonConvert.DeserializeObject<List<SortTerm>>(SortTermsAsJsonString);
+                return SortTerms[whichOne];
             }
             catch
             {
                 // While this shouldn't happen, if there is a problem getting the sort terms (e.g., bad json, index out of bounds), revert to the default sort
-                this.SortTerms = JsonConvert.DeserializeObject<List<SortTerm>>(Constant.DatabaseValues.DefaultSortTerms);
-                return this.SortTerms[whichOne];
+                SortTerms = JsonConvert.DeserializeObject<List<SortTerm>>(DatabaseValues.DefaultSortTerms);
+                return SortTerms[whichOne];
             }
         }
 
@@ -134,17 +135,17 @@ namespace Timelapse.DataTables
         public void SetSortTerms(SortTerm sortTerm1, SortTerm sortTerm2)
         {
             // Check the arguments for null 
-            if (this.SortTerms == null)
+            if (SortTerms == null)
             {
-                this.SortTerms = new List<SortTerm>();
+                SortTerms = new List<SortTerm>();
             }
             else
             {
-                this.SortTerms.Clear();
+                SortTerms.Clear();
             }
-            this.SortTerms.Add(sortTerm1 ?? new SortTerm()); // Note that this could break if sort term doesn't contained the expected values
-            this.SortTerms.Add(sortTerm2 ?? new SortTerm());
-            this.SortTermsAsJsonString = JsonConvert.SerializeObject(this.SortTerms, Formatting.Indented);
+            SortTerms.Add(sortTerm1 ?? new SortTerm()); // Note that this could break if sort term doesn't contained the expected values
+            SortTerms.Add(sortTerm2 ?? new SortTerm());
+            SortTermsAsJsonString = JsonConvert.SerializeObject(SortTerms, Formatting.Indented);
         }
         #endregion
     }

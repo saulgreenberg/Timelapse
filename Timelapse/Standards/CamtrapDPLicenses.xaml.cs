@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using Newtonsoft.Json;
 using Timelapse.Dialog;
-using Xceed.Wpf.Toolkit;
+using Timelapse.Util;
 
 namespace Timelapse.Standards
 {
@@ -24,7 +24,7 @@ namespace Timelapse.Standards
         // - updated by changes to the EditList (including adding and deleting rows)
         // - used to populate the dataGrid
         // - its contents is returned as a json string when done.
-        public ObservableCollection<Standards.licenses> LicensesList { get; set; }
+        public ObservableCollection<licenses> LicensesList { get; set; }
 
         // The fields used to construct the EditList
 
@@ -50,12 +50,12 @@ namespace Timelapse.Standards
                 $"- media: applies to the media files referenced in media.{Environment.NewLine}" +
                 "• e.g., \"data\"");
        
-        public List<string> ScopeItems { get; set; } = new List<string>() {"data", "media"};
+        public List<string> ScopeItems { get; set; } = new List<string> {"data", "media"};
         
         #endregion
 
         #region Private variables
-        private bool DontUpdate = false;
+        private bool DontUpdate;
         private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
@@ -64,8 +64,8 @@ namespace Timelapse.Standards
         public CamtrapDPLicenses(Window owner, string jsonLicensesList)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.JsonLicensesList = jsonLicensesList;
+            Owner = owner;
+            JsonLicensesList = jsonLicensesList;
         }
 
         private void CamptrapDP_OnLoaded(object sender, RoutedEventArgs e)
@@ -80,7 +80,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.LicensesList = new ObservableCollection<Standards.licenses>(JsonConvert.DeserializeObject<List<Standards.licenses>>(JsonLicensesList));
+                LicensesList = new ObservableCollection<licenses>(JsonConvert.DeserializeObject<List<licenses>>(JsonLicensesList));
             }
             catch (Exception)
             {
@@ -89,14 +89,14 @@ namespace Timelapse.Standards
             }
 
             DataGrid_Refresh();
-            if (this.dataGrid.Items.Count == 0)
+            if (dataGrid.Items.Count == 0)
             {
-                this.NewRow_OnClick(null, null);
+                NewRow_OnClick(null, null);
             }
-            if (this.dataGrid.Items.Count > 0)
+            if (dataGrid.Items.Count > 0)
             {
-                this.dataGrid.SelectedIndex = 0;
-                this.dataGridSelectedRow = this.dataGrid.SelectedIndex;
+                dataGrid.SelectedIndex = 0;
+                dataGridSelectedRow = dataGrid.SelectedIndex;
             }
         }
         #endregion
@@ -105,12 +105,12 @@ namespace Timelapse.Standards
         // Refresh the data grid to show the current itmes in the sources list
         private void DataGrid_Refresh()
         {
-            this.DontUpdate = true;
-            this.dataGrid.ItemsSource = null;
-            this.dataGrid.Items.Clear();
-            this.dataGrid.ItemsSource = this.LicensesList;
-            this.DontUpdate = false;
-            dataGrid.SelectedIndex = this.dataGridSelectedRow < this.dataGrid.Items.Count ? this.dataGridSelectedRow : -1;
+            DontUpdate = true;
+            dataGrid.ItemsSource = null;
+            dataGrid.Items.Clear();
+            dataGrid.ItemsSource = LicensesList;
+            DontUpdate = false;
+            dataGrid.SelectedIndex = dataGridSelectedRow < dataGrid.Items.Count ? dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
         }
 
@@ -118,35 +118,35 @@ namespace Timelapse.Standards
         // The enable state of the DeleteLicenses button should also reflect whether there is a row to delete
         private void DataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.DontUpdate)
+            if (DontUpdate)
             {
                 return;
             }
-            this.dataGridSelectedRow = dataGrid.SelectedIndex;
+            dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DontUpdate = true;
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count)
+            DontUpdate = true;
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < LicensesList.Count)
             {
-                this.DeleteRow.IsEnabled = true;
-                this.DontUpdate = true;
-                Standards.licenses licenses = this.LicensesList[dataGrid.SelectedIndex];
-                this.DataFieldName.Text = licenses.name;
-                this.DataFieldPath.Text = licenses.path;
-                this.DataFieldTitle.Text = licenses.title;
-                this.DataFieldScope.Text = licenses.scope;
+                DeleteRow.IsEnabled = true;
+                DontUpdate = true;
+                licenses licenses = LicensesList[dataGrid.SelectedIndex];
+                DataFieldName.Text = licenses.name;
+                DataFieldPath.Text = licenses.path;
+                DataFieldTitle.Text = licenses.title;
+                DataFieldScope.Text = licenses.scope;
             }
             else
             {
-                this.DeleteRow.IsEnabled = false;
-                this.DataFieldName.Text = string.Empty;
-                this.DataFieldPath.Text = string.Empty;
-                this.DataFieldTitle.Text = string.Empty;
-                this.DataFieldScope.Text = string.Empty;
+                DeleteRow.IsEnabled = false;
+                DataFieldName.Text = string.Empty;
+                DataFieldPath.Text = string.Empty;
+                DataFieldTitle.Text = string.Empty;
+                DataFieldScope.Text = string.Empty;
             }
-            this.DontUpdate = false;
-            if (this.SetFocus)
+            DontUpdate = false;
+            if (SetFocus)
             {
-                this.DataFieldName.Focus();
+                DataFieldName.Focus();
             }
         }
         #endregion
@@ -154,29 +154,29 @@ namespace Timelapse.Standards
         #region Button callbacks
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.LicensesList.Add(new Standards.licenses());
-            dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
+            LicensesList.Add(new licenses());
+            dataGrid.SelectedIndex = dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DataFieldName.Focus();
+            DataFieldName.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < LicensesList.Count)
             {
-                this.DontUpdate = true;
-                this.LicensesList.RemoveAt(dataGrid.SelectedIndex);
-                this.DontUpdate = false;
+                DontUpdate = true;
+                LicensesList.RemoveAt(dataGrid.SelectedIndex);
+                DontUpdate = false;
                 // When a row is deleted, select the last row if there is one.
                 dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
                 if (dataGrid.SelectedIndex == -1)
                 {
                     // This will clear the edit fields if nothing is selected
-                    this.SetFocus = false;
+                    SetFocus = false;
                     DataGrid_OnSelectionChanged(null, null);
-                    this.SetFocus = true;
+                    SetFocus = true;
                 }
             }
         }
@@ -188,7 +188,7 @@ namespace Timelapse.Standards
 
         private void Done_OnClick(object sender, RoutedEventArgs e)
         {
-            this.JsonSerialize();
+            JsonSerialize();
             DialogResult = true;
         }
         #endregion
@@ -198,46 +198,46 @@ namespace Timelapse.Standards
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (this.DontUpdate)
+            if (DontUpdate)
             {
                 return;
             }
-            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count)
+            if (sender is TextBox tb && dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < LicensesList.Count)
             {
                 switch (tb.Name)
                 {
                     case "DataFieldName":
-                        this.LicensesList[dataGrid.SelectedIndex].name = tb.Text;
+                        LicensesList[dataGrid.SelectedIndex].name = tb.Text;
                         break;
                     case "DataFieldPath":
-                        this.LicensesList[dataGrid.SelectedIndex].path = tb.Text;
+                        LicensesList[dataGrid.SelectedIndex].path = tb.Text;
                         break;
                     case "DataFieldTitle":
-                        this.LicensesList[dataGrid.SelectedIndex].title = tb.Text;
+                        LicensesList[dataGrid.SelectedIndex].title = tb.Text;
                         break;
                     case "DataFieldScope":
-                        this.LicensesList[dataGrid.SelectedIndex].scope = tb.Text;
+                        LicensesList[dataGrid.SelectedIndex].scope = tb.Text;
                         break;
                 }
             }
-            this.SetFocus = false;
+            SetFocus = false;
             DataGrid_Refresh();
-            dataGrid.SelectedItem = this.dataGridSelectedRow;
-            this.SetFocus = true;
+            dataGrid.SelectedItem = dataGridSelectedRow;
+            SetFocus = true;
         }
 
         private void DataFieldScope_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.DontUpdate)
+            if (DontUpdate)
             {
                 return;
             }
-            if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.LicensesList.Count && cb.SelectedValue != null)
+            if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < LicensesList.Count && cb.SelectedValue != null)
             {
-                this.LicensesList[dataGrid.SelectedIndex].scope = cb.Text;
+                LicensesList[dataGrid.SelectedIndex].scope = cb.Text;
             }
             DataGrid_Refresh();
-            dataGrid.SelectedItem = this.dataGridSelectedRow;
+            dataGrid.SelectedItem = dataGridSelectedRow;
         }
     
         #endregion
@@ -248,12 +248,12 @@ namespace Timelapse.Standards
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
-            List<Standards.licenses> taxonomicListForExport = new List<Standards.licenses>();
-            foreach (Standards.licenses license in this.LicensesList)
+            List<licenses> taxonomicListForExport = new List<licenses>();
+            foreach (licenses license in LicensesList)
             {
-                PropertyInfo[] properties = typeof(Standards.licenses).GetProperties();
+                PropertyInfo[] properties = typeof(licenses).GetProperties();
                 bool allNull = true;
-                Standards.licenses newLicensesList = new Standards.licenses();
+                licenses newLicensesList = new licenses();
                 foreach (PropertyInfo property in properties)
                 {
                     if (property.GetValue(license) != null && !string.IsNullOrWhiteSpace(property.GetValue(license).ToString()))
@@ -276,8 +276,8 @@ namespace Timelapse.Standards
             {
                 NullValueHandling = NullValueHandling.Ignore,
             };
-            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
-            this.JsonLicensesList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
+            settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
+            JsonLicensesList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
         }
         #endregion
 
@@ -290,8 +290,8 @@ namespace Timelapse.Standards
 
             public Fields(string label, string tooltip)
             {
-                this.Label = label;
-                this.Tooltip = tooltip;
+                Label = label;
+                Tooltip = tooltip;
             }
         }
         #endregion

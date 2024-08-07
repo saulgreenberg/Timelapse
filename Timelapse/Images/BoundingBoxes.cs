@@ -57,7 +57,7 @@ namespace Timelapse.Images
             // So we just use it as a short cut, i.e., if none of the bounding boxes are above the threshold, we can abort.
             // Also, we add a slight correction value to the MaxConfidence, so confidences near the threshold will still appear.
             double correction = 0.005;
-            if (this.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && this.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+            if (MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
             {
                 // Ignore any bounding box that is below the desired confidence threshold for displaying it.
                 // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
@@ -67,7 +67,7 @@ namespace Timelapse.Images
             }
 
 
-            foreach (BoundingBox bbox in this.Boxes)
+            foreach (BoundingBox bbox in Boxes)
             {
                 if ((bbox.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold && (bbox.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
                 {

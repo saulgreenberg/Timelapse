@@ -1,10 +1,11 @@
-﻿using System.Windows.Controls;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using Timelapse.ControlsDataCommon;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
-using Timelapse.ControlsDataCommon;
 using Timelapse.Util;
 
 namespace Timelapse.ControlsMetadata
@@ -12,24 +13,24 @@ namespace Timelapse.ControlsMetadata
     public class MetadataDataEntryAlphaNumeric : MetadataDataEntryControl<TextBox, Label>
     {
         #region Public Properties
-        public override UIElement GetContentControl => this.ContentControl;
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override UIElement GetContentControl => ContentControl;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
         /// <summary>Gets  the content of the Alphanumeric</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
         public bool ContentChanged { get; set; }
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -44,17 +45,17 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.NoteTextBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // Now configure the various elements
-            this.ControlType = control.Type;
-            this.ContentChanged = false;
-            this.ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
-            this.ContentControl.PreviewTextInput += ContentControl_PreviewTextInput;
-            this.ContentControl.TextChanged += ContentControl_TextChanged;
+            ControlType = control.Type;
+            ContentChanged = false;
+            ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
+            ContentControl.PreviewTextInput += ContentControl_PreviewTextInput;
+            ContentControl.TextChanged += ContentControl_TextChanged;
         }
         #endregion
 
         #region Callbacks: Limit text entry (including pasting) to alphanumeric text
         // Limit how spaces are used. (PreviewTextInput allows spaces to go through so we have to do it here) 
-        private void ContentControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs args)
+        private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs args)
         {
             if (processEvents)
             {
@@ -63,7 +64,7 @@ namespace Timelapse.ControlsMetadata
         }
 
         // Allow only alphanumeric characters (although editing characters like backspace etc still go through)
-        private void ContentControl_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs args)
+        private void ContentControl_PreviewTextInput(object sender, TextCompositionEventArgs args)
         {
             if (processEvents)
             {
@@ -76,13 +77,13 @@ namespace Timelapse.ControlsMetadata
         {
             if (processEvents)
             {
-                this.processEvents = false;
+                processEvents = false;
                 if (sender is TextBox textBox)
                 {
                     Window window = textBox.FindParentOfType<Window>();
                     ControlsDataHelpersCommon.AlphaNumericHandleAlphaNumericTextChange(window, this, args);
                 }
-                this.processEvents = true;
+                processEvents = true;
             }
         }
         #endregion
@@ -97,9 +98,9 @@ namespace Timelapse.ControlsMetadata
 
             // Set the alphanumeric to the value provided  
             // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..
-            this.ContentChanged = this.ContentControl.Text != value;
-            this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+            ContentChanged = ContentControl.Text != value;
+            ContentControl.Text = value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
         }
         #endregion
     }

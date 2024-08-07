@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
@@ -18,28 +19,28 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+        public override Point TopLeft => ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the content of the choice.</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -53,51 +54,51 @@ namespace Timelapse.ControlsDataEntry
             ThrowIf.IsNullArgument(control, nameof(control));
 
             // The behaviour of the combo box
-            this.ContentControl.Focusable = true;
-            this.ContentControl.IsEditable = false;
-            this.ContentControl.IsTextSearchEnabled = true;
+            ContentControl.Focusable = true;
+            ContentControl.IsEditable = false;
+            ContentControl.IsTextSearchEnabled = true;
 
             if (GlobalReferences.TimelapseState.IsViewOnly)
             {
-                this.ContentControl.IsReadOnly = true;
-                this.ContentControl.IsHitTestVisible = false;
+                ContentControl.IsReadOnly = true;
+                ContentControl.IsHitTestVisible = false;
             }
 
             // Callback used to allow Enter to select the highlit item
-            this.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+            ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
 
             // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end 
             ComboBoxItem cbi;
             Choices choices = Choices.ChoicesFromJson(control.List);
             foreach (string choice in choices.ChoiceList)
             {
-                cbi = new ComboBoxItem()
+                cbi = new ComboBoxItem
                 {
                     Content = choice
                 };
-                this.ContentControl.Items.Add(cbi);
+                ContentControl.Items.Add(cbi);
             }
             if (choices.IncludeEmptyChoice)
             {
                 // put empty choice / separator at the beginning of the control
 
-                cbi = new ComboBoxItem()
+                cbi = new ComboBoxItem
                 {
                     Content = string.Empty
                 };
-                this.ContentControl.Items.Insert(0, new Separator());
-                this.ContentControl.Items.Insert(0, cbi);
+                ContentControl.Items.Insert(0, new Separator());
+                ContentControl.Items.Insert(0, cbi);
             }
 
             // We include an invisible ellipsis menu item. This allows us to display an ellipsis in the combo box text field
             // when multiple images with different values are selected
-            cbi = new ComboBoxItem()
+            cbi = new ComboBoxItem
             {
-                Content = Constant.Unicode.Ellipsis
+                Content = Unicode.Ellipsis
             };
-            this.ContentControl.Items.Insert(0, cbi);
-            ((ComboBoxItem)this.ContentControl.Items[0]).Visibility = Visibility.Collapsed;
-            this.ContentControl.SelectedIndex = 1;
+            ContentControl.Items.Insert(0, cbi);
+            ((ComboBoxItem)ContentControl.Items[0]).Visibility = Visibility.Collapsed;
+            ContentControl.SelectedIndex = 1;
         }
         #endregion
 
@@ -180,19 +181,19 @@ namespace Timelapse.ControlsDataEntry
             // Used to signify the indeterminate state in no or multiple selections in the overview.
             if (value == null)
             {
-                this.ContentControl.Text = Constant.Unicode.Ellipsis;
-                this.ContentControl.ToolTip = "Select an item to change the " + this.Label + " for all selected images";
+                ContentControl.Text = Unicode.Ellipsis;
+                ContentControl.ToolTip = "Select an item to change the " + Label + " for all selected images";
                 return;
             }
             // For some reason, the empty item was not setting the selected index to the item with the blank entry. 
             // This is needed to set it explicitly.
             if (string.IsNullOrEmpty(value))
             {
-                this.ContentControl.SelectedIndex = 1;
+                ContentControl.SelectedIndex = 1;
             }
 
-            this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+            ContentControl.Text = value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
         }
         #endregion
 
@@ -202,11 +203,11 @@ namespace Timelapse.ControlsDataEntry
         public void HideItems(List<String> itemsToHide)
         {
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (this.ContentControl == null || this.ContentControl.Items == null || itemsToHide == null)
+            if (ContentControl == null || ContentControl.Items == null || itemsToHide == null)
             {
                 return;
             }
-            foreach (ComboBoxItem cbi in this.ContentControl.Items)
+            foreach (ComboBoxItem cbi in ContentControl.Items)
             {
                 if (itemsToHide.Contains((string)cbi.Content))
                 {
@@ -218,14 +219,14 @@ namespace Timelapse.ControlsDataEntry
         // Flash the content area of the control
         public override void FlashContentControl()
         {
-            Border contentHost = (Border)this.ContentControl.Template.FindName("PART_Border", this.ContentControl);
+            Border contentHost = (Border)ContentControl.Template.FindName("PART_Border", ContentControl);
             if (contentHost != null)
             {
                 TextBlock tb = VisualChildren.GetVisualChild<TextBlock>(contentHost);
                 if (tb != null)
                 {
                     tb.Background = new SolidColorBrush(Colors.White);
-                    tb.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimation());
+                    tb.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimation());
                 }
             }
         }
@@ -234,30 +235,30 @@ namespace Timelapse.ControlsDataEntry
         public override void ShowPreviewControlValue(string value)
         {
             // Create the popup overlay
-            if (this.PopupPreview == null)
+            if (PopupPreview == null)
             {
                 // We want to expose the arrow on the choice menu, so subtract its width and move the horizontal offset over
                 double arrowWidth = 20;
-                double width = this.ContentControl.Width - arrowWidth;
+                double width = ContentControl.Width - arrowWidth;
                 double horizontalOffset = -arrowWidth / 2;
 
                 // Padding is used to align the text so it begins at the same spot as the control's text
                 Thickness padding = new Thickness(5.5, 6.5, 0, 0);
 
-                this.PopupPreview = this.CreatePopupPreview(this.ContentControl, padding, width, horizontalOffset);
+                PopupPreview = CreatePopupPreview(ContentControl, padding, width, horizontalOffset);
             }
             // Show the popup
-            this.ShowPopupPreview(value);
+            ShowPopupPreview(value);
         }
 
         public override void HidePreviewControlValue()
         {
-            this.HidePopupPreview();
+            HidePopupPreview();
         }
 
         public override void FlashPreviewControlValue()
         {
-            this.FlashPopupPreview();
+            FlashPopupPreview();
         }
         #endregion
     }

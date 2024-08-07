@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Timelapse.Enums;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.Util
 {
@@ -24,7 +25,7 @@ namespace Timelapse.Util
                 //Skip files that have the Constant.File.BackupCheckpointIndicator, as those are left for manual removal
                 if (excludeCheckpointFiles)
                 {
-                    backupFiles = backupFiles.Where(x => x.Name.Contains(Constant.File.BackupCheckpointIndicator) == false);
+                    backupFiles = backupFiles.Where(x => x.Name.Contains(File.BackupCheckpointIndicator) == false);
                 }
                 return backupFiles;
             }
@@ -38,11 +39,11 @@ namespace Timelapse.Util
         {
             try
             {
-                DirectoryInfo backupFolder = FileBackup.GetOrCreateBackupFolder(sourceFilePath);
+                DirectoryInfo backupFolder = GetOrCreateBackupFolder(sourceFilePath);
                 FileInfo mostRecentBackupFile = null;
                 if (backupFolder != null)
                 {
-                    mostRecentBackupFile = FileBackup.GetBackupFiles(backupFolder, sourceFilePath, false).OrderByDescending(file => file.LastWriteTime).FirstOrDefault();
+                    mostRecentBackupFile = GetBackupFiles(backupFolder, sourceFilePath, false).OrderByDescending(file => file.LastWriteTime).FirstOrDefault();
                 }
                 if (backupFolder != null && mostRecentBackupFile != null)
                 {
@@ -58,7 +59,7 @@ namespace Timelapse.Util
 
         public static DirectoryInfo GetOrCreateBackupFolder(string sourceFilePath)
         {
-            if (Util.IsCondition.IsPathLengthTooLong(sourceFilePath, FilePathTypeEnum.Backup))
+            if (IsCondition.IsPathLengthTooLong(sourceFilePath, FilePathTypeEnum.Backup))
             {
                 // Don't bother if we are approaching the critical file path max length 
                 // This also stops creation of a backup folder if it doesn't exist
@@ -73,7 +74,7 @@ namespace Timelapse.Util
                 return null;
             }
 
-            DirectoryInfo backupFolder = new DirectoryInfo(Path.Combine(sourceFolderPath, Constant.File.BackupFolder));   // The Backup Folder 
+            DirectoryInfo backupFolder = new DirectoryInfo(Path.Combine(sourceFolderPath, File.BackupFolder));   // The Backup Folder 
             if (backupFolder.Exists == false)
             {
                 try
@@ -94,19 +95,19 @@ namespace Timelapse.Util
         // Copy to backup version with full path to source file
         public static bool TryCreateBackup(string sourceFilePath)
         {
-            return FileBackup.TryCreateBackup(Path.GetDirectoryName(sourceFilePath), Path.GetFileName(sourceFilePath), false);
+            return TryCreateBackup(Path.GetDirectoryName(sourceFilePath), Path.GetFileName(sourceFilePath), false);
         }
 
         // Copy or move file to backup version with full path to source file
         public static bool TryCreateBackup(string sourceFilePath, bool moveInsteadOfCopy)
         {
-            return FileBackup.TryCreateBackup(Path.GetDirectoryName(sourceFilePath), Path.GetFileName(sourceFilePath), moveInsteadOfCopy);
+            return TryCreateBackup(Path.GetDirectoryName(sourceFilePath), Path.GetFileName(sourceFilePath), moveInsteadOfCopy);
         }
 
         // Copy or move file to backup version with separated path/source file name
         public static bool TryCreateBackup(string folderPath, string sourceFileName)
         {
-            return FileBackup.TryCreateBackup(folderPath, sourceFileName, false);
+            return TryCreateBackup(folderPath, sourceFileName, false);
         }
 
         // Creates a standard backup file
@@ -120,14 +121,14 @@ namespace Timelapse.Util
         public static bool TryCreateBackup(string folderPath, string sourceFileName, bool moveInsteadOfCopy, string specialBackup)
         {
             string sourceFilePath = Path.Combine(folderPath, sourceFileName);
-            if (File.Exists(sourceFilePath) == false)
+            if (System.IO.File.Exists(sourceFilePath) == false)
             {
                 // nothing to do
                 return false;
             }
 
             // create backup folder if needed
-            DirectoryInfo backupFolder = FileBackup.GetOrCreateBackupFolder(sourceFilePath);
+            DirectoryInfo backupFolder = GetOrCreateBackupFolder(sourceFilePath);
             if (backupFolder == null)
             {
                 // Something went wrong...
@@ -140,13 +141,13 @@ namespace Timelapse.Util
             string sourceFileExtension = Path.GetExtension(sourceFileName);
             specialBackup = specialBackup == string.Empty
                 ? string.Empty
-                : Constant.File.BackupCheckpointIndicator + specialBackup;
+                : File.BackupCheckpointIndicator + specialBackup;
             string destinationFileName = String.Concat(sourceFileNameWithoutExtension, specialBackup, ".", DateTime.Now.ToString("yyyy-MM-dd.HH-mm-ss"), sourceFileExtension);
             string destinationFilePath = Path.Combine(backupFolder.FullName, destinationFileName);
 
             try
             {
-                if (File.Exists(destinationFilePath) && new FileInfo(destinationFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
+                if (System.IO.File.Exists(destinationFilePath) && new FileInfo(destinationFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
                 {
                     // Can't overwrite it...
                     return false;
@@ -154,11 +155,11 @@ namespace Timelapse.Util
                 if (moveInsteadOfCopy)
                 {
 
-                    Util.FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
+                    FilesFolders.TryMoveFileIfExists(sourceFilePath, destinationFilePath);
                 }
                 else
                 {
-                    File.Copy(sourceFilePath, destinationFilePath, true);
+                    System.IO.File.Copy(sourceFilePath, destinationFilePath, true);
                 }
             }
             catch
@@ -170,7 +171,7 @@ namespace Timelapse.Util
             }
 
             // age out older backup files (this skips the special checkpoint files)
-            IEnumerable<FileInfo> backupFiles = FileBackup.GetBackupFiles(backupFolder, sourceFilePath, true).OrderByDescending(file => file.LastWriteTimeUtc);
+            IEnumerable<FileInfo> backupFiles = GetBackupFiles(backupFolder, sourceFilePath, true).OrderByDescending(file => file.LastWriteTimeUtc);
 
             // ReSharper disable All
             // Resharper says this is heuristically unreachable, but that isn't true
@@ -180,13 +181,13 @@ namespace Timelapse.Util
                 return true;
             }
             // ReSharper restore All
-            foreach (FileInfo file in backupFiles.Skip(Constant.File.NumberOfBackupFilesToKeep))
+            foreach (FileInfo file in backupFiles.Skip(File.NumberOfBackupFilesToKeep))
             {
                 // Don't remove newer backups
                 int days = (DateTime.Now - file.CreationTime).Days;
                 if (days > 14)
                 {
-                    Util.FilesFolders.TryDeleteFileIfExists(file.FullName);
+                    FilesFolders.TryDeleteFileIfExists(file.FullName);
                 }
             }
             return true;

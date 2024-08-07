@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Timelapse.Constant;
 
 namespace Timelapse.Dialog
 {
@@ -15,30 +16,30 @@ namespace Timelapse.Dialog
         #region Constructore, Loaded
         public EpisodeOptions(TimeSpan timeDifferenceThreshold, Window owner)
         {
-            this.InitializeComponent();
-            this.Owner = owner;
-            this.EpisodeTimeThreshold = timeDifferenceThreshold;
+            InitializeComponent();
+            Owner = owner;
+            EpisodeTimeThreshold = timeDifferenceThreshold;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
-            this.TimeThresholdSlider.Minimum = Constant.EpisodeDefaults.TimeThresholdMinimum * 60;
-            this.TimeThresholdSlider.Maximum = Constant.EpisodeDefaults.TimeThresholdMaximum * 60; this.TimeThresholdSlider.SmallChange = 1;
-            this.TimeThresholdSlider.LargeChange = 1;
-            this.TimeThresholdSlider.ValueChanged += this.TimeThresholdSlider_ValueChanged;
-            this.TimeThresholdSlider.Value = this.EpisodeTimeThreshold.TotalSeconds;
-            this.DisplayFeedback();
+            TimeThresholdSlider.Minimum = EpisodeDefaults.TimeThresholdMinimum * 60;
+            TimeThresholdSlider.Maximum = EpisodeDefaults.TimeThresholdMaximum * 60; TimeThresholdSlider.SmallChange = 1;
+            TimeThresholdSlider.LargeChange = 1;
+            TimeThresholdSlider.ValueChanged += TimeThresholdSlider_ValueChanged;
+            TimeThresholdSlider.Value = EpisodeTimeThreshold.TotalSeconds;
+            DisplayFeedback();
         }
         #endregion
 
         #region Private Methods - Display Feedback
         private void DisplayFeedback()
         {
-            TimeSpan duration = TimeSpan.FromSeconds(this.TimeThresholdSlider.Value);
+            TimeSpan duration = TimeSpan.FromSeconds(TimeThresholdSlider.Value);
             string label = (duration >= TimeSpan.FromMinutes(1)) ? "minutes" : "seconds";
-            this.TimeThresholdText.Text = $"{duration:m\\:ss} {label}";
+            TimeThresholdText.Text = $"{duration:m\\:ss} {label}";
         }
         #endregion
 
@@ -46,18 +47,18 @@ namespace Timelapse.Dialog
         private void TimeThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             // this.state.FilePlayerSlowValue = this.SlowSpeedSlider.Value;
-            this.DisplayFeedback();
-            this.EpisodeTimeThreshold = TimeSpan.FromSeconds(this.TimeThresholdSlider.Value);
+            DisplayFeedback();
+            EpisodeTimeThreshold = TimeSpan.FromSeconds(TimeThresholdSlider.Value);
         }
 
         private void ResetTimeThresholdSlider_Click(object sender, RoutedEventArgs e)
         {
-            this.TimeThresholdSlider.Value = Constant.EpisodeDefaults.TimeThresholdDefault * 60;
+            TimeThresholdSlider.Value = EpisodeDefaults.TimeThresholdDefault * 60;
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
         #endregion
     }

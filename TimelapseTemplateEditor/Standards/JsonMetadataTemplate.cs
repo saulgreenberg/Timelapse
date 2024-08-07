@@ -13,7 +13,7 @@ namespace TimelapseTemplateEditor.Standards
     /// in order to allow the JSON data to be deserialized into the data structure
     /// see
     /// https://camtrap-dp.tdwg.org/ for description
-    /// https://github.com/tdwg/camtrap-dp for camtrap-dp githu
+    /// https://github.com/tdwg/camtrap-dp for camtrap-dp github
     ///
     /// When getting schema files from a URL, use the github source which contains the version(1.0), instead of the one on the documentation website
     /// https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/deployments-table-schema.json:

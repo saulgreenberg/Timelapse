@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,6 +7,7 @@ using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Util;
+using Control = Timelapse.Constant.Control;
 
 namespace Timelapse.Dialog
 {
@@ -25,71 +27,71 @@ namespace Timelapse.Dialog
         {
             InitializeComponent();
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
-            this.dataLabelByLabel = new Dictionary<string, string>();
+            dataLabelByLabel = new Dictionary<string, string>();
             this.fileDatabase = fileDatabase;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
             // Construct a list showing the available note fields in the combobox
-            foreach (ControlRow control in this.fileDatabase.Controls)
+            foreach (ControlRow control in fileDatabase.Controls)
             {
-                if (control.Type == Constant.Control.Counter ||
-                    control.Type == Constant.Control.IntegerAny ||
-                    control.Type == Constant.Control.IntegerPositive ||
-                control.Type == Constant.Control.DecimalAny ||
-                control.Type == Constant.Control.DecimalPositive)
+                if (control.Type == Control.Counter ||
+                    control.Type == Control.IntegerAny ||
+                    control.Type == Control.IntegerPositive ||
+                control.Type == Control.DecimalAny ||
+                control.Type == Control.DecimalPositive)
                 {
-                    this.dataLabelByLabel.Add(control.Label, control.DataLabel);
-                    this.ComboBoxSelectNoteField.Items.Add(control.Label);
+                    dataLabelByLabel.Add(control.Label, control.DataLabel);
+                    ComboBoxSelectNoteField.Items.Add(control.Label);
                 }
             }
-            if (this.ComboBoxSelectNoteField.Items.Count == 0)
+            if (ComboBoxSelectNoteField.Items.Count == 0)
             {
-                this.PrimaryPanel.Visibility = Visibility.Collapsed;
-                this.FeedbackPanel.Visibility = Visibility.Visible;
+                PrimaryPanel.Visibility = Visibility.Collapsed;
+                FeedbackPanel.Visibility = Visibility.Visible;
             }
-            else if (this.ComboBoxSelectNoteField.Items.Count == 1)
+            else if (ComboBoxSelectNoteField.Items.Count == 1)
             {
-                this.ComboBoxSelectNoteField.SelectedIndex = 0;
+                ComboBoxSelectNoteField.SelectedIndex = 0;
             }
             confidenceValue = GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold; // this.fileDatabase.GetTypicalDetectionThreshold();
-            this.SliderConfidence.Value = confidenceValue;
+            SliderConfidence.Value = confidenceValue;
         }
 
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void SliderConfidence_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            this.TextBlockSliderValue.Text = this.SliderConfidence.Value.ToString(("0.00"));
-            confidenceValue = this.SliderConfidence.Value;
+            TextBlockSliderValue.Text = SliderConfidence.Value.ToString(("0.00"));
+            confidenceValue = SliderConfidence.Value;
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
 
-            bool isCompleted = await this.PopulateAsync().ConfigureAwait(true);
-            this.DialogResult = isCompleted;
+            bool isCompleted = await PopulateAsync().ConfigureAwait(true);
+            DialogResult = isCompleted;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
 
         private void ComboBoxSelectNoteField_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox cb)
             {
-                this.dataFieldLabel = ((string)cb.SelectedValue).Trim();
-                this.StartDoneButton.IsEnabled = !string.IsNullOrEmpty(this.dataFieldLabel);
+                dataFieldLabel = ((string)cb.SelectedValue).Trim();
+                StartDoneButton.IsEnabled = !string.IsNullOrEmpty(dataFieldLabel);
             }
         }
 
@@ -97,13 +99,13 @@ namespace Timelapse.Dialog
         private async Task<bool> PopulateAsync()
         {
             bool result = false;
-            this.BusyCancelIndicator.IsBusy = true;
+            BusyCancelIndicator.IsBusy = true;
             await Task.Run(() =>
             {
-                string dataLabelToUpdate = this.dataLabelByLabel[this.dataFieldLabel];
-                result = this.fileDatabase.DetectionsAddCountToCounter(dataLabelToUpdate, this.confidenceValue, this.Progress);
-            }, this.Token).ConfigureAwait(true);
-            this.BusyCancelIndicator.IsBusy = false;
+                string dataLabelToUpdate = dataLabelByLabel[dataFieldLabel];
+                result = fileDatabase.DetectionsAddCountToCounter(dataLabelToUpdate, confidenceValue, Progress);
+            }, Token).ConfigureAwait(true);
+            BusyCancelIndicator.IsBusy = false;
             return result;
         }
     }

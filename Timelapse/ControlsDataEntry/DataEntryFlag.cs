@@ -5,9 +5,11 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
+using Control = System.Windows.Controls.Control;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -18,30 +20,30 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public Properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+        public override Point TopLeft => ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the Content of the Flag</summary>
-        public override string Content => (this.ContentControl.IsChecked != null && (bool)this.ContentControl.IsChecked) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+        public override string Content => (ContentControl.IsChecked != null && (bool)ContentControl.IsChecked) ? BooleanValue.True : BooleanValue.False;
 
         // This override has slightly different code compared to the other DataEntry types.. 
         private bool contentReadOnly;
         public override bool ContentReadOnly
         {
-            get => this.contentReadOnly;
+            get => contentReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.contentReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    contentReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.contentReadOnly = value;
+                    contentReadOnly = value;
                 }
             }
         }
@@ -52,7 +54,7 @@ namespace Timelapse.ControlsDataEntry
             : base(control, styleProvider, ControlContentStyleEnum.FlagCheckBox, ControlLabelStyleEnum.DefaultLabel)
         {
             // Callback used to allow Enter to select the highlit item
-            this.ContentControl.PreviewKeyDown += this.ContentControl_PreviewKeyDown;
+            ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
         }
         #endregion
 
@@ -86,16 +88,16 @@ namespace Timelapse.ControlsDataEntry
             // Used to signify the indeterminate state in no or multiple selections in the overview.
             if (value == null)
             {
-                this.ContentControl.IsChecked = null;
-                this.ContentControl.ToolTip = "Click to change the " + this.Label + " for all selected images";
+                ContentControl.IsChecked = null;
+                ContentControl.ToolTip = "Click to change the " + Label + " for all selected images";
                 return;
             }
 
             // Otherwise, the checkbox will be checked depending on whether the value is true or false,
             // and the tooltip will be set to true or false. 
             value = value.ToLower();
-            this.ContentControl.IsChecked = (value == Constant.BooleanValue.True);
-            this.ContentControl.ToolTip = this.LabelControl.ToolTip;
+            ContentControl.IsChecked = (value == BooleanValue.True);
+            ContentControl.ToolTip = LabelControl.ToolTip;
         }
         #endregion
 
@@ -103,17 +105,17 @@ namespace Timelapse.ControlsDataEntry
         // Flash the content area of the control
         public override void FlashContentControl()
         {
-            Border border = (Border)this.ContentControl.Template.FindName("checkBoxBorder", this.ContentControl);
+            Border border = (Border)ContentControl.Template.FindName("checkBoxBorder", ContentControl);
             if (border != null)
             {
                 border.Background = new SolidColorBrush(Colors.White);
-                border.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimation());
+                border.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimation());
             }
         }
 
         protected override Popup CreatePopupPreview(Control control, Thickness padding, double width, double horizontalOffset)
         {
-            Style style = (Style)this.ContentControl.FindResource(ControlContentStyleEnum.FlagCheckBox.ToString());
+            Style style = (Style)ContentControl.FindResource(ControlContentStyleEnum.FlagCheckBox.ToString());
 
             // Creatre a textblock and align it so the text is exactly at the same position as the control's text
             // Note that if control is null (which shouldn't happen) we use an autoheight
@@ -166,28 +168,28 @@ namespace Timelapse.ControlsDataEntry
             }
 
             // Create the popup overlay
-            if (this.PopupPreview == null)
+            if (PopupPreview == null)
             {
                 // We want to shrink the width a bit, as its otherwise a bit wide
                 double widthCorrection = 0;
-                double width = this.ContentControl.Width - widthCorrection;
+                double width = ContentControl.Width - widthCorrection;
                 double horizontalOffset = 0;
 
                 // Padding is used to align the text so it begins at the same spot as the control's text
                 Thickness padding = new Thickness(0, 0, 0, 0);
 
-                this.PopupPreview = this.CreatePopupPreview(this.ContentControl, padding, width, horizontalOffset);
+                PopupPreview = CreatePopupPreview(ContentControl, padding, width, horizontalOffset);
             }
             // Convert the true/false to a checkmark or none, then show the Popup
-            bool check = value.ToLower() == Constant.BooleanValue.True;
-            this.ShowPopupPreview(check);
+            bool check = value.ToLower() == BooleanValue.True;
+            ShowPopupPreview(check);
         }
         protected void ShowPopupPreview(bool value)
         {
-            Border border = (Border)this.PopupPreview.Child;
+            Border border = (Border)PopupPreview.Child;
             CheckBox popupText = (CheckBox)border.Child;
             popupText.IsChecked = value;
-            this.PopupPreview.IsOpen = true;
+            PopupPreview.IsOpen = true;
             Border cbborder = (Border)popupText.Template.FindName("checkBoxBorder", popupText);
             if (cbborder != null)
             {
@@ -197,40 +199,40 @@ namespace Timelapse.ControlsDataEntry
 
         public override void HidePreviewControlValue()
         {
-            if (this.PopupPreview == null || this.PopupPreview.Child == null)
+            if (PopupPreview == null || PopupPreview.Child == null)
             {
                 // There is no popupPreview being displayed, so there is nothing to hide.
                 return;
             }
-            Border border = (Border)this.PopupPreview.Child;
+            Border border = (Border)PopupPreview.Child;
             CheckBox popupText = (CheckBox)border.Child;
             popupText.IsChecked = false;
-            this.PopupPreview.IsOpen = false;
+            PopupPreview.IsOpen = false;
         }
 
         public override void FlashPreviewControlValue()
         {
-            this.FlashPopupPreview();
+            FlashPopupPreview();
         }
 
         protected override void FlashPopupPreview()
         {
-            if (this.PopupPreview == null || this.PopupPreview.Child == null)
+            if (PopupPreview == null || PopupPreview.Child == null)
             {
                 return;
             }
 
             // Get the TextBlock
-            Border border = (Border)this.PopupPreview.Child;
+            Border border = (Border)PopupPreview.Child;
             CheckBox popupText = (CheckBox)border.Child;
 
             // Animate the color from white back to its current color
-            ColorAnimation animation = new ColorAnimation()
+            ColorAnimation animation = new ColorAnimation
             {
                 From = Colors.White,
                 AutoReverse = false,
                 Duration = new Duration(TimeSpan.FromSeconds(.6)),
-                EasingFunction = new ExponentialEase()
+                EasingFunction = new ExponentialEase
                 {
                     EasingMode = EasingMode.EaseIn
                 },

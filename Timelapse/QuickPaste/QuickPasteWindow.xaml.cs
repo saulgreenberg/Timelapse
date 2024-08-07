@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,7 +19,7 @@ namespace Timelapse.QuickPaste
 
         private void SendQuickPasteEvent(QuickPasteEventArgs e)
         {
-            this.QuickPasteEvent?.Invoke(this, e);
+            QuickPasteEvent?.Invoke(this, e);
         }
         #endregion
 
@@ -33,39 +34,39 @@ namespace Timelapse.QuickPaste
         #region Constructor, Loaded, Closing, Closed
         public QuickPasteWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         // When the window is loaded
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Adjust this dialog window position, and add an event handler to signal when the position has changed 
-            if (this.Position.Left == 0 && this.Position.Top == 0)
+            if (Position.Left == 0 && Position.Top == 0)
             {
                 // 0,0 signals that there is no saved window position
                 Dialogs.SetDefaultDialogPosition(this);
             }
             else
             {
-                this.Top = this.Position.Top;
-                this.Left = this.Position.Left;
+                Top = Position.Top;
+                Left = Position.Left;
             }
-            this.SetPosition();
-            this.LocationChanged += this.QuickPasteWindow_LocationChanged;
+            SetPosition();
+            LocationChanged += QuickPasteWindow_LocationChanged;
 
             // Build the window contents
-            this.Refresh(this.QuickPasteEntries);
+            Refresh(QuickPasteEntries);
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.SetPosition();
+            SetPosition();
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
             // To overcome a wpf bug where Visibility stayed at Visibility.Visible.
-            this.Visibility = Visibility.Collapsed;
+            Visibility = Visibility.Collapsed;
         }
         #endregion
 
@@ -76,15 +77,15 @@ namespace Timelapse.QuickPaste
             if (quickPasteEntries == null) return;
 
             // Update the quickPasteEntries
-            this.QuickPasteEntries = quickPasteEntries;
+            QuickPasteEntries = quickPasteEntries;
 
             // Clear the QuickPasteGrid, so we can start afresh
-            this.QuickPasteGrid.RowDefinitions.Clear();
-            this.QuickPasteGrid.Children.Clear();
+            QuickPasteGrid.RowDefinitions.Clear();
+            QuickPasteGrid.Children.Clear();
             int gridRowIndex = 0;
 
             int shortcutKey = 1;
-            foreach (QuickPasteEntry quickPasteEntry in this.QuickPasteEntries)
+            foreach (QuickPasteEntry quickPasteEntry in QuickPasteEntries)
             {
                 // Create the tooltip text for the QuickPaste control
                 string tooltipText = string.Empty;
@@ -101,7 +102,7 @@ namespace Timelapse.QuickPaste
                 }
 
                 // Compose the button content: a title and shortcut key
-                TextBlock textblockTitle = new TextBlock()
+                TextBlock textblockTitle = new TextBlock
                 {
                     HorizontalAlignment = HorizontalAlignment.Left,
                 };
@@ -129,10 +130,10 @@ namespace Timelapse.QuickPaste
                 dockPanel.Children.Add(textblockShortcut);
 
                 // Create and configure the QuickPaste control, and add its callbacks
-                Button quickPasteControl = new Button()
+                Button quickPasteControl = new Button
                 {
                     HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    Style = this.Owner.FindResource("QuickPasteButtonStyle") as Style,
+                    Style = Owner.FindResource("QuickPasteButtonStyle") as Style,
                     Content = dockPanel,
                     ToolTip = tooltipText,
                     Tag = quickPasteEntry
@@ -146,55 +147,55 @@ namespace Timelapse.QuickPaste
                 ContextMenu contextMenu = new ContextMenu();
                 quickPasteControl.ContextMenu = contextMenu;
 
-                MenuItem editItem = new MenuItem()
+                MenuItem editItem = new MenuItem
                 {
                     Header = "Edit",
                     Tag = quickPasteEntry
                 };
-                editItem.Click += this.EditItem_Click;
+                editItem.Click += EditItem_Click;
                 contextMenu.Items.Add(editItem);
 
-                MenuItem deleteItem = new MenuItem()
+                MenuItem deleteItem = new MenuItem
                 {
                     Header = "Delete",
                     Tag = quickPasteEntry
                 };
-                deleteItem.Click += this.DeleteItem_Click;
+                deleteItem.Click += DeleteItem_Click;
                 contextMenu.Items.Add(deleteItem);
 
                 // Move item up the quickpaste list
-                MenuItem moveUpItem = new MenuItem()
+                MenuItem moveUpItem = new MenuItem
                 {
                     Header = "Move up",
                     Tag = quickPasteEntry,
-                    IsEnabled = this.QuickPasteEntries.First() != quickPasteEntry
+                    IsEnabled = QuickPasteEntries.First() != quickPasteEntry
                 };
-                moveUpItem.Click += this.MoveUpItem_Click;
+                moveUpItem.Click += MoveUpItem_Click;
                 contextMenu.Items.Add(moveUpItem);
 
                 // Move item down the quickpaste list
-                MenuItem moveDownItem = new MenuItem()
+                MenuItem moveDownItem = new MenuItem
                 {
                     Header = "Move down",
                     Tag = quickPasteEntry,
-                    IsEnabled = this.QuickPasteEntries.Last() != quickPasteEntry
+                    IsEnabled = QuickPasteEntries.Last() != quickPasteEntry
                 };
-                moveDownItem.Click += this.MoveDownItem_Click;
+                moveDownItem.Click += MoveDownItem_Click;
                 contextMenu.Items.Add(moveDownItem);
 
-                quickPasteControl.Click += this.QuickPasteControl_Click;
-                quickPasteControl.MouseEnter += this.QuickPasteControl_MouseEnter;
-                quickPasteControl.MouseLeave += this.QuickPasteControl_MouseLeave;
+                quickPasteControl.Click += QuickPasteControl_Click;
+                quickPasteControl.MouseEnter += QuickPasteControl_MouseEnter;
+                quickPasteControl.MouseLeave += QuickPasteControl_MouseLeave;
 
                 // Create a grid row and add the QuickPaste control to it
-                RowDefinition gridRow = new RowDefinition()
+                RowDefinition gridRow = new RowDefinition
                 {
                     Height = GridLength.Auto
                 };
-                this.QuickPasteGrid.RowDefinitions.Add(gridRow);
+                QuickPasteGrid.RowDefinitions.Add(gridRow);
                 Grid.SetRow(quickPasteControl, gridRowIndex);
                 Grid.SetColumn(quickPasteControl, gridRowIndex);
-                this.QuickPasteGrid.Children.Add(quickPasteControl);
+                QuickPasteGrid.Children.Add(quickPasteControl);
                 gridRowIndex++;
             }
         }
@@ -204,15 +205,15 @@ namespace Timelapse.QuickPaste
         public void RefreshQuickPasteWindowPreviewAsNeeded()
         {
             // If the quickPaste Window is visible
-            if (this.IsEnabled == false && this.IsLoaded == false)
+            if (IsEnabled == false && IsLoaded == false)
             {
                 return;
             }
-            foreach (Button quickPasteControl in this.QuickPasteGrid.Children)
+            foreach (Button quickPasteControl in QuickPasteGrid.Children)
             {
                 if (quickPasteControl.IsMouseOver)
                 {
-                    this.SendQuickPasteEvent(new QuickPasteEventArgs((QuickPasteEntry)quickPasteControl.Tag, QuickPasteEventIdentifierEnum.MouseEnter));
+                    SendQuickPasteEvent(new QuickPasteEventArgs((QuickPasteEntry)quickPasteControl.Tag, QuickPasteEventIdentifierEnum.MouseEnter));
                     return;
                 }
             }
@@ -222,10 +223,10 @@ namespace Timelapse.QuickPaste
         #region Public Methods - TryQuickPasteShortcut
         public void TryQuickPasteShortcut(int shortcutIndex)
         {
-            if (shortcutIndex <= this.QuickPasteEntries.Count)
+            if (shortcutIndex <= QuickPasteEntries.Count)
             {
-                QuickPasteEntry quickPasteEntry = this.QuickPasteEntries[shortcutIndex - 1];
-                this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.ShortcutPaste));
+                QuickPasteEntry quickPasteEntry = QuickPasteEntries[shortcutIndex - 1];
+                SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.ShortcutPaste));
             }
         }
         #endregion
@@ -234,7 +235,7 @@ namespace Timelapse.QuickPaste
         // Generate Event: New quickpaste entry
         private void NewQuickPasteEntryButton_Click(object sender, RoutedEventArgs e)
         {
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(null, QuickPasteEventIdentifierEnum.New));
+            SendQuickPasteEvent(new QuickPasteEventArgs(null, QuickPasteEventIdentifierEnum.New));
         }
 
         // Generate Event: Edit the quickpaste emtru
@@ -247,7 +248,7 @@ namespace Timelapse.QuickPaste
                 return;
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Edit));
+            SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Edit));
         }
 
         // Generate Event: Delete the quickpaste entry
@@ -260,7 +261,7 @@ namespace Timelapse.QuickPaste
                 return;
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Delete));
+            SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Delete));
         }
 
         // Generate Event: Move the quickpaste entry up the list
@@ -273,7 +274,7 @@ namespace Timelapse.QuickPaste
                 return;
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MoveUp));
+            SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MoveUp));
         }
 
         // Generate Event: Move the quickpaste entry down the list
@@ -286,7 +287,7 @@ namespace Timelapse.QuickPaste
                 return;
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)menuItem.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MoveDown));
+            SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MoveDown));
         }
 
         // Generate Event: MouseEnter on the quickpaste control
@@ -299,7 +300,7 @@ namespace Timelapse.QuickPaste
                 return;
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MouseEnter));
+            SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.MouseEnter));
         }
 
         // Generate Event: MouseLeave on the quickpaste control
@@ -308,7 +309,7 @@ namespace Timelapse.QuickPaste
             if (sender is Button button)
             {
                 QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
-                this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry,
+                SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry,
                 QuickPasteEventIdentifierEnum.MouseLeave));
             }
         }
@@ -322,14 +323,14 @@ namespace Timelapse.QuickPaste
                return;
             }
             QuickPasteEntry quickPasteEntry = (QuickPasteEntry)button.Tag;
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Paste));
+            SendQuickPasteEvent(new QuickPasteEventArgs(quickPasteEntry, QuickPasteEventIdentifierEnum.Paste));
         }
         #endregion
 
         #region Callbacks
         private void QuickPasteWindow_LocationChanged(object sender, EventArgs e)
         {
-            this.SetPosition();
+            SetPosition();
         }
 
         // Use the arrow and page up/down keys to navigate images
@@ -346,8 +347,8 @@ namespace Timelapse.QuickPaste
         #region Private Methods
         private void SetPosition()
         {
-            this.Position = new Rect(this.Left, this.Top, this.Width, this.Height);
-            this.SendQuickPasteEvent(new QuickPasteEventArgs(null, QuickPasteEventIdentifierEnum.PositionChanged));
+            Position = new Rect(Left, Top, Width, Height);
+            SendQuickPasteEvent(new QuickPasteEventArgs(null, QuickPasteEventIdentifierEnum.PositionChanged));
         }
         #endregion
     }

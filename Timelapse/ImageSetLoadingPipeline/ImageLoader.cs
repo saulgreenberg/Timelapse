@@ -15,7 +15,7 @@ namespace Timelapse.ImageSetLoadingPipeline
     public class ImageLoader
     {
         #region Public Properties
-        public string FolderPath => this.dataHandler.FileDatabase.FolderPath;
+        public string FolderPath => dataHandler.FileDatabase.FolderPath;
 
         public bool RequiresDatabaseInsert
         {
@@ -34,20 +34,20 @@ namespace Timelapse.ImageSetLoadingPipeline
         {
             get
             {
-                if (this.bitmapSource == null)
+                if (bitmapSource == null)
                 {
                     // Lazy load
-                    var task = this.File.LoadBitmapAsync(this.FolderPath, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth);
+                    var task = File.LoadBitmapAsync(FolderPath, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth);
                     task.Wait();
 
                     var loadResult = task.Result;
-                    this.bitmapSource = loadResult.Item1;
+                    bitmapSource = loadResult.Item1;
                 }
 
-                return this.bitmapSource;
+                return bitmapSource;
             }
             // ReSharper disable once UnusedMember.Local
-            private set => this.bitmapSource = value;
+            private set => bitmapSource = value;
         }
         #endregion
 
@@ -70,12 +70,12 @@ namespace Timelapse.ImageSetLoadingPipeline
         public Task LoadImageAsync(Action OnImageLoadComplete)
         {
             // Set the loader's file member. 
-            this.RequiresDatabaseInsert = true;
+            RequiresDatabaseInsert = true;
 
             // Skip the per-file call to the database
-            this.File = this.dataHandler.FileDatabase.FileTable.NewRow(this.fileInfo);
-            this.File.RelativePath = this.relativePath;
-            this.File.SetDateTimeFromFileInfo(this.FolderPath);
+            File = dataHandler.FileDatabase.FileTable.NewRow(fileInfo);
+            File.RelativePath = relativePath;
+            File.SetDateTimeFromFileInfo(FolderPath);
 
             return Task.Run(() =>
             {
@@ -83,13 +83,13 @@ namespace Timelapse.ImageSetLoadingPipeline
                 if (GlobalReferences.TimelapseState.MetadataOnLoad != null && GlobalReferences.TimelapseState.MetadataOnLoad.SelectedImageMetadataDataLabels != null &&
                     GlobalReferences.TimelapseState.MetadataOnLoad.SelectedImageMetadataDataLabels.Count > 0)
                 {
-                    this.File.TryReadMetadataAndSetMetadataFields(this.FolderPath, GlobalReferences.TimelapseState.MetadataOnLoad);
+                    File.TryReadMetadataAndSetMetadataFields(FolderPath, GlobalReferences.TimelapseState.MetadataOnLoad);
                 }
 
                 // Try to update the datetime (which is currently recorded as the file's date) with the metadata date time the image was taken instead
                 // Note that videos do not have these metadata fields
                 // Strategy is to set date from either the metadata or the file time depending on what is available
-                this.File.TryReadDateTimeOriginalFromMetadata(this.FolderPath);
+                File.TryReadDateTimeOriginalFromMetadata(FolderPath);
 
                 // This completes processing, but it may be some time before the task is checked for completion.
                 // for purposes of reporting progress, call the completion delegate provided.

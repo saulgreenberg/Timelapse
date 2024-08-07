@@ -35,12 +35,12 @@ namespace Timelapse.Dialog
                 int rowIndex = 0;
                 foreach (MissingFolderRow row in observableCollection)
                 {
-                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
                     if (dataGridRow == null) continue;
-                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    ComboBox comboBox = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (comboBox == null) continue;
 
-                    if (row.Use && false == string.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                    if (row.Use && false == string.IsNullOrWhiteSpace((string)comboBox.SelectedItem) && false == String.Equals((string)comboBox.SelectedItem, useLocateButtonText))
                     {
                         finalFolderLocations.Add(row.ExpectedOldLocation, (string)comboBox.SelectedItem);
                     }
@@ -71,15 +71,15 @@ namespace Timelapse.Dialog
             if (missingFoldersAndLikelyLocations == null || missingFoldersAndLikelyLocations.Count == 0)
             {
                 // Nothing to do. Abort
-                this.DialogResult = false;
+                DialogResult = false;
                 return;
             }
 
-            this.Owner = owner;
-            this.RootPath = rootPath;
-            this.FileDatabase = fileDatabase;
-            this.MissingRelativePaths = missingRelativePaths;
-            this.CreateDataTable(missingFoldersAndLikelyLocations);
+            Owner = owner;
+            RootPath = rootPath;
+            FileDatabase = fileDatabase;
+            MissingRelativePaths = missingRelativePaths;
+            CreateDataTable(missingFoldersAndLikelyLocations);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -87,18 +87,18 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Get rid of those ugly empty cell headers atop the Locate/View columns
-            this.DataGrid.Columns[5].HeaderStyle = CreateEmptyHeaderStyle();
-            this.DataGrid.Columns[6].HeaderStyle = CreateEmptyHeaderStyle();
+            DataGrid.Columns[5].HeaderStyle = CreateEmptyHeaderStyle();
+            DataGrid.Columns[6].HeaderStyle = CreateEmptyHeaderStyle();
 
             // Add the missing folders
-            this.PopulateDataGridRow();
+            PopulateDataGridRow();
         }
         #endregion
 
         private void CreateDataTable(Dictionary<string, List<string>> missingFoldersAndLikelyLocations)
         {
-            this.observableCollection = new ObservableCollection<MissingFolderRow>();
-            this.EnsureCheckboxValue();
+            observableCollection = new ObservableCollection<MissingFolderRow>();
+            EnsureCheckboxValue();
             
             foreach (KeyValuePair<string, List<string>> pair in missingFoldersAndLikelyLocations)
             {
@@ -106,71 +106,71 @@ namespace Timelapse.Dialog
                 List<string> possibleNewLocations = missingFoldersAndLikelyLocations[pair.Key];
                 if (possibleNewLocations.Count == 0)
                 {
-                    possibleNewLocations.Add(this.useLocateButtonText);
+                    possibleNewLocations.Add(useLocateButtonText);
                     isEmpty = true;
                 }
                 MissingFolderRow row = new MissingFolderRow(Path.GetFileName(pair.Key), pair.Key, possibleNewLocations, false, isEmpty);
-                this.observableCollection.Add(row);
+                observableCollection.Add(row);
             }
 
-            this.DataGrid.ItemsSource = null;
-            this.DataGrid.ItemsSource = this.observableCollection;
+            DataGrid.ItemsSource = null;
+            DataGrid.ItemsSource = observableCollection;
         }
 
         private void PopulateDataGridRow()
         {
             // Bind each combobox, and select the first item in each Combobox
             int rowIndex = 0;
-            foreach (MissingFolderRow mfr in this.observableCollection)
+            foreach (MissingFolderRow mfr in observableCollection)
             {
-                DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator
                     .ContainerFromIndex(rowIndex);
                 if (dataGridRow == null)
                 {
-                    this.DataGrid.UpdateLayout();
-                    this.DataGrid.ScrollIntoView(this.DataGrid.Items[rowIndex]);
-                    dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    DataGrid.UpdateLayout();
+                    DataGrid.ScrollIntoView(DataGrid.Items[rowIndex]);
+                    dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
                 }
-                ComboBox cb = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                ComboBox cb = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 cb.ItemsSource = mfr.PossibleNewLocation;
                 cb.SelectedIndex = 0;
                 rowIndex++;
             }
-            this.SetInitialCheckboxValue();
+            SetInitialCheckboxValue();
         }
         #region Button callbacks
-        private void Cancel_Click(object sender, RoutedEventArgs e) => this.DialogResult = false;
+        private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
 
-        private void UseNewLocations_Click(object sender, RoutedEventArgs e) => this.DialogResult = true;
+        private void UseNewLocations_Click(object sender, RoutedEventArgs e) => DialogResult = true;
         #endregion
 
         #region View/ Locate / CheckChanged, Combobox callbacks
         private void ViewButton_Click(object sender, RoutedEventArgs e)
         {
             string possibleLocation = GetPossibleLocationFromSelection();
-            if (String.Equals(possibleLocation, this.useLocateButtonText)) return;
-            Util.ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootPath, possibleLocation));
+            if (String.Equals(possibleLocation, useLocateButtonText)) return;
+            ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(RootPath, possibleLocation));
         }
 
         private void LocateButton_Click(object sender, RoutedEventArgs e)
         {
-            string missingFolderName = this.GetFolderNameFromSelection();
+            string missingFolderName = GetFolderNameFromSelection();
 
             // We need to update the datagrid with the new value. 
             int rowIndex = 0;
-            MissingFolderRow rowValues = (MissingFolderRow)this.selectedRowValues[0].Item;
-            string newLocation = Dialogs.LocateRelativePathUsingOpenFileDialog(this.RootPath, missingFolderName);
+            MissingFolderRow rowValues = (MissingFolderRow)selectedRowValues[0].Item;
+            string newLocation = Dialogs.LocateRelativePathUsingOpenFileDialog(RootPath, missingFolderName);
             if (string.IsNullOrWhiteSpace(newLocation)) return;
 
             // Find the selected row
-            foreach (MissingFolderRow row in this.observableCollection)
+            foreach (MissingFolderRow row in observableCollection)
             {
                 if (row == rowValues)
                 {
                     // Rebuild its combobox items so it has the latest user-provided location as the first selected item
-                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
                     if (dataGridRow == null) return;
-                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    ComboBox comboBox = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (comboBox == null) return;
 
                     // Rebuild the list with the new position at the beginning and selected.
@@ -180,7 +180,7 @@ namespace Timelapse.Dialog
                     };
                     foreach (string item in row.PossibleNewLocation)
                     {
-                        if (String.Equals(item, this.useLocateButtonText))
+                        if (String.Equals(item, useLocateButtonText))
                         {
                             continue;
                         }
@@ -191,13 +191,13 @@ namespace Timelapse.Dialog
                     }
                     if (newList.Count == 0)
                     {
-                        newList.Add(this.useLocateButtonText);
+                        newList.Add(useLocateButtonText);
                     }
                     row.PossibleNewLocation = newList;
 
                     comboBox.ItemsSource = newList;
                     comboBox.SelectedIndex = 0;
-                    this.EnsureCheckboxValue();
+                    EnsureCheckboxValue();
                 }
                 rowIndex++;
             }
@@ -217,16 +217,16 @@ namespace Timelapse.Dialog
             if (sender is ComboBox comboBoxSender)
             {
                 int rowIndex = 0;
-                foreach (MissingFolderRow unused in this.observableCollection)
+                foreach (MissingFolderRow unused in observableCollection)
                 {
-                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                    DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator
                        .ContainerFromIndex(rowIndex++);
                     if (null == dataGridRow) continue;
-                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    ComboBox comboBox = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (null == comboBox || comboBox != comboBoxSender) continue;
 
                     // We found the row.
-                    CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                    CheckBox checkBox = VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
                     if (null == checkBox) break;
 
                     if (comboBox.Items.Count > 1)
@@ -242,7 +242,7 @@ namespace Timelapse.Dialog
         // Remember the data for the selected row
         private void MatchDataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
-            this.selectedRowValues = e.AddedCells;
+            selectedRowValues = e.AddedCells;
         }
         #endregion
 
@@ -250,16 +250,16 @@ namespace Timelapse.Dialog
         private void SetInitialCheckboxValue()
         {
             int rowIndex = 0;
-            foreach (MissingFolderRow unused in this.observableCollection)
+            foreach (MissingFolderRow unused in observableCollection)
             {
-                DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator
                    .ContainerFromIndex(rowIndex);
                 if (null == dataGridRow) continue;
-                CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                CheckBox checkBox = VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
                 if (null == checkBox) continue;
-                ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                ComboBox comboBox = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 if (null == comboBox) continue;
-                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText) || comboBox.Items.Count > 1)
+                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, useLocateButtonText) || comboBox.Items.Count > 1)
                 {
                     checkBox.IsChecked = false;
                 }
@@ -277,16 +277,16 @@ namespace Timelapse.Dialog
         private void EnsureCheckboxValue()
         {
             int rowIndex = 0;
-            foreach (MissingFolderRow unused in this.observableCollection)
+            foreach (MissingFolderRow unused in observableCollection)
             {
-                DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator
+                DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator
                    .ContainerFromIndex(rowIndex);
                 if (null == dataGridRow) continue;
-                CheckBox checkBox = Util.VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
+                CheckBox checkBox = VisualChildren.GetVisualChild<CheckBox>(dataGridRow, "Part_Checkbox");
                 if (null == checkBox) continue;
-                ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                ComboBox comboBox = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                 if (null == comboBox) continue;
-                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, this.useLocateButtonText))
+                if (string.IsNullOrEmpty((string)comboBox.SelectedItem) || String.Equals((string)comboBox.SelectedItem, useLocateButtonText))
                 {
                     checkBox.IsChecked = false;
                 }
@@ -308,35 +308,35 @@ namespace Timelapse.Dialog
                 return;
             }
             Dictionary<string, List<string>> missingFoldersAndLikelyLocations = cb.IsChecked == true
-                ? FilesFolders.TryGetMissingFoldersStringent(this.FileDatabase.FolderPath, this.MissingRelativePaths, this.FileDatabase)
-                : FilesFolders.TryGetMissingFolders(this.FileDatabase.FolderPath, this.MissingRelativePaths);
+                ? FilesFolders.TryGetMissingFoldersStringent(FileDatabase.FolderPath, MissingRelativePaths, FileDatabase)
+                : FilesFolders.TryGetMissingFolders(FileDatabase.FolderPath, MissingRelativePaths);
 
-            this.CreateDataTable(missingFoldersAndLikelyLocations);
-            this.PopulateDataGridRow();
+            CreateDataTable(missingFoldersAndLikelyLocations);
+            PopulateDataGridRow();
         }
         #endregion
 
         #region Helper methods
         private string GetFolderNameFromSelection()
         {
-            MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
+            MissingFolderRow mfr = (MissingFolderRow)selectedRowValues[0].Item;
             return (mfr == null) ? string.Empty : mfr.FolderName;
         }
 
         private string GetPossibleLocationFromSelection()
         {
             string location = string.Empty;
-            MissingFolderRow mfr = (MissingFolderRow)this.selectedRowValues[0].Item;
+            MissingFolderRow mfr = (MissingFolderRow)selectedRowValues[0].Item;
             // return (mfr == null || mfr.PossibleNewLocation.Count == 0) ? string.Empty : mfr.PossibleNewLocation[0];
             int rowIndex = 0;
-            foreach (MissingFolderRow row in this.observableCollection)
+            foreach (MissingFolderRow row in observableCollection)
             {
                 if (row == mfr)
                 {
                     // We foound the row,
-                    DataGridRow dataGridRow = (DataGridRow)this.DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
+                    DataGridRow dataGridRow = (DataGridRow)DataGrid.ItemContainerGenerator.ContainerFromIndex(rowIndex);
                     if (null == dataGridRow) break;
-                    ComboBox comboBox = Util.VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
+                    ComboBox comboBox = VisualChildren.GetVisualChild<ComboBox>(dataGridRow, "Part_Combo");
                     if (null == comboBox) break;
                     location = (string)comboBox.SelectedItem;
                     break;
@@ -358,13 +358,13 @@ namespace Timelapse.Dialog
 
             Setter setterBackground = new Setter
             {
-                Property = DataGridColumnHeader.BackgroundProperty,
+                Property = BackgroundProperty,
                 Value = new SolidColorBrush(Colors.White)
             };
 
             Setter setterBorder = new Setter
             {
-                Property = DataGridColumnHeader.BorderThicknessProperty,
+                Property = BorderThicknessProperty,
                 Value = new Thickness(0, 0, 0, 1)
             };
 
@@ -389,11 +389,11 @@ namespace Timelapse.Dialog
 
             public MissingFolderRow(string folderName, string expectedOldLocation, List<string> possibleNewLocation, bool use, bool isEmpty)
             {
-                this.FolderName = folderName;
-                this.ExpectedOldLocation = expectedOldLocation;
-                this.PossibleNewLocation = possibleNewLocation;
-                this.Use = use;
-                this.Count = isEmpty ? possibleNewLocation.Count - 1 : possibleNewLocation.Count;
+                FolderName = folderName;
+                ExpectedOldLocation = expectedOldLocation;
+                PossibleNewLocation = possibleNewLocation;
+                Use = use;
+                Count = isEmpty ? possibleNewLocation.Count - 1 : possibleNewLocation.Count;
             }
         }
         #endregion

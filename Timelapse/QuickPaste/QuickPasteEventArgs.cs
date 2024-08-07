@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace Timelapse.QuickPaste
 {
     /// <summary>
@@ -19,8 +20,8 @@ namespace Timelapse.QuickPaste
         /// </summary>
         public QuickPasteEventArgs(QuickPasteEntry quickPasteEntry, QuickPasteEventIdentifierEnum eventType)
         {
-            this.QuickPasteEntry = quickPasteEntry;
-            this.EventType = eventType;
+            QuickPasteEntry = quickPasteEntry;
+            EventType = eventType;
         }
     }
 }

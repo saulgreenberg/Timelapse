@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
@@ -38,14 +39,14 @@ namespace Timelapse.Controls
         /// </summary>
         public bool Show
         {
-            get => this.Visibility == Visibility.Visible;
+            get => Visibility == Visibility.Visible;
             set
             {
-                this.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-                if (this.magHandleAdorner != null)
+                Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                if (magHandleAdorner != null)
                 {
                     // check condition - why would the maghandleadorner be null if this is not null?
-                    this.magHandleAdorner.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                    magHandleAdorner.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
                 }
             }
         }
@@ -75,21 +76,21 @@ namespace Timelapse.Controls
         public OffsetLens()
         {
             // Lens appearance
-            this.Radius = Constant.MarkableCanvas.MagnifyingGlassDiameter / 2.0;
-            this.BorderBrush = MakeOutlineBrush();
-            this.BorderThickness = new Thickness(3);
-            this.Background = Brushes.Black;
-            this.FrameType = FrameType.Circle;
-            this.Loaded += this.OffsetLens_Loaded;
+            Radius = MarkableCanvas.MagnifyingGlassDiameter / 2.0;
+            BorderBrush = MakeOutlineBrush();
+            BorderThickness = new Thickness(3);
+            Background = Brushes.Black;
+            FrameType = FrameType.Circle;
+            Loaded += OffsetLens_Loaded;
 
             // Makes mouse wheel operations (usually used to change the magnification level) into a no-op
-            this.ZoomFactorOnMouseWheel = 0;
-            this.IsUsingZoomOnMouseWheel = false;
+            ZoomFactorOnMouseWheel = 0;
+            IsUsingZoomOnMouseWheel = false;
         }
 
         private void OffsetLens_Loaded(object sender, RoutedEventArgs e)
         {
-            this.IsEnabled = true;
+            IsEnabled = true;
 
             // Handle adorner, including calculating its original offset
             myAdornerLayer = AdornerLayer.GetAdornerLayer(this);
@@ -97,7 +98,7 @@ namespace Timelapse.Controls
             {
                 IsHitTestVisible = false
             };
-            TranslateTransform tt = new TranslateTransform(this.Offset.X, this.Offset.Y);
+            TranslateTransform tt = new TranslateTransform(Offset.X, Offset.Y);
             magHandleAdorner.RenderTransform = tt;
             if (null != myAdornerLayer)
             {
@@ -108,7 +109,7 @@ namespace Timelapse.Controls
                 TracePrint.NullException(nameof(myAdornerLayer));
             }
 
-            this.SetDirection(OffsetLensDirection.TopRight);
+            SetDirection(OffsetLensDirection.TopRight);
         }
         #endregion
 
@@ -124,30 +125,30 @@ namespace Timelapse.Controls
             switch (direction)
             {
                 case OffsetLensDirection.TopLeft: // Up and Left
-                    x = -this.Offset.X;
-                    y = this.Offset.Y;
+                    x = -Offset.X;
+                    y = Offset.Y;
                     angle = -90;
                     break;
                 case OffsetLensDirection.TopRight: // Up and Right
                 default:
-                    x = this.Offset.X;
-                    y = this.Offset.Y;
+                    x = Offset.X;
+                    y = Offset.Y;
                     angle = 0;
                     break;
                 case OffsetLensDirection.BottomLeft: // Lower Right
-                    x = -this.Offset.X;
-                    y = 3 * this.Offset.Y;
+                    x = -Offset.X;
+                    y = 3 * Offset.Y;
                     angle = -180;
                     break;
                 case OffsetLensDirection.BottomRight: // Lower Left
-                    x = this.Offset.X;
-                    y = 3 * this.Offset.Y;
+                    x = Offset.X;
+                    y = 3 * Offset.Y;
                     angle = -270;
                     break;
             }
             // Now rotate and position the entire magnifying glass
-            this.RenderTransform = CreateTransformGroup(x, y, angle);
-            this.Direction = direction;
+            RenderTransform = CreateTransformGroup(x, y, angle);
+            Direction = direction;
         }
 
         private static LinearGradientBrush MakeOutlineBrush()
@@ -195,7 +196,7 @@ namespace Timelapse.Controls
         // method, which is called by the layout system as part of a rendering pass.
         protected override void OnRender(DrawingContext drawingContext)
         {
-            Rect adornedElementRect = new Rect(this.AdornedElement.DesiredSize);
+            Rect adornedElementRect = new Rect(AdornedElement.DesiredSize);
             int centerOffset = 75;
             Point handleStartOffset = new Point(0, 0);
             Point handleEndOffset = new Point(-39, 39);

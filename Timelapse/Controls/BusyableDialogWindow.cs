@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
+using Timelapse.Constant;
 using Timelapse.Dialog;
 using Timelapse.Util;
 
@@ -24,7 +25,7 @@ namespace Timelapse.Controls
         // Token to let us cancel the task
         private readonly CancellationTokenSource tokenSource;
         protected CancellationToken Token { get; set; }
-        protected CancellationTokenSource TokenSource => this.tokenSource;
+        protected CancellationTokenSource TokenSource => tokenSource;
         #endregion
 
         #region Variables for Close Button
@@ -44,12 +45,12 @@ namespace Timelapse.Controls
         #region Constructor / Loaded 
         public BusyableDialogWindow(Window owner)
         {
-            this.Owner = owner;
+            Owner = owner;
             // Initialize the cancellation CancelToken
-            this.tokenSource = new CancellationTokenSource();
-            this.Token = this.tokenSource.Token;
-            this.Loaded += this.BusyableDialogWindow_Loaded;
-            this.Closed += this.BusyableDialogWindow_Closed;
+            tokenSource = new CancellationTokenSource();
+            Token = tokenSource.Token;
+            Loaded += BusyableDialogWindow_Loaded;
+            Closed += BusyableDialogWindow_Closed;
         }
 
         // Fit the dialog into the calling window
@@ -70,12 +71,12 @@ namespace Timelapse.Controls
         /// <param name="busyCancelIndicator"></param>
         protected void InitalizeProgressHandler(BusyCancelIndicator busyCancelIndicator)
         {
-            this.ProgressHandler = new Progress<ProgressBarArguments>(value =>
+            ProgressHandler = new Progress<ProgressBarArguments>(value =>
             {
                 // Update the progress bar
-                BusyableDialogWindow.UpdateProgressBar(busyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
+                UpdateProgressBar(busyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
             });
-            this.Progress = ProgressHandler;
+            Progress = ProgressHandler;
         }
 
 
@@ -86,7 +87,7 @@ namespace Timelapse.Controls
         public void CancelAsyncOperationButton_Click(object sender, RoutedEventArgs e)
         {
             // Set this so that it will be caught in the above await task
-            this.TokenSource.Cancel();
+            TokenSource.Cancel();
         }
         #endregion
 
@@ -115,10 +116,10 @@ namespace Timelapse.Controls
         private DateTime lastRefreshDateTime = DateTime.Now;
         protected bool ReadyToRefresh()
         {
-            TimeSpan intervalFromLastRefresh = DateTime.Now - this.lastRefreshDateTime;
-            if (intervalFromLastRefresh > Constant.ThrottleValues.ProgressBarRefreshInterval)
+            TimeSpan intervalFromLastRefresh = DateTime.Now - lastRefreshDateTime;
+            if (intervalFromLastRefresh > ThrottleValues.ProgressBarRefreshInterval)
             {
-                this.lastRefreshDateTime = DateTime.Now;
+                lastRefreshDateTime = DateTime.Now;
                 return true;
             }
             return false;
@@ -127,7 +128,7 @@ namespace Timelapse.Controls
         // Set the Window's Close Button Enable state
         protected void WindowCloseButtonIsEnabled(bool enableCloseButton)
         {
-            Window window = Window.GetWindow(this);
+            Window window = GetWindow(this);
             if (window == null)
             {
                 return;

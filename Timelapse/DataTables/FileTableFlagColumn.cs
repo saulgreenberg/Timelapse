@@ -1,4 +1,5 @@
 ﻿using System;
+using Timelapse.Constant;
 
 namespace Timelapse.DataTables
 {
@@ -20,8 +21,8 @@ namespace Timelapse.DataTables
         /// </summary>
         public override bool IsContentValid(string value)
         {
-            return String.Equals(value, Constant.BooleanValue.False, StringComparison.OrdinalIgnoreCase) ||
-                   String.Equals(value, Constant.BooleanValue.True, StringComparison.OrdinalIgnoreCase);
+            return String.Equals(value, BooleanValue.False, StringComparison.OrdinalIgnoreCase) ||
+                   String.Equals(value, BooleanValue.True, StringComparison.OrdinalIgnoreCase);
         }
         #endregion
     }

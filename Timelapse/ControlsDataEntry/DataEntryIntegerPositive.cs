@@ -11,8 +11,8 @@ namespace Timelapse.ControlsDataEntry
         public DataEntryIntegerPositive(ControlRow control, DataEntryControls styleProvider) :
             base(control, styleProvider, true)
         {
-            this.ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_IntegerPositiveCharacterOnly;
-            DataObject.AddPastingHandler(this.ContentControl, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfIntegerPositive);
+            ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_IntegerPositiveCharacterOnly;
+            DataObject.AddPastingHandler(ContentControl, ValidationCallbacks.Paste_OnlyIfIntegerPositive);
         }
         #endregion`
     }

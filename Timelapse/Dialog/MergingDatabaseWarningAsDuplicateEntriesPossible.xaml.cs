@@ -10,9 +10,9 @@ namespace Timelapse.Dialog
         public MergingDatabaseWarningAsDuplicateEntriesPossible(Window owner, string details) 
         {
             InitializeComponent();
-            this.InitializeComponent();
-            this.Owner = owner;
-            this.TBDetails.Text += details;
+            InitializeComponent();
+            Owner = owner;
+            TBDetails.Text += details;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

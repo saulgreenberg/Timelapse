@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 
 namespace Timelapse.Controls
@@ -65,7 +66,7 @@ namespace Timelapse.Controls
         // ReSharper disable once UnusedMember.Global
         public bool DisplayImmediately
         {
-            set => this.Busy.DisplayAfter = value ? System.TimeSpan.FromSeconds(0) : System.TimeSpan.FromMilliseconds(100);
+            set => Busy.DisplayAfter = value ? TimeSpan.FromSeconds(0) : TimeSpan.FromMilliseconds(100);
         }
         #endregion
 
@@ -138,12 +139,12 @@ namespace Timelapse.Controls
         //    {
         //        return await Task.Run(() => this.LongRunningSearch(searchString));
         //    }
-        public static async Task<T> ProgressWrapper<T>(Func<Task<T>> method, System.IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource, string message, bool cancelEnabled)
+        public static async Task<T> ProgressWrapper<T>(Func<Task<T>> method, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource, string message, bool cancelEnabled)
         {
             Task<T> task = method();
             while (!task.IsCompleted && !task.IsCanceled && !task.IsFaulted && !cancelTokenSource.IsCancellationRequested)
             {
-                await Task.WhenAny(task, Task.Delay(Constant.ThrottleValues.ProgressBarRefreshInterval)); // Checks and thus updates every 250 ms
+                await Task.WhenAny(task, Task.Delay(ThrottleValues.ProgressBarRefreshInterval)); // Checks and thus updates every 250 ms
                 progress.Report(new ProgressBarArguments(0, message, cancelEnabled, true));
             }
 
@@ -161,7 +162,7 @@ namespace Timelapse.Controls
 
         public void Reset(bool isBusy)
         {
-            this.IsBusy = isBusy;
+            IsBusy = isBusy;
             GlobalReferences.CancelTokenSource = new CancellationTokenSource();
         }
     }

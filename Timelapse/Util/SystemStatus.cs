@@ -1,6 +1,8 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
+using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace Timelapse.Util
 {
@@ -19,7 +21,7 @@ namespace Timelapse.Util
         /// <returns>true if the language is english (en) and culture is en-US or en-CA.</returns>
         public static bool CheckAndGetLangaugeAndCulture(out string language, out string culturename, out string displayname)
         {
-            System.Globalization.CultureInfo cultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+            CultureInfo cultureInfo = Thread.CurrentThread.CurrentCulture;
             language = cultureInfo.TwoLetterISOLanguageName;
             culturename = cultureInfo.Name;
             displayname = cultureInfo.DisplayName;
@@ -89,7 +91,7 @@ namespace Timelapse.Util
         // ReSharper disable once UnusedMember.Global
         public static ParallelOptions GetParallelOptions(int maximumDegreeOfParallelismDesired)
         {
-            ParallelOptions parallelOptions = new ParallelOptions()
+            ParallelOptions parallelOptions = new ParallelOptions
             {
                 MaxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, maximumDegreeOfParallelismDesired)
             };

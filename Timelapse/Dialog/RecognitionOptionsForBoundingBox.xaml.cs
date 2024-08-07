@@ -16,30 +16,30 @@ namespace Timelapse.Dialog
             // Check the arguments for null
             // ThrowIf.IsNullArgument(timelapseState, nameof(timelapseState));
             InitializeComponent();
-            this.Owner = owner;
+            Owner = owner;
             this.timelapseState = timelapseState;
 
             // Detections
-            this.CheckBoxBoundingBoxAnnotate.IsChecked = this.timelapseState.BoundingBoxAnnotate;
-            this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = this.timelapseState.BoundingBoxColorBlindFriendlyColors;
-            this.CheckBoxBoundingBoxHideInThisSession.IsChecked = GlobalReferences.HideBoundingBoxes;
+            CheckBoxBoundingBoxAnnotate.IsChecked = this.timelapseState.BoundingBoxAnnotate;
+            CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = this.timelapseState.BoundingBoxColorBlindFriendlyColors;
+            CheckBoxBoundingBoxHideInThisSession.IsChecked = GlobalReferences.HideBoundingBoxes;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.BoundingBoxDisplayThresholdSlider.Value = this.timelapseState.BoundingBoxDisplayThreshold;
+            BoundingBoxDisplayThresholdSlider.Value = timelapseState.BoundingBoxDisplayThreshold;
         }
 
         #region Callbacks - Detection and Bounding Boxsettings
         private void ResetDetections_Click(object sender, RoutedEventArgs e)
         {
-            this.CheckBoxBoundingBoxAnnotate.IsChecked = true;
-            this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = false;
-            this.CheckBoxBoundingBoxHideInThisSession.IsChecked = false;
-            this.BoundingBoxDisplayThresholdSlider.IsEnabled = true;
-            this.timelapseState.BoundingBoxDisplayThresholdResetToDefault();
-            this.BoundingBoxDisplayThresholdSlider.Value = this.timelapseState.BoundingBoxDisplayThreshold;
+            CheckBoxBoundingBoxAnnotate.IsChecked = true;
+            CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked = false;
+            CheckBoxBoundingBoxHideInThisSession.IsChecked = false;
+            BoundingBoxDisplayThresholdSlider.IsEnabled = true;
+            timelapseState.BoundingBoxDisplayThresholdResetToDefault();
+            BoundingBoxDisplayThresholdSlider.Value = timelapseState.BoundingBoxDisplayThreshold;
             GlobalReferences.HideBoundingBoxes = CheckBoxBoundingBoxHideInThisSession.IsChecked == true;
 
         }
@@ -50,28 +50,28 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            this.BoundingBoxThresholdDisplayValue.Text = slider.Value.ToString("0.00");
-            this.BoundingBoxThresholdDisplayText.Text = slider.Value == 0 
+            BoundingBoxThresholdDisplayValue.Text = slider.Value.ToString("0.00");
+            BoundingBoxThresholdDisplayText.Text = slider.Value == 0 
                 ? "This setting will display all bounding boxes"
                 : "Always display bounding boxes at or above this confidence threshold";
-            this.timelapseState.BoundingBoxDisplayThreshold = slider.Value;
+            timelapseState.BoundingBoxDisplayThreshold = slider.Value;
         }
 
         private void CheckBoxBoundingBoxColorBlindRinedlyColors_Click(object sender, RoutedEventArgs e)
         {
-            this.timelapseState.BoundingBoxColorBlindFriendlyColors = this.CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked == true;
+            timelapseState.BoundingBoxColorBlindFriendlyColors = CheckBoxBoundingBoxColorBlindFriendlyColors.IsChecked == true;
         }
 
         private void CheckBoxBoundingBoxAnnotate_Click(object sender, RoutedEventArgs e)
         {
-            this.timelapseState.BoundingBoxAnnotate = this.CheckBoxBoundingBoxAnnotate.IsChecked == true;
+            timelapseState.BoundingBoxAnnotate = CheckBoxBoundingBoxAnnotate.IsChecked == true;
         }
         #endregion
 
         #region Callback - Dialog Buttons
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
         #endregion
 

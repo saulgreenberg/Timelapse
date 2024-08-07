@@ -27,8 +27,8 @@ namespace Timelapse.EventArguments
         /// </summary>
         public MarkerEventArgs(Marker tag, bool isNew)
         {
-            this.Marker = tag;
-            this.IsNew = isNew;
+            Marker = tag;
+            IsNew = isNew;
         }
     }
 }

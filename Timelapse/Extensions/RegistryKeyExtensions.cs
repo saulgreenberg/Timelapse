@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using Microsoft.Win32;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
@@ -41,7 +42,7 @@ namespace Timelapse.Extensions
             {
                 return defaultValue;
             }
-            return DateTime.TryParseExact(value, Constant.Time.DateTimeDatabaseFormats, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime dateTime)
+            return DateTime.TryParseExact(value, Time.DateTimeDatabaseFormats, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime dateTime)
                 ? dateTime
                 : defaultValue;
         }
@@ -209,7 +210,7 @@ namespace Timelapse.Extensions
             ThrowIf.IsNullArgument(registryKey, nameof(registryKey));
 
             RegistryKey subKey = registryKey.OpenSubKey(subKeyPath);
-            RecencyOrderedList<string> values = new RecencyOrderedList<string>(Constant.Defaults.NumberOfMostRecentDatabasesToTrack);
+            RecencyOrderedList<string> values = new RecencyOrderedList<string>(Defaults.NumberOfMostRecentDatabasesToTrack);
 
             if (subKey != null)
             {
@@ -251,7 +252,7 @@ namespace Timelapse.Extensions
             // For backwards compatability, we use the UTC format as otherwise older versions of Timelapse will not open
             try
             {
-                registryKey.Write(subKeyPath, value.ToString(Constant.Time.DateTimeDatabaseFormat));
+                registryKey.Write(subKeyPath, value.ToString(Time.DateTimeDatabaseFormat));
             }
             catch
             {

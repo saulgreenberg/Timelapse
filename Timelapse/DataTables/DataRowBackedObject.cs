@@ -21,7 +21,7 @@ namespace Timelapse.DataTables
     {
         #region Public / Protected Properties
         // Get the Database ID associated with this row
-        public long ID => this.Row.GetID();
+        public long ID => Row.GetID();
 
         protected DataRow Row { get; }
         #endregion
@@ -29,7 +29,7 @@ namespace Timelapse.DataTables
         #region Constructor
         protected DataRowBackedObject(DataRow row)
         {
-            this.Row = row;
+            Row = row;
         }
         #endregion
 
@@ -44,7 +44,7 @@ namespace Timelapse.DataTables
             // Check the arguments for null 
             ThrowIf.IsNullArgument(dataTable, nameof(dataTable));
 
-            return dataTable.Rows.IndexOf(this.Row);
+            return dataTable.Rows.IndexOf(Row);
         }
         #endregion
     }

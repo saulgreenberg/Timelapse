@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Util;
@@ -14,7 +15,7 @@ namespace Timelapse.Database
         private void MetadataCompareLevelHierarchyStructureBetweenTemplates(CommonDatabase tdbDatabase, TemplateSyncResults templateSyncResults)
         {
             // shortcut declarations
-            DataTableBackedList<MetadataInfoRow> ddbInfo = this.MetadataInfo;
+            DataTableBackedList<MetadataInfoRow> ddbInfo = MetadataInfo;
             DataTableBackedList<MetadataInfoRow> tdbInfo = tdbDatabase.MetadataInfo;
 
             // Get the max levels for the tdb and ddb MetadataInfo tables. 
@@ -174,7 +175,7 @@ namespace Timelapse.Database
 
                 // Get the datalabels in the various templates 
                 Dictionary<string, string> tdbDataLabels = tdbDatabase.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromControls();
-                Dictionary<string, string> ddbDataLabels = this.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromControls();
+                Dictionary<string, string> ddbDataLabels = GetTypedDataLabelsExceptIDInSpreadsheetOrderFromControls();
 
                 templateSyncResults.DataLabelsInTdbButNotDdbByLevel[level] = Compare.Dictionary1ExceptDictionary2(tdbDataLabels, ddbDataLabels);
                 templateSyncResults.DataLabelsInDdbButNotTdbByLevel[level] = Compare.Dictionary1ExceptDictionary2(ddbDataLabels, tdbDataLabels);
@@ -196,7 +197,7 @@ namespace Timelapse.Database
                     }
 
                     // Check: are the control types different?
-                    ControlRow ddbControl = this.GetControlFromControls(dataLabel);
+                    ControlRow ddbControl = GetControlFromControls(dataLabel);
                     ControlRow tdbControl = tdbDatabase.GetControlFromControls(dataLabel);
                     if (ddbControl.Type != tdbControl.Type)
                     {
@@ -208,7 +209,7 @@ namespace Timelapse.Database
                         else
                         {
                             // Yes. This is an error. Generate an error message, which because its now non-empty, also serves to signal the error.
-                            string msg = FileDatabase.GenerateErrorMessageForIncompatibleTypes(dataLabel, ddbControl.Type, tdbControl.Type);
+                            string msg = GenerateErrorMessageForIncompatibleTypes(dataLabel, ddbControl.Type, tdbControl.Type);
                             AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationErrorsByLevel, level, msg);
                         }
                     }
@@ -296,7 +297,7 @@ namespace Timelapse.Database
                 //        If the result is 0 then there are no levels in common.
                 if (templateSyncResults.InfoRowsInDdbToRenumber.Count > 0)
                 {
-                    for (int i = 1; i < this.GetMetadataInfoTableMaxLevel(); i++)
+                    for (int i = 1; i < GetMetadataInfoTableMaxLevel(); i++)
                     {
                         int level = i;
                         if (templateSyncResults.InfoRowsCommon.Any(s => s.Item1.Level == level && s.Item2.Level == level))
@@ -319,7 +320,7 @@ namespace Timelapse.Database
                     int ddbLevel = commonRow.Item2.Level; // Should be from 1, 2, etc. 
 
                     Dictionary<string, string> tdbDataLabels = tdbDatabase.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromMetadataControls(tdbLevel);
-                    Dictionary<string, string> ddbDataLabels = this.GetTypedDataLabelsExceptIDInSpreadsheetOrderFromMetadataControls(ddbLevel);
+                    Dictionary<string, string> ddbDataLabels = GetTypedDataLabelsExceptIDInSpreadsheetOrderFromMetadataControls(ddbLevel);
                     templateSyncResults.DataLabelsInTdbButNotDdbByLevel[tdbLevel] = Compare.Dictionary1ExceptDictionary2(tdbDataLabels, ddbDataLabels);
                     templateSyncResults.DataLabelsInDdbButNotTdbByLevel[tdbLevel] = Compare.Dictionary1ExceptDictionary2(ddbDataLabels, tdbDataLabels);
 
@@ -339,7 +340,7 @@ namespace Timelapse.Database
                         // A. Mismatch control types ? => Sync Error.
                         //    We compare each dataLabel's type in the .ddb vs .tdb template to see if they are the same.
                         //    If they are not, then we need to flag that.
-                        MetadataControlRow ddbControl = this.GetControlFromMetadataControls(dataLabel, ddbLevel);
+                        MetadataControlRow ddbControl = GetControlFromMetadataControls(dataLabel, ddbLevel);
                         MetadataControlRow tdbControl = tdbDatabase.GetControlFromMetadataControls(dataLabel, tdbLevel);
                         if (ddbControl.Type != tdbControl.Type)
                         {
@@ -350,7 +351,7 @@ namespace Timelapse.Database
                             else
                             {
                                 // Incompatible Syncronization Error: We found an Incompatible type switch
-                                string msg = FileDatabase.GenerateErrorMessageForIncompatibleTypes(dataLabel, ddbControl.Type, tdbControl.Type);
+                                string msg = GenerateErrorMessageForIncompatibleTypes(dataLabel, ddbControl.Type, tdbControl.Type);
                                 AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationErrorsByLevel, tdbLevel, msg);
 
                                 // Don't bother checking for other possible warnings below, as we only display critical errors when they occur.
@@ -408,48 +409,48 @@ namespace Timelapse.Database
         // Return true iff  a type conversion between a tdbControl's type vs the existing ddb Control type is compatable
         private static bool IsTypeConversionCompatible(string ddbControlType, string tdbControlType)
         {
-            return (ddbControlType == Constant.Control.AlphaNumeric && tdbControlType == Constant.Control.Note) || // Alpha -> Note
-                   (ddbControlType == Constant.Control.AlphaNumeric && tdbControlType == Constant.Control.MultiLine) || // Alpha -> Multiline
+            return (ddbControlType == Control.AlphaNumeric && tdbControlType == Control.Note) || // Alpha -> Note
+                   (ddbControlType == Control.AlphaNumeric && tdbControlType == Control.MultiLine) || // Alpha -> Multiline
 
-                   (ddbControlType == Constant.Control.Note && tdbControlType == Constant.Control.MultiLine) || // Note -> Multiline
+                   (ddbControlType == Control.Note && tdbControlType == Control.MultiLine) || // Note -> Multiline
 
-                   (ddbControlType == Constant.Control.MultiLine && tdbControlType == Constant.Control.Note) || // MultiLine -> Note
+                   (ddbControlType == Control.MultiLine && tdbControlType == Control.Note) || // MultiLine -> Note
 
-                   (ddbControlType == Constant.Control.FixedChoice && tdbControlType == Constant.Control.Note) || // FixedChoice -> Note
-                   (ddbControlType == Constant.Control.FixedChoice && tdbControlType == Constant.Control.MultiLine) || // FixedChoice -> Multiline
+                   (ddbControlType == Control.FixedChoice && tdbControlType == Control.Note) || // FixedChoice -> Note
+                   (ddbControlType == Control.FixedChoice && tdbControlType == Control.MultiLine) || // FixedChoice -> Multiline
 
-                   (ddbControlType == Constant.Control.MultiChoice && tdbControlType == Constant.Control.Note) || // MultiChoice -> Note
-                   (ddbControlType == Constant.Control.MultiChoice && tdbControlType == Constant.Control.MultiLine) || // MultiChoice -> Multiline
+                   (ddbControlType == Control.MultiChoice && tdbControlType == Control.Note) || // MultiChoice -> Note
+                   (ddbControlType == Control.MultiChoice && tdbControlType == Control.MultiLine) || // MultiChoice -> Multiline
 
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.IntegerPositive) || // Count -> IntPos  
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.IntegerAny) || // Count -> IntAny  
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.DecimalPositive) || // Count -> DecPos  
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.DecimalAny) || // Count -> DecAny  
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.Note) || // Count -> Note  
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.MultiLine) || // Count -> MultiLine  
-                   (ddbControlType == Constant.Control.Counter && tdbControlType == Constant.Control.AlphaNumeric) || // Count -> AlphaNumeric  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.IntegerPositive) || // Count -> IntPos  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.IntegerAny) || // Count -> IntAny  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.DecimalPositive) || // Count -> DecPos  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.DecimalAny) || // Count -> DecAny  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.Note) || // Count -> Note  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.MultiLine) || // Count -> MultiLine  
+                   (ddbControlType == Control.Counter && tdbControlType == Control.AlphaNumeric) || // Count -> AlphaNumeric  
 
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.IntegerAny) || // IntPos -> Int        
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.DecimalPositive) || // IntPos -> DecPos
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.DecimalAny) || // IntPos -> Dec
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.Counter) || // IntPos -> Count       
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.Note) || // IntPos -> Note          
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.MultiLine) || // IntPos -> MultLine
-                   (ddbControlType == Constant.Control.IntegerPositive && tdbControlType == Constant.Control.AlphaNumeric) || // IntPos -> AlphaNumeric
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.IntegerAny) || // IntPos -> Int        
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.DecimalPositive) || // IntPos -> DecPos
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.DecimalAny) || // IntPos -> Dec
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.Counter) || // IntPos -> Count       
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.Note) || // IntPos -> Note          
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.MultiLine) || // IntPos -> MultLine
+                   (ddbControlType == Control.IntegerPositive && tdbControlType == Control.AlphaNumeric) || // IntPos -> AlphaNumeric
 
-                   (ddbControlType == Constant.Control.IntegerAny && tdbControlType == Constant.Control.DecimalAny) || // IntAny -> DecAny     
-                   (ddbControlType == Constant.Control.IntegerAny && tdbControlType == Constant.Control.Note) || // IntAny -> Note          
-                   (ddbControlType == Constant.Control.IntegerAny && tdbControlType == Constant.Control.MultiLine) || // IntAny -> MultLine
-                   (ddbControlType == Constant.Control.IntegerAny && tdbControlType == Constant.Control.AlphaNumeric) || // IntAny -> AlphaNumeric
+                   (ddbControlType == Control.IntegerAny && tdbControlType == Control.DecimalAny) || // IntAny -> DecAny     
+                   (ddbControlType == Control.IntegerAny && tdbControlType == Control.Note) || // IntAny -> Note          
+                   (ddbControlType == Control.IntegerAny && tdbControlType == Control.MultiLine) || // IntAny -> MultLine
+                   (ddbControlType == Control.IntegerAny && tdbControlType == Control.AlphaNumeric) || // IntAny -> AlphaNumeric
 
-                   (ddbControlType == Constant.Control.DecimalPositive && tdbControlType == Constant.Control.DecimalAny) || // DecPos -> DecAny
-                   (ddbControlType == Constant.Control.DecimalPositive && tdbControlType == Constant.Control.Note) || // DecPos -> Note          
-                   (ddbControlType == Constant.Control.DecimalPositive && tdbControlType == Constant.Control.MultiLine) || // DecPos -> MultLine
-                   (ddbControlType == Constant.Control.DecimalPositive && tdbControlType == Constant.Control.AlphaNumeric) || // DecPos -> AlphaNumeric
+                   (ddbControlType == Control.DecimalPositive && tdbControlType == Control.DecimalAny) || // DecPos -> DecAny
+                   (ddbControlType == Control.DecimalPositive && tdbControlType == Control.Note) || // DecPos -> Note          
+                   (ddbControlType == Control.DecimalPositive && tdbControlType == Control.MultiLine) || // DecPos -> MultLine
+                   (ddbControlType == Control.DecimalPositive && tdbControlType == Control.AlphaNumeric) || // DecPos -> AlphaNumeric
 
-                   (ddbControlType == Constant.Control.DecimalAny && tdbControlType == Constant.Control.Note) || // DecAny -> Note          
-                   (ddbControlType == Constant.Control.DecimalAny && tdbControlType == Constant.Control.MultiLine) || // DecAny -> MultLine
-                   (ddbControlType == Constant.Control.DecimalAny && tdbControlType == Constant.Control.AlphaNumeric); // DecAny -> AlphaNumeric
+                   (ddbControlType == Control.DecimalAny && tdbControlType == Control.Note) || // DecAny -> Note          
+                   (ddbControlType == Control.DecimalAny && tdbControlType == Control.MultiLine) || // DecAny -> MultLine
+                   (ddbControlType == Control.DecimalAny && tdbControlType == Control.AlphaNumeric); // DecAny -> AlphaNumeric
 
         }
 
@@ -461,8 +462,8 @@ namespace Timelapse.Database
             string msg = $"  \u2022 Your template wants to redefine your '{dataLabel}' data from {ddbControlType}\u21D2{tdbControlType}.{Environment.NewLine}";
 
             // various controls x-> Alpha
-            if (ddbControlType != Constant.Control.AlphaNumeric && ddbControlType != Constant.Control.Flag && !IsCondition.IsNumberType(ddbControlType)
-                && tdbControlType == Constant.Control.AlphaNumeric)
+            if (ddbControlType != Control.AlphaNumeric && ddbControlType != Control.Flag && !IsCondition.IsNumberType(ddbControlType)
+                && tdbControlType == Control.AlphaNumeric)
             {
                 msg += $"     Problem: {tdbControlType} only allows <A:z, 0-9, -, _>, while your existing {ddbControlType} data can contain other characters.";
             }
@@ -474,9 +475,9 @@ namespace Timelapse.Database
             }
 
             // Any number any control x-> positive number
-            else if ((ddbControlType == Constant.Control.DecimalAny || ddbControlType == Constant.Control.IntegerAny)
+            else if ((ddbControlType == Control.DecimalAny || ddbControlType == Control.IntegerAny)
                      &&
-                     (tdbControlType == Constant.Control.DecimalPositive || tdbControlType == Constant.Control.IntegerPositive || tdbControlType == Constant.Control.Counter))            // Any non-numer control -> number
+                     (tdbControlType == Control.DecimalPositive || tdbControlType == Control.IntegerPositive || tdbControlType == Control.Counter))            // Any non-numer control -> number
             {
                 msg += $"     Problem: {tdbControlType} only allows positive numbers, while your existing {ddbControlType} data can contain negative numbers.";
             }
@@ -488,8 +489,8 @@ namespace Timelapse.Database
             }
 
             // MultiChoice x-> FixedChoice
-            else if (ddbControlType == Constant.Control.MultiChoice &&
-                    (tdbControlType == Constant.Control.FixedChoice || tdbControlType == Constant.Control.IntegerPositive || tdbControlType == Constant.Control.Counter))            // Any non-numer control -> number
+            else if (ddbControlType == Control.MultiChoice &&
+                    (tdbControlType == Control.FixedChoice || tdbControlType == Control.IntegerPositive || tdbControlType == Control.Counter))            // Any non-numer control -> number
             {
                 msg += $"     Problem: {tdbControlType} allows only a single selection, while your existing {ddbControlType} data can comprise multiple selections.";
             }
@@ -507,7 +508,7 @@ namespace Timelapse.Database
             }
 
             // Any control -> flag
-            else if (tdbControlType == Constant.Control.Flag)
+            else if (tdbControlType == Control.Flag)
             {
                 msg += $"     Problem: {tdbControlType} only allows true/false values, while your existing {ddbControlType} data can contain non-true/false text.";
             }

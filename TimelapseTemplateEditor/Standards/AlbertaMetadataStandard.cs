@@ -10,6 +10,10 @@ namespace TimelapseTemplateEditor.Standards
         // - a list of StandardsRow,
         // - level aliases
         // - a list of common species (used by particular rows), 
+
+        // Name of this standard
+        public static string Standard = Timelapse.Constant.Standards.AlbertaMetadataStandard;
+
         #region The Alias specification associated with each level
         public static Dictionary<int, string> Aliases = new Dictionary<int, string>
         {
@@ -19,6 +23,7 @@ namespace TimelapseTemplateEditor.Standards
             {4, "Sample Station"},
             {5, "Deployment"}
         };
+
         #endregion
 
         #region List of common species

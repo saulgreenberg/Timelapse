@@ -7,12 +7,12 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class WarningToUpdateDBFilesToSQL
     {
-        public bool DontShowAgain => this.CheckBoxDontShowAgain.IsChecked == true;
+        public bool DontShowAgain => CheckBoxDontShowAgain.IsChecked == true;
 
         public WarningToUpdateDBFilesToSQL(Window owner)
         {
-            this.InitializeComponent();
-            this.Owner = owner;
+            InitializeComponent();
+            Owner = owner;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -21,7 +21,7 @@ namespace Timelapse.Dialog
         }
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
     }
 }

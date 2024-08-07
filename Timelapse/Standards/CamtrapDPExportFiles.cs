@@ -5,20 +5,20 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
-using Timelapse.ControlsMetadata;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
-using Timelapse.Enums;
 using Timelapse.Util;
 using DataPackage = Timelapse.Standards.CamtrapDPConstants.DataPackage;
+using File = Timelapse.Constant.File;
+
 #pragma warning disable IDE1006
 
 namespace Timelapse.Standards
@@ -33,10 +33,10 @@ namespace Timelapse.Standards
         // If something goes wrong, return null
         public static async Task<List<string>> ExportCamtrapDPDataPackageToJsonFile(FileDatabase database, string dataPackageFilePath)
         {
-            Standards.CamtrapDPDataPackage datapackage = new CamtrapDPDataPackage();
-            Standards.resources resourceDeployment = new Standards.resources();
-            Standards.resources resourceMedia = new Standards.resources();
-            Standards.resources resourceObservations = new Standards.resources();
+            CamtrapDPDataPackage datapackage = new CamtrapDPDataPackage();
+            resources resourceDeployment = new resources();
+            resources resourceMedia = new resources();
+            resources resourceObservations = new resources();
             datapackage.resources.Add(resourceDeployment);
             datapackage.resources.Add(resourceMedia);
             datapackage.resources.Add(resourceObservations);
@@ -66,7 +66,7 @@ namespace Timelapse.Standards
                     int level = infoRow.Level;
 
                     // Get the rows for this level
-                    DataTables.DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
+                    DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
                         ? null
                         : value;
                     if (rows == null)
@@ -143,7 +143,7 @@ namespace Timelapse.Standards
                                     datapackage.title = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
                                     break;
                                 case DataPackage.Contributors:
-                                    datapackage.contributors = JsonConvert.DeserializeObject<List<Standards.contributors>>(row[dataLabelAndType.Key], settings);
+                                    datapackage.contributors = JsonConvert.DeserializeObject<List<contributors>>(row[dataLabelAndType.Key], settings);
                                     break;
                                 case DataPackage.Description:
                                     datapackage.description = string.IsNullOrWhiteSpace(row[dataLabelAndType.Key]) ? null : row[dataLabelAndType.Key];
@@ -163,12 +163,12 @@ namespace Timelapse.Standards
 
                                 // Sources object
                                 case DataPackage.Sources:
-                                    datapackage.sources = JsonConvert.DeserializeObject<List<Standards.sources>>(row[dataLabelAndType.Key], settings);
+                                    datapackage.sources = JsonConvert.DeserializeObject<List<sources>>(row[dataLabelAndType.Key], settings);
                                     break;
 
                                 // Licenses object
                                 case DataPackage.Licenses:
-                                    datapackage.licenses = JsonConvert.DeserializeObject<List<Standards.licenses>>(row[dataLabelAndType.Key], settings);
+                                    datapackage.licenses = JsonConvert.DeserializeObject<List<licenses>>(row[dataLabelAndType.Key], settings);
                                     break;
 
                                 case DataPackage.BibliographicCitation:
@@ -249,14 +249,14 @@ namespace Timelapse.Standards
                                 case DataPackage.Taxonomic:
                                     datapackage.taxonomic = string.IsNullOrEmpty(row[dataLabelAndType.Key]) || "[]" == row[dataLabelAndType.Key]
                                         ? null
-                                        : JsonConvert.DeserializeObject<List<Standards.taxonomic>>(row[dataLabelAndType.Key], settings);
+                                        : JsonConvert.DeserializeObject<List<taxonomic>>(row[dataLabelAndType.Key], settings);
                                     break;
 
                                 // RelatedIdentifiers Object
                                 case DataPackage.RelatedIdentifiers:
                                     datapackage.relatedIdentifiers = string.IsNullOrEmpty(row[dataLabelAndType.Key]) || "[]" == row[dataLabelAndType.Key]
                                         ? null
-                                        : JsonConvert.DeserializeObject<List<Standards.relatedIdentifiers>>(row[dataLabelAndType.Key], settings);
+                                        : JsonConvert.DeserializeObject<List<relatedIdentifiers>>(row[dataLabelAndType.Key], settings);
                                     break;
 
                                 // References Object
@@ -278,7 +278,7 @@ namespace Timelapse.Standards
                     using (StreamWriter fileWriter = new StreamWriter(dataPackageFilePath, false))
                     {
                         StringBuilder dataPackageAsJson = new StringBuilder();
-                        settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
+                        settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
                         dataPackageAsJson.Append(JsonConvert.SerializeObject(datapackage, settings));
                         fileWriter.WriteLine(dataPackageAsJson);
                     }
@@ -295,7 +295,7 @@ namespace Timelapse.Standards
                     }
                     else
                     {
-                        foreach (Standards.contributors contributor in datapackage.contributors)
+                        foreach (contributors contributor in datapackage.contributors)
                         {
                             if (contributor.title == null)
                             {
@@ -307,7 +307,7 @@ namespace Timelapse.Standards
                     // Sources  required fields
                     if (datapackage.sources != null)
                     {
-                        foreach (Standards.sources source in datapackage.sources)
+                        foreach (sources source in datapackage.sources)
                         {
                             if (source.title == null)
                             {
@@ -320,7 +320,7 @@ namespace Timelapse.Standards
                     // License  required fields
                     if (datapackage.licenses != null)
                     {
-                        foreach (Standards.licenses license in datapackage.licenses)
+                        foreach (licenses license in datapackage.licenses)
                         {
                             if (license.title == null && license.path == null)
                             {
@@ -377,7 +377,7 @@ namespace Timelapse.Standards
                     }
                     else
                     {
-                        foreach (Standards.taxonomic taxonomic in datapackage.taxonomic)
+                        foreach (taxonomic taxonomic in datapackage.taxonomic)
                         {
                             if (taxonomic.scientificName == null)
                             {
@@ -389,7 +389,7 @@ namespace Timelapse.Standards
                     // Related Identifiers required fields
                     if (datapackage.relatedIdentifiers != null)
                     {
-                        foreach (Standards.relatedIdentifiers relatedIdentifiers in datapackage.relatedIdentifiers)
+                        foreach (relatedIdentifiers relatedIdentifiers in datapackage.relatedIdentifiers)
                         {
                             if (relatedIdentifiers.relationType == null || relatedIdentifiers.relatedIdentifier == null || relatedIdentifiers.relatedIdentifierType == null)
                             {
@@ -440,7 +440,7 @@ namespace Timelapse.Standards
                     int level = 2;
 
                     // Get the rows for the deployment level
-                    DataTables.DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
+                    DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
                         ? null
                         : value;
 
@@ -467,7 +467,7 @@ namespace Timelapse.Standards
                         // Check to see if there is any data
                         if (null == rows || rows.RowCount == 0)
                         {
-                            problemList.Add($" • No deployment data is available. Did you create folder-level deployment data?");
+                            problemList.Add(" • No deployment data is available. Did you create folder-level deployment data?");
                             return problemList;
                         }
 
@@ -479,12 +479,12 @@ namespace Timelapse.Standards
                             // Set the DeploymentID to the relative path
                             foreach (KeyValuePair<string, string> dataLabelAndType in dataLabelsAndTypes)
                             {
-                                string where = row[Constant.DatabaseColumn.FolderDataPath];
+                                string where = row[DatabaseColumn.FolderDataPath];
                                 switch (dataLabelAndType.Key)
                                 {
                                     case CamtrapDPConstants.Deployment.DeploymentID:
                                         // Set the deployment id to the relative path
-                                        row[dataLabelAndType.Key] = row[Constant.DatabaseColumn.FolderDataPath];
+                                        row[dataLabelAndType.Key] = row[DatabaseColumn.FolderDataPath];
                                         break;
 
                                     case CamtrapDPConstants.Deployment.Latitude:
@@ -512,7 +512,7 @@ namespace Timelapse.Standards
                                 switch (dataLabelAndType.Value)
                                 {
                                     // Deployment fields only use DateTime_, but put in the code for Date_ or Time_ for added fields
-                                    case Constant.Control.DateTime_:
+                                    case Control.DateTime_:
                                         // Export the  DateTime_ column in CamtrapDP format
                                         string dateTimeString = DateTime.TryParseExact(row[dataLabelAndType.Key],
                                             CamtrapDPConstants.DateTimeFormats.TimelapseFullDateTimeFormat, CultureInfo.InvariantCulture,
@@ -522,7 +522,7 @@ namespace Timelapse.Standards
                                         rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(dateTimeString, includeComma));
                                         includeComma = true;
                                         break;
-                                    case Constant.Control.Date_:
+                                    case Control.Date_:
                                         // Export the  Date_ column column in CamtrapDP format
                                         string dateString = DateTime.TryParseExact(row[dataLabelAndType.Key], CamtrapDPConstants.DateTimeFormats.TimelapseDateOnlyFormat,
                                             CultureInfo.InvariantCulture,
@@ -545,7 +545,7 @@ namespace Timelapse.Standards
                         }
                     }
                     progress.Report(new ProgressBarArguments(Convert.ToInt32((double)level / rows.RowCount * 100.0),
-                        $"Writing the CamtrapDP Deployment CSV file. Please wait...", false, false));
+                        "Writing the CamtrapDP Deployment CSV file. Please wait...", false, false));
 
                     return problemList;
                 }
@@ -604,7 +604,7 @@ namespace Timelapse.Standards
                             bool includeObservationComma = false;
                             foreach (string dataLabel in dataLabels)
                             {
-                                if (MetadataCreateControl.IsStandardControlType(dataLabel))
+                                if (IsCondition.IsStandardControlType(dataLabel))
                                 {
                                     // Ignore standard columns as they are not part of the CamtrapDP standard.
                                     continue;
@@ -614,19 +614,18 @@ namespace Timelapse.Standards
                                 if (CamtrapDPHelpers.IsMediaField(dataLabel))
                                 {
                                     mediaHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(dataLabel, includeMediaComma));
-                                    includeMediaComma = true;
+
                                 }
                                 else
                                 {
                                     observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(dataLabel, includeObservationComma));
-                                    includeObservationComma = true;
                                     if (dataLabel == CamtrapDPConstants.Observations.ObservationID)
                                     {
-                                        observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(CamtrapDPConstants.Observations.DeploymentID, includeObservationComma));
-                                        observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(CamtrapDPConstants.Observations.MediaID, includeObservationComma));
+                                        observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(CamtrapDPConstants.Observations.DeploymentID, true));
+                                        observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(CamtrapDPConstants.Observations.MediaID, true));
                                     }
-
                                 }
+                                includeMediaComma = true;
                             }
                             // Write out the csv header row to each file
                             mediaFileWriter.WriteLine(mediaHeader.ToString());
@@ -641,8 +640,8 @@ namespace Timelapse.Standards
                                 if (database.ReadyToRefresh())
                                 {
                                     int percentDone = (int)100.0 * row / countAllCurrentlySelectedFiles;
-                                    progress.Report(new ProgressBarArguments(percentDone, $"Writing the CamtrapDP Media and Observations CSV files. Please wait", false, false));
-                                    Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime); // Allows the UI thread to update every now and then
+                                    progress.Report(new ProgressBarArguments(percentDone, "Writing the CamtrapDP Media and Observations CSV files. Please wait", false, false));
+                                    Thread.Sleep(ThrottleValues.RenderingBackoffTime); // Allows the UI thread to update every now and then
                                 }
 
                                 includeMediaComma = false;
@@ -655,7 +654,7 @@ namespace Timelapse.Standards
                                 {
                                     // Ignore standard columns as they are not part of the CamtrapDP standard.
                                     // We do use some of their values, though, to populate other CamtrapDP columns as seen below.
-                                    if (MetadataCreateControl.IsStandardControlType(dataLabel))
+                                    if (IsCondition.IsStandardControlType(dataLabel))
                                     {
                                         continue;
                                     }
@@ -697,7 +696,7 @@ namespace Timelapse.Standards
                                         case CamtrapDPConstants.Media.FileMediatype:
                                             // Mediatype is calculated from the file's extension
                                             string extension = Path.GetExtension(image.File);
-                                            mediaRowBuilder.Append(string.Equals(extension, Constant.File.JpgFileExtension, StringComparison.OrdinalIgnoreCase)
+                                            mediaRowBuilder.Append(string.Equals(extension, File.JpgFileExtension, StringComparison.OrdinalIgnoreCase)
                                                 ? CSVHelpers.CSVToCommaSeparatedValue("image/jpeg", includeMediaComma)
                                                 : CSVHelpers.CSVToCommaSeparatedValue($"video/{extension}", includeMediaComma));
                                             includeMediaComma = true;

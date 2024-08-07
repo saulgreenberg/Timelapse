@@ -2,6 +2,7 @@
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.Util
 {
@@ -20,7 +21,7 @@ namespace Timelapse.Util
                 if (droppedFiles != null && droppedFiles.Length == 1)
                 {
                     templateDatabasePath = droppedFiles[0];
-                    if (Path.GetExtension(templateDatabasePath) == Constant.File.TemplateDatabaseFileExtension)
+                    if (Path.GetExtension(templateDatabasePath) == File.TemplateDatabaseFileExtension)
                     {
                         return true;
                     }
@@ -34,7 +35,7 @@ namespace Timelapse.Util
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(dragEvent, nameof(dragEvent));
-            dragEvent.Effects = DragDropFile.IsTemplateFileDragging(dragEvent, out _) 
+            dragEvent.Effects = IsTemplateFileDragging(dragEvent, out _) 
                 ? DragDropEffects.All 
                 : DragDropEffects.None;
             dragEvent.Handled = true;

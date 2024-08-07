@@ -30,11 +30,11 @@ namespace Timelapse.DataStructures
         /// </summary>
         public ErrorsAndWarnings()
         {
-            this.Errors = new List<string>();
-            this.Warnings = new List<string>();
-            this.MergedFiles = new List<string>();
-            this.BackupMessages = new List<string>();
-            this.BackupMade = false;
+            Errors = new List<string>();
+            Warnings = new List<string>();
+            MergedFiles = new List<string>();
+            BackupMessages = new List<string>();
+            BackupMade = false;
         }
         #endregion
     }

@@ -13,14 +13,6 @@ namespace Timelapse.ControlsMetadata
 {
     public static class MetadataCreateControl
     {
-        #region Public static: Check control type
-        // Standard controls are the ones required by Timelapse, eg. File, RelativePath, DateTime, DeleteFlag
-        public static bool IsStandardControlType(string controlType)
-        {
-            return Timelapse.Constant.Control.StandardTypes.Contains(controlType);
-        }
-        #endregion
-
         #region Private Static: Create individual preview control types
         // Returns a stack panel containing two controls
         // The stack panel ensures that controls are layed out as a single unit with certain spatial characteristcs 
@@ -232,7 +224,6 @@ namespace Timelapse.ControlsMetadata
             return comboBox;
         }
         #endregion
-
     }
 }
 

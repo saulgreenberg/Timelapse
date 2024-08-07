@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 
@@ -11,61 +12,61 @@ namespace Timelapse.DataTables
 
         public long ControlOrder
         {
-            get => this.Row.GetLongField(Constant.Control.ControlOrder);
-            set => this.Row.SetField(Constant.Control.ControlOrder, value);
+            get => Row.GetLongField(Control.ControlOrder);
+            set => Row.SetField(Control.ControlOrder, value);
         }
 
         public string DataLabel
         {
-            get => this.Row.GetStringField(Constant.Control.DataLabel);
-            set => this.Row.SetField(Constant.Control.DataLabel, value);
+            get => Row.GetStringField(Control.DataLabel);
+            set => Row.SetField(Control.DataLabel, value);
         }
 
         public string DefaultValue
         {
-            get => this.Row.GetStringField(Constant.Control.DefaultValue);
-            set => this.Row.SetField(Constant.Control.DefaultValue, value);
+            get => Row.GetStringField(Control.DefaultValue);
+            set => Row.SetField(Control.DefaultValue, value);
         }
 
         public string Label
         {
-            get => this.Row.GetStringField(Constant.Control.Label);
-            set => this.Row.SetField(Constant.Control.Label, value);
+            get => Row.GetStringField(Control.Label);
+            set => Row.SetField(Control.Label, value);
         }
         public string List
         {
-            get => this.Row.GetStringField(Constant.Control.List);
-            set => this.Row.SetField(Constant.Control.List, value);
+            get => Row.GetStringField(Control.List);
+            set => Row.SetField(Control.List, value);
         }
 
         public long SpreadsheetOrder
         {
-            get => this.Row.GetLongField(Constant.Control.SpreadsheetOrder);
-            set => this.Row.SetField(Constant.Control.SpreadsheetOrder, value);
+            get => Row.GetLongField(Control.SpreadsheetOrder);
+            set => Row.SetField(Control.SpreadsheetOrder, value);
         }
 
         public string Tooltip
         {
-            get => this.Row.GetStringField(Constant.Control.Tooltip);
-            set => this.Row.SetField(Constant.Control.Tooltip, value);
+            get => Row.GetStringField(Control.Tooltip);
+            set => Row.SetField(Control.Tooltip, value);
         }
 
         public string Type
         {
-            get => this.Row.GetStringField(Constant.Control.Type);
-            set => this.Row.SetField(Constant.Control.Type, value);
+            get => Row.GetStringField(Control.Type);
+            set => Row.SetField(Control.Type, value);
         }
 
         public bool Visible
         {
-            get => this.Row.GetBooleanField(Constant.Control.Visible);
-            set => this.Row.SetField(Constant.Control.Visible, value);
+            get => Row.GetBooleanField(Control.Visible);
+            set => Row.SetField(Control.Visible, value);
         }
 
         public bool ExportToCSV
         {
-            get => this.Row.GetBooleanField(Constant.Control.ExportToCSV);
-            set => this.Row.SetField(Constant.Control.ExportToCSV, value);
+            get => Row.GetBooleanField(Control.ExportToCSV);
+            set => Row.SetField(Control.ExportToCSV, value);
         }
 
 
@@ -95,49 +96,49 @@ namespace Timelapse.DataTables
             bool synchronizationMadeChanges = false;
 
 
-            if (this.ControlOrder != controlRowToMatch.ControlOrder)
+            if (ControlOrder != controlRowToMatch.ControlOrder)
             {
-                this.ControlOrder = controlRowToMatch.ControlOrder;
+                ControlOrder = controlRowToMatch.ControlOrder;
                 synchronizationMadeChanges = true;
             }
-            if (this.DefaultValue != controlRowToMatch.DefaultValue)
+            if (DefaultValue != controlRowToMatch.DefaultValue)
             {
-                this.DefaultValue = controlRowToMatch.DefaultValue;
+                DefaultValue = controlRowToMatch.DefaultValue;
                 synchronizationMadeChanges = true;
             }
-            if (this.Type != controlRowToMatch.Type)
+            if (Type != controlRowToMatch.Type)
             {
-                this.Type = controlRowToMatch.Type;
+                Type = controlRowToMatch.Type;
                 synchronizationMadeChanges = true;
             }
-            if (this.Label != controlRowToMatch.Label)
+            if (Label != controlRowToMatch.Label)
             {
-                this.Label = controlRowToMatch.Label;
+                Label = controlRowToMatch.Label;
                 synchronizationMadeChanges = true;
             }
-            if (this.List != controlRowToMatch.List)
+            if (List != controlRowToMatch.List)
             {
-                this.List = controlRowToMatch.List;
+                List = controlRowToMatch.List;
                 synchronizationMadeChanges = true;
             }
-            if (this.SpreadsheetOrder != controlRowToMatch.SpreadsheetOrder)
+            if (SpreadsheetOrder != controlRowToMatch.SpreadsheetOrder)
             {
-                this.SpreadsheetOrder = controlRowToMatch.SpreadsheetOrder;
+                SpreadsheetOrder = controlRowToMatch.SpreadsheetOrder;
                 synchronizationMadeChanges = true;
             }
-            if (this.Tooltip != controlRowToMatch.Tooltip)
+            if (Tooltip != controlRowToMatch.Tooltip)
             {
-                this.Tooltip = controlRowToMatch.Tooltip;
+                Tooltip = controlRowToMatch.Tooltip;
                 synchronizationMadeChanges = true;
             }
-            if (this.Visible != controlRowToMatch.Visible)
+            if (Visible != controlRowToMatch.Visible)
             {
-                this.Visible = controlRowToMatch.Visible;
+                Visible = controlRowToMatch.Visible;
                 synchronizationMadeChanges = true;
             }
-            if (this.ExportToCSV != controlRowToMatch.ExportToCSV)
+            if (ExportToCSV != controlRowToMatch.ExportToCSV)
             {
-                this.ExportToCSV = controlRowToMatch.ExportToCSV;
+                ExportToCSV = controlRowToMatch.ExportToCSV;
                 synchronizationMadeChanges = true;
             }
             return synchronizationMadeChanges;
@@ -151,19 +152,19 @@ namespace Timelapse.DataTables
         {
             List<ColumnTuple> columnTuples = new List<ColumnTuple>
             {
-                new ColumnTuple(Constant.Control.ControlOrder, this.ControlOrder),
-                new ColumnTuple(Constant.Control.DataLabel, this.DataLabel),
-                new ColumnTuple(Constant.Control.DefaultValue, this.DefaultValue),
-                new ColumnTuple(Constant.Control.Label, this.Label),
-                new ColumnTuple(Constant.Control.List, this.List),
-                new ColumnTuple(Constant.Control.SpreadsheetOrder, this.SpreadsheetOrder),
+                new ColumnTuple(Control.ControlOrder, ControlOrder),
+                new ColumnTuple(Control.DataLabel, DataLabel),
+                new ColumnTuple(Control.DefaultValue, DefaultValue),
+                new ColumnTuple(Control.Label, Label),
+                new ColumnTuple(Control.List, List),
+                new ColumnTuple(Control.SpreadsheetOrder, SpreadsheetOrder),
 
-                new ColumnTuple(Constant.Control.Tooltip, this.Tooltip),
-                new ColumnTuple(Constant.Control.Type, this.Type),
-                new ColumnTuple(Constant.Control.Visible, this.Visible),
-                new ColumnTuple(Constant.Control.ExportToCSV, this.ExportToCSV),
+                new ColumnTuple(Control.Tooltip, Tooltip),
+                new ColumnTuple(Control.Type, Type),
+                new ColumnTuple(Control.Visible, Visible),
+                new ColumnTuple(Control.ExportToCSV, ExportToCSV),
             };
-            return new ColumnTuplesWithWhere(columnTuples, this.ID);
+            return new ColumnTuplesWithWhere(columnTuples, ID);
         }
         #endregion
     }

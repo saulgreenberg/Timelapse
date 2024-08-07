@@ -7,11 +7,13 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Forms;
 using System.Xml;
+using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using Xceed.Wpf.AvalonDock;
 using Xceed.Wpf.AvalonDock.Layout;
 using Xceed.Wpf.AvalonDock.Layout.Serialization;
+using Application = System.Windows.Application;
 
 namespace Timelapse.Extensions
 {
@@ -44,16 +46,16 @@ namespace Timelapse.Extensions
             // If from the resource file, then we have to use the path of the resource file
             switch (layoutKey)
             {
-                case Constant.AvalonLayoutTags.DataEntryOnTop:
-                    layoutName = Constant.AvalonLayoutResourcePaths.DataEntryOnTop;
+                case AvalonLayoutTags.DataEntryOnTop:
+                    layoutName = AvalonLayoutResourcePaths.DataEntryOnTop;
                     isResourceFile = true;
                     break;
-                case Constant.AvalonLayoutTags.DataEntryOnSide:
-                    layoutName = Constant.AvalonLayoutResourcePaths.DataEntryOnSide;
+                case AvalonLayoutTags.DataEntryOnSide:
+                    layoutName = AvalonLayoutResourcePaths.DataEntryOnSide;
                     isResourceFile = true;
                     break;
-                case Constant.AvalonLayoutTags.DataEntryFloating:
-                    layoutName = Constant.AvalonLayoutResourcePaths.DataEntryFloating;
+                case AvalonLayoutTags.DataEntryFloating:
+                    layoutName = AvalonLayoutResourcePaths.DataEntryFloating;
                     isResourceFile = true;
                     break;
                 default:
@@ -75,8 +77,8 @@ namespace Timelapse.Extensions
                     result = timelapse.AvalonLayout_TryLoadFromRegistry(layoutName);
                     if (result)
                     {
-                        timelapse.AvalonLayout_LoadWindowPositionAndSizeFromRegistry(layoutName + Constant.AvalonDockValues.WindowRegistryKeySuffix);
-                        timelapse.AvalonLayout_LoadWindowMaximizeStateFromRegistry(layoutName + Constant.AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
+                        timelapse.AvalonLayout_LoadWindowPositionAndSizeFromRegistry(layoutName + AvalonDockValues.WindowRegistryKeySuffix);
+                        timelapse.AvalonLayout_LoadWindowMaximizeStateFromRegistry(layoutName + AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
                     }
                 }
             }
@@ -92,8 +94,8 @@ namespace Timelapse.Extensions
                 // We are trying to load the last-used layout, but there isn't one. As a fallback, 
                 // we use the default configuration as specified in the XAML: - all tiled with the data entry on top. 
                 // Eve so, we check to see if the window position and size were saved; if they aren't there, it defaults to a reasonable size and position.
-                timelapse.AvalonLayout_LoadWindowPositionAndSizeFromRegistry(layoutName + Constant.AvalonDockValues.WindowRegistryKeySuffix);
-                timelapse.AvalonLayout_LoadWindowMaximizeStateFromRegistry(layoutName + Constant.AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
+                timelapse.AvalonLayout_LoadWindowPositionAndSizeFromRegistry(layoutName + AvalonDockValues.WindowRegistryKeySuffix);
+                timelapse.AvalonLayout_LoadWindowMaximizeStateFromRegistry(layoutName + AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
                 return false;
             }
 
@@ -126,7 +128,7 @@ namespace Timelapse.Extensions
             // Special case for DataEntryFloating:
             // Reposition the floating window in the middle of the main window, but just below the top
             // Note that this assumes there is just a single floating window (which should be the case for this configuration)
-            if (layoutKey == Constant.AvalonLayoutTags.DataEntryFloating)
+            if (layoutKey == AvalonLayoutTags.DataEntryFloating)
             {
                 if (timelapse.DockingManager1.FloatingWindows.Any())
                 {
@@ -391,8 +393,8 @@ namespace Timelapse.Extensions
             // Check the arguments for null 
             ThrowIf.IsNullArgument(timelapse, nameof(timelapse));
 
-            timelapse.AvalonLayout_SaveWindowPositionAndSizeToRegistry(registryKey + Constant.AvalonDockValues.WindowRegistryKeySuffix);
-            timelapse.AvalonLayout_SaveWindowMaximizeStateToRegistry(registryKey + Constant.AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
+            timelapse.AvalonLayout_SaveWindowPositionAndSizeToRegistry(registryKey + AvalonDockValues.WindowRegistryKeySuffix);
+            timelapse.AvalonLayout_SaveWindowMaximizeStateToRegistry(registryKey + AvalonDockValues.WindowMaximizeStateRegistryKeySuffix);
         }
         #endregion
 
@@ -575,7 +577,7 @@ namespace Timelapse.Extensions
             Uri uri1 = new Uri(resourceFilePath);
             try
             {
-                using (Stream stream = System.Windows.Application.GetResourceStream(uri1)?.Stream)
+                using (Stream stream = Application.GetResourceStream(uri1)?.Stream)
                 {
                     if (null == stream)
                     {

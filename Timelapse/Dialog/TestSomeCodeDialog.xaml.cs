@@ -12,8 +12,8 @@ namespace Timelapse.Dialog
         public TestSomeCodeDialog(Window owner, List<string> problems)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.StatusFeedback(problems);
+            Owner = owner;
+            StatusFeedback(problems);
         }
 
         private void TestSomeCodeDialog_OnLoaded(object sender, RoutedEventArgs e)
@@ -31,14 +31,14 @@ namespace Timelapse.Dialog
 
         private void StatusFeedback(string message)
         {
-            this.ListData.Items.Insert(0, message);
+            ListData.Items.Insert(0, message);
         }
 
         public void StatusFeedback(List<string> messages)
         {
             foreach (string message in messages)
             {
-                this.ListData.Items.Add(message);
+                ListData.Items.Add(message);
             }
         }
 

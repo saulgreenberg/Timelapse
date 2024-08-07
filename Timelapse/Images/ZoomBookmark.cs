@@ -14,32 +14,32 @@ namespace Timelapse.Images
         #region Constructore
         public ZoomBookmark()
         {
-            this.Reset();
+            Reset();
         }
         #endregion
 
         #region Set / Get / Apply Scaliing and Translation
         public void Apply(ScaleTransform scale, TranslateTransform translation)
         {
-            scale.ScaleX = this.Scale.X;
-            scale.ScaleY = this.Scale.Y;
-            translation.X = this.Translation.X;
-            translation.Y = this.Translation.Y;
+            scale.ScaleX = Scale.X;
+            scale.ScaleY = Scale.Y;
+            translation.X = Translation.X;
+            translation.Y = Translation.Y;
         }
         public Point GetScale()
         {
-            return this.Scale;
+            return Scale;
         }
 
         public Point GetTranslation()
         {
-            return this.Translation;
+            return Translation;
         }
 
         public void Reset()
         {
-            this.Scale = new Point(1.0, 1.0);
-            this.Translation = new Point(0.0, 0.0);
+            Scale = new Point(1.0, 1.0);
+            Translation = new Point(0.0, 0.0);
         }
         #endregion
 
@@ -48,16 +48,16 @@ namespace Timelapse.Images
         {
             // bookmarks use absolute positions and are therefore specific to a particular display size
             // A corollary of this is the scale transform's center need not be persisted as the bookmark's reset when the display size changes.
-            this.Scale = new Point(scale.ScaleX, scale.ScaleY);
-            this.Translation = new Point(translation.X, translation.Y);
+            Scale = new Point(scale.ScaleX, scale.ScaleY);
+            Translation = new Point(translation.X, translation.Y);
         }
 
         public void Set(Point scale, Point translation)
         {
             // bookmarks use absolute positions and are therefore specific to a particular display size
             // A corollary of this is the scale transform's center need not be persisted as the bookmark's reset when the display size changes.
-            this.Scale = scale;
-            this.Translation = translation;
+            Scale = scale;
+            Translation = translation;
         }
         #endregion
     }

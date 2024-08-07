@@ -13,8 +13,8 @@ namespace Timelapse.Dialog
 
         public RecognitionsAddSubfolderToFilePaths(Window owner, string prefix)
         {
-            this.Owner = owner;
-            this.Prefix = prefix;
+            Owner = owner;
+            Prefix = prefix;
             InitializeComponent();
         }
 
@@ -22,7 +22,7 @@ namespace Timelapse.Dialog
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             // this.Title = String.Format("Add the subfolder \"{0}\" to file paths in the Json?", this.Prefix);
-            this.Message.What = $"Your recognition file is in the subfolder '{this.Prefix}'.{Environment.NewLine}"
+            Message.What = $"Your recognition file is in the subfolder '{Prefix}'.{Environment.NewLine}"
                                 + "The image paths it contains appear to be relative to this subfolder rather than " + Environment.NewLine
                                 + "the root Timelapse folder.";
         }
@@ -30,18 +30,18 @@ namespace Timelapse.Dialog
         private void AddSubfolder_Click(object sender, RoutedEventArgs e)
         {
             AddSubFolderPrefix = true;
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void LeaveThingsAsTheyAre_Click(object sender, RoutedEventArgs e)
         {
             AddSubFolderPrefix = false;
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
     }
 }

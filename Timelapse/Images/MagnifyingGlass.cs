@@ -28,8 +28,8 @@ namespace Timelapse.Images
         /// </summary>
         public bool Show
         {
-            get => this.IsVisible;
-            set => this.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+            get => IsVisible;
+            set => Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         }
         #endregion
 
@@ -53,16 +53,16 @@ namespace Timelapse.Images
         #region Constructor
         public MagnifyingGlass(MarkableCanvas markableCanvas)
         {
-            this.IsEnabled = false;
-            this.IsHitTestVisible = false;
-            this.HorizontalAlignment = HorizontalAlignment.Left;
-            this.Parent = markableCanvas;
-            this.VerticalAlignment = VerticalAlignment.Top;
-            this.Visibility = Visibility.Collapsed;
-            this.ZoomFactor = Constant.MarkableCanvas.MagnifyingGlassDefaultZoom; // A 'just in case' default
+            IsEnabled = false;
+            IsHitTestVisible = false;
+            HorizontalAlignment = HorizontalAlignment.Left;
+            Parent = markableCanvas;
+            VerticalAlignment = VerticalAlignment.Top;
+            Visibility = Visibility.Collapsed;
+            ZoomFactor = Constant.MarkableCanvas.MagnifyingGlassDefaultZoom; // A 'just in case' default
 
-            this.lensAngle = 0;
-            this.magnifyingGlassAngle = 0;
+            lensAngle = 0;
+            magnifyingGlassAngle = 0;
 
             // Create the handle of the magnifying glass
             Line handle = new Line
@@ -82,11 +82,11 @@ namespace Timelapse.Images
             handleBrush.GradientStops.Add(new GradientStop(Colors.LightGreen, 0.9));
             handleBrush.GradientStops.Add(new GradientStop(Colors.Green, 1));
             handle.Stroke = handleBrush;
-            this.Children.Add(handle);
+            Children.Add(handle);
 
             // Create the lens of the magnifying glass
-            this.lensCanvas = new Canvas();
-            this.Children.Add(this.lensCanvas);
+            lensCanvas = new Canvas();
+            Children.Add(lensCanvas);
 
             // lens has a white backgound
             Ellipse lensBackground = new Ellipse
@@ -95,9 +95,9 @@ namespace Timelapse.Images
                 Height = Constant.MarkableCanvas.MagnifyingGlassDiameter,
                 Fill = Brushes.White
             };
-            this.lensCanvas.Children.Add(lensBackground);
+            lensCanvas.Children.Add(lensBackground);
 
-            this.magnifierLens = new Ellipse
+            magnifierLens = new Ellipse
             {
                 Width = Constant.MarkableCanvas.MagnifyingGlassDiameter,
                 Height = Constant.MarkableCanvas.MagnifyingGlassDiameter,
@@ -112,7 +112,7 @@ namespace Timelapse.Images
                 ViewportUnits = BrushMappingMode.RelativeToBoundingBox,
                 Viewport = new Rect(0, 0, 1, 1)
             };
-            this.magnifierLens.Fill = lensFill;
+            magnifierLens.Fill = lensFill;
 
             // outline the lens
             LinearGradientBrush outlineBrush = new LinearGradientBrush
@@ -132,16 +132,16 @@ namespace Timelapse.Images
             {
                 TracePrint.NullException(nameof(stop1) + " and " + nameof(stop2));
             }
-            this.magnifierLens.Stroke = outlineBrush;
-            this.lensCanvas.Children.Add(this.magnifierLens);
+            magnifierLens.Stroke = outlineBrush;
+            lensCanvas.Children.Add(magnifierLens);
 
             Ellipse lensImage = new Ellipse();
-            Canvas.SetLeft(lensImage, 2);
-            Canvas.SetTop(lensImage, 2);
+            SetLeft(lensImage, 2);
+            SetTop(lensImage, 2);
             lensImage.StrokeThickness = 4;
             lensImage.Width = Constant.MarkableCanvas.MagnifyingGlassDiameter - 4;
             lensImage.Height = Constant.MarkableCanvas.MagnifyingGlassDiameter - 4;
-            this.lensCanvas.Children.Add(lensImage);
+            lensCanvas.Children.Add(lensImage);
 
             // crosshairs
             Line verticalCrosshair = new Line
@@ -154,7 +154,7 @@ namespace Timelapse.Images
                 Stroke = Brushes.Black,
                 Opacity = 0.5
             };
-            this.lensCanvas.Children.Add(verticalCrosshair);
+            lensCanvas.Children.Add(verticalCrosshair);
 
             Line horizontalCrosshair = new Line
             {
@@ -166,7 +166,7 @@ namespace Timelapse.Images
                 Stroke = Brushes.Black,
                 Opacity = 0.5
             };
-            this.lensCanvas.Children.Add(horizontalCrosshair);
+            lensCanvas.Children.Add(horizontalCrosshair);
         }
         #endregion
 
@@ -174,19 +174,19 @@ namespace Timelapse.Images
         public void RedrawIfVisible(Point mouseLocation, Canvas canvasToMagnify)
         {
             // nothing to draw
-            if ((this.IsEnabled == false) ||
-                (this.IsVisible == false) ||
-                (this.Visibility != Visibility.Visible) ||
+            if ((IsEnabled == false) ||
+                (IsVisible == false) ||
+                (Visibility != Visibility.Visible) ||
                 (canvasToMagnify == null) ||
-                (this.Parent.ImageToMagnify.Source == null))
+                (Parent.ImageToMagnify.Source == null))
             {
                 return;
             }
 
             // Given a mouse position over the displayed image, we need to know where the equivalent position is over the magnified image (which is a different size)
             // We do this by calculating the ratio of the point over the displayed image, and then using that to calculate the position over the cached image
-            Point mousePosition = NativeMethods.GetCursorPos(this.Parent.ImageToDisplay);
-            Point mouseLocationRatio = Marker.ConvertPointToRatio(mousePosition, this.Parent.ImageToDisplay.ActualWidth, this.Parent.ImageToDisplay.ActualHeight);
+            Point mousePosition = NativeMethods.GetCursorPos(Parent.ImageToDisplay);
+            Point mouseLocationRatio = Marker.ConvertPointToRatio(mousePosition, Parent.ImageToDisplay.ActualWidth, Parent.ImageToDisplay.ActualHeight);
             Point magnifiedLocation = Marker.ConvertRatioToPoint(mouseLocationRatio, canvasToMagnify.Width, canvasToMagnify.Height);
 
             // Create an Visual brush from the unaltered image in the magnification canvas magCanvas, set its properties, and use it to fill the magnifying glass.
@@ -196,10 +196,10 @@ namespace Timelapse.Images
                 ViewboxUnits = BrushMappingMode.Absolute,
                 ViewportUnits = BrushMappingMode.RelativeToBoundingBox,
                 Viewport = new Rect(0, 0, 1, 1),
-                Viewbox = new Rect(magnifiedLocation.X - this.ZoomFactor / 2.0, magnifiedLocation.Y - this.ZoomFactor / 2.0, this.ZoomFactor, this.ZoomFactor)
+                Viewbox = new Rect(magnifiedLocation.X - ZoomFactor / 2.0, magnifiedLocation.Y - ZoomFactor / 2.0, ZoomFactor, ZoomFactor)
             };
             // Finally, fill the magnifying glass with this brush
-            this.magnifierLens.Fill = magnifierBrush;
+            magnifierLens.Fill = magnifierBrush;
 
             // Figure out the magnifying glass angle needed
             // The idea is that we will start rotating when the magnifying glass is near the top and the left of the display
@@ -208,9 +208,9 @@ namespace Timelapse.Images
             // positions of edges where angle should change 
             const double EdgeThreshold = Constant.MarkableCanvas.MagnifyingGlassDiameter; // proximity to an edge where the magnifying glass change angles
             double leftEdge = EdgeThreshold;
-            double rightEdge = this.Parent.ImageToDisplay.ActualWidth - EdgeThreshold;
+            double rightEdge = Parent.ImageToDisplay.ActualWidth - EdgeThreshold;
             double topEdge = EdgeThreshold;
-            double bottomEdge = this.Parent.ImageToDisplay.ActualHeight - EdgeThreshold;
+            double bottomEdge = Parent.ImageToDisplay.ActualHeight - EdgeThreshold;
 
             double newMagnifyingGlassAngle;  // the new angle to rotate the magnifying glass to
             // In various cases, several angles can work so choose a new angle whose difference from the existing angle will cause the least amount of animation 
@@ -224,7 +224,7 @@ namespace Timelapse.Images
             }
             else if (mouseLocation.X < leftEdge)
             {
-                newMagnifyingGlassAngle = AdjustAngle(this.magnifyingGlassAngle, 90, 180);      // middle left edge
+                newMagnifyingGlassAngle = AdjustAngle(magnifyingGlassAngle, 90, 180);      // middle left edge
             }
             else if ((mouseLocation.X > rightEdge) && (mouseLocation.Y < topEdge))
             {
@@ -236,37 +236,37 @@ namespace Timelapse.Images
             }
             else if (mouseLocation.X > rightEdge)
             {
-                newMagnifyingGlassAngle = AdjustAngle(this.magnifyingGlassAngle, 270, 0);       // middle right edge
+                newMagnifyingGlassAngle = AdjustAngle(magnifyingGlassAngle, 270, 0);       // middle right edge
             }
             else if (mouseLocation.Y < topEdge)
             {
-                newMagnifyingGlassAngle = AdjustAngle(this.magnifyingGlassAngle, 270, 180);     // top edge, middle
+                newMagnifyingGlassAngle = AdjustAngle(magnifyingGlassAngle, 270, 180);     // top edge, middle
             }
             else if (mouseLocation.Y > bottomEdge)
             {
-                newMagnifyingGlassAngle = AdjustAngle(this.magnifyingGlassAngle, 0, 90);       // bottom edge, middle
+                newMagnifyingGlassAngle = AdjustAngle(magnifyingGlassAngle, 0, 90);       // bottom edge, middle
             }
             else
             {
-                newMagnifyingGlassAngle = this.magnifyingGlassAngle;                           // far enough from edges, any angle will work: magnifer stays on the display image at any angle; 
+                newMagnifyingGlassAngle = magnifyingGlassAngle;                           // far enough from edges, any angle will work: magnifer stays on the display image at any angle; 
             }
 
             // If the angle has changed, animate the magnifying glass and its contained image to the new angle
-            double lensDiameter = this.magnifierLens.Width;
-            if (Math.Abs(this.magnifyingGlassAngle - newMagnifyingGlassAngle) > .0001)
+            double lensDiameter = magnifierLens.Width;
+            if (Math.Abs(magnifyingGlassAngle - newMagnifyingGlassAngle) > .0001)
             {
                 // Correct the rotation in those cases where it would turn the long way around. 
                 // Note that the new lens angle correction is hard coded rather than calculated, as it works. 
                 double newLensAngle;
                 double uncorrectedNewLensAngle = -newMagnifyingGlassAngle;
-                if (Math.Abs(this.magnifyingGlassAngle - 270) < .0001 && newMagnifyingGlassAngle == 0)
+                if (Math.Abs(magnifyingGlassAngle - 270) < .0001 && newMagnifyingGlassAngle == 0)
                 {
-                    this.magnifyingGlassAngle = -90;
+                    magnifyingGlassAngle = -90;
                     newLensAngle = -360; // subtract the rotation of the magnifying glass to counter that rotational effect
                 }
-                else if (this.magnifyingGlassAngle == 0 && Math.Abs(newMagnifyingGlassAngle - 270) < .0001)
+                else if (magnifyingGlassAngle == 0 && Math.Abs(newMagnifyingGlassAngle - 270) < .0001)
                 {
-                    this.magnifyingGlassAngle = 360;
+                    magnifyingGlassAngle = 360;
                     newLensAngle = 90;
                 }
                 else
@@ -276,16 +276,16 @@ namespace Timelapse.Images
 
                 // Rotate the lens within the magnifying glass
                 Duration animationDuration = new Duration(new TimeSpan(0, 0, 0, 0, 500));
-                DoubleAnimation lensAnimation = new DoubleAnimation(this.lensAngle, newLensAngle, animationDuration);
-                RotateTransform rotateTransformLens = new RotateTransform(this.magnifyingGlassAngle, lensDiameter / 2, lensDiameter / 2);
+                DoubleAnimation lensAnimation = new DoubleAnimation(lensAngle, newLensAngle, animationDuration);
+                RotateTransform rotateTransformLens = new RotateTransform(magnifyingGlassAngle, lensDiameter / 2, lensDiameter / 2);
                 rotateTransformLens.BeginAnimation(RotateTransform.AngleProperty, lensAnimation);
-                this.lensCanvas.RenderTransform = rotateTransformLens;
+                lensCanvas.RenderTransform = rotateTransformLens;
 
                 // Now rotate and position the entire magnifying glass
-                RotateTransform rotateTransformMagnifyingGlass = new RotateTransform(this.magnifyingGlassAngle, lensDiameter, lensDiameter);
-                DoubleAnimation magnifyingGlassAnimation = new DoubleAnimation(this.magnifyingGlassAngle, newMagnifyingGlassAngle, animationDuration);
+                RotateTransform rotateTransformMagnifyingGlass = new RotateTransform(magnifyingGlassAngle, lensDiameter, lensDiameter);
+                DoubleAnimation magnifyingGlassAnimation = new DoubleAnimation(magnifyingGlassAngle, newMagnifyingGlassAngle, animationDuration);
                 rotateTransformMagnifyingGlass.BeginAnimation(RotateTransform.AngleProperty, magnifyingGlassAnimation);
-                this.RenderTransform = rotateTransformMagnifyingGlass;
+                RenderTransform = rotateTransformMagnifyingGlass;
 
                 // Save the angle so we can compare it on the next iteration. If any of them are 360, swap it to 0
                 if (newMagnifyingGlassAngle % 360 == 0)
@@ -296,11 +296,11 @@ namespace Timelapse.Images
                 {
                     uncorrectedNewLensAngle = 0;
                 }
-                this.magnifyingGlassAngle = newMagnifyingGlassAngle;
-                this.lensAngle = uncorrectedNewLensAngle;
+                magnifyingGlassAngle = newMagnifyingGlassAngle;
+                lensAngle = uncorrectedNewLensAngle;
             }
-            Canvas.SetLeft(this, mouseLocation.X - lensDiameter);
-            Canvas.SetTop(this, mouseLocation.Y - lensDiameter);
+            SetLeft(this, mouseLocation.X - lensDiameter);
+            SetTop(this, mouseLocation.Y - lensDiameter);
         }
         #endregion
 
@@ -312,7 +312,8 @@ namespace Timelapse.Images
             {
                 return angle2;
             }
-            else if (Math.Abs(currentAngle - angle1) > 180)
+
+            if (Math.Abs(currentAngle - angle1) > 180)
             {
                 return angle2;
             }

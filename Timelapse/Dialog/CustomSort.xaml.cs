@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.SearchingAndSorting;
 
@@ -27,10 +28,10 @@ namespace Timelapse.Dialog
         #region Constructor and Loaded
         public CustomSort(FileDatabase database)
         {
-            this.InitializeComponent();
+            InitializeComponent();
             this.database = database;
-            this.SortTerm1 = new SortTerm();
-            this.SortTerm2 = new SortTerm();
+            SortTerm1 = new SortTerm();
+            SortTerm2 = new SortTerm();
         }
 
         // When the window is loaded, add SearchTerm controls to it
@@ -40,28 +41,28 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Get the sort terms. 
-            this.sortTermList = SortTerms.GetSortTerms(this.database.CustomSelection.SearchTerms);
+            sortTermList = SortTerms.GetSortTerms(database.CustomSelection.SearchTerms);
 
             // We need the labels of the File and Date datalabels, as we will check to see if they are selected in the combo box
-            foreach (SortTerm sortTerm in this.sortTermList)
+            foreach (SortTerm sortTerm in sortTermList)
             {
-                if (sortTerm.DataLabel == Constant.DatabaseColumn.File)
+                if (sortTerm.DataLabel == DatabaseColumn.File)
                 {
-                    this.fileDisplayLabel = sortTerm.DisplayLabel;
+                    fileDisplayLabel = sortTerm.DisplayLabel;
                 }
-                else if (sortTerm.DataLabel == Constant.DatabaseColumn.DateTime)
+                else if (sortTerm.DataLabel == DatabaseColumn.DateTime)
                 {
-                    this.dateDisplayLabel = sortTerm.DisplayLabel;
+                    dateDisplayLabel = sortTerm.DisplayLabel;
                 }
-                else if (sortTerm.DataLabel == Constant.DatabaseColumn.RelativePath)
+                else if (sortTerm.DataLabel == DatabaseColumn.RelativePath)
                 {
-                    this.relativePathDisplayLabel = sortTerm.DisplayLabel;
+                    relativePathDisplayLabel = sortTerm.DisplayLabel;
                 }
             }
 
             // Create the combo box entries showing the sort terms
             // As a side effect, PopulatePrimaryComboBox() invokes PrimaryComboBox_SelectionChanged, which then populates the secondary combo bo
-            this.PopulatePrimaryUIElements();
+            PopulatePrimaryUIElements();
         }
         #endregion
 
@@ -73,52 +74,52 @@ namespace Timelapse.Dialog
         {
             // Populate the Primary combo box with choices
             // By default, we select sort by ID unless its over-ridden
-            this.PrimaryComboBox.SelectedIndex = 0;
-            SortTerm sortTermDB = this.database.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
+            PrimaryComboBox.SelectedIndex = 0;
+            SortTerm sortTermDB = database.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
             bool dateTimeAlreadyProcessed = false; 
-            foreach (SortTerm sortTerm in this.sortTermList)
+            foreach (SortTerm sortTerm in sortTermList)
             {
                 // As there are two datetimes in the sort terms, just use the first one.
-                if (sortTerm.DisplayLabel == Constant.DatabaseColumn.DateTime && dateTimeAlreadyProcessed == false)
+                if (sortTerm.DisplayLabel == DatabaseColumn.DateTime && dateTimeAlreadyProcessed == false)
                 {
                     dateTimeAlreadyProcessed = true;
                     continue;
                 }
 
-                if (sortTerm.DataLabel == Constant.DatabaseColumn.File && sortTerm.DisplayLabel == Constant.DatabaseColumn.File)
+                if (sortTerm.DataLabel == DatabaseColumn.File && sortTerm.DisplayLabel == DatabaseColumn.File)
                 {
                     // There are two files in the sort terms, one where it sorts by full path and the other by just the file name
                     // Skip the one with just the file name, as the sql sort method is tuned to look at the full path on sort by file name
                     continue;
                 }
-                this.PrimaryComboBox.Items.Add(sortTerm.DisplayLabel);
+                PrimaryComboBox.Items.Add(sortTerm.DisplayLabel);
 
                 // If the current PrimarySort sort term matches the current item, then set it as selected
                 if (sortTerm.DataLabel == sortTermDB.DataLabel)
                 {
-                    this.PrimaryComboBox.SelectedIndex = this.PrimaryComboBox.Items.Count - 1;
+                    PrimaryComboBox.SelectedIndex = PrimaryComboBox.Items.Count - 1;
                 }
             }
 
             // Set the radio buttons to the default values
-            this.PrimaryAscending.IsChecked = sortTermDB.IsAscending == Constant.BooleanValue.True;
-            this.PrimaryDescending.IsChecked = sortTermDB.IsAscending == Constant.BooleanValue.False;
+            PrimaryAscending.IsChecked = sortTermDB.IsAscending == BooleanValue.True;
+            PrimaryDescending.IsChecked = sortTermDB.IsAscending == BooleanValue.False;
         }
         private void PopulateSecondaryUIElements()
         {
             // Populate the Secondary combo box with choices
             // By default, we select "None' unless its over-ridden
-            this.SecondaryComboBox.Items.Clear();
+            SecondaryComboBox.Items.Clear();
             // Add a 'None' entry, as sorting on a second term is optional
-            this.SecondaryComboBox.Items.Add(Constant.SortTermValues.NoneDisplayLabel);
-            this.SecondaryComboBox.SelectedIndex = 0;
+            SecondaryComboBox.Items.Add(SortTermValues.NoneDisplayLabel);
+            SecondaryComboBox.SelectedIndex = 0;
 
-            SortTerm sortTermDB = this.database.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
+            SortTerm sortTermDB = database.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
             bool dateTimeAlreadyProcessed = false;
-            foreach (SortTerm sortTerm in this.sortTermList)
+            foreach (SortTerm sortTerm in sortTermList)
             {
                 // As there are two datetimes in the sort terms, just use the first one.
-                if (sortTerm.DisplayLabel == Constant.DatabaseColumn.DateTime && dateTimeAlreadyProcessed == false)
+                if (sortTerm.DisplayLabel == DatabaseColumn.DateTime && dateTimeAlreadyProcessed == false)
                 {
                     dateTimeAlreadyProcessed = true;
                     continue;
@@ -128,23 +129,23 @@ namespace Timelapse.Dialog
                 // as it doesn't make sense to sort again on the same term
                 // Additionally, There are two files in the sort terms, one where it sorts by full path and the other by just the file name
                 // Skip the one with just the file name, as the sql sort method is tuned to look at the full path on sort by file name
-                if (sortTerm.DisplayLabel == (string)this.PrimaryComboBox.SelectedItem
-                   || (sortTerm.DataLabel == Constant.DatabaseColumn.File && sortTerm.DisplayLabel == Constant.DatabaseColumn.File))
+                if (sortTerm.DisplayLabel == (string)PrimaryComboBox.SelectedItem
+                   || (sortTerm.DataLabel == DatabaseColumn.File && sortTerm.DisplayLabel == DatabaseColumn.File))
                 {
                     continue;
                 }
-                this.SecondaryComboBox.Items.Add(sortTerm.DisplayLabel);
+                SecondaryComboBox.Items.Add(sortTerm.DisplayLabel);
 
                 // If the current SecondarySort sort term matches the current item, then set it as selected.
                 // Note that we check both terms for it, as File would be the 2nd term vs. the 1st term
                 if (sortTermDB.DataLabel == sortTerm.DataLabel)
                 {
-                    this.SecondaryComboBox.SelectedIndex = this.SecondaryComboBox.Items.Count - 1;
+                    SecondaryComboBox.SelectedIndex = SecondaryComboBox.Items.Count - 1;
                 }
             }
             // Set the radio buttons to the default values
-            this.SecondaryAscending.IsChecked = sortTermDB.IsAscending == Constant.BooleanValue.True;
-            this.SecondaryDescending.IsChecked = sortTermDB.IsAscending == Constant.BooleanValue.False;
+            SecondaryAscending.IsChecked = sortTermDB.IsAscending == BooleanValue.True;
+            SecondaryDescending.IsChecked = sortTermDB.IsAscending == BooleanValue.False;
         }
         #endregion
 
@@ -152,7 +153,7 @@ namespace Timelapse.Dialog
         // Whenever the primary combobox changes, repopulated the secondary combo box to make sure it excludes the currently selected item
         private void PrimaryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.PopulateSecondaryUIElements();
+            PopulateSecondaryUIElements();
         }
         #endregion
 
@@ -160,79 +161,79 @@ namespace Timelapse.Dialog
         // Apply the selection if the Ok button is clicked
         private void OkButton_Click(object sender, RoutedEventArgs args)
         {
-            string selectedPrimaryItem = (string)this.PrimaryComboBox.SelectedItem;
-            string selectedSecondaryItem = (string)this.SecondaryComboBox.SelectedItem;
+            string selectedPrimaryItem = (string)PrimaryComboBox.SelectedItem;
+            string selectedSecondaryItem = (string)SecondaryComboBox.SelectedItem;
 
-            foreach (SortTerm sortTerm in this.sortTermList)
+            foreach (SortTerm sortTerm in sortTermList)
             {
-                if (selectedPrimaryItem == this.fileDisplayLabel)
+                if (selectedPrimaryItem == fileDisplayLabel)
                 {
-                    this.SortTerm1.DataLabel = Constant.DatabaseColumn.File;
-                    this.SortTerm1.DisplayLabel = this.fileDisplayLabel;
-                    this.SortTerm1.ControlType = string.Empty;
+                    SortTerm1.DataLabel = DatabaseColumn.File;
+                    SortTerm1.DisplayLabel = fileDisplayLabel;
+                    SortTerm1.ControlType = string.Empty;
                 }
-                else if (selectedPrimaryItem == this.dateDisplayLabel)
+                else if (selectedPrimaryItem == dateDisplayLabel)
                 {
-                    this.SortTerm1.DataLabel = Constant.DatabaseColumn.DateTime;
-                    this.SortTerm1.DisplayLabel = this.dateDisplayLabel;
-                    this.SortTerm1.ControlType = string.Empty;
+                    SortTerm1.DataLabel = DatabaseColumn.DateTime;
+                    SortTerm1.DisplayLabel = dateDisplayLabel;
+                    SortTerm1.ControlType = string.Empty;
                 }
-                else if (selectedPrimaryItem == this.relativePathDisplayLabel)
+                else if (selectedPrimaryItem == relativePathDisplayLabel)
                 {
-                    this.SortTerm1.DataLabel = Constant.DatabaseColumn.RelativePath;
-                    this.SortTerm1.DisplayLabel = this.relativePathDisplayLabel;
-                    this.SortTerm1.ControlType = string.Empty;
+                    SortTerm1.DataLabel = DatabaseColumn.RelativePath;
+                    SortTerm1.DisplayLabel = relativePathDisplayLabel;
+                    SortTerm1.ControlType = string.Empty;
                 }
                 else if (selectedPrimaryItem == sortTerm.DisplayLabel)
                 {
-                    this.SortTerm1.DataLabel = sortTerm.DataLabel;
-                    this.SortTerm1.DisplayLabel = sortTerm.DisplayLabel;
-                    this.SortTerm1.ControlType = sortTerm.ControlType;
+                    SortTerm1.DataLabel = sortTerm.DataLabel;
+                    SortTerm1.DisplayLabel = sortTerm.DisplayLabel;
+                    SortTerm1.ControlType = sortTerm.ControlType;
                 }
-                this.SortTerm1.IsAscending = (this.PrimaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+                SortTerm1.IsAscending = (PrimaryAscending.IsChecked == true) ? BooleanValue.True : BooleanValue.False;
             }
 
-            if (selectedSecondaryItem != Constant.SortTermValues.NoneDisplayLabel)
+            if (selectedSecondaryItem != SortTermValues.NoneDisplayLabel)
             {
-                foreach (SortTerm sortTerm in this.sortTermList)
+                foreach (SortTerm sortTerm in sortTermList)
                 {
-                    if (selectedSecondaryItem == this.fileDisplayLabel)
+                    if (selectedSecondaryItem == fileDisplayLabel)
                     {
-                        this.SortTerm2.DataLabel = Constant.DatabaseColumn.File;
-                        this.SortTerm2.DisplayLabel = this.fileDisplayLabel;
-                        this.SortTerm2.ControlType = string.Empty;
-                        this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+                        SortTerm2.DataLabel = DatabaseColumn.File;
+                        SortTerm2.DisplayLabel = fileDisplayLabel;
+                        SortTerm2.ControlType = string.Empty;
+                        SortTerm2.IsAscending = (SecondaryAscending.IsChecked == true) ? BooleanValue.True : BooleanValue.False;
                     }
-                    else if (selectedSecondaryItem == this.dateDisplayLabel)
+                    else if (selectedSecondaryItem == dateDisplayLabel)
                     {
-                        this.SortTerm2.DataLabel = Constant.DatabaseColumn.DateTime;
-                        this.SortTerm2.DisplayLabel = this.dateDisplayLabel;
-                        this.SortTerm2.ControlType = string.Empty;
-                        this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+                        SortTerm2.DataLabel = DatabaseColumn.DateTime;
+                        SortTerm2.DisplayLabel = dateDisplayLabel;
+                        SortTerm2.ControlType = string.Empty;
+                        SortTerm2.IsAscending = (SecondaryAscending.IsChecked == true) ? BooleanValue.True : BooleanValue.False;
                     }
-                    else if (selectedSecondaryItem == this.dateDisplayLabel)
+                    else if (selectedSecondaryItem == dateDisplayLabel)
                     {
-                        this.SortTerm2.DataLabel = Constant.DatabaseColumn.DateTime;
-                        this.SortTerm2.DisplayLabel = this.dateDisplayLabel;
-                        this.SortTerm2.ControlType = string.Empty;
-                        this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+                        SortTerm2.DataLabel = DatabaseColumn.DateTime;
+                        SortTerm2.DisplayLabel = dateDisplayLabel;
+                        SortTerm2.ControlType = string.Empty;
+                        SortTerm2.IsAscending = (SecondaryAscending.IsChecked == true) ? BooleanValue.True : BooleanValue.False;
                     }
                     else if (selectedSecondaryItem == sortTerm.DisplayLabel)
                     {
-                        this.SortTerm2.DataLabel = sortTerm.DataLabel;
-                        this.SortTerm2.DisplayLabel = sortTerm.DisplayLabel;
-                        this.SortTerm2.ControlType = sortTerm.ControlType;
-                        this.SortTerm2.IsAscending = (this.SecondaryAscending.IsChecked == true) ? Constant.BooleanValue.True : Constant.BooleanValue.False;
+                        SortTerm2.DataLabel = sortTerm.DataLabel;
+                        SortTerm2.DisplayLabel = sortTerm.DisplayLabel;
+                        SortTerm2.ControlType = sortTerm.ControlType;
+                        SortTerm2.IsAscending = (SecondaryAscending.IsChecked == true) ? BooleanValue.True : BooleanValue.False;
                     }
                 }
             }
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         // Cancel - exit the dialog without doing anythikng.
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

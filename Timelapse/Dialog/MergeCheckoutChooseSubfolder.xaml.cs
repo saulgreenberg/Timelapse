@@ -4,6 +4,7 @@ using System.Windows;
 using Timelapse.ControlsDataEntry;
 using Timelapse.Database;
 using Timelapse.Util;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.Dialog
 {
@@ -28,15 +29,15 @@ namespace Timelapse.Dialog
         public MergeCheckoutChooseSubfolder(Window owner, string initialFolder, string templateDatabasePath, DataEntryHandler dataHandler)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.InitialFolder = initialFolder;
-            this.TemplateDatabasePath = templateDatabasePath;
-            this.DataHandler = dataHandler;
+            Owner = owner;
+            InitialFolder = initialFolder;
+            TemplateDatabasePath = templateDatabasePath;
+            DataHandler = dataHandler;
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            this.ButtonCheckOut.IsEnabled = false;
+            ButtonCheckOut.IsEnabled = false;
         }
         #endregion
 
@@ -44,36 +45,36 @@ namespace Timelapse.Dialog
         private async void DoCheckout()
         {
             // Copy the template to that folder, generating a unique name if needed
-            string tdbFileName = Constant.File.DefaultTemplateDatabaseFileName;
-            bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(this.FullSubFolderPath, tdbFileName, out string newTdbFileName);
+            string tdbFileName = File.DefaultTemplateDatabaseFileName;
+            bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(FullSubFolderPath, tdbFileName, out string newTdbFileName);
             if (tdbFileNameChanged)
             {
                 tdbFileName = newTdbFileName;
             }
 
             // Copy the main template into that folder, perhaps renaming it
-            string destinationTdbPath = Path.Combine(this.FullSubFolderPath, tdbFileName);
+            string destinationTdbPath = Path.Combine(FullSubFolderPath, tdbFileName);
             try
             {
-                File.Copy(this.TemplateDatabasePath, destinationTdbPath);
+                System.IO.File.Copy(TemplateDatabasePath, destinationTdbPath);
             }
             catch
             {
-                this.SetFeedbackAndDoneVisibility();
+                SetFeedbackAndDoneVisibility();
                 Message.What = string.Empty;
                 Message.Details = string.Empty;
                 Message.Solution = string.Empty;
                 Message.Hint = string.Empty;
                 Message.Result =
                     $"Could not check out the database.{Environment.NewLine}The template could not be copied into the desired folder";
-                this.success = false;
+                success = false;
                 return;
             }
 
             // Alter the just-copied template database so that the ignore flags for the intervening levels are set
             // The idea is not to change anything in the template except for those flags.
             // TODO not sure if ignore flags are the best way to do this yet. May be over-complicated
-            int levelsToIgnore = string.IsNullOrWhiteSpace(this.RelativeSubFolderPath) ? 0 : this.RelativeSubFolderPath.Split(Path.DirectorySeparatorChar).Length;
+            int levelsToIgnore = string.IsNullOrWhiteSpace(RelativeSubFolderPath) ? 0 : RelativeSubFolderPath.Split(Path.DirectorySeparatorChar).Length;
             using (CommonDatabase childTdbTemplate = new CommonDatabase(destinationTdbPath))
             {
                 childTdbTemplate.LoadMetadataControlsAndInfoFromTemplateDBSortedByControlOrder();
@@ -87,15 +88,15 @@ namespace Timelapse.Dialog
             }
 
             // Create an empty database in that folder
-            string ddbFileName = Constant.File.DefaultFileDatabaseFileName;
+            string ddbFileName = File.DefaultFileDatabaseFileName;
             bool ddbFileNameChanged =
-                FilesFolders.GenerateFileNameIfNeeded(this.FullSubFolderPath, ddbFileName, out string newDdbFileName);
+                FilesFolders.GenerateFileNameIfNeeded(FullSubFolderPath, ddbFileName, out string newDdbFileName);
             if (ddbFileNameChanged)
             {
                 // if needed, generate a unique file name
                 ddbFileName = newDdbFileName;
             }
-            string destinationDdbPath = Path.Combine(this.FullSubFolderPath, ddbFileName);
+            string destinationDdbPath = Path.Combine(FullSubFolderPath, ddbFileName);
 
             // We have a unique ddb path. Try to create the empty ddb file
             bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
@@ -104,29 +105,29 @@ namespace Timelapse.Dialog
             if (result == false)
             {
                 // This is rare, don't bother trying to figure out what went wrong.
-                this.SetFeedbackAndDoneVisibility();
+                SetFeedbackAndDoneVisibility();
                 Message.What = string.Empty;
                 Message.Details = string.Empty;
                 Message.Solution = string.Empty;
                 Message.Hint = string.Empty;
                 Message.Result = $"Could not check out the database.{Environment.NewLine}{Environment.NewLine}"
                     + "Something went wrong when trying to create an empty database";
-                this.success = false;
+                success = false;
                 return;
             }
 
             // Tell the user the name(s) of the created file
-            string shortDestinationTdbPath = Path.Combine(this.RelativeSubFolderPath, tdbFileName);
-            string shortDestinationDdbPath = Path.Combine(this.RelativeSubFolderPath, ddbFileName);
+            string shortDestinationTdbPath = Path.Combine(RelativeSubFolderPath, tdbFileName);
+            string shortDestinationDdbPath = Path.Combine(RelativeSubFolderPath, ddbFileName);
 
             // We now have a template and an empty database in the destination folder.
             // Populate it with the data from the source database.
-            MergeDatabases.CheckoutDatabaseWithRelativePath(this.DataHandler.FileDatabase, this.DataHandler.FileDatabase.FilePath, destinationDdbPath,
-                this.RelativeSubFolderPath);
-            this.SetFeedbackAndDoneVisibility();
-            this.DataHandler.FileDatabase.ImageSet.Log +=
+            MergeDatabases.CheckoutDatabaseWithRelativePath(DataHandler.FileDatabase, DataHandler.FileDatabase.FilePath, destinationDdbPath,
+                RelativeSubFolderPath);
+            SetFeedbackAndDoneVisibility();
+            DataHandler.FileDatabase.ImageSet.Log +=
                 $"{Environment.NewLine}{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Checked out:  {shortDestinationDdbPath}";
-            this.RedoMessageBoxWithResults(shortDestinationTdbPath, shortDestinationDdbPath);
+            RedoMessageBoxWithResults(shortDestinationTdbPath, shortDestinationDdbPath);
         }
         #endregion
 
@@ -172,46 +173,46 @@ namespace Timelapse.Dialog
         #region Callbacks
         private void ButtonChooseFolder_OnClick(object sender, RoutedEventArgs e)
         {
-            this.RelativeSubFolderPath = Dialogs.LocateRelativePathUsingOpenFileDialog(this.InitialFolder, String.Empty);
-            if (this.RelativeSubFolderPath == null)
+            RelativeSubFolderPath = Dialogs.LocateRelativePathUsingOpenFileDialog(InitialFolder, String.Empty);
+            if (RelativeSubFolderPath == null)
             {
                 // User cancelled
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(this.RelativeSubFolderPath))
+            if (string.IsNullOrWhiteSpace(RelativeSubFolderPath))
             {
-                this.txtboxNewFolderName.Text = string.Empty;
-                this.FullSubFolderPath = string.Empty;
+                txtboxNewFolderName.Text = string.Empty;
+                FullSubFolderPath = string.Empty;
             }
             else
             {
-                this.txtboxNewFolderName.Text = this.RelativeSubFolderPath;
-                this.FullSubFolderPath = Path.Combine(this.InitialFolder, this.RelativeSubFolderPath);
+                txtboxNewFolderName.Text = RelativeSubFolderPath;
+                FullSubFolderPath = Path.Combine(InitialFolder, RelativeSubFolderPath);
             }
-            this.ButtonCheckOut.IsEnabled = !string.IsNullOrWhiteSpace(this.RelativeSubFolderPath); // Enable the button only if a folder was specified
+            ButtonCheckOut.IsEnabled = !string.IsNullOrWhiteSpace(RelativeSubFolderPath); // Enable the button only if a folder was specified
         }
         private void ButtonCheckOut_Click(object sender, RoutedEventArgs e)
         {
             // ReSharper disable once AssignNullToNotNullAttribute
-            if (Directory.GetFiles(this.FullSubFolderPath, "*" + Constant.File.FileDatabaseFileExtension).Length > 0)
+            if (Directory.GetFiles(FullSubFolderPath, "*" + File.FileDatabaseFileExtension).Length > 0)
             {
                 if (false == Dialogs.MergeWarningCheckOutDdbFileExists(this))
                 {
                     return;
                 }
             }
-            this.DoCheckout();
+            DoCheckout();
         }
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = success;
+            DialogResult = success;
         }
     }
 }

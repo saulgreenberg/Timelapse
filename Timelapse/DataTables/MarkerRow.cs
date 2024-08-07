@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 
@@ -17,8 +18,8 @@ namespace Timelapse.DataTables
         // Given a datalabel of the counter column, return its value (0 or more points separated with a '|')
         public string this[string dataLabel]
         {
-            get => this.Row.GetStringField(dataLabel);
-            set => this.Row.SetField(dataLabel, value);
+            get => Row.GetStringField(dataLabel);
+            set => Row.SetField(dataLabel, value);
         }
 
         // Get as an IEnumerable a list of datalabels (the column names excepting the ID columnname) held in the Markers Table
@@ -26,9 +27,9 @@ namespace Timelapse.DataTables
         {
             get
             {
-                foreach (DataColumn column in this.Row.Table.Columns)
+                foreach (DataColumn column in Row.Table.Columns)
                 {
-                    if (column.ColumnName != Constant.DatabaseColumn.ID)
+                    if (column.ColumnName != DatabaseColumn.ID)
                     {
                         // Yield returns each element one at a time in an IEnumrable
                         yield return column.ColumnName;
@@ -51,11 +52,11 @@ namespace Timelapse.DataTables
         public override ColumnTuplesWithWhere CreateColumnTuplesWithWhereByID()
         {
             List<ColumnTuple> columnTuples = new List<ColumnTuple>();
-            foreach (string dataLabel in this.DataLabels)
+            foreach (string dataLabel in DataLabels)
             {
                 columnTuples.Add(new ColumnTuple(dataLabel, this[dataLabel]));
             }
-            return new ColumnTuplesWithWhere(columnTuples, this.ID);
+            return new ColumnTuplesWithWhere(columnTuples, ID);
         }
         #endregion
     }

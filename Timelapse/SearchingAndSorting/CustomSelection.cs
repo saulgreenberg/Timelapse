@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
@@ -27,7 +28,7 @@ namespace Timelapse.SearchingAndSorting
 
         public CustomSelectionOperatorEnum TermCombiningOperator { get; set; }
         public bool ShowMissingDetections { get; set; }
-        public Recognition.RecognitionSelections DetectionSelections { get; set; }
+        public RecognitionSelections DetectionSelections { get; set; }
 
         // Episode-specific data
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
@@ -65,9 +66,9 @@ namespace Timelapse.SearchingAndSorting
             // Check the arguments for null 
             ThrowIf.IsNullArgument(templateTable, nameof(templateTable));
 
-            this.DetectionSelections = new Recognition.RecognitionSelections();
-            this.SearchTerms = new List<SearchTerm>();
-            this.TermCombiningOperator = termCombiningOperator;
+            DetectionSelections = new RecognitionSelections();
+            SearchTerms = new List<SearchTerm>();
+            TermCombiningOperator = termCombiningOperator;
 
             // skip hidden controls as they're not normally a part of the user experience
             // this is potentially problematic in corner cases; perhaps add an option to show terms for all controls can be added if needed?
@@ -82,7 +83,7 @@ namespace Timelapse.SearchingAndSorting
                     ControlType = controlType,
                     DataLabel = control.DataLabel,
                     DatabaseValue = control.DefaultValue,
-                    Operator = Constant.SearchTermOperator.Equal,
+                    Operator = SearchTermOperator.Equal,
                     Label = control.Label,
                     List = Choices.ChoicesFromJson(control.List).ChoiceList,
                     UseForSearching = false
@@ -93,53 +94,53 @@ namespace Timelapse.SearchingAndSorting
                     // Add the empty string to the beginning of the search list, which allows the option of searching for empty items
                     searchTerm.List.Insert(0, string.Empty);
                 }
-                this.SearchTerms.Add(searchTerm);
+                SearchTerms.Add(searchTerm);
 
                 // Create a new search term for each row, where each row specifies a particular control and how it can be searched
-                if (controlType == Constant.Control.Counter ||
-                    controlType == Constant.Control.IntegerAny ||
-                    controlType == Constant.Control.IntegerPositive ||
-                    controlType == Constant.Control.DecimalAny ||
-                    controlType == Constant.Control.DecimalPositive)
+                if (controlType == Control.Counter ||
+                    controlType == Control.IntegerAny ||
+                    controlType == Control.IntegerPositive ||
+                    controlType == Control.DecimalAny ||
+                    controlType == Control.DecimalPositive)
                 {
                     searchTerm.DatabaseValue = "0";
-                    searchTerm.Operator = Constant.SearchTermOperator.GreaterThan;  // Makes more sense that people will test for > as the default rather than counters
+                    searchTerm.Operator = SearchTermOperator.GreaterThan;  // Makes more sense that people will test for > as the default rather than counters
                 }
-                else if (controlType == Constant.DatabaseColumn.DateTime && false == this.UseTimeInsteadOfDate)
+                else if (controlType == DatabaseColumn.DateTime && false == UseTimeInsteadOfDate)
                 {
                     // Because UseTimeInsteadofDate is false, we use the Date portion of the DateTime
                     // Note that the first time the CustomSelection dialog is popped Timelapse calls SetDateTime() to changes the default date time to the date time 
                     // of the current image
-                    searchTerm.DatabaseValue = DateTimeHandler.ToStringDatabaseDateTime(Constant.ControlDefault.DateTimeDefaultValue);
-                    searchTerm.Operator = Constant.SearchTermOperator.GreaterThanOrEqual;
+                    searchTerm.DatabaseValue = DateTimeHandler.ToStringDatabaseDateTime(ControlDefault.DateTimeDefaultValue);
+                    searchTerm.Operator = SearchTermOperator.GreaterThanOrEqual;
 
                     // support querying on a range of datetimes by giving the user two search terms, one configured for the start of the interval and one
                     // for the end
                     SearchTerm dateTimeLessThanOrEqual = new SearchTerm(searchTerm)
                     {
-                        Operator = Constant.SearchTermOperator.LessThanOrEqual
+                        Operator = SearchTermOperator.LessThanOrEqual
                     };
-                    this.SearchTerms.Add(dateTimeLessThanOrEqual);
+                    SearchTerms.Add(dateTimeLessThanOrEqual);
                 }
-                else if (controlType == Constant.DatabaseColumn.DateTime && this.UseTimeInsteadOfDate)
+                else if (controlType == DatabaseColumn.DateTime && UseTimeInsteadOfDate)
                 {
                     // Because UseTimeInsteadofDate is true, we use the Time portion of the DateTime
                     // the first time the CustomSelection dialog is popped Timelapse calls SetDateTime() to changes the default date time to the date time 
                     // of the current image
-                    searchTerm.DatabaseValue = DateTimeHandler.ToStringTime(Constant.ControlDefault.DateTimeDefaultValue);
-                    searchTerm.Operator = Constant.SearchTermOperator.GreaterThanOrEqual;
+                    searchTerm.DatabaseValue = DateTimeHandler.ToStringTime(ControlDefault.DateTimeDefaultValue);
+                    searchTerm.Operator = SearchTermOperator.GreaterThanOrEqual;
 
                     // support querying on a range of datetimes by giving the user two search terms, one configured for the start of the interval and one
                     // for the end
                     SearchTerm dateTimeLessThanOrEqual = new SearchTerm(searchTerm)
                     {
-                        Operator = Constant.SearchTermOperator.LessThanOrEqual
+                        Operator = SearchTermOperator.LessThanOrEqual
                     };
-                    this.SearchTerms.Add(dateTimeLessThanOrEqual);
+                    SearchTerms.Add(dateTimeLessThanOrEqual);
                 }
-                else if (controlType == Constant.Control.Flag)
+                else if (controlType == Control.Flag)
                 {
-                    searchTerm.DatabaseValue = Constant.BooleanValue.False;
+                    searchTerm.DatabaseValue = BooleanValue.False;
                 }
             }
 
@@ -149,19 +150,19 @@ namespace Timelapse.SearchingAndSorting
 
             // Get the unordered standard search tersm
             IEnumerable<SearchTerm> unorderedStandardSearchTerms = SearchTerms.Where(
-                term => term.DataLabel == Constant.DatabaseColumn.File ||
-                           term.DataLabel == Constant.DatabaseColumn.RelativePath || term.DataLabel == Constant.DatabaseColumn.DateTime ||
-                           term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
+                term => term.DataLabel == DatabaseColumn.File ||
+                           term.DataLabel == DatabaseColumn.RelativePath || term.DataLabel == DatabaseColumn.DateTime ||
+                           term.DataLabel == DatabaseColumn.DeleteFlag);
 
             // Create a dictionary that will contain items in the correct order
-            string secondDateTimeLabel = "2nd" + Constant.DatabaseColumn.DateTime;
+            string secondDateTimeLabel = "2nd" + DatabaseColumn.DateTime;
             Dictionary<string, SearchTerm> dictOrderedTerms = new Dictionary<string, SearchTerm>
             {
-                { Constant.DatabaseColumn.File, null },
-                { Constant.DatabaseColumn.RelativePath, null },
-                { Constant.DatabaseColumn.DateTime, null },
+                { DatabaseColumn.File, null },
+                { DatabaseColumn.RelativePath, null },
+                { DatabaseColumn.DateTime, null },
                 { secondDateTimeLabel, null },
-                { Constant.DatabaseColumn.DeleteFlag, null }
+                { DatabaseColumn.DeleteFlag, null }
             };
 
             // Add the unordered search terms into the dictionary, which will put them in the correct order
@@ -170,7 +171,7 @@ namespace Timelapse.SearchingAndSorting
             {
                 if (dictOrderedTerms.ContainsKey(searchTerm.DataLabel))
                 {
-                    if (searchTerm.DataLabel == Constant.DatabaseColumn.DateTime && dictOrderedTerms[searchTerm.DataLabel] != null)
+                    if (searchTerm.DataLabel == DatabaseColumn.DateTime && dictOrderedTerms[searchTerm.DataLabel] != null)
                     {
                         // We need to use the 2nd datetime label as there may be two DateTime entries (i.e. to allow a user to select a date range)
                         dictOrderedTerms[secondDateTimeLabel] = searchTerm;
@@ -206,7 +207,7 @@ namespace Timelapse.SearchingAndSorting
         {
             // Don't do anything if the selection was a custom selection
             // Note that FileSelectonENum.Folders is set elsewhere (in MenuItemSelectFOlder_Click) so we don't have to do it here.
-            if (this.SearchTerms == null)
+            if (SearchTerms == null)
             {
                 // This shouldn't happen, but just in case treat it as a no-op
                 return;
@@ -221,18 +222,18 @@ namespace Timelapse.SearchingAndSorting
                     return;
                 case FileSelectionEnum.All:
                     // Clearing all use fields is the same as selecting All Files
-                    this.ClearCustomSearchUses();
+                    ClearCustomSearchUses();
                     break;
                 case FileSelectionEnum.Folders:
                     // Set and only use the relative path as a search term
                     // Note that we do a return here, so we don't reset the relative path to the constrained root (if the arguments are specified)
-                    this.ClearCustomSearchUses();
-                    this.SetAndUseRelativePathSearchTerm(relativePath);
+                    ClearCustomSearchUses();
+                    SetAndUseRelativePathSearchTerm(relativePath);
                     return;
                 case FileSelectionEnum.MarkedForDeletion:
                     // Set and only use the DeleteFlag as true as a search term
-                    this.ClearCustomSearchUses();
-                    this.SetAndUseDeleteFlagSearchTerm();
+                    ClearCustomSearchUses();
+                    SetAndUseDeleteFlagSearchTerm();
                     break;
                 default:
                     // Shouldn't get here, but just in case it makes it a no-op
@@ -243,7 +244,7 @@ namespace Timelapse.SearchingAndSorting
             // For all other special cases, we also set the relative path if we are contrained to a relative path
             if (arguments != null && arguments.ConstrainToRelativePath)
             {
-                this.SetAndUseRelativePathSearchTerm(arguments.RelativePath);
+                SetAndUseRelativePathSearchTerm(arguments.RelativePath);
             }
         }
         #endregion
@@ -255,22 +256,22 @@ namespace Timelapse.SearchingAndSorting
             string where = string.Empty;
 
             // Collect all the standard search terms which the user currently selected as UseForSearching
-            IEnumerable<SearchTerm> standardSearchTerms = this.SearchTerms.Where(term => term.UseForSearching
-            && (term.DataLabel == Constant.DatabaseColumn.File ||
-               term.DataLabel == Constant.DatabaseColumn.RelativePath ||
-               term.DataLabel == Constant.DatabaseColumn.DateTime ||
-               term.DataLabel == Constant.DatabaseColumn.DeleteFlag));
+            IEnumerable<SearchTerm> standardSearchTerms = SearchTerms.Where(term => term.UseForSearching
+            && (term.DataLabel == DatabaseColumn.File ||
+               term.DataLabel == DatabaseColumn.RelativePath ||
+               term.DataLabel == DatabaseColumn.DateTime ||
+               term.DataLabel == DatabaseColumn.DeleteFlag));
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerable<SearchTerm> nonstandardSearchTerms = this.SearchTerms.Where(term => term.UseForSearching).Except(standardSearchTerms);
+            IEnumerable<SearchTerm> nonstandardSearchTerms = SearchTerms.Where(term => term.UseForSearching).Except(standardSearchTerms);
 
             // Combine the standard terms using the AND operator
             // ReSharper disable once PossibleMultipleEnumeration
             string standardWhere = CombineSearchTermsAndOperator(standardSearchTerms, CustomSelectionOperatorEnum.And);
 
             // Combine the non-standard terms using the operator defined by the user (either AND or OR)
-            string nonStandarWhere = CombineSearchTermsAndOperator(nonstandardSearchTerms, this.TermCombiningOperator);
+            string nonStandarWhere = CombineSearchTermsAndOperator(nonstandardSearchTerms, TermCombiningOperator);
 
             // Combine the standardWhere and nonStandardWhere clauses, depending if one or both of them exists
             if (false == string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
@@ -295,7 +296,7 @@ namespace Timelapse.SearchingAndSorting
             }
 
             // If no detections, we are done. Return the current where clause
-            if (GlobalReferences.DetectionsExists == false || this.DetectionSelections.Enabled == false)
+            if (GlobalReferences.DetectionsExists == false || DetectionSelections.Enabled == false)
             {
                 return where;
             }
@@ -316,7 +317,7 @@ namespace Timelapse.SearchingAndSorting
             // Form: WHERE or AND/OR
             // Add Where if we are using the first form, otherwise AND
             bool addAndOr = false;
-            if (string.IsNullOrEmpty(where) && this.DetectionSelections.AllDetections == false && this.DetectionSelections.InterpretAllDetectionsAsEmpty == false)
+            if (string.IsNullOrEmpty(where) && DetectionSelections.AllDetections == false && DetectionSelections.InterpretAllDetectionsAsEmpty == false)
             {
                 where += Sql.Where;
             }
@@ -330,23 +331,23 @@ namespace Timelapse.SearchingAndSorting
             //   If its a detection:  Detections.category = <DetectionCategory>  
             //   If its a classification:  Classifications.category = <DetectionCategory>  
             // Only added if we are using a detection category (i.e., any category but All Detections)
-            if (this.DetectionSelections.AllDetections == false && this.DetectionSelections.InterpretAllDetectionsAsEmpty == false)
+            if (DetectionSelections.AllDetections == false && DetectionSelections.InterpretAllDetectionsAsEmpty == false)
             {
                 if (addAndOr)
                 {
                     where += Sql.And;
                 }
-                if (this.DetectionSelections.RecognitionType == RecognitionType.Detection)
+                if (DetectionSelections.RecognitionType == RecognitionType.Detection)
                 {
                     // a DETECTION
                     // FORM Detections.Category = <DetectionCategory> 
-                    where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(this.DetectionSelections.DetectionCategory);
+                    where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(DetectionSelections.DetectionCategory);
                 }
                 else
                 {
                     // a CLASSIFICATION, 
                     // FORM Classifications.Category = <ClassificationCategory> 
-                    where += SqlPhrase.ClassificationsCategoryEqualsClassificationCategory(this.DetectionSelections.ClassificationCategory);
+                    where += SqlPhrase.ClassificationsCategoryEqualsClassificationCategory(DetectionSelections.ClassificationCategory);
                 }
             }
 
@@ -354,13 +355,13 @@ namespace Timelapse.SearchingAndSorting
             // Note that a confidence of 0 captures empty items with 0 confidence i.e., images with no detections in them
             // For the All category, we really don't wan't to include those, so the confidence has been bumped up slightly(in Item1) above 0
             // For the Empty category, we invert the confidence
-            Tuple<double, double> confidenceBounds = this.DetectionSelections.ConfidenceThresholdForSelect;
-            if (this.DetectionSelections.RecognitionType == RecognitionType.Detection && this.DetectionSelections.RankByConfidence == false)
+            Tuple<double, double> confidenceBounds = DetectionSelections.ConfidenceThresholdForSelect;
+            if (DetectionSelections.RecognitionType == RecognitionType.Detection && DetectionSelections.RankByConfidence == false)
             {
                 // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
                 where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(confidenceBounds.Item1, confidenceBounds.Item2);
             }
-            else if (this.DetectionSelections.RecognitionType == RecognitionType.Classification && this.DetectionSelections.RankByConfidence == false)
+            else if (DetectionSelections.RecognitionType == RecognitionType.Classification && DetectionSelections.RankByConfidence == false)
             {
                 // Classification. Form: GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) e.g.,  BETWEEN 0.8 AND 1
                 // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
@@ -378,7 +379,7 @@ namespace Timelapse.SearchingAndSorting
             // If there are two time terms and the select goes over midnight, we combine them with an OR instead of AND
             // This allows a select between (say) 10pm and 7am
             // ReSharper disable once PossibleMultipleEnumeration
-            bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(this.UseTimeInsteadOfDate, searchTerms, this.DetectionSelections.Enabled, out string combinedTimeTerm);
+            bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(UseTimeInsteadOfDate, searchTerms, DetectionSelections.Enabled, out string combinedTimeTerm);
 
             bool timeHandled = false; // Allows us to track whether we are on the first or second time term
             // ReSharper disable once PossibleMultipleEnumeration
@@ -399,20 +400,18 @@ namespace Timelapse.SearchingAndSorting
                         // We are on the second time term, so we can skip it as its already handled in the combined expression.
                         continue;
                     }
-                    else
-                    {
-                        // We are on the first time term, so we use the combined Time expression
-                        whereForTerm = combinedTimeTerm;
-                        timeHandled = true;
-                    }
+
+                    // We are on the first time term, so we use the combined Time expression
+                    whereForTerm = combinedTimeTerm;
+                    timeHandled = true;
                 }
                 else
                 {
                     // If we are using detections, then we have to qualify the data label e.g., DataTable.X
-                    string dataLabel = this.DetectionSelections.Enabled ? Constant.DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
+                    string dataLabel = DetectionSelections.Enabled ? DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
 
                     // Check to see if the search term is querying for an empty string
-                    if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == Constant.SearchTermOperator.Equal)
+                    if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)
                     {
                         // It is, so we also need to expand the query to check for both nulls an empty string, as both are considered equivalent for query purposes
                         // Form: ( dataLabel IS NULL OR  dataLabel = '' );
@@ -423,24 +422,24 @@ namespace Timelapse.SearchingAndSorting
                         // The search term is querying for a non-empty value.
                         Debug.Assert(searchTerm.DatabaseValue.Contains("\"") == false,
                             $"Search term '{searchTerm.DatabaseValue}' contains quotation marks and could be used for SQL injection.");
-                        if (dataLabel == Constant.DatabaseColumn.RelativePath ||
-                            dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.RelativePath)
+                        if (dataLabel == DatabaseColumn.RelativePath ||
+                            dataLabel == DBTables.FileData + "." + DatabaseColumn.RelativePath)
                         {
                             // Special case for RelativePath and DataTable.RelativePath, 
                             // as we want to return images not only in the relative path folder, but its subfolder as well.
                             // Form: ( DataTable.RelativePath='relpathValue' OR DataTable.RelativePath GLOB 'relpathValue\*' )
-                            string term1 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Equal), searchTerm.DatabaseValue, Sql.Text);
-                            string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(Constant.SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", Sql.Text);
+                            string term1 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(SearchTermOperator.Equal), searchTerm.DatabaseValue, Sql.Text);
+                            string term2 = SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(SearchTermOperator.Glob), searchTerm.DatabaseValue + @"\*", Sql.Text);
                             whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
                         }
-                        else if ((dataLabel == Constant.DatabaseColumn.DateTime ||
-                                  dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && false == this.UseTimeInsteadOfDate)
+                        else if ((dataLabel == DatabaseColumn.DateTime ||
+                                  dataLabel == DBTables.FileData + "." + DatabaseColumn.DateTime) && false == UseTimeInsteadOfDate)
                         {
                             // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
                         }
-                        else if ((dataLabel == Constant.DatabaseColumn.DateTime ||
-                                  dataLabel == Constant.DBTables.FileData + "." + Constant.DatabaseColumn.DateTime) && this.UseTimeInsteadOfDate)
+                        else if ((dataLabel == DatabaseColumn.DateTime ||
+                                  dataLabel == DBTables.FileData + "." + DatabaseColumn.DateTime) && UseTimeInsteadOfDate)
                         {
                             // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
@@ -450,20 +449,20 @@ namespace Timelapse.SearchingAndSorting
                             // Standard search term
                             // Form: dataLabel operator "value", e.g., DataLabel > "5"
                             string sqlType = Sql.Text;
-                            if (searchTerm.ControlType == Constant.Control.Counter ||
-                                searchTerm.ControlType == Constant.Control.IntegerAny ||
-                                searchTerm.ControlType == Constant.Control.IntegerPositive)
+                            if (searchTerm.ControlType == Control.Counter ||
+                                searchTerm.ControlType == Control.IntegerAny ||
+                                searchTerm.ControlType == Control.IntegerPositive)
                             {
                                 sqlType = Sql.IntegerType;
                             }
-                            else if (searchTerm.ControlType == Constant.Control.DecimalAny ||
-                                searchTerm.ControlType == Constant.Control.DecimalPositive)
+                            else if (searchTerm.ControlType == Control.DecimalAny ||
+                                searchTerm.ControlType == Control.DecimalPositive)
                             {
                                 sqlType = Sql.RealType;
                             }
 
                             // DO MULTICHOICE AROUND HERE,  ADD NOT GLOB
-                            if (searchTerm.ControlType == Constant.Control.MultiChoice &&
+                            if (searchTerm.ControlType == Control.MultiChoice &&
                                 //false == string.IsNullOrEmpty(searchTerm.DatabaseValue) &&  // Including this makes it the same as '=', which doesn't really have the same semantics as Include. But unsure...
                                 (searchTerm.Operator == SearchTermOperator.Includes || searchTerm.Operator == SearchTermOperator.Excludes))
                             {
@@ -477,7 +476,7 @@ namespace Timelapse.SearchingAndSorting
                             }
                         }
 
-                        if (searchTerm.ControlType == Constant.Control.Flag)
+                        if (searchTerm.ControlType == Control.Flag)
                         {
                             // Because flags can have capitals or lower case, we need to make the search case insenstive
                             whereForTerm += Sql.CollateNocase; // so that true and false comparisons are case-insensitive
@@ -523,7 +522,7 @@ namespace Timelapse.SearchingAndSorting
                 return false;
             }
 
-            IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime && term.UseForSearching);
+            IEnumerable<SearchTerm> timeTerms = searchTerms.Where(term => term.DataLabel == DatabaseColumn.DateTime && term.UseForSearching);
             // ReSharper disable once PossibleMultipleEnumeration
             if (timeTerms.Count() != 2)
             {
@@ -539,42 +538,38 @@ namespace Timelapse.SearchingAndSorting
             TimeSpan ts2 = st2.GetDateTime().TimeOfDay;
             switch (st1.Operator)
             {
-                case Constant.SearchTermOperator.GreaterThanOrEqual:
-                case Constant.SearchTermOperator.GreaterThan:
+                case SearchTermOperator.GreaterThanOrEqual:
+                case SearchTermOperator.GreaterThan:
                     // Case 1: time > time1, time < time2,  and if time1 > time2, i.e., the range should span midnight so it should be combined
-                    if (st2.Operator == Constant.SearchTermOperator.LessThanOrEqual || st2.Operator == Constant.SearchTermOperator.LessThan)
+                    if (st2.Operator == SearchTermOperator.LessThanOrEqual || st2.Operator == SearchTermOperator.LessThan)
                     {
                         if (ts1 > ts2)
                         {
                             expression = "Case 1";
                             break;
                         }
-                        else
-                        {
-                            return false;
-                        }
+
+                        return false;
                     }
                     return false;
-                case Constant.SearchTermOperator.LessThanOrEqual:
-                case Constant.SearchTermOperator.LessThan:
+                case SearchTermOperator.LessThanOrEqual:
+                case SearchTermOperator.LessThan:
                     // Case 2: time < time1, time > time2,  and if time1 < time2, i.e., the range should span midnight so it should be combined
-                    if (st2.Operator == Constant.SearchTermOperator.GreaterThanOrEqual || st2.Operator == Constant.SearchTermOperator.GreaterThan)
+                    if (st2.Operator == SearchTermOperator.GreaterThanOrEqual || st2.Operator == SearchTermOperator.GreaterThan)
                     {
                         if (ts1 < ts2)
                         {
                             expression = "Case 2";
                             break;
                         }
-                        else
-                        {
-                            return false;
-                        }
+
+                        return false;
                     }
                     return false;
                 default:
                     return false;
             }
-            string dataLabel = useFullyQualifiedDataLabel ? Constant.DBTables.FileData + "." + st1.DataLabel : st1.DataLabel;
+            string dataLabel = useFullyQualifiedDataLabel ? DBTables.FileData + "." + st1.DataLabel : st1.DataLabel;
             expression = Sql.OpenParenthesis
                 + SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(st1.Operator), st1.DatabaseValue)
                 + Sql.Or
@@ -590,16 +585,16 @@ namespace Timelapse.SearchingAndSorting
         public DateTime GetDateTimePLAINVERSION(int dateTimeSearchTermIndex)
         {
             // Get the date/time
-            return this.SearchTerms[dateTimeSearchTermIndex].GetDateTime();
+            return SearchTerms[dateTimeSearchTermIndex].GetDateTime();
         }
 
         public string GetRelativePathFolder
         {
             get
             {
-                foreach (SearchTerm searchTerm in this.SearchTerms)
+                foreach (SearchTerm searchTerm in SearchTerms)
                 {
-                    if (searchTerm.DataLabel == Constant.DatabaseColumn.RelativePath)
+                    if (searchTerm.DataLabel == DatabaseColumn.RelativePath)
                     {
                         return searchTerm.DatabaseValue;
                     }
@@ -614,18 +609,18 @@ namespace Timelapse.SearchingAndSorting
         // Note that the query using the relative path will be created elsewhere to include sub-folders of the relative path via a GLOB operator
         public void SetAndUseRelativePathSearchTerm(string relativePath)
         {
-            SearchTerm searchTerm = this.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.RelativePath);
+            SearchTerm searchTerm = SearchTerms.First(term => term.DataLabel == DatabaseColumn.RelativePath);
             searchTerm.DatabaseValue = relativePath;
-            searchTerm.Operator = Constant.SearchTermOperator.Equal;
+            searchTerm.Operator = SearchTermOperator.Equal;
             searchTerm.UseForSearching = true;
         }
 
         public void SetAndUseDeleteFlagSearchTerm()
         {
             // Set the use field for DeleteFlag, and its value to true
-            SearchTerm searchTerm = this.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
-            searchTerm.DatabaseValue = Constant.BooleanValue.True;
-            searchTerm.Operator = Constant.SearchTermOperator.Equal;
+            SearchTerm searchTerm = SearchTerms.First(term => term.DataLabel == DatabaseColumn.DeleteFlag);
+            searchTerm.DatabaseValue = BooleanValue.True;
+            searchTerm.Operator = SearchTermOperator.Equal;
             searchTerm.UseForSearching = true;
         }
         #endregion
@@ -633,12 +628,12 @@ namespace Timelapse.SearchingAndSorting
         #region Public Methods - Various Sets to initialize DateTimes
         public void SetDateTime(int dateTimeSearchTermIndex, DateTime newDateTime)
         {
-            this.SearchTerms[dateTimeSearchTermIndex].SetDatabaseValue(newDateTime);
+            SearchTerms[dateTimeSearchTermIndex].SetDatabaseValue(newDateTime);
         }
 
         public void SetDateTimes(DateTime dateTime)
         {
-            foreach (SearchTerm dateTimeTerm in this.SearchTerms.Where(term => term.DataLabel == Constant.DatabaseColumn.DateTime))
+            foreach (SearchTerm dateTimeTerm in SearchTerms.Where(term => term.DataLabel == DatabaseColumn.DateTime))
             {
                 dateTimeTerm.SetDatabaseValue(dateTime);
             }
@@ -649,15 +644,15 @@ namespace Timelapse.SearchingAndSorting
         // Clear all the 'use' flags in the custom search term and in the detections (if any)
         public void ClearCustomSearchUses()
         {
-            foreach (SearchTerm searchTerm in this.SearchTerms)
+            foreach (SearchTerm searchTerm in SearchTerms)
             {
                 searchTerm.UseForSearching = false;
             }
-            if (GlobalReferences.DetectionsExists && this.DetectionSelections != null)
+            if (GlobalReferences.DetectionsExists && DetectionSelections != null)
             {
-                this.DetectionSelections.ClearAllDetectionsUses();
+                DetectionSelections.ClearAllDetectionsUses();
             }
-            this.ShowMissingDetections = false;
+            ShowMissingDetections = false;
         }
         #endregion
 
@@ -714,8 +709,8 @@ namespace Timelapse.SearchingAndSorting
             }
 
             // Form: ( DataTable.RelativePath='relpathValue' OR DataTable.RelativePath GLOB 'relpathValue\*' )
-            string term1 = SqlPhrase.DataLabelOperatorValue(relativePathColumnName, CustomSelection.TermToSqlOperator(Constant.SearchTermOperator.Equal), relativePath, Sql.Text);
-            string term2 = SqlPhrase.DataLabelOperatorValue(relativePathColumnName, CustomSelection.TermToSqlOperator(Constant.SearchTermOperator.Glob), System.IO.Path.Combine(relativePath, "*"), Sql.Text);
+            string term1 = SqlPhrase.DataLabelOperatorValue(relativePathColumnName, TermToSqlOperator(SearchTermOperator.Equal), relativePath, Sql.Text);
+            string term2 = SqlPhrase.DataLabelOperatorValue(relativePathColumnName, TermToSqlOperator(SearchTermOperator.Glob), Path.Combine(relativePath, "*"), Sql.Text);
             return Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
         }
 
@@ -726,23 +721,23 @@ namespace Timelapse.SearchingAndSorting
         {
             switch (expression)
             {
-                case Constant.SearchTermOperator.Equal:
+                case SearchTermOperator.Equal:
                     return "=";
-                case Constant.SearchTermOperator.NotEqual:
+                case SearchTermOperator.NotEqual:
                     return "<>";
-                case Constant.SearchTermOperator.LessThan:
+                case SearchTermOperator.LessThan:
                     return "<";
-                case Constant.SearchTermOperator.GreaterThan:
+                case SearchTermOperator.GreaterThan:
                     return ">";
-                case Constant.SearchTermOperator.LessThanOrEqual:
+                case SearchTermOperator.LessThanOrEqual:
                     return "<=";
-                case Constant.SearchTermOperator.GreaterThanOrEqual:
+                case SearchTermOperator.GreaterThanOrEqual:
                     return ">=";
-                case Constant.SearchTermOperator.Glob:
-                case Constant.SearchTermOperator.Includes:
-                    return Constant.SearchTermOperator.Glob;
-                case Constant.SearchTermOperator.NotGlob:
-                case Constant.SearchTermOperator.Excludes:
+                case SearchTermOperator.Glob:
+                case SearchTermOperator.Includes:
+                    return SearchTermOperator.Glob;
+                case SearchTermOperator.NotGlob:
+                case SearchTermOperator.Excludes:
                     return " NOT GLOB ";
                 default:
                     return string.Empty;

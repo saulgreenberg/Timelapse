@@ -21,8 +21,8 @@ namespace Timelapse.DataTables
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(control, nameof(control));
-            this.choices = Choices.ChoicesFromJson(control.List).ChoiceList;
-            this.defaultValue = control.DefaultValue;
+            choices = Choices.ChoicesFromJson(control.List).ChoiceList;
+            defaultValue = control.DefaultValue;
         }
         #endregion
 
@@ -33,11 +33,11 @@ namespace Timelapse.DataTables
         public override bool IsContentValid(string value)
         {
             // the editor doesn't currently enforce the default value as one of the choices, so accept it as valid independently
-            if (value == this.defaultValue)
+            if (value == defaultValue)
             {
                 return true;
             }
-            return this.choices.Contains(value);
+            return choices.Contains(value);
         }
         #endregion
     }

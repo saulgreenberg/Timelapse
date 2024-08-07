@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -36,7 +38,7 @@ namespace Timelapse.Dialog
             get
             {
                 List<SourceFileInfo> _selectedDdbFile = new List<SourceFileInfo>();
-                foreach (SourceFileInfo ddbObject in this.ObservableDdbFileList)
+                foreach (SourceFileInfo ddbObject in ObservableDdbFileList)
                 {
                     if (ddbObject.IsSelected)
                     {
@@ -59,7 +61,7 @@ namespace Timelapse.Dialog
         public MergeCheckinDatabaseFiles(TimelapseWindow owner, string destinationDdbPath, SQLiteWrapper destinationDdb, FileDatabase fileDatabase) : base(owner)
         {
             InitializeComponent();
-            this.Owner = owner;
+            Owner = owner;
             this.destinationDdbPath = destinationDdbPath;
             this.destinationDdb = destinationDdb;
             this.fileDatabase = fileDatabase;
@@ -73,12 +75,12 @@ namespace Timelapse.Dialog
             }
 
             // Each object in this list represents a file, its selection state, and other related info about the fil
-            this.ObservableDdbFileList = new ObservableCollection<SourceFileInfo>();
+            ObservableDdbFileList = new ObservableCollection<SourceFileInfo>();
 
             // Get all the ddb files contained by subfolders under the rootFolder, excluding those directly in the root folder
-            this.sourceDdbFilePaths = FilesFolders.GetAllFilesInFoldersAndSubfoldersMatchingPattern(rootFolderPath,
-                "*" + Constant.File.FileDatabaseFileExtension, true, true, null);
-            this.sourceDdbFilePaths.RemoveAll(Item => Path.GetDirectoryName(Item) == rootFolderPath);
+            sourceDdbFilePaths = FilesFolders.GetAllFilesInFoldersAndSubfoldersMatchingPattern(rootFolderPath,
+                "*" + File.FileDatabaseFileExtension, true, true, null);
+            sourceDdbFilePaths.RemoveAll(Item => Path.GetDirectoryName(Item) == rootFolderPath);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -105,12 +107,12 @@ namespace Timelapse.Dialog
                 });
             }
             DataContext = this;
-            this.EnableOrDisableCheckInButton();
+            EnableOrDisableCheckInButton();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.DialogResult = this.Token.IsCancellationRequested || this.IsAnyDataUpdated;
+            DialogResult = Token.IsCancellationRequested || IsAnyDataUpdated;
         }
 
         #endregion
@@ -221,29 +223,29 @@ namespace Timelapse.Dialog
 
             // Start the merge process by first setting up progress indicators
             Mouse.OverrideCursor = Cursors.Wait;
-            this.BusyCancelIndicator.EnableForMerging(true);
+            BusyCancelIndicator.EnableForMerging(true);
 
             // Create a backup if needed before attempting doing the merge;
-            this.fileDatabase.CreateBackupIfNeeded();
+            fileDatabase.CreateBackupIfNeeded();
 
             // Try to merge the selected databases into destination ddb file.
             // .ddb files found in a Backup folder are ignored
             List<SourceFileInfo> sourceFileInfos = await MergeDatabasesAsync(
-                this.destinationDdb, this.destinationDdbPath,
-                this.SelectedDdbFiles,
-                this.Progress, GlobalReferences.CancelTokenSource).ConfigureAwait(true);
+                destinationDdb, destinationDdbPath,
+                SelectedDdbFiles,
+                Progress, GlobalReferences.CancelTokenSource).ConfigureAwait(true);
 
             // Turn off progress indicators
-            this.BusyCancelIndicator.EnableForSelection(false);
-            this.BusyCancelIndicator.Reset(false);
+            BusyCancelIndicator.EnableForSelection(false);
+            BusyCancelIndicator.Reset(false);
             Mouse.OverrideCursor = null;
 
             // Show the result;
-            this.ListboxFileDatabases.Visibility = Visibility.Collapsed;
-            this.FinalMessageScrollViewer.Visibility = Visibility.Visible;
-            this.ButtonSelectAll.Visibility = Visibility.Collapsed;
-            this.ButtonSelectNone.Visibility = Visibility.Collapsed;
-            this.ResultsBanner.Text = "Results";
+            ListboxFileDatabases.Visibility = Visibility.Collapsed;
+            FinalMessageScrollViewer.Visibility = Visibility.Visible;
+            ButtonSelectAll.Visibility = Visibility.Collapsed;
+            ButtonSelectNone.Visibility = Visibility.Collapsed;
+            ResultsBanner.Text = "Results";
 
             // As part of the above merge attempt, each SourceFileInfo records if the merge
             // was successful, or if the merge failed as well as why it failed.
@@ -258,20 +260,20 @@ namespace Timelapse.Dialog
                 else
                 {
                     mergedSourceFileInfos.Add(sourceFileInfo);
-                    this.fileDatabase.ImageSet.Log +=
+                    fileDatabase.ImageSet.Log +=
                         $"{Environment.NewLine}{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Checked in:     {sourceFileInfo.RelativePathIncludingFileName}";
                 }
-                this.IsAnyDataUpdated = mergedSourceFileInfos.Any();
+                IsAnyDataUpdated = mergedSourceFileInfos.Any();
             }
 
             int totalFiles = sourceFileInfos.Count;
             int mergedFiles = mergedSourceFileInfos.Count;
             int unmergedFiles = unmergedSourceFileInfos.Count;
 
-            this.FlowDocument.FontFamily = new FontFamily("SeguiUI");
-            this.FlowDocument.FontSize = 12;
+            FlowDocument.FontFamily = new FontFamily("SeguiUI");
+            FlowDocument.FontSize = 12;
 
-            Paragraph p1 = new Paragraph()
+            Paragraph p1 = new Paragraph
             {
                 Margin = new Thickness(0)
             };
@@ -282,13 +284,13 @@ namespace Timelapse.Dialog
                     FontWeight = FontWeights.Bold,
                     Text = $"{mergedFiles} / {totalFiles} files were merged:"
                 });
-                this.FlowDocument.Blocks.Add(p1);
-                this.FlowDocument.Blocks.Add(GenerateMergeFeedbackMessage(mergedSourceFileInfos));
+                FlowDocument.Blocks.Add(p1);
+                FlowDocument.Blocks.Add(GenerateMergeFeedbackMessage(mergedSourceFileInfos));
             }
 
             if (unmergedFiles > 0)
             {
-                Paragraph p2 = new Paragraph()
+                Paragraph p2 = new Paragraph
                 {
                     Margin = new Thickness(0)
                 };
@@ -297,14 +299,14 @@ namespace Timelapse.Dialog
                     FontWeight = FontWeights.Bold,
                     Text = $"{unmergedFiles} / {totalFiles} files were not merged for the indicated reasons:"
                 });
-                this.FlowDocument.Blocks.Add(p2);
-                this.FlowDocument.Blocks.Add(GenerateMergeFeedbackMessage(unmergedSourceFileInfos));
+                FlowDocument.Blocks.Add(p2);
+                FlowDocument.Blocks.Add(GenerateMergeFeedbackMessage(unmergedSourceFileInfos));
             }
 
             // Show the Done button and hide the other buttons
-            this.CheckInButton.Visibility = Visibility.Collapsed;
-            this.CancelButton.Visibility = Visibility.Collapsed;
-            this.DoneButton.Visibility = Visibility.Visible;
+            CheckInButton.Visibility = Visibility.Collapsed;
+            CancelButton.Visibility = Visibility.Collapsed;
+            DoneButton.Visibility = Visibility.Visible;
         }
         #endregion
 
@@ -316,32 +318,32 @@ namespace Timelapse.Dialog
 
         private void ButtonSelectAll_Click(object sender, RoutedEventArgs e)
         {
-            foreach (SourceFileInfo ddbObject in this.ObservableDdbFileList)
+            foreach (SourceFileInfo ddbObject in ObservableDdbFileList)
             {
                 ddbObject.IsSelected = true;
             }
-            this.ListboxFileDatabases.Items.Refresh();
-            this.EnableOrDisableCheckInButton();
+            ListboxFileDatabases.Items.Refresh();
+            EnableOrDisableCheckInButton();
         }
 
         private void ButtonSelectNone_Click(object sender, RoutedEventArgs e)
         {
-            foreach (SourceFileInfo ddbObject in this.ObservableDdbFileList)
+            foreach (SourceFileInfo ddbObject in ObservableDdbFileList)
             {
                 ddbObject.IsSelected = false;
             }
-            this.ListboxFileDatabases.Items.Refresh();
-            this.EnableOrDisableCheckInButton();
+            ListboxFileDatabases.Items.Refresh();
+            EnableOrDisableCheckInButton();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
         #endregion
 
@@ -357,7 +359,7 @@ namespace Timelapse.Dialog
         // separated into successfuly merged files vs failed merges and the reason why it failed
         private Paragraph GenerateMergeFeedbackMessage(List<SourceFileInfo> sourceFileInfos)
         {
-            Paragraph p1 = new Paragraph()
+            Paragraph p1 = new Paragraph
             {
                 Margin = new Thickness(0)
             };
@@ -524,13 +526,13 @@ namespace Timelapse.Dialog
         private bool TryGenerateErrorIfNoDdbSourceFilesExists()
         {
             // Check if any candidate source ddb files were found
-            if (sourceDdbFilePaths == null || this.sourceDdbFilePaths.Count == 0)
+            if (sourceDdbFilePaths == null || sourceDdbFilePaths.Count == 0)
             {
                 // Show error message
                 ListboxFileDatabases.Visibility = Visibility.Collapsed;
                 FinalMessageScrollViewer.Visibility = Visibility.Visible;
-                this.ButtonSelectAll.Visibility = Visibility.Collapsed;
-                this.ButtonSelectNone.Visibility = Visibility.Collapsed;
+                ButtonSelectAll.Visibility = Visibility.Collapsed;
+                ButtonSelectNone.Visibility = Visibility.Collapsed;
                 ResultsBanner.Text = "Warning: No database (.ddb) files are available to merge.";
                 CheckInButton.IsEnabled = false;
                 return true;
@@ -550,7 +552,7 @@ namespace Timelapse.Dialog
             var descendingComparer = Comparer<string>.Create((x, y) => comparer.Compare(y, x));
 
             SortedList<string, string> relativePaths = new SortedList<string, string>(descendingComparer);
-            foreach (SourceFileInfo fileObject in this.ObservableDdbFileList)
+            foreach (SourceFileInfo fileObject in ObservableDdbFileList)
             {
                 if (fileObject.IsSelected)
                 {
@@ -598,11 +600,11 @@ namespace Timelapse.Dialog
             {
                 if (ddbObject.IsSelected)
                 {
-                    this.CheckInButton.IsEnabled = true;
+                    CheckInButton.IsEnabled = true;
                     return;
                 }
             }
-            this.CheckInButton.IsEnabled = false;
+            CheckInButton.IsEnabled = false;
         }
 
         // Return the relative path (including file name) to the ddb file. 
@@ -639,9 +641,9 @@ namespace Timelapse.Dialog
             // Generate a shortened version of the file name to display in the available space
             public string ShortPathDisplayName =>
                 RelativePathIncludingFileName.Length < maxLength
-                    ? this.RelativePathIncludingFileName
-                    : this.RelativePathIncludingFileName.Substring(0, prefixLength) + " \u2026 "
-                    + this.RelativePathIncludingFileName.Substring(this.RelativePathIncludingFileName.Length -
+                    ? RelativePathIncludingFileName
+                    : RelativePathIncludingFileName.Substring(0, prefixLength) + " \u2026 "
+                    + RelativePathIncludingFileName.Substring(RelativePathIncludingFileName.Length -
                                                                    suffixLength);
         }
 

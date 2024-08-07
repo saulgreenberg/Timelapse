@@ -3,7 +3,10 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
+using Control = Timelapse.Constant.Control;
+using MarkableCanvas = Timelapse.Images.MarkableCanvas;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse
@@ -18,8 +21,8 @@ namespace Timelapse
         // Whenever the user clicks on the image, reset the image focus to the image control 
         private void MarkableCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs eventArgs)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
-            this.TrySetKeyboardFocusToMarkableCanvas(true, eventArgs);
+            FilePlayer_Stop(); // In case the FilePlayer is going
+            TrySetKeyboardFocusToMarkableCanvas(true, eventArgs);
         }
 
         // When we move over the canvas and the user isn't in the midst of typing into a text field, reset the top level focus
@@ -29,7 +32,7 @@ namespace Timelapse
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if ((focusedElement == null) || (focusedElement is TextBox == false))
             {
-                this.TrySetKeyboardFocusToMarkableCanvas(true, eventArgs);
+                TrySetKeyboardFocusToMarkableCanvas(true, eventArgs);
             }
         }
 
@@ -38,7 +41,7 @@ namespace Timelapse
         {
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if (focusedElement == null ||
-               focusedElement is Images.MarkableCanvas ||
+               focusedElement is MarkableCanvas ||
                focusedElement is TabItem)
             {
                 // We only want to save the focus on controls
@@ -46,22 +49,22 @@ namespace Timelapse
                 // Debug.Print(message);
                 return;
             }
-            this.lastControlWithFocus = focusedElement;
+            lastControlWithFocus = focusedElement;
         }
 
         private void FocusRestoreOn_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
+            if (lastControlWithFocus != null && lastControlWithFocus.IsEnabled)
             {
-                if (Equals(this.lastControlWithFocus, this.MarkableCanvas))
+                if (Equals(lastControlWithFocus, MarkableCanvas))
                 {
-                    this.MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
-                    this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+                    MoveFocusToNextOrPreviousControlOrCopyPreviousButton(Keyboard.Modifiers == ModifierKeys.Shift);
+                    CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
                 }
                 else
                 {
-                    Keyboard.Focus(this.lastControlWithFocus);
-                    this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+                    Keyboard.Focus(lastControlWithFocus);
+                    CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
                 }
             }
         }
@@ -72,7 +75,7 @@ namespace Timelapse
         private void TrySetKeyboardFocusToMarkableCanvas(bool checkForControlFocus, InputEventArgs eventArgs)
         {
             // Ensures that a floating window does not go behind the main window 
-            this.DockingManager_FloatingDataEntryWindowTopmost(true, this.DockingManager2);
+            DockingManager_FloatingDataEntryWindowTopmost(true, DockingManager2);
 
             // If the text box or combobox has the focus, we usually don't want to reset the focus. 
             // However, there are a few instances (e.g., after enter has been pressed) where we no longer want it 
@@ -80,7 +83,7 @@ namespace Timelapse
             if (checkForControlFocus && eventArgs is KeyEventArgs args)
             {
                 // If we are in a data control, don't reset the focus.
-                if (this.SendKeyToDataEntryControlOrMenu(args))
+                if (SendKeyToDataEntryControlOrMenu(args))
                 {
                     return;
                 }
@@ -88,7 +91,7 @@ namespace Timelapse
 
             // Don't raise the window just because we set the keyboard focus to it
             Keyboard.DefaultRestoreFocusMode = RestoreFocusMode.None;
-            Keyboard.Focus(this.MarkableCanvas);
+            Keyboard.Focus(MarkableCanvas);
         }
 
         // Move the focus (usually because of tabbing or shift-tab)
@@ -97,7 +100,7 @@ namespace Timelapse
         {
             // identify the currently selected control
             // if focus is currently set to the canvas this defaults to the first or last control, as appropriate
-            int currentControl = moveToPreviousControl ? this.DataEntryControls.Controls.Count : -1;
+            int currentControl = moveToPreviousControl ? DataEntryControls.Controls.Count : -1;
 
             IInputElement focusedElement = FocusManager.GetFocusedElement(this);
             if (focusedElement != null)
@@ -112,25 +115,25 @@ namespace Timelapse
 
                 // If we are moving the focus from outside to one of the controls in the data panel or the copy previous button,
                 // then try to restore the focus to the last control that had the focus.
-                if (Constant.Control.KeyboardInputTypes.Contains(type) == false && !Equals(focusedElement, this.CopyPreviousValuesButton))
+                if (Control.KeyboardInputTypes.Contains(type) == false && !Equals(focusedElement, CopyPreviousValuesButton))
                 {
-                    if (this.lastControlWithFocus != null && this.lastControlWithFocus.IsEnabled)
+                    if (lastControlWithFocus != null && lastControlWithFocus.IsEnabled)
                     {
-                        Keyboard.Focus(this.lastControlWithFocus);
-                        this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+                        Keyboard.Focus(lastControlWithFocus);
+                        CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
                         return;
                     }
                 }
 
                 // Otherwise, try to find the control that has the current focus
-                if (Constant.Control.KeyboardInputTypes.Contains(type))
+                if (Control.KeyboardInputTypes.Contains(type))
                 {
                     if (DataEntryHandler.TryFindFocusedControl(focusedElement, out DataEntryControl focusedControl))
                     {
                         int index = 0;
-                        foreach (DataEntryControl control in this.DataEntryControls.Controls)
+                        foreach (DataEntryControl control in DataEntryControls.Controls)
                         {
-                            if (Object.ReferenceEquals(focusedControl, control))
+                            if (ReferenceEquals(focusedControl, control))
                             {
                                 // We found it, so no need to look further
                                 currentControl = index;
@@ -154,15 +157,15 @@ namespace Timelapse
             }
 
             for (currentControl = incrementOrDecrement(currentControl);
-                 currentControl > -1 && currentControl < this.DataEntryControls.Controls.Count;
+                 currentControl > -1 && currentControl < DataEntryControls.Controls.Count;
                  currentControl = incrementOrDecrement(currentControl))
             {
-                DataEntryControl control = this.DataEntryControls.Controls[currentControl];
+                DataEntryControl control = DataEntryControls.Controls[currentControl];
                 //Debug.Print(control.GetType().ToString() + ":" + control.Content);
 
-                if (control.ContentReadOnly == false && control.IsContentControlEnabled && this.IsControlIncludedInTabOrder(control))
+                if (control.ContentReadOnly == false && control.IsContentControlEnabled && IsControlIncludedInTabOrder(control))
                 {
-                    this.lastControlWithFocus = control.Focus(this);
+                    lastControlWithFocus = control.Focus(this);
                     //Debug.Print($"Current focused element {focusedElement}");
                     //Debug.Print("In ReadOnly1: " + lastControlWithFocus.GetType().ToString() + " : "+  control.GetType().ToString() + ":" + control.Content);
                     // There is a bug with Avalon: when the data control pane is floating the focus does not go to it via the above call
@@ -174,7 +177,8 @@ namespace Timelapse
                         multiLine.GetContentControl.Focus();
                         return;
                     }
-                    else if (control is DataEntryMultiChoice multiChoice)
+
+                    if (control is DataEntryMultiChoice multiChoice)
                     {
                         multiChoice.GetContentControl.Focus();
                         return;
@@ -186,21 +190,21 @@ namespace Timelapse
             }
 
             // if we've gone thorugh all the controls and couldn't set the focus, then we must be at the beginning or at the end.
-            if (this.CopyPreviousValuesButton.IsEnabled)
+            if (CopyPreviousValuesButton.IsEnabled)
             {
                 // So set the focus to the Copy PreviousValuesButton, unless it is disabled.
-                this.CopyPreviousValuesButton.Focus();
-                this.lastControlWithFocus = this.CopyPreviousValuesButton;
-                this.CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+                CopyPreviousValuesButton.Focus();
+                lastControlWithFocus = CopyPreviousValuesButton;
+                CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
             }
             else
             {
                 // Skip the CopyPreviousValuesButton, as it is disabled.
-                DataEntryControl candidateControl = moveToPreviousControl ? this.DataEntryControls.Controls.Last() : this.DataEntryControls.Controls.First();
+                DataEntryControl candidateControl = moveToPreviousControl ? DataEntryControls.Controls.Last() : DataEntryControls.Controls.First();
                 if (moveToPreviousControl)
                 {
                     // Find the LAST control
-                    foreach (DataEntryControl control in this.DataEntryControls.Controls)
+                    foreach (DataEntryControl control in DataEntryControls.Controls)
                     {
                         if (control.ContentReadOnly == false)
                         {
@@ -211,7 +215,7 @@ namespace Timelapse
                 else
                 {
                     // Find the FIRST control
-                    foreach (DataEntryControl control in this.DataEntryControls.Controls)
+                    foreach (DataEntryControl control in DataEntryControls.Controls)
                     {
                         if (control.ContentReadOnly == false)
                         {
@@ -222,7 +226,7 @@ namespace Timelapse
                 }
                 if (candidateControl != null)
                 {
-                    this.lastControlWithFocus = candidateControl.Focus(this);
+                    lastControlWithFocus = candidateControl.Focus(this);
                 }
             }
         }
@@ -235,11 +239,11 @@ namespace Timelapse
             // check if each menu type is open
             // it is sufficient to check one always visible item from each top level menu (file, edit, etc.)
             // NOTE: this must be kept in sync with the menu definitions in XAML
-            if (this.MenuItemExit.IsVisible ||
-                this.MenuItemCopyPreviousValues.IsVisible ||
-                this.MenuItemViewNextImage.IsVisible ||
-                this.MenuItemSelectAllFiles.IsVisible ||
-                this.MenuItemAbout.IsVisible)
+            if (MenuItemExit.IsVisible ||
+                MenuItemCopyPreviousValues.IsVisible ||
+                MenuItemViewNextImage.IsVisible ||
+                MenuItemSelectAllFiles.IsVisible ||
+                MenuItemAbout.IsVisible)
             {
                 return true;
             }
@@ -255,12 +259,12 @@ namespace Timelapse
             // check if focus is on a control
             // NOTE: this list must be kept in sync with the System.Windows classes used by the classes in Timelapse\Util\DataEntry*.cs
             Type type = focusedElement.GetType();
-            if (Constant.Control.KeyboardInputTypes.Contains(type))
+            if (Control.KeyboardInputTypes.Contains(type))
             {
                 // send all keys to controls by default except
                 // - escape as that's a natural way to back out of a control (the user can also hit enter)
                 // - tab as that's the Windows keyboard navigation standard for moving between controls
-                this.FilePlayer_Stop(); // In case the FilePlayer is going
+                FilePlayer_Stop(); // In case the FilePlayer is going
                 return eventData.Key != Key.Escape && eventData.Key != Key.Tab;
             }
             return false;
@@ -271,11 +275,12 @@ namespace Timelapse
         // Determine whether system-supplied fields should be skipped over or not.
         private bool IsControlIncludedInTabOrder(DataEntryControl control)
         {
-            if (control.DataLabel == Constant.DatabaseColumn.DateTime && this.State.TabOrderIncludeDateTime == false)
+            if (control.DataLabel == DatabaseColumn.DateTime && State.TabOrderIncludeDateTime == false)
             {
                 return false;
             }
-            else if (control.DataLabel == Constant.DatabaseColumn.DeleteFlag && this.State.TabOrderIncludeDeleteFlag == false)
+
+            if (control.DataLabel == DatabaseColumn.DeleteFlag && State.TabOrderIncludeDeleteFlag == false)
             {
                 return false;
             }

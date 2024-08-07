@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -46,10 +46,10 @@ namespace Timelapse.Controls
         public string FolderPath { get; set; }
 
         // The number of columns that exist in the grid
-        public int AvailableColumns => this.Grid.ColumnDefinitions.Count;
+        public int AvailableColumns => Grid.ColumnDefinitions.Count;
 
         // The number of rows that currently exist in the ThumbnailGrid
-        public int AvailableRows => this.Grid.RowDefinitions.Count;
+        public int AvailableRows => Grid.RowDefinitions.Count;
 
         // Whether the Grid is activated (i..e, with a zoom level), 
         public bool IsGridActive => Level > 0;
@@ -72,16 +72,16 @@ namespace Timelapse.Controls
         #region Constructor
         public ThumbnailGrid()
         {
-            this.InitializeComponent();
-            this.FileTableStartIndex = 0;
+            InitializeComponent();
+            FileTableStartIndex = 0;
         }
         #endregion
 
         #region Public Reset
         public void Reset()
         {
-            this.thumbnailInCells = null;
-            this.Level = 0;
+            thumbnailInCells = null;
+            Level = 0;
         }
         #endregion
 
@@ -101,7 +101,7 @@ namespace Timelapse.Controls
             try
             {
                 // Lots of tests for particular conditions and optimizations before we do the actual refresh
-                if (this.FileTable == null || !this.FileTable.Any())
+                if (FileTable == null || !FileTable.Any())
                 {
                     // There aren't any images to show, so no point in going on
                     return ThumbnailGridRefreshStatus.Aborted;
@@ -109,33 +109,34 @@ namespace Timelapse.Controls
 
                 bool? showMoreCells = !showFewerCells; // For clarity in reading code
                 // Set the zoomOut levels, but abort if we are at either zoom limit
-                if (showMoreCells == true && this.Level >= Constant.ThumbnailGrid.MaxRows)
+                if (showMoreCells == true && Level >= Constant.ThumbnailGrid.MaxRows)
                 {
                     // Showing more cells aborted as already displaying the maximum amount of rows. 
                     //Debug.Print(String.Format("0 ThumbnailGridRefreshStatus.AtMaximumZoomLevel {0}", this.Level));
                     return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
                 }
-                else if (showMoreCells == true)
+
+                if (showMoreCells == true)
                 {
                     // Showing more cells, so increase the zoom out by one level
-                    this.Level++;
+                    Level++;
                 }
                 else if (showFewerCells == true)
                 {
                     // Showing fewer cells, so decrease the zoom out by one level
-                    this.Level--;
-                    if (this.Level <= 0)
+                    Level--;
+                    if (Level <= 0)
                     {
                         // Showing fewer cells aborted as we are already at or below zero 
                         //Debug.Print(String.Format("2b this.Level <= 0 {0}", this.Level));
-                        this.Level = 0;
+                        Level = 0;
                         return ThumbnailGridRefreshStatus.AtZeroZoomLevel;
                     }
                 }
 
                 // Find the current height of the available space and split it the number of rows defined by the state. i.e. state 1 is 2 rows, 2 is 3 rows, etc.
                 // Note that the level should be unaltered if its a resize or navigation
-                int desiredCellHeight = Convert.ToInt32(gridHeight / (this.Level + 1)) - 1; // Should be 2 rows, 3 rows, 4 rows.
+                int desiredCellHeight = Convert.ToInt32(gridHeight / (Level + 1)) - 1; // Should be 2 rows, 3 rows, 4 rows.
                 if (desiredCellHeight <= 0)
                 {
                     // this shouldn't happen, but just in case...
@@ -145,7 +146,7 @@ namespace Timelapse.Controls
                 if (showFewerCells != null && desiredCellHeight < Constant.ThumbnailGrid.MinumumThumbnailHeight)
                 {
                     //Zoom in or out aborted, as the desired cell height at the new zoom level is less than our minimum height.
-                    this.Level = this.Level == 0 ? 0 : this.Level - 1; // Revert the ZoomOutLevel as its currently too small
+                    Level = Level == 0 ? 0 : Level - 1; // Revert the ZoomOutLevel as its currently too small
                     return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
                 }
 
@@ -157,11 +158,11 @@ namespace Timelapse.Controls
                 {
                     // On a resize, we try to keep the cell size constant
                     desiredCellHeight = oldCellHeight;
-                    desiredCellWidth = (this.thumbnailInCells == null || this.thumbnailInCells.Count == 0)
+                    desiredCellWidth = (thumbnailInCells == null || thumbnailInCells.Count == 0)
                         ? 0
-                        : Convert.ToInt32(desiredCellHeight * this.thumbnailInCells[0].CellWidth / this.thumbnailInCells[0].CellHeight); // From the aspect ratio
+                        : Convert.ToInt32(desiredCellHeight * thumbnailInCells[0].CellWidth / thumbnailInCells[0].CellHeight); // From the aspect ratio
 
-                    if (Math.Abs(gridWidth - this.oldGridWidth) < .0001 && Math.Abs(gridHeight - this.oldGridHeight) < .0001)
+                    if (Math.Abs(gridWidth - oldGridWidth) < .0001 && Math.Abs(gridHeight - oldGridHeight) < .0001)
                     {
                         // If the grid size hasn't changed, we must be navigating
                         navigating = true;
@@ -173,24 +174,24 @@ namespace Timelapse.Controls
                             // This shouldn't happen, but lets print this out just in case its a result of setting a bogus desiredCellWidth above
                             // And it is a check for 0 which would otherwise crash the next test
                         }
-                        else if (this.AvailableRows == Convert.ToInt32(Math.Floor(gridHeight / desiredCellHeight))
-                                 && this.AvailableColumns == Convert.ToInt32(Math.Floor(gridWidth / desiredCellWidth)))
+                        else if (AvailableRows == Convert.ToInt32(Math.Floor(gridHeight / desiredCellHeight))
+                                 && AvailableColumns == Convert.ToInt32(Math.Floor(gridWidth / desiredCellWidth)))
                         {
                             // A possible resize did not affect the number of available rows/columns, then we don't have to do anything
                             // Although we still ahve to save the old size, as otherwise it won't recognize that things have changed.
-                            this.oldGridWidth = gridWidth;
-                            this.oldGridHeight = gridHeight;
+                            oldGridWidth = gridWidth;
+                            oldGridHeight = gridHeight;
                             return ThumbnailGridRefreshStatus.Ok;
                         }
                         else if (desiredCellHeight < Constant.ThumbnailGrid.MinumumThumbnailHeight)
                         {
                             // Resizing, but we are trying to shrink it smaller than the minimum cell size
                             // Thus try refreshing again. but at a lesser level
-                            this.Level--;
-                            if (this.Level < 0)
+                            Level--;
+                            if (Level < 0)
                             {
                                 // Zoomed in all the way, so inform the calling app that we can't do this.
-                                this.Level = 0;
+                                Level = 0;
                                 return ThumbnailGridRefreshStatus.NotEnoughSpaceForEvenOneCell;
                             }
 
@@ -199,21 +200,21 @@ namespace Timelapse.Controls
                     }
                 }
 
-                this.thumbnailsAlreadyInGrid.Clear(); // we will fill this only if we are navigating
-                int fileTableCount = this.FileTable.RowCount;
+                thumbnailsAlreadyInGrid.Clear(); // we will fill this only if we are navigating
+                int fileTableCount = FileTable.RowCount;
                 if (showFewerCells == null)
                 {
                     // if we made it this far for navigating and resizing, then lets see if we can reuse some of thumbnails
                     // as the cell size should be the same.
-                    this.thumbnailsAlreadyInGrid = this.GetThumbnailsAlreadyInGrid(desiredCellHeight, fileTableCount);
+                    thumbnailsAlreadyInGrid = GetThumbnailsAlreadyInGrid(desiredCellHeight, fileTableCount);
                 }
 
-                this.oldGridWidth = gridWidth;
-                this.oldGridHeight = gridHeight;
+                oldGridWidth = gridWidth;
+                oldGridHeight = gridHeight;
 
                 Mouse.OverrideCursor = Cursors.Wait;
                 int cellWidth;
-                if (this.thumbnailsAlreadyInGrid == null || this.thumbnailsAlreadyInGrid.Count == 0)
+                if (thumbnailsAlreadyInGrid == null || thumbnailsAlreadyInGrid.Count == 0)
                 {
                     // As we are not reusing thumbnails, we have to calculate the cell width.
                     // Get the first image as a sample to determine the apect ration, which we will use the set the width of all columns. 
@@ -223,7 +224,7 @@ namespace Timelapse.Controls
                     // way to do it is to grab the aspect ratio of the first image that will be displayed in the Thumbnail Grid. If it doesn't exist, we just use a default aspect ratio
                     // Another option - to avoid the cost of gettng a bitmap on a video - is to check if its a video (jut check the path suffix) and if so use the default aspect ratio OR
                     // use FFMPEG Probe (but that may mean another dll?)
-                    BitmapSource bm = this.FileTable[this.FileTableStartIndex].LoadBitmap(this.FolderPath, Constant.ImageValues.PreviewWidth32, ImageDisplayIntentEnum.Ephemeral,
+                    BitmapSource bm = FileTable[FileTableStartIndex].LoadBitmap(FolderPath, ImageValues.PreviewWidth32, ImageDisplayIntentEnum.Ephemeral,
                         ImageDimensionEnum.UseWidth, out _);
                     cellWidth = (bm == null || bm.PixelHeight == 0)
                         ? Convert.ToInt32(desiredCellHeight * Constant.ThumbnailGrid.AspectRatioDefault)
@@ -236,17 +237,17 @@ namespace Timelapse.Controls
                 }
 
                 // Reconstruct the Grid with the appropriate rows/columns 
-                if (this.ReconstructGrid(cellWidth, desiredCellHeight, gridWidth, gridHeight, fileTableCount, FileTableStartIndex, navigating) == false)
+                if (ReconstructGrid(cellWidth, desiredCellHeight, gridWidth, gridHeight, fileTableCount, FileTableStartIndex, navigating) == false)
                 {
                     // Abort as the grid cannot  display even a single image
                     Mouse.OverrideCursor = null;
                     return ThumbnailGridRefreshStatus.NotEnoughSpaceForEvenOneCell;
                 }
 
-                this.oldCellHeight = desiredCellHeight;
+                oldCellHeight = desiredCellHeight;
 
                 // Unselect all cells except the first one
-                this.SelectInitialCellOnly();
+                SelectInitialCellOnly();
                 Mouse.OverrideCursor = null;
                 return ThumbnailGridRefreshStatus.Ok;
             }
@@ -267,17 +268,17 @@ namespace Timelapse.Controls
             try
             {
                 ThumbnailInCell thumbnailInCell;
-                this.cellChosenOnMouseDown = this.GetCellFromPoint(Mouse.GetPosition(this.Grid));
-                RowColumn currentCell = this.GetCellFromPoint(Mouse.GetPosition(this.Grid));
-                this.cellWithLastMouseOver = currentCell;
+                cellChosenOnMouseDown = GetCellFromPoint(Mouse.GetPosition(Grid));
+                RowColumn currentCell = GetCellFromPoint(Mouse.GetPosition(Grid));
+                cellWithLastMouseOver = currentCell;
 
                 if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 {
                     // CTL mouse down: change that cell (and only that cell's) state
-                    this.modifierKeyPressedOnMouseDown = true;
-                    if (Equals(this.cellChosenOnMouseDown, currentCell))
+                    modifierKeyPressedOnMouseDown = true;
+                    if (Equals(cellChosenOnMouseDown, currentCell))
                     {
-                        thumbnailInCell = this.GetThumbnailInCellFromCell(currentCell);
+                        thumbnailInCell = GetThumbnailInCellFromCell(currentCell);
                         if (thumbnailInCell != null)
                         {
                             thumbnailInCell.IsSelected = !thumbnailInCell.IsSelected;
@@ -287,17 +288,17 @@ namespace Timelapse.Controls
                 else if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 {
                     // SHIFT mouse down: extend the selection (if any) to this point.
-                    this.modifierKeyPressedOnMouseDown = true;
-                    this.SelectExtendSelectionFrom(currentCell);
+                    modifierKeyPressedOnMouseDown = true;
+                    SelectExtendSelectionFrom(currentCell);
                 }
                 else
                 {
                     // Left mouse down, no modifiers keys. 
                     // Select only the current cell, unselecting others.
-                    thumbnailInCell = this.GetThumbnailInCellFromCell(currentCell);
+                    thumbnailInCell = GetThumbnailInCellFromCell(currentCell);
                     if (thumbnailInCell != null)
                     {
-                        this.SelectNone();
+                        SelectNone();
                         thumbnailInCell.IsSelected = true;
                     }
                 }
@@ -305,15 +306,15 @@ namespace Timelapse.Controls
                 // If this is a double click, raise the DecimalAny click event, e.g., so that the calling app can navigate to that image.
                 if (e.ClickCount == 2)
                 {
-                    thumbnailInCell = this.GetThumbnailInCellFromCell(currentCell);
-                    this.Level = 0; // So we won't be zoomed out anymore
+                    thumbnailInCell = GetThumbnailInCellFromCell(currentCell);
+                    Level = 0; // So we won't be zoomed out anymore
                     ThumbnailGridEventArgs eventArgs = new ThumbnailGridEventArgs(this, thumbnailInCell?.ImageRow);
-                    this.OnDoubleClick(eventArgs);
+                    OnDoubleClick(eventArgs);
                     e.Handled = true; // Stops the double click from generating a marker on the MarkableImageCanvas
                 }
-                this.EnableOrDisableControlsAsNeeded();
+                EnableOrDisableControlsAsNeeded();
                 ThumbnailGridEventArgs selectionEventArgs = new ThumbnailGridEventArgs(this, null);
-                this.OnSelectionChanged(selectionEventArgs);
+                OnSelectionChanged(selectionEventArgs);
             }
             catch
             {
@@ -325,33 +326,33 @@ namespace Timelapse.Controls
         private void Grid_MouseMove(object sender, MouseEventArgs e)
         {
             // We only pay attention to mouse-left moves without any modifier keys pressed (i.e., a drag action).
-            if (e.LeftButton != MouseButtonState.Pressed || this.modifierKeyPressedOnMouseDown)
+            if (e.LeftButton != MouseButtonState.Pressed || modifierKeyPressedOnMouseDown)
             {
                 return;
             }
 
             // Get the cell under the mouse pointer
-            RowColumn currentCell = this.GetCellFromPoint(Mouse.GetPosition(this.Grid));
+            RowColumn currentCell = GetCellFromPoint(Mouse.GetPosition(Grid));
 
             // Ignore if the cell has already been handled in the last mouse down or move event,
-            if (Equals(currentCell, this.cellWithLastMouseOver))
+            if (Equals(currentCell, cellWithLastMouseOver))
             {
                 return;
             }
-            this.SelectFromInitialCellTo(currentCell);
-            this.cellWithLastMouseOver = currentCell;
-            this.EnableOrDisableControlsAsNeeded();
+            SelectFromInitialCellTo(currentCell);
+            cellWithLastMouseOver = currentCell;
+            EnableOrDisableControlsAsNeeded();
         }
 
         // On the mouse up, select all cells contained by its bounding box. Note that this is needed
         // as well as the mouse move version, as otherwise a down/up on the same spot won't select the cell.
         private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            this.cellWithLastMouseOver.X = -1;
-            this.cellWithLastMouseOver.Y = -1;
-            if (this.modifierKeyPressedOnMouseDown)
+            cellWithLastMouseOver.X = -1;
+            cellWithLastMouseOver.Y = -1;
+            if (modifierKeyPressedOnMouseDown)
             {
-                this.modifierKeyPressedOnMouseDown = false;
+                modifierKeyPressedOnMouseDown = false;
             }
         }
         #endregion
@@ -361,28 +362,28 @@ namespace Timelapse.Controls
         // Select the first (and only the first) image in the current grid
         public void SelectInitialCellOnly()
         {
-            if (this.thumbnailInCells == null)
+            if (thumbnailInCells == null)
             {
                 return;
             }
-            this.SelectNone(); // Clear the selections
-            if (this.thumbnailInCells.Any())
+            SelectNone(); // Clear the selections
+            if (thumbnailInCells.Any())
             {
-                ThumbnailInCell ci = this.thumbnailInCells[0];
+                ThumbnailInCell ci = thumbnailInCells[0];
                 ci.IsSelected = true;
             }
             ThumbnailGridEventArgs eventArgs = new ThumbnailGridEventArgs(this, null);
-            this.OnSelectionChanged(eventArgs);
+            OnSelectionChanged(eventArgs);
         }
 
         private void SelectNone()
         {
             // Unselect all ThumbnailInCells
-            if (this.thumbnailInCells == null)
+            if (thumbnailInCells == null)
             {
                 return;
             }
-            foreach (ThumbnailInCell ci in this.thumbnailInCells)
+            foreach (ThumbnailInCell ci in thumbnailInCells)
             {
                 ci.IsSelected = false;
             }
@@ -400,17 +401,17 @@ namespace Timelapse.Controls
                 this.cellChosenOnMouseDown = currentCell;
             }
             // ReSharper restore All
-            this.SelectNone(); // Clear the selections
+            SelectNone(); // Clear the selections
 
             // Determine which cell is 
-            DetermineTopLeftBottomRightCells(this.cellChosenOnMouseDown, currentCell, out RowColumn startCell, out RowColumn endCell);
+            DetermineTopLeftBottomRightCells(cellChosenOnMouseDown, currentCell, out RowColumn startCell, out RowColumn endCell);
 
             // Select the cells defined by the cells running from the topLeft cell to the BottomRight cell
             RowColumn indexCell = startCell;
 
             while (true)
             {
-                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(indexCell);
+                ThumbnailInCell ci = GetThumbnailInCellFromCell(indexCell);
                 // If the cell doesn't contain a ThumbnailInCell, then we are at the end.
                 if (ci == null)
                 {
@@ -419,14 +420,14 @@ namespace Timelapse.Controls
                 ci.IsSelected = true;
 
                 // If there is no next cell, then we are at the end.
-                if (this.GridGetNextCell(indexCell, endCell, out RowColumn nextCell) == false)
+                if (GridGetNextCell(indexCell, endCell, out RowColumn nextCell) == false)
                 {
                     break;
                 }
                 indexCell = nextCell;
             }
             ThumbnailGridEventArgs eventArgs = new ThumbnailGridEventArgs(this, null);
-            this.OnSelectionChanged(eventArgs);
+            OnSelectionChanged(eventArgs);
         }
 
         // Select all cells between the initial and currently selected cell
@@ -439,7 +440,7 @@ namespace Timelapse.Controls
 
             while (true)
             {
-                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(indexCell);
+                ThumbnailInCell ci = GetThumbnailInCellFromCell(indexCell);
                 // This shouldn't happen, but ensure that the cell contains a ThumbnailInCell.
                 if (ci == null)
                 {
@@ -448,26 +449,26 @@ namespace Timelapse.Controls
                 ci.IsSelected = true;
 
                 // If there is no next cell, then we are at the end.
-                if (this.GridGetNextCell(indexCell, endCell, out RowColumn nextCell) == false)
+                if (GridGetNextCell(indexCell, endCell, out RowColumn nextCell) == false)
                 {
                     break;
                 }
                 indexCell = nextCell;
             }
             ThumbnailGridEventArgs eventArgs = new ThumbnailGridEventArgs(this, null);
-            this.OnSelectionChanged(eventArgs);
+            OnSelectionChanged(eventArgs);
         }
 
         private void SelectExtendSelectionFrom(RowColumn currentCell)
         {
             // If there is no previous cell, then we are at the end.
-            if (this.GridGetPreviousSelectedCell(currentCell, out RowColumn previousCell))
+            if (GridGetPreviousSelectedCell(currentCell, out RowColumn previousCell))
             {
-                this.SelectFromTo(previousCell, currentCell);
+                SelectFromTo(previousCell, currentCell);
             }
-            else if (this.GridGetNextSelectedCell(currentCell, out RowColumn nextCell))
+            else if (GridGetNextSelectedCell(currentCell, out RowColumn nextCell))
             {
-                this.SelectFromTo(currentCell, nextCell);
+                SelectFromTo(currentCell, nextCell);
             }
         }
 
@@ -475,11 +476,11 @@ namespace Timelapse.Controls
         public List<int> GetSelected()
         {
             List<int> selected = new List<int>();
-            if (this.thumbnailInCells == null)
+            if (thumbnailInCells == null)
             {
                 return selected;
             }
-            foreach (ThumbnailInCell ci in this.thumbnailInCells)
+            foreach (ThumbnailInCell ci in thumbnailInCells)
             {
                 if (ci.IsSelected)
                 {
@@ -492,7 +493,7 @@ namespace Timelapse.Controls
 
         public int SelectedCount()
         {
-            return this.GetSelected().Count;
+            return GetSelected().Count;
         }
         #endregion
 
@@ -501,13 +502,13 @@ namespace Timelapse.Controls
         private bool ReconstructGrid(double cellWidth, double cellHeight, double gridWidth, double gridHeight, int fileTableCount, int fileTableStartIndex, bool navigating)
         {
             int fileTableIndex;
-            this.BackgroundWorker = new BackgroundWorker()
+            BackgroundWorker = new BackgroundWorker
             {
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
             };
 
-            this.BackgroundWorker.DoWork += (ow, ea) =>
+            BackgroundWorker.DoWork += (ow, ea) =>
             {
                 try
                 {
@@ -519,10 +520,10 @@ namespace Timelapse.Controls
                     {
                         if (thumbnailInCell.ImageRow.IsVideo == false)
                         {
-                            if (this.BackgroundWorker.CancellationPending)
+                            if (BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
-                                this.BackgroundWorker.WorkerReportsProgress = false;
+                                BackgroundWorker.WorkerReportsProgress = false;
                                 return;
                             }
 
@@ -545,12 +546,12 @@ namespace Timelapse.Controls
                                 DateTimeLipInvoked = thumbnailInCell.DateTimeLastBitmapWasSet
                             };
 
-                            if (this.BackgroundWorker.CancellationPending)
+                            if (BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 return;
                             }
-                            this.BackgroundWorker.ReportProgress(0, lip);
+                            BackgroundWorker.ReportProgress(0, lip);
                         }
                         fileTableIndex++;
                     }
@@ -566,7 +567,7 @@ namespace Timelapse.Controls
                                 fileTableIndex++;
                                 continue;
                             }
-                            if (this.BackgroundWorker.CancellationPending)
+                            if (BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 return;
@@ -582,12 +583,12 @@ namespace Timelapse.Controls
                                 FileTableIndex = fileTableIndex,
                                 DateTimeLipInvoked = thumbnailInCell.DateTimeLastBitmapWasSet
                             };
-                            if (this.BackgroundWorker.CancellationPending)
+                            if (BackgroundWorker.CancellationPending)
                             {
                                 ea.Cancel = true;
                                 return;
                             }
-                            this.BackgroundWorker.ReportProgress(0, lip);
+                            BackgroundWorker.ReportProgress(0, lip);
                         }
                         fileTableIndex++;
                     }
@@ -600,20 +601,20 @@ namespace Timelapse.Controls
                 }
             };
 
-            this.BackgroundWorker.ProgressChanged += (o, ea) =>
+            BackgroundWorker.ProgressChanged += (o, ea) =>
             {
                 // this gets called on the UI thread
-                this.UpdateThumbnailsLoadProgress((LoadImageProgressStatus)ea.UserState);
+                UpdateThumbnailsLoadProgress((LoadImageProgressStatus)ea.UserState);
             };
 
-            this.BackgroundWorker.RunWorkerCompleted += (o, ea) =>
+            BackgroundWorker.RunWorkerCompleted += (o, ea) =>
             {
-                this.BackgroundWorker.Dispose();
+                BackgroundWorker.Dispose();
             };
 
-            this.CancelUpdate();
+            CancelUpdate();
 
-            if (this.thumbnailsAlreadyInGrid.Count > 0)
+            if (thumbnailsAlreadyInGrid.Count > 0)
             {
                 // Navigation or Resizing. 
                 // ThumbnailsIsAlreadyInGrid will only have thumbnails if it is a navigation or resize action. 
@@ -622,13 +623,13 @@ namespace Timelapse.Controls
                 {
                     // Navigation. The grid layout / cell size doesn't change during navigation,
                     // so this method uses the grid as is while reusing any thumbnails it can
-                    this.ReuseGrid(cellWidth, cellHeight, fileTableCount, fileTableStartIndex);
+                    ReuseGrid(cellWidth, cellHeight, fileTableCount, fileTableStartIndex);
                 }
                 else
                 {
                     // Resize. The grid layout changes, so it has to be reconstructed.  
                     // However, because the cell size is the same, we can reusue existing thumbnails 
-                    if (this.RebuildButReuseGrid(gridWidth, gridHeight, cellWidth, cellHeight, fileTableCount, fileTableStartIndex) == false)
+                    if (RebuildButReuseGrid(gridWidth, gridHeight, cellWidth, cellHeight, fileTableCount, fileTableStartIndex) == false)
                     {
                         // We can't even fit a single cell into the grid, so abort
                         return false;
@@ -640,13 +641,13 @@ namespace Timelapse.Controls
                 // Zoom level change, 
                 // The grid and /or cell size will have changed.
                 // We have to rebuild the grid from scratch, including regenerating all thumbnails sized to fit into the grid
-                if (this.RebuildGrid(gridWidth, gridHeight, cellWidth, cellHeight, fileTableCount, fileTableStartIndex) == false)
+                if (RebuildGrid(gridWidth, gridHeight, cellWidth, cellHeight, fileTableCount, fileTableStartIndex) == false)
                 {
                     // We can't even fit a single cell into the grid, so abort
                     return false;
                 }
             }
-            this.BackgroundWorker.RunWorkerAsync();
+            BackgroundWorker.RunWorkerAsync();
             return true;
         }
         #endregion
@@ -658,10 +659,10 @@ namespace Timelapse.Controls
         private List<ThumbnailInCell> GetThumbnailsAlreadyInGrid(double cellHeight, int fileTableCount)
         {
             List<ThumbnailInCell> thumbnailsAlreadyInGridList = new List<ThumbnailInCell>();
-            int fileTableIndex = this.FileTableStartIndex;
-            int cellsInGrid = this.AvailableColumns * this.AvailableRows;
+            int fileTableIndex = FileTableStartIndex;
+            int cellsInGrid = AvailableColumns * AvailableRows;
 
-            if (cellsInGrid <= 0 || Math.Abs(this.Grid.RowDefinitions[0].ActualHeight - cellHeight) > .0001)
+            if (cellsInGrid <= 0 || Math.Abs(Grid.RowDefinitions[0].ActualHeight - cellHeight) > .0001)
             {
                 // If The grid has nothing in it, or if the requested cell height isn't the same as the current one, return an empty list
                 // i.e., assumes this is a change in zoom level, thus we don't reuse thumbnails as we have to resize them anyways
@@ -673,8 +674,8 @@ namespace Timelapse.Controls
             // - the bitmap image is present (and thus renderable)
             for (int i = 0; i < cellsInGrid && fileTableIndex < fileTableCount; i++)
             {
-                string path = Path.Combine(this.FileTable[fileTableIndex].RelativePath, this.FileTable[fileTableIndex].File);
-                foreach (ThumbnailInCell tic in this.thumbnailInCells)
+                string path = Path.Combine(FileTable[fileTableIndex].RelativePath, FileTable[fileTableIndex].File);
+                foreach (ThumbnailInCell tic in thumbnailInCells)
                 {
                     if (String.Equals(tic.Path, path) && tic.Image.Source != null)
                     {
@@ -695,7 +696,7 @@ namespace Timelapse.Controls
         // Typically invoked for resizing actions.
         private bool RebuildButReuseGrid(double gridWidth, double gridHeight, double cellWidth, double cellHeight, int fileTableCount, int fileTableIndex)
         {
-            if (this.thumbnailsAlreadyInGrid.Count == 0)
+            if (thumbnailsAlreadyInGrid.Count == 0)
             {
                 // Since there are no reusable thumbnails, we may as well rebuild the grid from scratch
                 return RebuildGrid(gridWidth, gridHeight, cellWidth, cellHeight, fileTableCount, fileTableIndex);
@@ -710,22 +711,22 @@ namespace Timelapse.Controls
             }
 
             // Clear the Grid so we can start afresh
-            this.Grid.RowDefinitions.Clear();
-            this.Grid.ColumnDefinitions.Clear();
-            this.Grid.Children.Clear();
+            Grid.RowDefinitions.Clear();
+            Grid.ColumnDefinitions.Clear();
+            Grid.Children.Clear();
 
             // Add as many columns of the and rows of the given cell width and height as can fit into the grid's available space
             for (int currentColumn = 0; currentColumn < columnCount; currentColumn++)
             {
-                this.Grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
+                Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
             }
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
-                this.Grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(cellHeight, GridUnitType.Pixel) });
+                Grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(cellHeight, GridUnitType.Pixel) });
             }
 
             int gridIndex = 0;
-            this.thumbnailInCells = new List<ThumbnailInCell>();
+            thumbnailInCells = new List<ThumbnailInCell>();
 
             // Add an empty thumbnailInCell to each grid cell until no more cells or files to display. The bitmap will be added via the backgroundWorker.
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
@@ -734,10 +735,10 @@ namespace Timelapse.Controls
                 {
 
                     // Check to see if the thumbnail already exists in a reusable form in the grid. 
-                    string path = Path.Combine(this.FileTable[fileTableIndex].RelativePath, this.FileTable[fileTableIndex].File);
+                    string path = Path.Combine(FileTable[fileTableIndex].RelativePath, FileTable[fileTableIndex].File);
                     ThumbnailInCell tic = thumbnailsAlreadyInGrid.Find(x => String.Equals(x.Path, path));
 
-                    if (tic == null || tic.Image.Source == null || this.Grid.Children.Contains(tic))
+                    if (tic == null || tic.Image.Source == null || Grid.Children.Contains(tic))
                     {
                         // 1. A reusable thumbnail isn't available, so create one
                         // 2. Or, to make it work for duplicates, we recreate the thumbnail if more than one of them is already in the grid.
@@ -759,8 +760,8 @@ namespace Timelapse.Controls
 
                     Grid.SetRow(tic, currentRow);
                     Grid.SetColumn(tic, currentColumn);
-                    this.Grid.Children.Add(tic);
-                    this.thumbnailInCells.Add(tic);
+                    Grid.Children.Add(tic);
+                    thumbnailInCells.Add(tic);
                     fileTableIndex++;
                     gridIndex++;
                 }
@@ -772,14 +773,14 @@ namespace Timelapse.Controls
         // Typically invoked for navigation actions.
         private void ReuseGrid(double cellWidth, double cellHeight, int fileTableCount, int fileTableIndex)
         {
-            if (this.thumbnailsAlreadyInGrid.Count > 0)
+            if (thumbnailsAlreadyInGrid.Count > 0)
             {
                 // We can reuse the grid as it hasn't changed
-                this.Grid.Children.Clear();
+                Grid.Children.Clear();
                 int gridIndex = 0;
-                int rowCount = this.AvailableRows;
-                int columnCount = this.AvailableColumns;
-                this.thumbnailInCells = new List<ThumbnailInCell>();
+                int rowCount = AvailableRows;
+                int columnCount = AvailableColumns;
+                thumbnailInCells = new List<ThumbnailInCell>();
 
                 // Add an existing thumbnail to the grid.
                 for (int currentRow = 0; currentRow < rowCount; currentRow++)
@@ -788,11 +789,11 @@ namespace Timelapse.Controls
                     {
                         // Check to see if the thumbnail already exists in a reusable form in the grid 
                         // and that it hasn't been deleted since the last refresh. 
-                        string path = Path.Combine(this.FileTable[fileTableIndex].RelativePath, this.FileTable[fileTableIndex].File);
+                        string path = Path.Combine(FileTable[fileTableIndex].RelativePath, FileTable[fileTableIndex].File);
                         ThumbnailInCell thumbnailInCell = thumbnailsAlreadyInGrid.Find(x => String.Equals(x.Path, path));
                         // The Contains checks if the found thumbnail was a duplicate and thus already in the grid. If so we need to create a new thumbnail
                         // A reusable thumbnail isn't available, so create one
-                        if (thumbnailInCell == null || thumbnailInCell.Image.Source == null || this.Grid.Children.Contains(thumbnailInCell))
+                        if (thumbnailInCell == null || thumbnailInCell.Image.Source == null || Grid.Children.Contains(thumbnailInCell))
                         {
                             // 1. A reusable thumbnail isn't available, so create one
                             // 2. Or, to make it work for duplicates, we recreate the thumbnail if more than one of them is already in the grid.
@@ -815,10 +816,10 @@ namespace Timelapse.Controls
 
                         Grid.SetRow(thumbnailInCell, currentRow);
                         Grid.SetColumn(thumbnailInCell, currentColumn);
-                        thumbnailInCell.RefreshBoundingBoxesDuplicatesAndEpisodeInfo(this.FileTable, fileTableIndex);
+                        thumbnailInCell.RefreshBoundingBoxesDuplicatesAndEpisodeInfo(FileTable, fileTableIndex);
 
-                        this.Grid.Children.Add(thumbnailInCell);
-                        this.thumbnailInCells.Add(thumbnailInCell);
+                        Grid.Children.Add(thumbnailInCell);
+                        thumbnailInCells.Add(thumbnailInCell);
                         fileTableIndex++;
                         gridIndex++;
                     }
@@ -851,22 +852,22 @@ namespace Timelapse.Controls
             }
 
             // Clear the Grid so we can start afresh
-            this.Grid.RowDefinitions.Clear();
-            this.Grid.ColumnDefinitions.Clear();
-            this.Grid.Children.Clear();
+            Grid.RowDefinitions.Clear();
+            Grid.ColumnDefinitions.Clear();
+            Grid.Children.Clear();
 
             // Add as many columns of the and rows of the given cell width and height as can fit into the grid's available space
             for (int currentColumn = 0; currentColumn < columnCount; currentColumn++)
             {
-                this.Grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
+                Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(cellWidth, GridUnitType.Pixel) });
             }
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
-                this.Grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(cellHeight, GridUnitType.Pixel) });
+                Grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(cellHeight, GridUnitType.Pixel) });
             }
 
             int gridIndex = 0;
-            this.thumbnailInCells = new List<ThumbnailInCell>();
+            thumbnailInCells = new List<ThumbnailInCell>();
 
             // Add an empty thumbnailInCell to each grid cell until no more cells or files to display. The bitmap will be added via the backgroundWorker.
             for (int currentRow = 0; currentRow < rowCount; currentRow++)
@@ -876,8 +877,8 @@ namespace Timelapse.Controls
                     ThumbnailInCell thumbnailInCell = CreateEmptyThumbnail(fileTableIndex++, gridIndex++, cellWidth, cellHeight, currentRow, currentColumn);
                     Grid.SetRow(thumbnailInCell, currentRow);
                     Grid.SetColumn(thumbnailInCell, currentColumn);
-                    this.Grid.Children.Add(thumbnailInCell);
-                    this.thumbnailInCells.Add(thumbnailInCell);
+                    Grid.Children.Add(thumbnailInCell);
+                    thumbnailInCells.Add(thumbnailInCell);
                 }
             }
             return true;
@@ -890,9 +891,9 @@ namespace Timelapse.Controls
             try
             {
                 // As we are cancelling updates rapidly, check to make sure that we can still access the variables
-                if (lip.ThumbnailInCell.GridIndex < this.thumbnailInCells.Count && lip.BitmapSource != null)
+                if (lip.ThumbnailInCell.GridIndex < thumbnailInCells.Count && lip.BitmapSource != null)
                 {
-                    ThumbnailInCell thumbnailInCell = this.thumbnailInCells[lip.GridIndex];
+                    ThumbnailInCell thumbnailInCell = thumbnailInCells[lip.GridIndex];
                     if (thumbnailInCell.DateTimeLastBitmapWasSet != lip.DateTimeLipInvoked)
                     {
                         // If the dates don't match, this means that the bitmap we are trying to set is stale 
@@ -901,7 +902,7 @@ namespace Timelapse.Controls
                         return;
                     }
                     thumbnailInCell.SetThumbnail(lip.BitmapSource);
-                    thumbnailInCell.RefreshBoundingBoxesDuplicatesAndEpisodeInfo(this.FileTable, lip.FileTableIndex);
+                    thumbnailInCell.RefreshBoundingBoxesDuplicatesAndEpisodeInfo(FileTable, lip.FileTableIndex);
                 }
             }
             catch
@@ -916,9 +917,9 @@ namespace Timelapse.Controls
         {
             try
             {
-                if (this.BackgroundWorker != null)
+                if (BackgroundWorker != null)
                 {
-                    this.BackgroundWorker.CancelAsync();
+                    BackgroundWorker.CancelAsync();
                 }
             }
             catch
@@ -936,10 +937,10 @@ namespace Timelapse.Controls
                 GridIndex = gridIndex,
                 Row = row,
                 Column = column,
-                RootFolder = this.FolderPath,
-                ImageRow = this.FileTable[fileTableIndex],
+                RootFolder = FolderPath,
+                ImageRow = FileTable[fileTableIndex],
                 FileTableIndex = fileTableIndex,
-                BoundingBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(this.FileTable[fileTableIndex].ID)
+                BoundingBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(FileTable[fileTableIndex].ID)
             };
             return thumbnailInCell;
         }
@@ -948,26 +949,26 @@ namespace Timelapse.Controls
         #region Refresh Episode and Bounding Boxes (if they are turned on)
         public void RefreshEpisodeTextIfWarranted()
         {
-            foreach (ThumbnailInCell thumbnailInCell in this.thumbnailInCells)
+            foreach (ThumbnailInCell thumbnailInCell in thumbnailInCells)
             {
-                thumbnailInCell.RefreshEpisodeInfo(this.FileTable, thumbnailInCell.FileTableIndex);
+                thumbnailInCell.RefreshEpisodeInfo(FileTable, thumbnailInCell.FileTableIndex);
             }
         }
 
         public void RefreshBoundingBoxesAndEpisodeInfo()
         {
-            foreach (ThumbnailInCell thumbnailInCell in this.thumbnailInCells)
+            foreach (ThumbnailInCell thumbnailInCell in thumbnailInCells)
             {
-                thumbnailInCell.RefreshBoundingBoxesDuplicatesAndEpisodeInfo(this.FileTable, thumbnailInCell.FileTableIndex);
+                thumbnailInCell.RefreshBoundingBoxesDuplicatesAndEpisodeInfo(FileTable, thumbnailInCell.FileTableIndex);
             }
         }
 
         // ReSharper disable once UnusedMember.Global
         public void RefreshDuplicateTextIfWarranted()
         {
-            foreach (ThumbnailInCell thumbnailInCell in this.thumbnailInCells)
+            foreach (ThumbnailInCell thumbnailInCell in thumbnailInCells)
             {
-                thumbnailInCell.RefreshDuplicateInfo(this.FileTable, thumbnailInCell.FileTableIndex);
+                thumbnailInCell.RefreshDuplicateInfo(FileTable, thumbnailInCell.FileTableIndex);
             }
         }
         #endregion
@@ -975,10 +976,10 @@ namespace Timelapse.Controls
         #region Cell Navigation methods
         private bool GridGetNextSelectedCell(RowColumn cell, out RowColumn nextCell)
         {
-            RowColumn lastCell = new RowColumn(this.Grid.RowDefinitions.Count - 1, this.Grid.ColumnDefinitions.Count - 1);
-            while (this.GridGetNextCell(cell, lastCell, out nextCell))
+            RowColumn lastCell = new RowColumn(Grid.RowDefinitions.Count - 1, Grid.ColumnDefinitions.Count - 1);
+            while (GridGetNextCell(cell, lastCell, out nextCell))
             {
-                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(nextCell);
+                ThumbnailInCell ci = GetThumbnailInCellFromCell(nextCell);
 
                 // If there is no cell, we've reached the end, 
                 if (ci == null)
@@ -998,9 +999,9 @@ namespace Timelapse.Controls
         private bool GridGetPreviousSelectedCell(RowColumn cell, out RowColumn previousCell)
         {
             RowColumn lastCell = new RowColumn(0, 0);
-            while (this.GridGetPreviousCell(cell, lastCell, out previousCell))
+            while (GridGetPreviousCell(cell, lastCell, out previousCell))
             {
-                ThumbnailInCell ci = this.GetThumbnailInCellFromCell(previousCell);
+                ThumbnailInCell ci = GetThumbnailInCellFromCell(previousCell);
 
                 // If there is no cell, terminate as we've reached the beginning
                 if (ci == null)
@@ -1023,7 +1024,7 @@ namespace Timelapse.Controls
             nextCell = new RowColumn(cell.X, cell.Y);
             // Try to go to the next column or wrap around to the next row if we are at the end of the row
             nextCell.Y++;
-            if (nextCell.Y == this.Grid.ColumnDefinitions.Count)
+            if (nextCell.Y == Grid.ColumnDefinitions.Count)
             {
                 // start a new row
                 nextCell.Y = 0;
@@ -1047,7 +1048,7 @@ namespace Timelapse.Controls
             if (previousCell.Y < 0)
             {
                 // go to the previous row
-                previousCell.Y = this.Grid.ColumnDefinitions.Count - 1;
+                previousCell.Y = Grid.ColumnDefinitions.Count - 1;
                 previousCell.X--;
             }
 
@@ -1076,7 +1077,7 @@ namespace Timelapse.Controls
             double accumulatedWidth = 0.0;
 
             // Calculate which row the mouse was over
-            foreach (var rowDefinition in this.Grid.RowDefinitions)
+            foreach (var rowDefinition in Grid.RowDefinitions)
             {
                 accumulatedHeight += rowDefinition.ActualHeight;
                 if (accumulatedHeight >= mousePoint.Y)
@@ -1087,7 +1088,7 @@ namespace Timelapse.Controls
             }
 
             // Calculate which column the mouse was over
-            foreach (var columnDefinition in this.Grid.ColumnDefinitions)
+            foreach (var columnDefinition in Grid.ColumnDefinitions)
             {
                 accumulatedWidth += columnDefinition.ActualWidth;
                 if (accumulatedWidth >= mousePoint.X)
@@ -1102,7 +1103,7 @@ namespace Timelapse.Controls
         // Get the ThumbnailInCell held by the Grid's specified row,column coordinates 
         private ThumbnailInCell GetThumbnailInCellFromCell(RowColumn cell)
         {
-            return this.Grid.Children.Cast<ThumbnailInCell>().FirstOrDefault(exp => Grid.GetColumn(exp) == cell.Y && Grid.GetRow(exp) == cell.X);
+            return Grid.Children.Cast<ThumbnailInCell>().FirstOrDefault(exp => Grid.GetColumn(exp) == cell.Y && Grid.GetRow(exp) == cell.X);
         }
         #endregion
 
@@ -1110,13 +1111,13 @@ namespace Timelapse.Controls
         // Update the data entry controls to match the current selection(s)
         private void EnableOrDisableControlsAsNeeded()
         {
-            if (this.Visibility == Visibility.Collapsed)
+            if (Visibility == Visibility.Collapsed)
             {
-                this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
+                DataEntryControls.SetEnableState(ControlsEnableStateEnum.SingleImageView, -1);
             }
             else
             {
-                this.DataEntryControls.SetEnableState(ControlsEnableStateEnum.MultipleImageView, this.SelectedCount());
+                DataEntryControls.SetEnableState(ControlsEnableStateEnum.MultipleImageView, SelectedCount());
             }
         }
         #endregion
@@ -1127,12 +1128,12 @@ namespace Timelapse.Controls
 
         protected virtual void OnDoubleClick(ThumbnailGridEventArgs e)
         {
-            this.DoubleClick?.Invoke(this, e);
+            DoubleClick?.Invoke(this, e);
         }
 
         protected virtual void OnSelectionChanged(ThumbnailGridEventArgs e)
         {
-            this.SelectionChanged?.Invoke(this, e);
+            SelectionChanged?.Invoke(this, e);
         }
         #endregion
     }

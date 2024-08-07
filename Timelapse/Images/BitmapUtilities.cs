@@ -1,7 +1,4 @@
-﻿using MetadataExtractor.Formats.Exif;
-using MetadataExtractor;
-using NReco.VideoConverter;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -10,10 +7,16 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using NReco.VideoConverter;
+using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
+using Directory = MetadataExtractor.Directory;
+using File = System.IO.File;
 using Point = System.Windows.Point;
 
 namespace Timelapse.Images
@@ -34,11 +37,11 @@ namespace Timelapse.Images
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {
                 // We check this first as 'exists' will return false on a path too long error, and we want to display the correct bitmap
-                return Constant.ImageValues.FilePathTooLong.Value;
+                return ImageValues.FilePathTooLong.Value;
             }
             if (!File.Exists(filePath))
             {
-                return Constant.ImageValues.FileNoLongerAvailable.Value;
+                return ImageValues.FileNoLongerAvailable.Value;
             }
             try
             {
@@ -82,12 +85,10 @@ namespace Timelapse.Images
                     TracePrint.PrintMessage(
                         $"ImageRow/LoadBitmap: exception getting bitmap from file: {filePath}\n.** Insufficient Memory Exception: {exception.Message}.\n--------------\n**StackTrace: {exception.StackTrace}.\nXXXXXXXXXXXXXX\n\n");
                 }
-                else
-                {
-                    // TraceDebug.PrintMessage(String.Format("ImageRow/LoadBitmap: General exception: {0}\n.**Unknown exception getting bitmap from file: {1}.\n--------------\n**StackTrace: {2}.\nXXXXXXXXXXXXXX\n\n", filePath, exception.Message, exception.StackTrace));
-                }
+
+                // TraceDebug.PrintMessage(String.Format("ImageRow/LoadBitmap: General exception: {0}\n.**Unknown exception getting bitmap from file: {1}.\n--------------\n**StackTrace: {2}.\nXXXXXXXXXXXXXX\n\n", filePath, exception.Message, exception.StackTrace));
                 isCorruptOrMissing = true;
-                return Constant.ImageValues.Corrupt.Value;
+                return ImageValues.Corrupt.Value;
             }
         }
         #endregion
@@ -100,19 +101,19 @@ namespace Timelapse.Images
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {
                 isCorruptOrMissing = true;
-                return Constant.ImageValues.FilePathTooLong.Value;
+                return ImageValues.FilePathTooLong.Value;
             }
             if (!File.Exists(filePath))
             {
                 isCorruptOrMissing = true;
-                return Constant.ImageValues.FileNoLongerAvailable.Value;
+                return ImageValues.FileNoLongerAvailable.Value;
             }
 
             // Our FFMPEG installation is the 64 bit version. In case someone is using a 32 bit machine, we use the MediaEncoder instead.
             if (Environment.Is64BitOperatingSystem == false)
             {
                 // Debug.Print("Can't use ffmpeg as this is a 32 bit machine. Using MediaEncoder instead");
-                return BitmapUtilities.GetVideoBitmapFromFileUsingMediaEncoder(filePath, desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
+                return GetVideoBitmapFromFileUsingMediaEncoder(filePath, desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
             }
             try
             {
@@ -165,12 +166,12 @@ namespace Timelapse.Images
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {
                 isCorruptOrMissing = true;
-                return Constant.ImageValues.FilePathTooLong.Value;
+                return ImageValues.FilePathTooLong.Value;
             }
 
             if (!File.Exists(filePath))
             {
-                return Constant.ImageValues.FileNoLongerAvailable.Value;
+                return ImageValues.FileNoLongerAvailable.Value;
             }
 
             MediaPlayer mediaPlayer = new MediaPlayer
@@ -192,17 +193,17 @@ namespace Timelapse.Images
                 {
                     // back off briefly to let MediaPlayer do its loading, which typically takes perhaps 75ms
                     // a brief Sleep() is used rather than Yield() to reduce overhead as 500k to 1M+ yields typically occur
-                    Thread.Sleep(Constant.ThrottleValues.PollIntervalForVideoLoad);
+                    Thread.Sleep(ThrottleValues.PollIntervalForVideoLoad);
                     if (timesTried-- <= 0)
                     {
                         isCorruptOrMissing = false;
                         mediaPlayer.Stop();
-                        return BitmapUtilities.GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
+                        return GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
                     }
                 }
 
                 // sleep one more time as MediaPlayer has a tendency to still return black frames for a moment after the width and height have populated
-                Thread.Sleep(Constant.ThrottleValues.PollIntervalForVideoLoad);
+                Thread.Sleep(ThrottleValues.PollIntervalForVideoLoad);
 
                 int pixelWidth = mediaPlayer.NaturalVideoWidth;
                 int pixelHeight = mediaPlayer.NaturalVideoHeight;
@@ -225,7 +226,7 @@ namespace Timelapse.Images
 
                 // render and check for black frame
                 // it's assumed the camera doesn't yield all black frames
-                for (int renderAttempt = 1; renderAttempt <= Constant.ThrottleValues.MaximumRenderAttempts; ++renderAttempt)
+                for (int renderAttempt = 1; renderAttempt <= ThrottleValues.MaximumRenderAttempts; ++renderAttempt)
                 {
                     // try render
                     RenderTargetBitmap renderBitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Default);
@@ -246,11 +247,11 @@ namespace Timelapse.Images
                         return writeableBitmap;
                     }
                     // black frame was rendered; backoff slightly to try again
-                    Thread.Sleep(TimeSpan.FromMilliseconds(Constant.ThrottleValues.ProgressBarSleepInterval.TotalMilliseconds));
+                    Thread.Sleep(TimeSpan.FromMilliseconds(ThrottleValues.ProgressBarSleepInterval.TotalMilliseconds));
                 }
                 // We failed, so just return a blank video.
                 mediaPlayer.Stop();
-                return BitmapUtilities.GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
+                return GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
                 //throw new ApplicationException(String.Format("Limit of {0} render attempts was reached.", Constant.ThrottleValues.MaximumRenderAttempts));
             }
             catch
@@ -258,7 +259,7 @@ namespace Timelapse.Images
                 // We don't print the exception // (Exception exception)
                 // TraceDebug.PrintMessage(String.Format("VideoRow/LoadBitmap: Loading of {0} failed in Video - LoadBitmap. {0}", imageFolderPath));
                 mediaPlayer.Stop();
-                return BitmapUtilities.GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
+                return GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
             }
         }
         #endregion
@@ -272,7 +273,7 @@ namespace Timelapse.Images
         // Still, it at least shows how to draw atop a bitmap.
         public static BitmapSource GetBitmapFromFileWithPlayButton(string path, int? desiredWidth = null, ImageDisplayIntentEnum displayIntent = ImageDisplayIntentEnum.Persistent)
         {
-            BitmapSource bmp = BitmapUtilities.GetBitmapFromImageFile(path, desiredWidth, displayIntent, ImageDimensionEnum.UseWidth, out _);
+            BitmapSource bmp = GetBitmapFromImageFile(path, desiredWidth, displayIntent, ImageDimensionEnum.UseWidth, out _);
             RenderTargetBitmap target = new RenderTargetBitmap(bmp.PixelWidth, bmp.PixelHeight, bmp.DpiX, bmp.DpiY, PixelFormats.Pbgra32);
             DrawingVisual visual = new DrawingVisual();
 
@@ -369,7 +370,7 @@ namespace Timelapse.Images
         {
             if (!File.Exists(filePath))
             {
-                return Constant.ImageValues.FileNoLongerAvailable.Value.Width / Constant.ImageValues.FileNoLongerAvailable.Value.Height;
+                return ImageValues.FileNoLongerAvailable.Value.Width / ImageValues.FileNoLongerAvailable.Value.Height;
             }
             try
             {
@@ -386,7 +387,7 @@ namespace Timelapse.Images
             }
             catch
             {
-                return Constant.ImageValues.Corrupt.Value.Width / Constant.ImageValues.Corrupt.Value.Height;
+                return ImageValues.Corrupt.Value.Width / ImageValues.Corrupt.Value.Height;
             }
         }
         #endregion
@@ -482,7 +483,7 @@ namespace Timelapse.Images
             try
             {
                 // Use metadataextractor to read the orientation flag
-                IEnumerable<MetadataExtractor.Directory> directories = ImageMetadataReader.ReadMetadata(filePath);
+                IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(filePath);
                 ExifIfd0Directory ifd0Directory = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
                 if (ifd0Directory == null)
                 {

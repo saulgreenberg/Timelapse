@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
+using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Xceed.Wpf.AvalonDock;
 using Xceed.Wpf.AvalonDock.Controls;
@@ -12,7 +14,7 @@ namespace Timelapse
     public partial class TimelapseWindow
     {
         #region Callback - Property changing 
-        public void LayoutAnchorable_PropertyChanging(object sender, System.ComponentModel.PropertyChangingEventArgs e)
+        public void LayoutAnchorable_PropertyChanging(object sender, PropertyChangingEventArgs e)
         {
             // Check the arguments for null 
             if (sender == null || e == null)
@@ -25,9 +27,9 @@ namespace Timelapse
             }
 
             if (!(sender is LayoutAnchorable la)) return;
-            if (la.ContentId == "ContentIDDataEntryControlPanel" && (e.PropertyName == Constant.AvalonDockValues.FloatingWindowFloatingHeightProperty || e.PropertyName == Constant.AvalonDockValues.FloatingWindowFloatingWidthProperty))
+            if (la.ContentId == "ContentIDDataEntryControlPanel" && (e.PropertyName == AvalonDockValues.FloatingWindowFloatingHeightProperty || e.PropertyName == AvalonDockValues.FloatingWindowFloatingWidthProperty))
             {
-                this.DockingManager_FloatingDataEntryWindowLimitSize();
+                DockingManager_FloatingDataEntryWindowLimitSize();
             }
         }
         #endregion
@@ -35,13 +37,13 @@ namespace Timelapse
         #region Callback - Layout Updated 
         private void DockingManager_LayoutUpdated(object sender, EventArgs e)
         {
-            if (this.DockingManager1.FloatingWindows.Any())
+            if (DockingManager1.FloatingWindows.Any())
             {
-                this.DockingManager_FloatingDataEntryWindowTopmost(false, DockingManager1);
+                DockingManager_FloatingDataEntryWindowTopmost(false, DockingManager1);
             }
-            if (this.DockingManager2.FloatingWindows.Any())
+            if (DockingManager2.FloatingWindows.Any())
             {
-                this.DockingManager_FloatingDataEntryWindowTopmost(false, DockingManager2);
+                DockingManager_FloatingDataEntryWindowTopmost(false, DockingManager2);
             }
         }
         #endregion
@@ -64,8 +66,8 @@ namespace Timelapse
                     floatingWindow.ShowInTaskbar = true;
                     continue;
                 }
-                floatingWindow.MinHeight = Constant.AvalonDockValues.FloatingWindowMinimumHeight;
-                floatingWindow.MinWidth = Constant.AvalonDockValues.FloatingWindowMinimumWidth;
+                floatingWindow.MinHeight = AvalonDockValues.FloatingWindowMinimumHeight;
+                floatingWindow.MinWidth = AvalonDockValues.FloatingWindowMinimumWidth;
 
                 if (topMost)
                 {
@@ -89,7 +91,7 @@ namespace Timelapse
         // SAULXX: Limitations, I think it also applies to the instructions and data pane floating windows!
         private void DockingManager_FloatingDataEntryWindowLimitSize()
         {
-            foreach (var floatingWindow in this.DockingManager1.FloatingWindows)
+            foreach (var floatingWindow in DockingManager1.FloatingWindows)
             {
                 // This checks to see if its the data entry window, which is the only layoutanchorable present.
                 // If its not, then the value will be null (i.e., its the DataGrid layoutdocument)
@@ -99,13 +101,13 @@ namespace Timelapse
                 }
                 if (floatingWindow.HasContent)
                 {
-                    if (floatingWindow.Height > this.DataEntryScrollViewer.ActualHeight)
+                    if (floatingWindow.Height > DataEntryScrollViewer.ActualHeight)
                     {
-                        floatingWindow.Height = this.DataEntryScrollViewer.ActualHeight + Constant.AvalonDockValues.FloatingWindowLimitSizeHeightCorrection;
+                        floatingWindow.Height = DataEntryScrollViewer.ActualHeight + AvalonDockValues.FloatingWindowLimitSizeHeightCorrection;
                     }
-                    if (floatingWindow.Width > this.DataEntryScrollViewer.ActualWidth)
+                    if (floatingWindow.Width > DataEntryScrollViewer.ActualWidth)
                     {
-                        floatingWindow.Width = this.DataEntryScrollViewer.ActualWidth + Constant.AvalonDockValues.FloatingWindowLimitSizeWidthCorrection;
+                        floatingWindow.Width = DataEntryScrollViewer.ActualWidth + AvalonDockValues.FloatingWindowLimitSizeWidthCorrection;
                     }
                     break;
                 }

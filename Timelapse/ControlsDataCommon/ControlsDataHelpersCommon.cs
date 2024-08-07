@@ -1,25 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.ControlsMetadata;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Xceed.Wpf.Toolkit.Primitives;
 using Application = System.Windows.Application;
+using Control = Timelapse.Constant.Control;
 using DataFormats = System.Windows.DataFormats;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using TextBox = System.Windows.Controls.TextBox;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using Timelapse.DebuggingSupport;
-using Timelapse.Constant;
-using Timelapse.DataStructures;
 
 namespace Timelapse.ControlsDataCommon
 {
@@ -93,7 +95,7 @@ namespace Timelapse.ControlsDataCommon
                 return;
             }
 
-            if (false == ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(textBox, args, false))
+            if (false == TextBoxHandleKeyDownForSpace(textBox, args, false))
             {
                 alphaNumeric.FlashContentControl();
             }
@@ -109,7 +111,7 @@ namespace Timelapse.ControlsDataCommon
 
             TextBox textBox = alphaNumeric.ContentControl;
             // If we are in viewonly state, this ensures that the number textbox can't be edited.
-            if (false == ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(textBox, args, false))
+            if (false == TextBoxHandleKeyDownForSpace(textBox, args, false))
             {
                 alphaNumeric.FlashContentControl();
             }
@@ -125,7 +127,7 @@ namespace Timelapse.ControlsDataCommon
 
             TextBox textBox = alphaNumeric.ContentControl;
             // If we are in viewonly state, this ensures that the number textbox can't be edited.
-            if (false == ControlsDataHelpersCommon.TextBoxHandleAlphanumericInputOnly(textBox, args, false))
+            if (false == TextBoxHandleAlphanumericInputOnly(textBox, args, false))
             {
                 alphaNumeric.FlashContentControl();
             }
@@ -141,7 +143,7 @@ namespace Timelapse.ControlsDataCommon
 
             TextBox textBox = alphaNumeric.ContentControl;
             // If we are in viewonly state, this ensures that the number textbox can't be edited.
-            if (false == ControlsDataHelpersCommon.TextBoxHandleAlphanumericInputOnly(textBox, args, false))
+            if (false == TextBoxHandleAlphanumericInputOnly(textBox, args, false))
             {
                 alphaNumeric.FlashContentControl();
             }
@@ -157,7 +159,7 @@ namespace Timelapse.ControlsDataCommon
 
             TextBox textBox = alphaNumeric.ContentControl;
             // If we are in viewonly state, this ensures that the number textbox can't be edited.
-            ControlsDataHelpersCommon.TextBoxHandleAlphanumericTextChange(window, textBox, window != null);
+            TextBoxHandleAlphanumericTextChange(window, textBox, window != null);
         }
 
         public static void AlphaNumericHandleAlphaNumericTextChange(Window window, MetadataDataEntryAlphaNumeric alphaNumeric, TextChangedEventArgs args)
@@ -170,7 +172,7 @@ namespace Timelapse.ControlsDataCommon
 
             TextBox textBox = alphaNumeric.ContentControl;
             // If we are in viewonly state, this ensures that the number textbox can't be edited.
-            ControlsDataHelpersCommon.TextBoxHandleAlphanumericTextChange(window, textBox, window != null);
+            TextBoxHandleAlphanumericTextChange(window, textBox, window != null);
         }
 
         // Handle non-alphanumeric characters entered into the text box by ignoring them and, if flashControl, flashing the textbox
@@ -182,7 +184,7 @@ namespace Timelapse.ControlsDataCommon
                 return true;
             }
 
-            args.Handled = !Util.IsCondition.IsAlphaNumeric(args.Text);
+            args.Handled = !IsCondition.IsAlphaNumeric(args.Text);
             if (args.Handled)
             {
                 if (flashControl)
@@ -205,7 +207,7 @@ namespace Timelapse.ControlsDataCommon
                 return true;
             }
 
-            args.Handled = !Util.IsCondition.IsAlphaNumericIncludingGlobCharacters(args.Text);
+            args.Handled = !IsCondition.IsAlphaNumericIncludingGlobCharacters(args.Text);
             if (args.Handled)
             {
                 if (flashControl)
@@ -222,11 +224,11 @@ namespace Timelapse.ControlsDataCommon
         // Handle non-alphanumeric strings entered into the text box by clearing the textbox and showing an error dialog
         public static bool TextBoxHandleAlphanumericTextChange(Window window, TextBox textBox, bool showDialog)
         {
-            if (false == Timelapse.Util.IsCondition.IsAlphaNumeric(textBox.Text))
+            if (false == IsCondition.IsAlphaNumeric(textBox.Text))
             {
                 if (showDialog)
                 {
-                    Dialogs.InvalidDataFieldInput(window, Timelapse.Constant.Control.AlphaNumeric, textBox.Text);
+                    Dialogs.InvalidDataFieldInput(window, Control.AlphaNumeric, textBox.Text);
                 }
 
                 textBox.Text = string.Empty;
@@ -269,7 +271,8 @@ namespace Timelapse.ControlsDataCommon
                 {
                     return;
                 }
-                else if (IsCondition.IsAlphaNumeric(textAfterPasting))
+
+                if (IsCondition.IsAlphaNumeric(textAfterPasting))
                 {
                     return;
                 }
@@ -281,17 +284,17 @@ namespace Timelapse.ControlsDataCommon
             args.CancelCommand();
 
             // if we got here, the text after pasting is not an alphanumeric
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => { Dialogs.InvalidDataFieldInput(window, Constant.Control.AlphaNumeric, textAfterPasting); }));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => { Dialogs.InvalidDataFieldInput(window, Control.AlphaNumeric, textAfterPasting); }));
         }
 
         // Handle non-alphanumeric strings entered into the text box by clearing the textbox and showing an error dialog
         public static bool TextBoxHandleAlphanumericWithGlobTextChangedAlphanumericWithGlobTextChanged(Window window, TextBox textBox, bool showDialog)
         {
-            if (false == Timelapse.Util.IsCondition.IsAlphaNumericIncludingGlobCharacters(textBox.Text))
+            if (false == IsCondition.IsAlphaNumericIncludingGlobCharacters(textBox.Text))
             {
                 if (showDialog)
                 {
-                    Dialogs.InvalidDataFieldInput(window, Timelapse.Constant.Control.AlphaNumeric + "Glob", textBox.Text);
+                    Dialogs.InvalidDataFieldInput(window, Control.AlphaNumeric + "Glob", textBox.Text);
                 }
 
                 textBox.Text = string.Empty;
@@ -318,11 +321,11 @@ namespace Timelapse.ControlsDataCommon
 
             if (positiveNumbersOnly)
             {
-                args.Handled = !Util.IsCondition.IsIntegerPositiveCharacters(args.Text);
+                args.Handled = !IsCondition.IsIntegerPositiveCharacters(args.Text);
             }
             else
             {
-                args.Handled = args.Text != Environment.NewLine && !Util.IsCondition.IsIntegerCharacters(args.Text);
+                args.Handled = args.Text != Environment.NewLine && !IsCondition.IsIntegerCharacters(args.Text);
             }
 
             if (args.Handled)
@@ -377,11 +380,11 @@ namespace Timelapse.ControlsDataCommon
 
             if (positiveNumbersOnly)
             {
-                args.Handled = !Util.IsCondition.IsDecimalPositiveCharacters(args.Text);
+                args.Handled = !IsCondition.IsDecimalPositiveCharacters(args.Text);
             }
             else
             {
-                args.Handled = !Util.IsCondition.IsDecimalCharacters(args.Text);
+                args.Handled = !IsCondition.IsDecimalCharacters(args.Text);
             }
 
             if (args.Handled)
@@ -439,25 +442,25 @@ namespace Timelapse.ControlsDataCommon
 
             if (positiveNumbersOnly)
             {
-                if (false == Timelapse.Util.IsCondition.IsIntegerPositive(textBox.Text))
+                if (false == IsCondition.IsIntegerPositive(textBox.Text))
                 {
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.IntegerPositive, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.IntegerPositive, textBox.Text);
                     }
 
-                    textBox.Text = Constant.ControlDefault.NumberDefaultValue;
+                    textBox.Text = ControlDefault.NumberDefaultValue;
                     return false;
                 }
             }
-            else if (false == Timelapse.Util.IsCondition.IsInteger(textBox.Text))
+            else if (false == IsCondition.IsInteger(textBox.Text))
             {
                 if (showDialog)
                 {
-                    Dialogs.InvalidDataFieldInput(window, Constant.Control.IntegerAny, textBox.Text);
+                    Dialogs.InvalidDataFieldInput(window, Control.IntegerAny, textBox.Text);
                 }
 
-                textBox.Text = Constant.ControlDefault.NumberDefaultValue;
+                textBox.Text = ControlDefault.NumberDefaultValue;
                 return false;
             }
 
@@ -474,25 +477,25 @@ namespace Timelapse.ControlsDataCommon
 
             if (positiveNumbersOnly)
             {
-                if (false == Timelapse.Util.IsCondition.IsDecimalPositive(textBox.Text))
+                if (false == IsCondition.IsDecimalPositive(textBox.Text))
                 {
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.DecimalPositive, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.DecimalPositive, textBox.Text);
                     }
 
-                    textBox.Text = Constant.ControlDefault.NumberDefaultValue;
+                    textBox.Text = ControlDefault.NumberDefaultValue;
                     return false;
                 }
             }
-            else if (false == Timelapse.Util.IsCondition.IsDecimal(textBox.Text))
+            else if (false == IsCondition.IsDecimal(textBox.Text))
             {
                 if (showDialog)
                 {
-                    Dialogs.InvalidDataFieldInput(window, Constant.Control.DecimalAny, textBox.Text);
+                    Dialogs.InvalidDataFieldInput(window, Control.DecimalAny, textBox.Text);
                 }
 
-                textBox.Text = Constant.ControlDefault.NumberDefaultValue;
+                textBox.Text = ControlDefault.NumberDefaultValue;
                 return false;
             }
 
@@ -520,7 +523,7 @@ namespace Timelapse.ControlsDataCommon
             }
             if ((numberType == NumberTypeEnum.IntegerAny || numberType == NumberTypeEnum.IntegerPositive || numberType == NumberTypeEnum.Counter) && sender is IntegerUpDown integerUpDown)
             {
-                TextBox textBox = Util.VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
+                TextBox textBox = VisualChildren.GetVisualChild<TextBox>(integerUpDown, "PART_TextBox");
                 if (null != textBox)
                 {
                     textAfterPasting = textBox.Text;
@@ -546,7 +549,7 @@ namespace Timelapse.ControlsDataCommon
             }
             else if ((numberType == NumberTypeEnum.DecimalAny || numberType == NumberTypeEnum.DecimalPositive) && sender is DoubleUpDown doubleUpDown)
             {
-                TextBox textBox = Util.VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
+                TextBox textBox = VisualChildren.GetVisualChild<TextBox>(doubleUpDown, "PART_TextBox");
                 if (null != textBox)
                 {
                     textAfterPasting = textBox.Text;
@@ -577,19 +580,19 @@ namespace Timelapse.ControlsDataCommon
             switch (numberType)
             {
                 case NumberTypeEnum.Counter:
-                    controlType = Constant.Control.Counter;
+                    controlType = Control.Counter;
                     break;
                 case NumberTypeEnum.IntegerAny:
-                    controlType = Constant.Control.IntegerAny;
+                    controlType = Control.IntegerAny;
                     break;
                 case NumberTypeEnum.IntegerPositive:
-                    controlType = Constant.Control.IntegerPositive;
+                    controlType = Control.IntegerPositive;
                     break;
                 case NumberTypeEnum.DecimalAny:
-                    controlType = Constant.Control.DecimalAny;
+                    controlType = Control.DecimalAny;
                     break;
                 case NumberTypeEnum.DecimalPositive:
-                    controlType = Constant.Control.DecimalPositive;
+                    controlType = Control.DecimalPositive;
                     break;
             }
 
@@ -618,9 +621,9 @@ namespace Timelapse.ControlsDataCommon
                 {
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.FixedChoice, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.FixedChoice, textBox.Text);
                     }
-                    textBox.Text = Constant.ControlDefault.FixedChoiceDefaultValue;
+                    textBox.Text = ControlDefault.FixedChoiceDefaultValue;
                     return false;
                 }
             }
@@ -647,10 +650,10 @@ namespace Timelapse.ControlsDataCommon
                 {
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.MultiChoice, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.MultiChoice, textBox.Text);
                     }
 
-                    textBox.Text = Constant.ControlDefault.MultiChoiceDefaultValue;
+                    textBox.Text = ControlDefault.MultiChoiceDefaultValue;
                     return false;
                 }
                 sortedList.Add(str);
@@ -662,7 +665,7 @@ namespace Timelapse.ControlsDataCommon
 
         // Used when an item is selected from a Multichoice drop-down, where  it syncs the multichoice drop-down list and its textbox
         // as otherwise the two can differ
-        public static void MultiChoice_ItemSelectionChanged(object sender, Xceed.Wpf.Toolkit.Primitives.ItemSelectionChangedEventArgs e)
+        public static void MultiChoice_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
         {
             if (sender is CheckComboBox checkComboBox == false)
             {
@@ -722,9 +725,9 @@ namespace Timelapse.ControlsDataCommon
                 {
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.DateTime_, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.DateTime_, textBox.Text);
                     }
-                    textBox.Text = DateTimeHandler.ToStringDatabaseDateTime(Timelapse.Constant.ControlDefault.DateTimeCustomDefaultValue);
+                    textBox.Text = DateTimeHandler.ToStringDatabaseDateTime(ControlDefault.DateTimeCustomDefaultValue);
                     return false;
                 }
             }
@@ -734,9 +737,9 @@ namespace Timelapse.ControlsDataCommon
                 {
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.Date_, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.Date_, textBox.Text);
                     }
-                    textBox.Text = DateTimeHandler.ToStringDatabaseDate(Timelapse.Constant.ControlDefault.Date_DefaultValue);
+                    textBox.Text = DateTimeHandler.ToStringDatabaseDate(ControlDefault.Date_DefaultValue);
                     return false;
                 }
             }
@@ -747,9 +750,9 @@ namespace Timelapse.ControlsDataCommon
 
                     if (showDialog)
                     {
-                        Dialogs.InvalidDataFieldInput(window, Constant.Control.Time_, textBox.Text);
+                        Dialogs.InvalidDataFieldInput(window, Control.Time_, textBox.Text);
                     }
-                    textBox.Text = DateTimeHandler.ToStringTime(Constant.ControlDefault.Time_DefaultValue);
+                    textBox.Text = DateTimeHandler.ToStringTime(ControlDefault.Time_DefaultValue);
                     return false;
                 }
             }
@@ -774,7 +777,7 @@ namespace Timelapse.ControlsDataCommon
 
             if (string.IsNullOrEmpty(newValue))
             {
-                ControlsDataHelpersCommon.FlashContentControl(textBox);
+                FlashContentControl(textBox);
                 args.Handled = true;
                 return false;
             }
@@ -784,13 +787,13 @@ namespace Timelapse.ControlsDataCommon
         // Handle non-boolean strings entered into the text box by clearing the textbox and showing an error dialog
         public static bool TextBoxHandleFlagTextChange(Window window, TextBox textBox, bool showDialog)
         {
-            if (false == Timelapse.Util.IsCondition.IsBoolean(textBox.Text))
+            if (false == IsCondition.IsBoolean(textBox.Text))
             {
                 if (showDialog)
                 {
-                    Dialogs.InvalidDataFieldInput(window, Timelapse.Constant.Control.Flag, textBox.Text);
+                    Dialogs.InvalidDataFieldInput(window, Control.Flag, textBox.Text);
                 }
-                textBox.Text = Constant.ControlDefault.FlagValue;
+                textBox.Text = ControlDefault.FlagValue;
                 return false;
             }
             return true;
@@ -803,8 +806,8 @@ namespace Timelapse.ControlsDataCommon
         {
             if (sender is System.Windows.Controls.Control control)
             {
-                control.BorderThickness = new Thickness(Timelapse.Constant.Control.BorderThicknessHighlight);
-                control.BorderBrush = Timelapse.Constant.Control.BorderColorHighlight;
+                control.BorderThickness = new Thickness(Control.BorderThicknessHighlight);
+                control.BorderBrush = Control.BorderColorHighlight;
             }
             else
             {
@@ -817,8 +820,8 @@ namespace Timelapse.ControlsDataCommon
         {
             if (sender is System.Windows.Controls.Control control)
             {
-                control.BorderThickness = new Thickness(Timelapse.Constant.Control.BorderThicknessNormal);
-                control.BorderBrush = Timelapse.Constant.Control.BorderColorNormal;
+                control.BorderThickness = new Thickness(Control.BorderThicknessNormal);
+                control.BorderBrush = Control.BorderColorNormal;
             }
             else
             {
@@ -843,12 +846,12 @@ namespace Timelapse.ControlsDataCommon
         // This is a standard color animation scheme that can be accessed by the other controls
         private static ColorAnimation GetColorAnimation()
         {
-            return new ColorAnimation()
+            return new ColorAnimation
             {
                 From = Colors.LightCoral,
                 AutoReverse = false,
                 Duration = new Duration(TimeSpan.FromSeconds(.1)),
-                EasingFunction = new ExponentialEase()
+                EasingFunction = new ExponentialEase
                 {
                     EasingMode = EasingMode.EaseIn
                 },

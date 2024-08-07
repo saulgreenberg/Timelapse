@@ -12,7 +12,7 @@ namespace Timelapse
         #region Options sub-menu opening
         private void Options_SubmenuOpening(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            FilePlayer_Stop(); // In case the FilePlayer is going
         }
         #endregion
 
@@ -20,8 +20,8 @@ namespace Timelapse
         private void MenuItemAudioFeedback_Click(object sender, RoutedEventArgs e)
         {
             // We don't have to do anything here...
-            this.State.AudioFeedback = !this.State.AudioFeedback;
-            this.MenuItemAudioFeedback.IsChecked = this.State.AudioFeedback;
+            State.AudioFeedback = !State.AudioFeedback;
+            MenuItemAudioFeedback.IsChecked = State.AudioFeedback;
         }
         #endregion
 
@@ -29,9 +29,9 @@ namespace Timelapse
         // Display Magnifier: toggle on / off
         private void MenuItemDisplayMagnifyingGlass_Click(object sender, RoutedEventArgs e)
         {
-            this.State.MagnifyingGlassOffsetLensEnabled = !this.State.MagnifyingGlassOffsetLensEnabled;
-            this.MarkableCanvas.MagnifiersEnabled = this.State.MagnifyingGlassOffsetLensEnabled;
-            this.MenuItemDisplayMagnifyingGlass.IsChecked = this.State.MagnifyingGlassOffsetLensEnabled;
+            State.MagnifyingGlassOffsetLensEnabled = !State.MagnifyingGlassOffsetLensEnabled;
+            MarkableCanvas.MagnifiersEnabled = State.MagnifyingGlassOffsetLensEnabled;
+            MenuItemDisplayMagnifyingGlass.IsChecked = State.MagnifyingGlassOffsetLensEnabled;
         }
 
         // Increase magnification of the magnifying glass. 
@@ -41,7 +41,7 @@ namespace Timelapse
             // the effect more visible through a menu option versus the keyboard equivalent
             for (int i = 0; i < 6; i++)
             {
-                this.MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomIn);
+                MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomIn);
             }
         }
 
@@ -52,7 +52,7 @@ namespace Timelapse
             // the effect more visible through a menu option versus the keyboard equivalent
             for (int i = 0; i < 6; i++)
             {
-                this.MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomOut);
+                MarkableCanvas.MagnifierOrOffsetChangeZoomLevel(ZoomDirection.ZoomOut);
             }
         }
         #endregion
@@ -63,13 +63,13 @@ namespace Timelapse
         {
             if (ImageAdjuster == null)
             {
-                this.ImageAdjuster = new ImageAdjuster(this);
-                this.ImageAdjuster.ImageProcessingParametersChanged += this.MarkableCanvas.AdjustImage_EventHandler;
+                ImageAdjuster = new ImageAdjuster(this);
+                ImageAdjuster.ImageProcessingParametersChanged += MarkableCanvas.AdjustImage_EventHandler;
             }
             if (ImageAdjuster.IsVisible == false)
             {
-                this.ImageAdjuster.Show();
-                this.MarkableCanvas.GenerateImageStateChangeEventToReflectCurrentStatus();
+                ImageAdjuster.Show();
+                MarkableCanvas.GenerateImageStateChangeEventToReflectCurrentStatus();
             }
         }
         #endregion
@@ -77,7 +77,7 @@ namespace Timelapse
         #region Adjust FilePlayer playback speeds
         private void MenuItemFilePlayerOptions_Click(object sender, RoutedEventArgs e)
         {
-            FilePlayerOptions filePlayerOptions = new FilePlayerOptions(this.State, this);
+            FilePlayerOptions filePlayerOptions = new FilePlayerOptions(State, this);
             filePlayerOptions.ShowDialog();
         }
         #endregion
@@ -85,42 +85,42 @@ namespace Timelapse
         #region Episode ShowHide / AdjustThreshold
         private void MenuItemEpisodeShowHide_Click(object sender, RoutedEventArgs e)
         {
-            this.EpisodeShowHide(!Episodes.Episodes.ShowEpisodes);
+            EpisodeShowHide(!Episodes.Episodes.ShowEpisodes);
         }
         public void EpisodeShowHide(bool show)
         {
             Episodes.Episodes.ShowEpisodes = show;
-            this.MenuItemEpisodeShowHide.IsChecked = Episodes.Episodes.ShowEpisodes;
+            MenuItemEpisodeShowHide.IsChecked = Episodes.Episodes.ShowEpisodes;
 
-            if (this.IsDisplayingMultipleImagesInOverview())
+            if (IsDisplayingMultipleImagesInOverview())
             {
-                this.MarkableCanvas.DisplayEpisodeTextInThumbnailGridIfWarranted();
+                MarkableCanvas.DisplayEpisodeTextInThumbnailGridIfWarranted();
             }
             else
             {
-                this.DisplayEpisodeTextInImageIfWarranted(this.DataHandler.ImageCache.CurrentRow);
+                DisplayEpisodeTextInImageIfWarranted(DataHandler.ImageCache.CurrentRow);
             }
         }
 
         private void MenuItemEpisodeOptions_Click(object sender, RoutedEventArgs e)
         {
-            EpisodeOptions episodeOptions = new EpisodeOptions(this.State.EpisodeTimeThreshold, this);
+            EpisodeOptions episodeOptions = new EpisodeOptions(State.EpisodeTimeThreshold, this);
             bool? result = episodeOptions.ShowDialog();
             if (result == true)
             {
                 // the time threshold has changed, so save its new state
-                this.State.EpisodeTimeThreshold = episodeOptions.EpisodeTimeThreshold;
-                Episodes.Episodes.TimeThreshold = this.State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
+                State.EpisodeTimeThreshold = episodeOptions.EpisodeTimeThreshold;
+                Episodes.Episodes.TimeThreshold = State.EpisodeTimeThreshold; // so we don't have to pass it as a parameter
                 Episodes.Episodes.Reset();
             }
 
-            if (this.IsDisplayingMultipleImagesInOverview())
+            if (IsDisplayingMultipleImagesInOverview())
             {
-                this.MarkableCanvas.RefreshIfMultipleImagesAreDisplayed(false);
+                MarkableCanvas.RefreshIfMultipleImagesAreDisplayed(false);
             }
             else
             {
-                this.DisplayEpisodeTextInImageIfWarranted(this.DataHandler.ImageCache.CurrentRow);
+                DisplayEpisodeTextInImageIfWarranted(DataHandler.ImageCache.CurrentRow);
             }
         }
         #endregion
@@ -128,7 +128,7 @@ namespace Timelapse
         #region Show / Hide various informational dialogs"
         private void MenuItemDialogsOnOrOff_Click(object sender, RoutedEventArgs e)
         {
-            DialogsHideOrShow dialog = new DialogsHideOrShow(this.State, this);
+            DialogsHideOrShow dialog = new DialogsHideOrShow(State, this);
             dialog.ShowDialog();
         }
         #endregion
@@ -137,16 +137,16 @@ namespace Timelapse
         /// <summary>Show Timelapse Preference dialog</summary>
         private void MenuItemPreferences_Click(object sender, RoutedEventArgs e)
         {
-            AdvancedTimelapseOptions advancedTimelapseOptions = new AdvancedTimelapseOptions(this.State, this.MarkableCanvas, this);
+            AdvancedTimelapseOptions advancedTimelapseOptions = new AdvancedTimelapseOptions(State, MarkableCanvas, this);
             advancedTimelapseOptions.ShowDialog();
 
             // Reset how some controls appear depending upon the current options
-            this.EnableOrDisableMenusAndControls();
+            EnableOrDisableMenusAndControls();
 
-            if (this.DataHandler != null && this.DataHandler.FileDatabase != null)
+            if (DataHandler != null && DataHandler.FileDatabase != null)
             {
                 // If we aren't using detections, then hide their existence even if detection data may be present
-                GlobalReferences.DetectionsExists = this.DataHandler.FileDatabase.DetectionsExists();
+                GlobalReferences.DetectionsExists = DataHandler.FileDatabase.DetectionsExists();
             }
             else
             {
@@ -154,9 +154,9 @@ namespace Timelapse
             }
 
             // redisplay the file as the options may change how bounding boxes should be displayed
-            if (this.DataHandler != null)
+            if (DataHandler != null)
             {
-                this.FileShow(this.DataHandler.ImageCache.CurrentRow, true);
+                FileShow(DataHandler.ImageCache.CurrentRow, true);
             }
         }
         #endregion

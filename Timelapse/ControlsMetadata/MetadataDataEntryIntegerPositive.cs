@@ -14,8 +14,8 @@ namespace Timelapse.ControlsMetadata
         public MetadataDataEntryIntegerPositive(MetadataControlRow control, DataEntryControls styleProvider, string tooltip) :
             base(control, styleProvider,  tooltip, true)
         {
-            this.ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_IntegerPositiveCharacterOnly;
-            DataObject.AddPastingHandler(this.ContentControl, Timelapse.Util.ValidationCallbacks.Paste_OnlyIfIntegerPositive);
+            ContentControl.PreviewTextInput += ValidationCallbacks.PreviewInput_IntegerPositiveCharacterOnly;
+            DataObject.AddPastingHandler(ContentControl, ValidationCallbacks.Paste_OnlyIfIntegerPositive);
         }
         #endregion
     }

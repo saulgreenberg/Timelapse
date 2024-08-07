@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DebuggingSupport;
 using Timelapse.EventArguments;
@@ -25,25 +26,25 @@ namespace Timelapse
         // - regenerate the list of markers used by the markableCanvas
         private void MarkableCanvas_RaiseMarkerEvent(object sender, MarkerEventArgs e)
         {
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
             if (e.IsNew)
             {
                 // A marker has been added
-                DataEntryCounter currentCounter = this.FindSelectedCounter(); // No counters are selected, so don't mark anything
+                DataEntryCounter currentCounter = FindSelectedCounter(); // No counters are selected, so don't mark anything
                 if (currentCounter == null)
                 {
                     return;
                 }
-                this.MarkableCanvas_AddMarker(currentCounter, e.Marker);
+                MarkableCanvas_AddMarker(currentCounter, e.Marker);
                 return;
             }
             // An existing marker has been deleted.
-            DataEntryCounter counter = (DataEntryCounter)this.DataEntryControls.ControlsByDataLabelThatAreVisible[e.Marker.DataLabel];
+            DataEntryCounter counter = (DataEntryCounter)DataEntryControls.ControlsByDataLabelThatAreVisible[e.Marker.DataLabel];
 
             // Part 1. Decrement the counter only if there is a number in it
             string oldCounterData = counter.Content;
@@ -57,10 +58,10 @@ namespace Timelapse
                 {
                     // Don't bother updating if the value hasn't changed (i.e., already at a 0 count)
                     // Update the datatable and database with the new counter values
-                    this.DataHandler.IsProgrammaticControlUpdate = true;
+                    DataHandler.IsProgrammaticControlUpdate = true;
                     counter.SetContentAndTooltip(newCounterData);
-                    this.DataHandler.IsProgrammaticControlUpdate = false;
-                    this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, counter.DataLabel, newCounterData);
+                    DataHandler.IsProgrammaticControlUpdate = false;
+                    DataHandler.FileDatabase.UpdateFile(DataHandler.ImageCache.Current.ID, counter.DataLabel, newCounterData);
                 }
             }
 
@@ -68,7 +69,7 @@ namespace Timelapse
             // Each marker in the countercoords list reperesents a different control. 
             // So just check the first markers's DataLabel in each markersForCounters list to see if it matches the counter's datalabel.
             MarkersForCounter markersForCounter = null;
-            foreach (MarkersForCounter markers in this.markersOnCurrentFile)
+            foreach (MarkersForCounter markers in markersOnCurrentFile)
             {
                 // If there are no markers, we don't have to do anything.
                 if (markers.Markers.Count == 0)
@@ -88,18 +89,18 @@ namespace Timelapse
             if (markersForCounter != null)
             {
                 markersForCounter.RemoveMarker(e.Marker);
-                this.Speak(counter.Content); // Speak the current count
+                Speak(counter.Content); // Speak the current count
                                              // if (markersForCounter.Markers.Count == 0)
-                if (0 == this.markersOnCurrentFile.Count(x => x.Markers.Count > 0))
+                if (0 == markersOnCurrentFile.Count(x => x.Markers.Count > 0))
                 {
-                    this.DataHandler.FileDatabase.MarkersRemoveMarkerRow(this.DataHandler.ImageCache.Current.ID);
+                    DataHandler.FileDatabase.MarkersRemoveMarkerRow(DataHandler.ImageCache.Current.ID);
                 }
                 else
                 {
-                    this.DataHandler.FileDatabase.MarkersUpdateMarkerRow(this.DataHandler.ImageCache.Current.ID, markersForCounter);
+                    DataHandler.FileDatabase.MarkersUpdateMarkerRow(DataHandler.ImageCache.Current.ID, markersForCounter);
                 }
             }
-            this.MarkableCanvas_UpdateMarkers(); // Refresh the Markable Canvas, where it will also delete the markers at the same time
+            MarkableCanvas_UpdateMarkers(); // Refresh the Markable Canvas, where it will also delete the markers at the same time
         }
         #endregion
 
@@ -110,10 +111,10 @@ namespace Timelapse
         /// </summary>
         private void MarkableCanvas_AddMarker(DataEntryCounter counter, Marker marker)
         {
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
 
@@ -137,33 +138,33 @@ namespace Timelapse
                 ++count;
 
                 string counterContent = count.ToString();
-                this.DataHandler.IsProgrammaticControlUpdate = true;
-                this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, counter.DataLabel, counterContent);
+                DataHandler.IsProgrammaticControlUpdate = true;
+                DataHandler.FileDatabase.UpdateFile(DataHandler.ImageCache.Current.ID, counter.DataLabel, counterContent);
                 counter.SetContentAndTooltip(counterContent);
-                this.DataHandler.IsProgrammaticControlUpdate = false;
+                DataHandler.IsProgrammaticControlUpdate = false;
 
                 // Find the MarkersForCounters associated with this particular control so we can add a marker to it
                 MarkersForCounter markersForCounter = null;
 
                 // Insert markers into the MarkersTable if all markers are empty,
                 // which should only occur if the current file has no markers associated with it.
-                if (0 == this.markersOnCurrentFile.Count(e => e.Markers.Count > 0))
+                if (0 == markersOnCurrentFile.Count(e => e.Markers.Count > 0))
                 {
                     // As there is no row in the marker table with that ID, an empty row (with [] values) will be added to the database
                     // The Markers list held by the database will be updated accordingly after this IF section
                     // PERFORMANCE: The call below is inefficient, as it re-reads the entire Markers table from the data table.
                     // This is necessary to update the markers table, as otherwise it will not contain a row with the current Id
                     // But given that the marker table should be relatively small, it shouldn't be too costly.
-                    if (this.DataHandler.FileDatabase.MarkersTryInsertNewMarkerRow(this.DataHandler.ImageCache.Current.ID))
+                    if (DataHandler.FileDatabase.MarkersTryInsertNewMarkerRow(DataHandler.ImageCache.Current.ID))
                     {
                         // We added a new marker row, so we need to update the various markers data structures to reflect the new marker
                         // markersForCounter = new MarkersForCounter(counter.DataLabel);
-                        this.markersOnCurrentFile = this.DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(this.DataHandler.ImageCache.Current.ID);
+                        markersOnCurrentFile = DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(DataHandler.ImageCache.Current.ID);
                     }
                 }
 
                 // Find the markers for this Counter
-                foreach (MarkersForCounter markers in this.markersOnCurrentFile)
+                foreach (MarkersForCounter markers in markersOnCurrentFile)
                 {
                     if (markers.DataLabel == counter.DataLabel)
                     {
@@ -189,9 +190,9 @@ namespace Timelapse
                 markersForCounter.AddMarker(marker);
 
                 // update this counter's list of points in the database
-                this.DataHandler.FileDatabase.MarkersUpdateMarkerRow(this.DataHandler.ImageCache.Current.ID, markersForCounter);
-                this.MarkableCanvas.Markers = this.GetDisplayMarkers();
-                this.Speak(counter.Content + " " + counter.Label); // Speak the current count
+                DataHandler.FileDatabase.MarkersUpdateMarkerRow(DataHandler.ImageCache.Current.ID, markersForCounter);
+                MarkableCanvas.Markers = GetDisplayMarkers();
+                Speak(counter.Content + " " + counter.Label); // Speak the current count
             }
             catch
             {
@@ -205,13 +206,13 @@ namespace Timelapse
         // and then set the markableCanvas's list of markers to that list. We also reset the emphasis for those tags as needed.
         private void MarkableCanvas_UpdateMarkers()
         {
-            this.MarkableCanvas.Markers = this.GetDisplayMarkers(); // By default, we don't show the annotation
+            MarkableCanvas.Markers = GetDisplayMarkers(); // By default, we don't show the annotation
         }
 
         private List<Marker> GetDisplayMarkers()
         {
             // No markers?
-            if (this.markersOnCurrentFile == null)
+            if (markersOnCurrentFile == null)
             {
                 return null;
             }
@@ -219,12 +220,12 @@ namespace Timelapse
             // The markable canvas uses a simple list of markers to decide what to do.
             // So we just create that list here, where we also reset the emphasis of some of the markers
             List<Marker> markers = new List<Marker>();
-            DataEntryCounter selectedCounter = this.FindSelectedCounter();
-            int markersOnCurrentFileCount = this.markersOnCurrentFile.Count;
+            DataEntryCounter selectedCounter = FindSelectedCounter();
+            int markersOnCurrentFileCount = markersOnCurrentFile.Count;
             for (int counter = 0; counter < markersOnCurrentFileCount; counter++)
             {
-                MarkersForCounter markersForCounter = this.markersOnCurrentFile[counter];
-                if (this.DataEntryControls.ControlsByDataLabelThatAreVisible.TryGetValue(markersForCounter.DataLabel, out _) == false)
+                MarkersForCounter markersForCounter = markersOnCurrentFile[counter];
+                if (DataEntryControls.ControlsByDataLabelThatAreVisible.TryGetValue(markersForCounter.DataLabel, out _) == false)
                 {
                     // If we can't find the counter, its likely because the control was made invisible in the template,
                     // which means that there is no control associated with the marker. So just don't create the 
@@ -234,8 +235,8 @@ namespace Timelapse
                 }
 
                 // Update the emphasise for each tag to reflect how the user is interacting with tags
-                DataEntryCounter currentCounter = (DataEntryCounter)this.DataEntryControls.ControlsByDataLabelThatAreVisible[markersForCounter.DataLabel];
-                bool emphasize = markersForCounter.DataLabel == this.State.MouseOverCounter;
+                DataEntryCounter currentCounter = (DataEntryCounter)DataEntryControls.ControlsByDataLabelThatAreVisible[markersForCounter.DataLabel];
+                bool emphasize = markersForCounter.DataLabel == State.MouseOverCounter;
                 foreach (Marker marker in markersForCounter.Markers)
                 {
                     // the first time through, show an annotation. Otherwise we clear the flags to hide the annotation.
@@ -251,11 +252,11 @@ namespace Timelapse
 
                     if (selectedCounter != null && currentCounter.DataLabel == selectedCounter.DataLabel)
                     {
-                        marker.Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Constant.Defaults.SelectionColour);
+                        marker.Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Defaults.SelectionColour);
                     }
                     else
                     {
-                        marker.Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Constant.Defaults.StandardColour);
+                        marker.Brush = (SolidColorBrush)new BrushConverter().ConvertFromString(Defaults.StandardColour);
                     }
 
                     marker.Emphasise = emphasize;

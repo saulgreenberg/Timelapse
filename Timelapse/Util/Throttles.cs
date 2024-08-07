@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Timelapse.Constant;
 
 namespace Timelapse.Util
 {
@@ -18,7 +19,7 @@ namespace Timelapse.Util
         #region Constructors
         public Throttles()
         {
-            this.ResetToDefaults();
+            ResetToDefaults();
         }
         #endregion
 
@@ -29,7 +30,7 @@ namespace Timelapse.Util
         /// </summary>
         public void ResetToDefaults()
         {
-            this.DesiredImageRendersPerSecond = Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondDefault;
+            DesiredImageRendersPerSecond = ThrottleValues.DesiredMaximumImageRendersPerSecondDefault;
         }
 
         /// <summary>
@@ -41,19 +42,19 @@ namespace Timelapse.Util
         {
             // Ensure that the renders per second is within range. 
             // If not, and depending what it is set to, set it to either the lower or upper bound
-            if (rendersPerSecond < Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondLowerBound)
+            if (rendersPerSecond < ThrottleValues.DesiredMaximumImageRendersPerSecondLowerBound)
             {
-                rendersPerSecond = Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondLowerBound;
+                rendersPerSecond = ThrottleValues.DesiredMaximumImageRendersPerSecondLowerBound;
             }
-            else if (rendersPerSecond > Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondUpperBound)
+            else if (rendersPerSecond > ThrottleValues.DesiredMaximumImageRendersPerSecondUpperBound)
             {
-                rendersPerSecond = Constant.ThrottleValues.DesiredMaximumImageRendersPerSecondUpperBound;
+                rendersPerSecond = ThrottleValues.DesiredMaximumImageRendersPerSecondUpperBound;
                 // Debug.Print("RendersPerSecond corrected as it was not within range");
             }
 
-            this.DesiredImageRendersPerSecond = rendersPerSecond;
-            this.DesiredIntervalBetweenRenders = TimeSpan.FromSeconds(1.0 / rendersPerSecond);
-            this.RepeatedKeyAcceptanceInterval = (int)((SystemParameters.KeyboardSpeed + 0.5 * rendersPerSecond) / rendersPerSecond);
+            DesiredImageRendersPerSecond = rendersPerSecond;
+            DesiredIntervalBetweenRenders = TimeSpan.FromSeconds(1.0 / rendersPerSecond);
+            RepeatedKeyAcceptanceInterval = (int)((SystemParameters.KeyboardSpeed + 0.5 * rendersPerSecond) / rendersPerSecond);
         }
 
         #endregion

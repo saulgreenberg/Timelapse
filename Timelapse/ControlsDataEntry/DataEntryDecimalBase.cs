@@ -4,12 +4,15 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.ControlsDataCommon;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Control = Timelapse.Constant.Control;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -20,28 +23,28 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public Properties and Private variables
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+        public override Point TopLeft => ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets or sets the content of the counter.</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -54,31 +57,31 @@ namespace Timelapse.ControlsDataEntry
         public DataEntryDecimalBase(ControlRow control, DataEntryControls styleProvider, bool allowPositiveNumbersOnly) :
             base(control, styleProvider, ControlContentStyleEnum.DoubleTextBox, ControlLabelStyleEnum.DefaultLabel)
         {
-            this.AllowPositiveNumbersOnly = allowPositiveNumbersOnly;
-            this.ContentChanged = false;
+            AllowPositiveNumbersOnly = allowPositiveNumbersOnly;
+            ContentChanged = false;
 
             // This is the only real difference between a DecimalAny and an DecimalPositive
-            if (this.AllowPositiveNumbersOnly)
+            if (AllowPositiveNumbersOnly)
             {
-                this.ContentControl.Minimum = 0;
+                ContentControl.Minimum = 0;
             }
             // Configure the various elements if needed
             // Assign all counters to a single group so that selecting a new counter deselects any currently selected counter
-            this.ContentControl.Width += 18; // to account for the width of the spinner
-            this.ContentControl.FormatString = Timelapse.Constant.ControlDefault.DecimalFormatString;
-            this.ContentControl.UpdateValueOnEnterKey = true;
-            this.ContentControl.PreviewKeyDown += this.ContentControl_PreviewKeyDown;
-            this.ContentControl.GotKeyboardFocus += this.ContentControl_GotKeyboardFocus;
-            this.ContentControl.LostKeyboardFocus += this.ContentControl_LostKeyboardFocus;
+            ContentControl.Width += 18; // to account for the width of the spinner
+            ContentControl.FormatString = ControlDefault.DecimalFormatString;
+            ContentControl.UpdateValueOnEnterKey = true;
+            ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
+            ContentControl.GotKeyboardFocus += ContentControl_GotKeyboardFocus;
+            ContentControl.LostKeyboardFocus += ContentControl_LostKeyboardFocus;
         }
         #endregion.
 
 
         #region Event Handlers
         // Handle readonly states, enter, return, shift-arrow/home keys entered into the textbox
-        private void ContentControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs keyEvent)
+        private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
-            TextBox textBox = this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) as TextBox;
+            TextBox textBox = ContentControl.Template.FindName("PART_TextBox", ContentControl) as TextBox;
             if (textBox != null)
             {
                // If we are in viewonly state, this ensures that the number textbox can't be edited.
@@ -88,7 +91,7 @@ namespace Timelapse.ControlsDataEntry
             // We need to handle Enter/Return key presses here, as otherwise wrong values are displayed in the text box when we hit enter
             if (keyEvent.Key == Key.Enter || keyEvent.Key == Key.Return)
             {
-                this.UpdateValueIfNeeded(keyEvent);
+                UpdateValueIfNeeded(keyEvent);
                 return;
             }
 
@@ -105,7 +108,7 @@ namespace Timelapse.ControlsDataEntry
                 // So we mark the event as handled, and we cycle through the images anyways.
                 // Note that redirecting the event to the main window, while prefered, won't work
                 // as the main window ignores the arrow keys if the focus is set to a control.
-                bool success = this.UpdateValueIfNeeded(keyEvent);
+                bool success = UpdateValueIfNeeded(keyEvent);
                 keyEvent.Handled = true;
                 if (success)
                 {
@@ -117,27 +120,27 @@ namespace Timelapse.ControlsDataEntry
 
         #region Focus
         // Behaviour: Highlight the border and make the text caret appear whenever the control gets the keyboard focus
-        private void ContentControl_GotKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+        private void ContentControl_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            this.ContentControl.BorderThickness = new Thickness(Constant.Control.BorderThicknessHighlight);
-            this.ContentControl.BorderBrush = Constant.Control.BorderColorHighlight;
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
+            ContentControl.BorderThickness = new Thickness(Control.BorderThicknessHighlight);
+            ContentControl.BorderBrush = Control.BorderColorHighlight;
+            if (ContentControl.Template.FindName("PART_TextBox", ContentControl) is WatermarkTextBox textBox)
             {
                 textBox.IsReadOnlyCaretVisible = true;
             }
         }
 
         // Behaviour: Revert the border whenever the control loses the keyboard focus
-        private void ContentControl_LostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+        private void ContentControl_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            this.ContentControl.BorderThickness = new Thickness(Constant.Control.BorderThicknessNormal);
-            this.ContentControl.BorderBrush = Constant.Control.BorderColorNormal;
+            ContentControl.BorderThickness = new Thickness(Control.BorderThicknessNormal);
+            ContentControl.BorderBrush = Control.BorderColorNormal;
 
             // This is a hack to ensure the ellipsis appears as needed. 
-            WatermarkTextBox textBox = (WatermarkTextBox)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
+            WatermarkTextBox textBox = (WatermarkTextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl);
             if (textBox != null)
             {
-                if ((string)textBox.Watermark == Constant.Unicode.Ellipsis)
+                if ((string)textBox.Watermark == Unicode.Ellipsis)
                 {
                     textBox.Text = string.Empty;
                 }
@@ -153,7 +156,7 @@ namespace Timelapse.ControlsDataEntry
         // ValueChanged event will be triggered. Inefficient, but seems to work.
         public void SetBogusCounterContentAndTooltip()
         {
-            this.SetContentAndTooltip(int.MaxValue.ToString());
+            SetContentAndTooltip(int.MaxValue.ToString());
         }
         // If value is null, then show and ellipsis. If its a number, show that. Otherwise blank.
         public override void SetContentAndTooltip(string value)
@@ -166,21 +169,21 @@ namespace Timelapse.ControlsDataEntry
             // Its further complicated by the the way we have to set the bogus counter... 
 
             // We access the textbox portion of the DoubleUpDown, so we can write directly into it if needed.
-            WatermarkTextBox textBox = (WatermarkTextBox)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
+            WatermarkTextBox textBox = (WatermarkTextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl);
             // When we get a null value, just show the ellipsis symbol in the textbox. 
             if (value == null)
             {
-                this.ContentControl.AllowSpin = false;
+                ContentControl.AllowSpin = false;
                 if (textBox != null)
                 {
-                    textBox.Watermark = !string.IsNullOrEmpty(textBox.Text) ? Constant.Unicode.Ellipsis : string.Empty;
+                    textBox.Watermark = !string.IsNullOrEmpty(textBox.Text) ? Unicode.Ellipsis : string.Empty;
                     textBox.Text = string.Empty;
                 }
             }
             else
             {
                 // We have a valid value, so reset the control and watermark
-                this.ContentControl.AllowSpin = true;
+                ContentControl.AllowSpin = true;
                 if (textBox != null)
                 {
                     textBox.Watermark = string.Empty;
@@ -195,19 +198,19 @@ namespace Timelapse.ControlsDataEntry
                     {
                         textBox.Text = doubleValue.ToString(CultureInfo.InvariantCulture);
                     }
-                    this.ContentControl.Value = doubleValue;
+                    ContentControl.Value = doubleValue;
                 }
                 else
                 {
                     // If its not a number, blank out the text
-                    this.ContentControl.Text = string.Empty;
+                    ContentControl.Text = string.Empty;
                     if (textBox != null)
                     {
                         textBox.Text = value;
                     }
                 }
             }
-            this.ContentControl.ToolTip = value ?? "Edit to change the " + this.Label + " for all selected images";
+            ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for all selected images";
         }
         #endregion
 
@@ -215,43 +218,43 @@ namespace Timelapse.ControlsDataEntry
         // Flash the content area of the control
         public override void FlashContentControl()
         {
-            TextBox contentHost = (TextBox)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
+            TextBox contentHost = (TextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl);
             if (contentHost != null)
             {
                 contentHost.Background = new SolidColorBrush(Colors.White);
-                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimationFastRed());
+                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimationFastRed());
             }
         }
 
         public override void ShowPreviewControlValue(string value)
         {
             // Create the popup overlay
-            if (this.PopupPreview == null)
+            if (PopupPreview == null)
             {
                 // We want to expose the up/down controls, so subtract its width and move the horizontal offset over
                 double doubleUpDownWidth = 16;
-                double width = this.ContentControl.Width - doubleUpDownWidth;
+                double width = ContentControl.Width - doubleUpDownWidth;
                 double horizontalOffset = -doubleUpDownWidth / 2;
 
                 // Padding is used to align the text so it begins at the same spot as the control's text
                 Thickness padding = new Thickness(7, 5.5, 0, 0);
 
-                this.PopupPreview = this.CreatePopupPreview(this.ContentControl, padding, width, horizontalOffset);
+                PopupPreview = CreatePopupPreview(ContentControl, padding, width, horizontalOffset);
             }
             // Show the popup
-            this.ShowPopupPreview(value);
+            ShowPopupPreview(value);
         }
         public override void HidePreviewControlValue()
         {
-            if (this.PopupPreview != null)
+            if (PopupPreview != null)
             {
-                this.HidePopupPreview();
+                HidePopupPreview();
             }
         }
 
         public override void FlashPreviewControlValue()
         {
-            this.FlashPopupPreview();
+            FlashPopupPreview();
         }
         #endregion
 
@@ -261,35 +264,35 @@ namespace Timelapse.ControlsDataEntry
         private bool UpdateValueIfNeeded(KeyEventArgs args)
         {
             // Empty text should update the value to a null value
-            if (string.IsNullOrEmpty(this.ContentControl.Text))
+            if (string.IsNullOrEmpty(ContentControl.Text))
             {
-                if (null != this.ContentControl.Value)
+                if (null != ContentControl.Value)
                 {
-                    this.ContentControl.Value = null;
+                    ContentControl.Value = null;
                 }
                 return true;
             }
 
-            if (false == Double.TryParse(this.ContentControl.Text, out double newValueAsDouble))
+            if (false == Double.TryParse(ContentControl.Text, out double newValueAsDouble))
             {
                 // We should never get this, as checks for the input will have already been done, including empty input as handled above
-                Dialog.Dialogs.InvalidDataFieldInput(GlobalReferences.MainWindow, AllowPositiveNumbersOnly ? Constant.Control.DecimalPositive : Constant.Control.DecimalAny, this.Content);
+                Dialogs.InvalidDataFieldInput(GlobalReferences.MainWindow, AllowPositiveNumbersOnly ? Control.DecimalPositive : Control.DecimalAny, Content);
                 if (args != null)
                 {
                     args.Handled = true;
                 }
                 return false;
             }
-            if (null == this.ContentControl.Value)
+            if (null == ContentControl.Value)
             {
                 // replace the null control value with the new number value
-                this.ContentControl.Value = newValueAsDouble;
+                ContentControl.Value = newValueAsDouble;
                 return true;
             }
-            if (Math.Abs(newValueAsDouble - (Double)this.ContentControl.Value) > 0.00000001)
+            if (Math.Abs(newValueAsDouble - (Double)ContentControl.Value) > 0.00000001)
             {
                 // The number has changed so update it
-                this.ContentControl.Value = newValueAsDouble;
+                ContentControl.Value = newValueAsDouble;
             }
             return true;
         }

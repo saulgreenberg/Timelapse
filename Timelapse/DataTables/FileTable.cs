@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.IO;
+using Timelapse.Constant;
 using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
@@ -11,7 +12,7 @@ namespace Timelapse.DataTables
     {
         #region Constructors
         public FileTable(DataTable filesDataTable)
-            : base(filesDataTable, FileTable.CreateRow)
+            : base(filesDataTable, CreateRow)
         {
         }
         #endregion
@@ -20,7 +21,7 @@ namespace Timelapse.DataTables
         private static ImageRow CreateRow(DataRow row)
         {
             // Return a image row or video row if its an image or video file respectively (as identified by its suffix)
-            switch (FilesFolders.GetFileTypeByItsExtension(row.GetStringField(Constant.DatabaseColumn.File)))
+            switch (FilesFolders.GetFileTypeByItsExtension(row.GetStringField(DatabaseColumn.File)))
             {
                 case FileExtensionEnum.IsImage:
                     return new ImageRow(row);
@@ -30,7 +31,7 @@ namespace Timelapse.DataTables
                 default:
                     // This should never be reached
                     throw new NotSupportedException(
-                        $"Unhandled extension for file '{row.GetStringField(Constant.DatabaseColumn.File)}'.");
+                        $"Unhandled extension for file '{row.GetStringField(DatabaseColumn.File)}'.");
             }
         }
 
@@ -39,9 +40,9 @@ namespace Timelapse.DataTables
             // Check the arguments for null 
             ThrowIf.IsNullArgument(file, nameof(file));
 
-            DataRow row = this.DataTable.NewRow();
-            row[Constant.DatabaseColumn.File] = file.Name;
-            return FileTable.CreateRow(row);
+            DataRow row = DataTable.NewRow();
+            row[DatabaseColumn.File] = file.Name;
+            return CreateRow(row);
         }
     }
 }

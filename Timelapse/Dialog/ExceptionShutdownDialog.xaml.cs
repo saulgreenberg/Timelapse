@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -23,9 +24,9 @@ namespace Timelapse.Dialog
             // Check the arguments for null 
             ThrowIf.IsNullArgument(unhandledExceptionArgs, nameof(unhandledExceptionArgs));
 
-            this.Owner = owner;
-            this.ProgramName = programName;
-            this.UnhandledExceptionArgs = unhandledExceptionArgs;
+            Owner = owner;
+            ProgramName = programName;
+            UnhandledExceptionArgs = unhandledExceptionArgs;
             InitializeComponent();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -33,42 +34,42 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Create the text body of the report
-            this.body =
+            body =
                 $"Add details here to explain what happened, if you can.{Environment.NewLine}{Environment.NewLine}{Environment.NewLine}Timelapse has crashed. The bug report is below.{Environment.NewLine}";
-            this.body +=
+            body +=
                 $"{typeof(TimelapseWindow).Assembly.GetName()}, {Environment.OSVersion}, .NET runtime {Environment.Version}{Environment.NewLine}";
-            if (this.UnhandledExceptionArgs.ExceptionObject != null)
+            if (UnhandledExceptionArgs.ExceptionObject != null)
             {
-                this.body += UnhandledExceptionArgs.ExceptionObject.ToString();
+                body += UnhandledExceptionArgs.ExceptionObject.ToString();
             }
 
-            this.Message.Title = this.ProgramName + " needs to close. Please report this error.";
-            this.Message.Problem = this.ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
-            this.Message.Result =
-                $"Timelapse will shut down.{Environment.NewLine}The data file is likely OK.  If it's not you can restore from the {Constant.File.BackupFolder} folder.";
-            this.ExceptionReport.Text = body;
+            Message.Title = ProgramName + " needs to close. Please report this error.";
+            Message.Problem = ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
+            Message.Result =
+                $"Timelapse will shut down.{Environment.NewLine}The data file is likely OK.  If it's not you can restore from the {File.BackupFolder} folder.";
+            ExceptionReport.Text = body;
 
             // Add text to the body explaining the specific exception
-            Exception custom_excepton = (Exception)this.UnhandledExceptionArgs.ExceptionObject;
+            Exception custom_excepton = (Exception)UnhandledExceptionArgs.ExceptionObject;
             if (custom_excepton != null)
             {
                 switch (custom_excepton.Message)
                 {
-                    case Constant.ExceptionTypes.TemplateReadWriteException:
-                        this.Message.Problem =
-                            this.ProgramName + "  could not read data from the template (.tdb) file. This could be because: " + Environment.NewLine +
+                    case ExceptionTypes.TemplateReadWriteException:
+                        Message.Problem =
+                            ProgramName + "  could not read data from the template (.tdb) file. This could be because: " + Environment.NewLine +
                             "\u2022 the .tdb file is corrupt, or" + Environment.NewLine +
                             "\u2022 your system is somehow blocking Timelapse from manipulating that file (e.g., Citrix security will do that)" + Environment.NewLine +
                             "If you let us know, we will try and fix it. ";
                         break;
                     default:
-                        this.Message.Problem = this.ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
+                        Message.Problem = ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
                         break;
                 }
             }
             else
             {
-                this.Message.Problem = this.ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
+                Message.Problem = ProgramName + " encountered a problem, likely due to a bug. If you let us know, we will try and fix it. ";
             }
             CopyButton_Click(null, null);
         }
@@ -81,8 +82,8 @@ namespace Timelapse.Dialog
             Uri uri = new Uri($"mailto:{to}?subject={subject}&body={Uri.EscapeUriString(body)}");
             if (ProcessExecution.TryProcessStart(uri) == false)
             {
-                this.MailButton.Content = "Mailing failed - See 'alternate' instructions above, or press Cancel.";
-                this.MailButton.IsEnabled = false;
+                MailButton.Content = "Mailing failed - See 'alternate' instructions above, or press Cancel.";
+                MailButton.IsEnabled = false;
             }
         }
 
@@ -90,14 +91,14 @@ namespace Timelapse.Dialog
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.Clear();
-            Clipboard.SetText($"Email this to {to} {Environment.NewLine}{this.body}");
+            Clipboard.SetText($"Email this to {to} {Environment.NewLine}{body}");
         }
         #endregion
 
         #region Callbacks - Dialog Buttons
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

@@ -18,19 +18,19 @@
 
         public ProgressBarArguments(int percentDone, string message, string cancelMessage, bool cancelEnabled, bool IsIndeterminate)
         {
-            this.PercentDone = percentDone;
-            this.Message = message;
-            this.CancelMessage = cancelMessage;
-            this.IsCancelEnabled = cancelEnabled;
+            PercentDone = percentDone;
+            Message = message;
+            CancelMessage = cancelMessage;
+            IsCancelEnabled = cancelEnabled;
             this.IsIndeterminate = IsIndeterminate;
         }
 
         public ProgressBarArguments(int percentDone, string message, bool cancelEnabled, bool IsIndeterminate)
         {
-            this.PercentDone = percentDone;
-            this.Message = message;
-            this.CancelMessage = "Please wait...";
-            this.IsCancelEnabled = cancelEnabled;
+            PercentDone = percentDone;
+            Message = message;
+            CancelMessage = "Please wait...";
+            IsCancelEnabled = cancelEnabled;
             this.IsIndeterminate = IsIndeterminate;
         }
     }

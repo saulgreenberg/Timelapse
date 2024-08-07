@@ -15,7 +15,7 @@
         /// <summary>
         /// Key in the record Directory.Name Value, where Key is Directory.Name
         /// </summary>
-        public string Key => this.Directory + "." + this.Name;
+        public string Key => Directory + "." + Name;
 
         /// <summary>
         /// Name in the record Directory.Name Value
@@ -34,7 +34,7 @@
         /// </summary>
         public ImageMetadata()
         {
-            this.Initialize(string.Empty, string.Empty, string.Empty);
+            Initialize(string.Empty, string.Empty, string.Empty);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@
         /// </summary>
         public ImageMetadata(string directory, string name, string value)
         {
-            this.Initialize(directory, name, value);
+            Initialize(directory, name, value);
         }
         #endregion
 
@@ -52,9 +52,9 @@
         /// </summary>
         private void Initialize(string directory, string name, string value)
         {
-            this.Directory = directory;
-            this.Name = name;
-            this.Value = value;
+            Directory = directory;
+            Name = name;
+            Value = value;
         }
         #endregion 
     }

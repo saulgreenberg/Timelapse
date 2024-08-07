@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Timelapse.DataStructures;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.DebuggingSupport
 {
@@ -55,7 +56,7 @@ namespace Timelapse.DebuggingSupport
         // ReSharper disable once UnusedMember.Global
         public static void StackTraceToFile(string message)
         {
-            using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, Constant.File.TraceFile), true))
+            using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, File.TraceFile), true))
             {
                 file.WriteLine(GetMethodNameStack(message, 5));
                 file.WriteLine("----");

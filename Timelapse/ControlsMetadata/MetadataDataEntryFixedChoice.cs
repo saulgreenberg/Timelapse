@@ -1,10 +1,11 @@
-﻿using System.Windows.Controls;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
-using System.Windows.Input;
+
 namespace Timelapse.ControlsMetadata
 {
     // FixedChoice: Any single item chosen from a menu. Comprises:
@@ -14,28 +15,28 @@ namespace Timelapse.ControlsMetadata
     {
         #region Public Properties
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets  the content of the note</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public bool ContentChanged { get; set; }
 
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -46,34 +47,34 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.ChoiceComboBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // The behaviour of the combo box
-            this.ContentControl.Focusable = true;
-            this.ContentControl.IsEditable = false;
-            this.ContentControl.IsTextSearchEnabled = true;
+            ContentControl.Focusable = true;
+            ContentControl.IsEditable = false;
+            ContentControl.IsTextSearchEnabled = true;
 
             // Callback used to allow Enter to select the highlit item
-            this.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
+            ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
 
             // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end 
             ComboBoxItem cbi;
             Choices choices = Choices.ChoicesFromJson(control.List);
             foreach (string choice in choices.ChoiceList)
             {
-                cbi = new ComboBoxItem()
+                cbi = new ComboBoxItem
                 {
                     Content = choice
                 };
-                this.ContentControl.Items.Add(cbi);
+                ContentControl.Items.Add(cbi);
             }
             if (choices.IncludeEmptyChoice)
             {
                 // put empty choice / separator at the beginning of the control
 
-                cbi = new ComboBoxItem()
+                cbi = new ComboBoxItem
                 {
                     Content = string.Empty
                 };
-                this.ContentControl.Items.Insert(0, new Separator());
-                this.ContentControl.Items.Insert(0, cbi);
+                ContentControl.Items.Insert(0, new Separator());
+                ContentControl.Items.Insert(0, cbi);
             }
 
             // We include an invisible ellipsis menu item. This allows us to display an ellipsis in the combo box text field
@@ -84,11 +85,11 @@ namespace Timelapse.ControlsMetadata
             //};
             //this.ContentControl.Items.Insert(0, cbi);
             //((ComboBoxItem)this.ContentControl.Items[0]).Visibility = Visibility.Collapsed;
-            this.ContentControl.SelectedIndex = 0;
+            ContentControl.SelectedIndex = 0;
 
             // Now configure the various elements
-            this.ControlType = control.Type;
-            this.ContentChanged = false;
+            ControlType = control.Type;
+            ContentChanged = false;
         }
         #endregion
 
@@ -177,13 +178,13 @@ namespace Timelapse.ControlsMetadata
             // This is needed to set it explicitly.
             if (string.IsNullOrEmpty(value))
             {
-                this.ContentControl.SelectedIndex = 0;
+                ContentControl.SelectedIndex = 0;
             }
 
             // Set the note to the value provided  
             // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..
-            this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+            ContentControl.Text = value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
 
             //// Set the note to the value provided  
             //// If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..

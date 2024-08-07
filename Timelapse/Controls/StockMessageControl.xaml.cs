@@ -10,7 +10,7 @@ namespace Timelapse.Controls
         #region Public Properties
         public MessageBoxImage Icon
         {
-            get => this.iconType;
+            get => iconType;
             set
             {
                 // the MessageBoxImage enum contains duplicate values:
@@ -20,17 +20,17 @@ namespace Timelapse.Controls
                 switch (value)
                 {
                     case MessageBoxImage.Question:
-                        this.lblIconType.Content = "?";
-                        this.iconType = MessageBoxImage.Question;
+                        lblIconType.Content = "?";
+                        iconType = MessageBoxImage.Question;
                         break;
                     case MessageBoxImage.Warning:
-                        this.lblIconType.Content = "!";
-                        this.iconType = MessageBoxImage.Warning;
+                        lblIconType.Content = "!";
+                        iconType = MessageBoxImage.Warning;
                         break;
                     case MessageBoxImage.None:
                     case MessageBoxImage.Information:
-                        this.lblIconType.Content = "i";
-                        this.iconType = MessageBoxImage.Information;
+                        lblIconType.Content = "i";
+                        iconType = MessageBoxImage.Information;
                         break;
                     case MessageBoxImage.Error:
                         Run run = new Run
@@ -39,108 +39,108 @@ namespace Timelapse.Controls
                             Text = "\u004e"
                         };
                         // Create a symbol of a stopped hand
-                        this.lblIconType.Content = run;
-                        this.iconType = MessageBoxImage.Error;
+                        lblIconType.Content = run;
+                        iconType = MessageBoxImage.Error;
                         break;
                     default:
-                        this.lblIconType.Content = "?";
-                        this.iconType = MessageBoxImage.Question; // Show a reasonable default in the unlikely case this happens
-                        TracePrint.PrintMessage($"Unhandled icon type {this.Icon}.");
+                        lblIconType.Content = "?";
+                        iconType = MessageBoxImage.Question; // Show a reasonable default in the unlikely case this happens
+                        TracePrint.PrintMessage($"Unhandled icon type {Icon}.");
                         break;
                 }
-                this.iconType = value;
+                iconType = value;
             }
         }
 
         public string Title
         {
-            get => this.TitleText.Text;
+            get => TitleText.Text;
             set
             {
-                this.TitleText.Text = value;
-                this.SetExplanationVisibility();
+                TitleText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string What
         {
-            get => this.WhatText.Text;
+            get => WhatText.Text;
             set
             {
-                this.WhatText.Text = value;
-                this.SetExplanationVisibility();
+                WhatText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string Problem
         {
-            get => this.ProblemText.Text;
+            get => ProblemText.Text;
             set
             {
-                this.ProblemText.Text = value;
-                this.SetExplanationVisibility();
+                ProblemText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string Reason
         {
-            get => this.ReasonText.Text;
+            get => ReasonText.Text;
             set
             {
-                this.ReasonText.Text = value;
-                this.SetExplanationVisibility();
+                ReasonText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string Solution
         {
-            get => this.SolutionText.Text;
+            get => SolutionText.Text;
             set
             {
-                this.SolutionText.Text = value;
-                this.SetExplanationVisibility();
+                SolutionText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string Result
         {
-            get => this.ResultText.Text;
+            get => ResultText.Text;
             set
             {
-                this.ResultText.Text = value;
-                this.SetExplanationVisibility();
+                ResultText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string Hint
         {
-            get => this.HintText.Text;
+            get => HintText.Text;
             set
             {
-                this.HintText.Text = value;
-                this.SetExplanationVisibility();
+                HintText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public string Details
         {
-            get => this.DetailsText.Text;
+            get => DetailsText.Text;
             set
             {
-                this.DetailsText.Text = value;
-                this.SetExplanationVisibility();
+                DetailsText.Text = value;
+                SetExplanationVisibility();
             }
         }
 
         public bool ShowExplanationVisibility
         {
-            get => this.HideText.Visibility == Visibility.Visible;
+            get => HideText.Visibility == Visibility.Visible;
             set
             {
-                this.HideText.Visibility = value 
+                HideText.Visibility = value 
                     ? Visibility.Visible 
                     : Visibility.Collapsed;
-                this.SetExplanationVisibility();
+                SetExplanationVisibility();
             }
         }
         #endregion
@@ -152,8 +152,8 @@ namespace Timelapse.Controls
         #region Constructor
         public StockMessageControl()
         {
-            this.InitializeComponent();
-            this.SetExplanationVisibility();
+            InitializeComponent();
+            SetExplanationVisibility();
         }
         #endregion
 
@@ -161,32 +161,32 @@ namespace Timelapse.Controls
         private void SetExplanationVisibility()
         {
             GridLength zeroHeight = new GridLength(0.0);
-            if (this.HideText.IsChecked == true)
+            if (HideText.IsChecked == true)
             {
-                this.MessageGrid.RowDefinitions[1].Height = zeroHeight;
-                this.MessageGrid.RowDefinitions[2].Height = zeroHeight;
-                this.MessageGrid.RowDefinitions[3].Height = zeroHeight;
-                this.MessageGrid.RowDefinitions[4].Height = zeroHeight;
-                this.MessageGrid.RowDefinitions[5].Height = zeroHeight;
-                this.MessageGrid.RowDefinitions[6].Height = zeroHeight;
-                this.MessageGrid.RowDefinitions[7].Height = zeroHeight;
+                MessageGrid.RowDefinitions[1].Height = zeroHeight;
+                MessageGrid.RowDefinitions[2].Height = zeroHeight;
+                MessageGrid.RowDefinitions[3].Height = zeroHeight;
+                MessageGrid.RowDefinitions[4].Height = zeroHeight;
+                MessageGrid.RowDefinitions[5].Height = zeroHeight;
+                MessageGrid.RowDefinitions[6].Height = zeroHeight;
+                MessageGrid.RowDefinitions[7].Height = zeroHeight;
                 return;
             }
 
             GridLength autoHeight = new GridLength(1.0, GridUnitType.Auto);
-            this.MessageGrid.RowDefinitions[1].Height = string.IsNullOrEmpty(this.Problem) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[2].Height = string.IsNullOrEmpty(this.What) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[3].Height = string.IsNullOrEmpty(this.Reason) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[4].Height = string.IsNullOrEmpty(this.Solution) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[5].Height = string.IsNullOrEmpty(this.Result) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[6].Height = string.IsNullOrEmpty(this.Hint) ? zeroHeight : autoHeight;
-            this.MessageGrid.RowDefinitions[7].Height = string.IsNullOrEmpty(this.Details) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[1].Height = string.IsNullOrEmpty(Problem) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[2].Height = string.IsNullOrEmpty(What) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[3].Height = string.IsNullOrEmpty(Reason) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[4].Height = string.IsNullOrEmpty(Solution) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[5].Height = string.IsNullOrEmpty(Result) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[6].Height = string.IsNullOrEmpty(Hint) ? zeroHeight : autoHeight;
+            MessageGrid.RowDefinitions[7].Height = string.IsNullOrEmpty(Details) ? zeroHeight : autoHeight;
         }
 
         // This will toggle the visibility of the explanation panel
         private void HideTextButton_StateChange(object sender, RoutedEventArgs e)
         {
-            this.SetExplanationVisibility();
+            SetExplanationVisibility();
         }
         #endregion
     }

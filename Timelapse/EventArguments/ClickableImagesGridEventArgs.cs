@@ -11,8 +11,8 @@ namespace Timelapse.EventArguments
         public ImageRow ImageRow { get; set; }
         public ThumbnailGridEventArgs(ThumbnailGrid grid, ImageRow imageRow)
         {
-            this.Grid = grid;
-            this.ImageRow = imageRow;
+            Grid = grid;
+            ImageRow = imageRow;
         }
     }
 }

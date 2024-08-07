@@ -11,8 +11,8 @@ namespace Timelapse.Dialog
         #region Constructor, Loaded
         public SkipHiddenFiles(Window owner)
         {
-            this.InitializeComponent();
-            this.Owner = owner;
+            InitializeComponent();
+            Owner = owner;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -24,12 +24,12 @@ namespace Timelapse.Dialog
         #region Callbacks - Dialog Buttons
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
@@ -29,7 +30,7 @@ namespace Timelapse.Episodes
         /// <summary>
         /// The Time threshold between successive images that determine whether they belong together in an episode
         /// </summary>
-        public static TimeSpan TimeThreshold { get; set; } = TimeSpan.FromMinutes(Constant.EpisodeDefaults.TimeThresholdDefault);
+        public static TimeSpan TimeThreshold { get; set; } = TimeSpan.FromMinutes(EpisodeDefaults.TimeThresholdDefault);
         #endregion
 
         #region Public Methods - Reset
@@ -40,7 +41,7 @@ namespace Timelapse.Episodes
         /// </summary>
         public static void Reset()
         {
-            Episodes.EpisodesDictionary = new Dictionary<int, Tuple<int, int>>();
+            EpisodesDictionary = new Dictionary<int, Tuple<int, int>>();
         }
         #endregion
 
@@ -57,9 +58,9 @@ namespace Timelapse.Episodes
 
         public static void EpisodeGetEpisodesInRange(FileTable fileTable, int fileTableIndex, int maxRangeToSearch)
         {
-            if (Episodes.EpisodesDictionary == null)
+            if (EpisodesDictionary == null)
             {
-                Episodes.Reset();
+                Reset();
             }
             int index = fileTableIndex;
 
@@ -69,16 +70,16 @@ namespace Timelapse.Episodes
                 return;
             }
 
-            bool inRange = Episodes.EpisodeGetAroundIndex(fileTable, fileTableIndex, maxRangeToSearch, out int first, out int count);
+            bool inRange = EpisodeGetAroundIndex(fileTable, fileTableIndex, maxRangeToSearch, out int first, out int count);
 
             // foreach fileindex within the episode, ranging from first to last, add its episode information to the episode dictionary
             for (int i = 1; i <= count; i++)
             {
                 int currentFileIndex = first + i - 1;
-                if (Episodes.EpisodesDictionary != null && !Episodes.EpisodesDictionary.ContainsKey(currentFileIndex))
+                if (EpisodesDictionary != null && !EpisodesDictionary.ContainsKey(currentFileIndex))
                 {
                     Tuple<int, int> tuple = inRange ? new Tuple<int, int>(i, count) : new Tuple<int, int>(int.MaxValue, int.MaxValue);
-                    Episodes.EpisodesDictionary.Add(currentFileIndex, tuple);
+                    EpisodesDictionary.Add(currentFileIndex, tuple);
                 }
             }
         }
@@ -122,7 +123,7 @@ namespace Timelapse.Episodes
                     file = files[current];
                     date2 = file.DateTime;
                     TimeSpan difference = date2 - date1;
-                    bool aboveThreshold = difference.Duration() > Episodes.TimeThreshold;
+                    bool aboveThreshold = difference.Duration() > TimeThreshold;
                     if (aboveThreshold)
                     {
                         break;
@@ -149,7 +150,7 @@ namespace Timelapse.Episodes
                 file = files[current];
                 date2 = file.DateTime;
                 TimeSpan difference = date1 - date2;
-                bool aboveThreshold = difference.Duration() > Episodes.TimeThreshold;
+                bool aboveThreshold = difference.Duration() > TimeThreshold;
                 if (aboveThreshold && onFirstTwoImages == false)
                 {
                     break;
@@ -201,7 +202,7 @@ namespace Timelapse.Episodes
                 file = files[current];
                 date2 = file.DateTime;
                 TimeSpan difference = date1 - date2;
-                bool aboveThreshold = difference.Duration() > Episodes.TimeThreshold;
+                bool aboveThreshold = difference.Duration() > TimeThreshold;
                 if (aboveThreshold)
                 {
                     break;
@@ -222,7 +223,7 @@ namespace Timelapse.Episodes
                 file = files[current];
                 date2 = file.DateTime;
                 TimeSpan difference = date2 - date1;
-                bool aboveThreshold = difference.Duration() > Episodes.TimeThreshold;
+                bool aboveThreshold = difference.Duration() > TimeThreshold;
                 if (aboveThreshold)
                 {
                     break;

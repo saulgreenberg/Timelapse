@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
 using Timelapse.Util;
@@ -16,14 +17,14 @@ namespace Timelapse.DataTables
 
         public bool Copyable
         {
-            get => this.Row.GetBooleanField(Constant.Control.Copyable);
-            set => this.Row.SetField(Constant.Control.Copyable, value);
+            get => Row.GetBooleanField(Control.Copyable);
+            set => Row.SetField(Control.Copyable, value);
         }
 
         public int Width
         {
-            get => this.Row.GetIntegerField(Constant.Control.TextBoxWidth);
-            set => this.Row.SetField(Constant.Control.TextBoxWidth, value);
+            get => Row.GetIntegerField(Control.TextBoxWidth);
+            set => Row.SetField(Control.TextBoxWidth, value);
         }
 
         #endregion
@@ -50,14 +51,14 @@ namespace Timelapse.DataTables
 
             bool synchronizationMadeChanges = base.UpdateThisControlRowToMatch(controlRowToMatch);
 
-            if (this.Copyable != controlRowToMatch.Copyable)
+            if (Copyable != controlRowToMatch.Copyable)
             {
-                this.Copyable = controlRowToMatch.Copyable;
+                Copyable = controlRowToMatch.Copyable;
                 synchronizationMadeChanges = true;
             }
-            if (this.Width != controlRowToMatch.Width)
+            if (Width != controlRowToMatch.Width)
             {
-                this.Width = controlRowToMatch.Width;
+                Width = controlRowToMatch.Width;
                 synchronizationMadeChanges = true;
             }
             return synchronizationMadeChanges;
@@ -70,8 +71,8 @@ namespace Timelapse.DataTables
         {
             // We add the Copyable and TextboxWidth attributes
             ColumnTuplesWithWhere columnTuplesWithWhere = base.CreateColumnTuplesWithWhereByID();
-            columnTuplesWithWhere.Columns.Add(new ColumnTuple(Constant.Control.Copyable, this.Copyable));
-            columnTuplesWithWhere.Columns.Add(new ColumnTuple(Constant.Control.TextBoxWidth, this.Width));
+            columnTuplesWithWhere.Columns.Add(new ColumnTuple(Control.Copyable, Copyable));
+            columnTuplesWithWhere.Columns.Add(new ColumnTuple(Control.TextBoxWidth, Width));
 
             return columnTuplesWithWhere;
         }

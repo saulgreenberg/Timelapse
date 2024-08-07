@@ -11,7 +11,7 @@ namespace Timelapse.EventArguments
 
         public ImageStateEventArgs(bool isImageView)
         {
-            this.IsImageView = isImageView;
+            IsImageView = isImageView;
         }
     }
 }

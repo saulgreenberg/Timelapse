@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
+using Newtonsoft.Json;
 using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Images
@@ -22,8 +22,8 @@ namespace Timelapse.Images
         #region Constructor
         public MarkersForCounter(string dataLabel)
         {
-            this.DataLabel = dataLabel;
-            this.Markers = new List<Marker>();
+            DataLabel = dataLabel;
+            Markers = new List<Marker>();
         }
         #endregion
 
@@ -31,24 +31,24 @@ namespace Timelapse.Images
         // Add a Marker to the Marker's list
         public void AddMarker(Marker marker)
         {
-            this.Markers.Add(marker);
+            Markers.Add(marker);
         }
 
         // Create a marker with the given point and add it to the marker list
         public void AddMarker(Point point)
         {
-            this.AddMarker(new Marker(this.DataLabel, point));
+            AddMarker(new Marker(DataLabel, point));
         }
 
         public void RemoveMarker(Marker marker)
         {
-            int index = this.Markers.IndexOf(marker);
+            int index = Markers.IndexOf(marker);
             if (index == -1)
             {
                 TracePrint.PrintMessage("RemoveMarker: Expected marker to be present in list, but its not there.");
                 return;
             }
-            this.Markers.RemoveAt(index);
+            Markers.RemoveAt(index);
         }
         #endregion
 
@@ -56,7 +56,7 @@ namespace Timelapse.Images
         public string GetPointList()
         {
             List<Point> pointList = new List<Point>();
-            foreach (Marker markerForCounter in this.Markers)
+            foreach (Marker markerForCounter in Markers)
             {
                 pointList.Add(new Point(Math.Round(markerForCounter.Position.X, 4), Math.Round(markerForCounter.Position.Y, 4)));
             }
@@ -74,7 +74,7 @@ namespace Timelapse.Images
                 List<Point> points = JsonConvert.DeserializeObject<List<Point>>(pointList);
                 foreach (Point point in points)
                 {
-                    this.AddMarker(point);  // add the marker to the list;
+                    AddMarker(point);  // add the marker to the list;
                 }
             }
             catch

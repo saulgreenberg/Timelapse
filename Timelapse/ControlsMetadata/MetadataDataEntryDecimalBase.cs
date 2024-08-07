@@ -1,13 +1,13 @@
-﻿using System.Windows.Controls;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using Timelapse.Constant;
+using Timelapse.ControlsDataCommon;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
-using System.Windows.Input;
-using Timelapse.ControlsDataCommon;
-
 
 namespace Timelapse.ControlsMetadata
 {
@@ -19,28 +19,28 @@ namespace Timelapse.ControlsMetadata
     {
         #region Public Properties
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets  the content of the note</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public bool ContentChanged { get; set; }
 
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -51,19 +51,19 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.DoubleTextBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // Now configure the various elements
-            this.ControlType = control.Type;
-            this.ContentChanged = false;
+            ControlType = control.Type;
+            ContentChanged = false;
             // This is the only real difference between an DecimalAny and an DecimalPositive
             if (allowPositiveNumbersOnly)
             {
-                this.ContentControl.Minimum = 0;
+                ContentControl.Minimum = 0;
             }
 
-            this.ContentControl.FormatString = Timelapse.Constant.ControlDefault.DecimalFormatString;
-            this.ContentControl.Watermark = allowPositiveNumbersOnly ? "decimal\u22650 or blank" : "decimal or blank";
-            this.ContentControl.GotKeyboardFocus += ControlsDataHelpersCommon.Control_GotFocus;
-            this.ContentControl.LostKeyboardFocus += ControlsDataHelpersCommon.Control_LostFocus;
-            this.ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
+            ContentControl.FormatString = ControlDefault.DecimalFormatString;
+            ContentControl.Watermark = allowPositiveNumbersOnly ? "decimal\u22650 or blank" : "decimal or blank";
+            ContentControl.GotKeyboardFocus += ControlsDataHelpersCommon.Control_GotFocus;
+            ContentControl.LostKeyboardFocus += ControlsDataHelpersCommon.Control_LostFocus;
+            ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
         }
         #endregion
 
@@ -73,7 +73,7 @@ namespace Timelapse.ControlsMetadata
         {
             if (e.Key == Key.Space)
             {
-                TextBox contentHost = (TextBox)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
+                TextBox contentHost = (TextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl);
                 ControlsDataHelpersCommon.TextBoxHandleKeyDownForSpace(contentHost, e, true);
             }
         }
@@ -85,20 +85,20 @@ namespace Timelapse.ControlsMetadata
             // Set the number to the value provided, or to empty (which makes this somewhat messy))
 
             // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed.
-            this.ContentChanged = this.ContentControl.Text != value;
+            ContentChanged = ContentControl.Text != value;
 
             // It the user has cleared the control while the value is zero, then the user is trying to set it to an empty value
             // Makeing the control's value null will clear it i.e., to empty. Otherwise just set it to the entered value.
-            if (null != this.ContentControl.Text && string.IsNullOrWhiteSpace(this.ContentControl.Text) && value == "0")
+            if (null != ContentControl.Text && string.IsNullOrWhiteSpace(ContentControl.Text) && value == "0")
             {
-                this.ContentControl.Value = null;
+                ContentControl.Value = null;
             }
             else
             {
-                this.ContentControl.Text = value;
+                ContentControl.Text = value;
             }
             // The tooltip either shows the value, or 'Blank entry' if there is nothing in it.
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(this.ContentControl.Text) ? "Blank entry" : value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(ContentControl.Text) ? "Blank entry" : value;
         }
         #endregion
     }

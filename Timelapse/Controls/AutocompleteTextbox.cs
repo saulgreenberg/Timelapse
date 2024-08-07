@@ -39,8 +39,8 @@ namespace Timelapse.Controls
         #region Constructore
         public AutocompleteTextBox()
         {
-            this.mostRecentAutocompletion = null;
-            this.TextChanged += this.OnTextChanged;
+            mostRecentAutocompletion = null;
+            TextChanged += OnTextChanged;
         }
         #endregion
 
@@ -51,63 +51,63 @@ namespace Timelapse.Controls
             // Updating the text box moves the caret to the start position, which results in poor user experience when the text box initially contains only
             // whitespace and the user happens to move focus to the control in such a way that the first non-whitespace character entered follows some of the
             // whitespace---the result's the first character of the word ends up at the end rather than at the beginning.
-            int cursorPosition = this.CaretIndex;
-            string trimmedNote = this.Text.TrimStart();
-            if (trimmedNote != this.Text)
+            int cursorPosition = CaretIndex;
+            string trimmedNote = Text.TrimStart();
+            if (trimmedNote != Text)
             {
-                cursorPosition -= this.Text.Length - trimmedNote.Length;
+                cursorPosition -= Text.Length - trimmedNote.Length;
                 if (cursorPosition < 0)
                 {
                     cursorPosition = 0;
                 }
 
-                this.Text = trimmedNote;
-                this.CaretIndex = cursorPosition;
+                Text = trimmedNote;
+                CaretIndex = cursorPosition;
             }
 
             // check if autocompletion is possible when text is added
             // Don't attempt autocompletion on pure removals, such as backspace or delete, but do try when both add and remove changes are present as this
             // usually indicates the user's typing over the autocomplete suggestion.
             // Also, if the caret is at the beginning(i.e., either editing an empty cell or just a cell update by navigating), then don't autocomplete 
-            if ((string.IsNullOrEmpty(this.Text) == false) && (this.CaretIndex > 0) &&
+            if ((string.IsNullOrEmpty(Text) == false) && (CaretIndex > 0) &&
                 eventArgs.Changes.Any(change => change.AddedLength > 0))
             {
-                int textLength = this.Text.Length;
+                int textLength = Text.Length;
                 string autocompletion = null;
-                if (this.UseCompletion(this.mostRecentAutocompletion))
+                if (UseCompletion(mostRecentAutocompletion))
                 {
                     // prefer the most recently used completion over others
                     // This tends to alleviate users' data entry effort as usually the data entered for the last file is more likely appropriate than the first
                     // hit found in the completions collection.
-                    autocompletion = this.mostRecentAutocompletion;
+                    autocompletion = mostRecentAutocompletion;
                 }
-                else if (this.Autocompletions != null)
+                else if (Autocompletions != null)
                 {
-                    autocompletion = this.Autocompletions.Keys.FirstOrDefault(this.UseCompletion);
+                    autocompletion = Autocompletions.Keys.FirstOrDefault(UseCompletion);
                 }
 
                 if (string.IsNullOrEmpty(autocompletion) == false)
                 {
-                    this.Text = autocompletion;
-                    this.CaretIndex = textLength;
-                    this.SelectionStart = textLength;
-                    this.SelectionLength = autocompletion.Length - textLength;
+                    Text = autocompletion;
+                    CaretIndex = textLength;
+                    SelectionStart = textLength;
+                    SelectionLength = autocompletion.Length - textLength;
 
-                    this.mostRecentAutocompletion = autocompletion;
+                    mostRecentAutocompletion = autocompletion;
                 }
             }
 
             // synchronize tooltip with content
-            this.ToolTip = this.Text;
+            ToolTip = Text;
 
             // fire follow on event
-            this.TextAutocompleted?.Invoke(this, eventArgs);
+            TextAutocompleted?.Invoke(this, eventArgs);
         }
 
         private bool UseCompletion(string completion)
         {
-            int textLength = this.Text.Length;
-            if (completion != null && completion.Length >= textLength && completion.Substring(0, textLength).Equals(this.Text, StringComparison.Ordinal))
+            int textLength = Text.Length;
+            if (completion != null && completion.Length >= textLength && completion.Substring(0, textLength).Equals(Text, StringComparison.Ordinal))
             {
                 return true;
             }

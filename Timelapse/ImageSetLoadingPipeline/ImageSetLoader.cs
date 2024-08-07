@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -37,7 +38,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             private set;
         }
 
-        public int ImagesLoaded => this.imagesLoaded;
+        public int ImagesLoaded => imagesLoaded;
 
         public int ImagesToLoad
         {
@@ -79,7 +80,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                 where existingPaths.Contains(fileInfo.FullName.ToLowerInvariant()) == false
                 select fileInfo).OrderBy(f => f.FullName).ToArray();
 
-            this.ImagesToLoad = filesToAddInfoArray.Length;
+            ImagesToLoad = filesToAddInfoArray.Length;
 
             // The queue will take image rows ready for insertion to the second pass
             // The eventindicates explicitly when the first pass is done.
@@ -90,7 +91,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             string absolutePathPart = imageSetFolderPath.TrimEnd(Path.DirectorySeparatorChar) + @"\";
 
             // Pass 1
-            this.pass1 = new Task(() =>
+            pass1 = new Task(() =>
             {
 
                 List<Task> loadTasks = new List<Task>();
@@ -143,8 +144,8 @@ namespace Timelapse.ImageSetLoadingPipeline
                     {
                         // Both of these operations are atomic, the specific number and the specific loader at any given
                         // time may not correspond.
-                        Interlocked.Increment(ref this.imagesLoaded);
-                        this.LastLoadComplete = loader;
+                        Interlocked.Increment(ref imagesLoaded);
+                        LastLoadComplete = loader;
                         if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                         {
                             // User requested we cancel the task. So stop going through files.
@@ -159,7 +160,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                             // any order. By sorting the file infos above, things that sort first in the database should
                             // be done first, BUT THIS MAY REQUIRE ADDITIONAL FINESSE TO KEEP THE EXPLICIT ORDER CORRECT.
                             capturedDatabaseInsertionQueue.Enqueue(loader.File);
-                            Interlocked.Increment(ref this.imagesToInsert);
+                            Interlocked.Increment(ref imagesToInsert);
                         }
                     });
                     loadTasks.Add(loaderTask);
@@ -189,15 +190,15 @@ namespace Timelapse.ImageSetLoadingPipeline
                 databaseInsertionQueue = new ConcurrentQueue<ImageRow> ();
                 return;
             }
-            this.pass2 = new Task(() =>
+            pass2 = new Task(() =>
             {
                 // This pass2 starts after pass1 is fully complete
                 List<ImageRow> imagesToInsertList = capturedDatabaseInsertionQueue.OrderBy(f => Path.Combine(f.RelativePath, f.File)).ToList();
                 dataHandler.FileDatabase.AddFiles(imagesToInsertList,
                                                   (file, fileIndex) =>
                                                   {
-                                                      this.LastInsertComplete = file;
-                                                      this.LastIndexInsertComplete = fileIndex;
+                                                      LastInsertComplete = file;
+                                                      LastIndexInsertComplete = fileIndex;
                                                   });
             });
             // End Pass 2 
@@ -207,9 +208,9 @@ namespace Timelapse.ImageSetLoadingPipeline
         #region Internal Task LoadAsync
         internal async Task LoadAsync(Action<int, FolderLoadProgress> reportProgress, FolderLoadProgress folderLoadProgress, int progressIntervalMilliseconds)
         {
-            this.pass1.Start();
+            pass1.Start();
 
-            Timer t = new Timer((state) =>
+            Timer t = new Timer(state =>
             {
                 if (GlobalReferences.CancelTokenSource.IsCancellationRequested)
                 {
@@ -217,20 +218,20 @@ namespace Timelapse.ImageSetLoadingPipeline
                     // Debug.Print("Cancellation at beginning of Timer t");
                     return;
                 }
-                if (this.LastLoadComplete != null)
+                if (LastLoadComplete != null)
                 {
-                    folderLoadProgress.BitmapSource = this.LastLoadComplete.File.IsVideo 
-                        ? Constant.ImageValues.BlankVideo.Value 
-                        : this.LastLoadComplete.BitmapSource;
+                    folderLoadProgress.BitmapSource = LastLoadComplete.File.IsVideo 
+                        ? ImageValues.BlankVideo.Value 
+                        : LastLoadComplete.BitmapSource;
                 }
                 else
                 {
                     folderLoadProgress.BitmapSource = null;
                 }
                 
-                folderLoadProgress.CurrentFile = this.ImagesLoaded;
-                folderLoadProgress.CurrentFileName = this.LastLoadComplete?.File.File;
-                int percentProgress = (int)(100.0 * this.ImagesLoaded / this.ImagesToLoad);
+                folderLoadProgress.CurrentFile = ImagesLoaded;
+                folderLoadProgress.CurrentFileName = LastLoadComplete?.File.File;
+                int percentProgress = (int)(100.0 * ImagesLoaded / ImagesToLoad);
                 try
                 {
                     reportProgress(percentProgress, folderLoadProgress);
@@ -244,7 +245,7 @@ namespace Timelapse.ImageSetLoadingPipeline
 
             }, null, 0, progressIntervalMilliseconds);
 
-            await this.pass1.ConfigureAwait(false);
+            await pass1.ConfigureAwait(false);
 
             t.Change(-1, -1);
             t.Dispose();
@@ -258,18 +259,18 @@ namespace Timelapse.ImageSetLoadingPipeline
                 return;
             }
 
-            this.pass2.Start();
+            pass2.Start();
 
-            t = new Timer((state) =>
+            t = new Timer(state =>
             {
                 folderLoadProgress.BitmapSource = null;
-                folderLoadProgress.CurrentFile = this.LastIndexInsertComplete;
-                folderLoadProgress.CurrentFileName = this.LastInsertComplete?.File;
-                int percentProgress = (int)(100.0 * folderLoadProgress.CurrentFile / this.imagesToInsert);
+                folderLoadProgress.CurrentFile = LastIndexInsertComplete;
+                folderLoadProgress.CurrentFileName = LastInsertComplete?.File;
+                int percentProgress = (int)(100.0 * folderLoadProgress.CurrentFile / imagesToInsert);
                 reportProgress(percentProgress, folderLoadProgress);
             }, null, 0, progressIntervalMilliseconds);
 
-            await this.pass2.ConfigureAwait(false);
+            await pass2.ConfigureAwait(false);
 
             t.Change(-1, -1);
             t.Dispose();

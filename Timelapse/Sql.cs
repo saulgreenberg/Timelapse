@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Timelapse.Constant;
 using Timelapse.Enums;
 
 // ReSharper disable UnusedMember.Global
@@ -20,14 +21,14 @@ namespace Timelapse
         public const string Concatenate = " || ";
         public const string Descending = " DESC ";
         public const string Dot = ".";
-        public const string DotStar = Sql.Dot + Sql.Star;
+        public const string DotStar = Dot + Star;
         public const string BeginTransaction = " BEGIN TRANSACTION ";
-        public const string BeginTransactionSemiColon = Sql.BeginTransaction + Sql.Semicolon;
+        public const string BeginTransactionSemiColon = BeginTransaction + Semicolon;
         public const string Between = " BETWEEN ";
         public const string CaseWhen = " CASE WHEN ";
         public const string Cast = " CAST ";
         public const string Count = " Count ";
-        public const string CountStar = Sql.Count + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis;
+        public const string CountStar = Count + OpenParenthesis + Star + CloseParenthesis;
         public const string CreateIndex = " CREATE INDEX ";
         public const string CreateTable = " CREATE TABLE ";
         public const string CreateTemporaryTable = " CREATE TEMPORARY TABLE ";
@@ -49,7 +50,7 @@ namespace Timelapse
         public const string Else = " ELSE ";
         public const string End = " END ";
         public const string EndTransaction = " END TRANSACTION ";
-        public const string EndTransactionSemiColon = Sql.EndTransaction + Sql.Semicolon;
+        public const string EndTransactionSemiColon = EndTransaction + Semicolon;
         public const string Equal = " = ";
         public const string EqualsCaseID = " = CASE Id";
         public const string From = " FROM ";
@@ -84,7 +85,7 @@ namespace Timelapse
         public const string Not = " NOT ";
         public const string NotEqual = " <> ";
         public const string NotNull = " NOT NULL ";
-        public const string NotLike = Sql.Not + Sql.Like;
+        public const string NotLike = Not + Like;
         public const string Null = " NULL ";
         public const string NullAs = Null + " " + As;
         public const string Ok = "ok";
@@ -93,15 +94,15 @@ namespace Timelapse
         public const string OpenParenthesis = " ( ";
         public const string Or = " OR ";
         public const string OrderBy = " ORDER BY ";
-        public const string OrderByRandom = Sql.OrderBy + " RANDOM() ";
+        public const string OrderByRandom = OrderBy + " RANDOM() ";
         public const string Plus = " + ";
         public const string Pragma = " PRAGMA ";
-        public const string PragmaForeignKeysEquals = Sql.Pragma + " foreign_keys " + Sql.Equal;
-        public const string PragmaTableInfo = Sql.Pragma + " TABLE_INFO ";
-        public const string PragmaSetForeignKeys = Sql.PragmaForeignKeysEquals + " 1 ";
+        public const string PragmaForeignKeysEquals = Pragma + " foreign_keys " + Equal;
+        public const string PragmaTableInfo = Pragma + " TABLE_INFO ";
+        public const string PragmaSetForeignKeys = PragmaForeignKeysEquals + " 1 ";
         public const string PragmaForeignKeysOff = PragmaForeignKeysEquals + " OFF ";
         public const string PragmaForeignKeysOn = PragmaForeignKeysEquals + " ON ";
-        public const string PragmaQuickCheck = Sql.Pragma + " QUICK_CHECK ";
+        public const string PragmaQuickCheck = Pragma + " QUICK_CHECK ";
         public const string PrimaryKey = " PRIMARY KEY ";
         public const string RealType = " REAL ";
         public const string RenameTo = " RENAME TO ";
@@ -112,18 +113,18 @@ namespace Timelapse
         public const string SelectDistinct = " SELECT DISTINCT ";
         public const string SelectDistinctStar = " SELECT DISTINCT * ";
         public const string SelectOne = " SELECT 1 ";
-        public const string SelectStar = Sql.Select + Sql.Star; // SELECT * "
-        public const string SelectStarFrom = Sql.SelectStar + Sql.From; // SELECT * FROM "
+        public const string SelectStar = Select + Star; // SELECT * "
+        public const string SelectStarFrom = SelectStar + From; // SELECT * FROM "
 
         public const string SelectCount = " SELECT COUNT ";
         public const string SelectDistinctCount = " SELECT DISTINCT COUNT ";
-        public const string SelectCountStarFrom = Sql.SelectCount + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis + Sql.From;
-        public const string SelectDistinctCountStarFrom = Sql.SelectDistinctCount + Sql.OpenParenthesis + Sql.Star + Sql.CloseParenthesis + Sql.From;
+        public const string SelectCountStarFrom = SelectCount + OpenParenthesis + Star + CloseParenthesis + From;
+        public const string SelectDistinctCountStarFrom = SelectDistinctCount + OpenParenthesis + Star + CloseParenthesis + From;
         public const string SelectExists = " SELECT EXISTS ";
-        public const string SelectNameFromPragmaTableInfo = Sql.Select + Sql.Name + Sql.From + " PRAGMA_TABLE_INFO ";
-        public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Sql.Select + Sql.Name + Sql.From + Sql.SqlMaster + Sql.Where + Sql.TypeEqualsTable + Sql.And + Sql.Name + Sql.Equal;
-        public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = Sql.SelectCountStarFrom + Sql.SqlMaster + Sql.Where + Sql.TypeEqualsIndex + Sql.And + Sql.Name + Sql.Equal;
-        public static string SelectSqlFromSqliteMasterWhereTypeEqualTableAndNameEquals = $"{Sql.Select} sql {Sql.From} {Sql.SqlMaster} {Sql.Where} {Sql.TypeEqualsTable} {Sql.And} {Sql.Name} {Sql.Equal}";
+        public const string SelectNameFromPragmaTableInfo = Select + Name + From + " PRAGMA_TABLE_INFO ";
+        public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Select + Name + From + SqlMaster + Where + TypeEqualsTable + And + Name + Equal;
+        public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = SelectCountStarFrom + SqlMaster + Where + TypeEqualsIndex + And + Name + Equal;
+        public static string SelectSqlFromSqliteMasterWhereTypeEqualTableAndNameEquals = $"{Select} sql {From} {SqlMaster} {Where} {TypeEqualsTable} {And} {Name} {Equal}";
         public const string Semicolon = " ; ";
         public const string Set = " SET ";
         public const string SqlMaster = " sqlite_master ";
@@ -139,9 +140,9 @@ namespace Timelapse
         public const string Then = " THEN ";
         public const string Trim = " TRIM ";
         public const string True = " TRUE ";
-        public const string TypeEquals = " TYPE " + Sql.Equal;
-        public const string TypeEqualsTable = Sql.TypeEquals + " 'table' ";
-        public const string TypeEqualsIndex = Sql.TypeEquals + " 'index' ";
+        public const string TypeEquals = " TYPE " + Equal;
+        public const string TypeEqualsTable = TypeEquals + " 'table' ";
+        public const string TypeEqualsIndex = TypeEquals + " 'index' ";
         public const string UnionAll = " UNION ALL";
         public const string Update = " UPDATE ";
         public const string Values = " VALUES ";
@@ -194,11 +195,11 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCount + Sql.OpenParenthesis + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.CloseParenthesis;
+                phrase = Sql.SelectCount + Sql.OpenParenthesis + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.CloseParenthesis;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
-                phrase = Sql.Select + Constant.DBTables.FileData + Sql.DotStar;
+                phrase = Sql.Select + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.One)
             {
@@ -207,11 +208,11 @@ namespace Timelapse
             //string phrase = useCountForm
             //    ? Sql.SelectCount + Sql.OpenParenthesis + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.CloseParenthesis
             //    : Sql.Select + Constant.DBTables.FileData + Sql.DotStar;
-            return phrase + Sql.From + Constant.DBTables.FileData +
-                Sql.LeftJoin + Constant.DBTables.Detections +
-                Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID +
-                Sql.Equal + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID +
-                Sql.Where + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID + Sql.IsNull;
+            return phrase + Sql.From + DBTables.FileData +
+                Sql.LeftJoin + DBTables.Detections +
+                Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID +
+                Sql.Equal + DBTables.Detections + Sql.Dot + DatabaseColumn.ID +
+                Sql.Where + DBTables.Detections + Sql.Dot + DatabaseColumn.ID + Sql.IsNull;
         }
         //public static string SelectMissingDetections(bool useCountForm)
         //{
@@ -239,18 +240,18 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + Constant.DBTables.FileData + Sql.DotStar;
+                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
-                phrase = Sql.Select + Constant.DBTables.FileData + Sql.DotStar;
+                phrase = Sql.Select + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.One)
             {
                 phrase = Sql.SelectOne;
             }
-            return phrase + Sql.From + Constant.DBTables.Detections + Sql.InnerJoin + Constant.DBTables.FileData +
-                    Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.Equal + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
+            return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
+                    Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
         }
         //public static string SelectDetections(bool useCountForm)
         //{
@@ -290,14 +291,14 @@ namespace Timelapse
                 phrase = Sql.SelectOne + Sql.From + Sql.OpenParenthesis + Sql.SelectDistinct;
             }
 
-            phrase += Constant.DBTables.FileData + Sql.DotStar + Sql.From + Constant.DBTables.Classifications +
-                    Sql.InnerJoin + Constant.DBTables.FileData + Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID +
-                    Sql.Equal + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
+            phrase += DBTables.FileData + Sql.DotStar + Sql.From + DBTables.Classifications +
+                    Sql.InnerJoin + DBTables.FileData + Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID +
+                    Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
 
             // and now append INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-            phrase += Sql.InnerJoin + Constant.DBTables.Detections + Sql.On +
-                Constant.DBTables.Detections + Sql.Dot + Constant.DetectionColumns.DetectionID + Sql.Equal +
-                Constant.DBTables.Classifications + "." + Constant.DetectionColumns.DetectionID;
+            phrase += Sql.InnerJoin + DBTables.Detections + Sql.On +
+                DBTables.Detections + Sql.Dot + DetectionColumns.DetectionID + Sql.Equal +
+                DBTables.Classifications + "." + DetectionColumns.DetectionID;
 
             return phrase;
         }
@@ -376,7 +377,7 @@ namespace Timelapse
             if (value == string.Empty)
             {
                 // special case for empty string
-                return SqlPhrase.DataLabelOperatorValue(dataLabel, mathOperator, "*", Constant.Control.MultiLine);
+                return DataLabelOperatorValue(dataLabel, mathOperator, "*", Control.MultiLine);
             }
             string[] terms = value.Split(',');
             string where = string.Empty;
@@ -403,7 +404,7 @@ namespace Timelapse
         /// <returns>Detections.Category = detectionCategory</returns>
         public static string DetectionCategoryEqualsDetectionCategory(string detectionCategory)
         {
-            return Constant.DBTables.Detections + "." + Constant.DetectionColumns.Category + Sql.Equal + detectionCategory;
+            return DBTables.Detections + "." + DetectionColumns.Category + Sql.Equal + detectionCategory;
         }
 
         /// <summary>
@@ -414,7 +415,7 @@ namespace Timelapse
         ///
         public static string ClassificationsCategoryEqualsClassificationCategory(string classificationCategory)
         {
-            return Constant.DBTables.Classifications + "." + Constant.DetectionColumns.Category + Sql.Equal + classificationCategory;
+            return DBTables.Classifications + "." + DetectionColumns.Category + Sql.Equal + classificationCategory;
         }
 
         /// <summary>
@@ -425,9 +426,9 @@ namespace Timelapse
         /// <returns>Group By Detections.Id Having Max ( Detections.conf ) BETWEEN lowerBound AND upperBound</returns>
         public static string GroupByDetectionsIdHavingMaxDetectionsConf(double lowerBound, double upperBound)
         {
-            return Sql.GroupBy + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID +
+            return Sql.GroupBy + DBTables.Detections + "." + DetectionColumns.ImageID +
                 Sql.Having + Sql.Max +
-                Sql.OpenParenthesis + Constant.DBTables.Detections + "." + Constant.DetectionColumns.Conf + Sql.CloseParenthesis +
+                Sql.OpenParenthesis + DBTables.Detections + "." + DetectionColumns.Conf + Sql.CloseParenthesis +
                 Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
         }
 
@@ -439,9 +440,9 @@ namespace Timelapse
         /// <returns>GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) BETWEEN lowerBound AND upperBound</returns>
         public static string GroupByClassificationsIdHavingMaxClassificationsConf(double lowerBound, double upperBound)
         {
-            return Sql.GroupBy + Constant.DBTables.Classifications + "." + Constant.ClassificationColumns.ClassificationID +
+            return Sql.GroupBy + DBTables.Classifications + "." + ClassificationColumns.ClassificationID +
                 Sql.Having + Sql.Max +
-                Sql.OpenParenthesis + Constant.DBTables.Classifications + "." + Constant.DetectionColumns.Conf + Sql.CloseParenthesis +
+                Sql.OpenParenthesis + DBTables.Classifications + "." + DetectionColumns.Conf + Sql.CloseParenthesis +
                 Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
         }
 

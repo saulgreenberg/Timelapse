@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Images;
 using Timelapse.Util;
+using File = Timelapse.Constant.File;
 
 namespace Timelapse.Dialog
 {
@@ -50,50 +52,50 @@ namespace Timelapse.Dialog
             ThrowIf.IsNullArgument(imageCache, nameof(imageCache));
             ThrowIf.IsNullArgument(filesToDelete, nameof(filesToDelete));
 
-            this.InitializeComponent();
+            InitializeComponent();
 
             this.fileDatabase = fileDatabase;
             this.imageCache = imageCache;
             this.filesToDelete = filesToDelete;
-            this.backupDeletedFiles = backupdDeletedFiles;
+            backupDeletedFiles = backupdDeletedFiles;
 
             this.deleteImage = deleteImage;
             this.deleteData = deleteData;
             this.deleteCurrentImageOnly = deleteCurrentImageOnly;
 
             // Tracks whether any changes to the data or database are made
-            this.IsAnyDataUpdated = false;
+            IsAnyDataUpdated = false;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
             Mouse.OverrideCursor = Cursors.Wait;
 
             // Construct the interface for either a single deletion, or for multiple deletions
-            if (this.deleteCurrentImageOnly)
+            if (deleteCurrentImageOnly)
             {
-                this.DeleteCurrentImageOnly();
+                DeleteCurrentImageOnly();
             }
             else
             {
-                this.DeleteMultipleImages();
+                DeleteMultipleImages();
             }
 
             // Depending upon what is being deleted,
             // set the visibility and enablement of various controls
-            if (this.deleteData)
+            if (deleteData)
             {
                 // Set the UI to require a further confirmation step to delete the data, 
-                this.StartDoneButton.IsEnabled = false;
-                this.chkboxConfirm.Visibility = Visibility.Visible;
+                StartDoneButton.IsEnabled = false;
+                chkboxConfirm.Visibility = Visibility.Visible;
             }
             else
             {
-                this.StartDoneButton.IsEnabled = true;
-                this.chkboxConfirm.Visibility = Visibility.Collapsed;
+                StartDoneButton.IsEnabled = true;
+                chkboxConfirm.Visibility = Visibility.Collapsed;
             }
             Mouse.OverrideCursor = null;
         }
@@ -103,67 +105,67 @@ namespace Timelapse.Dialog
         private void DeleteCurrentImageOnly()
         {
             // The single file to delete
-            ImageRow imageRow = this.filesToDelete[0];
+            ImageRow imageRow = filesToDelete[0];
 
             // Show  the deleted file name and image in the interface
-            this.ShowSingleFileView();
-            this.maxPathLength = 70;
+            ShowSingleFileView();
+            maxPathLength = 70;
             string filePath = Path.Combine(imageRow.RelativePath, imageRow.File);
             if (string.IsNullOrEmpty(filePath) == false)
             {
-                filePath = filePath.Length <= this.maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - this.maxPathLength, this.maxPathLength);
+                filePath = filePath.Length <= maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - maxPathLength, maxPathLength);
             }
 
-            this.SingleImageViewer.Source = imageRow.LoadBitmap(this.fileDatabase.FolderPath, Constant.ImageValues.PreviewWidth480, out _);
-            this.SingleFilePanel.ToolTip = Path.Combine(imageRow.RelativePath, imageRow.File);
-            this.SingleImageViewer.ToolTip = Path.Combine(imageRow.RelativePath, imageRow.File);
-            this.SingleFileNameRun.Text = filePath;
+            SingleImageViewer.Source = imageRow.LoadBitmap(fileDatabase.FolderPath, ImageValues.PreviewWidth480, out _);
+            SingleFilePanel.ToolTip = Path.Combine(imageRow.RelativePath, imageRow.File);
+            SingleImageViewer.ToolTip = Path.Combine(imageRow.RelativePath, imageRow.File);
+            SingleFileNameRun.Text = filePath;
 
             // Populate the information pane
-            string imageOrVideo = this.filesToDelete[0].IsVideo ? "video" : "image";
+            string imageOrVideo = filesToDelete[0].IsVideo ? "video" : "image";
 
-            if (this.deleteImage)
+            if (deleteImage)
             {
-                this.Message.Title = $"Delete the current {imageOrVideo}";
-                this.Message.What = $"Deletes the current {imageOrVideo} if it exists";
-                this.Message.Result =
-                    $"\u2022 The deleted {imageOrVideo} will be backed up in a sub-folder named {Constant.File.DeletedFilesFolder}.{Environment.NewLine}";
-                this.Message.Hint = $"\u2022 Restore the deleted {imageOrVideo} by manually moving it ";
-                if (this.deleteImage && this.deleteData == false)
+                Message.Title = $"Delete the current {imageOrVideo}";
+                Message.What = $"Deletes the current {imageOrVideo} if it exists";
+                Message.Result =
+                    $"\u2022 The deleted {imageOrVideo} will be backed up in a sub-folder named {File.DeletedFilesFolder}.{Environment.NewLine}";
+                Message.Hint = $"\u2022 Restore the deleted {imageOrVideo} by manually moving it ";
+                if (deleteImage && deleteData == false)
                 {
                     // Case 1: Delete the current image, but not its data.
 
-                    this.Message.Title += " but not its data.";
-                    this.Message.What +=
+                    Message.Title += " but not its data.";
+                    Message.What +=
                         $"{Environment.NewLine}The data entered for the {imageOrVideo} IS NOT deleted.";
-                    this.Message.Result += String.Format("\u2022 A placeholder {0} will be shown when you try to view a deleted {0}.", imageOrVideo);
-                    this.Message.Hint += "back to its original location." + Environment.NewLine;
+                    Message.Result += String.Format("\u2022 A placeholder {0} will be shown when you try to view a deleted {0}.", imageOrVideo);
+                    Message.Hint += "back to its original location." + Environment.NewLine;
                 }
-                else if (this.deleteImage && this.deleteData)
+                else if (deleteImage && deleteData)
                 {
                     // Case 2: Delete the current image and its data
-                    this.Message.Title += " and its data";
-                    this.Message.What +=
+                    Message.Title += " and its data";
+                    Message.What +=
                         $"{Environment.NewLine}The data entered for the {imageOrVideo} IS deleted as well.";
-                    this.Message.Result +=
+                    Message.Result +=
                         $"\u2022 However, the data associated with that {imageOrVideo} will be permanently deleted.";
-                    this.Message.Hint += "to a new sub-folder." + Environment.NewLine + "  Then add that sub-folder back to the image set." + Environment.NewLine;
+                    Message.Hint += "to a new sub-folder." + Environment.NewLine + "  Then add that sub-folder back to the image set." + Environment.NewLine;
                 }
-                this.Message.Hint +=
-                    $"\u2022 See Options|Preferences to manage how files in {Constant.File.DeletedFilesFolder} are permanently deleted.";
+                Message.Hint +=
+                    $"\u2022 See Options|Preferences to manage how files in {File.DeletedFilesFolder} are permanently deleted.";
             }
             else
             {
                 // Case: Delete the data only, leaving the image intact
-                this.FileLabel.Text = "Affected file:";
-                this.ConfirmCheckBoxText.Text = "Click to confirm deletion of data for the selected file";
-                this.Message.Title = $"Delete only the current {imageOrVideo}'s data";
-                this.Message.What = String.Format("Deletes the data associated with the current {0}, but leaves the {0} intact", imageOrVideo);
-                this.Message.Result = $"\u2022 This data record will be removed.{Environment.NewLine}";
-                this.Message.Result +=
+                FileLabel.Text = "Affected file:";
+                ConfirmCheckBoxText.Text = "Click to confirm deletion of data for the selected file";
+                Message.Title = $"Delete only the current {imageOrVideo}'s data";
+                Message.What = String.Format("Deletes the data associated with the current {0}, but leaves the {0} intact", imageOrVideo);
+                Message.Result = $"\u2022 This data record will be removed.{Environment.NewLine}";
+                Message.Result +=
                     $"\u2022 The {imageOrVideo} is still intact, but it will not be displayed in Timelapse {Environment.NewLine}";
-                this.Message.Result += "   unless a duplicate record exists.";
-                this.Message.Hint = "Deleting only the data is useful for removing a previously-created duplicate record of a file.";
+                Message.Result += "   unless a duplicate record exists.";
+                Message.Hint = "Deleting only the data is useful for removing a previously-created duplicate record of a file.";
             }
         }
 
@@ -171,22 +173,22 @@ namespace Timelapse.Dialog
         private void DeleteMultipleImages()
         {
             int maxFilesToShow = 50000;
-            int numberOfImagesToDelete = this.filesToDelete.Count;
+            int numberOfImagesToDelete = filesToDelete.Count;
 
             // Load the files that are candidates for deletion as listbox items
-            this.ShowMultipleFilesView();
-            this.DeletedFilesListBox.Items.Clear();
-            this.maxPathLength = 100;
+            ShowMultipleFilesView();
+            DeletedFilesListBox.Items.Clear();
+            maxPathLength = 100;
 
-            if (this.filesToDelete.Count < maxFilesToShow)
+            if (filesToDelete.Count < maxFilesToShow)
             {
-                foreach (ImageRow imageProperties in this.filesToDelete)
+                foreach (ImageRow imageProperties in filesToDelete)
                 {
 
                     string filePath = Path.Combine(imageProperties.RelativePath, imageProperties.File);
                     if (string.IsNullOrEmpty(filePath) == false)
                     {
-                        filePath = filePath.Length <= this.maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - this.maxPathLength, this.maxPathLength);
+                        filePath = filePath.Length <= maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - maxPathLength, maxPathLength);
                     }
 
                     ListBoxItem lbi = new ListBoxItem
@@ -196,9 +198,9 @@ namespace Timelapse.Dialog
                         Content = filePath,
                         Tag = imageProperties
                     };
-                    lbi.MouseEnter += this.Lbi_MouseEnter;
-                    lbi.MouseLeave += this.Lbi_MouseLeave;
-                    this.DeletedFilesListBox.Items.Add(lbi);
+                    lbi.MouseEnter += Lbi_MouseEnter;
+                    lbi.MouseLeave += Lbi_MouseLeave;
+                    DeletedFilesListBox.Items.Add(lbi);
                 }
             }
             else
@@ -209,60 +211,60 @@ namespace Timelapse.Dialog
                     Height = 28,
                     Content = $"Items marked for deletion are not listed as there are a very large number of them ({numberOfImagesToDelete}).",
                 };
-                this.DeletedFilesListBox.FontStyle = FontStyles.Italic;
-                this.DeletedFilesListBox.FontWeight = FontWeights.Bold;
-                this.DeletedFilesListBox.Items.Add(lbi);
+                DeletedFilesListBox.FontStyle = FontStyles.Italic;
+                DeletedFilesListBox.FontWeight = FontWeights.Bold;
+                DeletedFilesListBox.Items.Add(lbi);
             }
 
             // Populate the information pane
-            if (this.deleteImage)
+            if (deleteImage)
             {
-                this.Message.Title = $"Delete {numberOfImagesToDelete} files(s) ";
-                this.Message.What =
+                Message.Title = $"Delete {numberOfImagesToDelete} files(s) ";
+                Message.What =
                     $"Delete {numberOfImagesToDelete} image and/or video(s) - if they exist - marked for deletion.";
-                this.Message.Result = string.Empty;
-                this.Message.Hint = "\u2022 Restore deleted files by manually moving them ";
-                this.Message.Result +=
-                    $"\u2022 The deleted file will be backed up in a sub-folder named {Constant.File.DeletedFilesFolder}.{Environment.NewLine}";
+                Message.Result = string.Empty;
+                Message.Hint = "\u2022 Restore deleted files by manually moving them ";
+                Message.Result +=
+                    $"\u2022 The deleted file will be backed up in a sub-folder named {File.DeletedFilesFolder}.{Environment.NewLine}";
                 if (deleteData == false)
                 {
                     // Case : Delete the images that have the delete flag set, but not their data
-                    this.Message.Title += "but not their data";
-                    this.Message.What += Environment.NewLine + "The data entered for them IS NOT deleted.";
-                    this.Message.Result += "\u2022 A placeholder image will be shown when you try to view a deleted file.";
-                    this.Message.Hint += "back to their original location." + Environment.NewLine;
+                    Message.Title += "but not their data";
+                    Message.What += Environment.NewLine + "The data entered for them IS NOT deleted.";
+                    Message.Result += "\u2022 A placeholder image will be shown when you try to view a deleted file.";
+                    Message.Hint += "back to their original location." + Environment.NewLine;
                 }
                 else // (deleteData == true)
                 {
                     // Case : Delete the images that have the delete flag set, and their data
-                    this.Message.Title += "and their data";
-                    this.Message.What += Environment.NewLine + "The data entered for them IS deleted as well.";
-                    this.Message.Result += "\u2022 However, the data associated with those files will be permanently deleted.";
-                    this.Message.Hint += "to a new sub-folder." + Environment.NewLine + "  Then add that sub-folder back to the image set." + Environment.NewLine;
+                    Message.Title += "and their data";
+                    Message.What += Environment.NewLine + "The data entered for them IS deleted as well.";
+                    Message.Result += "\u2022 However, the data associated with those files will be permanently deleted.";
+                    Message.Hint += "to a new sub-folder." + Environment.NewLine + "  Then add that sub-folder back to the image set." + Environment.NewLine;
                 }
-                if (numberOfImagesToDelete > Constant.ImageValues.LargeNumberOfDeletedImages)
+                if (numberOfImagesToDelete > ImageValues.LargeNumberOfDeletedImages)
                 {
-                    this.Message.Result +=
+                    Message.Result +=
                         $"{Environment.NewLine}\u2022 Deleting {numberOfImagesToDelete} files takes time. Please be patient.";
                 }
-                this.Message.Hint +=
-                    $"\u2022 See Options|Preferences to manage how files in {Constant.File.DeletedFilesFolder} are permanently deleted.";
+                Message.Hint +=
+                    $"\u2022 See Options|Preferences to manage how files in {File.DeletedFilesFolder} are permanently deleted.";
             }
             else
             {
                 // Case: Delete the data only, leaving the image intact
                 //this.FileLabel.Text = "Affected file:";
-                this.ConfirmCheckBoxText.Text =
+                ConfirmCheckBoxText.Text =
                     $"Click to confirm deletion of data for the {numberOfImagesToDelete} selected files";
-                this.Message.Title = $"Delete only the data for {numberOfImagesToDelete} files(s) ";
-                this.Message.What =
+                Message.Title = $"Delete only the data for {numberOfImagesToDelete} files(s) ";
+                Message.What =
                     $"Deletes the data associated with {numberOfImagesToDelete} file(s), but leaves the files intact";
-                this.Message.Result =
+                Message.Result =
                     $"\u2022 These {numberOfImagesToDelete} data records will be permanently removed.{Environment.NewLine}";
-                this.Message.Result +=
+                Message.Result +=
                     $"\u2022 The {numberOfImagesToDelete} file(s) are still intact, but will not be displayed in Timelapse {Environment.NewLine}";
-                this.Message.Result += "   unless a duplicate record exists.";
-                this.Message.Hint = "Deleting only the data  is useful for removing a previously-created duplicate record of a file.";
+                Message.Result += "   unless a duplicate record exists.";
+                Message.Hint = "Deleting only the data  is useful for removing a previously-created duplicate record of a file.";
             }
         }
         #endregion
@@ -286,7 +288,7 @@ namespace Timelapse.Dialog
                     {
                         isCancelled = true;
                         //  Since some file or its data may have been deleted, we want to set this to true in order to tell the calling method refresh everything.
-                        this.IsAnyDataUpdated = true;
+                        IsAnyDataUpdated = true;
                         return;
                         //return new Tuple<bool,int>(true, filesDeleted);
                     }
@@ -295,12 +297,12 @@ namespace Timelapse.Dialog
                     {
                         // We need to release the file handle to various images as otherwise we won't be able to move them
                         // Release the image cache for this ID, if its actually in the cache  
-                        this.imageCache.TryInvalidate(image.ID);
+                        imageCache.TryInvalidate(image.ID);
                         GC.Collect(); // See if this actually gets rid of the pointer to the image, as otherwise we get occassional exceptions
                                       // SAULXXX Note that we should likely pop up a dialog box that displays non-missing files that we can't (for whatever reason) delete
                                       // SAULXXX If we can't delete it, we may want to abort changing the various DeleteFlag 
                                       // SAULXXX A good way is to put an 'image.ImageFileExists' field in, and then do various tests on that.
-                        if (image.TryMoveFileToDeletedFilesFolder(this.fileDatabase.FolderPath, this.backupDeletedFiles))
+                        if (image.TryMoveFileToDeletedFilesFolder(fileDatabase.FolderPath, backupDeletedFiles))
                         {
                             // keep track of the number of files actually delted
                             filesDeleted++;
@@ -315,39 +317,39 @@ namespace Timelapse.Dialog
                     {
                         // as only the file was deleted, clear the delete flag
                         image.DeleteFlag = false;
-                        List<ColumnTuple> columnTuples = new List<ColumnTuple>()
+                        List<ColumnTuple> columnTuples = new List<ColumnTuple>
                         {
-                            new ColumnTuple(Constant.DatabaseColumn.DeleteFlag, Constant.BooleanValue.False),
+                            new ColumnTuple(DatabaseColumn.DeleteFlag, BooleanValue.False),
                         };
                         imagesToUpdate.Add(new ColumnTuplesWithWhere(columnTuples, image.ID));
                     }
                     fileIndex++;
-                    if (this.ReadyToRefresh())
+                    if (ReadyToRefresh())
                     {
                         int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
-                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                        Progress.Report(new ProgressBarArguments(percentDone,
                             $"Pass 1: Deleting {fileIndex} / {count} files", true, false));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);
                     }
                 }
-                this.Progress.Report(new ProgressBarArguments(100, $"Pass 2: Updating {count} files. Please wait...", false, true));
-                Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
+                Progress.Report(new ProgressBarArguments(100, $"Pass 2: Updating {count} files. Please wait...", false, true));
+                Thread.Sleep(ThrottleValues.RenderingBackoffTime);
 
                 if (deleteTheData)
                 {
                     // drop images
-                    this.fileDatabase.DeleteFilesAndMarkers(imageIDsToDropFromDatabase);
+                    fileDatabase.DeleteFilesAndMarkers(imageIDsToDropFromDatabase);
                 }
                 else
                 {
                     // update image properties
-                    this.fileDatabase.UpdateFiles(imagesToUpdate);
+                    fileDatabase.UpdateFiles(imagesToUpdate);
                 }
                 // A side effect of running this task is that the FileTable will be updated, which means that,
                 // at the very least, the calling function will need to run FilesSelectAndShow to either
                 // reload the FileTable with the updated data, or to reset the FileTable back to its original form
                 // if the operation was cancelled.
-                this.IsAnyDataUpdated = true;
+                IsAnyDataUpdated = true;
             }).ConfigureAwait(true);
 
             return new Tuple<bool, int>(isCancelled, filesDeleted);
@@ -363,9 +365,9 @@ namespace Timelapse.Dialog
                 return;
             }
             ImageRow ir = (ImageRow)lbi.Tag;
-            Image image = new Image()
+            Image image = new Image
             {
-                Source = ir.LoadBitmap(this.fileDatabase.FolderPath, Constant.ImageValues.PreviewWidth384, out _),
+                Source = ir.LoadBitmap(fileDatabase.FolderPath, ImageValues.PreviewWidth384, out _),
                 Height = 300,
                 HorizontalAlignment = HorizontalAlignment.Left
             };
@@ -387,83 +389,83 @@ namespace Timelapse.Dialog
         // Set the confirm checkbox, which enables the ok button if the data deletions are confirmed. 
         private void ConfirmBox_Checked(object sender, RoutedEventArgs e)
         {
-            this.StartDoneButton.IsEnabled = this.chkboxConfirm.IsChecked == true;
+            StartDoneButton.IsEnabled = chkboxConfirm.IsChecked == true;
         }
 
         // Cancel button selected
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
 
         // Ok button selected
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
             // ConfigureFormatForDateTimeCustom the UI's initial state
-            this.CancelButton.IsEnabled = false;
-            this.CancelButton.Visibility = Visibility.Hidden;
-            this.StartDoneButton.Content = "_Done";
-            this.StartDoneButton.Click -= this.StartButton_Click;
-            this.StartDoneButton.Click += this.DoneButton_Click;
-            this.StartDoneButton.IsEnabled = false;
-            this.BusyCancelIndicator.IsBusy = true;
-            this.WindowCloseButtonIsEnabled(false);
+            CancelButton.IsEnabled = false;
+            CancelButton.Visibility = Visibility.Hidden;
+            StartDoneButton.Content = "_Done";
+            StartDoneButton.Click -= StartButton_Click;
+            StartDoneButton.Click += DoneButton_Click;
+            StartDoneButton.IsEnabled = false;
+            BusyCancelIndicator.IsBusy = true;
+            WindowCloseButtonIsEnabled(false);
 
-            Tuple<bool, int> isCancelledAndDeletedImagesCount = await DoDeleteFilesAsync(this.filesToDelete, this.deleteImage, this.deleteData).ConfigureAwait(true);
+            Tuple<bool, int> isCancelledAndDeletedImagesCount = await DoDeleteFilesAsync(filesToDelete, deleteImage, deleteData).ConfigureAwait(true);
 
             // Hide the busy indicator and update the UI, e.g., to show how many files were deleted
-            this.BusyCancelIndicator.IsBusy = false;
-            this.StartDoneButton.IsEnabled = true;
-            this.WindowCloseButtonIsEnabled(true);
+            BusyCancelIndicator.IsBusy = false;
+            StartDoneButton.IsEnabled = true;
+            WindowCloseButtonIsEnabled(true);
 
-            if (this.deleteData && this.deleteImage == false)
+            if (deleteData && deleteImage == false)
             {
-                this.DoneMessagePanel.Content =
-                    $"Data deleted for {this.filesToDelete.Count} files.{Environment.NewLine}Otherwise, those files were left intact in their folders";
+                DoneMessagePanel.Content =
+                    $"Data deleted for {filesToDelete.Count} files.{Environment.NewLine}Otherwise, those files were left intact in their folders";
             }
             else if (isCancelledAndDeletedImagesCount.Item1 == false)
             {
-                this.DoneMessagePanel.Content = "Deleted ";
-                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files";
+                DoneMessagePanel.Content = "Deleted ";
+                DoneMessagePanel.Content += filesToDelete.Count == 1 ? filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files";
             }
             else
             {
-                this.DoneMessagePanel.Content = "Cancelled, but ";
-                this.DoneMessagePanel.Content += this.filesToDelete.Count == 1 ? this.filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files were already deleted." + Environment.NewLine;
-                this.DoneMessagePanel.Content += "Deleted files are available in your Deleted folder." + Environment.NewLine;
-                this.DoneMessagePanel.Content += "Data for these deleted images has not been changed." + Environment.NewLine;
+                DoneMessagePanel.Content = "Cancelled, but ";
+                DoneMessagePanel.Content += filesToDelete.Count == 1 ? filesToDelete[0].File : isCancelledAndDeletedImagesCount.Item2 + " files were already deleted." + Environment.NewLine;
+                DoneMessagePanel.Content += "Deleted files are available in your Deleted folder." + Environment.NewLine;
+                DoneMessagePanel.Content += "Data for these deleted images has not been changed." + Environment.NewLine;
             }
-            this.ShowDoneMessageView();
+            ShowDoneMessageView();
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
             // We return false if the database was not altered, i.e., if this was all a no-op
-            this.DialogResult = this.IsAnyDataUpdated;
+            DialogResult = IsAnyDataUpdated;
         }
         #endregion
 
         #region Helper methods to show/hide various UI panels
         private void ShowSingleFileView()
         {
-            this.SingleFilePanel.Visibility = Visibility.Visible;
-            this.MultipleFilePanel.Visibility = Visibility.Collapsed;
-            this.DoneMessagePanel.Visibility = Visibility.Collapsed;
+            SingleFilePanel.Visibility = Visibility.Visible;
+            MultipleFilePanel.Visibility = Visibility.Collapsed;
+            DoneMessagePanel.Visibility = Visibility.Collapsed;
         }
 
         private void ShowMultipleFilesView()
         {
-            this.SingleFilePanel.Visibility = Visibility.Collapsed;
-            this.MultipleFilePanel.Visibility = Visibility.Visible;
-            this.DoneMessagePanel.Visibility = Visibility.Collapsed;
+            SingleFilePanel.Visibility = Visibility.Collapsed;
+            MultipleFilePanel.Visibility = Visibility.Visible;
+            DoneMessagePanel.Visibility = Visibility.Collapsed;
         }
 
         private void ShowDoneMessageView()
         {
-            this.SingleFilePanel.Visibility = Visibility.Collapsed;
-            this.MultipleFilePanel.Visibility = Visibility.Collapsed;
-            this.DoneMessagePanel.Visibility = Visibility.Visible;
-            this.chkboxConfirm.Visibility = Visibility.Collapsed;
+            SingleFilePanel.Visibility = Visibility.Collapsed;
+            MultipleFilePanel.Visibility = Visibility.Collapsed;
+            DoneMessagePanel.Visibility = Visibility.Visible;
+            chkboxConfirm.Visibility = Visibility.Collapsed;
         }
         #endregion
     }

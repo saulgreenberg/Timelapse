@@ -7,6 +7,9 @@ namespace TimelapseTemplateEditor.Standards
 {
     public static class CamtrapDPStandard
     {
+        // Name of this standard
+        public static string Standard = Timelapse.Constant.Standards.CamtrapDPStandard;
+
         // The standard specification: a list of StandardsRow, common species (used by one row), and level aliases
         #region The Alias specification associated with each level
         public static Dictionary<int, string> Aliases = new Dictionary<int, string>
@@ -14,8 +17,6 @@ namespace TimelapseTemplateEditor.Standards
             {1, "DataPackage"},
             {2, "Deployments"},
         };
-
-        public static string Standard = Timelapse.Constant.Standards.CamtrapDPStandard;
         #endregion
 
         #region PracticeImageSet Folder Metadata as a Row List
@@ -122,7 +123,7 @@ namespace TimelapseTemplateEditor.Standards
                 Control.AlphaNumeric, 1, "timelapse_to_camtrapdp_dataset", "Package: name", CamtrapDPConstants.DataPackage.Name,
                 $"A short url-usable (and preferably human-readable) name of the package.{Environment.NewLine}" +
                 "• e.g., \"timelapse_to_camtrapdp_dataset\"",
-                null,false, true),
+                null,false),
 
             // Id - SAULXX - this will create a common GUID for all templates, which is not what we want.
             new StandardsRow(
@@ -137,14 +138,14 @@ namespace TimelapseTemplateEditor.Standards
                 $"{Timelapse.Util.DateTimeHandler.ToStringDatabaseDateTime(DateTime.Now)}", "Package: created*", CamtrapDPConstants.DataPackage.Created,
                 $"The datetime on which this was created.{Environment.NewLine}" +
                 "• e.g., \"2024-01-12 12:00:00\"",
-                null, false, true),
+                null, false),
 
             // Title
             new StandardsRow(
                 Control.MultiLine, 1, "", "Package: title", CamtrapDPConstants.DataPackage.Title,
                 $"A human readable title or one sentence description for this package{Environment.NewLine}" +
                 "• e.g., \"Timelapse to camtrapdp: a Timelapse dataset following the camtrapDP specifications.\"",
-                null, false, true),
+                null, false),
 
 
             // Description
@@ -154,7 +155,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"This also allows for simple plain text as plain text is itself valid markdown.{Environment.NewLine}" +
                 $"The first paragraph (up to the first double line break) should be usable as summary information for the package{Environment.NewLine}" +
                 "• e.g., \"Wolvering camera trap observations in Alberta, Canada. Part of an effort for tracking Wolverines.\"",
-                null, false, true ),
+                null, false),
 
             // Version
             new StandardsRow(
@@ -170,21 +171,21 @@ namespace TimelapseTemplateEditor.Standards
                 Control.Note, 1, "", "Package: image", CamtrapDPConstants.DataPackage.Image,
                 $"A URL or path to a representive image to use, for example, to show the package in a listing.{Environment.NewLine}" +
                 "• e.g., \"http://wolverine_project.org/images/wolverine.jpg\"",
-                null, false, true),
+                null, false),
 
             // Homepage
             new StandardsRow(
                 Control.Note, 1, "", "Package: home page", CamtrapDPConstants.DataPackage.Homepage,
                 $"A URL for the home page on the web that is related to this data package.{Environment.NewLine}" +
                 "• e.g., \"http://wolverine_project.org\"",
-                null, false, true),
+                null, false),
 
             // Keywords
             new StandardsRow(
                 Control.MultiLine, 1, "", "Package: keywords", CamtrapDPConstants.DataPackage.Keywords,
                 $"A comma-separated list of keywords to assist users searching for the package in catalogs.{Environment.NewLine}" +
                 "• e.g., \"wolverine, wildlife management, conservation, population monitoring\"",
-                null, false, true),
+                null, false),
             #endregion
 
             #region Project - a singleton object
@@ -192,37 +193,37 @@ namespace TimelapseTemplateEditor.Standards
             new StandardsRow(
                 Control.Note, 1, $"{Guid.NewGuid()}", "Project: Id", CamtrapDPConstants.DataPackage.Project.Id,
                 $"Unique identifier of the project.{Environment.NewLine}" +
-                $"• e.g., \"86cabc14-d475-4439-98a7-e7b590bed60e\"",
+                "• e.g., \"86cabc14-d475-4439-98a7-e7b590bed60e\"",
                 null, false, false),
 
             // Project - title
             new StandardsRow(
                 Control.Note, 1, "", "Project: title*", CamtrapDPConstants.DataPackage.Project.Title,
                 $"Title of the project.{Environment.NewLine}" +
-                $"• e.g., \"Management of Invasive Coypu and muskrAt in Europe\"",
-                null, false, true),
+                "• e.g., \"Management of Invasive Coypu and muskrAt in Europe\"",
+                null, false),
 
             
             // Project - acronym
             new StandardsRow(
                 Control.Note, 1, "", "Project: acronym", CamtrapDPConstants.DataPackage.Project.Acronym,
                 $"Acronym for the project, if any.{Environment.NewLine}" +
-                $"• e.g., \"MICA\"",
-                null, false, true),
+                "• e.g., \"MICA\"",
+                null, false),
 
             //Project - Description
             new StandardsRow(
                 Control.MultiLine, 1, "", "Project: description", CamtrapDPConstants.DataPackage.Project.Description,
                 $"Description of the project.{Environment.NewLine}" +
                 "• e.g., \"Invasive alien species such as the coypu and muskrat pose a major threat to biodiversity and cost millions of euros annually, etc.\"",
-                null, false, true),
+                null, false),
 
             //Project - Path
             new StandardsRow(
                 Control.MultiLine, 1, "", "Project: Path", CamtrapDPConstants.DataPackage.Project.Path,
                 $"Project website.{Environment.NewLine}" +
                 "• e.g., \"https://saul.cpsc.ucalgary.ca/timelapse/.\"",
-                null, false, true),
+                null, false),
 
             //Project - Sampling Design
             new StandardsRow(
@@ -231,7 +232,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"The values are based on Wearn & Glover-Kapfer (2017), pages 80-82{Environment.NewLine}" +
                 "• e.g., \"simpleRandom\"",
                 StandardsBase.CreateChoiceList(true, new List<string> { "simpleRandom", "systematicRandom", "clusteredRandom", "experimental", "targeted", "opportunistic"}),
-                    false, true),
+                    false),
 
             //Project - CaptureMethod
             new StandardsRow(
@@ -239,14 +240,14 @@ namespace TimelapseTemplateEditor.Standards
                 $"Method(s) used to capture the media files. {Environment.NewLine}" +
                 "• e.g., \"activityDetection\"",
                 StandardsBase.CreateChoiceList(true, new List<string> { "activityDetection", "timeLapse"}),
-                    false, true),
+                    false),
 
             //Project - Individual Animals
             new StandardsRow(
                 Control.Flag, 1, "", "Project: individual animals*", CamtrapDPConstants.DataPackage.Project.IndividualAnimals,
                 $"true if the project includes marked or recognizable individuals.{Environment.NewLine}" +
                 "• e.g., \"false\"",
-                null, false, true),
+                null, false),
 
             //Project - ObservationLevel
             new StandardsRow(
@@ -254,7 +255,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"Level at which observations are provided. {Environment.NewLine}" +
                 "• e.g., \"media\"",
                 StandardsBase.CreateChoiceList(true, new List<string> { "media", "event"}),
-                false, true),
+                false),
             #endregion
 
             // BibliographicCitation
@@ -264,8 +265,8 @@ namespace TimelapseTemplateEditor.Standards
                 $"• e.g., \"Desmet P, Neukermans A, Van der beeck D, Cartuyvels E (2022).{Environment.NewLine}" +
                 $"Sample from: MICA - Muskrat and coypu camera trap observations in Belgium, the Netherlands and Germany.{Environment.NewLine}" +
                 $"Version 1.0. Research Institute for Nature and Forest (INBO).{Environment.NewLine}" +
-                $"Dataset. https://camtrap-dp.tdwg.org/example/\"",
-                null, false, true),
+                "Dataset. https://camtrap-dp.tdwg.org/example/\"",
+                null, false),
 
             // CoordinatePrecision
             new StandardsRow(
@@ -274,7 +275,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"Especially relevant when coordinates have been rounded to protect sensitive species.{Environment.NewLine}" +
                 "• e.g., \"0.01\"",
                 null,
-                false, true),
+                false),
             
             // Spatial
             new StandardsRow(
@@ -282,9 +283,9 @@ namespace TimelapseTemplateEditor.Standards
                 $"Spatial coverage of the package, expressed as GeoJSON.{Environment.NewLine}" +
                 $"Timelapse will calculate this as a bounding box outlining your deployments' latitude/longitude coordinates,{Environment.NewLine}" +
                 $"or will let you copy GeoJSON as outputed by a mapping package.{Environment.NewLine}" +
-                $"For example, Timelapse provides the option to go to https://Geojson.io , outline the spatial coverage, and then copy the GeoJson output.",
+                "For example, Timelapse provides the option to go to https://Geojson.io , outline the spatial coverage, and then copy the GeoJson output.",
                 null,
-                false, true),
+                false),
 
             #region Temporal OBJECT - a singleton
             // Temporal start*
@@ -292,14 +293,14 @@ namespace TimelapseTemplateEditor.Standards
                 Control.Date_, 1, "", "Temporal start*", CamtrapDPConstants.DataPackage.Temporal.Start,
                 $"Start date of the first deployment.{Environment.NewLine}" +
                 "• e.g., \"2024-01-12\"",
-                null, false, true),
+                null, false),
 
             // Temporal end**
             new StandardsRow(
                 Control.Date_, 1, "", "Temporal end*", CamtrapDPConstants.DataPackage.Temporal.End,
                 $"End date of the last (completed) deployment.{Environment.NewLine}" +
                 "• e.g., \"2024-01-12\"",
-                null, false, true),
+                null, false),
             #endregion
 
             // Contributors - a Json array that holds a list of contributor objects
@@ -308,7 +309,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"a Json array that holds a list of contributors.{Environment.NewLine}" +
                 $"Note: Contributors describe the people or organizations who contributed to this Data Package.{Environment.NewLine}" +
                 "• e.g., \"Joe Bloggs\"",
-                null, false, true),
+                null, false),
 
             // Sources - a Json array that holds a list of contributor objects
             new StandardsRow(
@@ -316,32 +317,32 @@ namespace TimelapseTemplateEditor.Standards
                 $"a Json array that holds a list of data sources to this Data Package.{Environment.NewLine}" +
                 //$"Note: Contributors describe the people or organizations who contributed to this Data Package.{Environment.NewLine}" +
                 "• e.g., \"World Bank and OECD\"",
-                null, false, true),
+                null, false),
 
             // Licenses - a json array that holds a list of license objects
             new StandardsRow(
                 Control.MultiLine, 1, "", "Licenses", CamtrapDPConstants.DataPackage.Licenses,
                 $"Ideally two licenses, one for the data and another for the media provided in this package. {Environment.NewLine}",
-                null, false, true),
+                null, false),
 
 
             // Taxonomic - a json array that holds a list of Taxonomic objects
             new StandardsRow(
                 Control.MultiLine, 1, "[]", "Taxonomic definitions*", CamtrapDPConstants.DataPackage.Taxonomic,
                 $"A list of taxonomic definitions that apply to the data and / or media provided in this package. {Environment.NewLine}",
-                null, false, true),
+                null, false),
 
             // RelatedIdentifiers - a json array that holds a list of RelatedIdentifiers objects
             new StandardsRow(
                 Control.MultiLine, 1, "[]", "Related identifiers definitions", CamtrapDPConstants.DataPackage.RelatedIdentifiers,
                 $"A list of related identifier definitions  related to the data and / or media provided in this package. {Environment.NewLine}",
-                null, false, true),
+                null, false),
 
             // References - a json array that holds a list of references (each a string)
             new StandardsRow(
                 Control.MultiLine, 1, "[]", "References", CamtrapDPConstants.DataPackage.References,
                 $"A list of references (preferably including a DOI) related to the data and / or media provided in this package. {Environment.NewLine}",
-                null, false, true),
+                null, false),
             #endregion
 
             #region Level 2: Deployment
@@ -560,14 +561,14 @@ namespace TimelapseTemplateEditor.Standards
                 $"false if the media file should not be publicly accessible (e.g. to protect the privacy of people captured in the media).{Environment.NewLine}" +
                 $"Required.{Environment.NewLine}" +
                 "• e.g., \"true\"",
-                null, false, true),
+                null, false),
 
             new StandardsRow(Control.Note, 0, "", "File name", CamtrapDPConstants.Media.FileName,
                 "Name of the media file. " +
                 $"If provided, one should be able to sort media files chronologically within a deployment on timestamp (first) and fileName (second).{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"IMG0001.jpg\"",
-                null,false, false),
+                null,false),
 
             new StandardsRow(Control.FixedChoice, 0, "", "File mediatype*", CamtrapDPConstants.Media.FileMediatype,
                 $"Mediatype of the media file. Expressed as an IANA Media Type.{Environment.NewLine}" +
@@ -579,7 +580,7 @@ namespace TimelapseTemplateEditor.Standards
                 "EXIF data of the media file." +
                 $"Formatted as a valid JSON object. Optional.{Environment.NewLine}" +
                 "• e.g., \"{\"EXIF\":{\"ISO\":200,\"Make\":\"RECONYX\"}}\"",
-                null, false, true),
+                null, false),
 
             new StandardsRow(Control.Flag, 0, "false", "Favorite", CamtrapDPConstants.Media.Favorite,
                 $"true if the media file is deemed of interest (e.g. an exemplar image of an individual).{Environment.NewLine}" +
@@ -783,6 +784,7 @@ namespace TimelapseTemplateEditor.Standards
         };
 
         #endregion
+
         #endregion
     }
 }

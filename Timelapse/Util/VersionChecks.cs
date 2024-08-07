@@ -3,6 +3,7 @@ using System.Net;
 using System.Reflection;
 using System.Windows;
 using System.Xml;
+using Timelapse.Constant;
 using Timelapse.Dialog;
 
 namespace Timelapse.Util
@@ -48,13 +49,13 @@ namespace Timelapse.Util
             {
                 // Set a timeout for the web request
                 // If its timed out, it will go to the catch
-                WebRequest request = WebRequest.Create(this.latestVersionAddress.AbsoluteUri);
+                WebRequest request = WebRequest.Create(latestVersionAddress.AbsoluteUri);
                 request.Timeout = 5000;
                 using (WebResponse response = request.GetResponse())
                 {
                     // This pattern follows recommended correction to CA3075: Insecure DTD Processing
                     // provide the XmlReader with the URL of our xml document  
-                    XmlReaderSettings settings = new XmlReaderSettings() { XmlResolver = null };
+                    XmlReaderSettings settings = new XmlReaderSettings { XmlResolver = null };
                     //reader = XmlReader.Create(this.latestVersionAddress.AbsoluteUri, settings);
                     // ReSharper disable once AssignNullToNotNullAttribute
                     reader = XmlReader.Create(response.GetResponseStream(), settings);
@@ -64,7 +65,7 @@ namespace Timelapse.Util
                     // When we parse a  text node, we refer to elementName to check what was the node name  
                     string elementName = string.Empty;
                     // Check if the xml starts with a <timelapse> Element  
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == Constant.VersionXml.Timelapse)
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == VersionXml.Timelapse)
                     {
                         // Read the various elements and their associated contents
                         while (reader.Read())
@@ -82,11 +83,11 @@ namespace Timelapse.Util
                                     // we check what the name of the node was  
                                     switch (elementName)
                                     {
-                                        case Constant.VersionXml.Version:
+                                        case VersionXml.Version:
                                             // we keep the version info in xxx.xxx.xxx.xxx format as the Version class does the  parsing for us  
                                             latestVersionNumber = new Version(reader.Value);
                                             break;
-                                        case Constant.VersionXml.Url:
+                                        case VersionXml.Url:
                                             url = reader.Value;
                                             break;
                                     }
@@ -119,12 +120,12 @@ namespace Timelapse.Util
             }
 
             // get the running version  
-            Version currentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber();
+            Version currentVersionNumber = GetTimelapseCurrentVersionNumber();
 
             // compare the versions  
             if (currentVersionNumber < latestVersionNumber)
             {
-                NewVersionNotification newVersionNotification = new NewVersionNotification(this.window, this.applicationName, currentVersionNumber, latestVersionNumber);
+                NewVersionNotification newVersionNotification = new NewVersionNotification(window, applicationName, currentVersionNumber, latestVersionNumber);
                 if (newVersionNotification.ShowDialog() == true)
                 {
                     // navigate the default web browser to our app homepage (the url comes from the xml content)  
@@ -133,7 +134,7 @@ namespace Timelapse.Util
             }
             else if (showNoUpdatesMessage)
             {
-                Dialogs.NoUpdatesAvailableDialog(Application.Current.MainWindow, this.applicationName, currentVersionNumber);
+                Dialogs.NoUpdatesAvailableDialog(Application.Current.MainWindow, applicationName, currentVersionNumber);
             }
             return true;
         }

@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -16,30 +17,30 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public Properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+        public override Point TopLeft => ContentControl.PointToScreen(new Point(0, 0));
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets  the content of the note</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public bool ContentChanged { get; set; }
 
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -50,8 +51,8 @@ namespace Timelapse.ControlsDataEntry
             base(control, styleProvider, ControlContentStyleEnum.NoteTextBox, ControlLabelStyleEnum.DefaultLabel)
         {
             // Now configure the various elements
-            this.ContentControl.Autocompletions = autocompletions;
-            this.ContentChanged = false;
+            ContentControl.Autocompletions = autocompletions;
+            ContentChanged = false;
         }
         #endregion
 
@@ -62,16 +63,16 @@ namespace Timelapse.ControlsDataEntry
             // Used to signify the indeterminate state in no or multiple selections in the overview.
             if (value == null)
             {
-                this.ContentControl.Text = Constant.Unicode.Ellipsis;
-                this.ContentControl.ToolTip = "Edit to change the " + this.Label + " for all selected images";
+                ContentControl.Text = Unicode.Ellipsis;
+                ContentControl.ToolTip = "Edit to change the " + Label + " for all selected images";
                 return;
             }
 
             // Otherwise, the note will be set to the provided value 
             // If the value to be empty, we just make it the same as the tooltip so something meaningful is displayed..
-            this.ContentChanged = this.ContentControl.Text != value;
-            this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? this.LabelControl.ToolTip : value;
+            ContentChanged = ContentControl.Text != value;
+            ContentControl.Text = value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? LabelControl.ToolTip : value;
         }
         #endregion
 
@@ -79,18 +80,18 @@ namespace Timelapse.ControlsDataEntry
         // Flash the content area of the control
         public override void FlashContentControl()
         {
-            ScrollViewer contentHost = (ScrollViewer)this.ContentControl.Template.FindName("PART_ContentHost", this.ContentControl);
+            ScrollViewer contentHost = (ScrollViewer)ContentControl.Template.FindName("PART_ContentHost", ContentControl);
             if (contentHost != null)
             {
                 contentHost.Background = new SolidColorBrush(Colors.White);
-                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimationFastRed());
+                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimationFastRed());
             }
         }
 
         public override void ShowPreviewControlValue(string value)
         {
             // Create the popup overlay
-            if (this.PopupPreview == null)
+            if (PopupPreview == null)
             {
                 // No adjustment is needed as the popup is directly over the entire note control
                 double horizontalOffset = 0;
@@ -98,18 +99,18 @@ namespace Timelapse.ControlsDataEntry
                 // Padding is used to align the text so it begins at the same spot as the control's text
                 Thickness padding = new Thickness(7, 5.5, 0, 0);
 
-                this.PopupPreview = this.CreatePopupPreview(this.ContentControl, padding, this.ContentControl.Width, horizontalOffset);
+                PopupPreview = CreatePopupPreview(ContentControl, padding, ContentControl.Width, horizontalOffset);
             }
             // Show the popup
-            this.ShowPopupPreview(value);
+            ShowPopupPreview(value);
         }
         public override void HidePreviewControlValue()
         {
-            this.HidePopupPreview();
+            HidePopupPreview();
         }
         public override void FlashPreviewControlValue()
         {
-            this.FlashPopupPreview();
+            FlashPopupPreview();
         }
         #endregion
     }

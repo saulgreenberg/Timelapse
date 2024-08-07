@@ -15,11 +15,11 @@ namespace Timelapse.Controls
         private string autoToolTipContent = string.Empty;
         public string AutoToolTipContent
         {
-            get => this.autoToolTipContent;
+            get => autoToolTipContent;
             set
             {
-                this.autoToolTipContent = value;
-                this.FormatAutoToolTipContent();
+                autoToolTipContent = value;
+                FormatAutoToolTipContent();
             }
         }
 
@@ -31,17 +31,17 @@ namespace Timelapse.Controls
         {
             get
             {
-                if (this.autoToolTip == null)
+                if (autoToolTip == null)
                 {
                     FieldInfo field = typeof(Slider).GetField(
                         "_autoToolTip",
                         BindingFlags.NonPublic | BindingFlags.Instance);
                     if (field != null) 
                     { 
-                        this.autoToolTip = field.GetValue(this) as ToolTip;
+                        autoToolTip = field.GetValue(this) as ToolTip;
                     }
                 }
-                return this.autoToolTip;
+                return autoToolTip;
             }
         }
         #endregion
@@ -49,9 +49,9 @@ namespace Timelapse.Controls
         #region Private  methods
         private void FormatAutoToolTipContent()
         {
-            if (this.AutoToolTipContent != null && this.AutoToolTip != null)
+            if (AutoToolTipContent != null && AutoToolTip != null)
             {
-                this.AutoToolTip.Content = this.AutoToolTipContent;
+                AutoToolTip.Content = AutoToolTipContent;
             }
         }
         #endregion

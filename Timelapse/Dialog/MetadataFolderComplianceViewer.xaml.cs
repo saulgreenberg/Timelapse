@@ -24,35 +24,35 @@ namespace Timelapse.Dialog
         public MetadataFolderComplianceViewer(TimelapseWindow owner, FileDatabase fileDatabase, List<string> addedRelativePathList, DataTableBackedList<MetadataInfoRow> metadataInfo):base(owner)
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.FileDatabase = fileDatabase;
-            this.MetadataInfo = metadataInfo;
-            this.AddedRelativePathList = addedRelativePathList;
+            Owner = owner;
+            FileDatabase = fileDatabase;
+            MetadataInfo = metadataInfo;
+            AddedRelativePathList = addedRelativePathList;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            TextBlock tb1 = GenerateHierarchicalList(this.MetadataInfo);
+            TextBlock tb1 = GenerateHierarchicalList(MetadataInfo);
             Grid.SetRow(tb1, 2);
             Grid.SetColumn(tb1, 0);
-            this.ExpectedFolderLevelsGrid.Children.Add(tb1);
+            ExpectedFolderLevelsGrid.Children.Add(tb1);
 
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Set up a progress handler for long-running atomic operation
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
             Mouse.OverrideCursor = Cursors.Wait;
-            this.BusyCancelIndicator.Reset(true);
+            BusyCancelIndicator.Reset(true);
 
-            bool result = await this.MetadataComplianceControl.AsyncInitialize(this, this.FileDatabase, this.AddedRelativePathList, this.ProgressHandler, GlobalReferences.CancelTokenSource);
+            bool result = await MetadataComplianceControl.AsyncInitialize(this, FileDatabase, AddedRelativePathList, ProgressHandler, GlobalReferences.CancelTokenSource);
 
-            this.BusyCancelIndicator.Reset(false);
+            BusyCancelIndicator.Reset(false);
             Mouse.OverrideCursor = null;
             if (result == false)
             {
                 // Abort this, likely due to a user's progress cancel event
-                this.DialogResult = false;
+                DialogResult = false;
             }
         }
         #endregion
@@ -130,12 +130,12 @@ namespace Timelapse.Dialog
         }
         private void ExpandAll_Click(object sender, RoutedEventArgs e)
         {
-            this.MetadataComplianceControl.ExpandTreeView(true);
+            MetadataComplianceControl.ExpandTreeView(true);
         }
 
         private void ContractAll_Click(object sender, RoutedEventArgs e)
         {
-            this.MetadataComplianceControl.ExpandTreeView(false);
+            MetadataComplianceControl.ExpandTreeView(false);
         }
         #endregion
 

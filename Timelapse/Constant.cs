@@ -113,11 +113,11 @@ namespace Timelapse.Constant
         public const string Time_ = "Time_"; // A custom DateTime showing only the time
         // A list of all control types
         public static string[] ControlTypes = {
-            Constant.Control.Note, Constant.Control.MultiLine, Constant.Control.AlphaNumeric,
-            Constant.Control.Counter, Constant.Control.IntegerAny, Constant.Control.IntegerPositive, Constant.Control.DecimalAny, Constant.Control.DecimalPositive,
-            Constant.Control.FixedChoice, Constant.Control.MultiChoice,
-            Constant.Control.DateTime_, Constant.Control.Date_, Constant.Control.Time_,
-            Constant.Control.Flag
+            Note, MultiLine, AlphaNumeric,
+            Counter, IntegerAny, IntegerPositive, DecimalAny, DecimalPositive,
+            FixedChoice, MultiChoice,
+            DateTime_, Date_, Time_,
+            Flag
         };
 
         // default data labels
@@ -134,7 +134,7 @@ namespace Timelapse.Constant
         // a minty green, same as Copyable field
         public static readonly SolidColorBrush QuickPasteFieldHighlightBrush = Colours.MintyGreen; 
 
-        public static readonly ReadOnlyCollection<Type> KeyboardInputTypes = new List<Type>()
+        public static readonly ReadOnlyCollection<Type> KeyboardInputTypes = new List<Type>
         {
                 typeof(AutocompleteTextBox), // note controls
                 typeof(Calendar),          // date time control
@@ -150,7 +150,7 @@ namespace Timelapse.Constant
                 typeof(WatermarkTextBox)   // date time or counter control
         }.AsReadOnly();
 
-        public static readonly ReadOnlyCollection<string> StandardTypes = new List<string>()
+        public static readonly ReadOnlyCollection<string> StandardTypes = new List<string>
         {
                 DatabaseColumn.DateTime,
                 DatabaseColumn.DeleteFlag,
@@ -454,12 +454,12 @@ namespace Timelapse.Constant
         public const int PreviewWidth128 = 128;
         public const int PreviewWidth32 = 32;
 
-        public static readonly Lazy<BitmapImage> Corrupt = ImageValues.Load("Corrupted.jpg");
-        public static readonly Lazy<BitmapImage> FileNoLongerAvailable = ImageValues.Load("FileNoLongerAvailable.jpg");
-        public static readonly Lazy<BitmapImage> NoFilesAvailable = ImageValues.Load("NoFilesAvailable.jpg");
-        public static readonly Lazy<BitmapImage> LoadAnImageSet = ImageValues.Load("LoadAnImageSet.jpg");
-        public static readonly Lazy<BitmapImage> BlankVideo = ImageValues.Load("BlankVideo.jpg");
-        public static readonly Lazy<BitmapImage> FilePathTooLong = ImageValues.Load("FilePathTooLong.jpg");
+        public static readonly Lazy<BitmapImage> Corrupt = Load("Corrupted.jpg");
+        public static readonly Lazy<BitmapImage> FileNoLongerAvailable = Load("FileNoLongerAvailable.jpg");
+        public static readonly Lazy<BitmapImage> NoFilesAvailable = Load("NoFilesAvailable.jpg");
+        public static readonly Lazy<BitmapImage> LoadAnImageSet = Load("LoadAnImageSet.jpg");
+        public static readonly Lazy<BitmapImage> BlankVideo = Load("BlankVideo.jpg");
+        public static readonly Lazy<BitmapImage> FilePathTooLong = Load("FilePathTooLong.jpg");
 
         private static Lazy<BitmapImage> Load(string fileName)
         {
@@ -651,6 +651,7 @@ namespace Timelapse.Constant
 
     public static class Standards
     {
+        public const string AlbertaMetadataStandard = "AlbertaMetadataStandard";
         public const string CamtrapDPStandard = "CamtrapDP";
         public const string CamtrapDPStandardExportFolder = "ExportedCamtrapDP";
     }
@@ -699,7 +700,7 @@ namespace Timelapse.Constant
         // DateTimes as stored in the database. The 2nd form is so it can read in from the DB both the legacy (UTC) format and current simpler format 
         public const string DateTimeDatabaseLegacyUTCFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";  // legacy DatabaseFormat
         public const string DateTimeDatabaseFormat = "yyyy-MM-dd HH:mm:ss";
-        public static readonly string[] DateTimeDatabaseFormats = { Constant.Time.DateTimeDatabaseFormat, Constant.Time.DateTimeDatabaseLegacyUTCFormat };
+        public static readonly string[] DateTimeDatabaseFormats = { DateTimeDatabaseFormat, DateTimeDatabaseLegacyUTCFormat };
         public const string DateTimeDisplayFormat = "dd-MMM-yyyy HH:mm:ss";
         public const string DateTimeCSVWithTSeparator = "yyyy-MM-dd'T'HH:mm:ss";
         public const string DateTimeCSVWithoutTSeparator = "yyyy-MM-dd' 'HH:mm:ss";
@@ -761,7 +762,7 @@ namespace Timelapse.Constant
         public static readonly Uri LatestVersionBaseAddress = new Uri("http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/timelapse_version.xml");
         public static readonly string LatestVersionFileNamePrefix = "timelapse_version_";
         public static readonly string LatestVersionFileNameSuffix = ".rtf";
-        public static readonly Uri LatestVersionFileNameXML = new Uri(VersionUpdates.LatestVersionBaseAddress, "timelapse_version.xml");
+        public static readonly Uri LatestVersionFileNameXML = new Uri(LatestVersionBaseAddress, "timelapse_version.xml");
     }
 
     public static class VersionXml
@@ -826,7 +827,7 @@ namespace Timelapse.Constant
         public const float DefaultTypicalDetectionThresholdIfUnknown = 0.8f;        // Appropriate for Megadetector v4
         public const float DefaultConservativeDetectionThresholdIfUnknown = 0.3f;   // Appropriate for Megadetector v4
         public const float DefaultTypicalClassificationThresholdIfUnknown = 0.75f;  // Appropriate for Megadetector v4
-        public const float BoundingBoxDisplayThresholdDefault = Constant.RecognizerValues.Undefined;   // Appropriate for Megadetector v4
+        public const float BoundingBoxDisplayThresholdDefault = Undefined;   // Appropriate for Megadetector v4
         public const string MDVersionUnknown = "vUnknown";
         public const float Undefined = -1F;
 

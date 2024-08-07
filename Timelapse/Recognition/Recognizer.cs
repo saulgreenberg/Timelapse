@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Timelapse.Constant;
+
 #pragma warning disable IDE1006 // Naming Style - we are using lower case names to match the json structure, we  mute the warning
 namespace Timelapse.Recognition
 {
@@ -32,9 +34,9 @@ namespace Timelapse.Recognition
         // ReSharper disable once UnusedMember.Global
         public void SetDetectionCategoryDefaults()
         {
-            this.detection_categories = new Dictionary<string, string>
+            detection_categories = new Dictionary<string, string>
             {
-                { Constant.RecognizerValues.NoDetectionCategory, Constant.RecognizerValues.NoDetectionLabel },
+                { RecognizerValues.NoDetectionCategory, RecognizerValues.NoDetectionLabel },
                 { "2", "person" },
                 { "4", "vehicle" }
             };
@@ -44,9 +46,9 @@ namespace Timelapse.Recognition
         // ReSharper disable once UnusedMember.Global
         public void SetDetectionClassificationDefaults()
         {
-            this.classification_categories = new Dictionary<string, string>
+            classification_categories = new Dictionary<string, string>
             {
-                { Constant.RecognizerValues.NoDetectionCategory, Constant.RecognizerValues.NoDetectionLabel },
+                { RecognizerValues.NoDetectionCategory, RecognizerValues.NoDetectionLabel },
             };
         }
         #endregion
@@ -55,7 +57,7 @@ namespace Timelapse.Recognition
         // Dispose implemented to follow pattern described in CA1816
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -63,10 +65,10 @@ namespace Timelapse.Recognition
         {
             if (disposing)
             {
-                this.info = null;
-                this.detection_categories = null;
-                this.classification_categories = null;
-                this.images = null;
+                info = null;
+                detection_categories = null;
+                classification_categories = null;
+                images = null;
             }
         }
         #endregion
@@ -94,13 +96,13 @@ namespace Timelapse.Recognition
         // Defaults are just used as needed
         public void SetInfoDefaults()
         {
-            this.detector = Constant.RecognizerValues.DetectorUnknown;
-            this.detection_completion_time = Constant.RecognizerValues.DetectionCompletionTimeUnknown;
-            this.classifier = Constant.RecognizerValues.ClassifierUnknown;
-            this.classification_completion_time = Constant.RecognizerValues.ClassificationCompletionTimeUnknown;
-            this.format_version = Constant.RecognizerValues.FormatVersionUnknown;
-            this.detector_metadata = new detector_metadata();
-            this.classifier_metadata = new classifier_metadata();
+            detector = RecognizerValues.DetectorUnknown;
+            detection_completion_time = RecognizerValues.DetectionCompletionTimeUnknown;
+            classifier = RecognizerValues.ClassifierUnknown;
+            classification_completion_time = RecognizerValues.ClassificationCompletionTimeUnknown;
+            format_version = RecognizerValues.FormatVersionUnknown;
+            detector_metadata = new detector_metadata();
+            classifier_metadata = new classifier_metadata();
         }
         #endregion
     }
@@ -110,18 +112,18 @@ namespace Timelapse.Recognition
         // if its null, load it with some defaults
         // The megadetector_version is a string that provides detector version in the form md_v*
         // for example md_v5 is megadetector version 5
-        public string megadetector_version { get; set; } = Constant.RecognizerValues.MDVersionUnknown;
+        public string megadetector_version { get; set; } = RecognizerValues.MDVersionUnknown;
 
         // typical_detection_threshold describes the typical bound of the maximum detection confidence
         // that normally produces a mostly correct result. For example, if it is .8, then the 
         // confidence range of .8 - 1 is a reasonable starting point for looking for mostly correct
         // detections
-        public float? typical_detection_threshold { get; set; } = Constant.RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
+        public float? typical_detection_threshold { get; set; } = RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
 
         // conservative_detection_threshold describes the lower bound of the maximum detection confidence
         // where results below that are likely mis-detections. For example, if it is .4, then anything less
         // than .4 is likely empty. Thus 'Empty' could be consider from 0 - .4
-        public float? conservative_detection_threshold { get; set; } = Constant.RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
+        public float? conservative_detection_threshold { get; set; } = RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown;
     }
 
     public class classifier_metadata
@@ -129,7 +131,7 @@ namespace Timelapse.Recognition
         // typical_classification_threshold describes the typical bound of the classification probability
         // that normally produces a mostly correct result. For example, if it is .75, then the 
         // a classification probability of .75 or higher is likely correct
-        public float? typical_classification_threshold { get; set; } = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+        public float? typical_classification_threshold { get; set; } = RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
     }
 
     /// <summary>

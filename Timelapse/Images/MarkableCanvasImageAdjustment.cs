@@ -4,12 +4,14 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
 using Timelapse.Util;
+using File = System.IO.File;
 
 namespace Timelapse.Images
 {
@@ -52,8 +54,8 @@ namespace Timelapse.Images
         private void InitializeImageAdjustment()
         {
             // When started, ensures that the final image processing parameters are applied to the image
-            this.timerImageProcessingUpdate.Interval = TimeSpan.FromSeconds(0.1);
-            this.timerImageProcessingUpdate.Tick += this.TimerImageProcessingUpdate_Tick;
+            timerImageProcessingUpdate.Interval = TimeSpan.FromSeconds(0.1);
+            timerImageProcessingUpdate.Tick += TimerImageProcessingUpdate_Tick;
         }
 
         // Receive an event containing new image processing parameters.
@@ -71,7 +73,7 @@ namespace Timelapse.Images
             {
                 // The file cannot be opened or is not displayable. 
                 // Signal change in image state, which essentially says there is no displayable image to adjust (consumed by ImageAdjuster)
-                this.OnImageStateChanged(new ImageStateEventArgs(false)); //  Signal change in image state (consumed by ImageAdjuster)
+                OnImageStateChanged(new ImageStateEventArgs(false)); //  Signal change in image state (consumed by ImageAdjuster)
                 return;
             }
 
@@ -88,18 +90,18 @@ namespace Timelapse.Images
             }
 
             // Process the image based on the current image processing arguments. 
-            if (e.ForceUpdate == false && (e.Contrast == this.lastContrast && e.Brightness == this.lastBrightness && e.DetectEdges == this.lastDetectEdges && e.Sharpen == this.lastSharpen && e.UseGamma == this.lastUseGamma && Math.Abs(e.GammaValue - this.lastGammaValue) < .0001))
+            if (e.ForceUpdate == false && (e.Contrast == lastContrast && e.Brightness == lastBrightness && e.DetectEdges == lastDetectEdges && e.Sharpen == lastSharpen && e.UseGamma == lastUseGamma && Math.Abs(e.GammaValue - lastGammaValue) < .0001))
             {
                 // If there is no change from the last time we processed an image, abort as it would not make any difference to what the user sees
                 return;
             }
-            this.contrast = e.Contrast;
-            this.brightness = e.Brightness;
-            this.detectEdges = e.DetectEdges;
-            this.sharpen = e.Sharpen;
-            this.useGamma = e.UseGamma;
-            this.gammaValue = e.GammaValue;
-            this.timerImageProcessingUpdate.Start();
+            contrast = e.Contrast;
+            brightness = e.Brightness;
+            detectEdges = e.DetectEdges;
+            sharpen = e.Sharpen;
+            useGamma = e.UseGamma;
+            gammaValue = e.GammaValue;
+            timerImageProcessingUpdate.Start();
             await UpdateAndProcessImage().ConfigureAwait(true);
         }
 
@@ -107,23 +109,23 @@ namespace Timelapse.Images
         // will try to continue the processing the image with the latest image processing parameters (if any) 
         private async void TimerImageProcessingUpdate_Tick(object sender, EventArgs e)
         {
-            if (this.Processing)
+            if (Processing)
             {
                 return;
             }
-            if (this.contrast != this.lastContrast || this.brightness != this.lastBrightness || this.detectEdges != this.lastDetectEdges || this.sharpen != this.lastSharpen || this.lastUseGamma != this.useGamma || Math.Abs(this.lastGammaValue - this.gammaValue) > .0001)
+            if (contrast != lastContrast || brightness != lastBrightness || detectEdges != lastDetectEdges || sharpen != lastSharpen || lastUseGamma != useGamma || Math.Abs(lastGammaValue - gammaValue) > .0001)
             {
                 // Update the image as at least one parameter has changed (which will affect the image's appearance)
-                await this.UpdateAndProcessImage().ConfigureAwait(true);
+                await UpdateAndProcessImage().ConfigureAwait(true);
             }
-            this.timerImageProcessingUpdate.Stop();
+            timerImageProcessingUpdate.Stop();
         }
 
         // Update the image according to the image processing parameters.
         private async Task UpdateAndProcessImage()
         {
             // If its processing the image, try again later (via the time),
-            if (this.Processing)
+            if (Processing)
             {
                 return;
             }
@@ -134,8 +136,8 @@ namespace Timelapse.Images
                 {
                     // If we cannot get a valid file, there is no image to manipulate. 
                     // So abort and signal a change in image state that says there is no displayable image to adjust (consumed by ImageAdjuster)
-                    this.OnImageStateChanged(new ImageStateEventArgs(false));
-                    this.Processing = false;
+                    OnImageStateChanged(new ImageStateEventArgs(false));
+                    Processing = false;
                     return;
                 }
 
@@ -144,20 +146,20 @@ namespace Timelapse.Images
                 BitmapUtilities.MetadataExtractorGetOrientation(path, out int angle, out _, out RotateFlipType rotateFlip);
 
                 // Set the state to Processing is used to indicate that other attempts to process the image should be aborted util this is done.
-                this.Processing = true;
+                Processing = true;
                 using (MemoryStream imageStream = new MemoryStream(File.ReadAllBytes(path)))
                 {
                     // Remember the currently selected image processing states, so we can compare them later for changes
-                    this.lastBrightness = this.brightness;
-                    this.lastContrast = this.contrast;
-                    this.lastSharpen = this.sharpen;
-                    this.lastDetectEdges = this.detectEdges;
-                    this.lastUseGamma = this.useGamma;
-                    this.lastGammaValue = this.gammaValue;
-                    BitmapFrame bf = await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue, angle, rotateFlip).ConfigureAwait(true);
+                    lastBrightness = brightness;
+                    lastContrast = contrast;
+                    lastSharpen = sharpen;
+                    lastDetectEdges = detectEdges;
+                    lastUseGamma = useGamma;
+                    lastGammaValue = gammaValue;
+                    BitmapFrame bf = await ImageProcess.StreamToImageProcessedBitmap(imageStream, brightness, contrast, sharpen, detectEdges, useGamma, gammaValue, angle, rotateFlip).ConfigureAwait(true);
                     if (bf != null)
                     {
-                        this.ImageToDisplay.Source = bf;
+                        ImageToDisplay.Source = bf;
                         // In an earlier version, I was I was invoking StreamToImageProcessedBitmap twice, but am not sure why. So I commented it out but left it here just in case there was a reason for this.
                         // await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue).ConfigureAwait(true);
                     }
@@ -167,9 +169,9 @@ namespace Timelapse.Images
             {
                 // We failed on this image. To avoid this happening again,
                 // Signal change in image state, which essentially says there is no adjustable image (consumed by ImageAdjuster)
-                this.OnImageStateChanged(new ImageStateEventArgs(false));
+                OnImageStateChanged(new ImageStateEventArgs(false));
             }
-            this.Processing = false;
+            Processing = false;
         }
         #endregion
 
@@ -178,10 +180,10 @@ namespace Timelapse.Images
         // Typically used when the image adjustment window is opened for the first time, as the markable canvas needs to signal its state to it.
         public void GenerateImageStateChangeEventToReflectCurrentStatus()
         {
-            if (this.ThumbnailGrid.IsGridActive)
+            if (ThumbnailGrid.IsGridActive)
             {
                 // In the overview
-                this.GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuser)
+                GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuser)
                 return;
             }
             ImageCache imageCache = GlobalReferences.MainWindow?.DataHandler?.ImageCache;
@@ -190,19 +192,19 @@ namespace Timelapse.Images
                 if (imageCache.Current?.IsVideo == true)
                 {
                     // Its a video
-                    this.GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuser)
+                    GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuser)
                     return;
                 }
                 // Its a primary image, but we need to consider whether we are in either the differencing state or displaying a placeholder image
-                bool isImageView = imageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered && this.ImageToDisplay.Source != Constant.ImageValues.Corrupt.Value && this.ImageToDisplay.Source != Constant.ImageValues.FileNoLongerAvailable.Value;
-                this.GenerateImageStateChangeEvent(isImageView); //  Signal change in image state (consumed by ImageAdjuser)
+                bool isImageView = imageCache.CurrentDifferenceState == ImageDifferenceEnum.Unaltered && ImageToDisplay.Source != ImageValues.Corrupt.Value && ImageToDisplay.Source != ImageValues.FileNoLongerAvailable.Value;
+                GenerateImageStateChangeEvent(isImageView); //  Signal change in image state (consumed by ImageAdjuser)
             }
         }
 
         // Generate an event indicating the image state. To be consumed by the Image Adjuster to adjust its own state (e.g., disabled, reset, etc).
         private void GenerateImageStateChangeEvent(bool isImageView)
         {
-            this.OnImageStateChanged(new ImageStateEventArgs(isImageView)); //  Signal change in image state (consumed by ImageAdjuster, but only if its visible)
+            OnImageStateChanged(new ImageStateEventArgs(isImageView)); //  Signal change in image state (consumed by ImageAdjuster, but only if its visible)
         }
 
         protected virtual void OnImageStateChanged(ImageStateEventArgs e)

@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
@@ -66,16 +67,16 @@ namespace Timelapse.ControlsMetadata
 
             // populate properties from database definition of control
             // this.Content and Tooltip can't be set, however, as the caller hasn't instantiated the content control yet
-            this.DataLabel = control.DataLabel;
+            DataLabel = control.DataLabel;
 
             // Create the stack panel
-            this.Container = new StackPanel();
-            Style style = styleProvider.FindResource(Constant.ControlStyle.StackPanelContainerStyle) as Style;
-            this.Container.Style = style;
+            Container = new StackPanel();
+            Style style = styleProvider.FindResource(ControlStyle.StackPanelContainerStyle) as Style;
+            Container.Style = style;
 
             // use the containers's tag to point back to this so event handlers can access the DataEntryControl
             // this is needed by callbacks such as DataEntryHandler.Container_PreviewMouseRightButtonDown() and TimelapseWindow.CounterControl_MouseLeave()
-            this.Container.Tag = this;
+            Container.Tag = this;
         }
         #endregion
 
@@ -98,27 +99,27 @@ namespace Timelapse.ControlsMetadata
         public TContent ContentControl { get; }
 
         /// <summary>Gets the control label's value</summary>
-        public string Label => (string)this.LabelControl.Content;
+        public string Label => (string)LabelControl.Content;
 
         public TLabel LabelControl { get; }
 
         /// <summary>Gets or sets the width of the content control</summary>
         public int Width
         {
-            get => (int)this.ContentControl.Width;
-            set => this.ContentControl.Width = value;
+            get => (int)ContentControl.Width;
+            set => ContentControl.Width = value;
         }
 
         // Sets or gets whether this control is enabled or disabled</summary>
         public bool IsEnabled
         {
-            get => this.Container.IsEnabled;
+            get => Container.IsEnabled;
             set
             {
-                this.ContentControl.IsEnabled = value;
-                this.LabelControl.IsEnabled = value;
-                this.Container.IsEnabled = value;
-                this.ContentControl.Foreground = value ? Brushes.Black : Brushes.DimGray;
+                ContentControl.IsEnabled = value;
+                LabelControl.IsEnabled = value;
+                Container.IsEnabled = value;
+                ContentControl.Foreground = value ? Brushes.Black : Brushes.DimGray;
             }
         }
         #endregion
@@ -131,24 +132,24 @@ namespace Timelapse.ControlsMetadata
             ThrowIf.IsNullArgument(control, nameof(control));
             ThrowIf.IsNullArgument(styleProvider, nameof(styleProvider));
             
-            this.Tooltip = tooltip;
-            this.ContentControl = new TContent()
+            Tooltip = tooltip;
+            ContentControl = new TContent
             {
                 IsTabStop = true
             };
             if (contentStyleName.HasValue)
             {
-                this.ContentControl.Style = (Style)styleProvider.FindResource(contentStyleName.Value.ToString());
+                ContentControl.Style = (Style)styleProvider.FindResource(contentStyleName.Value.ToString());
             }
             // this.ContentReadOnly = false;
-            this.ContentControl.IsEnabled = true;
+            ContentControl.IsEnabled = true;
 
             // use the content's tag to point back to this so event handlers can access the NetadataDataEntryControl as well as just ContentControl
             // the data update callback for each control type in TimelapseWindow, such as NoteControl_TextChanged(), relies on this
-            this.ContentControl.Tag = this;
+            ContentControl.Tag = this;
 
             // Create the label (which is an actual label)
-            this.LabelControl = new TLabel()
+            LabelControl = new TLabel
             {
                 Content = control.Label,
                 Style = (Style)styleProvider.FindResource(labelStyleName.ToString()),
@@ -158,10 +159,10 @@ namespace Timelapse.ControlsMetadata
             };
 
             // add the label and content to the stack panel
-            this.Container.Children.Add(this.LabelControl);
-            this.Container.Children.Add(this.ContentControl);
-            this.Container.PreviewKeyDown += this.Container_PreviewKeyDown;
-            this.LabelControl.MouseDown += LabelControl_MouseDown;
+            Container.Children.Add(LabelControl);
+            Container.Children.Add(ContentControl);
+            Container.PreviewKeyDown += Container_PreviewKeyDown;
+            LabelControl.MouseDown += LabelControl_MouseDown;
         }
         #endregion
 
@@ -172,9 +173,9 @@ namespace Timelapse.ControlsMetadata
         {
             // We are only interested in interpretting the Shift/Arrow key for the following controls
             // The DataEntryChoice and DataEntryFlags do their own previewKeyDown processing to acheive a similar effect
-            if (this.ContentControl is DateTimePicker ||
-                this.ContentControl is IntegerUpDown ||
-                this.ContentControl is AutocompleteTextBox)
+            if (ContentControl is DateTimePicker ||
+                ContentControl is IntegerUpDown ||
+                ContentControl is AutocompleteTextBox)
             {
                 // Use the SHIFT right/left pageUp/PageDownkey to go to the next/previous image for datetimepicker
                 // The right/left arrow keys normally navigate through text characters when the text is enabled.
@@ -184,7 +185,7 @@ namespace Timelapse.ControlsMetadata
                 // - the SHIFT key is held down when its not a read only note
                 // Note that redirecting the event to the main window, while prefered, won't work
                 // as the main window ignores the arrow keys if the focus is set to a control.
-                if ((this.ContentReadOnly || Keyboard.Modifiers == ModifierKeys.Shift) && (keyEvent.Key == Key.Right || keyEvent.Key == Key.Left || keyEvent.Key == Key.PageUp || keyEvent.Key == Key.PageDown))
+                if ((ContentReadOnly || Keyboard.Modifiers == ModifierKeys.Shift) && (keyEvent.Key == Key.Right || keyEvent.Key == Key.Left || keyEvent.Key == Key.PageUp || keyEvent.Key == Key.PageDown))
                 {
                     keyEvent.Handled = true;
                     GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
@@ -197,14 +198,14 @@ namespace Timelapse.ControlsMetadata
             // request the focus manager figure out how to assign focus within the edit control as not all controls are focusable at their top level
             // This is not reliable at small focus scopes, possibly due to interaction with TimelapseWindow's focus management, but seems reasonably
             // well behaved at application scope.
-            FocusManager.SetFocusedElement(focusScope, this.ContentControl);
-            return this.ContentControl;
+            FocusManager.SetFocusedElement(focusScope, ContentControl);
+            return ContentControl;
         }
 
         // If we click on the label, the content control becomes the focus
         private void LabelControl_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            this.ContentControl.Focus();
+            ContentControl.Focus();
             e.Handled = true;
         }
         #endregion
@@ -213,23 +214,23 @@ namespace Timelapse.ControlsMetadata
         // Flash the content area of the control
         public void FlashContentControl()
         {
-            ScrollViewer contentHost = (ScrollViewer)this.ContentControl.Template.FindName("PART_ContentHost", this.ContentControl);
+            ScrollViewer contentHost = (ScrollViewer)ContentControl.Template.FindName("PART_ContentHost", ContentControl);
             if (contentHost != null)
             {
                 contentHost.Background = new SolidColorBrush(Colors.White);
-                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimation());
+                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimation());
             }
         }
 
         // This is a standard color animation scheme that can be accessed by the other controls
         protected ColorAnimation GetColorAnimation()
         {
-            return new ColorAnimation()
+            return new ColorAnimation
             {
                 From = Colors.LightCoral,
                 AutoReverse = false,
                 Duration = new Duration(TimeSpan.FromSeconds(.1)),
-                EasingFunction = new ExponentialEase()
+                EasingFunction = new ExponentialEase
                 {
                     EasingMode = EasingMode.EaseIn
                 },

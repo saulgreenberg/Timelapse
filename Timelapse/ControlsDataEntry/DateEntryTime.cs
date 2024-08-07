@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using Timelapse.Constant;
 using Timelapse.ControlsDataCommon;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Control = Timelapse.Constant.Control;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -15,29 +18,29 @@ namespace Timelapse.ControlsDataEntry
     {
         #region Public Properties
         // Return the TopLeft corner of the content control as a point
-        public override Point TopLeft => this.ContentControl.PointToScreen(new Point(0, 0));
+        public override Point TopLeft => ContentControl.PointToScreen(new Point(0, 0));
 
         public override UIElement GetContentControl =>
             // We return the textbox part of the content control, as otherwise focus does not work properly when we try to set it on the content control
-            (UIElement)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
+            (UIElement)ContentControl.Template.FindName("PART_TextBox", ContentControl);
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public override bool ContentReadOnly
         {
-            get => this.ContentControl.IsReadOnly;
+            get => ContentControl.IsReadOnly;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsReadOnly = true;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsReadOnly = true;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsReadOnly = value;
+                    ContentControl.IsReadOnly = value;
                 }
             }
         }
@@ -65,9 +68,9 @@ namespace Timelapse.ControlsDataEntry
             base(control, styleProvider, ControlContentStyleEnum.TimeBox, ControlLabelStyleEnum.DefaultLabel)
         {
             // configure the various elements
-            CreateControls.Configure(this.ContentControl, defaultValue);
-            this.ContentControl.GotKeyboardFocus += this.ContentControl_GotKeyboardFocus;
-            this.ContentControl.LostKeyboardFocus += this.ContentControl_LostKeyboardFocus;
+            CreateControls.Configure(ContentControl, defaultValue);
+            ContentControl.GotKeyboardFocus += ContentControl_GotKeyboardFocus;
+            ContentControl.LostKeyboardFocus += ContentControl_LostKeyboardFocus;
             //this.ContentControl.PreviewGotKeyboardFocus += ContentControl_PreviewGotKeyboardFocus;
             //this.ContentControl.PreviewLostKeyboardFocus += ContentControl_PreviewLostKeyboardFocus;
         }
@@ -92,17 +95,17 @@ namespace Timelapse.ControlsDataEntry
         #region Event Handlers
 
         // Highlight the border whenever the control gets the keyboard focus
-        private void ContentControl_GotKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+        private void ContentControl_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            this.ContentControl.BorderThickness = new Thickness(Constant.Control.BorderThicknessHighlight);
-            this.ContentControl.BorderBrush = Constant.Control.BorderColorHighlight;
+            ContentControl.BorderThickness = new Thickness(Control.BorderThicknessHighlight);
+            ContentControl.BorderBrush = Control.BorderColorHighlight;
 
         }
 
-        private void ContentControl_LostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+        private void ContentControl_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            this.ContentControl.BorderThickness = new Thickness(Constant.Control.BorderThicknessNormal);
-            this.ContentControl.BorderBrush = Constant.Control.BorderColorNormal;
+            ContentControl.BorderThickness = new Thickness(Control.BorderThicknessNormal);
+            ContentControl.BorderBrush = Control.BorderColorNormal;
 
         }
         #endregion
@@ -111,25 +114,25 @@ namespace Timelapse.ControlsDataEntry
         // This works only for the full DateTime format i.e., it can be used by DateTimeCustom only
         public override void SetContentAndTooltip(string value)
         {
-            if (this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl) is WatermarkTextBox textBox)
+            if (ContentControl.Template.FindName("PART_TextBox", ContentControl) is WatermarkTextBox textBox)
             {
                 if (value == null)
                 {
-                    textBox.Text = Constant.Unicode.Ellipsis;
+                    textBox.Text = Unicode.Ellipsis;
                 }
                 else
                 {
                     textBox.Text = DateTimeHandler.TryParseDatabaseTime(value, out DateTime time)
                         ? DateTimeHandler.ToStringTime(time)
                         : value;
-                    this.ContentControl.Text = textBox.Text;
+                    ContentControl.Text = textBox.Text;
                 }
             }
             else
             {
-                this.ContentControl.Text = value;
+                ContentControl.Text = value;
             }
-            this.ContentControl.ToolTip = value ?? "Edit to change the " + this.Label + " for the selected image";
+            ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for the selected image";
         }
         #endregion
 
@@ -137,43 +140,43 @@ namespace Timelapse.ControlsDataEntry
         // Flash the content area of the control
         public override void FlashContentControl()
         {
-            TextBox contentHost = (TextBox)this.ContentControl.Template.FindName("PART_TextBox", this.ContentControl);
+            TextBox contentHost = (TextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl);
             if (contentHost != null)
             {
                 contentHost.Background = new SolidColorBrush(Colors.White);
-                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, this.GetColorAnimationFastRed());
+                contentHost.Background.BeginAnimation(SolidColorBrush.ColorProperty, GetColorAnimationFastRed());
             }
         }
 
         public override void ShowPreviewControlValue(string value)
         {
             // Create the popup overlay
-            if (this.PopupPreview == null)
+            if (PopupPreview == null)
             {
                 // We want to expose the up/down controls, so subtract its width and move the horizontal offset over
                 double integerUpDownWidth = 16;
-                double width = this.ContentControl.Width - integerUpDownWidth;
+                double width = ContentControl.Width - integerUpDownWidth;
                 double horizontalOffset = -integerUpDownWidth / 2;
 
                 // Padding is used to align the text so it begins at the same spot as the control's text
                 Thickness padding = new Thickness(7, 5.5, 0, 0);
 
-                this.PopupPreview = this.CreatePopupPreview(this.ContentControl, padding, width, horizontalOffset);
+                PopupPreview = CreatePopupPreview(ContentControl, padding, width, horizontalOffset);
             }
             // Show the popup
-            this.ShowPopupPreview(value);
+            ShowPopupPreview(value);
         }
         public override void HidePreviewControlValue()
         {
-            if (this.PopupPreview != null)
+            if (PopupPreview != null)
             {
-                this.HidePopupPreview();
+                HidePopupPreview();
             }
         }
 
         public override void FlashPreviewControlValue()
         {
-            this.FlashPopupPreview();
+            FlashPopupPreview();
         }
         #endregion
     }

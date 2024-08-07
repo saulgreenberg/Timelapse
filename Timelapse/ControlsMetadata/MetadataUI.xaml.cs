@@ -24,14 +24,14 @@ namespace Timelapse.ControlsMetadata
                 if (null == relativePathToCurrentImage || relativePathToCurrentImage != value)
                 {
                     relativePathToCurrentImage = value;
-                    MetadataUI.SetPanelsRelativePathToCurrentFolder(this.TabControl.Items, value);
+                    SetPanelsRelativePathToCurrentFolder(TabControl.Items, value);
                 }
             }
         }
 
         public bool IsActive
         {
-            set => this.IsEnabled = value;
+            set => IsEnabled = value;
         }
 
         #endregion
@@ -51,33 +51,33 @@ namespace Timelapse.ControlsMetadata
         public void InitalizeFolderMetadataTabs()
         {
             // clear any existing metadata tabs (except the instructions)
-            MetadataUI.ClearMetadataTabsExceptInstructions(this.TabControl);
+            ClearMetadataTabsExceptInstructions(TabControl);
 
             if (null == FileDatabase?.FileTable)
             {
                 // No image set is open
-                this.NoteNoMetadataTemplate.Visibility = Visibility.Collapsed;
-                this.NoteNoImageSetOpen.Visibility = Visibility.Visible;
+                NoteNoMetadataTemplate.Visibility = Visibility.Collapsed;
+                NoteNoImageSetOpen.Visibility = Visibility.Visible;
                 return;
             }
 
             if (null == FileDatabase?.MetadataControlsByLevel || FileDatabase.MetadataControlsByLevel.Count == 0)
             {
                 // No metadata controls defined, just abort.
-                this.NoteNoMetadataTemplate.Visibility = Visibility.Visible;
-                this.NoteNoImageSetOpen.Visibility = Visibility.Collapsed;
+                NoteNoMetadataTemplate.Visibility = Visibility.Visible;
+                NoteNoImageSetOpen.Visibility = Visibility.Collapsed;
                 return;
             }
             // Good to go... Hide the warning as we no longer need it
-            this.NoteNoMetadataTemplate.Visibility = Visibility.Collapsed;
-            this.NoteNoImageSetOpen.Visibility = Visibility.Collapsed;
+            NoteNoMetadataTemplate.Visibility = Visibility.Collapsed;
+            NoteNoImageSetOpen.Visibility = Visibility.Collapsed;
 
             int i = 1;
             // Create a tab for each level
             foreach (MetadataInfoRow row in GlobalReferences.MainWindow.DataHandler.FileDatabase.MetadataInfo)
             {
                 // Set the fonts and color for the header. Panels that are not defined in the template show their headers in gray and italicized.
-                bool levelPresent = this.FileDatabase.MetadataTablesIsLevelPresent(i);
+                bool levelPresent = FileDatabase.MetadataTablesIsLevelPresent(i);
                 
                 FontStyle fontStyle = levelPresent 
                 ? FontStyles.Normal
@@ -89,26 +89,26 @@ namespace Timelapse.ControlsMetadata
 
                 TabItem tabItem = new TabItem
                 {
-                    Header = new TextBlock()
+                    Header = new TextBlock
                     {
                         Padding = new Thickness(5),
-                        Text = MetadataUI.CreateTemporaryAliasIfNeeded(row.Level, row.Alias),
+                        Text = CreateTemporaryAliasIfNeeded(row.Level, row.Alias),
                         FontStyle = fontStyle,
                         Foreground = fontColor
                     },
                     IsTabStop = false,
                 };
 
-                this.TabControl.Items.Insert(i++, tabItem);
+                TabControl.Items.Insert(i++, tabItem);
 
                 // Add a MetadataDataEntryPanel to each tab
                 MetadataDataEntryPanel folderMetadataDataEntryPanel = new MetadataDataEntryPanel(row.Level, tabItem);
                 tabItem.Content = folderMetadataDataEntryPanel;
             }
-            if (this.TabControl.Items.Count > 1)
+            if (TabControl.Items.Count > 1)
             {
                 // Set the initial tab to the first level tab, if one exists
-                this.TabControl.SelectedIndex = 1;
+                TabControl.SelectedIndex = 1;
             }
         }
         #endregion
@@ -117,7 +117,7 @@ namespace Timelapse.ControlsMetadata
         // Clear any existing metadata tabs (except the instructions, which should always be the first tab)
         public void SetEnableState(bool isEnabled)
         {
-            this.TabControl.IsEnabled = isEnabled;
+            TabControl.IsEnabled = isEnabled;
         }
         #endregion
 

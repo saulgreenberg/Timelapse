@@ -27,7 +27,7 @@ namespace Timelapse.DataStructures
             get
             {
                 List<string> tagList = new List<string>();
-                foreach (KeyValuePair<string, string> kvp in this.SelectedImageMetadataDataLabels)
+                foreach (KeyValuePair<string, string> kvp in SelectedImageMetadataDataLabels)
                 {
                     tagList.Add(kvp.Key);
                 }

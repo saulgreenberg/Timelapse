@@ -4,8 +4,10 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -15,6 +17,7 @@ using Timelapse.Images;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit.Core.Input;
 using Xceed.Wpf.Toolkit.Zoombox;
+using MarkableCanvas = Timelapse.Images.MarkableCanvas;
 
 namespace Timelapse.Controls
 {
@@ -45,12 +48,12 @@ namespace Timelapse.Controls
         public EpisodePopup(MarkableCanvas markableCanvas, FileDatabase fileDatabase, double imageHeight)
         {
             this.markableCanvas = markableCanvas;
-            this.FileDatabase = fileDatabase;
-            this.ImageHeight = imageHeight;
+            FileDatabase = fileDatabase;
+            ImageHeight = imageHeight;
 
-            this.Placement = PlacementMode.Bottom;
-            this.PlacementTarget = markableCanvas;
-            this.IsOpen = false;
+            Placement = PlacementMode.Bottom;
+            PlacementTarget = markableCanvas;
+            IsOpen = false;
         }
         #endregion
 
@@ -67,9 +70,9 @@ namespace Timelapse.Controls
             if (isVisible == false || currentImageRow == null || FileDatabase == null)
             {
                 // Hide the popup if asked or if basic data isn't available, including deleting the children
-                this.IsOpen = false;
-                this.Child = null;
-                this.InspectionPopup.IsOpen = false;
+                IsOpen = false;
+                Child = null;
+                InspectionPopup.IsOpen = false;
                 return;
             }
 
@@ -78,16 +81,16 @@ namespace Timelapse.Controls
             {
                 Orientation = Orientation.Horizontal
             };
-            this.Child = sp;
+            Child = sp;
 
 
             double width = 0;  // Used to calculate the placement offset of the popup relative to the placement target
 
             // Add a visual marker to show the position of the label in the image list
-            Label label = EpisodePopup.CreateLabel("^", this.ImageHeight);
+            Label label = CreateLabel("^", ImageHeight);
             label.VerticalAlignment = VerticalAlignment.Top;
             width += label.Width;
-            double height = this.ImageHeight;
+            double height = ImageHeight;
             sp.Children.Add(label);
 
             int margin = 2;
@@ -104,7 +107,7 @@ namespace Timelapse.Controls
             string supperDateTime = DateTimeHandler.ToStringDatabaseDateTime(upperDateTime);
 
             // Get a table of files (sorted by datetime) with that relative path which falls between the lower and upper date range
-            DataTable dt = this.FileDatabase.GetIDandDateWithRelativePathAndBetweenDates(relativePath, slowerDateTime, supperDateTime);
+            DataTable dt = FileDatabase.GetIDandDateWithRelativePathAndBetweenDates(relativePath, slowerDateTime, supperDateTime);
 
             // Find the current image in that table by its ID
             int rowWithCurrentImageRowID = -1;
@@ -139,13 +142,13 @@ namespace Timelapse.Controls
                 if (goBackwardsRow >= 0)
                 {
                     // Add a popup image to the left of the caret
-                    using (fileTable = this.FileDatabase.SelectFileInDataTableById(dt.Rows[goBackwardsRow][0].ToString()))
+                    using (fileTable = FileDatabase.SelectFileInDataTableById(dt.Rows[goBackwardsRow][0].ToString()))
                     {
                         if (fileTable.Any())
                         {
                             if ((lastBackwardsDateTime - fileTable[0].DateTime).Duration() <= timeThreshold)
                             {
-                                Image image = EpisodePopup.CreateImage(fileTable[0], margin, this.ImageHeight);
+                                Image image = CreateImage(fileTable[0], margin, ImageHeight);
                                 width += image.Source.Width;
                                 height = Math.Max(height, image.Source.Height);
 
@@ -172,13 +175,13 @@ namespace Timelapse.Controls
                 // Now try to add a popup image to the right if we still have some more  images left to display
                 if (goForwardsRow < availableRows && imagesLeftToDisplay > 0)
                 {
-                    using (fileTable = this.FileDatabase.SelectFileInDataTableById(dt.Rows[goForwardsRow][0].ToString()))
+                    using (fileTable = FileDatabase.SelectFileInDataTableById(dt.Rows[goForwardsRow][0].ToString()))
                     {
                         if (fileTable.Any())
                         {
                             if ((lastForwardsDateTime - fileTable[0].DateTime).Duration() <= timeThreshold)
                             {
-                                Image image = EpisodePopup.CreateImage(fileTable[0], margin, this.ImageHeight);
+                                Image image = CreateImage(fileTable[0], margin, ImageHeight);
                                 width += image.Source.Width;
                                 height = Math.Max(height, image.Source.Height);
 
@@ -203,9 +206,9 @@ namespace Timelapse.Controls
 
             label.Height = Math.Max(label.Height, height); // So it extends to the top of the popup
             // Position and open the popup so it appears horizontallhy centered just above the cursor
-            this.HorizontalOffset = this.markableCanvas.ActualWidth / 2.0 - width / 2.0;
-            this.VerticalOffset = -height - 2 * margin;
-            this.IsOpen = true;
+            HorizontalOffset = markableCanvas.ActualWidth / 2.0 - width / 2.0;
+            VerticalOffset = -height - 2 * margin;
+            IsOpen = true;
 
             // Cleanup
             dt.Dispose();
@@ -243,14 +246,14 @@ namespace Timelapse.Controls
             // Need to scale the image to the correct height
             if (isCorruptOrMissing)
             {
-                if (image.Height <= 0 || Constant.ImageValues.FileNoLongerAvailable.Value.Height <= 0)
+                if (image.Height <= 0 || ImageValues.FileNoLongerAvailable.Value.Height <= 0)
                 {
                     image.Source = null;
                 }
                 else
                 {
-                    double scale = imageHeight / Constant.ImageValues.FileNoLongerAvailable.Value.Height;
-                    image.Source = new TransformedBitmap(Constant.ImageValues.FileNoLongerAvailable.Value, new ScaleTransform(scale, scale));
+                    double scale = imageHeight / ImageValues.FileNoLongerAvailable.Value.Height;
+                    image.Source = new TransformedBitmap(ImageValues.FileNoLongerAvailable.Value, new ScaleTransform(scale, scale));
                 }
                 image.Tag = null;
             }
@@ -267,19 +270,19 @@ namespace Timelapse.Controls
         }
 
         // Create a new larger zoomable popup so that the user can inspect the image details
-        private void Canvas_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             int height = 480;
             if (sender is Canvas canvas && canvas.Tag != null)
             {
-                Image image = EpisodePopup.CreateImage((ImageRow)canvas.Tag, 0, height);
+                Image image = CreateImage((ImageRow)canvas.Tag, 0, height);
                 Canvas clone = CreateCanvasWithBoundingBoxesAndImage(image, height, 0, ((ImageRow)canvas.Tag).ID);
                 Zoombox zoombox = CreateZoombox();
                 zoombox.Content = clone;
 
-                this.InspectionPopup.Child = zoombox;
-                this.InspectionPopup.Placement = PlacementMode.MousePoint;
-                this.InspectionPopup.IsOpen = true;
+                InspectionPopup.Child = zoombox;
+                InspectionPopup.Placement = PlacementMode.MousePoint;
+                InspectionPopup.IsOpen = true;
             }
         }
 
@@ -287,15 +290,15 @@ namespace Timelapse.Controls
         {
             Zoombox zoombox = new Zoombox
             {
-                DragModifiers = new KeyModifierCollection()
+                DragModifiers = new KeyModifierCollection
                 {
                     KeyModifier.None
                 },
-                RelativeZoomModifiers = new KeyModifierCollection()
+                RelativeZoomModifiers = new KeyModifierCollection
                 {
                     KeyModifier.None
                 },
-                ZoomModifiers = new KeyModifierCollection()
+                ZoomModifiers = new KeyModifierCollection
                 {
                     KeyModifier.None
                 },

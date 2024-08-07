@@ -2,6 +2,7 @@
 using System.Runtime.ExceptionServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.Extensions
@@ -24,13 +25,13 @@ namespace Timelapse.Extensions
             ThrowIf.IsNullArgument(previous, nameof(previous));
             ThrowIf.IsNullArgument(next, nameof(next));
 
-            if (WriteableBitmapExtensions.BitmapsMismatched(unaltered, previous) ||
-                WriteableBitmapExtensions.BitmapsMismatched(unaltered, next))
+            if (BitmapsMismatched(unaltered, previous) ||
+                BitmapsMismatched(unaltered, next))
             {
                 return null;
             }
 
-            WriteableBitmapExtensions.GetColorOffsets(unaltered, out int blueOffset, out int greenOffset, out int redOffset);
+            GetColorOffsets(unaltered, out int blueOffset, out int greenOffset, out int redOffset);
 
             int totalPixels = unaltered.PixelWidth * unaltered.PixelHeight;
             int pixelSizeInBytes = unaltered.Format.BitsPerPixel / 8;
@@ -49,9 +50,9 @@ namespace Timelapse.Extensions
                 byte g2 = (byte)Math.Abs(*(unalteredIndex + greenOffset) - *(nextIndex + greenOffset));
                 byte r2 = (byte)Math.Abs(*(unalteredIndex + redOffset) - *(nextIndex + redOffset));
 
-                byte b = WriteableBitmapExtensions.DifferenceIfAboveThreshold(threshold, b1, b2);
-                byte g = WriteableBitmapExtensions.DifferenceIfAboveThreshold(threshold, g1, g2);
-                byte r = WriteableBitmapExtensions.DifferenceIfAboveThreshold(threshold, r1, r2);
+                byte b = DifferenceIfAboveThreshold(threshold, b1, b2);
+                byte g = DifferenceIfAboveThreshold(threshold, g1, g2);
+                byte r = DifferenceIfAboveThreshold(threshold, r1, r2);
 
                 byte averageDifference = (byte)((b + g + r) / 3);
                 differencePixels[differenceIndex + blueOffset] = averageDifference;
@@ -93,7 +94,7 @@ namespace Timelapse.Extensions
             ThrowIf.IsNullArgument(image, nameof(image));
 
             // The RGB offsets from the beginning of the pixel (i.e., 0, 1 or 2)
-            WriteableBitmapExtensions.GetColorOffsets(image, out int blueOffset, out int greenOffset, out int redOffset);
+            GetColorOffsets(image, out int blueOffset, out int greenOffset, out int redOffset);
 
             // various counters that we will use in calculation of image darkness
             int darkPixels = 0;
@@ -109,7 +110,7 @@ namespace Timelapse.Extensions
                 // TODO: Calculate pixelStride as a function of image resolution so future high res images will still be processed quickly.
                 byte* currentPixel = (byte*)image.BackBuffer.ToPointer(); // the imageIndex will point to a particular byte in the pixel array
                 int pixelSizeInBytes = image.Format.BitsPerPixel / 8;
-                int pixelStride = Constant.ImageValues.DarkPixelSampleStrideDefault;
+                int pixelStride = ImageValues.DarkPixelSampleStrideDefault;
                 int totalPixels = image.PixelHeight * image.PixelWidth; // total number of pixels in the image
 
                 for (int pixelIndex = 0; pixelIndex < totalPixels; pixelIndex += pixelStride)
@@ -136,7 +137,7 @@ namespace Timelapse.Extensions
                     // In practice a grey scale pixel's rgb are all equal (i.e., delta = 0) but we need the value as we want to see how 'close' the pixel 
                     // actually is to 0, i.e., to allow some slop in determining grey versus color pixels.
                     int rgbDelta = Math.Abs(r - g) + Math.Abs(g - b) + Math.Abs(b - r);
-                    if (rgbDelta <= Constant.ImageValues.GreyscalePixelThreshold)
+                    if (rgbDelta <= ImageValues.GreyscalePixelThreshold)
                     {
                         ++uncoloredPixels;
                     }
@@ -148,7 +149,7 @@ namespace Timelapse.Extensions
                 // Check if its a grey scale image, i.e., at least 90% of the pixels in this image (given this slop) are grey scale.
                 // If not, its a color image so judge it as not dark
                 double uncoloredPixelFraction = 1d * uncoloredPixels / countedPixels;
-                if (uncoloredPixelFraction < Constant.ImageValues.GreyscaleImageThreshold)
+                if (uncoloredPixelFraction < ImageValues.GreyscaleImageThreshold)
                 {
                     darkPixelFraction = 1 - uncoloredPixelFraction;
                     isColor = true;
@@ -185,14 +186,14 @@ namespace Timelapse.Extensions
             ThrowIf.IsNullArgument(image, nameof(image));
 
             // The RGB offsets from the beginning of the pixel (i.e., 0, 1 or 2)
-            WriteableBitmapExtensions.GetColorOffsets(image, out int blueOffset, out int greenOffset, out int redOffset);
+            GetColorOffsets(image, out int blueOffset, out int greenOffset, out int redOffset);
 
             // examine only a subset of pixels as otherwise this is an expensive operation
             // check pixels from last to first as most cameras put a non-black status bar or at least non-black text at the bottom of the frame,
             // so reverse order may be a little faster on average in cases of nighttime images with black skies
             // TODO  Calculate pixelStride as a function of image size so future high res images will still be processed quickly.
             byte* currentPixel = (byte*)image.BackBuffer.ToPointer(); // the imageIndex will point to a particular byte in the pixel array
-            int pixelStride = Constant.ImageValues.DarkPixelSampleStrideDefault;
+            int pixelStride = ImageValues.DarkPixelSampleStrideDefault;
             int totalPixels = image.PixelHeight * image.PixelWidth; // total number of pixels in the image
             for (int pixelIndex = totalPixels - 1; pixelIndex > 0; pixelIndex -= pixelStride)
             {
@@ -216,11 +217,11 @@ namespace Timelapse.Extensions
             ThrowIf.IsNullArgument(image1, nameof(image1));
             ThrowIf.IsNullArgument(image2, nameof(image2));
 
-            if (WriteableBitmapExtensions.BitmapsMismatched(image1, image2))
+            if (BitmapsMismatched(image1, image2))
             {
                 return null;
             }
-            WriteableBitmapExtensions.GetColorOffsets(image1, out int blueOffset, out int greenOffset, out int redOffset);
+            GetColorOffsets(image1, out int blueOffset, out int greenOffset, out int redOffset);
 
             int totalPixels = image1.PixelWidth * image1.PixelHeight;
             int pixelSizeInBytes = image1.Format.BitsPerPixel / 8;

@@ -1,12 +1,13 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using Newtonsoft.Json;
 using Timelapse.Dialog;
+using Timelapse.Util;
 using TextBox = System.Windows.Controls.TextBox;
 #pragma warning disable IDE1006
 
@@ -27,7 +28,7 @@ namespace Timelapse.Standards
         // - used to populate the dataGrid
         // - its contents is available as a json string when done.
         // - VernacualNames is itself a list of keyvalue pairs that has to be handled separately
-        public ObservableCollection<Standards.taxonomic> TaxonomicList { get; set; }
+        public ObservableCollection<taxonomic> TaxonomicList { get; set; }
 
         // Fields are used to bind a field label and tooltip info in the xaml
         public Fields ScientificNameField { get; set; } =
@@ -38,7 +39,7 @@ namespace Timelapse.Standards
 
         public Fields TaxonIDField { get; set; } =
             new Fields("Taxon id",
-                $"Unique identifier of the taxon. " +
+                "Unique identifier of the taxon. " +
                 $"Preferably a global unique identifier issued by an authoritative checklist.{Environment.NewLine}" +
                  "• e.g., \"https://www.checklistbank.org/dataset/COL2023/taxon/QLXL\"");
 
@@ -93,7 +94,7 @@ namespace Timelapse.Standards
         #endregion
 
         #region Private variables
-        private bool DontUpdate = false;
+        private bool DontUpdate;
         private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
@@ -102,9 +103,9 @@ namespace Timelapse.Standards
         public CamtrapDPTaxonomic(Window owner, string jsonTaxonomicList)
         {
             InitializeComponent();
-            this.DataContext = this;
-            this.Owner = owner;
-            this.JsonTaxonomicList = jsonTaxonomicList;
+            DataContext = this;
+            Owner = owner;
+            JsonTaxonomicList = jsonTaxonomicList;
         }
 
         private void CamptrapDP_OnLoaded(object sender, RoutedEventArgs e)
@@ -119,7 +120,7 @@ namespace Timelapse.Standards
 
             try
             {
-                this.TaxonomicList = new ObservableCollection<Standards.taxonomic>(JsonConvert.DeserializeObject<List<Standards.taxonomic>>(JsonTaxonomicList));
+                TaxonomicList = new ObservableCollection<taxonomic>(JsonConvert.DeserializeObject<List<taxonomic>>(JsonTaxonomicList));
             }
             catch (Exception)
             {
@@ -127,14 +128,14 @@ namespace Timelapse.Standards
                 DialogResult = false;
             }
             DataGrid_Refresh();
-            if (this.dataGrid.Items.Count == 0)
+            if (dataGrid.Items.Count == 0)
             {
-                this.NewRow_OnClick(null, null);
+                NewRow_OnClick(null, null);
             }
-            if (this.dataGrid.Items.Count > 0)
+            if (dataGrid.Items.Count > 0)
             {
-                this.dataGrid.SelectedIndex = 0;
-                this.dataGridSelectedRow = this.dataGrid.SelectedIndex;
+                dataGrid.SelectedIndex = 0;
+                dataGridSelectedRow = dataGrid.SelectedIndex;
             }
         }
         #endregion
@@ -143,12 +144,12 @@ namespace Timelapse.Standards
         // Refresh the data grid to show the current itmes in the sources list
         private void DataGrid_Refresh()
         {
-            this.DontUpdate = true;
-            this.dataGrid.ItemsSource = null;
-            this.dataGrid.Items.Clear();
-            this.dataGrid.ItemsSource = this.TaxonomicList;
-            this.DontUpdate = false;
-            dataGrid.SelectedIndex = this.dataGridSelectedRow < this.dataGrid.Items.Count ? this.dataGridSelectedRow : -1;
+            DontUpdate = true;
+            dataGrid.ItemsSource = null;
+            dataGrid.Items.Clear();
+            dataGrid.ItemsSource = TaxonomicList;
+            DontUpdate = false;
+            dataGrid.SelectedIndex = dataGridSelectedRow < dataGrid.Items.Count ? dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
         }
 
@@ -156,44 +157,44 @@ namespace Timelapse.Standards
         // The enable state of the Delete button should also reflect whether there is a row to delete
         private void DataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.DontUpdate)
+            if (DontUpdate)
             {
                 return;
             }
-            this.dataGridSelectedRow = dataGrid.SelectedIndex;
+            dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DontUpdate = true;
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
+            DontUpdate = true;
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count)
             {
-                this.DeleteRow.IsEnabled = true;
-                Standards.taxonomic taxonomic = this.TaxonomicList[dataGrid.SelectedIndex];
-                this.DataFieldScientificName.Text = taxonomic.scientificName;
-                this.DataFieldTaxonID.Text = taxonomic.taxonID;
-                this.DataFieldTaxonRank.Text = taxonomic.taxonRank;
-                this.DataFieldKingdom.Text = taxonomic.kingdom;
-                this.DataFieldPhylum.Text = taxonomic.phylum;
-                this.DataFieldClass.Text = taxonomic.class_;
-                this.DataFieldOrder.Text = taxonomic.order;
-                this.DataFieldFamily.Text = taxonomic.family;
-                this.DataFieldGenus.Text = taxonomic.genus;
+                DeleteRow.IsEnabled = true;
+                taxonomic taxonomic = TaxonomicList[dataGrid.SelectedIndex];
+                DataFieldScientificName.Text = taxonomic.scientificName;
+                DataFieldTaxonID.Text = taxonomic.taxonID;
+                DataFieldTaxonRank.Text = taxonomic.taxonRank;
+                DataFieldKingdom.Text = taxonomic.kingdom;
+                DataFieldPhylum.Text = taxonomic.phylum;
+                DataFieldClass.Text = taxonomic.class_;
+                DataFieldOrder.Text = taxonomic.order;
+                DataFieldFamily.Text = taxonomic.family;
+                DataFieldGenus.Text = taxonomic.genus;
             }
             else
             {
-                this.DeleteRow.IsEnabled = false;
-                this.DataFieldScientificName.Text = string.Empty;
-                this.DataFieldTaxonID.Text = string.Empty;
-                this.DataFieldTaxonRank.Text = string.Empty;
-                this.DataFieldKingdom.Text = string.Empty;
-                this.DataFieldPhylum.Text = string.Empty;
-                this.DataFieldClass.Text = string.Empty;
-                this.DataFieldOrder.Text = string.Empty;
-                this.DataFieldFamily.Text = string.Empty;
-                this.DataFieldGenus.Text = string.Empty;
+                DeleteRow.IsEnabled = false;
+                DataFieldScientificName.Text = string.Empty;
+                DataFieldTaxonID.Text = string.Empty;
+                DataFieldTaxonRank.Text = string.Empty;
+                DataFieldKingdom.Text = string.Empty;
+                DataFieldPhylum.Text = string.Empty;
+                DataFieldClass.Text = string.Empty;
+                DataFieldOrder.Text = string.Empty;
+                DataFieldFamily.Text = string.Empty;
+                DataFieldGenus.Text = string.Empty;
             }
-            this.DontUpdate = false;
-            if (this.SetFocus)
+            DontUpdate = false;
+            if (SetFocus)
             {
-                this.DataFieldScientificName.Focus();
+                DataFieldScientificName.Focus();
             }
         }
         #endregion
@@ -201,29 +202,29 @@ namespace Timelapse.Standards
         #region Callbacks: Buttons 
         private void NewRow_OnClick(object sender, RoutedEventArgs e)
         {
-            this.TaxonomicList.Add(new Standards.taxonomic());
-            dataGrid.SelectedIndex = this.dataGrid.Items.Count - 1;
+            TaxonomicList.Add(new taxonomic());
+            dataGrid.SelectedIndex = dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            this.DataFieldScientificName.Focus();
+            DataFieldScientificName.Focus();
         }
 
         private void DeleteRow_OnClick(object sender, RoutedEventArgs e)
         {
-            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
+            if (dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count)
             {
-                this.DontUpdate = true;
-                this.TaxonomicList.RemoveAt(dataGrid.SelectedIndex);
-                this.DontUpdate = false;
+                DontUpdate = true;
+                TaxonomicList.RemoveAt(dataGrid.SelectedIndex);
+                DontUpdate = false;
                 // When a row is deleted, select the last row if there is one.
                 dataGrid.SelectedIndex = dataGrid.Items.Count > 0 ? dataGrid.Items.Count - 1 : -1;
                 EditGrid.IsEnabled = dataGrid.Items.Count > 0;
                 if (dataGrid.SelectedIndex == -1)
                 {
                     // This will clear the edit fields if nothing is selected
-                    this.SetFocus = false;
+                    SetFocus = false;
                     DataGrid_OnSelectionChanged(null, null);
-                    this.SetFocus = true;
+                    SetFocus = true;
                 }
             }
         }
@@ -236,7 +237,7 @@ namespace Timelapse.Standards
         private void Done_OnClick(object sender, RoutedEventArgs e)
         {
 
-            this.JsonSerialize();
+            JsonSerialize();
             DialogResult = true;
         }
         #endregion
@@ -246,59 +247,59 @@ namespace Timelapse.Standards
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (this.DontUpdate)
+            if (DontUpdate)
             {
                 return;
             }
-            if (sender is TextBox tb && this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
+            if (sender is TextBox tb && dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count)
             {
                 switch (tb.Name)
                 {
                     case "DataFieldScientificName":
-                        this.TaxonomicList[dataGrid.SelectedIndex].scientificName = tb.Text;
+                        TaxonomicList[dataGrid.SelectedIndex].scientificName = tb.Text;
                         break;
                     case "DataFieldTaxonID":
-                        this.TaxonomicList[dataGrid.SelectedIndex].taxonID = tb.Text;
+                        TaxonomicList[dataGrid.SelectedIndex].taxonID = tb.Text;
                         break;
                     case "DataFieldKingdom":
-                        this.TaxonomicList[dataGrid.SelectedIndex].kingdom = tb.Text;
+                        TaxonomicList[dataGrid.SelectedIndex].kingdom = tb.Text;
                         break;
                     case "DataFieldPhylum":
-                        this.TaxonomicList[dataGrid.SelectedIndex].phylum = tb.Text;
-                        break; break;
+                        TaxonomicList[dataGrid.SelectedIndex].phylum = tb.Text;
+                        break; 
                     case "DataFieldClass":
-                        this.TaxonomicList[dataGrid.SelectedIndex].class_ = tb.Text;
-                        break; break;
+                        TaxonomicList[dataGrid.SelectedIndex].class_ = tb.Text;
+                        break; 
                     case "DataFieldOrder":
-                        this.TaxonomicList[dataGrid.SelectedIndex].order = tb.Text;
-                        break; break;
+                        TaxonomicList[dataGrid.SelectedIndex].order = tb.Text;
+                        break; 
                     case "DataFieldFamily":
-                        this.TaxonomicList[dataGrid.SelectedIndex].family = tb.Text;
-                        break; break;
+                        TaxonomicList[dataGrid.SelectedIndex].family = tb.Text;
+                        break; 
                     case "DataFieldGenus":
-                        this.TaxonomicList[dataGrid.SelectedIndex].genus = tb.Text;
+                        TaxonomicList[dataGrid.SelectedIndex].genus = tb.Text;
                         break;
                 }
             }
-            this.SetFocus = false;
+            SetFocus = false;
             DataGrid_Refresh();
-            dataGrid.SelectedItem = this.dataGridSelectedRow;
-            this.SetFocus = true;
+            dataGrid.SelectedItem = dataGridSelectedRow;
+            SetFocus = true;
         }
 
         // Rank updates are via combobox changes
         private void DataFieldTaxonRank_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.DontUpdate)
+            if (DontUpdate)
             {
                 return;
             }
-            if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count && cb.SelectedValue != null)
+            if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count && cb.SelectedValue != null)
             {
-                this.TaxonomicList[dataGrid.SelectedIndex].taxonRank = (string)((ComboBoxItem)cb.SelectedValue).Content;
+                TaxonomicList[dataGrid.SelectedIndex].taxonRank = (string)((ComboBoxItem)cb.SelectedValue).Content;
             }
             DataGrid_Refresh();
-            dataGrid.SelectedItem = this.dataGridSelectedRow;
+            dataGrid.SelectedItem = dataGridSelectedRow;
         }
         #endregion
 
@@ -308,12 +309,12 @@ namespace Timelapse.Standards
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
-            List<Standards.taxonomic> taxonomicListForExport = new List<Standards.taxonomic>();
-            foreach (Standards.taxonomic taxonomic in this.TaxonomicList)
+            List<taxonomic> taxonomicListForExport = new List<taxonomic>();
+            foreach (taxonomic taxonomic in TaxonomicList)
             {
-                PropertyInfo[] properties = typeof(Standards.taxonomic).GetProperties();
+                PropertyInfo[] properties = typeof(taxonomic).GetProperties();
                 bool allNull = true;
-                Standards.taxonomic newTaxonomic = new Standards.taxonomic();
+                taxonomic newTaxonomic = new taxonomic();
                 foreach (PropertyInfo property in properties)
                 {
                     // Ignore vernacularCounts, as that is just used for display purposes internally
@@ -337,8 +338,8 @@ namespace Timelapse.Standards
             {
                 NullValueHandling = NullValueHandling.Ignore,
             };
-            settings.Converters.Add(new Util.JsonConverters.WhiteSpaceToNullConverter());
-            this.JsonTaxonomicList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
+            settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
+            JsonTaxonomicList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
         }
         #endregion
 
@@ -351,8 +352,8 @@ namespace Timelapse.Standards
 
             public Fields(string label, string tooltip)
             {
-                this.Label = label;
-                this.Tooltip = tooltip;
+                Label = label;
+                Tooltip = tooltip;
             }
         }
 
@@ -360,12 +361,12 @@ namespace Timelapse.Standards
 
         private void VernacularButton_OnOpened(object sender, RoutedEventArgs e)
         {
-            if (this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
+            if (dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count)
             {
                 TBVernacularItemsEditor.Text = string.Empty;
-                if (null != this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
+                if (null != TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
                 {
-                    foreach (KeyValuePair<string, string> vItem in this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
+                    foreach (KeyValuePair<string, string> vItem in TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
                     {
                         TBVernacularItemsEditor.Text += $"{vItem.Key}:{vItem.Value}{Environment.NewLine}";
                     }
@@ -382,7 +383,7 @@ namespace Timelapse.Standards
         private void VernacularButton_Closed(object sender, RoutedEventArgs e)
         {
             SetVernacularItemsListFromStringList(
-                TBVernacularItemsEditor.Text.Split(new string[] { Environment.NewLine },
+                TBVernacularItemsEditor.Text.Split(new[] { Environment.NewLine },
                 StringSplitOptions.None).ToList());
             DataGrid_Refresh();
         }
@@ -392,16 +393,16 @@ namespace Timelapse.Standards
         private void SetVernacularItemsListFromStringList(List<string> stringList)
         {
 
-            if (this.dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < this.TaxonomicList.Count)
+            if (dataGridSelectedRow >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count)
             {
 
-                if (null == this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
+                if (null == TaxonomicList[dataGrid.SelectedIndex].vernacularNames)
                 {
-                    this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames = new Dictionary<string, string>();
+                    TaxonomicList[dataGrid.SelectedIndex].vernacularNames = new Dictionary<string, string>();
                 }
                 else
                 {
-                    this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames.Clear();
+                    TaxonomicList[dataGrid.SelectedIndex].vernacularNames.Clear();
                 }
 
                 // Populate the list
@@ -410,7 +411,7 @@ namespace Timelapse.Standards
                     KeyValuePair<string, string> vItem = VernacularItemFromString(str);
                     if (vItem.Key != string.Empty)
                     {
-                        this.TaxonomicList[dataGrid.SelectedIndex].vernacularNames.Add(vItem.Key, vItem.Value);
+                        TaxonomicList[dataGrid.SelectedIndex].vernacularNames.Add(vItem.Key, vItem.Value);
                     }
                 }
             }

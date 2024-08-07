@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -82,7 +83,7 @@ namespace Timelapse
                     Dictionary<string, string>  finalFileLocations = dialog.FinalFolderLocations;
                     foreach (string key in finalFileLocations.Keys)
                     {
-                        ColumnTuple columnToUpdate = new ColumnTuple(Constant.DatabaseColumn.RelativePath, finalFileLocations[key]);
+                        ColumnTuple columnToUpdate = new ColumnTuple(DatabaseColumn.RelativePath, finalFileLocations[key]);
                         ColumnTuplesWithWhere columnToUpdateWithWhere = new ColumnTuplesWithWhere(columnToUpdate, key);
                         fileDatabase.UpdateFiles(columnToUpdateWithWhere);
                     }
@@ -91,7 +92,7 @@ namespace Timelapse
                     if (null != fileDatabase.MetadataTablesByLevel)
                     {
                         int level = 0;
-                        foreach (KeyValuePair<int, DataTableBackedList<DataTables.MetadataRow>> kvp in fileDatabase.MetadataTablesByLevel)
+                        foreach (KeyValuePair<int, DataTableBackedList<MetadataRow>> kvp in fileDatabase.MetadataTablesByLevel)
                         {
                             level++;
                             if (kvp.Key == 1)
@@ -105,8 +106,8 @@ namespace Timelapse
                                 foreach (string key in finalFileLocations.Keys)
                                 {
                                     // Get the path part for this level
-                                    List<string> oldPaths = Util.FilesFolders.SplitAsCascadingRelativePath(key);
-                                    List<string> newPaths = Util.FilesFolders.SplitAsCascadingRelativePath(finalFileLocations[key]);
+                                    List<string> oldPaths = FilesFolders.SplitAsCascadingRelativePath(key);
+                                    List<string> newPaths = FilesFolders.SplitAsCascadingRelativePath(finalFileLocations[key]);
                                     if (newPaths.Count < level - 2 || oldPaths.Count < level - 2)
                                     {
                                         // the path doesn't have this level. It should, but..
@@ -156,7 +157,7 @@ namespace Timelapse
         /// </summary>
         private static List<string> GetMissingFolders(FileDatabase fileDatabase)
         {
-            List<object> allRelativePaths = fileDatabase.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
+            List<object> allRelativePaths = fileDatabase.GetDistinctValuesInColumn(DBTables.FileData, DatabaseColumn.RelativePath);
             List<string> missingRelativePaths = new List<string>();
             foreach (string relativePath in allRelativePaths)
             {

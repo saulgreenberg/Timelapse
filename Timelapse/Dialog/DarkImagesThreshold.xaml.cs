@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -19,6 +22,7 @@ using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.State;
 using Timelapse.Util;
+using Control = Timelapse.Constant.Control;
 
 namespace Timelapse.Dialog
 {
@@ -59,97 +63,97 @@ namespace Timelapse.Dialog
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
             ThrowIf.IsNullArgument(state, nameof(state));
 
-            this.InitializeComponent();
-            this.Owner = owner;
+            InitializeComponent();
+            Owner = owner;
             this.fileDatabase = fileDatabase;
             this.state = state;
-            this.imageEnumerator = new FileTableEnumerator(fileDatabase);
-            this.imageEnumerator.TryMoveToFile(currentImageIndex);
+            imageEnumerator = new FileTableEnumerator(fileDatabase);
+            imageEnumerator.TryMoveToFile(currentImageIndex);
 
-            this.darkPixelThreshold = state.DarkPixelThreshold;
-            this.darkPixelRatio = state.DarkPixelRatioThreshold;
-            this.darkPixelRatioFound = 0;
-            this.isColor = false;
-            this.updateDarkClassificationForAllSelectedImagesStarted = false;
+            darkPixelThreshold = state.DarkPixelThreshold;
+            darkPixelRatio = state.DarkPixelRatioThreshold;
+            darkPixelRatioFound = 0;
+            isColor = false;
+            updateDarkClassificationForAllSelectedImagesStarted = false;
 
-            dispatcherTimer.Tick += this.DispatcherTimer_Tick;
+            dispatcherTimer.Tick += DispatcherTimer_Tick;
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
 
-            this.disposed = false;
+            disposed = false;
         }
 
         // Display the image and associated details in the UI
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
-            this.DarkThreshold.Value = this.state.DarkPixelThreshold;
-            this.DarkThreshold.ValueChanged += this.DarkThresholdSlider_ValueChanged;
+            DarkThreshold.Value = state.DarkPixelThreshold;
+            DarkThreshold.ValueChanged += DarkThresholdSlider_ValueChanged;
 
-            this.ScrollImages.Minimum = 0;
-            this.ScrollImages.Maximum = this.fileDatabase.CountAllCurrentlySelectedFiles - 1;
-            this.ScrollImages.Value = this.imageEnumerator.CurrentRow;
+            ScrollImages.Minimum = 0;
+            ScrollImages.Maximum = fileDatabase.CountAllCurrentlySelectedFiles - 1;
+            ScrollImages.Value = imageEnumerator.CurrentRow;
 
             // Collect all the flag controls in a dictionary by Label,DataLabel (DeleteFlag would not be collected)
             foreach (ControlRow control in fileDatabase.Controls)
             {
-                if (control.Type == Constant.Control.Flag)
+                if (control.Type == Control.Flag)
                 {
-                    if (false == this.FlagLabelsDataLabels.ContainsKey(control.Label))
+                    if (false == FlagLabelsDataLabels.ContainsKey(control.Label))
                     {
-                        this.FlagLabelsDataLabels.Add(control.Label, control.DataLabel);
+                        FlagLabelsDataLabels.Add(control.Label, control.DataLabel);
                     }
                 }
             }
             // Populate the combobox with the labels of the available flag controls
-            this.CBPopulateFlagField.ItemsSource = this.FlagLabelsDataLabels.Keys.ToList();
+            CBPopulateFlagField.ItemsSource = FlagLabelsDataLabels.Keys.ToList();
 
             // Gie the user some instructions depending on whether any flage are available
-            if (this.FlagLabelsDataLabels.Count == 0)
+            if (FlagLabelsDataLabels.Count == 0)
             {
-                this.SelectAFlagField.Content = "No flag fields available for populating dark classifications! Create one in the template.";
-                this.CBPopulateFlagField.Visibility = Visibility.Collapsed;
-                this.LabelWarning1.Content = "No flag fields are available for populating dark classifications.";
-                this.LabelWarning2.Content = "Create one in the template.";
+                SelectAFlagField.Content = "No flag fields available for populating dark classifications! Create one in the template.";
+                CBPopulateFlagField.Visibility = Visibility.Collapsed;
+                LabelWarning1.Content = "No flag fields are available for populating dark classifications.";
+                LabelWarning2.Content = "Create one in the template.";
             }
             else
             {
-                this.LabelWarning1.Content = "";
-                this.LabelWarning2.Content = "Select a Flag field to activate the Start button.";
+                LabelWarning1.Content = "";
+                LabelWarning2.Content = "Select a Flag field to activate the Start button.";
             }
 
-            this.SetPreviousNextPlayButtonStates();
-            this.ScrollImages_ValueChanged(null, null);
-            this.ScrollImages.ValueChanged += this.ScrollImages_ValueChanged;
-            this.Focus();               // necessary for the left/right arrow keys to work.
+            SetPreviousNextPlayButtonStates();
+            ScrollImages_ValueChanged(null, null);
+            ScrollImages.ValueChanged += ScrollImages_ValueChanged;
+            Focus();               // necessary for the left/right arrow keys to work.
         }
         #endregion
 
         #region Closing and Disposing
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
-            this.DialogResult = this.Token.IsCancellationRequested && this.IsAnyDataUpdated;
+            DialogResult = Token.IsCancellationRequested && IsAnyDataUpdated;
         }
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (this.disposed)
+            if (disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                this.imageEnumerator?.Dispose();
+                imageEnumerator?.Dispose();
             }
 
-            this.disposed = true;
+            disposed = true;
         }
         #endregion
 
@@ -157,102 +161,102 @@ namespace Timelapse.Dialog
         public void Repaint()
         {
             // Color the bar to show the current color given the dark color threshold
-            byte greyColor = (byte)Math.Round(255 - (double)255 * this.darkPixelThreshold);
+            byte greyColor = (byte)Math.Round(255 - (double)255 * darkPixelThreshold);
             Brush brush = new SolidColorBrush(Color.FromArgb(255, greyColor, greyColor, greyColor));
-            this.RectDarkPixelRatioFound.Fill = brush;
-            this.lblGreyColorThreshold.Content = (greyColor + 1).ToString();
+            RectDarkPixelRatioFound.Fill = brush;
+            lblGreyColorThreshold.Content = (greyColor + 1).ToString();
 
             // Size the bar to show how many pixels in the current image are at least as dark as that color
-            if (this.isColor)
+            if (isColor)
             {
                 // color image
-                this.RectDarkPixelRatioFound.Width = MinimumRectangleWidth;
+                RectDarkPixelRatioFound.Width = MinimumRectangleWidth;
             }
             else
             {
-                this.RectDarkPixelRatioFound.Width = this.FeedbackCanvas.ActualWidth * this.darkPixelRatioFound;
-                if (this.RectDarkPixelRatioFound.Width < MinimumRectangleWidth)
+                RectDarkPixelRatioFound.Width = FeedbackCanvas.ActualWidth * darkPixelRatioFound;
+                if (RectDarkPixelRatioFound.Width < MinimumRectangleWidth)
                 {
-                    this.RectDarkPixelRatioFound.Width = MinimumRectangleWidth; // Just so something is always visible
+                    RectDarkPixelRatioFound.Width = MinimumRectangleWidth; // Just so something is always visible
                 }
             }
-            this.RectDarkPixelRatioFound.Height = this.FeedbackCanvas.ActualHeight;
+            RectDarkPixelRatioFound.Height = FeedbackCanvas.ActualHeight;
 
             // Show the location of the %age threshold bar
-            this.DarkPixelRatioThumb.Height = this.FeedbackCanvas.ActualHeight;
-            this.DarkPixelRatioThumb.Width = MinimumRectangleWidth;
-            Canvas.SetLeft(this.DarkPixelRatioThumb, (this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth) * this.darkPixelRatio);
+            DarkPixelRatioThumb.Height = FeedbackCanvas.ActualHeight;
+            DarkPixelRatioThumb.Width = MinimumRectangleWidth;
+            Canvas.SetLeft(DarkPixelRatioThumb, (FeedbackCanvas.ActualWidth - DarkPixelRatioThumb.ActualWidth) * darkPixelRatio);
 
-            this.UpdateLabels();
+            UpdateLabels();
         }
 
         // Update all the labels to show the current old and new classification values
         private void UpdateLabels()
         {
-            this.DarkPixelRatio.Content = $"{100 * this.darkPixelRatio,3:##0}%";
-            this.RatioFound.Content = $"{100 * this.darkPixelRatioFound,3:##0}";
+            DarkPixelRatio.Content = $"{100 * darkPixelRatio,3:##0}%";
+            RatioFound.Content = $"{100 * darkPixelRatioFound,3:##0}";
 
             // We don't want to update labels if the image is not valid 
-            if (false == Boolean.TryParse(this.OriginalClassification.Content.ToString(), out _))
+            if (false == Boolean.TryParse(OriginalClassification.Content.ToString(), out _))
             {
                 // We don't have a value, so just set it to blank
-                this.OriginalClassification.Content = "----";
+                OriginalClassification.Content = "----";
             }
 
-            if (this.isColor)
+            if (isColor)
             {
                 // color image 
-                this.ThresholdMessage.Text = "Color - therefore not dark";
-                this.Percent.Visibility = Visibility.Collapsed;
-                this.RatioFound.Visibility = Visibility.Collapsed;
-                this.RatioFound.Content = string.Empty;
+                ThresholdMessage.Text = "Color - therefore not dark";
+                Percent.Visibility = Visibility.Collapsed;
+                RatioFound.Visibility = Visibility.Collapsed;
+                RatioFound.Content = string.Empty;
             }
             else
             {
-                this.ThresholdMessage.Text = "of the pixels are darker than the threshold";
-                this.RatioFound.Visibility = Visibility.Visible;
-                this.Percent.Visibility = Visibility.Visible;
+                ThresholdMessage.Text = "of the pixels are darker than the threshold";
+                RatioFound.Visibility = Visibility.Visible;
+                Percent.Visibility = Visibility.Visible;
             }
 
-            if (this.isColor)
+            if (isColor)
             {
-                this.NewClassification.Content = Constant.BooleanValue.False;       // Color image
+                NewClassification.Content = BooleanValue.False;       // Color image
             }
-            else if (this.darkPixelRatio <= this.darkPixelRatioFound)
+            else if (darkPixelRatio <= darkPixelRatioFound)
             {
-                this.NewClassification.Content = Constant.BooleanValue.True;  // Dark grey scale image
+                NewClassification.Content = BooleanValue.True;  // Dark grey scale image
             }
             else
             {
-                this.NewClassification.Content = Constant.BooleanValue.False;   // Light grey scale image
+                NewClassification.Content = BooleanValue.False;   // Light grey scale image
             }
         }
 
         // Utility routine for calling a typical sequence of UI update actions
         private void DisplayImageAndDetails()
         {
-            if (this.imageEnumerator.Current == null)
+            if (imageEnumerator.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.imageEnumerator.Current));
+                TracePrint.NullException(nameof(imageEnumerator.Current));
                 return;
             }
-            this.bitmap = this.imageEnumerator.Current.LoadBitmap(this.fileDatabase.FolderPath, out _).AsWriteable();
-            this.Image.Source = this.bitmap;
-            this.FileName.Content = this.imageEnumerator.Current.File;
-            this.FileName.ToolTip = this.imageEnumerator.Current.File;
+            bitmap = imageEnumerator.Current.LoadBitmap(fileDatabase.FolderPath, out _).AsWriteable();
+            Image.Source = bitmap;
+            FileName.Content = imageEnumerator.Current.File;
+            FileName.ToolTip = imageEnumerator.Current.File;
 
-            if (string.IsNullOrEmpty(this.ChosenFlagLabel) ||
-                string.IsNullOrWhiteSpace(this.imageEnumerator?.Current?.GetValueDatabaseString(this.FlagLabelsDataLabels[this.ChosenFlagLabel])))
+            if (string.IsNullOrEmpty(ChosenFlagLabel) ||
+                string.IsNullOrWhiteSpace(imageEnumerator?.Current?.GetValueDatabaseString(FlagLabelsDataLabels[ChosenFlagLabel])))
             {
-                this.OriginalClassification.Content = string.Empty;
+                OriginalClassification.Content = string.Empty;
             }
             else
             {
-                this.OriginalClassification.Content = this.imageEnumerator.Current.GetValueDatabaseString(this.FlagLabelsDataLabels[this.ChosenFlagLabel]);
+                OriginalClassification.Content = imageEnumerator.Current.GetValueDatabaseString(FlagLabelsDataLabels[ChosenFlagLabel]);
             }
-            this.RecalculateDarkClassificationForCurrentImage();
-            this.Repaint();
+            RecalculateDarkClassificationForCurrentImage();
+            Repaint();
         }
         #endregion
 
@@ -263,7 +267,7 @@ namespace Timelapse.Dialog
         /// </summary>
         private void RecalculateDarkClassificationForCurrentImage()
         {
-            this.bitmap.IsDark(this.darkPixelThreshold, this.darkPixelRatio, out this.darkPixelRatioFound, out this.isColor);
+            bitmap.IsDark(darkPixelThreshold, darkPixelRatio, out darkPixelRatioFound, out isColor);
         }
 
         /// <summary>
@@ -274,14 +278,14 @@ namespace Timelapse.Dialog
             return await Task.Run(() =>
             {
                 // The selected files to check
-                List<ImageRow> selectedFiles = this.fileDatabase.FileTable.ToList();
+                List<ImageRow> selectedFiles = fileDatabase.FileTable.ToList();
                 List<ColumnTuplesWithWhere> filesToUpdate = new List<ColumnTuplesWithWhere>();
                 int fileIndex = 0;
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 int selectedFilesCount = selectedFiles.Count;
-                string dataLabel = string.IsNullOrEmpty(this.ChosenFlagLabel)
+                string dataLabel = string.IsNullOrEmpty(ChosenFlagLabel)
                                     ? string.Empty
-                                    : this.FlagLabelsDataLabels[this.ChosenFlagLabel];
+                                    : FlagLabelsDataLabels[ChosenFlagLabel];
                 foreach (ImageRow file in selectedFiles)
                 {
                     if (Token.IsCancellationRequested)
@@ -297,7 +301,7 @@ namespace Timelapse.Dialog
                         // Get the image, and add it to the list of images to be updated if the imageQuality has changed
                         // Note that if the image can't be created, we will just go to the catch.
                         // We also use a TransientLoading, as the estimate of darkness will work just fine on that
-                        imageQuality.Bitmap = file.LoadBitmap(this.fileDatabase.FolderPath, ImageDisplayIntentEnum.Ephemeral, out bool isCorruptOrMissing).AsWriteable();
+                        imageQuality.Bitmap = file.LoadBitmap(fileDatabase.FolderPath, ImageDisplayIntentEnum.Ephemeral, out bool isCorruptOrMissing).AsWriteable();
                         if (isCorruptOrMissing)
                         {
                             // If we can't read the image, just set its darkness to false
@@ -306,14 +310,14 @@ namespace Timelapse.Dialog
                         else
                         {
                             // Set the image quality. Note that videos are always classified as false.
-                            imageQuality.NewDarkClassification = !file.IsVideo && imageQuality.Bitmap.IsDark(this.darkPixelThreshold, this.darkPixelRatio, out this.darkPixelRatioFound, out this.isColor);
+                            imageQuality.NewDarkClassification = !file.IsVideo && imageQuality.Bitmap.IsDark(darkPixelThreshold, darkPixelRatio, out darkPixelRatioFound, out isColor);
                         }
-                        imageQuality.IsColor = this.isColor;
-                        imageQuality.DarkPixelRatioFound = this.darkPixelRatioFound;
+                        imageQuality.IsColor = isColor;
+                        imageQuality.DarkPixelRatioFound = darkPixelRatioFound;
 
                         string newDarkClassificationAsString = imageQuality.NewDarkClassification
-                        ? Constant.BooleanValue.True
-                        : Constant.BooleanValue.False;
+                        ? BooleanValue.True
+                        : BooleanValue.False;
 
                         if (imageQuality.OldDarkClassification != imageQuality.NewDarkClassification)
                         {
@@ -329,26 +333,26 @@ namespace Timelapse.Dialog
                     }
 
                     fileIndex++;
-                    if (this.ReadyToRefresh())
+                    if (ReadyToRefresh())
                     {
                         int percentDone = (int)(100.0 * fileIndex / selectedFilesCount);
-                        this.Progress.Report(new ProgressBarArguments(percentDone,
+                        Progress.Report(new ProgressBarArguments(percentDone,
                             $"{fileIndex}/{selectedFilesCount} images. Processing {file.File}", true, false));
-                        Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                 }
 
                 // Update the database to reflect the changed values
                 // Tracks whether any changes to the data or database are made
-                this.Progress.Report(new ProgressBarArguments(100,
+                Progress.Report(new ProgressBarArguments(100,
                     $"Writing changes for {filesToUpdate.Count} files. Please wait...", false, true));
-                Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
-                this.IsAnyDataUpdated = true;
-                this.fileDatabase.UpdateFiles(filesToUpdate);
+                Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+                IsAnyDataUpdated = true;
+                fileDatabase.UpdateFiles(filesToUpdate);
                 return filesToUpdate.Count > 0
                 ? $"{selectedFilesCount} files examined, with {filesToUpdate.Count} updated to reflect changes."
                 : $"{selectedFilesCount} files examined. None were updated as nothing has changed.";
-            }, this.Token).ConfigureAwait(true);
+            }, Token).ConfigureAwait(true);
         }
         #endregion
 
@@ -357,27 +361,27 @@ namespace Timelapse.Dialog
         {
             if (sender is ComboBox cmb)
             {
-                foreach (ControlRow control in this.fileDatabase.Controls)
+                foreach (ControlRow control in fileDatabase.Controls)
                 {
                     if (control.Label == (string)cmb.SelectedItem)
                     {
-                        this.ChosenFlagLabel = control.Label;
+                        ChosenFlagLabel = control.Label;
                     }
                 }
-                bool success = false == string.IsNullOrEmpty(this.ChosenFlagLabel);
-                this.StartDoneButton.IsEnabled = success;
+                bool success = false == string.IsNullOrEmpty(ChosenFlagLabel);
+                StartDoneButton.IsEnabled = success;
                 if (success)
                 {
-                    this.LabelWarning1.Content = "Press Start to populate Dark classification data";
-                    this.LabelWarning2.Content = $"in the {this.ChosenFlagLabel} data field";
+                    LabelWarning1.Content = "Press Start to populate Dark classification data";
+                    LabelWarning2.Content = $"in the {ChosenFlagLabel} data field";
                 }
                 else
                 {
                     // This should never happen, as the user can only select valid flags
-                    this.LabelWarning1.Content = "";
-                    this.LabelWarning2.Content = "Select a Flag field to activate the Start button.";
+                    LabelWarning1.Content = "";
+                    LabelWarning2.Content = "Select a Flag field to activate the Start button.";
                 }
-                this.DisplayImageAndDetails();
+                DisplayImageAndDetails();
             }
         }
         #endregion
@@ -401,7 +405,7 @@ namespace Timelapse.Dialog
             }
             resetButton.ContextMenu.IsEnabled = true;
             resetButton.ContextMenu.PlacementTarget = (Button)sender;
-            resetButton.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            resetButton.ContextMenu.Placement = PlacementMode.Bottom;
             resetButton.ContextMenu.IsOpen = true;
         }
 
@@ -409,27 +413,27 @@ namespace Timelapse.Dialog
         private void MenuItemResetCurrent_Click(object sender, RoutedEventArgs e)
         {
             // Move the thumb to correspond to the original value
-            this.darkPixelRatio = this.state.DarkPixelRatioThreshold;
-            this.darkPixelThreshold = this.state.DarkPixelThreshold;
-            Canvas.SetLeft(this.DarkPixelRatioThumb, this.darkPixelRatio * (this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth));
+            darkPixelRatio = state.DarkPixelRatioThreshold;
+            darkPixelThreshold = state.DarkPixelThreshold;
+            Canvas.SetLeft(DarkPixelRatioThumb, darkPixelRatio * (FeedbackCanvas.ActualWidth - DarkPixelRatioThumb.ActualWidth));
 
             // Move the slider to its original position
-            this.DarkThreshold.Value = this.state.DarkPixelThreshold;
-            this.RecalculateDarkClassificationForCurrentImage();
-            this.Repaint();
+            DarkThreshold.Value = state.DarkPixelThreshold;
+            RecalculateDarkClassificationForCurrentImage();
+            Repaint();
         }
 
         // Reset the thresholds to the Default settings
         private void MenuItemResetDefault_Click(object sender, RoutedEventArgs e)
         {
             // Move the thumb to correspond to the original value
-            this.darkPixelRatio = Constant.ImageValues.DarkPixelRatioThresholdDefault;
-            Canvas.SetLeft(this.DarkPixelRatioThumb, this.darkPixelRatio * (this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth));
+            darkPixelRatio = ImageValues.DarkPixelRatioThresholdDefault;
+            Canvas.SetLeft(DarkPixelRatioThumb, darkPixelRatio * (FeedbackCanvas.ActualWidth - DarkPixelRatioThumb.ActualWidth));
 
             // Move the slider to its original position
-            this.DarkThreshold.Value = Constant.ImageValues.DarkPixelThresholdDefault;
-            this.RecalculateDarkClassificationForCurrentImage();
-            this.Repaint();
+            DarkThreshold.Value = ImageValues.DarkPixelThresholdDefault;
+            RecalculateDarkClassificationForCurrentImage();
+            Repaint();
         }
         #endregion
 
@@ -438,18 +442,18 @@ namespace Timelapse.Dialog
         // Set a new value for the dark pixel threshold and update the UI
         private void DarkThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (this.DarkPixelRatio == null)
+            if (DarkPixelRatio == null)
             {
                 return;
             }
-            this.darkPixelThreshold = Convert.ToInt32(e.NewValue);
+            darkPixelThreshold = Convert.ToInt32(e.NewValue);
 
-            this.RecalculateDarkClassificationForCurrentImage();
-            this.Repaint();
+            RecalculateDarkClassificationForCurrentImage();
+            Repaint();
         }
 
         // Set a new value for the Dark Pixel Ratio and update the UI
-        private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        private void Thumb_DragDelta(object sender, DragDeltaEventArgs e)
         {
             if (e.Source is UIElement thumb == false)
             {
@@ -457,29 +461,29 @@ namespace Timelapse.Dialog
                 return;
             }
 
-            if ((Canvas.GetLeft(thumb) + e.HorizontalChange) >= (this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth))
+            if ((Canvas.GetLeft(thumb) + e.HorizontalChange) >= (FeedbackCanvas.ActualWidth - DarkPixelRatioThumb.ActualWidth))
             {
-                Canvas.SetLeft(thumb, this.FeedbackCanvas.ActualWidth - this.DarkPixelRatioThumb.ActualWidth);
-                this.darkPixelRatio = 1;
+                Canvas.SetLeft(thumb, FeedbackCanvas.ActualWidth - DarkPixelRatioThumb.ActualWidth);
+                darkPixelRatio = 1;
             }
             else if ((Canvas.GetLeft(thumb) + e.HorizontalChange) <= 0)
             {
                 Canvas.SetLeft(thumb, 0);
-                this.darkPixelRatio = 0;
+                darkPixelRatio = 0;
             }
             else
             {
                 Canvas.SetLeft(thumb, Canvas.GetLeft(thumb) + e.HorizontalChange);
-                this.darkPixelRatio = (Canvas.GetLeft(thumb) + e.HorizontalChange) / this.FeedbackCanvas.ActualWidth;
+                darkPixelRatio = (Canvas.GetLeft(thumb) + e.HorizontalChange) / FeedbackCanvas.ActualWidth;
             }
-            if (this.DarkPixelRatio == null)
+            if (DarkPixelRatio == null)
             {
                 return;
             }
 
-            this.RecalculateDarkClassificationForCurrentImage();
+            RecalculateDarkClassificationForCurrentImage();
             // We don't repaint, as this will screw up the thumb dragging. So just update the labels instead.
-            this.UpdateLabels();
+            UpdateLabels();
         }
         #endregion
 
@@ -487,20 +491,20 @@ namespace Timelapse.Dialog
         // Scroll to another image
         private void ScrollImages_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (this.updateDarkClassificationForAllSelectedImagesStarted)
+            if (updateDarkClassificationForAllSelectedImagesStarted)
             {
                 return;
             }
 
-            this.imageEnumerator.TryMoveToFile(Convert.ToInt32(this.ScrollImages.Value));
-            this.DisplayImageAndDetails();
-            this.SetPreviousNextPlayButtonStates();
+            imageEnumerator.TryMoveToFile(Convert.ToInt32(ScrollImages.Value));
+            DisplayImageAndDetails();
+            SetPreviousNextPlayButtonStates();
         }
 
         // If its an arrow key navigate left/right image 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (!this.ReadyToRefresh())
+            if (!ReadyToRefresh())
             {
                 // only update every now and then, as otherwise it stalls when the arrow key is held down
                 return;
@@ -510,10 +514,10 @@ namespace Timelapse.Dialog
             switch (e.Key)
             {
                 case Key.Right:             // next file
-                    this.NextButton_Click(null, null);
+                    NextButton_Click(null, null);
                     break;
                 case Key.Left:              // previous file
-                    this.PreviousButton_Click(null, null);
+                    PreviousButton_Click(null, null);
                     break;
                 default:
                     return;
@@ -524,45 +528,45 @@ namespace Timelapse.Dialog
         // Navigate to the previous image
         private void PreviousButton_Click(object sender, RoutedEventArgs e)
         {
-            this.imageEnumerator.MovePrevious();
-            this.ScrollImages.Value = this.imageEnumerator.CurrentRow;
+            imageEnumerator.MovePrevious();
+            ScrollImages.Value = imageEnumerator.CurrentRow;
         }
 
         // Navigate to the next image
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
-            this.imageEnumerator.MoveNext();
-            this.ScrollImages.Value = this.imageEnumerator.CurrentRow;
+            imageEnumerator.MoveNext();
+            ScrollImages.Value = imageEnumerator.CurrentRow;
         }
 
         // Helper for the above, where previous/next buttons are enabled/disabled as needed
         private void SetPreviousNextPlayButtonStates()
         {
-            this.PreviousFile.IsEnabled = this.imageEnumerator.CurrentRow != 0;
-            this.NextFile.IsEnabled = (this.imageEnumerator.CurrentRow < this.fileDatabase.CountAllCurrentlySelectedFiles - 1);
+            PreviousFile.IsEnabled = imageEnumerator.CurrentRow != 0;
+            NextFile.IsEnabled = (imageEnumerator.CurrentRow < fileDatabase.CountAllCurrentlySelectedFiles - 1);
             if (NextFile.IsEnabled == false)
             {
                 // We are at the end, so stop playback and disable the play button
-                this.PlayButtonSetState(false, false);
+                PlayButtonSetState(false, false);
             }
-            else if (this.displatcherTimerIsPlaying == false && NextFile.IsEnabled)
+            else if (displatcherTimerIsPlaying == false && NextFile.IsEnabled)
             {
                 // We are at the end, so stop playback and disable the play button
-                this.PlayButtonSetState(false, true);
+                PlayButtonSetState(false, true);
             }
         }
 
         // Show the next file after every tick
         private void DispatcherTimer_Tick(object sender, EventArgs e)
         {
-            this.NextButton_Click(null, null);
+            NextButton_Click(null, null);
         }
 
         // Play the images automatically
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
-            this.displatcherTimerIsPlaying = !this.displatcherTimerIsPlaying;
-            PlayButtonSetState(this.displatcherTimerIsPlaying, true);
+            displatcherTimerIsPlaying = !displatcherTimerIsPlaying;
+            PlayButtonSetState(displatcherTimerIsPlaying, true);
         }
 
         // Set the play/pause/enable state of the play button
@@ -571,21 +575,21 @@ namespace Timelapse.Dialog
             if (play)
             {
                 // Play
-                this.dispatcherTimer.Start();
-                this.displatcherTimerIsPlaying = true;
+                dispatcherTimer.Start();
+                displatcherTimerIsPlaying = true;
                 // Show Pause character
-                this.PlayFile.Content = "\u23F8";
+                PlayFile.Content = "\u23F8";
             }
             else
             {
                 // Pause
-                this.dispatcherTimer.Stop();
-                this.displatcherTimerIsPlaying = false;
+                dispatcherTimer.Stop();
+                displatcherTimerIsPlaying = false;
                 // Start the playback
                 // Show Fast forward character
-                this.PlayFile.Content = "\u23E9";
+                PlayFile.Content = "\u23E9";
             }
-            this.PlayFile.IsEnabled = enabled;
+            PlayFile.IsEnabled = enabled;
         }
         #endregion
 
@@ -594,44 +598,44 @@ namespace Timelapse.Dialog
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
             // Update state variables to the current settings
-            this.state.DarkPixelThreshold = this.darkPixelThreshold;
-            this.state.DarkPixelRatioThreshold = this.darkPixelRatio;
+            state.DarkPixelThreshold = darkPixelThreshold;
+            state.DarkPixelRatioThreshold = darkPixelRatio;
 
             // update the UI
-            this.CancelButton.IsEnabled = false;
-            this.CancelButton.Visibility = Visibility.Hidden;
-            this.StartDoneButton.Content = "_Done";
-            this.StartDoneButton.Click -= this.StartButton_Click;
-            this.StartDoneButton.Click += this.DoneButton_Click;
-            this.StartDoneButton.IsEnabled = false;
-            this.BusyCancelIndicator.IsBusy = true;
-            this.LabelWarning1.Content = "";
-            this.LabelWarning2.Content = "";
+            CancelButton.IsEnabled = false;
+            CancelButton.Visibility = Visibility.Hidden;
+            StartDoneButton.Content = "_Done";
+            StartDoneButton.Click -= StartButton_Click;
+            StartDoneButton.Click += DoneButton_Click;
+            StartDoneButton.IsEnabled = false;
+            BusyCancelIndicator.IsBusy = true;
+            LabelWarning1.Content = "";
+            LabelWarning2.Content = "";
 
-            string finalMessage = await this.BeginUpdateDarkClassificationForAllSelectedImagesAsync().ConfigureAwait(true);
-            this.BusyCancelIndicator.IsBusy = false;
+            string finalMessage = await BeginUpdateDarkClassificationForAllSelectedImagesAsync().ConfigureAwait(true);
+            BusyCancelIndicator.IsBusy = false;
 
             // Hide various buttons, the primary panel, and the image
-            this.StartDoneButton.IsEnabled = true;
-            this.CancelButton.IsEnabled = false;
-            this.Primary2.Visibility = Visibility.Collapsed;
-            this.Primary3.Visibility = Visibility.Collapsed;
-            this.Primary4.Visibility = Visibility.Collapsed;
-            this.Image.Visibility = Visibility.Collapsed;
-            this.FinalMessage.Visibility = Visibility.Visible;
-            this.FinalMessage.Text = finalMessage;
+            StartDoneButton.IsEnabled = true;
+            CancelButton.IsEnabled = false;
+            Primary2.Visibility = Visibility.Collapsed;
+            Primary3.Visibility = Visibility.Collapsed;
+            Primary4.Visibility = Visibility.Collapsed;
+            Image.Visibility = Visibility.Collapsed;
+            FinalMessage.Visibility = Visibility.Visible;
+            FinalMessage.Text = finalMessage;
         }
 
         private void DoneButton_Click(object sender, RoutedEventArgs e)
         {
             // We return false if the database was not altered, i.e., if this was all a no-op
-            this.DialogResult = this.IsAnyDataUpdated;
+            DialogResult = IsAnyDataUpdated;
         }
 
         // Cancel or Stop - exit the dialog
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = this.Token.IsCancellationRequested || this.IsAnyDataUpdated;
+            DialogResult = Token.IsCancellationRequested || IsAnyDataUpdated;
         }
         #endregion
 
@@ -654,12 +658,12 @@ namespace Timelapse.Dialog
                 // Check the arguments for null 
                 ThrowIf.IsNullArgument(image, nameof(image));
 
-                this.Bitmap = null;
-                this.DarkPixelRatioFound = 0;
-                this.FileName = image.File;
-                this.IsColor = false;
-                this.OldDarkClassification = !string.IsNullOrEmpty(dataLabel) && image.GetValueDatabaseString(dataLabel) == Constant.BooleanValue.True;
-                this.NewDarkClassification = false;
+                Bitmap = null;
+                DarkPixelRatioFound = 0;
+                FileName = image.File;
+                IsColor = false;
+                OldDarkClassification = !string.IsNullOrEmpty(dataLabel) && image.GetValueDatabaseString(dataLabel) == BooleanValue.True;
+                NewDarkClassification = false;
             }
         }
         #endregion

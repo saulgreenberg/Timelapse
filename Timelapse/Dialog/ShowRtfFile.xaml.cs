@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using System.Windows.Resources;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
@@ -21,21 +22,21 @@ namespace Timelapse.Dialog
         private string Filename { get;  }
         public ShowRtfFile(Window owner, string title, string what, string fileName)
         {
-            this.InitializeComponent();
-            this.Owner = owner;
-            this.MessageTitle = title;
-            this.MessageWhat = what;
-            this.Filename = fileName;
+            InitializeComponent();
+            Owner = owner;
+            MessageTitle = title;
+            MessageWhat = what;
+            Filename = fileName;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             // Construct the template message
-            this.Title = this.MessageTitle;
+            Title = MessageTitle;
 
-            this.Message.Title = this.MessageTitle;
-            this.Message.What = MessageWhat;
+            Message.Title = MessageTitle;
+            Message.What = MessageWhat;
 
             // Create a flow document and load it with the contents of the file
             try
@@ -48,11 +49,11 @@ namespace Timelapse.Dialog
                 };
 
                 // create a string containing the help text from the rtf help file
-                StreamResourceInfo sri = Application.GetResourceStream(new Uri(this.Filename));
+                StreamResourceInfo sri = Application.GetResourceStream(new Uri(Filename));
                 if (null == sri?.Stream)
                 {
                     TracePrint.NullException(nameof(sri));
-                    this.DialogResult = false;
+                    DialogResult = false;
                     return;
                 }
 
@@ -70,16 +71,16 @@ namespace Timelapse.Dialog
                 textRange.Load(stream, DataFormats.Rtf);
 
                 // Add the document to the FlowDocumentScollViewer
-                this.RtfFlowDocumentScrollViewer.Document = content;
+                RtfFlowDocumentScrollViewer.Document = content;
                 // We can now displose of the reader and write as we no longer need them.
                 reader.Dispose();
                 writer.Dispose();
-                this.SubscribeToAllHyperlinks(this.RtfFlowDocumentScrollViewer.Document);
+                SubscribeToAllHyperlinks(RtfFlowDocumentScrollViewer.Document);
             }
             catch
             {
                 TracePrint.NullException("In catch!");
-                this.DialogResult = false;
+                DialogResult = false;
             }
         }
 
@@ -89,7 +90,7 @@ namespace Timelapse.Dialog
             var hyperlinks = GetVisuals(flowDocument).OfType<Hyperlink>();
             foreach (var link in hyperlinks)
             {
-                link.RequestNavigate += this.Link_RequestNavigate;
+                link.RequestNavigate += Link_RequestNavigate;
             }
         }
 
@@ -105,7 +106,7 @@ namespace Timelapse.Dialog
             }
         }
 
-        private void Link_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void Link_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             ProcessExecution.TryProcessStart(e.Uri);
             e.Handled = true;
@@ -116,12 +117,12 @@ namespace Timelapse.Dialog
 
         private void YesButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

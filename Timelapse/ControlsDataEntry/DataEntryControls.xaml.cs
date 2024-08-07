@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -26,10 +27,10 @@ namespace Timelapse.ControlsDataEntry
         #region Constructor
         public DataEntryControls()
         {
-            this.InitializeComponent();
-            this.Controls = new List<DataEntryControl>();
-            this.ControlsByDataLabelThatAreVisible = new Dictionary<string, DataEntryControl>();
-            this.ControlsByDataLabelForExport = new Dictionary<string, DataEntryControl>();
+            InitializeComponent();
+            Controls = new List<DataEntryControl>();
+            ControlsByDataLabelThatAreVisible = new Dictionary<string, DataEntryControl>();
+            ControlsByDataLabelForExport = new Dictionary<string, DataEntryControl>();
         }
         #endregion
 
@@ -45,10 +46,10 @@ namespace Timelapse.ControlsDataEntry
 
             // Depending on how the user interacts with the file import process image set loading can be aborted after controls are generated and then
             // another image set loaded.  Any existing controls therefore need to be cleared.
-            this.Controls.Clear();
-            this.ControlsByDataLabelThatAreVisible.Clear();
-            this.ControlsByDataLabelForExport.Clear();
-            this.ControlGrid.Inlines.Clear();
+            Controls.Clear();
+            ControlsByDataLabelThatAreVisible.Clear();
+            ControlsByDataLabelForExport.Clear();
+            ControlGrid.Inlines.Clear();
 
             foreach (ControlRow control in database.Controls)
             {
@@ -61,7 +62,7 @@ namespace Timelapse.ControlsDataEntry
                 DataEntryControl controlToAdd;
                 switch (control.Type)
                 {
-                    case Constant.DatabaseColumn.DateTime:
+                    case DatabaseColumn.DateTime:
                         DataEntryDateTime dateTimeControl = new DataEntryDateTime(control, this)
                         {
                             ContentReadOnly = false
@@ -69,12 +70,12 @@ namespace Timelapse.ControlsDataEntry
                         controlToAdd = dateTimeControl;
                         break;
 
-                    case Constant.DatabaseColumn.File:
-                    case Constant.DatabaseColumn.RelativePath:
-                    case Constant.Control.Note:
+                    case DatabaseColumn.File:
+                    case DatabaseColumn.RelativePath:
+                    case Control.Note:
                         // standard controls rendering as notes aren't editable by the user, so we don't need autocompletions on them 
                         Dictionary<string, string> noteAutocompletions = null;
-                        bool readOnly = control.Type != Constant.Control.Note && control.Type != Constant.Control.AlphaNumeric;
+                        bool readOnly = control.Type != Control.Note && control.Type != Control.AlphaNumeric;
                         if (readOnly == false)
                         {
                             noteAutocompletions = new Dictionary<string, string>();
@@ -85,14 +86,14 @@ namespace Timelapse.ControlsDataEntry
                         };
                         controlToAdd = noteControl;
                         break;
-                    case Constant.Control.MultiLine:
+                    case Control.MultiLine:
                         DataEntryMultiLine multiLineControl = new DataEntryMultiLine(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = multiLineControl;
                         break;
-                    case Constant.Control.AlphaNumeric:
+                    case Control.AlphaNumeric:
                         Dictionary<string, string> alphaAutocompletions = new Dictionary<string, string>();
                         DataEntryAlphaNumeric alphaNumericControl = new DataEntryAlphaNumeric(control, alphaAutocompletions, this)
                         {
@@ -100,79 +101,79 @@ namespace Timelapse.ControlsDataEntry
                         };
                         controlToAdd = alphaNumericControl;
                         break;
-                    case Constant.Control.Flag:
-                    case Constant.DatabaseColumn.DeleteFlag:
+                    case Control.Flag:
+                    case DatabaseColumn.DeleteFlag:
                         DataEntryFlag flagControl = new DataEntryFlag(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = flagControl;
                         break;
-                    case Constant.Control.Counter:
+                    case Control.Counter:
                         DataEntryCounter counterControl = new DataEntryCounter(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = counterControl;
                         break;
-                    case Constant.Control.IntegerAny:
+                    case Control.IntegerAny:
                         DataEntryIntegerAny integerAnyControl = new DataEntryIntegerAny(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = integerAnyControl;
                         break;
-                    case Constant.Control.IntegerPositive:
+                    case Control.IntegerPositive:
                         DataEntryIntegerPositive integerPositiveControl = new DataEntryIntegerPositive(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = integerPositiveControl;
                         break;
-                    case Constant.Control.DecimalAny:
+                    case Control.DecimalAny:
                         DataEntryDecimalAny decimalAnyControl = new DataEntryDecimalAny(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = decimalAnyControl;
                         break;
-                    case Constant.Control.DecimalPositive:
+                    case Control.DecimalPositive:
                         DataEntryDecimalPositive decimalPositiveControl = new DataEntryDecimalPositive(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = decimalPositiveControl;
                         break;
-                    case Constant.Control.FixedChoice:
+                    case Control.FixedChoice:
                         DataEntryChoice choiceControl = new DataEntryChoice(control, this)
                         {
                             ContentReadOnly = false
                         };                      
                         controlToAdd = choiceControl;
                         break;
-                    case Constant.Control.MultiChoice:
+                    case Control.MultiChoice:
                         DataEntryMultiChoice multiChoiceControl = new DataEntryMultiChoice(control, this)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = multiChoiceControl;
                         break;
-                    case Constant.Control.DateTime_:
-                        DataEntryDateTimeCustom dateTimeCustomControl = new DataEntryDateTimeCustom(control, this, Constant.ControlDefault.DateTimeCustomDefaultValue)
+                    case Control.DateTime_:
+                        DataEntryDateTimeCustom dateTimeCustomControl = new DataEntryDateTimeCustom(control, this, ControlDefault.DateTimeCustomDefaultValue)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = dateTimeCustomControl;
                         break;
-                    case Constant.Control.Date_:
-                        DataEntryDate dateControl = new DataEntryDate(control, this, Constant.ControlDefault.Date_DefaultValue)
+                    case Control.Date_:
+                        DataEntryDate dateControl = new DataEntryDate(control, this, ControlDefault.Date_DefaultValue)
                         {
                             ContentReadOnly = false
                         };
                         controlToAdd = dateControl;
                         break;
-                    case Constant.Control.Time_:
-                        DataEntryTime timeControl = new DataEntryTime(control, this, Constant.ControlDefault.Time_DefaultValue)
+                    case Control.Time_:
+                        DataEntryTime timeControl = new DataEntryTime(control, this, ControlDefault.Time_DefaultValue)
                         {
                             ContentReadOnly = false
                         };
@@ -184,31 +185,31 @@ namespace Timelapse.ControlsDataEntry
                 }
                 if (control.Visible)
                 {
-                    this.ControlGrid.Inlines.Add(controlToAdd.Container);
-                    this.Controls.Add(controlToAdd);
-                    this.ControlsByDataLabelThatAreVisible.Add(control.DataLabel, controlToAdd);
+                    ControlGrid.Inlines.Add(controlToAdd.Container);
+                    Controls.Add(controlToAdd);
+                    ControlsByDataLabelThatAreVisible.Add(control.DataLabel, controlToAdd);
                 }
                 if (control.ExportToCSV)
                 {
-                    this.ControlsByDataLabelForExport.Add(control.DataLabel, controlToAdd);
+                    ControlsByDataLabelForExport.Add(control.DataLabel, controlToAdd);
                 }
             }
 
             // Redundant check as for some reason CA1062 was still showing up as a warning.
             ThrowIf.IsNullArgument(dataEntryPropagator, nameof(dataEntryPropagator));
-            dataEntryPropagator.SetDataEntryCallbacks(this.ControlsByDataLabelThatAreVisible);
-            this.dataEntryHandler = dataEntryPropagator;
+            dataEntryPropagator.SetDataEntryCallbacks(ControlsByDataLabelThatAreVisible);
+            dataEntryHandler = dataEntryPropagator;
         }
         #endregion
 
         public void Reset()
         {
-            this.Controls.Clear();
-            this.ControlsByDataLabelThatAreVisible.Clear();
-            this.ControlsByDataLabelForExport.Clear();
+            Controls.Clear();
+            ControlsByDataLabelThatAreVisible.Clear();
+            ControlsByDataLabelForExport.Clear();
             try
             {
-                this.ControlGrid.Inlines.Clear();
+                ControlGrid.Inlines.Clear();
             }
             catch (Exception)
             {
@@ -222,7 +223,7 @@ namespace Timelapse.ControlsDataEntry
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
 
-            foreach (DataEntryControl control in this.Controls)
+            foreach (DataEntryControl control in Controls)
             {
                 // no point in autocompleting if its read-only
                 if (control.ContentReadOnly)
@@ -241,7 +242,7 @@ namespace Timelapse.ControlsDataEntry
         // Try to add the values in the current note fields to the autocompletion list, assuming that it is different.
         public void AutocompletionUpdateWithCurrentRowValues()
         {
-            foreach (DataEntryControl control in this.Controls)
+            foreach (DataEntryControl control in Controls)
             {
                 // no point in updating autocompletion if its read-only
                 if (control.ContentReadOnly)
@@ -264,7 +265,7 @@ namespace Timelapse.ControlsDataEntry
         // Return the autocompletion list for a note identified by its datalabel
         public Dictionary<string, string> AutocompletionGetForNote(string datalabel)
         {
-            foreach (DataEntryControl control in this.Controls)
+            foreach (DataEntryControl control in Controls)
             {
                 // no point in autocompleting if its read-only
                 if (control.DataLabel == datalabel)
@@ -273,10 +274,8 @@ namespace Timelapse.ControlsDataEntry
                     {
                         return note.ContentControl.Autocompletions;
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return null;
                 }
             }
             return null;
@@ -290,12 +289,12 @@ namespace Timelapse.ControlsDataEntry
         // when the markable canvas is zoomed out to display multiple images
         public void SetEnableState(ControlsEnableStateEnum controlsToEnable, int imagesSelected)
         {
-            if (this.dataEntryHandler?.ImageCache?.Current == null)
+            if (dataEntryHandler?.ImageCache?.Current == null)
             {
                 return;
             }
-            this.dataEntryHandler.IsProgrammaticControlUpdate = true;
-            foreach (DataEntryControl control in this.Controls)
+            dataEntryHandler.IsProgrammaticControlUpdate = true;
+            foreach (DataEntryControl control in Controls)
             {
                 if (control is DataEntryDateTime datetime)
                 {
@@ -304,14 +303,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         datetime.IsEnabled = true;
-                        datetime.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(datetime.DataLabel));
+                        datetime.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(datetime.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one image is selected, display it as enabled (but not editable) and show its value, otherwise disabled
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(datetime.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(datetime.DataLabel);
                         datetime.IsEnabled = false;   // We currently don't allow editing of utcOffset in the overview. To fix, start here: datetime.IsEnabled = (imagesSelected == 1) ? true : false;
                         datetime.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -323,7 +322,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         note.IsEnabled = true;
-                        note.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(note.DataLabel));
+                        note.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(note.DataLabel));
                     }
                     else
                     {
@@ -331,9 +330,9 @@ namespace Timelapse.ControlsDataEntry
                         // File, Relative Path: When one image is selected, display it as enabled and editable.
                         // Notes: When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(note.DataLabel);
-                        if (control.DataLabel == Constant.DatabaseColumn.File ||
-                             control.DataLabel == Constant.DatabaseColumn.RelativePath)
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(note.DataLabel);
+                        if (control.DataLabel == DatabaseColumn.File ||
+                             control.DataLabel == DatabaseColumn.RelativePath)
                         {
                             note.IsEnabled = imagesSelected == 1;
                         }
@@ -351,7 +350,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         multiLine.IsEnabled = true;
-                        multiLine.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(multiLine.DataLabel));
+                        multiLine.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(multiLine.DataLabel));
                     }
                     else
                     {
@@ -359,7 +358,7 @@ namespace Timelapse.ControlsDataEntry
                         // File, Relative Path: When one image is selected, display it as enabled and editable.
                         // Notes: When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(multiLine.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(multiLine.DataLabel);
                         multiLine.IsEnabled = imagesSelected >= 1;
                         multiLine.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -371,7 +370,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         alphaNumeric.IsEnabled = true;
-                        alphaNumeric.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(alphaNumeric.DataLabel));
+                        alphaNumeric.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(alphaNumeric.DataLabel));
                     }
                     else
                     {
@@ -379,9 +378,9 @@ namespace Timelapse.ControlsDataEntry
                         // File, Relative Path: When one image is selected, display it as enabled and editable.
                         // Notes: When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(alphaNumeric.DataLabel);
-                        if (control.DataLabel == Constant.DatabaseColumn.File ||
-                            control.DataLabel == Constant.DatabaseColumn.RelativePath)
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(alphaNumeric.DataLabel);
+                        if (control.DataLabel == DatabaseColumn.File ||
+                            control.DataLabel == DatabaseColumn.RelativePath)
                         {
                             alphaNumeric.IsEnabled = imagesSelected == 1;
                         }
@@ -399,14 +398,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         choice.IsEnabled = true;
-                        choice.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(choice.DataLabel));
+                        choice.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(choice.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(choice.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(choice.DataLabel);
                         choice.IsEnabled = (imagesSelected >= 1);
                         choice.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -418,14 +417,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         multiChoice.IsEnabled = true;
-                        multiChoice.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(multiChoice.DataLabel));
+                        multiChoice.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(multiChoice.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(multiChoice.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(multiChoice.DataLabel);
                         multiChoice.IsEnabled = (imagesSelected >= 1);
                         multiChoice.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -437,14 +436,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         counter.IsEnabled = true;
-                        counter.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(counter.DataLabel));
+                        counter.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(counter.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(counter.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(counter.DataLabel);
                         counter.IsEnabled = (imagesSelected >= 1);
                         // Changing a counter value does not trigger a ValueChanged event if the values are the same.
                         // which means multiple images may not be updated even if other images have the same value.
@@ -464,14 +463,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         integerBase.IsEnabled = true;
-                        integerBase.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(integerBase.DataLabel));
+                        integerBase.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(integerBase.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(integerBase.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(integerBase.DataLabel);
                         integerBase.IsEnabled = imagesSelected >= 1;
                         // Changing a counter value does not trigger a ValueChanged event if the values are the same.
                         // which means multiple images may not be updated even if other images have the same value.
@@ -491,14 +490,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         decimalBase.IsEnabled = true;
-                        decimalBase.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(decimalBase.DataLabel));
+                        decimalBase.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(decimalBase.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(decimalBase.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(decimalBase.DataLabel);
                         decimalBase.IsEnabled = imagesSelected >= 1;
                         // Changing a counter value does not trigger a ValueChanged event if the values are the same.
                         // which means multiple images may not be updated even if other images have the same value.
@@ -515,14 +514,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         flag.IsEnabled = true;
-                        flag.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(flag.DataLabel));
+                        flag.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(flag.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(flag.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(flag.DataLabel);
                         flag.IsEnabled = (imagesSelected >= 1);
                         flag.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -534,14 +533,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         dateTime_.IsEnabled = true;
-                        dateTime_.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(dateTime_.DataLabel));
+                        dateTime_.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(dateTime_.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(dateTime_.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(dateTime_.DataLabel);
                         dateTime_.IsEnabled = (imagesSelected >= 1);
                         dateTime_.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -553,14 +552,14 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         date_.IsEnabled = true;
-                        date_.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(date_.DataLabel));
+                        date_.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(date_.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(date_.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(date_.DataLabel);
                         date_.IsEnabled = (imagesSelected >= 1);
                         date_.SetContentAndTooltip(contentAndTooltip);
                     }
@@ -572,20 +571,20 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         time_.IsEnabled = true;
-                        time_.SetContentAndTooltip(this.dataEntryHandler.ImageCache.Current.GetValueDisplayString(time_.DataLabel));
+                        time_.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(time_.DataLabel));
                     }
                     else
                     {
                         // Multiple images view
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
-                        string contentAndTooltip = this.dataEntryHandler.GetValueDisplayStringCommonToFileIds(time_.DataLabel);
+                        string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(time_.DataLabel);
                         time_.IsEnabled = (imagesSelected >= 1);
                         time_.SetContentAndTooltip(contentAndTooltip);
                     }
                 }
             }
-            this.dataEntryHandler.IsProgrammaticControlUpdate = false;
+            dataEntryHandler.IsProgrammaticControlUpdate = false;
         }
         #endregion
 
@@ -593,8 +592,8 @@ namespace Timelapse.ControlsDataEntry
         {
             try
             {
-                this.dataEntryHandler?.Dispose();
-                this.dataEntryHandler = null;
+                dataEntryHandler?.Dispose();
+                dataEntryHandler = null;
 
             }
             catch

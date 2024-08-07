@@ -17,11 +17,11 @@
         }
         public QuickPasteItem(string dataLabel, string label, string value, bool enabled, string controlType)
         {
-            this.DataLabel = dataLabel;
-            this.Label = label;
-            this.Value = value;
-            this.Use = enabled;
-            this.ControlType = controlType;
+            DataLabel = dataLabel;
+            Label = label;
+            Value = value;
+            Use = enabled;
+            ControlType = controlType;
         }
         #endregion
     }

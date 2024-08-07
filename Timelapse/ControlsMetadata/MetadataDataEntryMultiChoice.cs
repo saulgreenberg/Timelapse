@@ -1,5 +1,5 @@
-﻿using System.Windows.Controls;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Controls;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -15,29 +15,29 @@ namespace Timelapse.ControlsMetadata
     {
         #region Public Properties
 
-        public override UIElement GetContentControl => this.ContentControl;
+        public override UIElement GetContentControl => ContentControl;
 
-        public override bool IsContentControlEnabled => this.ContentControl.IsEnabled;
+        public override bool IsContentControlEnabled => ContentControl.IsEnabled;
 
         /// <summary>Gets  the content of the note</summary>
-        public override string Content => this.ContentControl.Text;
+        public override string Content => ContentControl.Text;
 
         public bool ContentChanged { get; set; }
 
         public override bool ContentReadOnly
         {
             // A hack, as the CheckComboBox does not contain an IsReadOnly field
-            get => this.ContentControl.IsEditable;
+            get => ContentControl.IsEditable;
             set
             {
                 if (GlobalReferences.TimelapseState.IsViewOnly)
                 {
-                    this.ContentControl.IsEditable = false;
-                    this.ContentControl.IsHitTestVisible = false;
+                    ContentControl.IsEditable = false;
+                    ContentControl.IsHitTestVisible = false;
                 }
                 else
                 {
-                    this.ContentControl.IsEditable = value;
+                    ContentControl.IsEditable = value;
                 }
             }
         }
@@ -48,9 +48,9 @@ namespace Timelapse.ControlsMetadata
             base(control, styleProvider, ControlContentStyleEnum.MultiChoiceComboBox, ControlLabelStyleEnum.DefaultLabel, tooltip)
         {
             // The behaviour of the combo box
-            this.ContentControl.Focusable = true;
+            ContentControl.Focusable = true;
             //this.ContentControl.IsEditable = false;
-            this.ContentControl.IsTextSearchEnabled = true;
+            ContentControl.IsTextSearchEnabled = true;
 
             // Callback used to allow Enter to select the highlit item
             // this.ContentControl.PreviewKeyDown += this.ContentCtl_PreviewKeyDown;
@@ -64,13 +64,13 @@ namespace Timelapse.ControlsMetadata
                 {
                     continue;
                 }
-                this.ContentControl.Items.Add(choice);
+                ContentControl.Items.Add(choice);
             }
-            this.ContentControl.SelectedItem = control.DefaultValue;
+            ContentControl.SelectedItem = control.DefaultValue;
 
             // Now configure the various elements
-            this.ControlType = control.Type;
-            this.ContentChanged = false;
+            ControlType = control.Type;
+            ContentChanged = false;
         }
         #endregion
 
@@ -81,7 +81,7 @@ namespace Timelapse.ControlsMetadata
             // This is needed to set it explicitly.
             if (string.IsNullOrEmpty(value))
             {
-                this.ContentControl.SelectedValue = string.Empty;
+                ContentControl.SelectedValue = string.Empty;
             }
             else
             {
@@ -90,8 +90,8 @@ namespace Timelapse.ControlsMetadata
 
             // Set the choice to the value provided  
             // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..
-            this.ContentControl.Text = value;
-            this.ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+            ContentControl.Text = value;
+            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
         }
         #endregion
     }

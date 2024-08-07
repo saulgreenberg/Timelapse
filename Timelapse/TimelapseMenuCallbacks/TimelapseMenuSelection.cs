@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.SearchingAndSorting;
 using MessageBox = Timelapse.Dialog.MessageBox;
@@ -19,29 +21,29 @@ namespace Timelapse
         # region Select sub-menu opening
         private void MenuItemSelect_SubmenuOpening(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            FilePlayer_Stop(); // In case the FilePlayer is going
 
-            this.MenuItemSelectMissingFiles.IsEnabled = true;
+            MenuItemSelectMissingFiles.IsEnabled = true;
 
             // Enable menu if there are any files marked for deletion
-            bool exists = this.DataHandler.FileDatabase.ExistsRowThatMatchesSelectionForAllFilesOrConstrainedRelativePathFiles(FileSelectionEnum.MarkedForDeletion);
-            this.MenuItemSelectFilesMarkedForDeletion.Header = "All files marked for d_eletion";
+            bool exists = DataHandler.FileDatabase.ExistsRowThatMatchesSelectionForAllFilesOrConstrainedRelativePathFiles(FileSelectionEnum.MarkedForDeletion);
+            MenuItemSelectFilesMarkedForDeletion.Header = "All files marked for d_eletion";
             if (!exists)
             {
-                this.MenuItemSelectFilesMarkedForDeletion.Header += " (0)";
+                MenuItemSelectFilesMarkedForDeletion.Header += " (0)";
             }
-            this.MenuItemSelectFilesMarkedForDeletion.IsEnabled = exists;
+            MenuItemSelectFilesMarkedForDeletion.IsEnabled = exists;
 
             // Put a checkmark next to the menu item that matches the stored selection criteria
-            FileSelectionEnum selection = this.DataHandler.FileDatabase.FileSelectionEnum;
+            FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum;
 
-            this.MenuItemSelectAllFiles.IsChecked = selection == FileSelectionEnum.All;
-            this.MenuItemSelectByRelativePath.IsChecked = selection == FileSelectionEnum.Folders;
+            MenuItemSelectAllFiles.IsChecked = selection == FileSelectionEnum.All;
+            MenuItemSelectByRelativePath.IsChecked = selection == FileSelectionEnum.Folders;
 
-            this.MenuItemSelectMissingFiles.IsChecked = selection == FileSelectionEnum.Missing;
-            this.MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
-            this.MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
-            this.MenuItemSelectRandomSample.IsEnabled = this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
+            MenuItemSelectMissingFiles.IsChecked = selection == FileSelectionEnum.Missing;
+            MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
+            MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
+            MenuItemSelectRandomSample.IsEnabled = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
         }
         #endregion
 
@@ -50,7 +52,7 @@ namespace Timelapse
         {
             MenuItem item = (MenuItem)sender;
             FileSelectionEnum selection;
-            FileSelectionEnum oldSelection = this.DataHandler.FileDatabase.FileSelectionEnum;
+            FileSelectionEnum oldSelection = DataHandler.FileDatabase.FileSelectionEnum;
 
 
             // Any selections below will not trigger a Select with recognitions
@@ -58,19 +60,19 @@ namespace Timelapse
             GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = 1;
 
             // Set the selection enum to match the menu selection 
-            if (item == this.MenuItemSelectAllFiles)
+            if (item == MenuItemSelectAllFiles)
             {
                 selection = FileSelectionEnum.All;
             }
-            else if (item == this.MenuItemSelectMissingFiles)
+            else if (item == MenuItemSelectMissingFiles)
             {
                 selection = FileSelectionEnum.Missing;
             }
-            else if (item == this.MenuItemSelectFilesMarkedForDeletion)
+            else if (item == MenuItemSelectFilesMarkedForDeletion)
             {
                 selection = FileSelectionEnum.MarkedForDeletion;
             }
-            else if (item == this.MenuItemSelectByRelativePath)
+            else if (item == MenuItemSelectByRelativePath)
             {
                 // MenuItemSelectByFolder and its child folders should not be activated from here, 
                 // but we add this test just as a reminder that we haven't forgotten it
@@ -84,19 +86,19 @@ namespace Timelapse
 
             // Clear all the checkmarks from the Folder menu
             // But, not sure where we Treat the other menu checked status as a radio button i.e., we would want to toggle their states so only the clicked menu item is checked. 
-            this.MenuItemSelectByRelativePath_ClearAllCheckmarks();
+            MenuItemSelectByRelativePath_ClearAllCheckmarks();
 
             // Select and show the files according to the selection made
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Go to the first result (i.e., index 0) in the given selection set
-                await this.FilesSelectAndShowAsync(selection).ConfigureAwait(true);
+                await FilesSelectAndShowAsync(selection).ConfigureAwait(true);
             }
             else
             {
-                if (false == await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, selection).ConfigureAwait(true))
+                if (false == await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, selection).ConfigureAwait(true))
                 {
-                    this.DataHandler.FileDatabase.FileSelectionEnum = oldSelection;
+                    DataHandler.FileDatabase.FileSelectionEnum = oldSelection;
                 }
             }
         }
@@ -116,21 +118,21 @@ namespace Timelapse
             if (menu.Items.Count != 1)
             {
                 // Gets the folders from the database, and created a menu item representing it
-                this.MenuItemSelectByFolder_ResetFolderList();
+                MenuItemSelectByFolder_ResetFolderList();
             }
             // Set the checkmark to reflect the current search term for the relative path
-            this.MenuItemFolderListSetCheckmark();
+            MenuItemFolderListSetCheckmark();
         }
 
         private void MenuItemFolderListSetCheckmark()
         {
-            SearchTerm relativePathSearchTerm = this.DataHandler?.FileDatabase?.CustomSelection?.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.RelativePath);
+            SearchTerm relativePathSearchTerm = DataHandler?.FileDatabase?.CustomSelection?.SearchTerms.First(term => term.DataLabel == DatabaseColumn.RelativePath);
             if (relativePathSearchTerm == null)
             {
                 return;
             }
 
-            foreach (MenuItem menuItem in this.MenuItemSelectByRelativePath.Items)
+            foreach (MenuItem menuItem in MenuItemSelectByRelativePath.Items)
             {
                 menuItem.IsChecked = relativePathSearchTerm.UseForSearching && String.Equals((string)menuItem.Header, relativePathSearchTerm.DatabaseValue);
             }
@@ -141,16 +143,16 @@ namespace Timelapse
         {
 
             // Clear the list, excepting the first menu item all folders, which should be kept.
-            MenuItem item = (MenuItem)this.MenuItemSelectByRelativePath.Items[0];
-            this.MenuItemSelectByRelativePath.Items.Clear();
-            this.MenuItemSelectByRelativePath.Items.Add(item);
+            MenuItem item = (MenuItem)MenuItemSelectByRelativePath.Items[0];
+            MenuItemSelectByRelativePath.Items.Clear();
+            MenuItemSelectByRelativePath.Items.Add(item);
 
             // Populate the menu . Get the folders from the database, and create a menu item representing it
             int i = 1;
             // PERFORMANCE. THIS introduces a delay when there are a large number of files. It is invoked when the user loads images for the first time. 
             // PROGRESSBAR - at the very least, show a progress bar if needed.
 
-            List<string> folderList = this.DataHandler.FileDatabase.GetFoldersFromRelativePaths();//this.DataHandler.FileDatabase.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
+            List<string> folderList = DataHandler.FileDatabase.GetFoldersFromRelativePaths();//this.DataHandler.FileDatabase.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
             foreach (string header in folderList)
             {
                 if (string.IsNullOrEmpty(header))
@@ -160,7 +162,7 @@ namespace Timelapse
                 }
 
                 // Add the folder to the menu only if it isn't constrained by the relative path arguments
-                if (this.Arguments.ConstrainToRelativePath && !(header == this.Arguments.RelativePath || header.StartsWith(this.Arguments.RelativePath + @"\")))
+                if (Arguments.ConstrainToRelativePath && !(header == Arguments.RelativePath || header.StartsWith(Arguments.RelativePath + @"\")))
                 {
                     continue;
                 }
@@ -171,8 +173,8 @@ namespace Timelapse
                     IsCheckable = true,
                     ToolTip = "Show only files in the folder (including its own sub-folders): " + header
                 };
-                menuitemFolder.Click += this.MenuItemSelectFolder_Click;
-                this.MenuItemSelectByRelativePath.Items.Insert(i++, menuitemFolder);
+                menuitemFolder.Click += MenuItemSelectFolder_Click;
+                MenuItemSelectByRelativePath.Items.Insert(i++, menuitemFolder);
             }
         }
 
@@ -185,10 +187,10 @@ namespace Timelapse
                 return;
             }
 
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 //Shouldn't happen
-                TracePrint.UnexpectedException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.UnexpectedException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
 
@@ -227,8 +229,8 @@ namespace Timelapse
 
         private void MenuItemSelectByRelativePath_ClearAllCheckmarks()
         {
-            this.MenuItemSelectByRelativePath.IsChecked = false;
-            foreach (MenuItem mi in this.MenuItemSelectByRelativePath.Items)
+            MenuItemSelectByRelativePath.IsChecked = false;
+            foreach (MenuItem mi in MenuItemSelectByRelativePath.Items)
             {
                 mi.IsChecked = false;
             }
@@ -239,31 +241,31 @@ namespace Timelapse
         private async void MenuItemSelectCustomSelection_Click(object sender, RoutedEventArgs e)
         {
             // the first time the custom selection dialog is launched update the DateTime search terms to the time of the current image
-            SearchTerm firstDateTimeSearchTerm = this.DataHandler.FileDatabase.CustomSelection.SearchTerms.FirstOrDefault(searchTerm => searchTerm.DataLabel == Constant.DatabaseColumn.DateTime);
+            SearchTerm firstDateTimeSearchTerm = DataHandler.FileDatabase.CustomSelection.SearchTerms.FirstOrDefault(searchTerm => searchTerm.DataLabel == DatabaseColumn.DateTime);
             if (firstDateTimeSearchTerm == null)
             {
                 // Shouldn't happen, as there should always be a datetime columne
                 TracePrint.NullException(nameof(firstDateTimeSearchTerm));
                 return;
             }
-            if (firstDateTimeSearchTerm.GetDateTime() == Constant.ControlDefault.DateTimeDefaultValue)
+            if (firstDateTimeSearchTerm.GetDateTime() == ControlDefault.DateTimeDefaultValue)
             {
                 DateTime defaultDate;
-                if (this.DataHandler.ImageCache.Current == null)
+                if (DataHandler.ImageCache.Current == null)
                 {
                     // Should't happen
-                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     defaultDate = DateTime.Now;
                 }
                 else
                 {
-                    defaultDate = this.DataHandler.ImageCache.Current.DateTime;
+                    defaultDate = DataHandler.ImageCache.Current.DateTime;
                 }
-                this.DataHandler.FileDatabase.CustomSelection.SetDateTimes(defaultDate);
+                DataHandler.FileDatabase.CustomSelection.SetDateTimes(defaultDate);
             }
 
             // show the dialog and process the resuls
-            Dialog.CustomSelectionWithEpisodes customSelection = new Dialog.CustomSelectionWithEpisodes(this.DataHandler.FileDatabase, this.DataEntryControls, this, this.DataHandler.FileDatabase.CustomSelection.DetectionSelections, this.DataHandler.ImageCache.Current)
+            CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(DataHandler.FileDatabase, DataEntryControls, this, DataHandler.FileDatabase.CustomSelection.DetectionSelections, DataHandler.ImageCache.Current)
             {
                 Owner = this
             };
@@ -271,27 +273,27 @@ namespace Timelapse
             // Set the selection to show all images and a valid image
             if (changeToCustomSelection == true)
             {
-                if (this.DataHandler.ImageCache.Current == null)
+                if (DataHandler.ImageCache.Current == null)
                 {
                     // Shouldn't happen.
-                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     return;
                 }
-                await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
-                if (this.MenuItemSelectCustomSelection.IsChecked || this.MenuItemSelectCustomSelection.IsChecked)
+                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
+                if (MenuItemSelectCustomSelection.IsChecked || MenuItemSelectCustomSelection.IsChecked)
                 {
-                    this.MenuItemSelectByRelativePath_ClearAllCheckmarks();
+                    MenuItemSelectByRelativePath_ClearAllCheckmarks();
                 }
             }
             else
             {
                 // Since we canceled the custom selection, uncheck the item (but only if another menu item is shown checked)
                 bool otherMenuItemIsChecked =
-                    this.MenuItemSelectAllFiles.IsChecked ||
-                    this.MenuItemSelectMissingFiles.IsChecked ||
-                    this.MenuItemSelectByRelativePath.IsChecked ||
-                    this.MenuItemSelectFilesMarkedForDeletion.IsChecked;
-                this.MenuItemSelectCustomSelection.IsChecked = !otherMenuItemIsChecked;
+                    MenuItemSelectAllFiles.IsChecked ||
+                    MenuItemSelectMissingFiles.IsChecked ||
+                    MenuItemSelectByRelativePath.IsChecked ||
+                    MenuItemSelectFilesMarkedForDeletion.IsChecked;
+                MenuItemSelectCustomSelection.IsChecked = !otherMenuItemIsChecked;
             }
         }
         #endregion
@@ -301,39 +303,39 @@ namespace Timelapse
         // Useful when, for example, the user has selected a view, but then changed some data values where items no longer match the current selection.
         private async void MenuItemSelectReselect_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
             // Reselect the images, which re-sorts them to the current sort criteria. 
-            await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
+            await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
         }
         #endregion
 
         #region Select Random Sample
         private async void MenuItemSelectRandomSample_Click(object sender, RoutedEventArgs e)
         {
-            this.MenuItemSelectAllFiles.IsChecked = false;
-            int currentSelectionCount = this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;
-            Dialog.RandomSampleSelection customSelection = new Dialog.RandomSampleSelection(this, currentSelectionCount);
+            MenuItemSelectAllFiles.IsChecked = false;
+            int currentSelectionCount = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;
+            RandomSampleSelection customSelection = new RandomSampleSelection(this, currentSelectionCount);
             bool? useRandomSample = customSelection.ShowDialog();
-            this.MenuItemSelectAllFiles.IsChecked = false;
+            MenuItemSelectAllFiles.IsChecked = false;
             if (true == useRandomSample)
             {
-                if (this.DataHandler.ImageCache.Current == null)
+                if (DataHandler.ImageCache.Current == null)
                 {
                     // Shouldn't happen
-                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
-                    this.StatusBar.SetView("Something went wrong with random sample");
+                    TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
+                    StatusBar.SetView("Something went wrong with random sample");
                     return;
                 }
-                this.DataHandler.FileDatabase.CustomSelection.RandomSample = customSelection.SampleSize;
-                await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
-                this.DataHandler.FileDatabase.CustomSelection.RandomSample = 0;
-                this.MenuItemSelectAllFiles.IsChecked = true;
-                this.StatusBar.SetView("Random Sample of currently selected Files");
+                DataHandler.FileDatabase.CustomSelection.RandomSample = customSelection.SampleSize;
+                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
+                DataHandler.FileDatabase.CustomSelection.RandomSample = 0;
+                MenuItemSelectAllFiles.IsChecked = true;
+                StatusBar.SetView("Random Sample of currently selected Files");
             }
 
         }

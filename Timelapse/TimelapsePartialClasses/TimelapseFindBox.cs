@@ -16,7 +16,7 @@ namespace Timelapse
         {
             if (e.Key == Key.Enter)
             {
-                this.FindBox_FindImage(true);
+                FindBox_FindImage(true);
             }
         }
 
@@ -24,14 +24,14 @@ namespace Timelapse
         private void FindBoxButton_Click(object sender, RoutedEventArgs e)
         {
             Button findButton = sender as Button;
-            bool isForward = (findButton == this.FindForwardButton);
-            this.FindBox_FindImage(isForward);
+            bool isForward = (findButton == FindForwardButton);
+            FindBox_FindImage(isForward);
         }
 
         // Close
         private void FindBoxClose_Click(object sender, RoutedEventArgs e)
         {
-            this.FindBoxSetVisibility(false);
+            FindBoxSetVisibility(false);
         }
         #endregion
 
@@ -41,10 +41,10 @@ namespace Timelapse
         private void FindBoxSetVisibility(bool isVisible)
         {
             // Only make the find box visible if there are files to view
-            if (this.FindBox != null && this.IsFileDatabaseAvailable() && this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0)
+            if (FindBox != null && IsFileDatabaseAvailable() && DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0)
             {
-                this.FindBox.IsOpen = isVisible;
-                this.FindBoxTextBox.Focus();
+                FindBox.IsOpen = isVisible;
+                FindBoxTextBox.Focus();
             }
         }
         #endregion
@@ -54,21 +54,21 @@ namespace Timelapse
         // Only invoked by the above
         private void FindBox_FindImage(bool isForward)
         {
-            string searchTerm = this.FindBoxTextBox.Text;
-            ImageRow row = this.DataHandler.ImageCache.Current;
+            string searchTerm = FindBoxTextBox.Text;
+            ImageRow row = DataHandler.ImageCache.Current;
 
-            int currentIndex = this.DataHandler.FileDatabase.FileTable.IndexOf(row);
-            int foundIndex = this.DataHandler.FileDatabase.FindByFileName(currentIndex, isForward, searchTerm);
+            int currentIndex = DataHandler.FileDatabase.FileTable.IndexOf(row);
+            int foundIndex = DataHandler.FileDatabase.FindByFileName(currentIndex, isForward, searchTerm);
             if (foundIndex != -1)
             {
-                this.FileShow(foundIndex);
+                FileShow(foundIndex);
             }
             else
             {
                 // Flash the text field to indicate no result
-                if (this.FindResource("ColorAnimationBriefFlash") is Storyboard sb)
+                if (FindResource("ColorAnimationBriefFlash") is Storyboard sb)
                 {
-                    Storyboard.SetTarget(sb, this.FindBoxTextBox);
+                    Storyboard.SetTarget(sb, FindBoxTextBox);
                     sb.Begin();
                 }
             }

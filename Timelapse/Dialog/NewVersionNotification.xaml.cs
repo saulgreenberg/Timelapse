@@ -6,6 +6,8 @@ using System.Net;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Navigation;
+using Timelapse.Constant;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -20,19 +22,19 @@ namespace Timelapse.Dialog
         public NewVersionNotification(Window owner, string applicationName, Version currentVersionNumber, Version latestVersionNumber)
         {
 
-            this.InitializeComponent();
-            this.Owner = owner;
+            InitializeComponent();
+            Owner = owner;
 
             // Construct the template message
-            this.Title = $"A new version of {applicationName} is available.";
+            Title = $"A new version of {applicationName} is available.";
 
-            this.Message.Title = this.Title;
-            this.Message.What = $"A new {applicationName} version is available: {latestVersionNumber}";
-            this.Message.What += Environment.NewLine;
-            this.Message.What += $"You are running an older version:       {currentVersionNumber} ";
+            Message.Title = Title;
+            Message.What = $"A new {applicationName} version is available: {latestVersionNumber}";
+            Message.What += Environment.NewLine;
+            Message.What += $"You are running an older version:       {currentVersionNumber} ";
 
-            this.Message.Reason = "We always recommend updating. Updates include bug fixes, enhancements, new features, and more. ";
-            this.Message.Reason += Environment.NewLine + "Select 'Download New Version' to download it at the Timelapse download page.";
+            Message.Reason = "We always recommend updating. Updates include bug fixes, enhancements, new features, and more. ";
+            Message.Reason += Environment.NewLine + "Select 'Download New Version' to download it at the Timelapse download page.";
 
             // Create a flow document and load it with the contents of the file
             try
@@ -46,8 +48,8 @@ namespace Timelapse.Dialog
                 TextRange textRange = new TextRange(content.ContentStart, content.ContentEnd);
 
                 // Try to load the rtf file pointed at by the URI as a string
-                string filename = Constant.VersionUpdates.LatestVersionFileNamePrefix + $"{latestVersionNumber}" + Constant.VersionUpdates.LatestVersionFileNameSuffix;
-                Uri uri = new Uri(Constant.VersionUpdates.LatestVersionBaseAddress, filename);
+                string filename = VersionUpdates.LatestVersionFileNamePrefix + $"{latestVersionNumber}" + VersionUpdates.LatestVersionFileNameSuffix;
+                Uri uri = new Uri(VersionUpdates.LatestVersionBaseAddress, filename);
                 WebResponse response = WebRequest.Create(uri).GetResponse();
                 Stream streamfromuri = response.GetResponseStream();
                 if (streamfromuri == null)
@@ -68,10 +70,10 @@ namespace Timelapse.Dialog
 
                         // Load the stream into the Flow Document, converting hyperlinks to active links
                         textRange.Load(stream, DataFormats.Rtf);
-                        this.SubscribeToAllHyperlinks(content);
+                        SubscribeToAllHyperlinks(content);
 
                         // Add the document to the FlowDocumentScollViewer
-                        this.ChangeDescription.Document = content;
+                        ChangeDescription.Document = content;
                     }
                 }
             }
@@ -87,11 +89,11 @@ namespace Timelapse.Dialog
                 p1.Inlines.Add("See version change details at: ");
                 Hyperlink h1 = new Hyperlink();
                 h1.Inlines.Add("Timelapse Version History Page");
-                h1.NavigateUri = Constant.ExternalLinks.TimlapseVersionChangesLink;
-                h1.RequestNavigate += this.Link_RequestNavigate;
+                h1.NavigateUri = ExternalLinks.TimlapseVersionChangesLink;
+                h1.RequestNavigate += Link_RequestNavigate;
                 p1.Inlines.Add(h1);
                 content.Blocks.Add(p1);
-                this.ChangeDescription.Document = content;
+                ChangeDescription.Document = content;
             }
         }
 
@@ -107,7 +109,7 @@ namespace Timelapse.Dialog
             var hyperlinks = GetVisuals(flowDocument).OfType<Hyperlink>();
             foreach (var link in hyperlinks)
             {
-                link.RequestNavigate += this.Link_RequestNavigate;
+                link.RequestNavigate += Link_RequestNavigate;
             }
         }
 
@@ -123,7 +125,7 @@ namespace Timelapse.Dialog
             }
         }
 
-        private void Link_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void Link_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             ProcessExecution.TryProcessStart(e.Uri);
             e.Handled = true;
@@ -134,12 +136,12 @@ namespace Timelapse.Dialog
 
         private void YesButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
 
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
         #endregion
     }

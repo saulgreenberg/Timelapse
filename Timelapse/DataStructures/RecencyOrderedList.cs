@@ -13,7 +13,7 @@ namespace Timelapse.DataStructures
         /// <summary>
         /// Number of items in the collection
         /// </summary>
-        public int Count => this.list.Count;
+        public int Count => list.Count;
 
         #endregion
 
@@ -30,7 +30,7 @@ namespace Timelapse.DataStructures
         /// <param name="maximumItems"></param>
         public RecencyOrderedList(int maximumItems)
         {
-            this.list = new LinkedList<TElement>();
+            list = new LinkedList<TElement>();
 
             // subtract one off the list's maximum size as SetMostRecent() checks it after 
             this.maximumItems = maximumItems;
@@ -44,7 +44,7 @@ namespace Timelapse.DataStructures
         /// <returns></returns>
         public bool IsFull()
         {
-            return this.list.Count == this.maximumItems;
+            return list.Count == maximumItems;
         }
 
         /// <summary>
@@ -54,17 +54,17 @@ namespace Timelapse.DataStructures
         /// <param name="mostRecent"></param>
         public void SetMostRecent(TElement mostRecent)
         {
-            if (this.list.Remove(mostRecent) == false)
+            if (list.Remove(mostRecent) == false)
             {
                 // item wasn't already in the list
-                if (this.list.Count >= this.maximumItems)
+                if (list.Count >= maximumItems)
                 {
                     // list was full, drop the oldest item to make room for new item
-                    this.list.RemoveLast();
+                    list.RemoveLast();
                 }
             }
             // make the item the most current in the list
-            this.list.AddFirst(mostRecent);
+            list.AddFirst(mostRecent);
         }
 
         /// <summary>
@@ -74,9 +74,9 @@ namespace Timelapse.DataStructures
         /// <returns>false if the list is empty</returns>
         public bool TryGetMostRecent(out TElement mostRecent)
         {
-            if (this.list.Count > 0)
+            if (list.Count > 0)
             {
-                mostRecent = this.list.First.Value;
+                mostRecent = list.First.Value;
                 return true;
             }
             mostRecent = default;
@@ -90,9 +90,9 @@ namespace Timelapse.DataStructures
         /// <returns>false if the list is empty</returns>
         public bool TryGetLeastRecent(out TElement leastRecent)
         {
-            if (this.list.Count > 0)
+            if (list.Count > 0)
             {
-                leastRecent = this.list.Last.Value;
+                leastRecent = list.Last.Value;
                 return true;
             }
             leastRecent = default;
@@ -106,7 +106,7 @@ namespace Timelapse.DataStructures
         /// <returns>false if the collecton does not contain that item </returns>
         public bool TryRemove(TElement value)
         {
-            return this.list.Remove(value);
+            return list.Remove(value);
         }
         #endregion
 
@@ -114,13 +114,13 @@ namespace Timelapse.DataStructures
         public IEnumerator<TElement> GetEnumerator()
         {
             // ReSharper disable once NotDisposedResourceIsReturned
-            return this.list.GetEnumerator();
+            return list.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             // ReSharper disable once NotDisposedResourceIsReturned
-            return this.list.GetEnumerator();
+            return list.GetEnumerator();
         }
 
         #endregion

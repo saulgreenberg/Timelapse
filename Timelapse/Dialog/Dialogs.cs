@@ -1,19 +1,25 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using DialogUpgradeFiles;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
+using Control = Timelapse.Constant.Control;
 using Cursor = System.Windows.Input.Cursor;
+using File = Timelapse.Constant.File;
 using Rectangle = System.Drawing.Rectangle;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
@@ -27,8 +33,8 @@ namespace Timelapse.Dialog
         // are done together, so collapse it into a single call
         public static void TryPositionAndFitDialogIntoWindow(Window window)
         {
-            Dialogs.SetDefaultDialogPosition(window);
-            Dialogs.TryFitDialogInWorkingArea(window);
+            SetDefaultDialogPosition(window);
+            TryFitDialogInWorkingArea(window);
         }
 
 
@@ -76,7 +82,7 @@ namespace Timelapse.Dialog
             // Not sure how this would all work if multi-monitors had different dpis...
             double dpiWidthFactor = 1;
             double dpiHeightFactor = 1;
-            Window mainWindow = System.Windows.Application.Current.MainWindow;
+            Window mainWindow = Application.Current.MainWindow;
             if (mainWindow == null)
             {
                 // This shouldn't happen
@@ -102,7 +108,7 @@ namespace Timelapse.Dialog
             }
 
             // Get the monitor screen that this window appears to be on
-            Screen screenInDpi = Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+            Screen screenInDpi = Screen.FromHandle(new WindowInteropHelper(window).Handle);
 
             // A user reported a bug where the window height was negative. Not sure what value we should
             // really be testing against... Maybe MinWidth? Anyways, this should at least catch the worst of it.
@@ -291,10 +297,8 @@ namespace Timelapse.Dialog
                     // Trim the root folder path from the folder name to produce a relative path. 
                     return fileSelectionDialog.FileName;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
         }
 
@@ -326,10 +330,8 @@ namespace Timelapse.Dialog
                     // Trim the root folder path from the folder name to produce a relative path. 
                     return (folderSelectionDialog.FileName.Length > initialFolder.Length) ? folderSelectionDialog.FileName.Substring(initialFolder.Length + 1) : string.Empty;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
         }
 
@@ -452,7 +454,7 @@ namespace Timelapse.Dialog
         public static bool MaybePromptToApplyOperationOnSelectionDialog(Window owner, FileDatabase fileDatabase, bool promptState, string operationDescription,
             Action<bool> persistOptOut)
         {
-            if (Dialogs.CheckIfPromptNeeded(promptState, fileDatabase, out int filesTotalCount, out int filesSelectedCount) == false)
+            if (CheckIfPromptNeeded(promptState, fileDatabase, out int filesTotalCount, out int filesSelectedCount) == false)
             {
                 // if showing all images, or if users had elected not to be warned, then no need for showing the warning message
                 return true;
@@ -647,14 +649,14 @@ namespace Timelapse.Dialog
                 // Both files were renamed
                 fileTypeText = "Timelapse";
                 what =
-                    $"Your folder has multiple Timelapse template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files in it,";
+                    $"Your folder has multiple Timelapse template ({File.TemplateDatabaseFileExtension}) and data ({File.FileDatabaseFileExtension}) files in it,";
                 fileList = $"\u2022 {tdbFileName}{Environment.NewLine}"
                            + $"\u2022 {ddbFileName}";
             }
             else if (false == string.IsNullOrWhiteSpace(tdbFileName))
             {
                 // The template file only was renamed
-                fileTypeText = $"Timelapse template {Constant.File.TemplateDatabaseFileExtension} ";
+                fileTypeText = $"Timelapse template {File.TemplateDatabaseFileExtension} ";
                 pluralityText = " is ";
                 what = $"Your folder has multiple {fileTypeText} files in it,";
                 fileList = $"\u2022 {tdbFileName}";
@@ -662,7 +664,7 @@ namespace Timelapse.Dialog
             else
             {
                 // The datafile only was renamed
-                fileTypeText = $"Timelapse data {Constant.File.FileDatabaseFileExtension} ";
+                fileTypeText = $"Timelapse data {File.FileDatabaseFileExtension} ";
                 pluralityText = " is";
                 what =
                     $"Your folder has multiple {fileTypeText} files in it,";
@@ -756,9 +758,9 @@ namespace Timelapse.Dialog
                                "\u2022 Use shorter folder or file names."
                                + Environment.NewLine + "\u2022 If you do move them and Timelapse cannot find those folders, "
                                + Environment.NewLine + "     use Edit|Try to find any missing folders... to locate them.",
-                    Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength + " characters."
+                    Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + File.MaxPathLength + " characters."
                              + "Timelapse will shut down until you fix this.",
-                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
+                    Hint = "Files created in your " + File.BackupFolder + " folder must also be less than " + File.MaxPathLength + " characters."
                 }
             };
             if (e != null)
@@ -783,12 +785,12 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Error,
                     Title = title,
                     Problem = "Timelapse skipped reading some of your images in the folders below, as their file paths were too long.",
-                    Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + Constant.File.MaxPathLength + " characters.",
+                    Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + File.MaxPathLength + " characters.",
                     Solution = "Try reloading this image set after shortening the file path:"
                                + Environment.NewLine
                                + "\u2022 shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine +
                                "\u2022 use shorter folder or file names.",
-                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
+                    Hint = "Files created in your " + File.BackupFolder + " folder must also be less than " + File.MaxPathLength + " characters."
                 }
             };
 
@@ -817,10 +819,10 @@ namespace Timelapse.Dialog
                     Problem = title
                               + Environment.NewLine
                               + "As a precaution, Timelapse normally moves deleted files into the " +
-                              Constant.File.DeletedFilesFolder + " folder." + Environment.NewLine
+                              File.DeletedFilesFolder + " folder." + Environment.NewLine
                               + "However, the new file paths are too long for Windows to handle.",
                     Reason = "Windows cannot perform file operations if the file path is more than " +
-                             (Constant.File.MaxPathLength + 8) + " characters.",
+                             (File.MaxPathLength + 8) + " characters.",
                     Solution = "Click Okay to delete these files without backing them up, or Cancel to abort." +
                                Environment.NewLine
                                + "Alternately, shorten the path to your files, preferably well below the length limit:" +
@@ -844,7 +846,7 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not open the template (.tdb) file as its name is too long:"
                               + Environment.NewLine
                               + "\u2022 " + templateDatabasePath,
-                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
+                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
                                + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
@@ -864,7 +866,7 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not load the database (.ddb) file as its name is too long:"
                               + Environment.NewLine
                               + "\u2022 " + databasePath,
-                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
+                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:" + Environment.NewLine
                                                                                                 + "\u2022 move your image folder higher up the folder hierarchy, or" +
                                                                                                 Environment.NewLine
@@ -884,9 +886,9 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse will continue, but without backing up your files."
                               + Environment.NewLine
                               + "The issue is that the backup file can't be created as its name is too long for Windows to handle.",
-                    Reason = "Timelapse normally creates time-stamped backup files of your template, database, and csv files within a " + Constant.File.BackupFolder + " folder." +
+                    Reason = "Timelapse normally creates time-stamped backup files of your template, database, and csv files within a " + File.BackupFolder + " folder." +
                              Environment.NewLine
-                             + "However, Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
+                             + "However, Windows imposes a file name length limit (including its folder path) of around " + File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
                                + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
@@ -907,7 +909,7 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not rename the database (.ddb) file as its name would be too long:"
                               + Environment.NewLine
                               + "\u2022 " + databasePath,
-                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + Constant.File.MaxPathLength + " characters.",
+                    Reason = "Windows imposes a file name length limit (including its folder path) of around " + File.MaxPathLength + " characters.",
                     Solution = "Shorten the path name, preferably well below the length limit:"
                                + Environment.NewLine
                                + "\u2022 move your image folder higher up the folder hierarchy, or" + Environment.NewLine
@@ -998,12 +1000,12 @@ namespace Timelapse.Dialog
                     Problem = "Timelapse could not load the Template File :"
                               + Environment.NewLine
                               + "\u2022 " + templateDatabasePath,
-                    Reason = $"The template ({Constant.File.TemplateDatabaseFileExtension}) file may be corrupted, unreadable, or otherwise invalid.",
+                    Reason = $"The template ({File.TemplateDatabaseFileExtension}) file may be corrupted, unreadable, or otherwise invalid.",
                     Solution = "Try one or more of the following:"
                                + Environment.NewLine
                                + $"\u2022 recreate the template, or use another copy of it.{Environment.NewLine}"
-                               + $"\u2022 check if there is a valid template file in your {Constant.File.BackupFolder} folder.{Environment.NewLine}"
-                               + $"\u2022 email {Constant.ExternalLinks.EmailAddress} describing what happened, attaching a copy of your {Constant.File.TemplateDatabaseFileExtension} file.",
+                               + $"\u2022 check if there is a valid template file in your {File.BackupFolder} folder.{Environment.NewLine}"
+                               + $"\u2022 email {ExternalLinks.EmailAddress} describing what happened, attaching a copy of your {File.TemplateDatabaseFileExtension} file.",
                     Result = "Timelapse did not affect any of your other files.",
                     Icon = MessageBoxImage.Error,
                     Hint = owner.Name.Equals("Timelapse") // Only displayed in Timelapse, not the template editor
@@ -1036,7 +1038,7 @@ namespace Timelapse.Dialog
                         : "Your database is unreadable or corrupted. Possible reasons include:" + Environment.NewLine,
                     Solution = "\u2022 If you have not analyzed any images yet, delete the .ddb file and try again."
                                + Environment.NewLine
-                               + "\u2022 Also, check for valid backups of your database in your " + Constant.File.BackupFolder + " folder that you can reuse.",
+                               + "\u2022 Also, check for valid backups of your database in your " + File.BackupFolder + " folder that you can reuse.",
                     Hint = "If you are stuck: Send an explanatory note to saul@ucalgary.ca." + Environment.NewLine
                                                                                              + "He will check those files to see if there is a fixable bug.",
                     Icon = MessageBoxImage.Error
@@ -1068,8 +1070,8 @@ namespace Timelapse.Dialog
                               + Environment.NewLine
                               + "\u2022 " + templateDatabasePath,
                     Reason = "Timelapse files are either:" + Environment.NewLine
-                                                           + $"\u2022 template files with a suffix {Constant.File.TemplateDatabaseFileExtension} {Environment.NewLine}"
-                                                           + $"\u2022 data files with a suffix {Constant.File.FileDatabaseFileExtension}",
+                                                           + $"\u2022 template files with a suffix {File.TemplateDatabaseFileExtension} {Environment.NewLine}"
+                                                           + $"\u2022 data files with a suffix {File.FileDatabaseFileExtension}",
                     Solution = "Load only template and database files with those suffixes.",
                     Icon = MessageBoxImage.Error
                 }
@@ -1329,7 +1331,7 @@ namespace Timelapse.Dialog
                              + " - was not already associated with another image entry.",
                     Hint = "If the original file was:"
                            + Environment.NewLine
-                           + "\u2022 deleted, check your " + Constant.File.DeletedFilesFolder + " folder to see if its there." + Environment.NewLine
+                           + "\u2022 deleted, check your " + File.DeletedFilesFolder + " folder to see if its there." + Environment.NewLine
                            + "\u2022 moved outside of this image set, then you will have to find it and move it back in." + Environment.NewLine
                            + "\u2022 renamed, then you have to find it yourself and restore its original name." + Environment.NewLine + Environment.NewLine
                            + "Of course, you can just leave things as they are, or delete this image's data field if it has little value to you.",
@@ -1450,7 +1452,7 @@ namespace Timelapse.Dialog
                     Title = title,
                     What = $"Exporting your data to the file below failed for an unknown reason{Environment.NewLine}" +
                            $"{fileName}",
-                    Hint = $"If there is no obvious reason for this failure, email the Timelapse developer saul@ucalgary.ca",
+                    Hint = "If there is no obvious reason for this failure, email the Timelapse developer saul@ucalgary.ca",
                     Icon = MessageBoxImage.Exclamation
                 },
                 DontShowAgain =
@@ -1503,9 +1505,9 @@ namespace Timelapse.Dialog
                 {
                     Title = title,
                     What = $"Exporting {whereToExport} requires that you have all your files selected,{Environment.NewLine}" +
-                           $"but you are only viewing a subset of them",
+                           "but you are only viewing a subset of them",
                     Solution = $"Try exporting again by selecting all your files via:{Environment.NewLine}" +
-                               $" • Select | All files",
+                               " • Select | All files",
                     Icon = MessageBoxImage.Exclamation
                 },
             };
@@ -1524,19 +1526,19 @@ namespace Timelapse.Dialog
                 {
                     Icon = MessageBoxImage.Question,
                     What = $"To export all your data as CamtrapDP files, you will be asked to select a folder.{Environment.NewLine}" +
-                           $"Timelapse will then create a new folder within that called '{Constant.File.CamtrapDPExportFolder}',{Environment.NewLine}" +
+                           $"Timelapse will then create a new folder within that called '{File.CamtrapDPExportFolder}',{Environment.NewLine}" +
                            $"and will export four files as required by the CamtrapDP standard into that folder.{Environment.NewLine}" +
 
-                           $" • {Constant.File.CamtrapDPDataPackageJsonFilename}{Environment.NewLine}" +
-                           $" • {Constant.File.CamtrapDPDeploymentCSVFilename}{Environment.NewLine}" +
-                           $" • {Constant.File.CamtrapDPMediaCSVFilename}{Environment.NewLine}" +
-                           $" • {Constant.File.CamtrapDPObservationsCSVFilename}",
+                           $" • {File.CamtrapDPDataPackageJsonFilename}{Environment.NewLine}" +
+                           $" • {File.CamtrapDPDeploymentCSVFilename}{Environment.NewLine}" +
+                           $" • {File.CamtrapDPMediaCSVFilename}{Environment.NewLine}" +
+                           $" • {File.CamtrapDPObservationsCSVFilename}",
                     Result = $"You should be able to upload these files to a CamptrapDP-compatable data repository,{Environment.NewLine}" +
-                            $"as Timelapse configures each one to conform to the CamtrapDP standard.",
+                            "as Timelapse configures each one to conform to the CamtrapDP standard.",
                     Hint = $"CamptrapDP requires filled in values for various fields. Timelapse will warn you if some are missing.{Environment.NewLine}" +
                            $" • see CamtrapDP specifications: see https://camtrap-dp.tdwg.org/{Environment.NewLine}{Environment.NewLine}" +
                            $"However, we do recommend validating your files against a proper CamtrapDP validator before uploading.{Environment.NewLine}" +
-                           $" • see CamtrapDP validation: see https://camtrap-dp.tdwg.org/#validation ",
+                           " • see CamtrapDP validation: see https://camtrap-dp.tdwg.org/#validation ",
                 }
             }.ShowDialog();
         }
@@ -1556,7 +1558,7 @@ namespace Timelapse.Dialog
             }
 
             string reason = imageDataIncluded
-                ? $"• Image data was exported to {Constant.File.CSVImageDataFileName}.{Environment.NewLine}" +
+                ? $"• Image data was exported to {File.CSVImageDataFileName}.{Environment.NewLine}" +
                   $"  (data in that file can be altered and imported back into Timelapse).{Environment.NewLine}"
                 : string.Empty;
             reason += "• Each folder data level was exported to a file whose name is the same as the folder data level.";
@@ -1608,7 +1610,7 @@ namespace Timelapse.Dialog
                     Title = title,
                     What = "The selected files were exported to " + csvFileName,
                     Result =
-                        $"This file is overwritten every time you export it (backups can be found in the {Constant.File.BackupFolder} folder).",
+                        $"This file is overwritten every time you export it (backups can be found in the {File.BackupFolder} folder).",
                     Hint = "\u2022 You can open this file with most spreadsheet programs, such as Excel." + Environment.NewLine
                                                                                                           + "\u2022 If you make changes in the spreadsheet file, you will need to import it to see those changes." +
                                                                                                           Environment.NewLine
@@ -1743,7 +1745,7 @@ namespace Timelapse.Dialog
                     Title = title,
                     Icon = MessageBoxImage.Information,
                     What = $"The file {csvFileName} was successfully imported.",
-                    Hint = "\u2022 Check your data. If it is not what you expect, restore your data by using latest backup file in " + Constant.File.BackupFolder + "."
+                    Hint = "\u2022 Check your data. If it is not what you expect, restore your data by using latest backup file in " + File.BackupFolder + "."
                 }
             };
             if (warnings.Count != 0)
@@ -2302,44 +2304,44 @@ namespace Timelapse.Dialog
                 case DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion:
                     if (GlobalReferences.MainWindow.State.SuppressOpeningWithOlderTimelapseVersionDialog == false)
                     {
-                        return true == Dialogs.DatabaseFileOpenedWithOlderVersionOfTimelapse(owner);
+                        return true == DatabaseFileOpenedWithOlderVersionOfTimelapse(owner);
                     }
 
                     return true;
                 case DatabaseFileErrorsEnum.PreVersion2300:
                 case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
                     Mouse.OverrideCursor = null;
-                    DialogUpgradeFiles.DialogUpgradeFilesAndFolders dialogUpdateFiles =
-                        new DialogUpgradeFiles.DialogUpgradeFilesAndFolders(owner, Path.GetDirectoryName(filePath), VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+                    DialogUpgradeFilesAndFolders dialogUpdateFiles =
+                        new DialogUpgradeFilesAndFolders(owner, Path.GetDirectoryName(filePath), VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
                     dialogUpdateFiles.ShowDialog();
                     return false;
                 case DatabaseFileErrorsEnum.PathTooLong:
                     Mouse.OverrideCursor = null;
-                    Dialogs.TemplatePathTooLongDialog(owner, filePath);
+                    TemplatePathTooLongDialog(owner, filePath);
                     return false;
                 case DatabaseFileErrorsEnum.FileInRootDriveFolder:
                     Mouse.OverrideCursor = null;
-                    Dialog.Dialogs.TemplateInDisallowedFolder(owner, true, Path.GetDirectoryName(filePath));
+                    TemplateInDisallowedFolder(owner, true, Path.GetDirectoryName(filePath));
                     return false;
                 case DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder:
                     Mouse.OverrideCursor = null;
-                    Dialog.Dialogs.TemplateInDisallowedFolder(owner, false, Path.GetDirectoryName(filePath));
+                    TemplateInDisallowedFolder(owner, false, Path.GetDirectoryName(filePath));
                     return false;
                 case DatabaseFileErrorsEnum.InvalidDatabase:
                     Mouse.OverrideCursor = null;
-                    if (Path.GetExtension(filePath) == Constant.File.TemplateDatabaseFileExtension)
+                    if (Path.GetExtension(filePath) == File.TemplateDatabaseFileExtension)
                     {
-                        Dialogs.TemplateFileNotLoadedAsCorruptDialog(owner, filePath);
+                        TemplateFileNotLoadedAsCorruptDialog(owner, filePath);
                     }
                     else
                     {
-                        Dialogs.DatabaseFileNotLoadedAsCorruptDialog(owner, filePath, false);
+                        DatabaseFileNotLoadedAsCorruptDialog(owner, filePath, false);
                     }
 
                     return false;
                 case DatabaseFileErrorsEnum.NotATimelapseFile:
                     Mouse.OverrideCursor = null;
-                    Dialogs.FileNotATimelapseFile(owner, filePath);
+                    FileNotATimelapseFile(owner, filePath);
                     return false;
                 case DatabaseFileErrorsEnum.DoesNotExist:
                 case DatabaseFileErrorsEnum.TemplateElementsDiffer:
@@ -2388,16 +2390,16 @@ namespace Timelapse.Dialog
         public static void MergeErrorDatabaseFileAppearsCorruptDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            string title = $"Your database {Constant.File.FileDatabaseFileExtension} file  is likely corrupted.";
+            string title = $"Your database {File.FileDatabaseFileExtension} file  is likely corrupted.";
             // notify the user the database appears corrupt
             new MessageBox(title, owner)
             {
                 Message =
                 {
-                    Problem = $"The selected {Constant.File.FileDatabaseFileExtension} file does not contain a valid  database.",
+                    Problem = $"The selected {File.FileDatabaseFileExtension} file does not contain a valid  database.",
                     Reason = "Your  database file is likely corrupted, which means that Timelapse cannot use it.",
                     Solution = $"If you could open this database file previously, a working backup may be available.{Environment.NewLine}"
-                               + $"\u2022 Check your {Constant.File.BackupFolder} folder to see if there is a backup that works.{Environment.NewLine}"
+                               + $"\u2022 Check your {File.BackupFolder} folder to see if there is a backup that works.{Environment.NewLine}"
                                + $"\u2022 If so, copy it to the problem file's location, and try to open it.{Environment.NewLine}"
                                + "\u2022 If not, you may have to delete your database file and then recreate it.",
                     Hint = $"If you are stuck, send an explanatory note to saul@ucalgary.ca.{Environment.NewLine}"
@@ -2417,7 +2419,7 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Icon = MessageBoxImage.Question,
-                    Problem = $"A database {Constant.File.FileDatabaseFileExtension} file already exists in that folder.",
+                    Problem = $"A database {File.FileDatabaseFileExtension} file already exists in that folder.",
                     Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
                              + "as to which one to use and which one has the most up to date data.",
                     Solution = $"You can continue to create the empty database. However, you may want to {Environment.NewLine}"
@@ -2440,7 +2442,7 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Icon = MessageBoxImage.Question,
-                    Problem = $"A database {Constant.File.FileDatabaseFileExtension} file already exists in that folder.",
+                    Problem = $"A database {File.FileDatabaseFileExtension} file already exists in that folder.",
                     Reason = $"While you can have multiple databases in a folder, it can lead to confusion {Environment.NewLine}"
                              + "as to which one to use and which one has the most up to date data.",
                     Solution = $"You can continue to check out a database. However, you may want to {Environment.NewLine}"
@@ -2455,19 +2457,19 @@ namespace Timelapse.Dialog
         public static void MergeErrorDatabaseFileNeedsToBeUpdatedDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            string title = $"Your selected database {Constant.File.FileDatabaseFileExtension} needs to be updated.";
+            string title = $"Your selected database {File.FileDatabaseFileExtension} needs to be updated.";
             new MessageBox(title, owner)
             {
                 Message =
                 {
-                    Problem = $"Your database {Constant.File.FileDatabaseFileExtension} needs to be updated.",
+                    Problem = $"Your database {File.FileDatabaseFileExtension} needs to be updated.",
                     Reason = $"Your  database file was created with an old version of Timelapse{Environment.NewLine}"
                              + "and cannot be opened with the current Timelapse version",
                     Solution = $"Upgrade this (and other) files as follows.{Environment.NewLine}"
                                + $"1. Select 'File|Upgrade Timelapse files to the latest version...' from the Timelapse menu.{Environment.NewLine}"
                                + "2. Follow the instructions in that dialog to select and upgrade one or more files.",
                     Hint = $"Opening an upgraded file with an old version of Timelapse can cause Timelapseto crash,{Environment.NewLine}"
-                           + $"which may corrupt your database {Constant.File.FileDatabaseFileExtension} file.{Environment.NewLine}"
+                           + $"which may corrupt your database {File.FileDatabaseFileExtension} file.{Environment.NewLine}"
                            + "If that happens, try upgrading it again in the latest version of Timelapse."
                 }
             }.ShowDialog();
@@ -2514,12 +2516,12 @@ namespace Timelapse.Dialog
                     Title = title,
                     Problem = "Your file's path name is too long.",
                     Reason = $"Windows cannot perform file operations if the folder path combined with the file name{Environment.NewLine}"
-                             + "is more than " + Constant.File.MaxPathLength + " characters.",
+                             + "is more than " + File.MaxPathLength + " characters.",
                     Solution = "\u2022 Shorten the path name by moving your image folder higher up the folder hierarchy, or" + Environment.NewLine +
                                "\u2022 Use shorter folder or file names."
                                + Environment.NewLine + "\u2022 If you do move or rename them and Timelapse cannot find those folders or files, "
                                + Environment.NewLine + "     use the 'Edit|Try to find...' functions to locate them.",
-                    Hint = "Files created in your " + Constant.File.BackupFolder + " folder must also be less than " + Constant.File.MaxPathLength + " characters."
+                    Hint = "Files created in your " + File.BackupFolder + " folder must also be less than " + File.MaxPathLength + " characters."
                 }
             };
             messageBox.ShowDialog();
@@ -2540,13 +2542,13 @@ namespace Timelapse.Dialog
                     Reason = "The data field definitions used to enter image-level data differ.",
                     Solution = "Try the following steps."
                                + Environment.NewLine
-                               + $"1. Update the selected database's template ({Constant.File.TemplateDatabaseFileExtension}) file to match the destination database's template.{Environment.NewLine}"
+                               + $"1. Update the selected database's template ({File.TemplateDatabaseFileExtension}) file to match the destination database's template.{Environment.NewLine}"
                                + $"2. Using folder levels? The child template should not include the extraneous folder levels.{Environment.NewLine}     If it does, this can be difficult to repair.{Environment.NewLine}"
                                + $"3. Reopen the selected database in Timelapse to complete the update.{Environment.NewLine}"
                                + "4. Try to merge the file again.",
                     Icon = MessageBoxImage.Error,
                     Hint =
-                        $"The best way to create compatable child template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
+                        $"The best way to create compatable child template ({File.TemplateDatabaseFileExtension}) and data ({File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
                         $"the child via the File|Merge option.{Environment.NewLine}Then use that template to either load the checked out data file, or to create a new data file."
                 }
             };
@@ -2569,7 +2571,7 @@ namespace Timelapse.Dialog
                                "Their folder levels should be the same, and each level should include the same controls.",
                     Icon = MessageBoxImage.Error,
                     Hint =
-                        $"The best way to create compatable child template ({Constant.File.TemplateDatabaseFileExtension}) and data ({Constant.File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
+                        $"The best way to create compatable child template ({File.TemplateDatabaseFileExtension}) and data ({File.FileDatabaseFileExtension}) files is by checking out{Environment.NewLine}" +
                         $"the child via the File|Merge option.{Environment.NewLine}Then use that template to either load the checked out data file, or to create a new data file."
                 }
             };
@@ -2645,7 +2647,7 @@ namespace Timelapse.Dialog
                     break;
             }
 
-            new Dialog.MessageBox(title, owner)
+            new MessageBox(title, owner)
             {
                 Message =
                 {
@@ -2683,7 +2685,7 @@ namespace Timelapse.Dialog
                     break;
             }
 
-            new Dialog.MessageBox(title, owner)
+            new MessageBox(title, owner)
             {
                 Message =
                 {
@@ -2709,84 +2711,84 @@ namespace Timelapse.Dialog
             string title = "Your entered data is not ";
             switch (dataFieldType)
             {
-                case Constant.Control.AlphaNumeric:
+                case Control.AlphaNumeric:
                     expectedInput = "alphanumeric text";
                     example = $"{Environment.NewLine}• allowed characters: (A-Z, a-z, 0-9, _, -)" +
                               $"{Environment.NewLine}•  e.g., Station_1";
                     expectedType = "alphanumeric";
                     title += "alphanumeric text";
                     break;
-                case Constant.Control.AlphaNumeric + "Glob":
+                case Control.AlphaNumeric + "Glob":
                     expectedInput = "alphanumeric text plus glob characters";
                     example = $"{Environment.NewLine}• allowed characters: (A-Z, a-z, 0-9, _, -,?, *)" +
                               " e.g., Station* to find text with the prefix Station";
                     expectedType = "alphanumeric with glob characters";
                     title += "alphanumeric text plus glob chacters";
                     break;
-                case Constant.Control.IntegerAny:
+                case Control.IntegerAny:
                     expectedInput = "an integer";
                     expectedType = "integer";
                     example = $"{Environment.NewLine}• e.g., -5";
                     title += "a valid integer";
                     break;
-                case Constant.Control.Counter:
+                case Control.Counter:
                     expectedInput = "a positive integer";
                     expectedType = "counter";
                     example = $"{Environment.NewLine}• e.g., 5";
                     title += "a valid positive integer";
                     break;
-                case Constant.Control.IntegerPositive:
+                case Control.IntegerPositive:
                     expectedInput = "a positive integer";
                     expectedType = "positive integer";
                     example = $"{Environment.NewLine}• e.g., 5";
                     title += "a valid positive integer";
                     break;
-                case Constant.Control.FixedChoice:
+                case Control.FixedChoice:
                     expectedInput = "an item in this control's fixed choice menu, or blank";
                     expectedType = "an item in this control's fixed choice menu, or blank";
                     example = $"{Environment.NewLine}• e.g., c if your menu list contained a,b,c ";
                     title += "a valid choice menu item";
                     break;
-                case Constant.Control.MultiChoice:
+                case Control.MultiChoice:
                     expectedInput = "a comma-separated list of items, each in your list menu";
                     expectedType = "comma-separated list";
                     example = $"{Environment.NewLine}• e.g., a,c if your multichoice list contained a,b,c ";
                     title += "a valid list of choice menu items";
                     break;
-                case Constant.Control.DecimalAny:
+                case Control.DecimalAny:
                     expectedInput = "a decimal number";
                     example = $"{Environment.NewLine}•  e.g., -3.45";
                     expectedType = "decimal";
                     title += "a valid decimal number";
                     break;
-                case Constant.Control.DecimalPositive:
+                case Control.DecimalPositive:
                     expectedInput = "a positive decimal number";
                     example = $"{Environment.NewLine}• e.g., 3.45";
                     expectedType = "positive decimal";
                     title += "a valid positive decimal number";
                     break;
-                case Constant.Control.DateTime_:
+                case Control.DateTime_:
                     expectedInput = "in date/time format";
                     example = $"{Environment.NewLine}• format is yyyy-mm-dd hh:mm:ss" +
                               $"{Environment.NewLine}• e.g., 2024-12-24 13:05:00 for Dec. 24, 2024, 1:05 pm";
                     expectedType = "date/time";
                     title += "in date/time format";
                     break;
-                case Constant.Control.Date_:
+                case Control.Date_:
                     expectedInput = "in date format";
                     example = $"{Environment.NewLine}• format is yyyy-mm-dd" +
                               $"{Environment.NewLine}• e.g., 2024-12-24 ";
                     expectedType = "date";
                     title += "in date format";
                     break;
-                case Constant.Control.Time_:
+                case Control.Time_:
                     expectedInput = "in time format ";
                     example = $"{Environment.NewLine}• format is hh:mm:ss" +
                               $"{Environment.NewLine}• e.g., 13:05:00 for 1:05 pm";
                     expectedType = "time";
                     title += "in time format";
                     break;
-                case Constant.Control.Flag:
+                case Control.Flag:
                     expectedInput = "a true or false value";
                     title += "a valid true or false value";
                     break;
@@ -2797,7 +2799,7 @@ namespace Timelapse.Dialog
                 ? $"Your entered data would be: {invalidContent}{Environment.NewLine}This does not match what a {expectedType} data field expects."
                 : "Your entered data does not match what this data field expects.";
 
-            new Dialog.MessageBox(title, owner)
+            new MessageBox(title, owner)
             {
                 Message =
                 {
@@ -3108,11 +3110,11 @@ namespace Timelapse.Dialog
                 Message =
                 {
                     Icon = MessageBoxImage.Warning,
-                    What = $"CamtrapDP specifies various required fields, which don't appear to be filled in." +
+                    What = "CamtrapDP specifies various required fields, which don't appear to be filled in." +
                            missingMessage,
-                    Result = $"Other systems that expect these required fields may complain or fail.",
+                    Result = "Other systems that expect these required fields may complain or fail.",
                     Hint = $"This is just a warning, as your data was still exported.{Environment.NewLine}" +
-                           $"You may want to go back and fill in those missing fields.",
+                           "You may want to go back and fill in those missing fields.",
                 }
             }.ShowDialog();
         }
@@ -3134,7 +3136,7 @@ namespace Timelapse.Dialog
                            $"   • view and/or edit your current spatial coverage in a browser-based map;{Environment.NewLine}" +
                            $"   • then copy/paste the generated geojson text into the Timelapse spatial field.{Environment.NewLine}" +
                            $"3. From some other source (e.g., GIS package). {Environment.NewLine}" +
-                           $"   • paste geojson into the spatial coverage field",
+                           "   • paste geojson into the spatial coverage field",
 
                     Hint = $"The easiest approach is to:{Environment.NewLine}" +
                            $"   • click 'From lat/long'{Environment.NewLine}" +

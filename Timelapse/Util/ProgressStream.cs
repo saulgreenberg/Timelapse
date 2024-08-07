@@ -33,7 +33,7 @@ namespace Timelapse.Util
         {
             if (streamToReportOn != null)
             {
-                this.innerStream = streamToReportOn;
+                innerStream = streamToReportOn;
                 this.cancelTokenSource = cancelTokenSource;
             }
             else
@@ -61,9 +61,9 @@ namespace Timelapse.Util
 
         protected virtual void OnBytesRead(int bytesMoved)
         {
-            if (this.cancelTokenSource.IsCancellationRequested)
+            if (cancelTokenSource.IsCancellationRequested)
             {
-                this.Close();
+                Close();
                 throw new TaskCanceledException("Cancelled");
             }
             if (BytesRead != null)
@@ -187,10 +187,10 @@ namespace Timelapse.Util
         public ProgressStreamReportEventArgs(int bytesMoved, long streamLength, long streamPosition, bool wasRead)
             : this()
         {
-            this.BytesMoved = bytesMoved;
-            this.StreamLength = streamLength;
-            this.StreamPosition = streamPosition;
-            this.WasRead = wasRead;
+            BytesMoved = bytesMoved;
+            StreamLength = streamLength;
+            StreamPosition = streamPosition;
+            WasRead = wasRead;
         }
         #endregion
     }

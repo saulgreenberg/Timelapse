@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataTables;
+using File = System.IO.File;
 
 namespace Timelapse.Dialog
 {
@@ -23,29 +26,29 @@ namespace Timelapse.Dialog
         public ExportAllSelectedFiles(Window owner, FileDatabase fileDatabase) : base(owner)
         {
             InitializeComponent();
-            this.FileDatabase = fileDatabase;
+            FileDatabase = fileDatabase;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Set up a progress handler that will update the progress bar
-            this.InitalizeProgressHandler(this.BusyCancelIndicator);
+            InitalizeProgressHandler(BusyCancelIndicator);
 
-            this.FolderLocation.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-            int count = this.FileDatabase.CountAllCurrentlySelectedFiles;
+            FolderLocation.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            int count = FileDatabase.CountAllCurrentlySelectedFiles;
             if (count >= 100)
             {
                 // Reality check...
-                this.Message.Hint =
-                    $"Do you really want to copy {count} files? This seems like alot.{Environment.NewLine}" + this.Message.Hint;
+                Message.Hint =
+                    $"Do you really want to copy {count} files? This seems like alot.{Environment.NewLine}" + Message.Hint;
             }
-            this.Message.Title = $"Export (by copying) {count} currently selected files";
+            Message.Title = $"Export (by copying) {count} currently selected files";
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             // Closing the window also indicates we should cancel any ongoing operations
-            this.TokenSource.Cancel();
+            TokenSource.Cancel();
         }
         #endregion
 
@@ -53,40 +56,40 @@ namespace Timelapse.Dialog
         private void ChooseFolderButton_Click(object sender, RoutedEventArgs e)
         {
             // Set up a Folder Browser with some instructions
-            if (Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Locate folder to export your files...", this.FolderLocation.Text, out string folder))
+            if (Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Locate folder to export your files...", FolderLocation.Text, out string folder))
             {
                 // Display the folder
-                this.FolderLocation.Text = folder;
+                FolderLocation.Text = folder;
             }
         }
 
         private async void Export_Click(object sender, RoutedEventArgs e)
         {
-            if (this.GetPathAndCreateItIfNeeded(out string path) == false)
+            if (GetPathAndCreateItIfNeeded(out string path) == false)
             {
                 System.Windows.MessageBox.Show(String.Format("Could not create the folder: {1}  {0}{1}Export aborted.", path, Environment.NewLine), "Export aborted.", MessageBoxButton.OK, MessageBoxImage.Error);
-                this.DialogResult = false;
+                DialogResult = false;
             }
-            this.BusyCancelIndicator.IsBusy = true;
+            BusyCancelIndicator.IsBusy = true;
             string feedbackMessage = await CopyFiles(path).ConfigureAwait(true);
-            this.BusyCancelIndicator.IsBusy = false;
+            BusyCancelIndicator.IsBusy = false;
 
-            this.Grid1.Visibility = Visibility.Collapsed;
-            this.ButtonPanel1.Visibility = Visibility.Collapsed;
+            Grid1.Visibility = Visibility.Collapsed;
+            ButtonPanel1.Visibility = Visibility.Collapsed;
 
-            this.TextBlockFeedback.Text = feedbackMessage;
-            this.TextBlockFeedback.Visibility = Visibility.Visible;
-            this.ButtonPanel2.Visibility = Visibility.Visible;
+            TextBlockFeedback.Text = feedbackMessage;
+            TextBlockFeedback.Visibility = Visibility.Visible;
+            ButtonPanel2.Visibility = Visibility.Visible;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            DialogResult = false;
         }
 
         private void Done_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            DialogResult = true;
         }
         #endregion
 
@@ -101,7 +104,7 @@ namespace Timelapse.Dialog
             int skippedFiles = 0;
             int existingFiles = 0;
             bool cancelled = false;
-            bool renameFileWithPrefix = this.CBRename.IsChecked == true;
+            bool renameFileWithPrefix = CBRename.IsChecked == true;
 
             // We first check all files to see if they exist in the destination.
             // Yes, this is a bit heavyweight. There is likely a more efficient way to do this.
@@ -147,7 +150,7 @@ namespace Timelapse.Dialog
 
                 foreach (ImageRow ir in FileDatabase.FileTable)
                 {
-                    if (this.TokenSource.IsCancellationRequested)
+                    if (TokenSource.IsCancellationRequested)
                     {
                         cancelled = true;
                         return;
@@ -172,12 +175,12 @@ namespace Timelapse.Dialog
                         skippedFiles++;
                     }
 
-                    if (!this.ReadyToRefresh()) continue;
+                    if (!ReadyToRefresh()) continue;
 
                     int percentDone = Convert.ToInt32((copiedFiles + skippedFiles) / Convert.ToDouble(totalFiles) * 100.0);
-                    this.Progress.Report(new ProgressBarArguments(percentDone,
+                    Progress.Report(new ProgressBarArguments(percentDone,
                         $"Copying {copiedFiles} / {totalFiles} files", true, false));
-                    Thread.Sleep(Constant.ThrottleValues.RenderingBackoffTime);
+                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);
                 }
             }).ConfigureAwait(true);
 
@@ -206,9 +209,9 @@ namespace Timelapse.Dialog
 
         private bool GetPathAndCreateItIfNeeded(out string path)
         {
-            path = (this.CBPutInSubFolder.IsChecked == true)
-                ? Path.Combine(this.FolderLocation.Text, this.TextBoxPutInSubFolder.Text)
-                : this.FolderLocation.Text;
+            path = (CBPutInSubFolder.IsChecked == true)
+                ? Path.Combine(FolderLocation.Text, TextBoxPutInSubFolder.Text)
+                : FolderLocation.Text;
 
             if (Directory.Exists(path)) return true;
 

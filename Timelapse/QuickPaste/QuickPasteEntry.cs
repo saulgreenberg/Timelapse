@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 namespace Timelapse.QuickPaste
 {
     // QuickPasteEntry Data Structure: collects all the data controls and their values as a single potential quickpaste entry
@@ -13,7 +14,7 @@ namespace Timelapse.QuickPaste
         // A test to see if at lease one item is marked as 'Use', i.e., if at least one item is pastable
         public bool IsAtLeastOneItemPastable()
         {
-            foreach (QuickPasteItem item in this.Items)
+            foreach (QuickPasteItem item in Items)
             {
                 if (item.Use)
                 {

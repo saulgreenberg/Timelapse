@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -14,6 +15,7 @@ using Timelapse.Enums;
 using Timelapse.QuickPaste;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
+using File = System.IO.File;
 
 // Edit Menu Callbacks
 // ReSharper disable once CheckNamespace
@@ -24,39 +26,39 @@ namespace Timelapse
         #region Edit Submenu Opening 
         private void Edit_SubmenuOpening(object sender, RoutedEventArgs e)
         {
-            this.FilePlayer_Stop(); // In case the FilePlayer is going
+            FilePlayer_Stop(); // In case the FilePlayer is going
 
             // Enable / disable various edit menu items depending on whether we are looking at the single image view or overview
-            bool state = this.IsDisplayingSingleImage();
-            this.MenuItemCopyPreviousValues.IsEnabled = state;
+            bool state = IsDisplayingSingleImage();
+            MenuItemCopyPreviousValues.IsEnabled = state;
 
             // Enable the FindMissingImage menu only if the current image is missing
-            ImageRow currentImage = this.DataHandler?.ImageCache?.Current;
-            this.MenuItemFindMissingImage.IsEnabled =
-                   this.DataHandler?.ImageCache?.Current != null
-                && false == File.Exists(FilesFolders.GetFullPath(this.DataHandler.FileDatabase, currentImage));
+            ImageRow currentImage = DataHandler?.ImageCache?.Current;
+            MenuItemFindMissingImage.IsEnabled =
+                   DataHandler?.ImageCache?.Current != null
+                && false == File.Exists(FilesFolders.GetFullPath(DataHandler.FileDatabase, currentImage));
 
-            if (this.MarkableCanvas.ThumbnailGrid.IsVisible == false && this.MarkableCanvas.ThumbnailGrid.IsGridActive == false)
+            if (MarkableCanvas.ThumbnailGrid.IsVisible == false && MarkableCanvas.ThumbnailGrid.IsGridActive == false)
             {
-                this.MenuItemRestoreDefaults.Header = "Restore default values for this file";
-                this.MenuItemRestoreDefaults.ToolTip = "For the currently displayed file, revert all fields to its default values (excepting file paths and dates/times)";
+                MenuItemRestoreDefaults.Header = "Restore default values for this file";
+                MenuItemRestoreDefaults.ToolTip = "For the currently displayed file, revert all fields to its default values (excepting file paths and dates/times)";
             }
             else
             {
-                this.MenuItemRestoreDefaults.Header = "Restore default values for the checkmarked files";
-                this.MenuItemRestoreDefaults.ToolTip = "For all checkmarked files, revert their fields to their default values (excepting file paths and dates/times)";
+                MenuItemRestoreDefaults.Header = "Restore default values for the checkmarked files";
+                MenuItemRestoreDefaults.ToolTip = "For all checkmarked files, revert their fields to their default values (excepting file paths and dates/times)";
             }
 
             // Enable duplicates only if we have a single image in the main view to duplicate
             // We don't allow duplications in the overview as the attempts to do so were somewhat buggy. It could be done, but I don't think its critical.
-            this.MenuItemDuplicateRecord.IsEnabled = state;
+            MenuItemDuplicateRecord.IsEnabled = state;
         }
         #endregion
 
         #region Find image 
         private void MenuItemFindByFileName_Click(object sender, RoutedEventArgs e)
         {
-            this.FindBoxSetVisibility(true);
+            FindBoxSetVisibility(true);
         }
         #endregion
 
@@ -64,35 +66,35 @@ namespace Timelapse
         /// Show the QuickPaste Window 
         private void MenuItemQuickPasteWindowShow_Click(object sender, RoutedEventArgs e)
         {
-            if (this.quickPasteWindow == null)
+            if (quickPasteWindow == null)
             {
                 // create the quickpaste window if it doesn't already exist.
-                this.QuickPasteWindowShow();
+                QuickPasteWindowShow();
             }
-            this.QuickPasteRefreshWindowAndJSON();
-            this.QuickPasteWindowShow();
+            QuickPasteRefreshWindowAndJSON();
+            QuickPasteWindowShow();
         }
 
         /// Import QuickPaste Items from a .ddb file
         private void MenuItemQuickPasteImportFromDB_Click(object sender, RoutedEventArgs e)
         {
             if (Dialogs.TryGetFileFromUserUsingOpenFileDialog("Import QuickPaste entries by selecting the Timelapse database (.ddb) file from the image folder where you had used them.",
-                                             Path.Combine(this.DataHandler.FileDatabase.FolderPath, Constant.File.DefaultFileDatabaseFileName),
+                                             Path.Combine(DataHandler.FileDatabase.FolderPath, Constant.File.DefaultFileDatabaseFileName),
                                              String.Format("Database files (*{0})|*{0}", Constant.File.FileDatabaseFileExtension),
                                              Constant.File.FileDatabaseFileExtension,
                                              out string ddbFile))
             {
-                List<QuickPasteEntry> qpe = QuickPasteOperations.QuickPasteImportFromDB(this.DataHandler.FileDatabase, ddbFile);
+                List<QuickPasteEntry> qpe = QuickPasteOperations.QuickPasteImportFromDB(DataHandler.FileDatabase, ddbFile);
                 if (qpe.Count == 0)
                 {
                     Dialogs.MenuEditCouldNotImportQuickPasteEntriesDialog(this);
                 }
                 else
                 {
-                    this.quickPasteEntries = qpe;
-                    this.DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
-                    this.QuickPasteRefreshWindowAndJSON();
-                    this.QuickPasteWindowShow();
+                    quickPasteEntries = qpe;
+                    DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
+                    QuickPasteRefreshWindowAndJSON();
+                    QuickPasteWindowShow();
                 }
             }
         }
@@ -101,7 +103,7 @@ namespace Timelapse
         #region  Copy Previous Values
         private void MenuItemCopyPreviousValues_Click(object sender, RoutedEventArgs e)
         {
-            this.CopyPreviousValues_Click();
+            CopyPreviousValues_Click();
         }
         #endregion
 
@@ -111,36 +113,36 @@ namespace Timelapse
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
-            if (this.DataHandler.ImageCache.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
+            if (DataHandler.ImageCache.Current != null && DataHandler.ImageCache.Current.IsDisplayable(FolderPath) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
                 Dialogs.MenuEditPopulateDataFieldWithMetadataDialog(this);
                 return;
             }
 
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
 
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                            "'Populate data fields with image metadata...'",
                                                                optOut =>
                                                                {
-                                                                   this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
+                                                                   State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
             {
-                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache.Current.GetFilePath(this.FolderPath), false);
-                if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
+                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(FolderPath), false);
+                if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
 
                 }
                 // If the Populate dialog started the ExifToolManager, this will kill the no longer needed ExifTool processes. 
-                this.State.ExifToolManager.Stop();
+                State.ExifToolManager.Stop();
             }
         }
         #endregion
@@ -150,7 +152,7 @@ namespace Timelapse
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
-            if (this.DataHandler.ImageCache.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath) == false)
+            if (DataHandler.ImageCache.Current != null && DataHandler.ImageCache.Current.IsDisplayable(FolderPath) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
                 Dialogs.MenuEditRereadDateTimesFromMetadataDialog(this);
@@ -158,23 +160,23 @@ namespace Timelapse
             }
 
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                            "'Re-read dates and times from a metadata field...'",
                                                                optOut =>
                                                                {
-                                                                   this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
+                                                                   State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
             {
-                if (this.DataHandler.ImageCache.Current == null)
+                if (DataHandler.ImageCache.Current == null)
                 {
                     //Shouldn't happen. And should likely produce an error message.
-                    TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                    TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     return;
                 }
-                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache.Current.GetFilePath(this.FolderPath), true);
-                if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
+                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(FolderPath), true);
+                if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -184,7 +186,7 @@ namespace Timelapse
         private async void MenuItemEditPopulateFieldWithEpisodeData_Click(object sender, RoutedEventArgs e)
         {
             // Check: needs at least one file in the current selection,
-            if (this.DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles == 0 || this.DataHandler?.FileDatabase?.ImageSet == null)
+            if (DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles == 0 || DataHandler?.FileDatabase?.ImageSet == null)
             {
                 Dialogs.MenuOptionsCantPopulateDataFieldWithEpisodeAsNoFilesDialog(this);
                 return;
@@ -192,9 +194,9 @@ namespace Timelapse
 
             // Check: needs at least one Note field that could be populated
             bool noteControlOk = false;
-            foreach (ControlRow control in this.DataHandler.FileDatabase.Controls)
+            foreach (ControlRow control in DataHandler.FileDatabase.Controls)
             {
-                if (Util.IsCondition.IsControlType_Note_MultiLine(control.Type))
+                if (IsCondition.IsControlType_Note_MultiLine(control.Type))
                 {
                     noteControlOk = true;
                 }
@@ -207,7 +209,7 @@ namespace Timelapse
 
             // Check: search term, can only be none or relativePath
             bool searchTermsOk = true;
-            List<SearchTerm> searchTerms = this.DataHandler.FileDatabase.CustomSelection?.SearchTerms;
+            List<SearchTerm> searchTerms = DataHandler.FileDatabase.CustomSelection?.SearchTerms;
             if (searchTerms == null)
             {
                 searchTermsOk = false;
@@ -216,7 +218,7 @@ namespace Timelapse
             {
                 foreach (SearchTerm searchTerm in searchTerms)
                 {
-                    if (searchTerm.UseForSearching && searchTerm.DataLabel != Constant.DatabaseColumn.RelativePath)
+                    if (searchTerm.UseForSearching && searchTerm.DataLabel != DatabaseColumn.RelativePath)
                     {
                         searchTermsOk = false;
                     }
@@ -224,10 +226,10 @@ namespace Timelapse
             }
 
             // Check: if the sort terms must be RelativePath x DateTime, or DateTime all ascending
-            SortTerm sortTermDB1 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
-            SortTerm sortTermDB2 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
-            bool sortTermsOk = (sortTermDB1.DataLabel == Constant.DatabaseColumn.RelativePath && Constant.BooleanValue.True == sortTermDB1.IsAscending && sortTermDB2.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending)
-                               || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && Constant.BooleanValue.True == sortTermDB1.IsAscending && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+            SortTerm sortTermDB1 = DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
+            SortTerm sortTermDB2 = DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
+            bool sortTermsOk = (sortTermDB1.DataLabel == DatabaseColumn.RelativePath && BooleanValue.True == sortTermDB1.IsAscending && sortTermDB2.DataLabel == DatabaseColumn.DateTime && BooleanValue.True == sortTermDB1.IsAscending)
+                               || (sortTermDB1.DataLabel == DatabaseColumn.DateTime && BooleanValue.True == sortTermDB1.IsAscending && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
 
             if (!searchTermsOk || !sortTermsOk)
             {
@@ -238,18 +240,18 @@ namespace Timelapse
             }
 
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                        "'Populate a data field with episodedata...'",
                                                            optOut =>
                                                            {
-                                                               this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
+                                                               State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                            }))
             {
-                PopulateFieldWithEpisodeData populateField = new PopulateFieldWithEpisodeData(this, this.DataHandler.FileDatabase);
+                PopulateFieldWithEpisodeData populateField = new PopulateFieldWithEpisodeData(this, DataHandler.FileDatabase);
                 {
-                    if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
+                    if (ShowDialogAndCheckIfChangesWereMade(populateField))
                     {
-                        await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                        await FilesSelectAndShowAsync().ConfigureAwait(true);
                     }
                 }
             }
@@ -260,28 +262,28 @@ namespace Timelapse
         #region Populate Field with GUID
         private async void MenuItemEditPopulateFieldWithGUID_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
 
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
                                                                            "'Populate data fields with globally unique identifiers (GUIDs)...'",
                                                                optOut =>
                                                                {
-                                                                   this.State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
+                                                                   State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
             {
-                PopulateFieldWithGUID populateField = new PopulateFieldWithGUID(this, this.DataHandler.FileDatabase);
-                if (this.ShowDialogAndCheckIfChangesWereMade(populateField))
+                PopulateFieldWithGUID populateField = new PopulateFieldWithGUID(this, DataHandler.FileDatabase);
+                if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
                 // If the Populate dialog started the ExifToolManager, this will kill the no longer needed ExifTool processes. 
-                this.State.ExifToolManager.Stop();
+                State.ExifToolManager.Stop();
             }
         }
         #endregion
@@ -289,7 +291,7 @@ namespace Timelapse
         #region Dupicate the record
         private async void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
         {
-            if (this.IsDisplayingSingleImage() == false)
+            if (IsDisplayingSingleImage() == false)
             {
                 // We only allow duplication if we are displaying a single image in the main view
                 return;
@@ -297,20 +299,20 @@ namespace Timelapse
 
             // Check: ideally the sort terms will be RelativePath x DateTime, as otherwise the duplicates may not be in sorted order.
             // The various flags determine whether we show only a problem message, a duplicate info message, or both.
-            SortTerm sortTermDB1 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
-            SortTerm sortTermDB2 = this.DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
+            SortTerm sortTermDB1 = DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
+            SortTerm sortTermDB2 = DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
             bool sortTermsOKForDuplicateOrdering =
-                     (sortTermDB1.DataLabel == Constant.DatabaseColumn.RelativePath && sortTermDB2.DataLabel == Constant.DatabaseColumn.DateTime)
-                  || (sortTermDB1.DataLabel == Constant.DatabaseColumn.DateTime && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+                     (sortTermDB1.DataLabel == DatabaseColumn.RelativePath && sortTermDB2.DataLabel == DatabaseColumn.DateTime)
+                  || (sortTermDB1.DataLabel == DatabaseColumn.DateTime && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
 
-            if (this.State.SuppressHowDuplicatesWork == false || sortTermsOKForDuplicateOrdering == false)
+            if (State.SuppressHowDuplicatesWork == false || sortTermsOKForDuplicateOrdering == false)
             {
-                if (Dialogs.MenuEditHowDuplicatesWorkDialog(this, sortTermsOKForDuplicateOrdering, this.State.SuppressHowDuplicatesWork) == false)
+                if (Dialogs.MenuEditHowDuplicatesWorkDialog(this, sortTermsOKForDuplicateOrdering, State.SuppressHowDuplicatesWork) == false)
                 {
                     return;
                 }
             }
-            await this.DuplicateCurrentRecord();
+            await DuplicateCurrentRecord();
         }
         #endregion
 
@@ -321,7 +323,7 @@ namespace Timelapse
             try
             {
                 // Temporarily set the DeleteFlag search term so that it will be used to chec for DeleteFlag = true
-                SearchTerm currentSearchTerm = this.DataHandler.FileDatabase.CustomSelection.SearchTerms.First(term => term.DataLabel == Constant.DatabaseColumn.DeleteFlag);
+                SearchTerm currentSearchTerm = DataHandler.FileDatabase.CustomSelection.SearchTerms.First(term => term.DataLabel == DatabaseColumn.DeleteFlag);
                 SearchTerm tempSearchTerm = currentSearchTerm.Clone();
                 currentSearchTerm.DatabaseValue = "true";
                 currentSearchTerm.UseForSearching = true;
@@ -329,21 +331,21 @@ namespace Timelapse
 
                 //bool deletedImages = this.DataHandler.FileDatabase.ExistsRowThatMatchesSelectionForAllFilesOrConstrainedRelativePathFiles(FileSelectionEnum.MarkedForDeletion);
                 //bool deletedImages = this.DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom) > 0;
-                bool deletedImages = this.DataHandler.FileDatabase.ExistsFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
+                bool deletedImages = DataHandler.FileDatabase.ExistsFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
 
                 // Reset  the DeleteFlag search term to its previous values
                 currentSearchTerm.DatabaseValue = tempSearchTerm.DatabaseValue;
                 currentSearchTerm.UseForSearching = tempSearchTerm.UseForSearching;
                 currentSearchTerm.Operator = tempSearchTerm.Operator;
 
-                this.MenuItemDeleteFiles.IsEnabled = deletedImages;
-                this.MenuItemDeleteFilesAndData.IsEnabled = deletedImages;
-                this.MenuItemDeleteFilesData.IsEnabled = deletedImages;
+                MenuItemDeleteFiles.IsEnabled = deletedImages;
+                MenuItemDeleteFilesAndData.IsEnabled = deletedImages;
+                MenuItemDeleteFilesData.IsEnabled = deletedImages;
 
                 // Enable the delete current file option only if we are not on the thumbnail grid 
-                this.MenuItemDeleteCurrentFileAndData.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false; // Only show this option if the thumbnail grid is visible
-                this.MenuItemDeleteCurrentFile.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false && this.DataHandler?.ImageCache?.Current != null && this.DataHandler.ImageCache.Current.IsDisplayable(this.FolderPath);
-                this.MenuItemDeleteCurrentData.IsEnabled = this.MarkableCanvas.IsThumbnailGridVisible == false;
+                MenuItemDeleteCurrentFileAndData.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false; // Only show this option if the thumbnail grid is visible
+                MenuItemDeleteCurrentFile.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false && DataHandler?.ImageCache?.Current != null && DataHandler.ImageCache.Current.IsDisplayable(FolderPath);
+                MenuItemDeleteCurrentData.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false;
 
             }
             catch (Exception exception)
@@ -352,12 +354,12 @@ namespace Timelapse
 
                 // This function was blowing up on one user's machine, but not others.
                 // I couldn't figure out why, so I just put this fallback in here to catch that unusual case.
-                this.MenuItemDeleteFiles.IsEnabled = true;
-                this.MenuItemDeleteFilesAndData.IsEnabled = true;
-                this.MenuItemDeleteFilesData.IsEnabled = true;
-                this.MenuItemDeleteCurrentFile.IsEnabled = true;
-                this.MenuItemDeleteCurrentFileAndData.IsEnabled = true;
-                this.MenuItemDeleteCurrentData.IsEnabled = true;
+                MenuItemDeleteFiles.IsEnabled = true;
+                MenuItemDeleteFilesAndData.IsEnabled = true;
+                MenuItemDeleteFilesData.IsEnabled = true;
+                MenuItemDeleteCurrentFile.IsEnabled = true;
+                MenuItemDeleteCurrentFileAndData.IsEnabled = true;
+                MenuItemDeleteCurrentData.IsEnabled = true;
             }
         }
 
@@ -380,20 +382,20 @@ namespace Timelapse
             bool deleteCurrentImageOnly;
             bool deleteFiles;
             bool deleteData;
-            if (menuItem.Name.Equals(this.MenuItemDeleteFiles.Name) || menuItem.Name.Equals(this.MenuItemDeleteFilesAndData.Name) || menuItem.Name.Equals(this.MenuItemDeleteFilesData.Name))
+            if (menuItem.Name.Equals(MenuItemDeleteFiles.Name) || menuItem.Name.Equals(MenuItemDeleteFilesAndData.Name) || menuItem.Name.Equals(MenuItemDeleteFilesData.Name))
             {
                 deleteCurrentImageOnly = false;
-                deleteFiles = false == menuItem.Name.Equals(this.MenuItemDeleteFilesData.Name); // this is the only condition where we don't delete the file
-                deleteData = false == menuItem.Name.Equals(this.MenuItemDeleteFiles.Name); // this is the only condition where we don't delete the data
+                deleteFiles = false == menuItem.Name.Equals(MenuItemDeleteFilesData.Name); // this is the only condition where we don't delete the file
+                deleteData = false == menuItem.Name.Equals(MenuItemDeleteFiles.Name); // this is the only condition where we don't delete the data
                 // get list of all images marked for deletion in the current seletion
-                using (FileTable filetable = this.DataHandler.FileDatabase.SelectFilesMarkedForDeletion())
+                using (FileTable filetable = DataHandler.FileDatabase.SelectFilesMarkedForDeletion())
                 {
                     filesToDelete = filetable.ToList();
                 }
 
                 for (int index = filesToDelete.Count - 1; index >= 0; index--)
                 {
-                    if (this.DataHandler.FileDatabase.FileTable.Find(filesToDelete[index].ID) == null)
+                    if (DataHandler.FileDatabase.FileTable.Find(filesToDelete[index].ID) == null)
                     {
                         filesToDelete.Remove(filesToDelete[index]);
                     }
@@ -403,13 +405,13 @@ namespace Timelapse
             {
                 // Delete current image case. Get the ID of the current image and construct a datatable that contains that image's datarow
                 deleteCurrentImageOnly = true;
-                deleteFiles = false == menuItem.Name.Equals(this.MenuItemDeleteCurrentData.Name); // this is the only condition where we don't delete the current file
-                deleteData = false == menuItem.Name.Equals(this.MenuItemDeleteCurrentFile.Name); // this is the only condition where we don't delete the current data
+                deleteFiles = false == menuItem.Name.Equals(MenuItemDeleteCurrentData.Name); // this is the only condition where we don't delete the current file
+                deleteData = false == menuItem.Name.Equals(MenuItemDeleteCurrentFile.Name); // this is the only condition where we don't delete the current data
 
                 filesToDelete = new List<ImageRow>();
-                if (this.DataHandler.ImageCache.Current != null)
+                if (DataHandler.ImageCache.Current != null)
                 {
-                    filesToDelete.Add(this.DataHandler.ImageCache.Current);
+                    filesToDelete.Add(DataHandler.ImageCache.Current);
                 }
             }
 
@@ -424,32 +426,32 @@ namespace Timelapse
 
             // if we delete data records, we can sometimes get in the situation (particularly if we delete a duplicate) where the next fileID displayed is not the closest to the existing position.
             // To resolve this, we get the closest non-deleted file ID before we do the deletion and then try to display that file.
-            if (this.DataHandler.ImageCache.Current == null)
+            if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
-                TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
 
-            long currentFileID = this.DataHandler.ImageCache.Current.ID;
+            long currentFileID = DataHandler.ImageCache.Current.ID;
             if (deleteData)
             {
                 // if we delete the data for the current image only but not the file , we can sometimes get in the situation (particularly if we delete a duplicate) where the next fileID displayed is not the closest to the existing position.
                 // To resolve this, we get the closest non-deleted file ID before we do the deletion.
-                int fileIndex = this.DataHandler.ImageCache.CurrentRow;
+                int fileIndex = DataHandler.ImageCache.CurrentRow;
                 bool allDone = false;
                 Mouse.OverrideCursor = Cursors.Wait;
-                int count = this.DataHandler.FileDatabase.FileTable.Count();
+                int count = DataHandler.FileDatabase.FileTable.Count();
                 for (int nextFileIndex = fileIndex; nextFileIndex < count; nextFileIndex++)
                 {
                     // Check if is a deleted file. 
-                    if (this.DataHandler.FileDatabase.IsFileRowInRange(nextFileIndex))
+                    if (DataHandler.FileDatabase.IsFileRowInRange(nextFileIndex))
                     {
-                        if (this.DataHandler.FileDatabase.FileTable[nextFileIndex].DeleteFlag == false)
+                        if (DataHandler.FileDatabase.FileTable[nextFileIndex].DeleteFlag == false)
                         //if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID))
                         {
                             // Its not a deleted file, so we have a valid next file to display!
-                            currentFileID = this.DataHandler.FileDatabase.FileTable[nextFileIndex].ID;
+                            currentFileID = DataHandler.FileDatabase.FileTable[nextFileIndex].ID;
                             allDone = true;
                             break;
                         }
@@ -461,13 +463,13 @@ namespace Timelapse
                     for (int prevFileIndex = fileIndex; prevFileIndex >= 0; prevFileIndex--)
                     {
                         // Check if is a deleted file. 
-                        if (this.DataHandler.FileDatabase.IsFileRowInRange(prevFileIndex))
+                        if (DataHandler.FileDatabase.IsFileRowInRange(prevFileIndex))
                         {
-                            if (this.DataHandler.FileDatabase.FileTable[prevFileIndex].DeleteFlag == false)
+                            if (DataHandler.FileDatabase.FileTable[prevFileIndex].DeleteFlag == false)
                             //if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID))
                             {
                                 // Its not a deleted file, so we have a valid next file to display!
-                                currentFileID = this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID;
+                                currentFileID = DataHandler.FileDatabase.FileTable[prevFileIndex].ID;
                                 //allDone = true;
                                 break;
                             }
@@ -492,7 +494,7 @@ namespace Timelapse
                     }
                 }
             }
-            if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(this.DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
+            if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
             {
                 // Path is too long to delete
                 if (Dialogs.FilePathDeletedFileTooLongDialog(this) == false)
@@ -505,34 +507,34 @@ namespace Timelapse
             }
             // Delete the files
 
-            DeleteImages deleteImagesDialog = new DeleteImages(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache, filesToDelete, deleteFiles, deleteData, deleteCurrentImageOnly, backupDeletedFiles);
+            DeleteImages deleteImagesDialog = new DeleteImages(this, DataHandler.FileDatabase, DataHandler.ImageCache, filesToDelete, deleteFiles, deleteData, deleteCurrentImageOnly, backupDeletedFiles);
             bool? result = deleteImagesDialog.ShowDialog();
             if (result == true)
             {
 
                 Mouse.OverrideCursor = Cursors.Wait;
                 // Reload the file datatable. 
-                await this.FilesSelectAndShowAsync(currentFileID, this.DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
+                await FilesSelectAndShowAsync(currentFileID, DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
 
                 if (deleteData)
                 {
                     // Find and show the image closest to the last one shown
-                    if (this.DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0)
+                    if (DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0)
                     {
-                        int nextImageRow = this.DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID);
-                        this.FileShow(nextImageRow);
+                        int nextImageRow = DataHandler.FileDatabase.GetFileOrNextFileIndex(currentFileID);
+                        FileShow(nextImageRow);
                     }
                     else
                     {
                         // No images left, so disable everything
-                        this.EnableOrDisableMenusAndControls();
+                        EnableOrDisableMenusAndControls();
                     }
                 }
                 else
                 {
                     // display the updated properties on the current image, or the closest one to it.
-                    int nextImageRow = this.DataHandler.FileDatabase.FindClosestImageRow(currentFileID);
-                    this.FileShow(nextImageRow);
+                    int nextImageRow = DataHandler.FileDatabase.FindClosestImageRow(currentFileID);
+                    FileShow(nextImageRow);
                 }
                 Mouse.OverrideCursor = null;
             }
@@ -550,16 +552,16 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this,
-                this.DataHandler.FileDatabase,
-                this.State.SuppressSelectedRereadDatesFromFilesPrompt,
+                DataHandler.FileDatabase,
+                State.SuppressSelectedRereadDatesFromFilesPrompt,
                 "'Reread dates and times from files...'",
-                optOut => { this.State.SuppressSelectedRereadDatesFromFilesPrompt = optOut; }
+                optOut => { State.SuppressSelectedRereadDatesFromFilesPrompt = optOut; }
                 ))
             {
-                DateTimeRereadFromFiles rereadDates = new DateTimeRereadFromFiles(this, this.DataHandler.FileDatabase);
-                if (this.ShowDialogAndCheckIfChangesWereMade(rereadDates))
+                DateTimeRereadFromFiles rereadDates = new DateTimeRereadFromFiles(this, DataHandler.FileDatabase);
+                if (ShowDialogAndCheckIfChangesWereMade(rereadDates))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -570,16 +572,16 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this,
-                this.DataHandler.FileDatabase,
-                this.State.SuppressSelectedDaylightSavingsCorrectionPrompt,
+                DataHandler.FileDatabase,
+                State.SuppressSelectedDaylightSavingsCorrectionPrompt,
                 "'Correct for daylight savings time...'",
-                optOut => { this.State.SuppressSelectedDaylightSavingsCorrectionPrompt = optOut; }
+                optOut => { State.SuppressSelectedDaylightSavingsCorrectionPrompt = optOut; }
                 ))
             {
-                DateDaylightSavingsTimeCorrection dateTimeChange = new DateDaylightSavingsTimeCorrection(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache);
-                if (this.ShowDialogAndCheckIfChangesWereMade(dateTimeChange))
+                DateDaylightSavingsTimeCorrection dateTimeChange = new DateDaylightSavingsTimeCorrection(this, DataHandler.FileDatabase, DataHandler.ImageCache);
+                if (ShowDialogAndCheckIfChangesWereMade(dateTimeChange))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -588,17 +590,17 @@ namespace Timelapse
         private async void MenuItemDateTimeFixedCorrection_Click(object sender, RoutedEventArgs e)
         {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedDateTimeFixedCorrectionPrompt,
+            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedDateTimeFixedCorrectionPrompt,
                                                                            "'Add a fixed correction value to every date/time...'",
                                                                optOut =>
                                                                {
-                                                                   this.State.SuppressSelectedDateTimeFixedCorrectionPrompt = optOut;
+                                                                   State.SuppressSelectedDateTimeFixedCorrectionPrompt = optOut;
                                                                }))
             {
-                DateTimeFixedCorrection fixedDateCorrection = new DateTimeFixedCorrection(this, this.DataHandler.FileDatabase, this.DataHandler.ImageCache.Current);
-                if (this.ShowDialogAndCheckIfChangesWereMade(fixedDateCorrection))
+                DateTimeFixedCorrection fixedDateCorrection = new DateTimeFixedCorrection(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current);
+                if (ShowDialogAndCheckIfChangesWereMade(fixedDateCorrection))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -610,16 +612,16 @@ namespace Timelapse
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this,
-                this.DataHandler.FileDatabase,
-                this.State.SuppressSelectedDateTimeLinearCorrectionPrompt,
+                DataHandler.FileDatabase,
+                State.SuppressSelectedDateTimeLinearCorrectionPrompt,
                 "'Correct for camera clock drift'",
-                optOut => { this.State.SuppressSelectedDateTimeLinearCorrectionPrompt = optOut; }
+                optOut => { State.SuppressSelectedDateTimeLinearCorrectionPrompt = optOut; }
                 ))
             {
-                DateTimeLinearCorrection linearDateCorrection = new DateTimeLinearCorrection(this, this.DataHandler.FileDatabase);
-                if (this.ShowDialogAndCheckIfChangesWereMade(linearDateCorrection))
+                DateTimeLinearCorrection linearDateCorrection = new DateTimeLinearCorrection(this, DataHandler.FileDatabase);
+                if (ShowDialogAndCheckIfChangesWereMade(linearDateCorrection))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -629,17 +631,17 @@ namespace Timelapse
         {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
-                this, this.DataHandler.FileDatabase, this.State.SuppressSelectedAmbiguousDatesPrompt,
+                this, DataHandler.FileDatabase, State.SuppressSelectedAmbiguousDatesPrompt,
                 "'Correct ambiguous dates...'",
                 optOut =>
                  {
-                     this.State.SuppressSelectedAmbiguousDatesPrompt = optOut;
+                     State.SuppressSelectedAmbiguousDatesPrompt = optOut;
                  }))
             {
-                DateCorrectAmbiguous dateCorrection = new DateCorrectAmbiguous(this, this.DataHandler.FileDatabase);
-                if (this.ShowDialogAndCheckIfChangesWereMade(dateCorrection))
+                DateCorrectAmbiguous dateCorrection = new DateCorrectAmbiguous(this, DataHandler.FileDatabase);
+                if (ShowDialogAndCheckIfChangesWereMade(dateCorrection))
                 {
-                    await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                    await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
             }
         }
@@ -652,7 +654,7 @@ namespace Timelapse
         private async void MenuItemFolderEditor_Click(object sender, RoutedEventArgs e)
         {
             // Warn the user about using the folder editor if metadata is in use
-            if (null != this.DataHandler?.FileDatabase?.MetadataInfo && this.DataHandler?.FileDatabase?.MetadataInfo.RowCount > 0)
+            if (null != DataHandler?.FileDatabase?.MetadataInfo && DataHandler?.FileDatabase?.MetadataInfo.RowCount > 0)
             {
                 if (false == Dialogs.FolderEditorMetadataWarning(this))
                 {
@@ -660,12 +662,12 @@ namespace Timelapse
                 }
             }
 
-            RelativePathEditor relativePathEditor = new RelativePathEditor(this, this.DataHandler?.FileDatabase);
+            RelativePathEditor relativePathEditor = new RelativePathEditor(this, DataHandler?.FileDatabase);
             if (true == relativePathEditor.ShowDialog())
             {
                 // true is returned if any edits were actually made by the user that led to changes
                 // So reselect/display the files to show those changes
-                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                await FilesSelectAndShowAsync().ConfigureAwait(true);
             }
         }
         #endregion
@@ -673,8 +675,8 @@ namespace Timelapse
         #region CompareFoldersToExpectedStructure
         private void MenuItemAnalyzeFolderStructure_Click(object sender, RoutedEventArgs e)
         {
-            if (null == this.DataHandler?.FileDatabase?.MetadataInfo) return;
-            MetadataFolderComplianceViewer dialog = new MetadataFolderComplianceViewer(this, this.DataHandler.FileDatabase, new List<string>(), this.DataHandler.FileDatabase.MetadataInfo);
+            if (null == DataHandler?.FileDatabase?.MetadataInfo) return;
+            MetadataFolderComplianceViewer dialog = new MetadataFolderComplianceViewer(this, DataHandler.FileDatabase, new List<string>(), DataHandler.FileDatabase.MetadataInfo);
             dialog.ShowDialog();
 
         }
@@ -687,19 +689,19 @@ namespace Timelapse
             // Don't do anything if the image actually exists. This should not fire, as this menu item is only enabled 
             // if there is a current image that doesn't exist. But just in case...
 
-            if (null == this.DataHandler?.ImageCache?.Current || File.Exists(FilesFolders.GetFullPath(this.DataHandler.FileDatabase.FolderPath, this.DataHandler?.ImageCache?.Current)))
+            if (null == DataHandler?.ImageCache?.Current || File.Exists(FilesFolders.GetFullPath(DataHandler.FileDatabase.FolderPath, DataHandler?.ImageCache?.Current)))
             {
                 return;
             }
             // Note:  there are redundant null checks due to Resharper indicating possible nullreference exceptions
-            if (null == this.DataHandler)
+            if (null == DataHandler)
             {
                 // Shouldn't happen. 
-                TracePrint.NullException(nameof(this.DataHandler));
+                TracePrint.NullException(nameof(DataHandler));
                 return;
             }
-            string folderPath = this.DataHandler.FileDatabase.FolderPath;
-            ImageRow currentImage = this.DataHandler?.ImageCache?.Current;
+            string folderPath = DataHandler.FileDatabase.FolderPath;
+            ImageRow currentImage = DataHandler?.ImageCache?.Current;
 
             if (null == currentImage)
             {
@@ -713,13 +715,13 @@ namespace Timelapse
             // Remove any of the tuples that are spoken for i.e., that are already associated with a row in the database
             for (int i = matchingRelativePathFileNameList.Count - 1; i >= 0; i--)
             {
-                if (null == this.DataHandler)
+                if (null == DataHandler)
                 {
                     // Shouldn't happen. 
-                    TracePrint.NullException(nameof(this.DataHandler));
+                    TracePrint.NullException(nameof(DataHandler));
                     return;
                 }
-                if (this.DataHandler.FileDatabase.ExistsRelativePathAndFileInDataTable(matchingRelativePathFileNameList[i].Item1, matchingRelativePathFileNameList[i].Item2))
+                if (DataHandler.FileDatabase.ExistsRelativePathAndFileInDataTable(matchingRelativePathFileNameList[i].Item1, matchingRelativePathFileNameList[i].Item2))
                 {
                     // We only want matching files that are not already assigned to another datafield in the database
                     matchingRelativePathFileNameList.RemoveAt(i);
@@ -735,13 +737,13 @@ namespace Timelapse
             }
 
             // Now retrieve a list of all filenames located in the same folder (i.e., that have the same relative path) as the missing file.
-            if (null == this.DataHandler)
+            if (null == DataHandler)
             {
                 // Shouldn't happen. 
-                TracePrint.NullException(nameof(this.DataHandler));
+                TracePrint.NullException(nameof(DataHandler));
                 return;
             }
-            List<string> otherMissingFiles = this.DataHandler.FileDatabase.SelectFileNamesWithRelativePathFromDatabase(currentImage.RelativePath);
+            List<string> otherMissingFiles = DataHandler.FileDatabase.SelectFileNamesWithRelativePathFromDatabase(currentImage.RelativePath);
 
             // Remove the current missing file from the list, as well as any file that exists i.e., that is not missing.
             for (int i = otherMissingFiles.Count - 1; i >= 0; i--)
@@ -763,7 +765,7 @@ namespace Timelapse
                 foreach (string otherMissingFile in otherMissingFiles)
                 {
                     // Its a potential candidate if its not already referenced but it exists in that relative path folder
-                    if (false == this.DataHandler.FileDatabase.ExistsRelativePathAndFileInDataTable(matchingPath.Item1, otherMissingFile)
+                    if (false == DataHandler.FileDatabase.ExistsRelativePathAndFileInDataTable(matchingPath.Item1, otherMissingFile)
                         && File.Exists(FilesFolders.GetFullPath(FolderPath, matchingPath.Item1, otherMissingFile)))
                     {
                         orphanMissingFiles.Add(otherMissingFile);
@@ -772,7 +774,7 @@ namespace Timelapse
                 otherMissingFileCandidates.Add(matchingPath.Item1, orphanMissingFiles);
             }
 
-            Dialog.MissingImageLocateRelativePaths dialog = new Dialog.MissingImageLocateRelativePaths(this, this.DataHandler.FileDatabase, currentImage.RelativePath, currentImage.File, otherMissingFileCandidates);
+            MissingImageLocateRelativePaths dialog = new MissingImageLocateRelativePaths(this, DataHandler.FileDatabase, currentImage.RelativePath, currentImage.File, otherMissingFileCandidates);
 
             bool? result = dialog.ShowDialog();
             if (result == true)
@@ -786,7 +788,7 @@ namespace Timelapse
                 // Update the original missing file
                 List<ColumnTuplesWithWhere> columnTuplesWithWhereList = new List<ColumnTuplesWithWhere>();
                 ColumnTuplesWithWhere columnTuplesWithWhere = new ColumnTuplesWithWhere();
-                columnTuplesWithWhere.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.RelativePath, locatedMissingFile.Item1)); // The new relative path
+                columnTuplesWithWhere.Columns.Add(new ColumnTuple(DatabaseColumn.RelativePath, locatedMissingFile.Item1)); // The new relative path
                 columnTuplesWithWhere.SetWhere(currentImage.RelativePath, currentImage.File); // Where the original relative path/file terms are met
                 columnTuplesWithWhereList.Add(columnTuplesWithWhere);
 
@@ -794,24 +796,24 @@ namespace Timelapse
                 foreach (string otherMissingFileName in otherMissingFileCandidates[locatedMissingFile.Item1])
                 {
                     columnTuplesWithWhere = new ColumnTuplesWithWhere();
-                    columnTuplesWithWhere.Columns.Add(new ColumnTuple(Constant.DatabaseColumn.RelativePath, locatedMissingFile.Item1)); // The new value
+                    columnTuplesWithWhere.Columns.Add(new ColumnTuple(DatabaseColumn.RelativePath, locatedMissingFile.Item1)); // The new value
                     columnTuplesWithWhere.SetWhere(currentImage.RelativePath, otherMissingFileName); // Where the original relative path/file terms are met
                     columnTuplesWithWhereList.Add(columnTuplesWithWhere);
                 }
 
                 // Now update the database
-                this.DataHandler.FileDatabase.UpdateFiles(columnTuplesWithWhereList);
-                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                DataHandler.FileDatabase.UpdateFiles(columnTuplesWithWhereList);
+                await FilesSelectAndShowAsync().ConfigureAwait(true);
             }
         }
 
         // Find missing folders
         private async void MenuItemEditFindMissingFolder_Click(object sender, RoutedEventArgs e)
         {
-            bool? result = TimelapseWindow.GetAndCorrectForMissingFolders(this, this.DataHandler.FileDatabase);
+            bool? result = GetAndCorrectForMissingFolders(this, DataHandler.FileDatabase);
             if (true == result)
             {
-                await this.FilesSelectAndShowAsync().ConfigureAwait(true);
+                await FilesSelectAndShowAsync().ConfigureAwait(true);
                 return;
             }
             if (result != null) // && false == result.Value -> this is always true
@@ -826,20 +828,20 @@ namespace Timelapse
         private void MenuItemEditClassifyDarkImages_Click(object sender, RoutedEventArgs e)
         {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
-            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, this.DataHandler.FileDatabase, this.State.SuppressSelectedDarkThresholdPrompt,
+            if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedDarkThresholdPrompt,
                                                                            "'Populate a field with Dark classification data...'",
                                                                optOut =>
                                                                {
-                                                                   this.State.SuppressSelectedDarkThresholdPrompt = optOut; // SG TODO
+                                                                   State.SuppressSelectedDarkThresholdPrompt = optOut; // SG TODO
                                                                }))
             {
-                using (DarkImagesThreshold darkThreshold = new DarkImagesThreshold(this, this.DataHandler.FileDatabase, this.State, this.DataHandler.ImageCache.CurrentRow))
+                using (DarkImagesThreshold darkThreshold = new DarkImagesThreshold(this, DataHandler.FileDatabase, State, DataHandler.ImageCache.CurrentRow))
                 {
                     darkThreshold.Owner = this;
                     if (darkThreshold.ShowDialog() == true)
                     {
                         // Force an update of the current image in case the current values have changed
-                        this.FileShow(this.DataHandler.ImageCache.CurrentRow, true);
+                        FileShow(DataHandler.ImageCache.CurrentRow, true);
                     }
                 }
             }
@@ -849,15 +851,15 @@ namespace Timelapse
         #region Edit notes for this image set
         private void MenuItemLog_Click(object sender, RoutedEventArgs e)
         {
-            EditLog editImageSetLog = new EditLog(this.DataHandler.FileDatabase.ImageSet.Log, this)
+            EditLog editImageSetLog = new EditLog(DataHandler.FileDatabase.ImageSet.Log, this)
             {
                 Owner = this
             };
             bool? result = editImageSetLog.ShowDialog();
             if (result == true)
             {
-                this.DataHandler.FileDatabase.ImageSet.Log = editImageSetLog.Log.Text;
-                this.DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
+                DataHandler.FileDatabase.ImageSet.Log = editImageSetLog.Log.Text;
+                DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
             }
         }
         #endregion
@@ -868,7 +870,7 @@ namespace Timelapse
             // Customize the text to whether full view or overview is being displayed
             if (sender is ContextMenu menu && menu.Items[0] is MenuItem menuItem)
             {
-                if (this.MarkableCanvas.ThumbnailGrid.IsVisible == false && this.MarkableCanvas.ThumbnailGrid.IsGridActive == false)
+                if (MarkableCanvas.ThumbnailGrid.IsVisible == false && MarkableCanvas.ThumbnailGrid.IsGridActive == false)
                 {
                     menuItem.Header = "Restore default values for this file";
                     menuItem.ToolTip = "For the currently displayed file, revert all fields to its default values (excepting file paths and dates/times)";
@@ -888,31 +890,31 @@ namespace Timelapse
         private void MenuItemRestoreDefaultValues_Click(object sender, RoutedEventArgs e)
         {
             // Retrieve the controls
-            foreach (KeyValuePair<string, DataEntryControl> pair in this.DataEntryControls.ControlsByDataLabelThatAreVisible)
+            foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
                 DataEntryControl control = pair.Value;
-                if (control.DataLabel == Constant.DatabaseColumn.File || control.DataLabel == Constant.DatabaseColumn.RelativePath ||
-                    control.DataLabel == Constant.DatabaseColumn.DateTime)
+                if (control.DataLabel == DatabaseColumn.File || control.DataLabel == DatabaseColumn.RelativePath ||
+                    control.DataLabel == DatabaseColumn.DateTime)
                 {
                     // Ignore stock controls
                     continue;
                 }
-                ControlRow imageDatabaseControl = this.templateDatabase.GetControlFromControls(control.DataLabel);
-                if (this.MarkableCanvas.ThumbnailGrid.IsVisible == false && this.MarkableCanvas.ThumbnailGrid.IsGridActive == false)
+                ControlRow imageDatabaseControl = templateDatabase.GetControlFromControls(control.DataLabel);
+                if (MarkableCanvas.ThumbnailGrid.IsVisible == false && MarkableCanvas.ThumbnailGrid.IsGridActive == false)
                 {
                     // Only a single image is displayed: update the database for the current row with the control's value
-                    if (this.DataHandler.ImageCache.Current == null)
+                    if (DataHandler.ImageCache.Current == null)
                     {
                         // Shouldn't happen
-                        TracePrint.NullException(nameof(this.DataHandler.ImageCache.Current));
+                        TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                         continue;
                     }
-                    this.DataHandler.FileDatabase.UpdateFile(this.DataHandler.ImageCache.Current.ID, control.DataLabel, imageDatabaseControl.DefaultValue);
+                    DataHandler.FileDatabase.UpdateFile(DataHandler.ImageCache.Current.ID, control.DataLabel, imageDatabaseControl.DefaultValue);
                 }
                 else
                 {
                     // Multiple images are displayed: update the database for all selected rows with the control's value
-                    this.DataHandler.FileDatabase.UpdateFiles(this.MarkableCanvas.ThumbnailGrid.GetSelected(), control.DataLabel, imageDatabaseControl.DefaultValue);
+                    DataHandler.FileDatabase.UpdateFiles(MarkableCanvas.ThumbnailGrid.GetSelected(), control.DataLabel, imageDatabaseControl.DefaultValue);
                 }
                 control.SetContentAndTooltip(imageDatabaseControl.DefaultValue);
             }

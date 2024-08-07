@@ -6,12 +6,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
+using Control = System.Windows.Controls.Control;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -66,17 +68,17 @@ namespace Timelapse.ControlsDataEntry
 
             // populate properties from database definition of control
             // this.Content and Tooltip can't be set, however, as the caller hasn't instantiated the content control yet
-            this.Copyable = control.Copyable;
-            this.DataLabel = control.DataLabel;
+            Copyable = control.Copyable;
+            DataLabel = control.DataLabel;
 
             // Create the stack panel
-            this.Container = new StackPanel();
-            Style style = styleProvider.FindResource(Constant.ControlStyle.StackPanelContainerStyle) as Style;
-            this.Container.Style = style;
+            Container = new StackPanel();
+            Style style = styleProvider.FindResource(ControlStyle.StackPanelContainerStyle) as Style;
+            Container.Style = style;
 
             // use the containers's tag to point back to this so event handlers can access the DataEntryControl
             // this is needed by callbacks such as DataEntryHandler.Container_PreviewMouseRightButtonDown() and TimelapseWindow.CounterControl_MouseLeave()
-            this.Container.Tag = this;
+            Container.Tag = this;
         }
         #endregion
 
@@ -110,27 +112,27 @@ namespace Timelapse.ControlsDataEntry
         public TContent ContentControl { get; }
 
         /// <summary>Gets the control label's value</summary>
-        public string Label => (string)this.LabelControl.Content;
+        public string Label => (string)LabelControl.Content;
 
         public TLabel LabelControl { get; }
 
         /// <summary>Gets or sets the width of the content control</summary>
         public int Width
         {
-            get => (int)this.ContentControl.Width;
-            set => this.ContentControl.Width = value;
+            get => (int)ContentControl.Width;
+            set => ContentControl.Width = value;
         }
 
         // Sets or gets whether this control is enabled or disabled</summary>
         public bool IsEnabled
         {
-            get => this.Container.IsEnabled;
+            get => Container.IsEnabled;
             set
             {
-                this.ContentControl.IsEnabled = value;
-                this.LabelControl.IsEnabled = value;
-                this.Container.IsEnabled = value;
-                this.ContentControl.Foreground = value ? Brushes.Black : Brushes.DimGray;
+                ContentControl.IsEnabled = value;
+                LabelControl.IsEnabled = value;
+                Container.IsEnabled = value;
+                ContentControl.Foreground = value ? Brushes.Black : Brushes.DimGray;
             }
         }
         #endregion
@@ -143,24 +145,24 @@ namespace Timelapse.ControlsDataEntry
             ThrowIf.IsNullArgument(control, nameof(control));
             ThrowIf.IsNullArgument(styleProvider, nameof(styleProvider));
 
-            this.ContentControl = new TContent()
+            ContentControl = new TContent
             {
                 IsTabStop = true
             };
             if (contentStyleName.HasValue)
             {
-                this.ContentControl.Style = (Style)styleProvider.FindResource(contentStyleName.Value.ToString());
+                ContentControl.Style = (Style)styleProvider.FindResource(contentStyleName.Value.ToString());
             }
             // this.ContentReadOnly = false;
-            this.ContentControl.IsEnabled = true;
-            this.Width = control.Width;
+            ContentControl.IsEnabled = true;
+            Width = control.Width;
 
             // use the content's tag to point back to this so event handlers can access the DataEntryControl as well as just ContentControl
             // the data update callback for each control type in TimelapseWindow, such as NoteControl_TextChanged(), relies on this
-            this.ContentControl.Tag = this;
+            ContentControl.Tag = this;
 
             // Create the label (which is an actual label)
-            this.LabelControl = new TLabel()
+            LabelControl = new TLabel
             {
                 Content = control.Label,
                 Style = (Style)styleProvider.FindResource(labelStyleName.ToString()),
@@ -168,9 +170,9 @@ namespace Timelapse.ControlsDataEntry
             };
 
             // add the label and content to the stack panel
-            this.Container.Children.Add(this.LabelControl);
-            this.Container.Children.Add(this.ContentControl);
-            this.Container.PreviewKeyDown += this.Container_PreviewKeyDown;
+            Container.Children.Add(LabelControl);
+            Container.Children.Add(ContentControl);
+            Container.PreviewKeyDown += Container_PreviewKeyDown;
         }
         #endregion
 
@@ -181,9 +183,9 @@ namespace Timelapse.ControlsDataEntry
         {
             // We are only interested in interpretting the Shift/Arrow key for the following controls
             // The DataEntryChoice, DataEntryFlags DataEntryIntegers, DataEntryDecimals do their own previewKeyDown processing to acheive a similar effect
-            if (this.ContentControl is DateTimePicker ||
-                this.ContentControl is TimePicker ||
-                this.ContentControl is AutocompleteTextBox)
+            if (ContentControl is DateTimePicker ||
+                ContentControl is TimePicker ||
+                ContentControl is AutocompleteTextBox)
             {
                 // Use the SHIFT right/left pageUp/PageDownkey to go to the next/previous image for datetimepicker
                 // The right/left arrow keys normally navigate through text characters when the text is enabled.
@@ -193,7 +195,7 @@ namespace Timelapse.ControlsDataEntry
                 // - the SHIFT key is held down when its not a read only note
                 // Note that redirecting the event to the main window, while prefered, won't work
                 // as the main window ignores the arrow keys if the focus is set to a control.
-                if ((this.ContentReadOnly || Keyboard.Modifiers == ModifierKeys.Shift) && (keyEvent.Key == Key.Right || keyEvent.Key == Key.Left || keyEvent.Key == Key.PageUp || keyEvent.Key == Key.PageDown))
+                if ((ContentReadOnly || Keyboard.Modifiers == ModifierKeys.Shift) && (keyEvent.Key == Key.Right || keyEvent.Key == Key.Left || keyEvent.Key == Key.PageUp || keyEvent.Key == Key.PageDown))
                 {
                     keyEvent.Handled = true;
                     GlobalReferences.MainWindow.Handle_PreviewKeyDown(keyEvent, true);
@@ -206,8 +208,8 @@ namespace Timelapse.ControlsDataEntry
             // request the focus manager figure out how to assign focus within the edit control as not all controls are focusable at their top level
             // This is not reliable at small focus scopes, possibly due to interaction with TimelapseWindow's focus management, but seems reasonably
             // well behaved at application scope.
-            FocusManager.SetFocusedElement(focusScope, this.ContentControl);
-            return this.ContentControl;
+            FocusManager.SetFocusedElement(focusScope, ContentControl);
+            return ContentControl;
         }
         #endregion
 
@@ -255,55 +257,55 @@ namespace Timelapse.ControlsDataEntry
 
         protected virtual void ShowPopupPreview(string value)
         {
-            Border border = (Border)this.PopupPreview.Child;
+            Border border = (Border)PopupPreview.Child;
             TextBlock popupText = (TextBlock)border.Child;
             popupText.Text = value;
-            this.PopupPreview.IsOpen = true;
+            PopupPreview.IsOpen = true;
         }
 
         protected void HidePopupPreview()
         {
-            if (this.PopupPreview == null || this.PopupPreview.Child == null)
+            if (PopupPreview == null || PopupPreview.Child == null)
             {
                 // There is no popupPreview being displayed, so there is nothing to hide.
                 return;
             }
-            Border border = (Border)this.PopupPreview.Child;
+            Border border = (Border)PopupPreview.Child;
             TextBlock popupText = (TextBlock)border.Child;
             popupText.Text = string.Empty;
-            this.PopupPreview.IsOpen = false;
+            PopupPreview.IsOpen = false;
         }
 
         // Create a flash effect for the popup. We use this to signal that the 
         // preview text has been selected
         protected virtual void FlashPopupPreview()
         {
-            if (this.PopupPreview == null || this.PopupPreview.Child == null)
+            if (PopupPreview == null || PopupPreview.Child == null)
             {
                 return;
             }
 
             // Get the TextBlock
-            Border border = (Border)this.PopupPreview.Child;
+            Border border = (Border)PopupPreview.Child;
             TextBlock popupText = (TextBlock)border.Child;
 
             // Revert to normal fontstyle, and set up a
             // timer to change it back to italics after a short duration
             popupText.FontStyle = FontStyles.Normal;
-            DispatcherTimer timer = new DispatcherTimer()
+            DispatcherTimer timer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(.4),
                 Tag = popupText,
             };
-            timer.Tick += this.FlashFontTimer_Tick;
+            timer.Tick += FlashFontTimer_Tick;
 
             // Animate the color from white back to its current color
-            ColorAnimation animation = new ColorAnimation()
+            ColorAnimation animation = new ColorAnimation
             {
                 From = Colors.White,
                 AutoReverse = false,
                 Duration = new Duration(TimeSpan.FromSeconds(.6)),
-                EasingFunction = new ExponentialEase()
+                EasingFunction = new ExponentialEase
                 {
                     EasingMode = EasingMode.EaseIn
                 },
@@ -326,12 +328,12 @@ namespace Timelapse.ControlsDataEntry
         // This is a standard color animation scheme that can be accessed by the other controls
         protected ColorAnimation GetColorAnimation()
         {
-            return new ColorAnimation()
+            return new ColorAnimation
             {
                 From = Colors.LightGreen,
                 AutoReverse = false,
                 Duration = new Duration(TimeSpan.FromSeconds(.6)),
-                EasingFunction = new ExponentialEase()
+                EasingFunction = new ExponentialEase
                 {
                     EasingMode = EasingMode.EaseIn
                 },
@@ -350,12 +352,12 @@ namespace Timelapse.ControlsDataEntry
 
         protected ColorAnimation GetColorAnimation(Color color, Duration duration)
         {
-            return new ColorAnimation()
+            return new ColorAnimation
             {
                 From = color,
                 AutoReverse = false,
                 Duration = duration,
-                EasingFunction = new ExponentialEase()
+                EasingFunction = new ExponentialEase
                 {
                     EasingMode = EasingMode.EaseIn
                 },

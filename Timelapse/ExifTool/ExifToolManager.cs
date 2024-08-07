@@ -36,8 +36,8 @@ namespace Timelapse.ExifTool
         {
             get
             {
-                if (this.ExifTool == null) return false;
-                return this.ExifTool.Status == ExifToolWrapper.ExeStatus.Ready;
+                if (ExifTool == null) return false;
+                return ExifTool.Status == ExifToolWrapper.ExeStatus.Ready;
             }
         }
         #endregion
@@ -46,11 +46,11 @@ namespace Timelapse.ExifTool
         public void StartIfNotAlreadyStarted()
         {
             // Start to exiftool if it is not already started
-            if (this.ExifTool == null)
+            if (ExifTool == null)
             {
                 // Yes, start  exiftool
-                this.ExifTool = new ExifToolWrapper();
-                this.ExifTool.Start();
+                ExifTool = new ExifToolWrapper();
+                ExifTool.Start();
             }
         }
         #endregion
@@ -61,18 +61,18 @@ namespace Timelapse.ExifTool
             try
             {
                 // Check to see if the exiftool actually needs stopping
-                if (this.ExifTool != null)
+                if (ExifTool != null)
                 {
                     // If the ExifTool is already stopped, this should still work without any consequences.
-                    Task.Run(() => this.ExifTool.Stop());
+                    Task.Run(() => ExifTool.Stop());
 
                     // Sometimes Exiftool process seems to linger. This is a further way to ensure that those processes are killed.
-                    if (this.KillTimer == null)
+                    if (KillTimer == null)
                     {
-                        this.KillTimer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(1) };
-                        this.KillTimer.Tick += this.KillTimer_Tick;
+                        KillTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+                        KillTimer.Tick += KillTimer_Tick;
                     }
-                    this.KillTimer.Start();
+                    KillTimer.Start();
                 }
             }
             catch
@@ -93,7 +93,7 @@ namespace Timelapse.ExifTool
                     process.Kill();
                 }
                 KillTimer.Stop();
-                this.ExifTool = null;
+                ExifTool = null;
             }
             catch
             {
@@ -112,15 +112,15 @@ namespace Timelapse.ExifTool
         // Version 1: Return all Exif tag/value data associated with the file identified in filepath
         public Dictionary<string, string> FetchExifFrom(string filepath)
         {
-            this.StartIfNotAlreadyStarted();
-            return this.ExifTool.FetchExifFrom(filepath);
+            StartIfNotAlreadyStarted();
+            return ExifTool.FetchExifFrom(filepath);
         }
         // Version 2: specifies the tags of interest, where only those tag/values are returned.
         // If the tag does not exist, the returned data structure will not contain that tag
         public Dictionary<string, string> FetchExifFrom(string filepath, string[] tags)
         {
-            this.StartIfNotAlreadyStarted();
-            return this.ExifTool.FetchExifFrom(filepath, tags);
+            StartIfNotAlreadyStarted();
+            return ExifTool.FetchExifFrom(filepath, tags);
         }
         #endregion
 
@@ -131,11 +131,11 @@ namespace Timelapse.ExifTool
             if (disposing)
             {
                 // Dispose managed resources
-                if (this.ExifTool != null)
+                if (ExifTool != null)
                 {
-                    this.ExifTool.Stop();
+                    ExifTool.Stop();
                     // Stop  kills the process, but lets dispose the exif tool anyways
-                    this.ExifTool.Dispose();
+                    ExifTool.Dispose();
                 }
             }
             // free native resources

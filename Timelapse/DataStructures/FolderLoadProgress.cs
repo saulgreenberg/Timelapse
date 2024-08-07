@@ -14,12 +14,12 @@ namespace Timelapse.DataStructures
 
         public FolderLoadProgress(int totalFiles)
         {
-            this.BitmapSource = null;
-            this.CurrentFile = 0;
-            this.CurrentFileName = null;
-            this.TotalFiles = totalFiles;
-            this.CurrentPass = 0;
-            this.TotalPasses = 0;
+            BitmapSource = null;
+            CurrentFile = 0;
+            CurrentFileName = null;
+            TotalFiles = totalFiles;
+            CurrentPass = 0;
+            TotalPasses = 0;
         }
     }
 }

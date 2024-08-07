@@ -59,28 +59,28 @@ namespace Timelapse.Database
         // ReSharper disable once ConvertConstructorToMemberInitializers
         public TemplateSyncResults()
         {
-            this.InfoRowsInDdbToRenumber = new List<Tuple<MetadataInfoRow, int, int>>();
-            this.InfoRowsInDdbToDelete = new List<MetadataInfoRow>();
-            this.InfoRowsCommon = new List<Tuple<MetadataInfoRow, MetadataInfoRow>>();
-            this.InfoRowsInTdbToAdd = new List<MetadataInfoRow>();
-            this.InfoRowsWithNameChanges = new List<Tuple<MetadataInfoRow, MetadataInfoRow>>();
-            this.InfoRowsWithDifferentGuidSameAlias = new List<Tuple<MetadataInfoRow, MetadataInfoRow>>();  // Form: tdbRow, ddbRow
-                                                                            this.DataLabelsInTdbButNotDdbByLevel = new Dictionary<int, Dictionary<string, string>>();
-            this.DataLabelsInDdbButNotTdbByLevel = new Dictionary<int, Dictionary<string, string>>();
+            InfoRowsInDdbToRenumber = new List<Tuple<MetadataInfoRow, int, int>>();
+            InfoRowsInDdbToDelete = new List<MetadataInfoRow>();
+            InfoRowsCommon = new List<Tuple<MetadataInfoRow, MetadataInfoRow>>();
+            InfoRowsInTdbToAdd = new List<MetadataInfoRow>();
+            InfoRowsWithNameChanges = new List<Tuple<MetadataInfoRow, MetadataInfoRow>>();
+            InfoRowsWithDifferentGuidSameAlias = new List<Tuple<MetadataInfoRow, MetadataInfoRow>>();  // Form: tdbRow, ddbRow
+                                                                            DataLabelsInTdbButNotDdbByLevel = new Dictionary<int, Dictionary<string, string>>();
+            DataLabelsInDdbButNotTdbByLevel = new Dictionary<int, Dictionary<string, string>>();
 
-            this.DataLabelsToAddByLevel = new Dictionary<int, List<String>>();
-            this.DataLabelsToDeleteByLevel = new Dictionary<int, List<String>>();
-            this.DataLabelsToRenameByLevel = new Dictionary<int,List<KeyValuePair<string, string>>>();
+            DataLabelsToAddByLevel = new Dictionary<int, List<String>>();
+            DataLabelsToDeleteByLevel = new Dictionary<int, List<String>>();
+            DataLabelsToRenameByLevel = new Dictionary<int,List<KeyValuePair<string, string>>>();
 
-            this.ControlSynchronizationErrorsByLevel = new Dictionary<int, List<string>>();
-            this.ControlSynchronizationWarningsByLevel = new Dictionary<int, List<string>>();
+            ControlSynchronizationErrorsByLevel = new Dictionary<int, List<string>>();
+            ControlSynchronizationWarningsByLevel = new Dictionary<int, List<string>>();
 
-            this.UseTdbTemplate = true;
-            this.SyncRequiredAsNonCriticalDataFieldAttributesDiffer = false;
-            this.SyncRequiredAsFolderLevelsDiffer = false;
-            this.InfoHierarchyIncompatibleDifferences = false;
-            this.InfoHierarchyTdbDiffersOnlyWithAppendedLevels = false;
-            this.SyncRequiredToUpdateInfoTableGuids = false;
+            UseTdbTemplate = true;
+            SyncRequiredAsNonCriticalDataFieldAttributesDiffer = false;
+            SyncRequiredAsFolderLevelsDiffer = false;
+            InfoHierarchyIncompatibleDifferences = false;
+            InfoHierarchyTdbDiffersOnlyWithAppendedLevels = false;
+            SyncRequiredToUpdateInfoTableGuids = false;
         }
         #endregion
 
@@ -88,16 +88,16 @@ namespace Timelapse.Database
         // Invoked by the SyncRequiredAsDataLabelsDiffer getter
         private bool GetSyncRequiredAsDataLabelsDiffer()
         {
-            foreach (KeyValuePair<int, Dictionary<string, string>> kvp in this.DataLabelsInTdbButNotDdbByLevel)
+            foreach (KeyValuePair<int, Dictionary<string, string>> kvp in DataLabelsInTdbButNotDdbByLevel)
             {
-                if (this.DataLabelsInTdbButNotDdbByLevel[kvp.Key].Count > 0)
+                if (DataLabelsInTdbButNotDdbByLevel[kvp.Key].Count > 0)
                 {
                     return true;
                 }
             }
-            foreach (KeyValuePair<int, Dictionary<string, string>> kvp in this.DataLabelsInDdbButNotTdbByLevel)
+            foreach (KeyValuePair<int, Dictionary<string, string>> kvp in DataLabelsInDdbButNotTdbByLevel)
             {
-                if (this.DataLabelsInDdbButNotTdbByLevel[kvp.Key].Count > 0)
+                if (DataLabelsInDdbButNotTdbByLevel[kvp.Key].Count > 0)
                 {
                     return true;
                 }
