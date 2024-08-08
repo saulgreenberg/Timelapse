@@ -289,7 +289,7 @@ namespace Timelapse.Recognition
                     {
                         // Get the image id from the image
                         // If we can't, just skip it (this should not happen)
-                        if (Int32.TryParse(t[0].ToString(), out int id))
+                        if (long.TryParse(t[0].ToString(), out long id))
                         {
                             image.imageID = id;
                         }

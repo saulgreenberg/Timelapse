@@ -141,7 +141,7 @@ namespace Timelapse.Recognition
     public class image
     {
         #region Public Properties
-        public int imageID { get; set; }
+        public long imageID { get; set; }
         public string file { get; set; } = string.Empty;
         public float? max_detection_conf { get; set; } = 0;
         public List<detection> detections { get; set; } = new List<detection>();

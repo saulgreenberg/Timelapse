@@ -366,10 +366,13 @@
                     <Separator />
                     <!-- EcoAsssist -->
                     <MenuItem Header="EcoAssist Image Recognizer..." SubmenuOpened="MenuItem_OnEcoAssistSubmenuOpened" >
+                        <MenuItem.Icon>
+                            <Image Source="Icons/ecoAssist.png" />
+                        </MenuItem.Icon>
 
                         <MenuItem Name="MenuItemEcoAssistRun" Header="Run EcoAssist recognizer on a folder..." IsEnabled="True" Click="MenuItemEcoAssistRun_Click" ToolTip="Run the EcoAssist recognizer on a folder that you select">
                             <MenuItem.Icon>
-                                <Image Source="Icons/JSONImport_32x.png" />
+                                <Image Source="Icons/EcoAssist.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
@@ -377,13 +380,13 @@
 
                         <MenuItem Name="MenuItemEcoAssistDownload" Header="Install EcoAssist image recognizer (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
                             <MenuItem.Icon>
-                                <Image Source="Icons/JSONImport_32x.png" />
+                                <Image Source="Icons/EcoAssistUpload.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
                         <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Uninstall EcoAssist (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistUninstall_Click" ToolTip="Go to the Uninstall EcoAssist web page to download the EcoAssist Unninstall utility">
                             <MenuItem.Icon>
-                                <Image Source="Icons/JSONImport_32x.png" />
+                                <Image Source="Icons/EcoAssistUninstall.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 

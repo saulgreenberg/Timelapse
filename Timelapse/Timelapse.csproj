@@ -1098,6 +1098,9 @@
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Icons\EcoAssist.png" />
+    <Resource Include="Icons\EcoAssistUninstall.png" />
+    <Resource Include="Icons\EcoAssistUpload.png" />
     <Resource Include="Resources\LoadAnImageSet.jpg" />
   </ItemGroup>
   <ItemGroup />

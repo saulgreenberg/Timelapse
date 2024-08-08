@@ -975,7 +975,7 @@ namespace Timelapse.ControlsDataEntry
             DataEntryMultiLine control = (DataEntryMultiLine)((MultiLineTextEditor)sender).Tag;
             {
                 control.ContentChanged = true;
-
+                control.SetContentAndTooltip(control.Content.Trim());
                 // Note that  trailing whitespace is removed only from the database as further edits may use it.
                 UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content.Trim());
             }
