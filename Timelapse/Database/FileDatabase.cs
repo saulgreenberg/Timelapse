@@ -870,9 +870,9 @@ namespace Timelapse.Database
         #endregion
 
         #region Get the ID of the last row inserted into the database
-        public int GetLastInsertedRow(string datatable, string intfield)
+        public long GetLastInsertedRow(string datatable, string intfield)
         {
-            return Database.ScalarGetMaxIntValue(datatable, intfield);
+            return Database.ScalarGetMaxValueAsLong(datatable, intfield);
         }
         #endregion
 
@@ -1949,7 +1949,7 @@ namespace Timelapse.Database
             }
             // Uncommment this to see the actual complete query
             // Debug.Print("File Counts: " + query);
-            return Database.ScalarGetCountFromSelect(query);
+            return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 
         // Return true if even one file matches the fileSelection condition in the entire database
@@ -2013,8 +2013,8 @@ namespace Timelapse.Database
             query += Sql.CloseParenthesis;
 
             // Uncommment this to see the actual complete query
-            //Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetCountFromSelect(query).ToString() );
-            return Database.ScalarGetCountFromSelect(query) != 0;
+            //Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetScalarFromSelectAsInt(query).ToString() );
+            return Database.ScalarGetScalarFromSelectAsInt(query) != 0;
         }
 
         #endregion
@@ -2024,7 +2024,7 @@ namespace Timelapse.Database
         public int CountAllFilesMatchingRelativePath(string RelativePath)
         {
             string query = Sql.SelectCountStarFrom + DBTables.FileData + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(RelativePath);
-            return Database.ScalarGetCountFromSelect(query);
+            return Database.ScalarGetScalarFromSelectAsInt(query);
         }
         #endregion
 
@@ -2281,7 +2281,7 @@ namespace Timelapse.Database
         public void IndexCreateForFileAndRelativePathIfNotExists()
         {
             // If even one of the indexes doesn't exist, they would all have to be created
-            if (0 == Database.ScalarGetCountFromSelect(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote("IndexFile")))
+            if (0 == Database.ScalarGetScalarFromSelectAsInt(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote("IndexFile")))
             {
                 List<Tuple<string, string, string>> tuples = new List<Tuple<string, string, string>>
                 {
@@ -2908,8 +2908,8 @@ namespace Timelapse.Database
                     bool clearDBRecognitionData = true;
 
                     // the starting index to be used for inserts using the DetectionID
-                    int dbStartingDetectionID = 1;
-                    int dbStartingClassificationID = 1;
+                    long dbStartingDetectionID = 1;
+                    long dbStartingClassificationID = 1;
 
                     // Resetting these tables to null will force reading the new values into them
                     // TODO: Put this somewhere else in case the user aborts the update!
@@ -3024,7 +3024,7 @@ namespace Timelapse.Database
                         // As we may be inserting classification records as well, get the max ClassificationID, and add 1 to it. This will be the starting classificationID for insertions
                         if (Database.TableExistsAndNotEmpty(DBTables.Classifications))
                         {
-                            dbStartingClassificationID = Database.ScalarGetMaxIntValue(DBTables.Classifications, ClassificationColumns.ClassificationID);
+                            dbStartingClassificationID = Database.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID);
                             dbStartingClassificationID++;
                         }
 

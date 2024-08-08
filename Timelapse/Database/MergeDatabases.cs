@@ -560,7 +560,7 @@ namespace Timelapse.Database
             // Part 2. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
             //    This will guarantee that there are no duplicate primary keys.
             //    Note: if there are no entries in the database, this function returns 0 
-            long offsetId = destinationDdb.ScalarGetMaxLongValue(DBTables.FileData, DatabaseColumn.ID);
+            long offsetId = destinationDdb.ScalarGetMaxValueAsLong(DBTables.FileData, DatabaseColumn.ID);
 
             // Part 3. Handle the DataTable portion
             query += QueryPhraseMergeDataTable(offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference);
@@ -1044,7 +1044,7 @@ namespace Timelapse.Database
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
             // The offeset should be 0 if there are no detections in the main DB, as we will be creating the detection table and then just adding to it.
             long offsetDetectionId = destinationRecognitionsExist
-                ? destinationDdb.ScalarGetMaxLongValue(DBTables.Detections, DetectionColumns.DetectionID)
+                ? destinationDdb.ScalarGetMaxValueAsLong(DBTables.Detections, DetectionColumns.DetectionID)
                 : 0;
 
             query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, DBTables.Detections) + Environment.NewLine;
@@ -1060,8 +1060,8 @@ namespace Timelapse.Database
 
             // Similar to the above, we also update the classifications
             // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???
-            int offsetClassificationId = (destinationRecognitionsExist)
-                ? destinationDdb.ScalarGetMaxIntValue(DBTables.Classifications, ClassificationColumns.ClassificationID)
+            long offsetClassificationId = (destinationRecognitionsExist)
+                ? destinationDdb.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID)
                 : 0;
             query += QueryCreateTemporaryTableFromExistingTable(tempClassificationsTable, attachedSourceDB, DBTables.Classifications) + Environment.NewLine;
             if (offsetClassificationId > 0)
@@ -1081,7 +1081,7 @@ namespace Timelapse.Database
             string attachedSourceDB, string srcTableName, string destTableName, string relativePathDifference)
         {
             string tmpLevelsTable = $"tmp{srcTableName}";
-            long offsetId = destinationDdb.ScalarGetMaxLongValue(destTableName, DatabaseColumn.ID);
+            long offsetId = destinationDdb.ScalarGetMaxValueAsLong(destTableName, DatabaseColumn.ID);
             string query = QueryCreateTemporaryTableFromExistingTable(tmpLevelsTable, attachedSourceDB, srcTableName) + Environment.NewLine;
             if (offsetId > 0)
             {

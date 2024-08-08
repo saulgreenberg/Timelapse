@@ -156,7 +156,7 @@ namespace Timelapse.Recognition
     public class detection
     {
         #region Public Properties
-        public int detectionID { get; set; }
+        public long detectionID { get; set; }
         public string category { get; set; } = string.Empty;
         public float conf { get; set; } = 0;
 

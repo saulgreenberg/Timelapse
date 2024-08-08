@@ -78,7 +78,7 @@ namespace TimelapseTemplateEditor
             // Add the image template data fields
             //
             //infoColumnsTuplesWithWhereList.Clear();
-            id = 1 + Globals.TemplateDatabase.Database.ScalarGetMaxLongValue(DBTables.Template, DatabaseColumn.ID);
+            id = 1 + Globals.TemplateDatabase.Database.ScalarGetMaxValueAsLong(DBTables.Template, DatabaseColumn.ID);
             foreach (StandardsRow sr in imageTemplateRows)
             {
                 // Add a row of a particular type, with its default values

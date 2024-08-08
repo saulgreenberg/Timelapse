@@ -54,7 +54,7 @@ namespace Timelapse
             if (GlobalReferences.DetectionsExists)
             {
                 // Get the ID of the duplicate file that was just inserted into the filedata table
-                int duplicateFileID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.FileData, DatabaseColumn.ID);
+                long duplicateFileID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.FileData, DatabaseColumn.ID);
 
                 // Get the detections associated with the current row, if any
                 DataRow[] detectionRows = DataHandler.FileDatabase.GetDetectionsFromFileID(row.ID);
@@ -81,7 +81,7 @@ namespace Timelapse
                         DataHandler.FileDatabase.InsertDetection(detectionInsertionStatements);
 
                         // Get the ID of the duplicate file that was just inserted into the filedata table
-                        int detectionID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.Detections, DetectionColumns.DetectionID);
+                        long detectionID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.Detections, DetectionColumns.DetectionID);
 
                         // Now get the classifications associated with each detection, if any
                         DataRow[] classificationDataTableRows = DataHandler.FileDatabase.GetClassificationsFromDetectionID((long)detectionRow[0]);
