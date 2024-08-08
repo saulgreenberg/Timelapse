@@ -15,6 +15,7 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
 using Control = Timelapse.Constant.Control;
@@ -1166,10 +1167,11 @@ namespace Timelapse.Dialog
         /// <summary>
         /// Ask the user to confirm value propagation from the last value
         /// </summary>
-        public static bool? DataEntryConfirmPropagateFromLastValueDialog(Window owner, String text, int imagesAffected)
+
+        public static bool DataEntryConfirmPropagateFromLastValueDialog(Window owner, String text, int imagesAffected)
         {
             text = string.IsNullOrEmpty(text) ? string.Empty : text.Trim();
-            return new MessageBox("Please confirm 'Propagate to Here' for this field.", owner, MessageBoxButton.YesNo)
+            MessageBox messageBox = new MessageBox("Please confirm 'Propagate to Here' for this field.", owner, MessageBoxButton.YesNo)
             {
                 Message =
                 {
@@ -1180,10 +1182,21 @@ namespace Timelapse.Dialog
                              + "\u2022 That field's value will be copied across all files between that file and this one of your selected files",
                     Result = "If you select yes: " + Environment.NewLine
                                                    + "\u2022 " + imagesAffected + " files will be affected."
+                },
+                DontShowAgain =
+                {
+                    Visibility = Visibility.Visible
                 }
-            }.ShowDialog();
-        }
+            };
 
+            bool proceedWithOperation = messageBox.ShowDialog() == true;
+            if (proceedWithOperation && messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                GlobalReferences.TimelapseState.SuppressPropagateFromLastNonEmptyValuePrompt = messageBox.DontShowAgain.IsChecked.Value;
+            }
+
+            return proceedWithOperation;
+        }
         #endregion
 
         #region MessageBox: MarkableCanvas Can't Open External PhotoViewer
