@@ -42,6 +42,7 @@ namespace Timelapse.Dialog
             SuppressSelectedRereadDatesFromFilesPrompt.IsChecked = state.SuppressSelectedRereadDatesFromFilesPrompt;
             // this.SuppressWarningToUpdateDBFilesToSQL.IsChecked = this.state.SuppressWarningToUpdateDBFilesToSQLPrompt;
             SuppressOpeningWithOlderTimelapseVersionDialog.IsChecked = state.SuppressOpeningWithOlderTimelapseVersionDialog;
+            SuppressPropagateFromLastNonEmptyValuePrompt.IsChecked = state.SuppressPropagateFromLastNonEmptyValuePrompt;
         }
         #endregion
 
@@ -128,12 +129,19 @@ namespace Timelapse.Dialog
             state.SuppressWarningToUpdateDBFilesToSQLPrompt = cb.IsChecked == true;
         }
 
-        private void SuppressOpeningWithOlderTimelapseVersionDialogL_Click(object sender, RoutedEventArgs e)
+        private void SuppressOpeningWithOlderTimelapseVersionDialog_Click(object sender, RoutedEventArgs e)
         {
             CheckBox cb = (CheckBox)sender;
             state.SuppressOpeningWithOlderTimelapseVersionDialog = cb.IsChecked == true;
         }
         #endregion
+
+
+        private void SuppressPropagateFromLastNonEmptyValuePrompt_Click(object sender, RoutedEventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            state.SuppressPropagateFromLastNonEmptyValuePrompt = cb.IsChecked == true;
+        }
 
         #region Callback - Dialog Buttons
         private void OkButton_Click(object sender, RoutedEventArgs e)
@@ -142,5 +150,6 @@ namespace Timelapse.Dialog
         }
 
         #endregion
+
     }
 }

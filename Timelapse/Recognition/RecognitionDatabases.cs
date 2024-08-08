@@ -126,7 +126,7 @@ namespace Timelapse.Recognition
         // Populate the various Detection Database Tables from the detection data structure.
         // The startDetectionID should be greater than any existing detection ID in the detection table. 
         // This is necessary to make sure we don't add duplicate keys if we are merging detections
-        public static void PopulateTables(Recognizer recognizer, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, int startDetectionID, int startClassificationID, IProgress<ProgressBarArguments> progress)
+        public static void PopulateTables(Recognizer recognizer, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, long startDetectionID, long startClassificationID, IProgress<ProgressBarArguments> progress)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(recognizer, nameof(recognizer));
@@ -216,8 +216,8 @@ namespace Timelapse.Recognition
             // Images and Detections:  Populate
             if (recognizer.images != null && recognizer.images.Count > 0)
             {
-                int detectionIndex = startDetectionID;
-                int classificationIndex = startClassificationID;
+                long detectionIndex = startDetectionID;
+                long classificationIndex = startClassificationID;
                 List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
                 List<List<ColumnTuple>> classificationInsertionStatements = new List<List<ColumnTuple>>();
 

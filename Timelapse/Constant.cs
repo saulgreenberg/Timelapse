@@ -608,6 +608,7 @@ namespace Timelapse.Constant
         
         public const string SuppressOpeningMessageDialog = "SuppressOpeningMessageDialog";
         public const string SuppressOpeningWithOlderTimelapseVersionDialog = "SuppressOpeningWithOlderTimelapseVersionDialog";
+        public const string SuppressPropagateFromLastNonEmptyValuePrompt = "SuppressPropagateFromLastNonEmptyValuePrompt";
         public const string SuppressSelectedAmbiguousDatesPrompt = "SuppressSelectedAmbiguousDatesPrompt";
         public const string SuppressSelectedCsvExportPrompt = "SuppressSelectedCsvExportPrompt";
         public const string SuppressSelectedDarkThresholdPrompt = "SuppressSelectedDarkThresholdPrompt";

@@ -409,12 +409,15 @@ namespace Timelapse.ControlsDataEntry
 
             // Display the appropriate dialog box that explains what will happen. Arguments indicate what is to be propagated and how many files will be affected
             int filesAffected = currentRowIndex - indexToCopyFrom;
-            if (Dialogs.DataEntryConfirmPropagateFromLastValueDialog(Application.Current.MainWindow, valueToCopy, filesAffected) != true)
-            {
-                return; // operation cancelled
-                // newContent = this.FileDatabase.FileTable[currentRowIndex].GetValueDisplayString(control.DataLabel); // No change, so return the current value
-            }
 
+            // Show the warning (if not supressed)
+            if (GlobalReferences.TimelapseState.SuppressPropagateFromLastNonEmptyValuePrompt == false)
+            {
+                if (Dialogs.DataEntryConfirmPropagateFromLastValueDialog(Application.Current.MainWindow, valueToCopy, filesAffected) != true)
+                {
+                    return; // operation cancelled
+                }
+            }
             // Update the affected files. Note that we start on the row after the one with a value in it to the current row.
             Mouse.OverrideCursor = Cursors.Wait;
             //this.FileDatabase.UpdateFiles(valueSource, control.DataLabel, indexToCopyFrom + 1, currentRowIndex);
@@ -737,7 +740,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Unicode.Ellipsis : dateTimeCustomPasteHeader) + "'";
                     }
-                    else 
+                    else
                     {
                         menuItemPasteFromClipboard.Header = "Paste '" + (clipboardText.Length > 20 ? clipboardText.Substring(0, 20) + Unicode.Ellipsis : clipboardText) + "'";
                     }

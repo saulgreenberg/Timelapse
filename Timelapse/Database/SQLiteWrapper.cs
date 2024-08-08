@@ -85,7 +85,7 @@ namespace Timelapse.Database
 
         public bool IndexExists(string indexName)
         {
-            return 0 != ScalarGetCountFromSelect(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote(indexName));
+            return 0 != ScalarGetScalarFromSelectAsInt(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote(indexName));
         }
 
         // Create a single index named indexName if it doesn't already exist
@@ -631,13 +631,13 @@ namespace Timelapse.Database
         /// </summary>
         /// <param name="query">The query to run.</param>
         /// <returns>The number of items selected.</returns>
-        public int ScalarGetCountFromSelect(string query)
+        public int ScalarGetScalarFromSelectAsInt(string query)
         {
             object obj = GetScalarFromSelect(query);
             return (obj == DBNull.Value) ? 0 : Convert.ToInt32(obj);
         }
 
-        public long ScalarGetLongFromSelect(string query)
+        public long ScalarGetScalarFromSelectAsLong(string query)
         {
             object obj = GetScalarFromSelect(query);
             return (obj == DBNull.Value) ? 0 : Convert.ToInt64(obj);
@@ -654,17 +654,17 @@ namespace Timelapse.Database
         // Get the Maximum value of the field from the datatable  
         // Form: "SELECT MAX(field) From DataTable"
         // The field should contain an int value
-        public int ScalarGetMaxIntValue(string dataTable, string intfield)
+        public int ScalarGetMaxValueAsInt(string dataTable, string intfield)
         {
-            return ScalarGetCountFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
+            return ScalarGetScalarFromSelectAsInt(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
         }
 
         // Get the Maximum value of the field from the datatable  
         // Form: "SELECT MAX(field) From DataTable"
         // The field should contain an int value
-        public long ScalarGetMaxLongValue(string dataTable, string intfield)
+        public long ScalarGetMaxValueAsLong(string dataTable, string intfield)
         {
-            return ScalarGetLongFromSelect(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
+            return ScalarGetScalarFromSelectAsLong(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
         }
 
         // Return a scalar float value, or null if things go wrong.
@@ -1497,7 +1497,7 @@ namespace Timelapse.Database
                 }
                 query = $"SELECT COUNT(*)_ FROM {tableName}";
                 // If > 0 elements, then it both exists and has content so return true otherwise false
-                return ScalarGetCountFromSelect(query) != 0;
+                return ScalarGetScalarFromSelectAsInt(query) != 0;
             }
         }
 
@@ -1514,7 +1514,7 @@ namespace Timelapse.Database
                 }
                 query = $"SELECT COUNT(*)_ FROM {tableName}";
                 // If 0 elements, then its empty so return true otherwise false
-                return ScalarGetCountFromSelect(query) == 0;
+                return ScalarGetScalarFromSelectAsInt(query) == 0;
             }
         }
         #endregion
