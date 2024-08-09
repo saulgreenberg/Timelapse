@@ -981,16 +981,17 @@ namespace Timelapse.Database
                 {
                     query += conditionalExpression;
 
+                    // DELETE - No longer needed as I now insert the duplicate in the FileTable for immediate viewing
                     // A duplicate was just created. Because we are in a custom selection, we have to include it as an OR criteria in the WHERE in order to include it in the select.
                     // The added form that creates the exception is something like:
                     //    OR (RelativePath = '<duplicate.RelativePath>' AND File = 'duplicate.File').
-                    if (null != CustomSelection.DuplicatesRelativePathAndFileTuple)
-                    {
-                        string relativePath = CustomSelection.DuplicatesRelativePathAndFileTuple.Item1;
-                        string file = CustomSelection.DuplicatesRelativePathAndFileTuple.Item2;
-                        query += $"{Sql.Or} {Sql.OpenParenthesis} {DatabaseColumn.RelativePath} {Sql.Equal} {Sql.Quote(relativePath)} " +
-                                 $"{Sql.And} {DatabaseColumn.File} {Sql.Equal} {Sql.Quote(file)} {Sql.CloseParenthesis}";
-                    }
+                    //if (null != CustomSelection.DuplicatesRelativePathAndFileTuple)
+                    //{
+                    //    string relativePath = CustomSelection.DuplicatesRelativePathAndFileTuple.Item1;
+                    //    string file = CustomSelection.DuplicatesRelativePathAndFileTuple.Item2;
+                    //    query += $"{Sql.Or} {Sql.OpenParenthesis} {DatabaseColumn.RelativePath} {Sql.Equal} {Sql.Quote(relativePath)} " +
+                    //             $"{Sql.And} {DatabaseColumn.File} {Sql.Equal} {Sql.Quote(file)} {Sql.CloseParenthesis}";
+                    //}
                 }
             }
 

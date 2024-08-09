@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -43,6 +44,18 @@ namespace Timelapse.DataTables
         public void AddRow(DataRow row)
         {
             DataTable.Rows.Add(row.ItemArray);
+        }
+
+        public void InsertRow(int index, DataRow row)
+        {
+            if (null == row?.ItemArray)
+            {
+                return;
+            }
+            DataRow clonedRow = DataTable.NewRow();
+            clonedRow.ItemArray = row.ItemArray.Clone() as object[];
+
+            DataTable.Rows.InsertAt(clonedRow, index);
         }
 
         public void RemoveAt(int index)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,6 +19,19 @@ namespace Timelapse
     {
 
         #region Duplicate the current record
+        // Duplicates are somewhat problematic in terms of how to display them
+        // When a user creates a duplicate, they will likely want to see it immediately, where it would be positioned just after the original. 
+        // However, the selection and sorting order may not be amenable to this, e.g.,
+        // - if the duplicate does not match the current selection (e.g. selection is species=bear, which the original had, but where species is cleared in the duplicate)
+        // - if the sorting order does not have the duplicate follow the selection (e.g., sort on species)
+        // To get around this, we do the following.
+        // - Create a duplicate row representing the current image
+        // - Add it to the database 
+        // - Insert it in the file table immediately after the original's position.
+        // - Note that we do NOT refresh the selection
+        // Because of the above, we will always see the duplicates when they are created, and can update their contents.
+        // The next selection, done who knows when, will update the view and the sort,
+        // where those duplicates may or may not then appear depending on the select and sort criteria
         public async Task DuplicateCurrentRecord()
         {
             // Get the current image (or the selected image in the thumbnail grid) and duplicate it.
@@ -42,14 +56,25 @@ namespace Timelapse
             // Create a duplicate of it
             ImageRow duplicate = row.DuplicateRowWithCoreValues(DataHandler.FileDatabase.FileTable.NewRow(fileInfo));
 
-            // Insert the duplicated image into the filedata table
+            // Add the row to the database
             List<ImageRow> imagesToInsert = new List<ImageRow> { duplicate };
             DataHandler.FileDatabase.AddFiles(imagesToInsert, null);
 
+            // Insert the duplicated image into the filedata table. Note that we have to reset the slider to correctly show the new file count.
+            long insertedDuplicateID = DataHandler.FileDatabase.Database.ScalarGetMaxValueAsLong(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
+            DataTable table = DataHandler.FileDatabase.Database.GetDataTableFromSelect($"Select * from DataTable where ID={Sql.Quote(insertedDuplicateID.ToString())}");
+            if (table.Rows.Count == 1)
+            {
+                int fileIndexForInsert = DataHandler.ImageCache.CurrentRow + 1;
+                DataHandler.FileDatabase.FileTable.InsertRow(fileIndexForInsert, table.Rows[0]);
+                this.FileNavigatorSliderReset();
+            }
+            
+            // DELETE THIS AS NEW STRATE
             // We want the select to display this duplicate (and all its companion duplicates for this image). So we create a search term
             // that specifies the RelativePath and File. Later, the FilesSelectAndShowAsync will then include it as an exception,
             // where it will be added to the select criteria within a WHERE.
-            DataHandler.FileDatabase.CustomSelection.DuplicatesRelativePathAndFileTuple = new Tuple<string, string>(duplicate.RelativePath, duplicate.File);
+            //DataHandler.FileDatabase.CustomSelection.DuplicatesRelativePathAndFileTuple = new Tuple<string, string>(duplicate.RelativePath, duplicate.File);
 
             if (GlobalReferences.DetectionsExists)
             {
@@ -112,7 +137,7 @@ namespace Timelapse
                 // Check if we need this...
                 DataHandler.FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
             }
-            await FilesSelectAndShowAsync();
+            //await FilesSelectAndShowAsync();
             TryFileShowWithoutSliderCallback(DirectionEnum.Next);
         }
         #endregion
