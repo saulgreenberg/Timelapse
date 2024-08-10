@@ -379,7 +379,7 @@ namespace Timelapse
         #region Export All data to CSV
         private async void MenuItem_ExportAllDataToCSV_Click(object sender, RoutedEventArgs e)
         {
-            if (DataHandler?.FileDatabase == null || false == DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()) return;
+            if (DataHandler?.FileDatabase == null) return;
 
             // If we are not viewing all files, generate a warning and exit.
             int filesTotalCount = DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.All);
