@@ -34,6 +34,7 @@ namespace Timelapse.Database
     public partial class FileDatabase : CommonDatabase
     {
         #region Private variables
+
         private DataGrid boundGrid;
         private bool disposed;
         private DataRowChangeEventHandler onFileDataTableRowChanged;
@@ -44,9 +45,10 @@ namespace Timelapse.Database
         private Dictionary<string, string> classificationCategoriesDictionary;
         private DataTable detectionDataTable; // Mirrors the database detection table
         private DataTable classificationsDataTable; // Mirrors the database classification table
+
         #endregion
 
-        #region Properties 
+        #region Properties
 
         // The current file selection (All, Custom, etc.)
         public FileSelectionEnum FileSelectionEnum { get; set; } = FileSelectionEnum.All;
@@ -68,10 +70,10 @@ namespace Timelapse.Database
         public ImageSetRow ImageSet { get; private set; }
 
         // contains the markers
-        public DataTableBackedList<MarkerRow> Markers { get; private set; }
+        public DataTables.DataTableBackedList<MarkerRow> Markers { get; private set; }
 
         // contains the current metadata tables by level
-        public Dictionary<int, DataTableBackedList<MetadataRow>> MetadataTablesByLevel { get; private set; }
+        public Dictionary<int, DataTables.DataTableBackedList<MetadataRow>> MetadataTablesByLevel { get; private set; }
 
         // Return the selected folder (if any)
         public string GetSelectedFolder
@@ -82,14 +84,27 @@ namespace Timelapse.Database
                 {
                     return string.Empty;
                 }
+
                 return CustomSelection.GetRelativePathFolder;
             }
         }
+
+        // Get all the relative paths in the current selection from the FileTable
+        private IEnumerable<string> relativePathsInCurrentSelection = null;
+        public IEnumerable<string> GetRelativePathsInCurrentSelection
+        {
+            get
+            {
+                return relativePathsInCurrentSelection ?? (relativePathsInCurrentSelection = this.FileTable.Select(o => o.RelativePath).Distinct());
+            }
+            private set => relativePathsInCurrentSelection = value;
+        }
+
         #endregion
 
         #region Create or Open the Database
         private FileDatabase(string filePath)
-            : base(filePath)
+                    : base(filePath)
         {
             DataLabelFromStandardControlType = new Dictionary<string, string>();
             disposed = false;
@@ -540,7 +555,7 @@ namespace Timelapse.Database
             }
 
             if (control.Type == Control.IntegerPositive ||
-                control.Type == Control.IntegerAny || 
+                control.Type == Control.IntegerAny ||
                 control.Type == Control.DecimalPositive ||
                 control.Type == Control.DecimalAny)
             {
@@ -903,7 +918,7 @@ namespace Timelapse.Database
         public async Task SelectFilesAsync(FileSelectionEnum selection)
         {
             string query = string.Empty;
-
+            this.ResetAfterPossibleRelativePathChanges();
             // Random selection - Add folderPrefix
             //if (this.CustomSelection.RandomSample > 0)
             //{
@@ -925,7 +940,7 @@ namespace Timelapse.Database
             //}
 
             if (CustomSelection == null)
-            {   
+            {
                 // If no custom selections are configure, then just use a standard query
                 query += Sql.SelectStarFrom + DBTables.FileData;
 
@@ -1031,7 +1046,7 @@ namespace Timelapse.Database
                             }
                             break;
                         }
-                        
+
                         if (sortTerm[i].DataLabel == DatabaseColumn.DateTime)
                         {
                             term[i] = $"datetime({DatabaseColumn.DateTime})";
@@ -1058,8 +1073,8 @@ namespace Timelapse.Database
                             ResetSortTermsToDefault(term);
                             break;
                         }
-                        else if (sortTerm[i].ControlType == Control.Counter || 
-                                 sortTerm[i].ControlType == Control.IntegerAny || 
+                        else if (sortTerm[i].ControlType == Control.Counter ||
+                                 sortTerm[i].ControlType == Control.IntegerAny ||
                                  sortTerm[i].ControlType == Control.IntegerPositive)
                         {
                             // Its a counter or number type: modify sorting of blanks by transforming it into a '-1' and then by casting it as an integer
@@ -1804,6 +1819,7 @@ namespace Timelapse.Database
         public void RelativePathReplacePrefix(string oldPrefixPath, string newPrefixPath, bool isInteriorNode)
         {
             string query;
+            this.ResetAfterPossibleRelativePathChanges();
             if (isInteriorNode)
             {
                 query = Sql.Update + DBTables.FileData
@@ -2131,6 +2147,23 @@ namespace Timelapse.Database
                 return -1;
             }
             return culture.CompareInfo.IndexOf(FileTable[rowIndex].File, filename, CompareOptions.IgnoreCase);
+        }
+        #endregion
+
+        #region Find first image that begins with this RelativePath prefix or that matches this relative path
+        public int FindFirstImageWithRootRelativePath(string relativePathPrefix)
+        {
+            int index = -1;
+            foreach (ImageRow row in this.FileTable)
+            {
+                index++;
+                if (row.RelativePath == relativePathPrefix || row.RelativePath.StartsWith(relativePathPrefix + Path.DirectorySeparatorChar))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
         #endregion
 
@@ -2592,7 +2625,7 @@ namespace Timelapse.Database
         {
             Dictionary<string, string> dataLabelsAndTypes = new Dictionary<string, string>();
             string query = string.IsNullOrWhiteSpace(orderByString)
-                ? $"{Sql.Select} {Control.DataLabel} {Sql.Comma} {Control.Type}{Sql.From} {DBTables.MetadataTemplate} {Sql.Where} {Control.Level} {Sql.Equal} {level}" 
+                ? $"{Sql.Select} {Control.DataLabel} {Sql.Comma} {Control.Type}{Sql.From} {DBTables.MetadataTemplate} {Sql.Where} {Control.Level} {Sql.Equal} {level}"
                 : $"{Sql.Select} {Control.DataLabel} {Sql.Comma} {Control.Type}{Sql.From} {DBTables.MetadataTemplate} {Sql.Where} {Control.Level} {Sql.Equal} {level} {Sql.OrderBy} {orderByString}";
 
             DataTable datatable = Database.GetDataTableFromSelect(query);
@@ -2608,15 +2641,6 @@ namespace Timelapse.Database
         public Dictionary<string, string> MetadataGetDataLabelsInSpreadsheetOrder(int level)
         {
             return MetadataGetDataLabels(level, Control.SpreadsheetOrder);
-            //Dictionary<string, string> dataLabelsAndTypes = new Dictionary<string, string>();
-            //string query = $"{Sql.Select} {Constant.Control.DataLabel} {Sql.Comma} {Constant.Control.Type}{Sql.From} {Constant.DBTables.MetadataTemplate} {Sql.Where} {Constant.Control.Level} {Sql.Equal} {level} {Sql.OrderBy} {Constant.Control.SpreadsheetOrder}";
-            //DataTable datatable = this.Database.GetDataTableFromSelect(query);
-            //for (int i = 0; i < datatable.Rows.Count; i++)
-            //{
-            //    // Dictionary entry is datalabel, type
-            //    dataLabelsAndTypes.Add((string)datatable.Rows[i][0], (string)datatable.Rows[i][1]);
-            //}
-            //return dataLabelsAndTypes;
         }
 
         // Return a dictionary comprised of datalabel, type pairs but only for rows with its Export flag on
@@ -3609,6 +3633,7 @@ namespace Timelapse.Database
         // Restore the custom selection from the Json stored in the image set table
         public FileSelectionEnum GetCustomSelectionFromJSON()
         {
+            this.ResetAfterPossibleRelativePathChanges();
             // We put this in a try/catch. If anything fails, we just revert to the default custom selection (All)
             try
             {
@@ -3770,6 +3795,14 @@ namespace Timelapse.Database
                 CustomSelection = new CustomSelection(Controls);
                 return FileSelectionEnum.All;
             }
+        }
+        #endregion
+
+        #region Reset after a selection
+
+        private void ResetAfterPossibleRelativePathChanges()
+        {
+            this.GetRelativePathsInCurrentSelection = null;
         }
         #endregion
 

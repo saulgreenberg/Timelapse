@@ -87,12 +87,14 @@ namespace Timelapse.ControlsMetadata
                     ? Brushes.Black
                     : Brushes.Gray;
 
+                string tabHeader = CreateTemporaryAliasIfNeeded(row.Level, row.Alias);
+
                 TabItem tabItem = new TabItem
                 {
                     Header = new TextBlock
                     {
                         Padding = new Thickness(5),
-                        Text = CreateTemporaryAliasIfNeeded(row.Level, row.Alias),
+                        Text = tabHeader,
                         FontStyle = fontStyle,
                         Foreground = fontColor
                     },
@@ -102,7 +104,7 @@ namespace Timelapse.ControlsMetadata
                 TabControl.Items.Insert(i++, tabItem);
 
                 // Add a MetadataDataEntryPanel to each tab
-                MetadataDataEntryPanel folderMetadataDataEntryPanel = new MetadataDataEntryPanel(row.Level, tabItem);
+                MetadataDataEntryPanel folderMetadataDataEntryPanel = new MetadataDataEntryPanel(row.Level, tabItem, tabHeader);
                 tabItem.Content = folderMetadataDataEntryPanel;
             }
             if (TabControl.Items.Count > 1)
@@ -112,6 +114,17 @@ namespace Timelapse.ControlsMetadata
             }
         }
         #endregion
+
+        public void ResetNavigationButtonsForMetadataTabs()
+        {
+            foreach (TabItem tabItem in TabControl.Items)
+            {
+                if (tabItem.Content is MetadataDataEntryPanel panel)
+                {
+                    panel.NavigationButtonsShowHide();
+                }
+            }
+        }
 
         #region Public SetEnableState
         // Clear any existing metadata tabs (except the instructions, which should always be the first tab)

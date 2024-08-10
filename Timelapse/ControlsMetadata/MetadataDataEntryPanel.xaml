@@ -28,9 +28,19 @@
                        Margin="0,11,0,0" FontWeight="Bold" FontSize="14" Text="Folder:"/>
             <TextBlock Grid.Row="0" Grid.Column="1" Name="TextBlockRelativePathToCurrentImage" FontSize="14" VerticalAlignment="Top" TextAlignment="Left" HorizontalAlignment ="Left" 
                        Margin="5,11,0,0" Text="path goes here" />
-            <Button Grid.Row="0" Grid.Column="2" Name="ButtonAddMetadata" Content="Click to edit data for this folder" 
+            <StackPanel Grid.Row="0" Grid.Column="2"  Orientation="Horizontal">
+            <Button Name="ButtonAddMetadata" Content="Click to edit data for this folder" 
                     Padding="2.5,11,2.5,11" Height="Auto" Margin="10,0,10,0" HorizontalAlignment="Right"
                     Click="AddMetadata_OnClick"/>
+                <Button Name="ButtonPreviousFolder" FontFamily="Marlett" FontSize="20" Content="3"
+                    Padding="2.5,11,2.5,11" Height="Auto" Margin="10,0,10,0" HorizontalAlignment="Right"
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="NavigateFolder_OnClick"/>
+                <Button Name="ButtonNextFolder"  FontFamily="Marlett" FontSize="20" Content="4"
+                    Padding="2.5,11,2.5,11" Height="Auto" Margin="0,0,0,0" HorizontalAlignment="Right"
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="NavigateFolder_OnClick"/>
+            </StackPanel>
             <TextBlock Name="TBProblem" 
                        Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,-10,0,0" VerticalAlignment="Top" 
                        FontWeight="Normal" FontStyle="Italic" FontSize="10" Foreground="Crimson" />

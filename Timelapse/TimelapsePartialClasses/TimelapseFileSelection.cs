@@ -154,6 +154,7 @@ namespace Timelapse
             StatusBar.SetCount(DataHandler.FileDatabase.CountAllCurrentlySelectedFiles);
             FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
             DataHandler.FileDatabase.FileSelectionEnum = selection;    // Remember the current selection
+            this.MetadataUI.ResetNavigationButtonsForMetadataTabs();   // Reset the navigation buttons for the MetadataUI (if any) as changed selection may affect what relative paths are present
             return true;
         }
         #endregion

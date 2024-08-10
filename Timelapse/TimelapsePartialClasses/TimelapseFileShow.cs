@@ -26,7 +26,7 @@ namespace Timelapse
 
         // FileShow is invoked from elsewhere than from the slider. 
         // By default, don't force the update
-        private void FileShow(int fileIndex)
+        public void FileShow(int fileIndex)
         {
             FileShow(fileIndex, false, false);
         }

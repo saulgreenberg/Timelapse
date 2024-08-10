@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -55,13 +56,15 @@ namespace Timelapse.ControlsMetadata
         #endregion
 
         #region Constructor
-        public MetadataDataEntryPanel(int level, TabItem parentTab)
+        public MetadataDataEntryPanel(int level, TabItem parentTab, string tabHeader)
         {
             InitializeComponent();
             Level = level;
             ParentTab = parentTab;
             DataTableBackedList<MetadataInfoRow> metadataInfo = FileDatabase.MetadataInfo;
             ExpectedImageLevel = metadataInfo == null ? 1 : metadataInfo[metadataInfo.RowCount - 1].Level;
+            this.ButtonPreviousFolder.ToolTip = $"Go to the previous {tabHeader} folder{Environment.NewLine}• the displayed image will change to an image in that folder";
+            this.ButtonNextFolder.ToolTip = $"Go to the next {tabHeader} folder{Environment.NewLine}• the displayed image will change to an image in that folder";
         }
         #endregion
 
@@ -696,6 +699,8 @@ namespace Timelapse.ControlsMetadata
                     TBProblem.Text = string.Empty;
                 }
             }
+
+            NavigationButtonsShowHide();
         }
         #endregion
 
@@ -758,6 +763,46 @@ namespace Timelapse.ControlsMetadata
         }
         #endregion
 
+        #region Folder Navigation Buttons for Next/Previous folder
+        private void NavigateFolder_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (false == sender is Button btn || string.IsNullOrWhiteSpace(this.SubPath))
+            {
+                // Noop if we are in the root folder
+                return;
+            }
+
+            // Geta  list of beginnning relative path portions in the currently selected files and the index in that list that matches the subpath.
+            List<string> foldersAtThisLevelList = GetFolderListMatchingSubPathLevels(this.FileDatabase, this.SubPath, out int matchingIndex);
+            if ((btn.Name == ButtonPreviousFolder.Name && matchingIndex <= 0) || (btn.Name == ButtonNextFolder.Name && matchingIndex > foldersAtThisLevelList.Count() - 2))
+            {
+                // index is out of bounds
+                return;
+            }
+            string desiredRootPath = btn.Name == ButtonPreviousFolder.Name ? foldersAtThisLevelList.ElementAt(matchingIndex - 1) : foldersAtThisLevelList.ElementAt(matchingIndex + 1);
+            int fileIndex = GlobalReferences.MainWindow.DataHandler.FileDatabase.FindFirstImageWithRootRelativePath(desiredRootPath);
+            if (fileIndex != -1)
+            {
+                // This works regardless if its the previous or next button that is pressed.
+                GlobalReferences.MainWindow.FileShow(fileIndex);
+            }
+        }
+
+        public void NavigationButtonsShowHide()
+        {
+            if (string.IsNullOrWhiteSpace(this.SubPath))
+            {
+                // We are viewing the top level folder, so there are no previous/next folders at this level
+                ButtonPreviousFolder.IsEnabled = false;
+                ButtonNextFolder.IsEnabled = false;
+                return;
+            }
+            List<string> foldersAtThisLevelList = GetFolderListMatchingSubPathLevels(this.FileDatabase, this.SubPath, out int matchingIndex);
+            ButtonPreviousFolder.IsEnabled = matchingIndex != 0;
+            ButtonNextFolder.IsEnabled = matchingIndex != foldersAtThisLevelList.Count - 1;
+        }
+        #endregion
+
         #region Standard-specific initializations
 
         // Contributors will be a json string that holds a list of contributor objects.
@@ -777,7 +822,7 @@ namespace Timelapse.ControlsMetadata
                             Content = "Click to edit a list of Contributors",
                             Visibility = Visibility.Visible,
                             Height = 24,
-                            Padding = new Thickness(15,0,15,0),
+                            Padding = new Thickness(15, 0, 15, 0),
                             HorizontalContentAlignment = HorizontalAlignment.Left,
                         };
                         button.Click += Contributors_Click;
@@ -861,7 +906,7 @@ namespace Timelapse.ControlsMetadata
 
                     if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Spatial, out var spatialControl))
                     {
-                        StackPanel spatialPanel = new StackPanel {Orientation=Orientation.Horizontal};
+                        StackPanel spatialPanel = new StackPanel { Orientation = Orientation.Horizontal };
                         Button buttonLatLong = new Button
                         {
                             Content = "From lat/long",
@@ -882,8 +927,8 @@ namespace Timelapse.ControlsMetadata
                                       "Then copy/paste the generated geojson into the Timelapse spatial field.",
                             Visibility = Visibility.Visible,
                             Height = 24,
-                            Width  = Double.NaN,
-                            Margin=new Thickness(5, 0, 0, 0),
+                            Width = Double.NaN,
+                            Margin = new Thickness(5, 0, 0, 0),
                             Padding = new Thickness(5, 0, 5, 0),
                             HorizontalContentAlignment = HorizontalAlignment.Left,
                         };
@@ -1016,7 +1061,7 @@ namespace Timelapse.ControlsMetadata
                     command += jsonParameterCode + Uri.EscapeDataString(spatialControl.Content);
                 }
                 ProcessExecution.TryProcessStart(new Uri(command));
-            } 
+            }
         }
 
         public void SpatialLatLong_Click(object sender, RoutedEventArgs eventArgs)
@@ -1247,6 +1292,67 @@ namespace Timelapse.ControlsMetadata
             timePicker.TimeInterval = TimeSpan.FromMinutes(15);
             timePicker.StartTime = TimeSpan.FromHours(9);
             timePicker.MaxDropDownHeight = 250;
+        }
+        #endregion
+
+        #region Helpers for next/previous folder navigation
+        // Returns
+        // - a list of beginnning relative path portions in the currently selected files at the same level as the relativePathPortion,
+        // - sets the matchingIndex to the path that in that list that matches the relativePathPortion.
+        // For example, if the subpath is Station2, it would return Station1, Station2, Station3 etc with the matching index of 1  
+        private List<string> GetFolderListMatchingSubPathLevels(FileDatabase fileDatabase, string subPath, out int matchingIndex)
+        {
+            matchingIndex = -1;
+            if (fileDatabase?.FileTable == null)
+            {
+                return new List<string>();
+            }
+            List<string> folderList = FileTableGetAllSubFolderNamesFromRelativePaths(this.FileDatabase);
+
+            // Collect the paths that are at this level
+            int currentIndex = 0;
+            List<string> foldersAtThisLevelList = new List<string>();
+            foreach (string folder in folderList)
+            {
+                if (folder.Split(Path.DirectorySeparatorChar).Length == this.Level - 1)
+                {
+                    foldersAtThisLevelList.Add(folder);
+                    if (folder == subPath)
+                    {
+                        matchingIndex = currentIndex;
+                    }
+                    currentIndex++;
+                }
+            }
+
+            return foldersAtThisLevelList;
+        }
+
+        // Get all the distinct relative paths in the current selection, each relative path split into its component parts
+        // e.g., if we had Station1/Deployment1, Station1/Deployment2, Station2/Deployment1, the list would also contain Station1, Station2 
+        private static List<string> FileTableGetAllSubFolderNamesFromRelativePaths(FileDatabase fileDatabase)
+        {
+            if (fileDatabase == null)
+            {
+                return new List<string>();
+            }
+            IEnumerable<string> relativePathList = fileDatabase.GetRelativePathsInCurrentSelection;
+            List<string> allPaths = new List<string>();
+            foreach (string relativePath in relativePathList.Cast<String>())
+            {
+                allPaths.Add(relativePath);
+                string parent = string.IsNullOrEmpty(relativePath) ? string.Empty : Path.GetDirectoryName(relativePath);
+                while (!string.IsNullOrWhiteSpace(parent))
+                {
+                    if (!allPaths.Contains(parent))
+                    {
+                        allPaths.Add(parent);
+                    }
+                    parent = Path.GetDirectoryName(parent);
+                }
+            }
+            allPaths.Sort();
+            return allPaths;
         }
         #endregion
     }
