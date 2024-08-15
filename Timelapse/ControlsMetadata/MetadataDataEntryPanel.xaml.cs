@@ -774,7 +774,8 @@ namespace Timelapse.ControlsMetadata
 
             // Geta  list of beginnning relative path portions in the currently selected files and the index in that list that matches the subpath.
             List<string> foldersAtThisLevelList = GetFolderListMatchingSubPathLevels(this.FileDatabase, this.SubPath, out int matchingIndex);
-            if ((btn.Name == ButtonPreviousFolder.Name && matchingIndex <= 0) || (btn.Name == ButtonNextFolder.Name && matchingIndex > foldersAtThisLevelList.Count() - 2))
+            int count = foldersAtThisLevelList.Count - 2;
+            if ((btn.Name == ButtonPreviousFolder.Name && matchingIndex <= 0) || (btn.Name == ButtonNextFolder.Name && matchingIndex > count))
             {
                 // index is out of bounds
                 return;
@@ -1338,7 +1339,7 @@ namespace Timelapse.ControlsMetadata
             }
             IEnumerable<string> relativePathList = fileDatabase.GetRelativePathsInCurrentSelection;
             List<string> allPaths = new List<string>();
-            foreach (string relativePath in relativePathList.Cast<String>())
+            foreach (string relativePath in relativePathList)
             {
                 allPaths.Add(relativePath);
                 string parent = string.IsNullOrEmpty(relativePath) ? string.Empty : Path.GetDirectoryName(relativePath);

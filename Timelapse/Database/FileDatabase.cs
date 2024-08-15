@@ -90,7 +90,7 @@ namespace Timelapse.Database
         }
 
         // Get all the relative paths in the current selection from the FileTable
-        private IEnumerable<string> relativePathsInCurrentSelection = null;
+        private IEnumerable<string> relativePathsInCurrentSelection;
         public IEnumerable<string> GetRelativePathsInCurrentSelection
         {
             get

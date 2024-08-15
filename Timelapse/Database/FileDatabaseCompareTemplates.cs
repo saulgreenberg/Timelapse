@@ -418,6 +418,7 @@ namespace Timelapse.Database
 
                    (ddbControlType == Control.FixedChoice && tdbControlType == Control.Note) || // FixedChoice -> Note
                    (ddbControlType == Control.FixedChoice && tdbControlType == Control.MultiLine) || // FixedChoice -> Multiline
+                   (ddbControlType == Control.FixedChoice && tdbControlType == Control.MultiChoice) || // FixedChoice -> MultiChoice
 
                    (ddbControlType == Control.MultiChoice && tdbControlType == Control.Note) || // MultiChoice -> Note
                    (ddbControlType == Control.MultiChoice && tdbControlType == Control.MultiLine) || // MultiChoice -> Multiline

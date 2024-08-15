@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Constant;
@@ -32,7 +30,7 @@ namespace Timelapse
         // Because of the above, we will always see the duplicates when they are created, and can update their contents.
         // The next selection, done who knows when, will update the view and the sort,
         // where those duplicates may or may not then appear depending on the select and sort criteria
-        public async Task DuplicateCurrentRecord()
+        public void DuplicateCurrentRecord()
         {
             // Get the current image (or the selected image in the thumbnail grid) and duplicate it.
             // Note that this method shouldn't be called as the menueditDuplicate item will be disabled 
@@ -137,7 +135,6 @@ namespace Timelapse
                 // Check if we need this...
                 DataHandler.FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
             }
-            //await FilesSelectAndShowAsync();
             TryFileShowWithoutSliderCallback(DirectionEnum.Next);
         }
         #endregion

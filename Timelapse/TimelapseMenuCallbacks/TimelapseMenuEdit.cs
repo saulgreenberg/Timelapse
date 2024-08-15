@@ -289,7 +289,7 @@ namespace Timelapse
         #endregion
 
         #region Dupicate the record
-        private async void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
+        private void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
         {
             if (IsDisplayingSingleImage() == false)
             {
@@ -312,7 +312,7 @@ namespace Timelapse
                     return;
                 }
             }
-            await DuplicateCurrentRecord();
+            DuplicateCurrentRecord();
         }
         #endregion
 

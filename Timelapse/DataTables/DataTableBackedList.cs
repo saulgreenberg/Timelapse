@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -53,6 +52,7 @@ namespace Timelapse.DataTables
                 return;
             }
             DataRow clonedRow = DataTable.NewRow();
+            // ReSharper disable once AssignNullToNotNullAttribute
             clonedRow.ItemArray = row.ItemArray.Clone() as object[];
 
             DataTable.Rows.InsertAt(clonedRow, index);
