@@ -509,6 +509,15 @@ namespace Timelapse.Database
                     ControlRow ddbControl = GetControlFromControls(dataLabel);
                     ControlRow tdbControl = templateDatabase.GetControlFromControls(dataLabel);
 
+                    // If a control type has changed, we need to clear the search terms as it
+                    // stores the current search term by its old value. We could, of course, try to change
+                    // it to the new type but that could introduce complications with its stored search value.
+                    if (ddbControl.Type != tdbControl.Type)
+                    {
+                        ColumnTuple columnToUpdate = new ColumnTuple(Constant.DatabaseColumn.SearchTerms, string.Empty);
+                        this.Database.Update(Constant.DBTables.ImageSet, columnToUpdate);
+                    }
+
                     // This does the ddb row update. 
                     if (ddbControl.TryUpdateThisControlRowToMatch(tdbControl))
                     {

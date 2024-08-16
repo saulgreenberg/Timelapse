@@ -5,7 +5,7 @@
         xmlns:controls="clr-namespace:Timelapse.Controls;assembly=Timelapse"
         xmlns:controlsEditor="clr-namespace:TimelapseTemplateEditor.Controls"
         xmlns:controlsMetadata="clr-namespace:TimelapseTemplateEditor.ControlsMetadata"
-        Height="825" Width="1200" MinHeight="600" MinWidth="800" Icon="Icons/TemplateEditor.ico" 
+        Height="825" Width="1200" MinHeight="600" MinWidth="800" Icon="Icons/TemplateEditor32.ico" 
         Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>

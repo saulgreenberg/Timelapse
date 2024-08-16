@@ -96,7 +96,7 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Icons\Timelapse.ico</ApplicationIcon>
+    <ApplicationIcon>Timelapse.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
@@ -991,12 +991,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Icons\Timelapse.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Icons\16x16.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\NoFilesAvailable.jpg" />
     <Resource Include="Resources\Corrupted.jpg" />
     <Resource Include="Resources\FileNoLongerAvailable.jpg" />
@@ -1098,6 +1092,11 @@
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Timelapse.ico" />
+    <Resource Include="Icons\Timelapse32.ico" />
+    <Resource Include="Timelapse16.ico" />
+    <Resource Include="Timelapse32.ico" />
+    <Resource Include="Timelapse64.ico" />
     <Resource Include="Icons\EcoAssist.png" />
     <Resource Include="Icons\EcoAssistUninstall.png" />
     <Resource Include="Icons\EcoAssistUpload.png" />
