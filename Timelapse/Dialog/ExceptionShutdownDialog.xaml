@@ -19,8 +19,11 @@
         <controls:StockMessageControl x:Name="Message" Grid.Row="0" Icon="Error"
                             What="Please help us fix it! 
                                     &#10;&#x2022; Press 'Mail this report' to mail a bug report to us.  
-                                    &#10;&#x2022; Alternately, select 'Copy report, and paste the report into an email to saul@ucalgary.ca."
-                            Hint="If you can, also describe what you were doing at the time of the crash."/>
+                                    &#10;&#x2022; Alternately, select 'Copy report, and paste the report into an email to saul@ucalgary.ca.
+                                    &#10;&#x2022; If you can, also describe what you were doing at the time of the crash."
+                            Hint="Restart Timelapse to pick up where you left off. This usually works. But send the bug report anyways!
+                                  &#10; If problems persist,  zip up your .tdb and .ddb file and email it to saul.greenberg@gmail.com 
+                                  &#10; to help him figure out the bug (his other 'ucalgary.ca' address does not accept zip files)."/>
         <StackPanel Orientation="Horizontal"  Grid.Row="1">
             <TextBlock Text="Technical problem description" Margin="10,10,5,10" FontSize="14" FontWeight="Bold"/>
             <TextBlock Text="to send to the Timelapse Developer" Margin="0,10,20,10" FontSize="14" FontStyle="Italic"/>
