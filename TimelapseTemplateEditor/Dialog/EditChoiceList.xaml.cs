@@ -1,7 +1,14 @@
-﻿using System.Windows;
+﻿using System;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
+using Timelapse.Util;
 
 namespace TimelapseTemplateEditor.Dialog
 {
@@ -62,6 +69,42 @@ namespace TimelapseTemplateEditor.Dialog
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+        }
+
+        // As multichoice uses a comma separated list, and as we do allow conversions between fixed choice to multichoice, don't allow commas 
+        // Note that we *could* allow commas in fixed choices by testing to see if showEmptyChoiceOption is true (only for FixedChoices)
+        // although we don't do that here.
+        private void TextBoxChoiceList_OnPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.OemComma)
+            {
+                if (sender is TextBox tb)
+                {
+                    FlashContentControl(tb);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        // Flash the textbox
+        public void FlashContentControl(TextBox tb)
+        {
+            if (tb != null)
+            {
+                tb.Background = new SolidColorBrush(Colors.White);
+                tb.Background.BeginAnimation(
+                    SolidColorBrush.ColorProperty,
+                    new ColorAnimation
+                    {
+                        From = Colors.LightCoral,
+                        AutoReverse = false,
+                        Duration = TimeSpan.FromSeconds(.1),
+                        EasingFunction = new ExponentialEase
+                        {
+                            EasingMode = EasingMode.EaseIn
+                        },
+                    });
+            }
         }
     }
 }

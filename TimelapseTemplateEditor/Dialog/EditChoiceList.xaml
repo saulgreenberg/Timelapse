@@ -19,7 +19,7 @@
             </StackPanel>
 
             <CheckBox Name="IncludeEmptyChoiceCheckBox" DockPanel.Dock="Bottom" Content="Include an 'empty' item" IsChecked="True" ToolTip="Includes an 'empty' item, which lets the user clear the entry."/>
-            <TextBox Name="TextBoxChoiceList" FontSize="12" DockPanel.Dock="Top" MinHeight="100" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+            <TextBox Name="TextBoxChoiceList" FontSize="12" DockPanel.Dock="Top" MinHeight="100" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" PreviewKeyDown="TextBoxChoiceList_OnPreviewKeyDown"
                      TextWrapping="NoWrap"  AcceptsTab="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ToolTip="Define the choice menu by editing 1 choice item per line" />
         </DockPanel>
     </DockPanel>
