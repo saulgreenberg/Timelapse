@@ -241,7 +241,7 @@ namespace Timelapse.ControlsDataEntry
 
             Popup popup = new Popup
             {
-                Width = width,
+                Width = width < 5 ? Double.NaN : width,
                 Height = control?.Height ?? Double.NaN,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
