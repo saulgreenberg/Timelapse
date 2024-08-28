@@ -1,15 +1,16 @@
-# Timelapse2
+# Timelapse
 This repository contains the source code for and releases of [Timelapse](http://saul.cpsc.ucalgary.ca/timelapse/pmwiki.php?n=Main.HomePage), created by Saul Greenberg of the University of Calgary and Greenberg Consulting Inc.
 
-Timelapse is an Image Analyser for Camera Traps, where it is used by scientists to visually analyze and encode data as tags from thousands to millions  of images and videos. See  the [Timelapse web site](http://saul.cpsc.ucalgary.ca/timelapse/pmwiki.php?) for packaged downloads, a tutorial guide and manual oriented towards end-users, and other resources.
+Timelapse is an image analyser for camera traps. It is primarily used by scientists to visually analyze images and encode data as tags from thousands to millions  of images and videos. While it is agnostic to its use, ecologists are currently the primary users. See  the [Timelapse web site](https://timelapse.ucalgary.ca) for packaged downloads, a tutorial guide and manual oriented towards end-users, and other resources.
 
 Timelapse is currently in use across the world by various biologists / ecologists / scientists and resource managers within broadly varying institutions --- national and regional parks, ecological agencies, fishery departments, conservation societies, university groups, etc. --- for quite different needs (e.g., wildlife monitoring, fisheries usage, resource monitoring and management, social science studies etc). What they have in common is
 * they collect extremely large numbers of images from one to very many field cameras
-* they are interested in examining and tagging images (i.e., information describing image details), where tags that is usually specific to their projects
+* they are interested in examining and tagging images (i.e., information describing image details)
+* they want to create data fields specific to their projects (i.e., highly customizable data)
 * they have their own needs and ways for performing analytics on that data.
-Timelapse is optimized for the tagging step, where users then export the data tags so that it can be analyzed in another package of their choosing (e.g., R, spreadsheets, etc.)
+Timelapse is optimized for those wanting to turn their images into meaningful data. Users can easily export the data for later analysis in another package of their choosing (e.g., R, spreadsheets, etc.)
 
-Timelapse also works with image recognition data, particularly using recognition data from Microsoft's Megadetector.Timelapse imports the recognition file produced by Megadetector (or other compatable image recognition tool), and displays detected items within bounding boxes. Queries can be run against recognized entities.
+Timelapse  works with image recognition data, where it integrates access to EcoAssist / Megadetector. Timelapse imports the recognition file produced by that software (or other compatable image recognition tool), and displays detected items within bounding boxes. Queries can be run against recognized entities.
 
 ### Contributing
 
@@ -34,11 +35,11 @@ After installation clone the repository locally through Visual Studio's Team Exp
 * clone the repo locally through Visual Studio's Team Explorer or GitHub's clone or download options
 * install Visual StyleCop (Tools -> Extensions and Updates -> Online)
 
-Development is currently done against .NET 4.8.
+Development is done uising .NET 4.8.1
 
 ### Building Timelapse
 To run all parts of Timelapse, do the following.
-1. Download and install ffmpeg.exe into the Dependencies folder. You can get the executable from https://ffmpeg.org/download.html#build-windows 
+1. Download and install ffmpeg.exe and exiftool.exe into the Dependencies folder. You can get the Windows executables from https://ffmpeg.org/ and   https://exiftool.org/ 
 2. Open the Timelapse solution in the top level Timelapse folder (e.g., using Visual Studio).
 3. Open the Nuget package manager and restore the required packages.
 4. Build the following:
@@ -56,12 +57,9 @@ To run all parts of Timelapse, do the following.
 
 * Atlassian's [SourceTree](https://www.atlassian.com/software/sourcetree), a recommended augmentation of the git support available in Visual Studio's Team Explorer.
 *  [Nuget Package Manager](https://docs.nuget.org/ndocs/guides/install-nuget#nuget-package-manager-in-visual-studio) for accessing and including 3rd party packages used by Timelapse.
-* The [Visual Studio Image Library](https://msdn.microsoft.com/en-us/library/ms246582.aspx) for icons.
-* John Skeet's discussion of [DateTime, DateTimeOffset, and TimeZoneInfo limitations](http://blog.nodatime.org/2011/08/what-wrong-with-datetime-anyway.html).
 
 ### Dependencies
-* Timelapse software requires .NET 4.8.
+* Timelapse software requires .NET 4.8.1.
 * Timelapse is currently tested  on Windows 11 and - as far as we know - should run without issue on all versions of Windows. End users may need to [install .NET 4.8](https://msdn.microsoft.com/en-us/library/bb822049.aspx) if it's not already present. 
 * Timelapse uses various packages (including dlls available via NuGet). See the License file for a list of packages and their particular license terms.
 * Screen size of 1600 x 900 or larger is preferred, although it is usable on smaller displays.
-
