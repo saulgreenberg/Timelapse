@@ -1,0 +1,51 @@
+# Omit Visual Studio unneeded folders/files 
+*.suo
+*.user
+*.vsp
+*.vspx
+.vs/
+*.tmp
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+debug.log
+
+# Omit Build results 
+bin/
+packages/
+obj/
+**/StyleCop.Cache
+
+# Omit these folders
+UtilityPrograms/
+
+# Keep: these required dll dependencies
+Dependencies-Dlls/**
+!Dependencies-Dlls/Xceed.Wpf.AvalonDock.dll
+!Dependencies-Dlls/Xceed.Wpf.Toolkit.dll
+!Dependencies-Dlls/DialogUpgradeFiles.dll
+
+# Keep: these required exe dependencies
+Dependencies-Exes/**
+!Dependencies-Exes/exiftool(-k).exe
+!Dependencies-Exes/ffmpeg.exe
+
+# Remove the above from the Timelapse subfolder, as they will be copied from the dependencies when built
+Timelapse/exiftool(-k).exe
+Timelapse/ffmpeg.exe
+
+# NuGet Packages
+**/packages/*
+
+# except build/, which is used as an MSBuild target.
+# and any custom dlls that aren't from NuGet
+!**/packages/build/
+
+# Timelapse output
+Backups/
+*.pdb
+
+# Omit other extraneous files that don't need to be in the build
+ToDo.docx
+~$ToDo.docx
+
+
