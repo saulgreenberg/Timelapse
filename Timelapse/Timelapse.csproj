@@ -1,0 +1,1120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F223A2F9-F2C2-47A8-80F3-472349176579}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Timelapse</RootNamespace>
+    <AssemblyName>Timelapse</AssemblyName>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <TargetFrameworkProfile />
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <InstallUrl>http://saul.cpsc.ucalgary.ca/timelapse/uploads/Installs/Timelapse/</InstallUrl>
+    <SupportUrl>http://saul.cpsc.ucalgary.ca/timelapse/</SupportUrl>
+    <TargetCulture>en-CA</TargetCulture>
+    <ProductName>Timelapse 2 Image Analyzer</ProductName>
+    <PublisherName>Saul Greenberg - Greenberg Consulting Inc</PublisherName>
+    <SuiteName>Timelapse</SuiteName>
+    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
+    <WebPage>publish.htm</WebPage>
+    <ApplicationRevision>9</ApplicationRevision>
+    <ApplicationVersion>1.1.9.9</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <CreateDesktopShortcut>true</CreateDesktopShortcut>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>Timelapse.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>Timelapse.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>0744795F13F850C9EC610B9A48630CB31A2D2F1D</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>Timelapse_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Timelapse.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>Internet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>StrongNameKeyFile.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DialogUpgradeFiles">
+      <HintPath>..\Dependencies-Dlls\DialogUpgradeFiles.dll</HintPath>
+    </Reference>
+    <Reference Include="ImageProcessor, Version=2.9.1.225, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ImageProcessor.2.9.1\lib\net452\ImageProcessor.dll</HintPath>
+    </Reference>
+    <Reference Include="MetadataExtractor, Version=2.8.1.0, Culture=neutral, PublicKeyToken=b66b5ccaf776c301, processorArchitecture=MSIL">
+      <HintPath>..\packages\MetadataExtractor.2.8.1\lib\net45\MetadataExtractor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WindowsAPICodePack-Core.1.1.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WindowsAPICodePack-Shell.1.1.1\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NReco.VideoConverter, Version=1.2.1.0, Culture=neutral, PublicKeyToken=395ccb334978a0cd, processorArchitecture=MSIL">
+      <HintPath>..\packages\NReco.VideoConverter.1.2.1\lib\net45\NReco.VideoConverter.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.SQLite, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Speech" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="ToastNotifications, Version=2.5.1.0, Culture=neutral, PublicKeyToken=e89d9d7314a7c797, processorArchitecture=MSIL">
+      <HintPath>..\packages\ToastNotifications.2.5.1\lib\net40\ToastNotifications.dll</HintPath>
+    </Reference>
+    <Reference Include="ToastNotifications.Messages, Version=2.5.1.0, Culture=neutral, PublicKeyToken=e89d9d7314a7c797, processorArchitecture=MSIL">
+      <HintPath>..\packages\ToastNotifications.Messages.2.5.1\lib\net40\ToastNotifications.Messages.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="Xceed.Wpf.AvalonDock">
+      <HintPath>..\Dependencies-Dlls\Xceed.Wpf.AvalonDock.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.Toolkit">
+      <HintPath>..\Dependencies-Dlls\Xceed.Wpf.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="XmpCore, Version=6.1.10.1, Culture=neutral, PublicKeyToken=961f4f366277b80e, processorArchitecture=MSIL">
+      <HintPath>..\packages\XmpCore.6.1.10.1\lib\net35\XmpCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="ControlsDataCommon\ControlsDataHelpersCommon.cs" />
+    <Compile Include="ControlsDataCommon\CreateControls.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryAlphaNumeric.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryDateTimeBase.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryDateTimeCustom.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryDecimalAny.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryDecimalPositive.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryIntegerAny.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryIntegerBase.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryIntegerPositive.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryDecimalBase.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryMultiChoice.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryMultiLine.cs" />
+    <Compile Include="ControlsDataEntry\DateEntryDate.cs" />
+    <Compile Include="ControlsDataEntry\DateEntryTime.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryDate.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryDateTimeCustom.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryDecimalBase.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryIntegerBase.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryMultiChoice.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryDecimalAny.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryDecimalPositive.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryFixedChoice.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryIntegerAny.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryAlphaNumeric.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryIntegerPositive.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryMultiLine.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryNote.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryTime.cs" />
+    <Compile Include="Controls\AutocompleteTextBox.cs" />
+    <Compile Include="Controls\BusyCancelIndicator.xaml.cs">
+      <DependentUpon>BusyCancelIndicator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BusyCancelIndicatorExtensions.cs" />
+    <Compile Include="ControlsMetadata\MetadataCreateControl.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryHandler.cs" />
+    <Compile Include="ControlsMetadata\MetadataDataEntryPanel.xaml.cs">
+      <DependentUpon>MetadataDataEntryPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ControlsMetadata\MetadataUI.xaml.cs">
+      <DependentUpon>MetadataUI.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ControlsMetadata\MetadataDataEntryFlag.cs" />
+    <Compile Include="ControlsMetadata\MetadataEntryControl.cs" />
+    <Compile Include="Controls\FileMetadataGrid.xaml.cs">
+      <DependentUpon>FileMetadataGrid.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MetadataFolderComplianceControl.xaml.cs">
+      <DependentUpon>MetadataFolderComplianceControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\RelativePathControl.xaml.cs">
+      <DependentUpon>RelativePathControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ThumbnailInCell.xaml.cs">
+      <DependentUpon>ThumbnailInCell.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ThumbnailGrid.xaml.cs">
+      <DependentUpon>ThumbnailGrid.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BusyableDialogWindow.cs" />
+    <Compile Include="Controls\OffsetLens.cs" />
+    <Compile Include="Controls\ProgressBarArguments.cs" />
+    <Compile Include="Controls\EpisodePopup.cs" />
+    <Compile Include="Database\FileDatabaseCompareTemplates.cs" />
+    <Compile Include="DataStructures\Arguments.cs" />
+    <Compile Include="DataStructures\Choices.cs" />
+    <Compile Include="Database\MergeDatabases.cs" />
+    <Compile Include="DataTables\CommonControlRow.cs" />
+    <Compile Include="DataTables\FileTableDateColumn.cs" />
+    <Compile Include="DataTables\FileTableDecimalColumn.cs" />
+    <Compile Include="DataTables\FileTableTimeColumn.cs" />
+    <Compile Include="DataTables\MetadataControlRow.cs" />
+    <Compile Include="DataTables\MetadataInfoRow.cs" />
+    <Compile Include="DataTables\MetadataRow.cs" />
+    <Compile Include="Dialog\MergeCheckoutChooseSubfolder.xaml.cs">
+      <DependentUpon>MergeCheckoutChooseSubfolder.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MergeCreateEmptyDatabase.xaml.cs">
+      <DependentUpon>MergeCreateEmptyDatabase.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MergeCheckinDatabaseFiles.xaml.cs">
+      <DependentUpon>MergeCheckinDatabaseFiles.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml.cs">
+      <DependentUpon>MergingDatabaseWarningAsDuplicateEntriesPossible.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MetadataFolderComplianceViewer.xaml.cs">
+      <DependentUpon>MetadataFolderComplianceViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\PopulateFieldWithDetectionCounts.xaml.cs">
+      <DependentUpon>PopulateFieldWithDetectionCounts.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\PopulateFieldWithGUID.xaml.cs">
+      <DependentUpon>PopulateFieldWithGUID.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RecognitionOptionsForBoundingBox.xaml.cs">
+      <DependentUpon>RecognitionOptionsForBoundingBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RelativePathEditor.xaml.cs">
+      <DependentUpon>RelativePathEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\ShowRtfFile.xaml.cs">
+      <DependentUpon>ShowRtfFile.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\TemplateChangedWizard.xaml.cs">
+      <DependentUpon>TemplateChangedWizard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\ControlTypeEnum.cs" />
+    <Compile Include="Enums\CreateSubfolderResultEnum.cs" />
+    <Compile Include="Enums\DateTimeFormatEnum.cs" />
+    <Compile Include="Enums\ImageLevelLocationStatusEnum.cs" />
+    <Compile Include="Enums\NumberTypeEnum.cs" />
+    <Compile Include="Enums\UpdateStateEnum.cs" />
+    <Compile Include="Enums\MoveFolderResultEnum.cs" />
+    <Compile Include="Enums\SelectMissingFilesResultEnum.cs" />
+    <Compile Include="Extensions\StringExtension.cs" />
+    <Compile Include="Extensions\TextBlockExtension.cs" />
+    <Compile Include="Recognition\RecognitionDatabases.cs" />
+    <Compile Include="Recognition\Recognizer.cs" />
+    <Compile Include="Recognition\RecognitionSelections.cs" />
+    <Compile Include="DataStructures\AmbiguousDateRange.cs" />
+    <Compile Include="Recognition\RecognitionUtilities.cs" />
+    <Compile Include="Dialog\CustomSelectionWithEpisodes.xaml.cs">
+      <DependentUpon>CustomSelectionWithEpisodes.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml.cs">
+      <DependentUpon>RecognitionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RecognitionsDeleteOldData.xaml.cs">
+      <DependentUpon>RecognitionsDeleteOldData.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\EpisodeOptions.xaml.cs">
+      <DependentUpon>EpisodeOptions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\ExceptionShutdownDialog.xaml.cs">
+      <DependentUpon>ExceptionShutdownDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\ExportAllSelectedFiles.xaml.cs">
+      <DependentUpon>ExportAllSelectedFiles.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\ImageAdjuster.xaml.cs">
+      <DependentUpon>ImageAdjuster.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MissingFoldersLocateAllFolders.xaml.cs">
+      <DependentUpon>MissingFoldersLocateAllFolders.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\PopulateFieldsWithImageMetadataOnLoad.xaml.cs">
+      <DependentUpon>PopulateFieldsWithImageMetadataOnLoad.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\PopulateFieldWithEpisodeData.xaml.cs">
+      <DependentUpon>PopulateFieldWithEpisodeData.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RandomSampleSelection.xaml.cs">
+      <DependentUpon>RandomSampleSelection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\SkipHiddenFiles.xaml.cs">
+      <DependentUpon>SkipHiddenFiles.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\PopulateFieldsWithMetadata.xaml.cs">
+      <DependentUpon>PopulateFieldsWithMetadata.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\TestSomeCodeDialog.xaml.cs">
+      <DependentUpon>TestSomeCodeDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\WarningToUpdateDBFilesToSQL.xaml.cs">
+      <DependentUpon>WarningToUpdateDBFilesToSQL.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\CancelStatusEnum.cs" />
+    <Compile Include="Enums\CSVDateTimeOptionsEnum.cs" />
+    <Compile Include="Enums\DatabaseFileErrorsEnum.cs" />
+    <Compile Include="Enums\FileExtensionEnum.cs" />
+    <Compile Include="Enums\FilePathTypeEnum.cs" />
+    <Compile Include="Enums\FlashEnum.cs" />
+    <Compile Include="Enums\ImageDimensionEnum.cs" />
+    <Compile Include="Enums\ListComparisonEnum.cs" />
+    <Compile Include="Enums\MetadataToolEnum.cs" />
+    <Compile Include="Enums\OffsetLensDirection.cs" />
+    <Compile Include="Enums\RecognizerImportResultEnum.cs" />
+    <Compile Include="Enums\RecognitionType.cs" />
+    <Compile Include="Enums\RecognizerPathTestResults.cs" />
+    <Compile Include="Enums\SchemaAttributesEnum.cs" />
+    <Compile Include="Enums\SelectTypesEnum.cs" />
+    <Compile Include="Enums\ThumbnailGridRefreshStatus.cs" />
+    <Compile Include="Enums\ZoomDirection.cs" />
+    <Compile Include="EventArguments\ClickableImagesGridEventArgs.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryDateTime.cs" />
+    <Compile Include="Controls\FilePlayer.xaml.cs">
+      <DependentUpon>FilePlayer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EventArguments\FilePlayerEventArgs.cs" />
+    <Compile Include="Controls\AutoToolTipSlider.cs" />
+    <Compile Include="Controls\VideoPlayer.xaml.cs">
+      <DependentUpon>VideoPlayer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Database\SchemaColumnDefinition.cs" />
+    <Compile Include="DataTables\ControlRow.cs" />
+    <Compile Include="Enums\ControlsEnableStateEnum.cs" />
+    <Compile Include="Enums\CustomSelectionOperatorEnum.cs" />
+    <Compile Include="ExifTool\ExifToolManager.cs" />
+    <Compile Include="Extensions\WriteableBitmapExtensions.cs" />
+    <Compile Include="SearchingAndSorting\SortTerm.cs" />
+    <Compile Include="SearchingAndSorting\SortTerms.cs" />
+    <Compile Include="DataTables\DataTableBackedList.cs" />
+    <Compile Include="DataTables\FileTableChoiceColumn.cs" />
+    <Compile Include="DataTables\FileTableColumn.cs" />
+    <Compile Include="Extensions\DataRowExtensions.cs" />
+    <Compile Include="DataTables\FileTableCounterColumn.cs" />
+    <Compile Include="Database\TemplateSyncResults.cs" />
+    <Compile Include="DataTables\FileTableDateTimeColumn.cs" />
+    <Compile Include="DataTables\FileTableFlagColumn.cs" />
+    <Compile Include="DataTables\FileTableNoteColumn.cs" />
+    <Compile Include="DataTables\FileTable.cs" />
+    <Compile Include="DataTables\ImageSetRow.cs" />
+    <Compile Include="DataTables\MarkerRow.cs" />
+    <Compile Include="DataTables\VideoRow.cs" />
+    <Compile Include="EventArguments\ImageAdjusterEventArgs.cs" />
+    <Compile Include="EventArguments\ImageStateEventArgs.cs" />
+    <Compile Include="ExifTool\ExifToolException.cs" />
+    <Compile Include="ExifTool\ExifToolWrapper.cs" />
+    <Compile Include="ImageSetLoadingPipeline\ImageLoader.cs" />
+    <Compile Include="ImageSetLoadingPipeline\ImageSetLoader.cs" />
+    <Compile Include="Images\BitmapUtilities.cs" />
+    <Compile Include="Images\BoundingBox.cs" />
+    <Compile Include="Images\BoundingBoxes.cs" />
+    <Compile Include="Images\MarkableCanvasImageAdjustment.cs" />
+    <Compile Include="QuickPaste\QuickPaste.cs" />
+    <Compile Include="QuickPaste\QuickPasteEditor.xaml.cs">
+      <DependentUpon>QuickPasteEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\CustomSort.xaml.cs">
+      <DependentUpon>CustomSort.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DateCorrectAmbiguous.xaml.cs">
+      <DependentUpon>DateCorrectAmbiguous.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\DateChangesFeedbackControl.xaml.cs">
+      <DependentUpon>DateChangesFeedbackControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DateTimeLinearCorrection.xaml.cs">
+      <DependentUpon>DateTimeLinearCorrection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DeleteDeleteFolder.xaml.cs">
+      <DependentUpon>DeleteDeleteFolder.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\Dialogs.cs" />
+    <Compile Include="Dialog\DialogsHideOrShow.xaml.cs">
+      <DependentUpon>DialogsHideOrShow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\FilePlayerOptions.xaml.cs">
+      <DependentUpon>FilePlayerOptions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\MissingImageLocateRelativePaths.xaml.cs">
+      <DependentUpon>MissingImageLocateRelativePaths.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\NewVersionNotification.xaml.cs">
+      <DependentUpon>NewVersionNotification.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="QuickPaste\QuickPasteEntry.cs" />
+    <Compile Include="QuickPaste\QuickPasteEventArgs.cs" />
+    <Compile Include="QuickPaste\QuickPasteItem.cs" />
+    <Compile Include="QuickPaste\QuickPasteWindow.xaml.cs">
+      <DependentUpon>QuickPasteWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\UpdateRootFolder.xaml.cs">
+      <DependentUpon>UpdateRootFolder.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\DirectionEnum.cs" />
+    <Compile Include="Enums\FilePlayerSelectionEnum.cs" />
+    <Compile Include="QuickPaste\QuickPasteEventIdentifierEnum.cs" />
+    <Compile Include="DataStructures\FolderLoadProgress.cs" />
+    <Compile Include="Images\ZoomBookmark.cs" />
+    <Compile Include="Sql.cs" />
+    <Compile Include="DataStructures\ImageMetadataOnLoad.cs" />
+    <Compile Include="Standards\CamtrapDPContributors.xaml.cs">
+      <DependentUpon>CamtrapDPContributors.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPConstants.cs" />
+    <Compile Include="Standards\CamtrapDPExportFiles.cs" />
+    <Compile Include="Standards\CamtrapDPDataPackage.cs" />
+    <Compile Include="Standards\CamtrapDPHelpers.cs" />
+    <Compile Include="Standards\CamtrapDPKeywords.xaml.cs">
+      <DependentUpon>CamtrapDPKeywords.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPLicenses.xaml.cs">
+      <DependentUpon>CamtrapDPLicenses.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPReferences.xaml.cs">
+      <DependentUpon>CamtrapDPReferences.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPRelatedIdentifiers.xaml.cs">
+      <DependentUpon>CamtrapDPRelatedIdentifiers.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPSources.xaml.cs">
+      <DependentUpon>CamtrapDPSources.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Standards\CamtrapDPTaxonomic.xaml.cs">
+      <DependentUpon>CamtrapDPTaxonomic.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuRecognitions.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseDuplicates.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseCheckAndCorrectFolders.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseDetections.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseClosing.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseEpsiodes.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseProgress.cs" />
+    <Compile Include="Util\ColorsAndBrushes.cs" />
+    <Compile Include="Util\Compare.cs" />
+    <Compile Include="Util\CSVHelpers.cs" />
+    <Compile Include="Util\Dictionaries.cs" />
+    <Compile Include="Util\DragDropFile.cs" />
+    <Compile Include="Episodes\Episodes.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseFileShow.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseAvalonDock.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseCopyPreviousValues.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseFocus.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseKeyboardShortcuts.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenusControlsEnableDisable.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseFileNavigationSlider.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseFilePlayer.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseFileSelection.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseFindBox.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseImageDifferencing.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseImageSetLoading.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseMarkingAndCounting.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuEdit.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuFile.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuHelp.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuOptions.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuSelection.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuSort.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuView.cs" />
+    <Compile Include="TimelapseMenuCallbacks\TimelapseMenuWindow.cs" />
+    <Compile Include="TimelapsePartialClasses\TimelapseQuickPaste.cs" />
+    <Compile Include="Extensions\DataGridExtensions.cs" />
+    <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\DateTimeOffsetExtensions.cs" />
+    <Compile Include="Enums\DeletiionManagementEnum.cs" />
+    <Compile Include="DataStructures\ErrorsAndWarnings.cs" />
+    <Compile Include="Util\IsCondition.cs" />
+    <Compile Include="Util\JsonConverters.cs" />
+    <Compile Include="Util\Numbers.cs" />
+    <Compile Include="Util\ValidationCallbacks.cs" />
+    <Compile Include="Util\ViewModelBase.cs" />
+    <Compile Include="Util\ProcessExecution.cs" />
+    <Compile Include="Util\ProgressStream.cs" />
+    <Compile Include="Util\SystemStatus.cs" />
+    <Compile Include="Util\ThowIf.cs" />
+    <Compile Include="DataStructures\GlobalReferences.cs" />
+    <Compile Include="DataStructures\ImageMetadata.cs" />
+    <Compile Include="Util\ImageMetadataDictionary.cs" />
+    <Compile Include="Util\FilesFolders.cs" />
+    <Compile Include="Extensions\RegistryKeyExtensions.cs" />
+    <Compile Include="Util\Throttles.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Extensions\BitmapSourceExtensions.cs" />
+    <Compile Include="Enums\ImageDifferenceResultEnum.cs" />
+    <Compile Include="Images\ImageCache.cs" />
+    <Compile Include="DataTables\FileTableEnumerator.cs" />
+    <Compile Include="DataStructures\DateTimeFeedbackTuple.cs" />
+    <Compile Include="Enums\DateTimeAdjustmentEnum.cs" />
+    <Compile Include="Enums\ImageDifferenceEnum.cs" />
+    <Compile Include="Enums\ImageDisplayIntentEnum.cs" />
+    <Compile Include="Images\MagnifyingGlass.cs" />
+    <Compile Include="EventArguments\MarkerEventArgs.cs" />
+    <Compile Include="Controls\StockMessageControl.xaml.cs">
+      <DependentUpon>StockMessageControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DataTables\DataRowBackedObject.cs" />
+    <Compile Include="Util\Dependencies.cs" />
+    <Compile Include="Extensions\TimelapseAvalonExtensions.cs" />
+    <Compile Include="DebuggingSupport\TracePrint.cs" />
+    <Compile Include="Util\VersionChecks.cs" />
+    <Compile Include="Constant.cs" />
+    <Compile Include="SearchingAndSorting\CustomSelection.cs" />
+    <Compile Include="DataStructures\ColumnTuple.cs" />
+    <Compile Include="DataStructures\ColumnTuplesWithWhere.cs" />
+    <Compile Include="Database\FileDatabase.cs" />
+    <Compile Include="SearchingAndSorting\SearchTerm.cs" />
+    <Compile Include="Dialog\AboutTimelapse.xaml.cs">
+      <DependentUpon>AboutTimelapse.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\ChooseFileDatabase.xaml.cs">
+      <DependentUpon>ChooseFileDatabase.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DateTimeRereadFromFiles.xaml.cs">
+      <DependentUpon>DateTimeRereadFromFiles.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DeleteImages.xaml.cs">
+      <DependentUpon>DeleteImages.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Util\VisualChildren.cs" />
+    <Page Include="Controls\BusyCancelIndicator.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ControlsMetadata\MetadataDataEntryPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ControlsMetadata\MetadataUI.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\FileMetadataGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MetadataFolderComplianceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\RelativePathControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ThumbnailInCell.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ThumbnailGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\FilePlayer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\VideoPlayer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\CustomSelectionWithEpisodes.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\MergeCheckoutChooseSubfolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MergeCreateEmptyDatabase.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MergeCheckinDatabaseFiles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\MergingDatabaseWarningAsDuplicateEntriesPossible.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MetadataFolderComplianceViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\PopulateFieldWithDetectionCounts.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\PopulateFieldWithGUID.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionOptionsForBoundingBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionsDeleteOldData.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\EpisodeOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\ExceptionShutdownDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\ExportAllSelectedFiles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\ImageAdjuster.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MissingFoldersLocateAllFolders.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\PopulateFieldsWithImageMetadataOnLoad.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\PopulateFieldWithEpisodeData.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\RandomSampleSelection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RelativePathEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\ShowRtfFile.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\SkipHiddenFiles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\PopulateFieldsWithMetadata.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\TemplateChangedWizard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\TestSomeCodeDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\WarningToUpdateDBFilesToSQL.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="QuickPaste\QuickPasteEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="QuickPaste\QuickPasteWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPContributors.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPKeywords.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPLicenses.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPReferences.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPRelatedIdentifiers.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPSources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Standards\CamtrapDPTaxonomic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StyleResources\CommonStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StyleResources\CopyPreviousButtonStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\CustomSort.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DateCorrectAmbiguous.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\DateChangesFeedbackControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\AboutTimelapse.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\ChooseFileDatabase.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DateTimeLinearCorrection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\DateTimeFixedCorrection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DateTimeRereadFromFiles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DeleteDeleteFolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DeleteImages.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\DialogsHideOrShow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\EditLog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\FilePlayerOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MissingImageLocateRelativePaths.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\MessageBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dialog\DarkImagesThreshold.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\NewVersionNotification.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RenameFileDatabaseFile.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\UpdateRootFolder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\DateDaylightSavingsTimeCorrection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\HelpUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ControlsDataEntry\DataEntryControls.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\AdvancedTimelapseOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\StockMessageControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StyleResources\QuickPasteButtonStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TimelapseWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Images\Marker.cs" />
+    <Compile Include="Images\ImageProcess.cs" />
+    <Compile Include="Dialog\MessageBox.xaml.cs">
+      <DependentUpon>MessageBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DarkImagesThreshold.xaml.cs">
+      <DependentUpon>DarkImagesThreshold.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\RenameFileDatabaseFile.xaml.cs">
+      <DependentUpon>RenameFileDatabaseFile.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Util\FileBackup.cs" />
+    <Compile Include="DataTables\ImageRow.cs" />
+    <Compile Include="Enums\FileSelectionEnum.cs" />
+    <Compile Include="Images\MarkersForCounter.cs" />
+    <Compile Include="Enums\ControlLabelStyleEnum.cs" />
+    <Compile Include="Enums\ControlContentStyleEnum.cs" />
+    <Compile Include="DataStructures\RecencyOrderedList.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryControl.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryCounter.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryChoice.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryFlag.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryNote.cs" />
+    <Compile Include="Util\NativeMethods.cs" />
+    <Compile Include="Database\CsvReaderWriter.cs" />
+    <Compile Include="Dialog\DateTimeFixedCorrection.xaml.cs">
+      <DependentUpon>DateTimeFixedCorrection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\EditLog.xaml.cs">
+      <DependentUpon>EditLog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DateDaylightSavingsTimeCorrection.xaml.cs">
+      <DependentUpon>DateDaylightSavingsTimeCorrection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HelpUserControl.xaml.cs">
+      <DependentUpon>HelpUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Images\MarkableCanvas.cs" />
+    <Compile Include="Util\DateTimeHandler.cs" />
+    <Compile Include="State\UserRegistrySettings.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryControls.xaml.cs">
+      <DependentUpon>DataEntryControls.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\AdvancedTimelapseOptions.xaml.cs">
+      <DependentUpon>AdvancedTimelapseOptions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="State\TimelapseUserRegistrySettings.cs" />
+    <Compile Include="ControlsDataEntry\DataEntryHandler.cs">
+      <ExcludeFromStyleCop>False</ExcludeFromStyleCop>
+    </Compile>
+    <Compile Include="Database\SQLiteWrapper.cs" />
+    <Compile Include="Controls\StatusBarExtensions.cs" />
+    <Compile Include="Database\CommonDatabase.cs" />
+    <Compile Include="State\TimelapseState.cs" />
+    <Compile Include="TimelapseWindow.xaml.cs">
+      <DependentUpon>TimelapseWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+    <Resource Include="Resources\TimelapseHelp.rtf" />
+    <Resource Include="Resources\TimelapseMetadataInstructionsHelp.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <None Include="StrongNameKeyFile.snk" />
+    <None Include="Timelapse.ruleset" />
+    <Resource Include="Resources\AvalonLayout_DataEntryFloating.config" />
+    <Resource Include="Resources\AvalonLayout_DataEntryOnSide.config" />
+    <Resource Include="Resources\AvalonLayout_DataEntryOnTop.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\NoFilesAvailable.jpg" />
+    <Resource Include="Resources\Corrupted.jpg" />
+    <Resource Include="Resources\FileNoLongerAvailable.jpg" />
+    <Resource Include="Resources\VideoPlayIcon.png" />
+    <Resource Include="Resources\VideoPauseIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\About_32x.png" />
+    <Resource Include="Icons\ConvertFile_32x.png" />
+    <Resource Include="Icons\Download_32x.png" />
+    <Resource Include="Icons\EmailSend_32x.png" />
+    <Resource Include="Icons\Exit_22x.png" />
+    <Resource Include="Icons\Home_32x.png" />
+    <Resource Include="Icons\InspectMetadata_32x.png" />
+    <Resource Include="Icons\JoinMailingList_32x.png" />
+    <Resource Include="Icons\NewFile_40x.png" />
+    <Resource Include="Icons\OpenFile_32x.png" />
+    <Resource Include="Icons\ShowColumns_32x.png" />
+    <Resource Include="Icons\ShowUTCTime_32x.png" />
+    <Resource Include="Icons\UserManual_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\CSVImport_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\CSVExport_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\ImageExport_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-Pause.png" />
+    <Resource Include="Icons\MediaControl-PlaySpeed2.png" />
+    <Resource Include="Icons\MediaControl-PlaySpeed3.png" />
+    <Resource Include="Icons\MediaControl-Rewind-Speed2.png" />
+    <Resource Include="Icons\MediaControl-Rewind-Speed3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-Stop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-First.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-Last.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-Rewind-Speed1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-PageDown.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-PageUp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\MediaControl-RowDown.png" />
+    <Resource Include="Icons\MediaControl-RowUp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\ImageFolder_50.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\LayoutCustomLoad_32x.png" />
+    <Resource Include="Icons\LayoutCustomSave_32x.png" />
+    <Resource Include="Icons\LayoutDataEntryFloating_32x.png" />
+    <Resource Include="Icons\LayoutDataEntryOnSide_32x.png" />
+    <Resource Include="Icons\LayoutDataEntryOnTop_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\LayoutDefault_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\BlankVideo.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\JSONImport_32x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\CloseFile_40x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\FolderEmpty.png" />
+    <Resource Include="Icons\FolderEmpty_Missing.png" />
+    <Resource Include="Icons\FolderPhotos.png" />
+    <Resource Include="Icons\FolderPhotos_Missing.png" />
+    <Resource Include="Resources\FilePathTooLong.jpg" />
+    <Resource Include="Icons\MediaControl-PlaySpeed1.png" />
+    <Resource Include="Icons\MediaControl-PlayButton.png" />
+    <Resource Include="Icons\ExternalVideoPlayer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Timelapse.ico" />
+    <Resource Include="Icons\Timelapse32.ico" />
+    <Resource Include="Timelapse16.ico" />
+    <Resource Include="Timelapse32.ico" />
+    <Resource Include="Timelapse64.ico" />
+    <Resource Include="Icons\EcoAssist.png" />
+    <Resource Include="Icons\EcoAssistUninstall.png" />
+    <Resource Include="Icons\EcoAssistUpload.png" />
+    <Resource Include="Resources\LoadAnImageSet.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="exiftool%28-k%29.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ffmpeg.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

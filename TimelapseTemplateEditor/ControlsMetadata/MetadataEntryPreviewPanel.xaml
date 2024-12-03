@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="TimelapseTemplateEditor.ControlsMetadata.MetadataEntryPreviewPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- #region Control help text -->
+        <TextBlock Grid.Row="0"  FontWeight="Bold" Text="What the interface will (roughly) look like. Drag and drop controls by their labels to re-arrange their order." />
+        <!--#endregion-->
+
+        <!-- #region Control preview area -->
+        <Border Grid.Row="1" BorderBrush="Gray" Background="LightGoldenrodYellow" BorderThickness="1" >
+            <ScrollViewer Name="PreviewScrollViewer" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" MinHeight="100">
+                <Grid x:Name="ControlsPanel"
+                      Margin="10,10,10,0" 
+                             
+                            Tag="DROPTARGET" AllowDrop="True"
+
+                            PreviewMouseLeftButtonDown="ControlsPanel_PreviewMouseLeftButtonDown" 
+                            PreviewMouseLeftButtonUp="ControlsPanel_PreviewMouseLeftButtonUp" 
+                            PreviewMouseMove="ControlsPanel_PreviewMouseMove" 
+                            DragEnter="ControlsPanel_DragEnter" 
+                            Drop="ControlsPanel_DragDrop" />
+            </ScrollViewer>
+        </Border>
+        <!--#endregion-->
+
+    </Grid>
+</UserControl>
