@@ -17,10 +17,10 @@ Timelapse  works with image recognition data, where it integrates access to EcoA
 Bug reports, feature requests, and feedback are most welcome. Let us know! We can't improve the system if we don't hear from you. If you wish to co-develop this project, see below. 
 
 ### History
-Timelapse was originally designed for a fisheries biologist who ran many camera traos in Timelapse mode, hence its name. Over time, its interface and functionality has been extended to meet the needs of a broad variety of user who use camera traps in many different ways. 
+Timelapse was originally designed for a fisheries biologist who ran many camera traps in Timelapse mode, hence its name. Over time, its interface and functionality has been extended to meet the needs of a broad variety of user who use camera traps in many different ways. 
 
 While a few developers have contributed to Timelapse over the years, the overwhelming majority was done as a solo effort by Saul Greenberg.
-This repository begins at Timelapse Version 2.2.3.2. Earlier Timelapse versions are maintained in a different repository   named TimelapseDeprecated
+This repository begins at Timelapse Version 2.3.2.5Alpha2. Earlier Timelapse versions can be supplied if needed by contacting Saul Greenberg
 
 ## For Developers
 If you wish to co-develop this project, contact saul@ucalgary.ca to see if our project goals coincide.
