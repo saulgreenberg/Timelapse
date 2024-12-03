@@ -39,18 +39,15 @@ Development is done uising .NET 4.8.1
 
 ### Building Timelapse
 To run all parts of Timelapse, do the following.
-1. Download and install ffmpeg.exe and exiftool.exe into the Dependencies folder. You can get the Windows executables from https://ffmpeg.org/ and   https://exiftool.org/ 
+1. Copyl ffmpeg.exe and exiftool.exe from the Dependencies folder into the Timelapse folder. 
 2. Open the Timelapse solution in the top level Timelapse folder (e.g., using Visual Studio).
-3. Open the Nuget package manager and restore the required packages.
+3. Open the Nuget package manager and restore the required packages, although this should be done automatically..
 4. Build the following:
     - Timelapse
     - TimelapseTemplateEditor
-    - TimelapseViewOnly
-    - only if you need it: UpdateCSVFile 
-    - you don't have to build DialogUpgradeFiles as the dll is already included.
-5. Check that the folders x86 and x64, which should each contain an SQLite.interoper.dll file 
-   are in your debug/release folders. If they aren't, copy those folders from the Dependencies folder.
-   I am not sure why they are sometimes missing, but...
+ 
+5. Other prebuilt dlls are already included in the Dependencies-dlls folder, and should be correctly referenced
+   This should include the SQLite builds, which should have folders x86 and x64 containing an SQLite.interoper.dll file 
 6. If something goes wrong, just contact me.
 
 ###Also helpful are
