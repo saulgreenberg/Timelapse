@@ -1193,7 +1193,7 @@ namespace Timelapse.Images
             Point imageMousePosition = e.GetPosition(ImageToDisplay);
             Point videoMousePosition = e.GetPosition(VideoPlayer.MediaElement);
             TryZoomInOrOut(zoomIn, imageMousePosition, videoMousePosition);
-            e.Handled = true;
+            e.Handled = true; // As otherwise it may be invoked twice by both the marker and markable canvase
         }
 
         // Hide the magnifying glass when the mouse cursor leaves the image
