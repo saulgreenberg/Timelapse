@@ -159,7 +159,7 @@ namespace Timelapse.Controls
                                 Image image = tuple.Item1;
                                 width += image.Source.Width;
                                 height = Math.Max(height, image.Source.Height);
-                                Debug.Print($"height:{height} this.ImageHeight:{this.ImageHeight} image.Source.Height:{image.Source.Height}");
+                               
                                 // Create a canvas containing the image and bounding boxes (if detections are on)
                                 Canvas canvas = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, margin, fileTable[0].ID, fileTable[0].IsVideo);
                                 canvas.MouseLeftButtonUp += Canvas_MouseLeftButtonUp;
@@ -197,7 +197,7 @@ namespace Timelapse.Controls
                                 BoundingBoxes boundingBoxes = tuple.Item2;
                                 width += image.Source.Width;
                                 height = Math.Max(height, image.Source.Height);
-                                //Debug.Print($"height:{height} this.ImageHeight:{this.ImageHeight} image.Source.Height:{image.Source.Height}");
+
                                 // Create a canvas containing the image and bounding box
                                 Canvas canvas = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, margin, fileTable[0].ID, fileTable[0].IsVideo);
                                 canvas.MouseLeftButtonUp += Canvas_MouseLeftButtonUp;

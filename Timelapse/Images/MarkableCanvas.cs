@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -1192,6 +1193,7 @@ namespace Timelapse.Images
             Point imageMousePosition = e.GetPosition(ImageToDisplay);
             Point videoMousePosition = e.GetPosition(VideoPlayer.MediaElement);
             TryZoomInOrOut(zoomIn, imageMousePosition, videoMousePosition);
+            e.Handled = true;
         }
 
         // Hide the magnifying glass when the mouse cursor leaves the image
