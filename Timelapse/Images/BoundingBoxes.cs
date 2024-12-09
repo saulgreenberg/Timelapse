@@ -46,7 +46,7 @@ namespace Timelapse.Images
             {
                 return false;
             }
-           
+
             // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
             if (GlobalReferences.DetectionsExists == false || GlobalReferences.HideBoundingBoxes || Keyboard.IsKeyDown(Key.H) || null == this.Boxes || this.Boxes.Count == 0)
             {
@@ -254,7 +254,6 @@ namespace Timelapse.Images
             Canvas.SetTop(rect, screenPositionTopLeft.Y - stroke_thickness);
             canvas.Children.Add(rect);
             canvas.Tag = Constant.MarkableCanvas.BoundingBoxCanvasTag;
-
 
             // Bounding box labelling: Category plus confidence (to two decimal places or epsilon)
             // Use the primary detection category if there are no classifications, 
