@@ -169,8 +169,6 @@
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
-                <Grid/>
-
             </Grid>
         </StackPanel>
     </Grid>

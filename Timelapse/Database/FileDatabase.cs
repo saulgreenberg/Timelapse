@@ -3248,7 +3248,6 @@ namespace Timelapse.Database
                         }
                         List<string> queries = new List<string>();
 
-                        count = jsonRecognizer.images.Count;
                         foreach (image image in jsonRecognizer.images)
                         {
                             // check whether the image file in the json exists in the recognizer table.

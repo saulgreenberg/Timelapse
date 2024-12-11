@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -691,20 +690,7 @@ namespace Timelapse.Images
                     // Set the new heights
                     bboxCanvas.Width = ImageToDisplay.RenderSize.Width;
                     bboxCanvas.Height = ImageToDisplay.RenderSize.Height;
-                    bool boundingBoxesDrawn;
-                    //if (this.displayingImage)
-                    //{
-                        // Image invocation
-                        boundingBoxesDrawn =
-                            BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, ImageToDisplay.RenderSize.Width, ImageToDisplay.RenderSize.Height, 0, transformGroup);
-                    //}
-                    //else
-                    //{
-                    //    // Video invocation
-                    //    boundingBoxesDrawn = 
-                    //        BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, ImageToDisplay.RenderSize.Width, ImageToDisplay.RenderSize.Height, 0, transformGroup, BoundingBoxes.InitialVideoFrame, 0);
-                    //}
-
+                    bool boundingBoxesDrawn = BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, ImageToDisplay.RenderSize.Width, ImageToDisplay.RenderSize.Height, 0, transformGroup);
                     if (boundingBoxesDrawn)
                     {
                         Children.Add(bboxCanvas);

@@ -69,12 +69,6 @@ namespace Timelapse
                 this.FileNavigatorSliderReset();
             }
             
-            // DELETE THIS AS NEW STRATE
-            // We want the select to display this duplicate (and all its companion duplicates for this image). So we create a search term
-            // that specifies the RelativePath and File. Later, the FilesSelectAndShowAsync will then include it as an exception,
-            // where it will be added to the select criteria within a WHERE.
-            //DataHandler.FileDatabase.CustomSelection.DuplicatesRelativePathAndFileTuple = new Tuple<string, string>(duplicate.RelativePath, duplicate.File);
-
             if (GlobalReferences.DetectionsExists)
             {
                 // Get the ID of the duplicate file that was just inserted into the filedata table
@@ -104,7 +98,7 @@ namespace Timelapse
                         {
                             if (null != detectionRow[4])
                             {
-                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.FrameNumber, (int)Convert.ToInt32(detectionRow[4])));
+                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.FrameNumber, Convert.ToInt32(detectionRow[4])));
                             }
 
                             if (null != detectionRow[5])

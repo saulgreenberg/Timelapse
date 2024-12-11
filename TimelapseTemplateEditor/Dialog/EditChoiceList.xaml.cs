@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,7 +7,6 @@ using System.Windows.Media.Animation;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
-using Timelapse.Util;
 
 namespace TimelapseTemplateEditor.Dialog
 {
