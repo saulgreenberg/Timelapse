@@ -71,7 +71,7 @@ namespace TimelapseTemplateEditor.Standards
         public string description { get; set; }
 
         public List<field> fields { get; set; }
-        public string primaryKey { get; set; }
+
         #endregion
         
         #region Disposing
