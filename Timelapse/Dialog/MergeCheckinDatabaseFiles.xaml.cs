@@ -193,8 +193,9 @@ namespace Timelapse.Dialog
                     }
 
                     // e. Do the merge
+                    bool mergingFromEarlierDetectionTable = false == sourceDdb.SchemaIsColumnInTable(Constant.DBTables.Detections, Constant.DetectionColumns.FrameRate);
                     sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(
-                        destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
+                        destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore, mergingFromEarlierDetectionTable);
                 }
                 return selectedSourceDdbFiles;
 

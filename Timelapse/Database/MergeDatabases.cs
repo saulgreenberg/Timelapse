@@ -546,7 +546,7 @@ namespace Timelapse.Database
         public static DatabaseFileErrorsEnum MergeSourceIntoDestinationDdb(
             SQLiteWrapper destinationDdb,
             string sourceDdbPath,
-            string relativePathDifference, int levelsToIgnore)
+            string relativePathDifference, int levelsToIgnore, bool mergingFromEarlierDetectionTable)
         {
 
             // a. We need several temporary tables 
@@ -588,7 +588,7 @@ namespace Timelapse.Database
             if (updateRecognitions)
             {
                 query = resultTuple.Item2;
-                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist);
+                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist, mergingFromEarlierDetectionTable);
             }
 
             // Part 7. Now update the various MetadataTables if and as needed
@@ -1035,7 +1035,7 @@ namespace Timelapse.Database
 
         // The database to merge in has recognitions, so the SQL query should update the detections table and (if needed) the recognition table.
         private static string QueryPhraseMergeRecognitionTables(long offsetId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, bool destinationRecognitionsExist)
+            string attachedSourceDB, bool destinationRecognitionsExist, bool mergingFromEarlierDetectionTable)
         {
             string query = string.Empty;
             string tempDetectionsTable = "tempDetectionsTable";
@@ -1056,7 +1056,19 @@ namespace Timelapse.Database
             {
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
-            query += QueryInsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
+
+            if (mergingFromEarlierDetectionTable)
+            {
+                // Backwards compatability repair, when merging a pre-2.3.2.5 created detection table
+                // Those detection tables do not have frame_rate and frame_number columns, so we have to create some null column placeholders to fake this, as otherwise the query will fail.
+                query += $"{Sql.InsertInto} {DBTables.Detections}  {Sql.Select} {Constant.DetectionColumns.DetectionID}, {Constant.DetectionColumns.Category}, {Constant.DetectionColumns.Conf}, {Constant.DetectionColumns.BBox}, " +
+                         $"{Sql.NullAsPlaceHolder}, {Sql.NullAsPlaceHolder}, {Constant.DatabaseColumn.ID} {Sql.From} {tempDetectionsTable}" +
+                         $"{Sql.Semicolon} {Environment.NewLine}";
+            }
+            else
+            {
+                query += QueryInsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
+            }
 
             // Similar to the above, we also update the classifications
             // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???

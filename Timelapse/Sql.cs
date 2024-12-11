@@ -88,6 +88,7 @@ namespace Timelapse
         public const string NotLike = Not + Like;
         public const string Null = " NULL ";
         public const string NullAs = Null + " " + As;
+        public const string NullAsPlaceHolder = NullAs + Placeholder;
         public const string Ok = "ok";
         public const string On = " ON ";
         public const string OnConflict = " ON CONFLICT ";
@@ -95,6 +96,7 @@ namespace Timelapse
         public const string Or = " OR ";
         public const string OrderBy = " ORDER BY ";
         public const string OrderByRandom = OrderBy + " RANDOM() ";
+        public const string Placeholder = " PLACEHOLDER ";
         public const string Plus = " + ";
         public const string Pragma = " PRAGMA ";
         public const string PragmaForeignKeysEquals = Pragma + " foreign_keys " + Equal;
