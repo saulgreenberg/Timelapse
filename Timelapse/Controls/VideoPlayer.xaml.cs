@@ -1167,7 +1167,8 @@ namespace Timelapse.Controls
             // Enable only if there are bounding boxes and the max confidence > the display threshold
             this.BorderButtonBestFrame.Visibility = null != this.BoxesForFile &&
                                                     this.BoxesForFile.Boxes.Count > 0 &&
-                                                    this.BoxesForFile.MaxConfidence >= GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold
+                                                    this.BoxesForFile.MaxConfidence >= GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+                                                    null != this.BoxesForFile.FrameRate && this.BoxesForFile.FrameRate > 0
                 ? Visibility.Visible
                 : Visibility.Hidden;
         }
