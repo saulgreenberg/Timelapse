@@ -2932,7 +2932,7 @@ namespace Timelapse.Dialog
             string title = "Recognition data imported";
             bool isRootFolder = string.IsNullOrWhiteSpace(jsonFilePath);
             string what = isRootFolder
-                ? $"Recognition data imported for images located in your image set."
+                ? "Recognition data imported for images located in your image set."
                 : $"Recognition data imported for images located in a particular sub-folder.{Environment.NewLine}•  {jsonFilePath}";
 
             new MessageBox(title, owner)

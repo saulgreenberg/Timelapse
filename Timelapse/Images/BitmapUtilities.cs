@@ -167,7 +167,7 @@ namespace Timelapse.Images
                 isCorruptOrMissing = false;
                 return bitmap;
             } 
-            catch (Exception e)// (FFMpegException e)
+            catch
             {
                 // Couldn't get the thumbnail using FFMPEG. Fallback to try getting it using the MediaEncoder
                 // Note. One of the reasons for this failure can occur if we call ffMpeg.GetVideoThumbnail(filePath, outputBitmapAsStream, frameTime);

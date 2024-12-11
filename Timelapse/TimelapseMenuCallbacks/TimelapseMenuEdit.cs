@@ -477,7 +477,6 @@ namespace Timelapse
                         if (DataHandler.FileDatabase.IsFileRowInRange(prevFileIndex))
                         {
                             if (DataHandler.FileDatabase.FileTable[prevFileIndex].DeleteFlag == false)
-                            //if (false == filesToDelete.Any(file => file.ID == this.DataHandler.FileDatabase.FileTable[prevFileIndex].ID))
                             {
                                 // Its not a deleted file, so we have a valid next file to display!
                                 currentFileID = DataHandler.FileDatabase.FileTable[prevFileIndex].ID;
@@ -504,7 +503,7 @@ namespace Timelapse
                     }
                 }
             }
-            if (backupDeletedFiles == true && longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
+            if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
             {
                 // Path is too long to back up
                 if (Dialogs.FilePathDeletedFileTooLongDialog(this) == false)

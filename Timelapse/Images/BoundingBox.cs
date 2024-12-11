@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Navigation;
 using Timelapse.Constant;
 using Timelapse.Util;
 

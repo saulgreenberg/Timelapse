@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -146,7 +144,6 @@ namespace Timelapse.Controls
         // Get the bitmap, scaled to fit the cellWidth/Height, from the image row's image or video 
         public BitmapSource GetThumbnail(double cellWidth, double cellHeight)
         {
-            BitmapSource bf;
             if (ImageRow.IsVideo == false)
             {
                 // Calculate scale factor to ensure that images of different aspect ratios completely fit in the cell

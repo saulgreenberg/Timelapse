@@ -14,8 +14,6 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
-using Timelapse.Images;
-using Timelapse.Util;
 using RowColumn = System.Drawing.Point;
 
 namespace Timelapse.Controls

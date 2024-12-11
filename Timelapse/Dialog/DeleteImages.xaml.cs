@@ -128,7 +128,7 @@ namespace Timelapse.Dialog
             Message.Hint = $"\u2022 Select Options|Preferences to manage deletion behavior, including:{Environment.NewLine}" +
                            $"   - whether deleted files are actually backed up to this image set's {File.DeletedFilesFolder} folder,{Environment.NewLine}" +
                            $"   - if backed up, when the {File.DeletedFilesFolder} is emptied.{Environment.NewLine}" +
-                           $"   - alternately, whether files are immediately and permanently deleted.";
+                           "   - alternately, whether files are immediately and permanently deleted.";
 
             if (deleteData && !deleteImage)
             {
@@ -265,7 +265,7 @@ namespace Timelapse.Dialog
             Message.Hint = $"\u2022 Select Options|Preferences to manage deletion behavior, including:{Environment.NewLine}" +
                            $"   - whether deleted files are actually backed up to this image set's {File.DeletedFilesFolder} folder,{Environment.NewLine}" +
                            $"   - if backed up, when the {File.DeletedFilesFolder} is emptied.{Environment.NewLine}" +
-                           $"   - alternately, whether files are immediately and permanently deleted.";
+                           "   - alternately, whether files are immediately and permanently deleted.";
 
             // Populate the information pane
             if (deleteImage)
@@ -280,7 +280,7 @@ namespace Timelapse.Dialog
                 {
                     Message.Title = $"Permanently delete {numberOfImagesToDelete} files(s) ";
                     Message.What = $"Permanently delete {numberOfImagesToDelete} image and/or video(s) marked for deletion.";
-                    Message.Result = $"\u2022 The deleted files will be permanently deleted";
+                    Message.Result = "\u2022 The deleted files will be permanently deleted";
                 }
 
                 if (deleteData == false)

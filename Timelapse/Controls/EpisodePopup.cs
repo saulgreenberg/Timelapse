@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Diagnostics;
-using System.Drawing.Printing;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,7 +15,6 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit.Core.Converters;
 using Xceed.Wpf.Toolkit.Core.Input;
 using Xceed.Wpf.Toolkit.Zoombox;
 using MarkableCanvas = Timelapse.Images.MarkableCanvas;
@@ -275,7 +272,7 @@ namespace Timelapse.Controls
         #endregion
 
         #region Internal methods
-        // Create a canvas containging the image as well as the  bounding boxes defined by the filetable id 
+        // Create a canvas containing the image as well as the  bounding boxes defined by the filetable id 
         private static Canvas CreateCanvasWithBoundingBoxesAndImage(BoundingBoxes boundingBoxes, Image image, double height, int margin, long fileTableID, bool isVideo)
         {
             Canvas canvas = new Canvas

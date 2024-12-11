@@ -1,7 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Microsoft.WindowsAPICodePack.Shell;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -32,11 +31,7 @@ namespace Timelapse.Controls
         private TimeSpan MediaElementCurrentPosition
         {
             get => this.MediaElement.Position;
-            set
-            {
-                this.MediaElement.Position = value;
-                // TracePrint.StackTraceToOutput(this.MediaElement.Position.ToString());
-            }
+            set => this.MediaElement.Position = value;
         }
 
         #endregion
@@ -48,7 +43,7 @@ namespace Timelapse.Controls
         private bool isProgrammaticUpdate; // To control callback execution
 
         // Tracks whether the player was previously loaded
-        private bool IsVideoPlayerLoaded = false;
+        private bool IsVideoPlayerLoaded;
 
         // Timers
         private DispatcherTimer TimerUpdatePosition;
@@ -67,7 +62,7 @@ namespace Timelapse.Controls
         private double VideoDurationSeconds = -1;
         private TimeSpan VideoDurationTimeSpan;
 
-        private BoundingBoxes BoxesForFile = null; // The bounding boxes for the current video
+        private BoundingBoxes BoxesForFile; // The bounding boxes for the current video
 
         #endregion
 
@@ -128,7 +123,7 @@ namespace Timelapse.Controls
 
             this.OpenExternalPlayer.Click += OpenExternalPlayer_Click;
             this.CBMute.Checked += CBMute_CheckedChanged;
-            this.CBMute.Unchecked += CBMute_CheckedChanged; ;
+            this.CBMute.Unchecked += CBMute_CheckedChanged;
         }
         
         private void CBMute_CheckedChanged(object sender, RoutedEventArgs e)
@@ -989,7 +984,7 @@ namespace Timelapse.Controls
                 }
 
                 string currentPath = mainWindow.DataHandler.ImageCache.Current.GetFilePath(GlobalReferences.MainWindow.DataHandler.FileDatabase.FolderPath);
-                frameRate = VideoPlayer.GetFrameRateFromFile(currentPath) ?? null;
+                frameRate = VideoPlayer.GetFrameRateFromFile(currentPath);
                 if (frameRate <= 0)
                 {
                     frameRate = null;
@@ -1011,7 +1006,7 @@ namespace Timelapse.Controls
             try
             {
                 // The frame rate will be 
-                ShellObject obj = ShellObject.FromParsingName(@path);
+                ShellObject obj = ShellObject.FromParsingName(path);
                 ShellProperty<uint?> rateProp = obj.Properties.GetProperty<uint?>("System.Video.FrameRate");
                 return rateProp?.Value == null
                     ? null

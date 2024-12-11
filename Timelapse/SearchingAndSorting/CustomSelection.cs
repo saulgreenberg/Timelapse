@@ -672,20 +672,13 @@ namespace Timelapse.SearchingAndSorting
             // When recognitions are selected, we may over-ride which bounding boxes are displayed by expanding the range to include the selection confidence values.
             if (recognitionSelections.UseRecognition)
             {
-                if (recognitionSelections.InterpretAllDetectionsAsEmpty) // Empty
-                {
+                GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = recognitionSelections.InterpretAllDetectionsAsEmpty 
                     // For empty, set the over-ride to a small value i.e., equal to epsilon
                     // This avoids displaying spurious bounding boxes (extremely low confidence ones) while still showing
                     // the ones that have low confidence bounding boxes that are still useful.
-                    GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = 0.1; //confidenceBounds.Item2;
-                   // Debug.Print("Empty with Recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
-                }
-                else
-                {
-                    // For non-empty, set the over-ride to include the bounding boxes within the current range
-                    GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = recognitionSelections.ConfidenceThreshold1ForUI;
-                    //Debug.Print("Non-Empty with Recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
-                }
+                    ?  0.1
+                        // For non-empty, set the over-ride to include the bounding boxes within the current range
+                    :  recognitionSelections.ConfidenceThreshold1ForUI;
             }
             else
             {

@@ -1,17 +1,14 @@
-﻿using Microsoft.VisualBasic;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.UI.WebControls;
 using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit.Core.Converters;
 using ColumnTuple = Timelapse.DataStructures.ColumnTuple;
 using ColumnTuplesWithWhere = Timelapse.DataStructures.ColumnTuplesWithWhere;
 using Control = Timelapse.Constant.Control;
