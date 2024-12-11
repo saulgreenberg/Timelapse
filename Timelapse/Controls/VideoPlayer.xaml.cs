@@ -889,15 +889,7 @@ namespace Timelapse.Controls
         // Likley due to an OnIsVisibleChange event
         private void VideoPlayer_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (e.PreviousSize.Width == 0 && e.PreviousSize.Height == 0)
-            {
-                // Minor problem: SizeChanged is invoked twice when Timelapse is first started on a video,
-                // This perhaps ignores the first invocation.
-                return;
-            }
-
-            // TracePrint.StackTrace($"--->${e.NewSize}, {e.PreviousSize}", 4);
-            // Fit the video into the canvas
+            // Minor inefficiency: SizeChanged is invoked twice when Timelapse is first started on a video
             MediaElement.Width = VideoCanvas.ActualWidth;
             MediaElement.Height = VideoCanvas.ActualHeight;
             VideoScale.CenterX = 0.5 * ActualWidth;

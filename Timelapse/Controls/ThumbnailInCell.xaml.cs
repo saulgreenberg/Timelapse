@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,7 +13,6 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Util;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 
 namespace Timelapse.Controls
 {
@@ -209,45 +210,17 @@ namespace Timelapse.Controls
                 try
                 {
                     // Checking if this thread has access to the object.
+                    // This check sometimes fails (but not on my machine) with a
+                    //   System.InvalidOperationException: The calling thread cannot access this object because a different thread owns it.
+                    //   If that happens, we just try again in the else statement using Dispatcher.Invoke...
                     if (Dispatcher.CheckAccess())
                     {
-                        // This sometimes fails (but not on my machine) with a System.InvalidOperationException: The calling thread cannot access this object because a different thread owns it. 
-                        if (this.ImageRow.IsVideo)
-                        {
-                            if (false == this.OkayToDrawAndResetInitialVideoFrameIfNeeded(this.ImageRow, boundingBoxes))
-                            {
-                                // For some reason, its not ok to display or draw the initial video frame. 
-                                // So we default to just drawing the bounding box over the image. 
-                                BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, this.CellWidth, this.CellHeight);
-                            }
-                            else
-                            {
-                                boundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight, 0, null, boundingBoxes.InitialVideoFrame, 0);
-                            }
-
-                        }
-                        else
-                        {
-                            BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight);
-                        }
-
+                        DoRefreshBoundingBoxes();
                     }
                     else
                     {
-                        Dispatcher.Invoke(() =>
-                        {
-                            TracePrint.PrintMessage("In RefreshBoundingBoxes: using the displatcher to avoid the 'calling thread cannot access this object' exception.");
-                            // This sometimes fails (but not on my machine) with a System.InvalidOperationException: The calling thread cannot access this object because a different thread owns it. 
-                            if (this.ImageRow.IsVideo)
-                            {
-                                //this.ResetInitialVideoFrameIfNeeded(this.ImageRow, boundingBoxes);
-                                boundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight, 0, null, boundingBoxes.InitialVideoFrame, 0);
-                            }
-                            else
-                            {
-                                BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight);
-                            }
-                        });
+                        TracePrint.PrintMessage("In RefreshBoundingBoxes: using the displatcher to avoid the 'calling thread cannot access this object' exception.");
+                        Dispatcher.Invoke(DoRefreshBoundingBoxes);
                     }
                 }
                 catch
@@ -265,6 +238,62 @@ namespace Timelapse.Controls
             }
         }
 
+        private void DoRefreshBoundingBoxes()
+        {
+            TransformGroup tg = GetTransformGroupToApplyToBoundingBoxes();
+            // This thread has access to the object.
+            if (this.ImageRow.IsVideo)
+            {
+                // Its a video. Get the Transform Group to apply to the bounding boxes
+                if (false == this.OkayToDrawAndResetInitialVideoFrameIfNeeded(this.ImageRow, boundingBoxes))
+                {
+                    // For some reason, its not ok to display or draw the initial video frame because some information (such as frame rate) is missing
+                    // So we just reset the bounding box to appear over the first (0th) frame. 
+                    boundingBoxes.InitialVideoFrame = 0;
+                }
+                boundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight, 0, tg, boundingBoxes.InitialVideoFrame, 0);
+            }
+            else
+            {
+                // Its an image
+                BoundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight, 0, tg);
+            }
+        }
+
+        // Calculate a transform group that will be applied to bounding boxes.
+        // We do this by looknig at the aspect ratio, which in terms determines
+        // which scaling and transform parameters need to be applied
+        private TransformGroup GetTransformGroupToApplyToBoundingBoxes()
+        {
+            ScaleTransform sc = new ScaleTransform(1.0, 1.0);
+            TranslateTransform tt = new TranslateTransform(0, 0);
+            double imageAspectRatio = this.Image.Width / this.ImageHeight;
+            double cellAspectRatio = this.CellWidth / this.CellHeight;
+
+            if (imageAspectRatio > cellAspectRatio)
+            {
+                // Image aspect ratio is wider than its containing cell
+                // This means we have to scall the X direction to make it fit,
+                // but we don't have to do anything to the Y direction as the image Y is always less than the cell Y
+                // We also don't have to transform things as the image is top-aligned
+                sc.ScaleX = this.CellWidth / this.Image.Width;
+            }
+            else
+            {
+                // Image aspect ratio is narrower (or equal to) its containing cell
+                // This means we have to scale the X direction (as its narrower)
+                // and the Y direction (as we shrunk it)
+                // We also have to transform it as the image is positioned in the center of the cell
+                sc.ScaleX = imageAspectRatio / cellAspectRatio;
+                sc.ScaleY = this.CellHeight / this.ImageHeight;
+                tt.X = (this.CellWidth - Image.Width * sc.ScaleX) * .5;
+            }
+            TransformGroup tg = new TransformGroup();
+            tg.Children.Add(sc);
+            tg.Children.Add(tt);
+            return tg;
+        }
+
         // Only invoke this if the ImageRow is a video
         // Essentially, it checks various parameters, including whether the the desired frame is within the time frame of the video.
         // If things fail, it changes the BoundingBox's initial frame to 0, otherwise leaves it untouched.
@@ -280,7 +309,7 @@ namespace Timelapse.Controls
 
             // Does the bounding box structure have a frame rate set?
             // If not, we can't do anything with it.
-            if (false == bBoxes.FrameRate.HasValue)
+            if (false == bBoxes.FrameRate.HasValue || bBoxes.FrameRate <= 0)
             {
                 //bBoxes.InitialVideoFrame = 0;
                 return false;

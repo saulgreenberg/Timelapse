@@ -678,13 +678,13 @@ namespace Timelapse.SearchingAndSorting
                     // This avoids displaying spurious bounding boxes (extremely low confidence ones) while still showing
                     // the ones that have low confidence bounding boxes that are still useful.
                     GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = 0.1; //confidenceBounds.Item2;
-                    Debug.Print("Empty with Recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
+                   // Debug.Print("Empty with Recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
                 }
                 else
                 {
                     // For non-empty, set the over-ride to include the bounding boxes within the current range
                     GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = recognitionSelections.ConfidenceThreshold1ForUI;
-                    Debug.Print("Non-Empty with Recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
+                    //Debug.Print("Non-Empty with Recognitions: " + GlobalReferences.TimelapseState.BoundingBoxThresholdOveride);
                 }
             }
             else

@@ -48,6 +48,7 @@ namespace Timelapse
         }
         #endregion
 
+        #region Set BoundingBox options
         private void MenuBoundingBoxSetOptions_Click(object sender, RoutedEventArgs e)
         {
             if (DataHandler?.FileDatabase?.Database != null && DataHandler.FileDatabase.DetectionsExists())
@@ -59,6 +60,7 @@ namespace Timelapse
                 }
             }
         }
+        #endregion
 
         #region Import recognition data
         private async void MenuItemImportRecognitionData_Click(object sender, RoutedEventArgs e)
@@ -80,7 +82,6 @@ namespace Timelapse
             //
             // 2. Read recognitions from the Json file.
             //    Note that this has its own progress handler
-            //
             BusyCancelIndicator.IsBusy = true;
             using (Recognizer jsonRecognitions = await DataHandler.FileDatabase.JsonDeserializeRecognizerFileAsync(jsonFilePath).ConfigureAwait(true))
             {
@@ -140,25 +141,6 @@ namespace Timelapse
                             BusyCancelIndicator.Reset(false);
                             return;
                         }
-
-                        // This is old code from before EcoAssist was added to Timelapse
-                        // It asks the user to choose between options where the recognition file should be added as is,
-                        // or wether the path should be repaired to add a prefix path that will make it consistent with a path from the root folder
-                        //RecognitionsAddSubfolderToFilePaths messageBox = new RecognitionsAddSubfolderToFilePaths(this, subFolderPrefix);
-                        //if (false == messageBox.ShowDialog())
-                        //{
-                        //    this.BusyCancelIndicator.Reset(false);
-                        //    return;
-                        //}
-                        //if (messageBox.AddSubFolderPrefix)
-                        //{
-                        //    // The user indicated we should add the prefix, so do so.
-                        //    if (CancelStatusEnum.Cancelled == await RecognitionUtilities.RecognitionsAddPrefixToFilePaths(jsonRecognitions, subFolderPrefix, progress, GlobalReferences.CancelTokenSource))
-                        //    {
-                        //        this.BusyCancelIndicator.Reset(false);
-                        //        return;
-                        //    }
-                        //}
                     }
                     else if (resultRecognizerPathTest == RecognizerPathTestResults.NoMatchToExistingFiles)
                     {
@@ -170,8 +152,6 @@ namespace Timelapse
                             return;
                         }
                     }
-                    // This is the only other thing it could be, so implicit. We do nothing as the paths are correct
-                    //else resultRecognizerPathTest == RecognizerPathTestResults.PathsRelativeToRootFolder
                 }
                 else
                 {
@@ -336,7 +316,17 @@ namespace Timelapse
         #endregion
 
         #region EcoAssist menu items
-       
+
+        // Adjust menu based on whether Ecoassist is installed
+        private void MenuItem_OnEcoAssistSubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
+
+            // Enable runing ecoassist only if the Ecoassist executable seems to be installed.
+            MenuItemEcoAssistRun.IsEnabled = System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2);
+        }
+
         // Download and install ecoassist. 
         private void MenuItemEcoAssistDownload_Click(object sender, RoutedEventArgs e)
         {
@@ -407,13 +397,5 @@ namespace Timelapse
         }
         #endregion
 
-        private void MenuItem_OnEcoAssistSubmenuOpened(object sender, RoutedEventArgs e)
-        {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
-
-            // Enable runing ecoassist only if the Ecoassist executable seems to be installed.
-            MenuItemEcoAssistRun.IsEnabled = System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2);
-        }
     }
 }
