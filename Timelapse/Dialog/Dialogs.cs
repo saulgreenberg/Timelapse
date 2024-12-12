@@ -1122,7 +1122,8 @@ namespace Timelapse.Dialog
                     Icon = MessageBoxImage.Error,
                     What = "Timelapse cannot do this operation.",
                     Reason = "The control has, for some reason, a 'null' value that can't be copied.",
-                    Solution = "Replace the value in this control with an appropriate value (including empty) and try again.",
+                    Solution = $"Try one of the following:{Environment.NewLine}\u2022 Retype the value in this control with an appropriate value (including empty)"  +
+                            $"{Environment.NewLine}• Navigate to a different image and then back to this one and try to do this again.",
                     Result = "Nothing has been changed."
                 }
             };

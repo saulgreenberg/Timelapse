@@ -446,7 +446,7 @@ namespace Timelapse.ControlsDataEntry
 
             if (control.Content == null)
             {
-                // This shouldn't happen, but I did receive an error report once...
+                // This shouldn't happen, but I did receive an error report ...
                 Dialogs.DataEntryCantCopyAsNullDialog(Application.Current.MainWindow);
                 return;
             }
@@ -462,6 +462,13 @@ namespace Timelapse.ControlsDataEntry
             // Update all files to match the value of the control (identified by the data label) in the currently selected image row.
             Mouse.OverrideCursor = Cursors.Wait;
             ImageRow imageRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.Current : FileDatabase.FileTable[ThumbnailGrid.GetSelected()[0]];
+            if (imageRow == null)
+            {
+                // This shouldn't happen, but I did receive an error report ...
+                Dialogs.DataEntryCantCopyAsNullDialog(Application.Current.MainWindow);
+                return;
+            }
+
             FileDatabase.UpdateFiles(imageRow, control);
             Mouse.OverrideCursor = null;
         }
