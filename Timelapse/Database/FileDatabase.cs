@@ -210,7 +210,8 @@ namespace Timelapse.Database
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.RootFolder, Sql.Text, string.Empty));
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.Log, Sql.Text, DatabaseValues.ImageSetDefaultLog));
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.MostRecentFileID, Sql.Text));
-            schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.VersionCompatabily, Sql.Text));  // Records the highest Timelapse version number ever used to open this database
+            schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.VersionCompatibility, Sql.Text));  // Records the highest Timelapse version number ever used to open this database
+            schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.BackwardsCompatibility, Sql.Text));  // Records the earliest Timelapse version number that is backwards compatible with this database
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.SortTerms, Sql.Text, DatabaseValues.DefaultSortTerms));        // A JSON description of the sort terms
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.SearchTerms, Sql.Text, DatabaseValues.DefaultSearchTerms));        // A JSON description of the search terms
             schemaColumnDefinitions.Add(new SchemaColumnDefinition(DatabaseColumn.QuickPasteTerms, Sql.Text));        // A comma-separated list of 4 sort terms
@@ -227,11 +228,12 @@ namespace Timelapse.Database
                 new ColumnTuple(DatabaseColumn.Log, DatabaseValues.ImageSetDefaultLog),
                 new ColumnTuple(DatabaseColumn.MostRecentFileID, DatabaseValues.InvalidID),
                 //new ColumnTuple(Constant.DatabaseColumn.Selection, allImages.ToString()),
-                new ColumnTuple(DatabaseColumn.VersionCompatabily, timelapseCurrentVersionNumber.ToString()),
+                new ColumnTuple(DatabaseColumn.VersionCompatibility, timelapseCurrentVersionNumber.ToString()),
+                new ColumnTuple(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatible),
                 new ColumnTuple(DatabaseColumn.SortTerms, DatabaseValues.DefaultSortTerms),
                 new ColumnTuple(DatabaseColumn.SearchTerms, DatabaseValues.DefaultSearchTerms),
                 new ColumnTuple(DatabaseColumn.QuickPasteTerms, DatabaseValues.DefaultQuickPasteJSON),
-                new ColumnTuple(DatabaseColumn.Standard, existingTemplateDatabase.TemplateGetStandard())
+                new ColumnTuple(DatabaseColumn.Standard, existingTemplateDatabase.GetTemplateStandard())
             };
             List<List<ColumnTuple>> insertionStatements = new List<List<ColumnTuple>>
             {
@@ -718,8 +720,14 @@ namespace Timelapse.Database
                 AddExportToCSVColumnIfNeeded(Database);
 
                 // If the Standards column isn't in the ImageSet table or in the template's TemplateInfo table, add it
+                // Note: It should have been added previously to the template table
                 AddStandardToTemplateInfoColumnIfNeeded(templateDatabase.Database);
                 AddStandardToImageSetColumnIfNeeded(Database);
+
+                // If the BackwardsCompatibility column isn't in the ImageSet table or in the template's TemplateInfo table, add it
+                // Note:  BackwardsCompatibility should have been added previously to the template table in DoCreateOrOpenAsync
+                AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded(templateDatabase.Database);
+                AddBackwardsCompatibilityToImageSetColumnIfNeeded(Database);
 
                 // If there are no metadata tables in the Ddb database, create them and their corresponding data structures
                 // Note that this is specific to the metadata tables in the DDB database, which may differ from table contents (if any) that are present in the TDB database
@@ -2903,7 +2911,7 @@ namespace Timelapse.Database
                 // The image set hasn't been loaded yet, so try to load it
                 ImageSetLoadFromDatabase();
             }
-            if (false == Database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.VersionCompatabily))
+            if (false == Database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.VersionCompatibility))
             {
                 // As there is no version column, this must be a really early version.
                 // Return some very low number, which should trigger most checks and updates

@@ -38,8 +38,15 @@ namespace Timelapse.DataTables
         // The most recent timelapse version used to open the files
         public string VersionCompatability
         {
-            get => Row.GetStringField(DatabaseColumn.VersionCompatabily);
-            set => Row.SetField(DatabaseColumn.VersionCompatabily, value);
+            get => Row.GetStringField(DatabaseColumn.VersionCompatibility);
+            set => Row.SetField(DatabaseColumn.VersionCompatibility, value);
+        }
+
+        // The most recent timelapse version used to open the files
+        public string BackwardsCompatability
+        {
+            get => Row.GetStringField(DatabaseColumn.BackwardsCompatibility);
+            set => Row.SetField(DatabaseColumn.BackwardsCompatibility, value);
         }
 
         // JSON description of the QuickPasteEntries.
@@ -104,7 +111,8 @@ namespace Timelapse.DataTables
                 new ColumnTuple(DatabaseColumn.RootFolder,RootFolder),
                 new ColumnTuple(DatabaseColumn.Log, Log),
                 new ColumnTuple(DatabaseColumn.MostRecentFileID, MostRecentFileID),
-                new ColumnTuple(DatabaseColumn.VersionCompatabily, VersionCompatability),
+                new ColumnTuple(DatabaseColumn.VersionCompatibility, VersionCompatability),
+                new ColumnTuple(DatabaseColumn.BackwardsCompatibility, BackwardsCompatability),
                 new ColumnTuple(DatabaseColumn.SortTerms, SortTermsAsJsonString),
                 new ColumnTuple(DatabaseColumn.SearchTerms, SearchTermsAsJSON),
                 new ColumnTuple(DatabaseColumn.QuickPasteTerms, QuickPasteAsJSON),

@@ -108,7 +108,7 @@ namespace TimelapseTemplateEditor
             DoCreateMetadataStandardFields(AlbertaMetadataStandard.FolderMetadataRows, AlbertaMetadataStandard.ImageTemplateRows, AlbertaMetadataStandard.Aliases);
             
             // Set the standard being used, if any. This avoids excessive calls to the database
-            templateDatabase.UpdateStandard(AlbertaMetadataStandard.Standard);
+            templateDatabase.SetTemplateStandard(AlbertaMetadataStandard.Standard);
             this.standardType = AlbertaMetadataStandard.Standard; 
             
             this.TemplateUI.RowControls.IsEnabled = true;
@@ -129,7 +129,7 @@ namespace TimelapseTemplateEditor
             DoCreateMetadataStandardFields(CamtrapDPStandard.FolderMetadataRows, CamtrapDPStandard.ImageTemplateRows, CamtrapDPStandard.Aliases);
 
             // Set the standard being used, if any. This avoids excessive calls to the database
-            templateDatabase.UpdateStandard(CamtrapDPStandard.Standard);
+            templateDatabase.SetTemplateStandard(CamtrapDPStandard.Standard);
             this.standardType = CamtrapDPStandard.Standard;
 
             this.TemplateUI.RowControls.IsEnabled = false;

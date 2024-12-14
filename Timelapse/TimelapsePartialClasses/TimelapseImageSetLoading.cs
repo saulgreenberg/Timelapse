@@ -290,6 +290,13 @@ namespace Timelapse
                 DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
             }
 
+            // Do the same for the template database
+            if (VersionChecks.IsVersion1GreaterThanVersion2(currentVersionNumberAsString, templateDatabase.GetTemplateVersionCompatibility()))
+            {
+                templateDatabase.SetTemplateVersionCompatibility(currentVersionNumberAsString);
+                //DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
+            }
+
             // Check: if the root folder stored in the database is different from the actual root folder update its database value.
             CheckAndUpdateRootFolderIfNeeded(fileDatabase);
 

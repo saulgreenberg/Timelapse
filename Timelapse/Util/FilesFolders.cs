@@ -205,37 +205,61 @@ namespace Timelapse.Util
                 }
 
                 // Test: if its missing the VersionCompatability column, its pre 2.3.0.0
-                if (false == db.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.VersionCompatabily))
+                if (false == db.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.VersionCompatibility))
                 {
                     return DatabaseFileErrorsEnum.PreVersion2300;
                 }
 
-                // Test: Get the versionCompatability value and test if its 2.3.0.0 or later
-                string versionQuery = Sql.Select + DatabaseColumn.VersionCompatabily + Sql.From + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + Sql.Equal + Sql.Quote(DatabaseValues.ImageSetRowID.ToString());
+                // Test: Get the versionCompatability value and test if the executable version number is:
+                // - earlier than 2.3.0.0 (requires a special database update)
+                // - 2.3.0.0 but earlier than the BackwardsCompatibility version (which requires downloading the latest version of Timelapse)
+                // - At or later than BackwardsCompatibility, but less than the database version (which is likely ok, but generates a warning)
+                string versionQuery = Sql.Select + DatabaseColumn.VersionCompatibility + Sql.From + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + Sql.Equal + Sql.Quote(DatabaseValues.ImageSetRowID.ToString());
                 DataTable table = db.GetDataTableFromSelect(versionQuery);
                 if (table.Rows.Count > 0)
                 {
-                    string thisVersion = (string)table.Rows[0][DatabaseColumn.VersionCompatabily];
-                    if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(thisVersion, DatabaseValues.VersionNumberMinimum))
+                    string databaseCompatibilityVersion = (string)table.Rows[0][DatabaseColumn.VersionCompatibility];
+                    if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(databaseCompatibilityVersion, DatabaseValues.VersionNumberMinimum))
                     {
+                        // While the database looks like it was last updated after 2.3.0.0, we still have to handle this special case
                         // But - Special case as UTCOffset column could be added if the DB was opened with a pre2.3 version of Timelapse.
                         if (db.SchemaIsColumnInTable(DBTables.FileData, ControlDeprecated.UtcOffsetLabel))
                         {
                             return DatabaseFileErrorsEnum.PreVersion2300;
                         }
 
-                        // Now just check to see if we are opening the .ddb file with an older version of Timelapse that last opened it...
-                        string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
-                        if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseCurrentVersionNumber, thisVersion))
+                        // Get the 
+                        string timelapseExecutableCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+
+                        // Test: Get the BackwardsCompatibility value and test if the current version is compatible with it
+                        string backwardsCompatibilityQuery = Sql.Select + DatabaseColumn.BackwardsCompatibility + Sql.From + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + Sql.Equal + Sql.Quote(DatabaseValues.ImageSetRowID.ToString());
+                        table = db.GetDataTableFromSelect(backwardsCompatibilityQuery);
+                        if (table.Rows.Count > 0)
+                        {
+                            string databaseBackwardsCompatibilityVersion = (string)table.Rows[0][DatabaseColumn.BackwardsCompatibility];
+                            // Now just check to see if we are opening the .ddb file with an older version of Timelapse that last opened it...
+                            if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseExecutableCurrentVersionNumber, databaseBackwardsCompatibilityVersion))
+                            {
+                                return DatabaseFileErrorsEnum.Ok;
+                            }
+
+                            return DatabaseFileErrorsEnum.IncompatibleVersion;
+                        }
+                        // We couldn't get the backwards compatibility column, so just check it against the 2.3.0.0
+                        // (as we know that databases between 2.3.2.0 and 2.3.2.5 are compatible)
+                        // Maybe do something different here?
+                        if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseExecutableCurrentVersionNumber, databaseCompatibilityVersion))
                         {
                             return DatabaseFileErrorsEnum.Ok;
                         }
 
                         return DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion;
                     }
-
+                    // The database is pre2.3.0.0
                     return DatabaseFileErrorsEnum.PreVersion2300;
                 }
+
+                return DatabaseFileErrorsEnum.PreVersion2300;
             }
 
             // It should never get here
@@ -777,7 +801,7 @@ namespace Timelapse.Util
                 string durationAsString = prop.FormatForDisplay(PropertyDescriptionFormatOptions.None);
                 if (TimeSpan.TryParse(durationAsString, out TimeSpan duration))
                 {
-                    return (float?) duration.TotalSeconds;
+                    return (float?)duration.TotalSeconds;
                 }
                 return 0;
             }
@@ -851,7 +875,7 @@ namespace Timelapse.Util
                 }
                 return true;
             }
-            catch (Exception )
+            catch (Exception)
             {
                 return false;
             }

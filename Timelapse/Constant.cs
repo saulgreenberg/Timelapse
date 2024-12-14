@@ -272,7 +272,12 @@ namespace Timelapse.Constant
         public const int InvalidRow = -1;
         //public const int RelativePathPosition = 2;
         public const int RowsPerInsert = 5000;
-        public const string VersionNumberMinimum = "2.3.0.0";
+
+        // These constants control incompatible versioning, as indicated below
+        public const string VersionNumberMinimum = "2.3.0.0"; // Earlier versions than this requires a special software update to the database files as done via DialogUpgradeFils.dll
+        public const string VersionNumberBackwardsCompatible = "2.3.0.0"; // The earliest version known to be backwards compatible with this database
+        public const string VersionNumberBackwardsCompatibleForTemplates = "2.3.0.0"; // The earliest version known to be backwards compatible with this database
+
         public const string DefaultSortTerms = "[ { \"DataLabel\":\"RelativePath\", \"DisplayLabel\":\"RelativePath\", \"ControlType\":\"RelativePath\", \"IsAscending\":\"true\" }, { \"DataLabel\":\"DateTime\", \"DisplayLabel\":\"DateTime\", \"ControlType\":\"DateTime\", \"IsAscending\":\"true\" } ]";
         public const string DefaultSearchTerms = "{}";
         public const string DefaultQuickPasteJSON = "[]";
@@ -304,7 +309,8 @@ namespace Timelapse.Constant
         public const string Log = "Log";                    // String holding a user-created text log
         public const string RootFolder = "RootFolder";       // String holding the root folder containing the template
         public const string MostRecentFileID = "Row";       // ID of the last image displayed. It used to hold the current row #, but we repurposed ROW to  hold the MostRecentFileID as it simplifies backwards compatability
-        public const string VersionCompatabily = "VersionCompatabily";      // The latest version of Timelapse that opened this database. Useful for cases when we want to check for backwards compatability
+        public const string VersionCompatibility = "VersionCompatabily";      // The latest version of Timelapse that opened this database. Useful for cases when we want to check for backwards compatability
+        public const string BackwardsCompatibility = "BackwardsCompatibility"; // The earliest version of Timelapse that is backwards compatable with this database.
         public const string SortTerms = "SortTerms";                     // a comma-separated list that indicates the Primary 1st and 2nd sort terms and their attribute
         public const string QuickPasteTerms = "QuickPasteTerms";              // a JSON description that specifies the user's quickpaste entries and values.
         public const string SearchTerms = "SearchTerms";              // a JSON description storing the current search terms

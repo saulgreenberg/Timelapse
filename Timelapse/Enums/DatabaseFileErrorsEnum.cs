@@ -6,6 +6,7 @@
         OkButOpenedWithAnOlderTimelapseVersion,
         InvalidDatabase,
         PreVersion2300,
+        IncompatibleVersion,
         UTCOffsetTypeExistsInUpgradedVersion,
         FileInSystemOrHiddenFolder,
 

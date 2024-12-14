@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -133,6 +134,7 @@ namespace Timelapse.Database
         // This is only invoked for .tdb files by the above method. It:
         // - creates a new database if the file doesn't exist,
         // - opens an existing database if the file exists and is valid.
+        // - does a few backwards compatibility repairs (Note: These should really be done in UpgradeDatabasesForBackwardsCompatibility)
         // It is invoked by only the prior method, or from the Editor
         private static async Task<CommonDatabase> DoCreateOrOpenAsync(string filePath)
         {
@@ -161,6 +163,7 @@ namespace Timelapse.Database
                 // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
                 // Note that we don't have to do this for the metadataTemplate as it follows the new versions' spec
                 AddExportToCSVColumnIfNeeded(commonDatabase.Database);
+                AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded(commonDatabase.Database);
 
                 // Load (or reload) the Controls data structure from the template table in the database
                 await commonDatabase.LoadControlsFromTemplateDBSortedByControlOrderAsync();
@@ -1585,40 +1588,71 @@ namespace Timelapse.Database
 
         #endregion
 
-        #region Info table - Create, Populate info table, and Update version info
-        public void UpdateVersionNumber(string versionNumber)
-        {
-            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.VersionCompatabily, versionNumber);
-        }
+        #region Info table - Create and populate info table, Get and Set for info table column values
 
-        public void UpdateStandard(string standard)
-        {
-            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.Standard, standard);
-        }
-
-        // Create and populate a TemplateInfo table in the database using the schema below
+        // TemplateInfo: Create and populate the table in the template database with the schema and values
         private static void CreateAndPopulateTemplateInfoTable(SQLiteWrapper database)
         {
             // Add a TemplateInfo table only to the .tdb file
             List<SchemaColumnDefinition> templateInfoColumns = new List<SchemaColumnDefinition>
             {
-                new SchemaColumnDefinition(DatabaseColumn.VersionCompatabily, Sql.Text, DatabaseValues.VersionNumberMinimum),
+                new SchemaColumnDefinition(DatabaseColumn.VersionCompatibility, Sql.Text, string.Empty),
+                new SchemaColumnDefinition(DatabaseColumn.BackwardsCompatibility, Sql.Text, string.Empty),
                 new SchemaColumnDefinition(DatabaseColumn.Standard, Sql.Text, string.Empty)
             };
             database.CreateTable(DBTables.TemplateInfo, templateInfoColumns);
 
             // Add the version number of the current Timelapse program to the templateinfo table 
             List<List<ColumnTuple>> templateContents = new List<List<ColumnTuple>>();
-            List<ColumnTuple> version = new List<ColumnTuple>
+            List<ColumnTuple> versions = new List<ColumnTuple>
             {
-                new ColumnTuple(DatabaseColumn.VersionCompatabily, VersionChecks.GetTimelapseCurrentVersionNumber().ToString())
+                new ColumnTuple(DatabaseColumn.VersionCompatibility, VersionChecks.GetTimelapseCurrentVersionNumber().ToString()),
+                new ColumnTuple(DatabaseColumn.BackwardsCompatibility, DatabaseValues.VersionNumberBackwardsCompatible)
             };
-            templateContents.Add(version);
+            templateContents.Add(versions);
             database.Insert(DBTables.TemplateInfo, templateContents);
         }
 
+        public string GetTemplateVersionCompatibility()
+        {
+            if (Database.TableExists(DBTables.TemplateInfo))
+            {
+                DataTable table = Database.GetDataTableFromSelect(Sql.Select + DatabaseColumn.VersionCompatibility + Sql.From + DBTables.TemplateInfo);
+                if (table.Rows.Count > 0)
+                {
+                    return (string)table.Rows[0][DatabaseColumn.VersionCompatibility];
+                }
+            }
+
+            return string.Empty;
+        }
+
+        public void SetTemplateVersionCompatibility(string versionNumber)
+        {
+            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.VersionCompatibility, versionNumber);
+        }
+
+        public string GetTemplateBackwardsCompatibility()
+        {
+            if (Database.TableExists(DBTables.TemplateInfo))
+            {
+                DataTable table = Database.GetDataTableFromSelect(Sql.Select + DatabaseColumn.BackwardsCompatibility + Sql.From + DBTables.TemplateInfo);
+                if (table.Rows.Count > 0)
+                {
+                    return (string)table.Rows[0][DatabaseColumn.BackwardsCompatibility];
+                }
+            }
+
+            return string.Empty;
+        }
+
+        public void SetTemplateBackwardsCompatibility(string versionNumber)
+        {
+            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.BackwardsCompatibility, versionNumber);
+        }
+
         // Return the current standard (if any) stored in the TemplateInfo table 
-        public string TemplateGetStandard()
+        public string GetTemplateStandard()
         {
             if (Database.TableExists(DBTables.TemplateInfo))
             {
@@ -1631,6 +1665,13 @@ namespace Timelapse.Database
 
             return string.Empty;
         }
+
+        public void SetTemplateStandard(string standard)
+        {
+            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.Standard, standard);
+        }
+
+
         #endregion
 
         #region MetadataInfoTable - UpsertMetadataInfoTableRow
@@ -1795,6 +1836,22 @@ namespace Timelapse.Database
             }
         }
 
+        protected static void AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If the BackwardsCompatibility column isn't in the template info, it means we are opening up 
+            // an old version of the template. Update the table by adding a new BackwardsCompatibility column
+            // filled with the hardcoded version number of the earliest version that is backwards compatible with this version
+            if (false == database.SchemaIsColumnInTable(DBTables.TemplateInfo, DatabaseColumn.BackwardsCompatibility))
+            {
+                SchemaColumnDefinition scd = new SchemaColumnDefinition(DatabaseColumn.BackwardsCompatibility, Sql.Text, string.Empty);
+                database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd);
+                // Update the template info table with the current Backwards compatability value
+                ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
+                ctww.Columns.Add(new ColumnTuple(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatibleForTemplates));
+                database.Update(DBTables.TemplateInfo, ctww);
+            }
+        }
+
         protected static void AddStandardToImageSetColumnIfNeeded(SQLiteWrapper database)
         {
             // Backwards compatability: If the Standards column isn't in the image set info, it means we are opening up 
@@ -1807,6 +1864,22 @@ namespace Timelapse.Database
 
                 ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
                 ctww.Columns.Add(new ColumnTuple(DatabaseColumn.Standard, string.Empty));
+                database.Update(DBTables.ImageSet, ctww);
+            }
+        }
+
+        protected static void AddBackwardsCompatibilityToImageSetColumnIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If the BackwardsCompatibility column isn't in the image set info, it means we are opening up 
+            // an old version of the template. Update the table by adding a new BackwardsCompatibility column
+            // filled with the hardcoded version number of the earliest version that is backwards compatible with this version
+            if (false == database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.BackwardsCompatibility))
+            {
+                SchemaColumnDefinition scd = new SchemaColumnDefinition(DatabaseColumn.BackwardsCompatibility, Sql.Text, string.Empty);
+                database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd);
+
+                ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
+                ctww.Columns.Add(new ColumnTuple(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatible));
                 database.Update(DBTables.ImageSet, ctww);
             }
         }

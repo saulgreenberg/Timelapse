@@ -368,7 +368,8 @@ namespace Timelapse.Dialog
             {
                 if (sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.Ok ||
                     sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion ||
-                    sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent)
+                    sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent) 
+                    //|| sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.IncompatibleVersion)
                 {
                     p1.Inlines.Add($"   \u2713 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}");
                 }
@@ -464,6 +465,11 @@ namespace Timelapse.Dialog
                     b1.Click += InvokeErrorExplanation_Click;
                     return new Tuple<string, Button>("The file's template is incompatible due to folder-level differences.", b1);
 
+                case DatabaseFileErrorsEnum.IncompatibleVersion:
+                    b1.Tag = DatabaseFileErrorsEnum.IncompatibleVersion;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file's data is incompatible with the version of Timelapse you are using.", b1);
+
                 default:
                     return new Tuple<string, Button>("Unknown error", null);
             }
@@ -485,6 +491,11 @@ namespace Timelapse.Dialog
                     case DatabaseFileErrorsEnum.PreVersion2300:
                     case DatabaseFileErrorsEnum.UTCOffsetTypeExistsInUpgradedVersion:
                         Dialogs.MergeErrorDatabaseFileNeedsToBeUpdatedDialog(this);
+                        break;
+
+                    // Incomatible .ddb version
+                    case DatabaseFileErrorsEnum.IncompatibleVersion:
+                        Dialogs.DatabaseFileOpenedWithIncompatibleVersionOfTimelapse(this);
                         break;
 
                     // File in a non-permitted place

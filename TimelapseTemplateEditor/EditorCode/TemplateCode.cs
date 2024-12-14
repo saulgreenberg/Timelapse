@@ -78,11 +78,11 @@ namespace TimelapseTemplateEditor
                 string timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
                 if (VersionChecks.IsVersion1GreaterThanVersion2(timelapseCurrentVersionNumber, TemplateGetVersionCompatability(templateDatabase.Database)))
                 {
-                    templateDatabase.UpdateVersionNumber(VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
+                    templateDatabase.SetTemplateVersionCompatibility(VersionChecks.GetTimelapseCurrentVersionNumber().ToString());
                 }
 
                 // Set the standard being used, if any. This avoids excessive calls to the database
-                this.standardType = templateDatabase.TemplateGetStandard();
+                this.standardType = templateDatabase.GetTemplateStandard();
             }
             
             // Update the UI states
@@ -209,10 +209,10 @@ namespace TimelapseTemplateEditor
         {
             if (db.TableExists(DBTables.TemplateInfo))
             {
-                DataTable table = db.GetDataTableFromSelect(Sql.Select + DatabaseColumn.VersionCompatabily + Sql.From + DBTables.TemplateInfo);
+                DataTable table = db.GetDataTableFromSelect(Sql.Select + DatabaseColumn.VersionCompatibility + Sql.From + DBTables.TemplateInfo);
                 if (table.Rows.Count > 0)
                 {
-                    return (string)table.Rows[0][DatabaseColumn.VersionCompatabily];
+                    return (string)table.Rows[0][DatabaseColumn.VersionCompatibility];
                 }
             }
             return VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
