@@ -233,17 +233,20 @@ namespace Timelapse.Util
 
                         // Test: Get the BackwardsCompatibility value and test if the current version is compatible with it
                         string backwardsCompatibilityQuery = Sql.Select + DatabaseColumn.BackwardsCompatibility + Sql.From + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + Sql.Equal + Sql.Quote(DatabaseValues.ImageSetRowID.ToString());
-                        table = db.GetDataTableFromSelect(backwardsCompatibilityQuery);
-                        if (table.Rows.Count > 0)
+                        if (db.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BackwardsCompatibility))
                         {
-                            string databaseBackwardsCompatibilityVersion = (string)table.Rows[0][DatabaseColumn.BackwardsCompatibility];
-                            // Now just check to see if we are opening the .ddb file with an older version of Timelapse that last opened it...
-                            if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseExecutableCurrentVersionNumber, databaseBackwardsCompatibilityVersion))
+                            table = db.GetDataTableFromSelect(backwardsCompatibilityQuery);
+                            if (table.Rows.Count > 0)
                             {
-                                return DatabaseFileErrorsEnum.Ok;
-                            }
+                                string databaseBackwardsCompatibilityVersion = (string)table.Rows[0][DatabaseColumn.BackwardsCompatibility];
+                                // Now just check to see if we are opening the .ddb file with an older version of Timelapse that last opened it...
+                                if (VersionChecks.IsVersion1GreaterOrEqualToVersion2(timelapseExecutableCurrentVersionNumber, databaseBackwardsCompatibilityVersion))
+                                {
+                                    return DatabaseFileErrorsEnum.Ok;
+                                }
 
-                            return DatabaseFileErrorsEnum.IncompatibleVersion;
+                                return DatabaseFileErrorsEnum.IncompatibleVersion;
+                            }
                         }
                         // We couldn't get the backwards compatibility column, so just check it against the 2.3.0.0
                         // (as we know that databases between 2.3.2.0 and 2.3.2.5 are compatible)
