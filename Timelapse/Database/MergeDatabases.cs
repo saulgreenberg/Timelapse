@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Media.Animation;
 using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.Enums;

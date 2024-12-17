@@ -2342,9 +2342,9 @@ namespace Timelapse.Dialog
                     What = $"You are using an old incompatible version of the Timelapse program to open this image set.{Environment.NewLine}"
                            + "To open this image set, you must update Timelapse to the latest version.",
                     Reason =  $"This image set was previously opened by a later version of Timelapse, which updated{Environment.NewLine}" +
-                              $"your files in a way that is no longer compatible with the version of Timelapse you are using.",
+                              "your files in a way that is no longer compatible with the version of Timelapse you are using.",
 
-                    Solution = $"Go to the Timelapse web site, download the new version, and try again." + Environment.NewLine
+                    Solution = $"Go to the Timelapse web site, download the new version, and try again.{Environment.NewLine}"
                                         + "\u2022 https://timelapse.ucalgary.ca",
                     Icon = MessageBoxImage.Error,
                     Hint = "Its always best to use the latest Timelapse version to minimize any incompatabilities."

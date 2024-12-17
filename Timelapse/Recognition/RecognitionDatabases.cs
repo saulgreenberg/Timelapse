@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-using System.Windows.Controls;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
