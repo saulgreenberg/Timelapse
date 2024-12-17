@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using System.Windows.Controls;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
@@ -84,12 +85,15 @@ namespace Timelapse.Recognition
                 new SchemaColumnDefinition(DetectionColumns.Category,  Sql.StringType),
                 new SchemaColumnDefinition(DetectionColumns.Conf,  Sql.Real),
                 new SchemaColumnDefinition(DetectionColumns.BBox,  Sql.StringType), // Will need to parse it into new new double[4]
-                new SchemaColumnDefinition(DetectionColumns.FrameNumber, Sql.IntegerType),
-                new SchemaColumnDefinition(DetectionColumns.FrameRate, Sql.RealType),
+                //new SchemaColumnDefinition(DetectionColumns.FrameNumber, Sql.IntegerType),
+                //new SchemaColumnDefinition(DetectionColumns.FrameRate, Sql.RealType),
                 new SchemaColumnDefinition(DetectionColumns.ImageID, Sql.IntegerType), // Foreign key: ImageID
                 new SchemaColumnDefinition("FOREIGN KEY ( " + DetectionColumns.ImageID + " )", "REFERENCES " + DBTables.FileData + " ( " + DetectionColumns.ImageID + " ) " + " ON DELETE CASCADE "),
             };
             database.CreateTable(DBTables.Detections, columnDefinitions);
+
+            // Detections Video
+            RecognitionDatabases.CreateDetectionsVideoTable(database);
 
             // Classifications 
             columnDefinitions = new List<SchemaColumnDefinition>
@@ -101,6 +105,20 @@ namespace Timelapse.Recognition
                 new SchemaColumnDefinition("FOREIGN KEY ( " + ClassificationColumns.DetectionID + " )", "REFERENCES " + DBTables.Detections + " ( " + ClassificationColumns.DetectionID + " ) " + " ON DELETE CASCADE "),
             };
             database.CreateTable(DBTables.Classifications, columnDefinitions);
+        }
+
+        // This is its own method as we also invoke it elsewhere
+        public static void CreateDetectionsVideoTable(SQLiteWrapper database)
+        {
+            // Detections Video
+            List<SchemaColumnDefinition> columnDefinitions = new List<SchemaColumnDefinition>()
+            {
+                new SchemaColumnDefinition(DetectionColumns.FrameNumber, Sql.IntegerType),
+                new SchemaColumnDefinition(DetectionColumns.FrameRate, Sql.RealType),
+                new SchemaColumnDefinition(DetectionColumns.DetectionID, Sql.IntegerType), // Foreign key: DetectionID
+                new SchemaColumnDefinition("FOREIGN KEY ( " + DetectionColumns.DetectionID + " )", "REFERENCES " + DBTables.Detections + " ( " + DetectionColumns.DetectionID + " ) " + " ON DELETE CASCADE "),
+            };
+            database.CreateTable(DBTables.DetectionsVideo, columnDefinitions);
         }
         #endregion
 
@@ -115,7 +133,14 @@ namespace Timelapse.Recognition
             if (clearInfo) detectionTables.Add(DBTables.Info);
             if (clearDetectionCategories) detectionTables.Add(DBTables.DetectionCategories);
             if (clearClassificationCategories) detectionTables.Add(DBTables.ClassificationCategories);
-            if (clearDetections) detectionTables.Add(DBTables.Detections);
+            if (clearDetections)
+            {
+                // When we clear Detections, DetectionsVideo should also be cleared.
+                // Even though it would be done anyways as it maintains a foreign key to the DetectionsID,I think this is more efficient.
+                detectionTables.Add(DBTables.DetectionsVideo);
+                detectionTables.Add(DBTables.Detections);
+
+            }
             if (clearClassifications) detectionTables.Add(DBTables.Classifications);
 
             if (detectionTables.Count > 0)
@@ -223,6 +248,7 @@ namespace Timelapse.Recognition
                 long detectionIndex = startDetectionID;
                 long classificationIndex = startClassificationID;
                 List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
+                List<List<ColumnTuple>> detectionVideoInsertionStatements = new List<List<ColumnTuple>>();
                 List<List<ColumnTuple>> classificationInsertionStatements = new List<List<ColumnTuple>>();
 
                 // Get a data table containing the ID, RelativePath, and File
@@ -322,7 +348,10 @@ namespace Timelapse.Recognition
 
                                 // Note: The ColumnTuple for floats (i.e., detection.conf) takes care of writing
                                 // floats in invariant culture format (so ',' decimal separators are avoided)
-                                List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
+                                if (Util.IsCondition.IsJPGExtension(image.file))
+                                {
+                                    // Its an image. Always add the detection
+                                    List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
                                     {
                                         new ColumnTuple(DetectionColumns.DetectionID, detection.detectionID),
                                         new ColumnTuple(DetectionColumns.ImageID, image.imageID),
@@ -330,23 +359,31 @@ namespace Timelapse.Recognition
                                         new ColumnTuple(DetectionColumns.Conf, detection.conf),
                                         new ColumnTuple(DetectionColumns.BBox, bboxAsString),
                                     };
-
-                                if (false == Util.IsCondition.IsJPGExtension(image.file))
-                                {
-                                    // If its a video (i.e., not a jpg or jpeg), then insert the detection's video frame rate and frame number info.
-                                    // Otherwise these fields will be null for images in the DB
-                                    // Note that while frame rate is redundant as it would be the same for all detections in the video, the 
-                                    // database only has recognition tables for detections
-                                    // Implementation note: We could have frame rate be a column in the datatable,
-                                    // but that is too much to change, and wouldn't be relevant anyways for data sets that don't use detections.
-                                    // Another approach would be to maintain an imageRecognition table that points to the detections, but that also
-                                    // adds complexity.
-                                    detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.FrameNumber, detection.frame_number));
-                                    detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.FrameRate, image.frame_rate));
+                                    detectionInsertionStatements.Add(detectionColumnsToUpdate);
                                 }
+                                else if (detection.frame_number >= 0 && null != image.frame_rate && image.frame_rate > 0)
+                                {
+                                    // Its an video with a valid frame_rate/frame_number.
+                                    // Note that the detection and its corresponding detectionVideo is omitted if the frame_rate/frame_number is not valid
+                                    List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
+                                    {
+                                        new ColumnTuple(DetectionColumns.DetectionID, detection.detectionID),
+                                        new ColumnTuple(DetectionColumns.ImageID, image.imageID),
+                                        new ColumnTuple(DetectionColumns.Category, detection.category),
+                                        new ColumnTuple(DetectionColumns.Conf, detection.conf),
+                                        new ColumnTuple(DetectionColumns.BBox, bboxAsString),
+                                    };
+                                    detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
-                                detectionInsertionStatements.Add(detectionColumnsToUpdate);
-
+                                    // Now add the frame rate/frame number to the DetectionsVideo table
+                                    List<ColumnTuple> detectionVideoColumnsToUpdate = new List<ColumnTuple>
+                                    {
+                                        new ColumnTuple(DetectionColumns.FrameNumber, detection.frame_number),
+                                        new ColumnTuple(DetectionColumns.FrameRate, image.frame_rate),
+                                        new ColumnTuple(DetectionColumns.DetectionID, detection.detectionID)
+                                    };
+                                    detectionVideoInsertionStatements.Add(detectionVideoColumnsToUpdate);
+                                }
 
                                 // If the detection has some classification info, then add that to the classifications data table
                                 foreach (Object[] classification in detection.classifications)
@@ -381,6 +418,7 @@ namespace Timelapse.Recognition
                     }
                 }
                 detectionDB.Insert(DBTables.Detections, detectionInsertionStatements, progress, "Adding detections", 1000);
+                detectionDB.Insert(DBTables.DetectionsVideo, detectionVideoInsertionStatements, progress, "Adding detections for Video", 1000);
                 detectionDB.Insert(DBTables.Classifications, classificationInsertionStatements, progress, "Adding classifications", 1000);
                 fileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
                 dataTable?.Dispose();

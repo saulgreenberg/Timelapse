@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -174,8 +175,7 @@ namespace Timelapse.Dialog
                     string relativePathDifference =
                         FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
                     sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb,
-                            sourceFileInfo.FullPath, relativePathDifference);
+                        MergeDatabases.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb, relativePathDifference);
                     if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if the templates are problematic
@@ -184,8 +184,7 @@ namespace Timelapse.Dialog
 
                     // Remove the metadata entries from the destination ddb.
                     sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.RemoveMetadataEntriesFromDestinationDdbMatchingPath(destinationDdb,
-                            sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
+                        MergeDatabases.RemoveMetadataEntriesFromDestinationDdbMatchingPath(destinationDdb, relativePathDifference, levelsToIgnore);
                     if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if the templates are problematic
@@ -193,9 +192,7 @@ namespace Timelapse.Dialog
                     }
 
                     // e. Do the merge
-                    bool mergingFromEarlierDetectionTable = false == sourceDdb.SchemaIsColumnInTable(Constant.DBTables.Detections, Constant.DetectionColumns.FrameRate);
-                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(
-                        destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore, mergingFromEarlierDetectionTable);
+                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
                 }
                 return selectedSourceDdbFiles;
 

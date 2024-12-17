@@ -147,6 +147,7 @@ namespace Timelapse
         public const string TypeEqualsIndex = TypeEquals + " 'index' ";
         public const string UnionAll = " UNION ALL";
         public const string Update = " UPDATE ";
+        public const string Using = " USING ";
         public const string Values = " VALUES ";
         public const string When = " WHEN ";
         public const string Where = " WHERE ";
@@ -406,6 +407,7 @@ namespace Timelapse
         /// <returns>Detections.Category = detectionCategory</returns>
         public static string DetectionCategoryEqualsDetectionCategory(string detectionCategory)
         {
+            // TODO DetectionsVideo
             return DBTables.Detections + "." + DetectionColumns.Category + Sql.Equal + detectionCategory;
         }
 

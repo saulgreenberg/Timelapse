@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.Enums;
@@ -40,9 +41,7 @@ namespace Timelapse.Database
 
             // Create the empty database based on the provided template
             CommonDatabase templateDatabase = tupleResult.Item2;
-            FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationDdbPath, templateDatabase)
-                .ConfigureAwait(true);
-
+            FileDatabase fd = await FileDatabase.CreateEmptyDatabase(destinationDdbPath, templateDatabase).ConfigureAwait(true);
             fd.Dispose();
             // ReSharper disable once RedundantAssignment
             fd = null;
@@ -217,6 +216,7 @@ namespace Timelapse.Database
         #region Checkout a relative path database
         public static void CheckoutDatabaseWithRelativePath(FileDatabase sourceDdbFileDatabase, string sourceDdbPath, string destinationDdbPath, string relativePath)
         {
+            // TODO DetectionsVideo
             SQLiteWrapper destinationDdb = new SQLiteWrapper(destinationDdbPath);
             SQLiteWrapper sourceDdb = sourceDdbFileDatabase.Database;
 
@@ -241,9 +241,7 @@ namespace Timelapse.Database
             // Note that the two classification tables are only included in the checkout process if there is something in them
             if (sourceDdb.TableExists(DBTables.Detections))
             {
-                query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine;
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
-
                 bool checkoutClassificationsTable = sourceDdb.TableExistsAndNotEmpty(DBTables.Classifications);
                 bool checkoutClassificationCategoriesTable = sourceDdb.TableExistsAndNotEmpty(DBTables.Classifications);
                 query += QueryCheckoutRecognitionTables(attachedSourceDB, relativePath, checkoutClassificationsTable, checkoutClassificationCategoriesTable) + Environment.NewLine;
@@ -380,6 +378,7 @@ namespace Timelapse.Database
         //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
         private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationsTable, bool checkoutClassificationCategoriesTable)
         {
+            // TODO DetectionsVideo
             string attachedDataTable = attachedSourceDB + Sql.Dot + DBTables.FileData;
 
             // Copy the Detections table matching the ids and relative paths
@@ -397,6 +396,12 @@ namespace Timelapse.Database
                            + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
             queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.Detections, tmpDetections) + Environment.NewLine;
 
+            string tmpDetectionsVideo = "tmpDetectionsVideos";
+            string attachedDetectionsVideos = attachedSourceDB + Sql.Dot + DBTables.DetectionsVideo;
+            queryPhrase += Sql.CreateTemporaryTable + tmpDetectionsVideo + Sql.As
+                + Sql.Select + DetectionColumns.FrameNumber + Sql.Comma + DetectionColumns.FrameRate + Sql.Comma + DetectionColumns.DetectionID + Sql.From + attachedDetectionsVideos
+                + Sql.Join + tmpDetections  + Sql.Using + Sql.OpenParenthesis + DetectionColumns.DetectionID + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
+            queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tmpDetectionsVideo) + Environment.NewLine;
 
             // Copy the Detection Categories table
             queryPhrase += QueryCheckoutCopyCompleteTable("tmpDetectionCategories", DBTables.DetectionCategories, attachedSourceDB);
@@ -450,7 +455,7 @@ namespace Timelapse.Database
                 createTableWithSchema = Regex.Replace(createTableWithSchema, @"CREATE .*\(", $"CREATE TABLE {destLevelTableName} (", RegexOptions.IgnoreCase);
                 queryPhrase += createTableWithSchema + Sql.Semicolon + Environment.NewLine;
             }
-            
+
             // The source database should already be attached by previous calls, named attachedSourceDB.
             // Populate the just created table with the contents of the old table that match the relative path
             // and then trim the relative path to remove unneeded levels
@@ -472,7 +477,6 @@ namespace Timelapse.Database
         // - the templates match
         public static DatabaseFileErrorsEnum RemoveEntriesFromDestinationDdbMatchingPath(
         SQLiteWrapper destinationDdb,
-        string sourceDdbPath,
         string relativePathDifference)
         {
             // Delete entries from the DataTable whose RelativePath begins with the (folder) path from the root folder.
@@ -496,16 +500,11 @@ namespace Timelapse.Database
                 destinationDdb.Delete(DBTables.Markers, idClauses);
                 // Debug.Print($"Ddb deleted {idClauses.Count} entries in the folder {relativePathDifference}");
             }
-            //else
-            //{
-            //    Debug.Print($"Ddb does not reference the folder: {relativePathDifference}. Nothing deleted");
-            //}
             return DatabaseFileErrorsEnum.Ok;
         }
 
         public static DatabaseFileErrorsEnum RemoveMetadataEntriesFromDestinationDdbMatchingPath(
             SQLiteWrapper destinationDdb,
-            string sourceDdbPath,
             string relativePathDifference, int levelsToIgnore)
         {
             // For each levels table in the destination...
@@ -546,9 +545,8 @@ namespace Timelapse.Database
         public static DatabaseFileErrorsEnum MergeSourceIntoDestinationDdb(
             SQLiteWrapper destinationDdb,
             string sourceDdbPath,
-            string relativePathDifference, int levelsToIgnore, bool mergingFromEarlierDetectionTable)
+            string relativePathDifference, int levelsToIgnore)
         {
-
             // a. We need several temporary tables 
             string attachedSourceDB = "attachedSourceDB";
             string tempDataTable = "tempDataTable";
@@ -556,6 +554,9 @@ namespace Timelapse.Database
 
             // Part 1. Initiate the query phrase with a transaction
             string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
+
+            // Turn Foreign keys off for this transaction as we will be clearing and updating tables with foreign keys.
+            query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine; 
 
             // Part 2. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
             //    This will guarantee that there are no duplicate primary keys.
@@ -588,7 +589,9 @@ namespace Timelapse.Database
             if (updateRecognitions)
             {
                 query = resultTuple.Item2;
-                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist, mergingFromEarlierDetectionTable);
+
+                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist);
+
             }
 
             // Part 7. Now update the various MetadataTables if and as needed
@@ -612,18 +615,25 @@ namespace Timelapse.Database
             }
 
             // Part 8. The query is now done, so end the transaction and execute it
+            // Turn Foreign keys back on again
+            query += Sql.PragmaForeignKeysOn + Sql.Semicolon + Environment.NewLine;
             query += Sql.EndTransactionSemiColon;
+
+
             destinationDdb.ExecuteNonQuery(query);
 
             // Part 9. Check if there are any Detections. If not, delete all the recognition tables as they are no longer relevant
             if (destinationDdb.TableExistsAndEmpty(DBTables.Detections))
             {
+
                 destinationDdb.DropTable(DBTables.Detections);
+                destinationDdb.DropTable(DBTables.DetectionsVideo);
                 destinationDdb.DropTable(DBTables.Classifications);
                 destinationDdb.DropTable(DBTables.DetectionCategories);
                 destinationDdb.DropTable(DBTables.ClassificationCategories);
                 destinationDdb.DropTable(DBTables.Info);
             }
+            FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists(destinationDdb);
             return DatabaseFileErrorsEnum.Ok;
         }
 
@@ -1035,10 +1045,11 @@ namespace Timelapse.Database
 
         // The database to merge in has recognitions, so the SQL query should update the detections table and (if needed) the recognition table.
         private static string QueryPhraseMergeRecognitionTables(long offsetId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, bool destinationRecognitionsExist, bool mergingFromEarlierDetectionTable)
+            string attachedSourceDB, bool destinationRecognitionsExist)
         {
             string query = string.Empty;
             string tempDetectionsTable = "tempDetectionsTable";
+            string tempDetectionsVideoTable = "tempDetectionVideoTable";
             string tempClassificationsTable = "tempClassificationsTable";
 
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
@@ -1047,6 +1058,7 @@ namespace Timelapse.Database
                 ? destinationDdb.ScalarGetMaxValueAsLong(DBTables.Detections, DetectionColumns.DetectionID)
                 : 0;
 
+            // Update the Detections table, including adjusting the ID and DetectionID offset as needed
             query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, DBTables.Detections) + Environment.NewLine;
             if (offsetId > 0)
             {
@@ -1056,21 +1068,17 @@ namespace Timelapse.Database
             {
                 query += QueryAddOffsetToIDInTable(tempDetectionsTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
+            query += QueryInsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
 
-            if (mergingFromEarlierDetectionTable)
+            // Now update the DetectionsVideo table, including adjusting the DetectionID offset as needed
+            query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsVideoTable, attachedSourceDB, DBTables.DetectionsVideo) + Environment.NewLine;
+            if (offsetDetectionId > 0)
             {
-                // Backwards compatability repair, when merging a pre-2.3.2.5 created detection table
-                // Those detection tables do not have frame_rate and frame_number columns, so we have to create some null column placeholders to fake this, as otherwise the query will fail.
-                query += $"{Sql.InsertInto} {DBTables.Detections}  {Sql.Select} {Constant.DetectionColumns.DetectionID}, {Constant.DetectionColumns.Category}, {Constant.DetectionColumns.Conf}, {Constant.DetectionColumns.BBox}, " +
-                         $"{Sql.NullAsPlaceHolder}, {Sql.NullAsPlaceHolder}, {Constant.DatabaseColumn.ID} {Sql.From} {tempDetectionsTable}" +
-                         $"{Sql.Semicolon} {Environment.NewLine}";
+                query += QueryAddOffsetToIDInTable(tempDetectionsVideoTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
-            else
-            {
-                query += QueryInsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
-            }
+            query += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable) + Environment.NewLine; ;
 
-            // Similar to the above, we also update the classifications
+            // Update the classifications table, , including adjusting the ID and DetectionID offset as needed
             // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???
             long offsetClassificationId = (destinationRecognitionsExist)
                 ? destinationDdb.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID)

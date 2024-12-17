@@ -734,7 +734,7 @@ namespace Timelapse.Database
                 CreateEmptyMetadataTablesIfNeeded();
 
                 // If the Detections Table is missing the frame_number column, add it.
-                AddFrameNumberFrameRateColumnsToDetectionsTableIfNeeded(Database);
+                AddDetectionsVideoTableIfNeeded(Database);
 
                 // See pre-2.2.2.5 version for example code
             }).ConfigureAwait(true);
@@ -1788,11 +1788,15 @@ namespace Timelapse.Database
         // Refresh the Detections DataTable (sync and async)
         public void RefreshDetectionsDataTable()
         {
-            detectionDataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.Detections);
+            // This query joins all Detections and DetectionsVideo into a single table. If there is no corresponding DetectionsVideo entry, frame rate / number will be null
+            string query = $"{Sql.SelectStarFrom} {DBTables.Detections} {Sql.LeftJoin} {DBTables.DetectionsVideo} {Sql.Using} {Sql.OpenParenthesis} {DetectionColumns.DetectionID} {Sql.CloseParenthesis}";
+            detectionDataTable = Database.GetDataTableFromSelect(query);
         }
         public async Task RefreshDetectionsDataTableAsync()
         {
-            detectionDataTable = await Database.GetDataTableFromSelectAsync(Sql.SelectStarFrom + DBTables.Detections);
+            // This query joins all Detections and DetectionsVideo into a single table. If there is no corresponding DetectionsVideo entry, frame rate / number will be null
+            string query = $"{Sql.SelectStarFrom} {DBTables.Detections} {Sql.LeftJoin} {DBTables.DetectionsVideo} {Sql.Using} {Sql.OpenParenthesis} {DetectionColumns.DetectionID} {Sql.CloseParenthesis}";
+            detectionDataTable = await Database.GetDataTableFromSelectAsync(query);
         }
 
         // Refresh the Classifications DataTable (sync and async)
@@ -2442,7 +2446,18 @@ namespace Timelapse.Database
         public void IndexCreateForDetectionsAndClassificationsIfNotExists()
         {
             Database.IndexCreateIfNotExists(DatabaseValues.IndexID, DBTables.Detections, DatabaseColumn.ID);
+            // Even though DetectionsVideo has foreign key relation to Detections, we create an index as its not done automatically.
+            Database.IndexCreateIfNotExists(DatabaseValues.IndexDetectionVideoID, DBTables.DetectionsVideo, DetectionColumns.DetectionID);
             Database.IndexCreateIfNotExists(DatabaseValues.IndexClassificationID, DBTables.Classifications, DetectionColumns.DetectionID);
+        }
+
+        // static version of the above
+        public static void IndexCreateForDetectionsAndClassificationsIfNotExists(SQLiteWrapper database)
+        {
+            database.IndexCreateIfNotExists(DatabaseValues.IndexID, DBTables.Detections, DatabaseColumn.ID);
+            // Even though DetectionsVideo has foreign key relation to Detections, we create an index as its not done automatically.
+            database.IndexCreateIfNotExists(DatabaseValues.IndexDetectionVideoID, DBTables.DetectionsVideo, DetectionColumns.DetectionID);
+            database.IndexCreateIfNotExists(DatabaseValues.IndexClassificationID, DBTables.Classifications, DetectionColumns.DetectionID);
         }
 
         public void IndexCreateForFileAndRelativePathIfNotExists()
@@ -2894,44 +2909,9 @@ namespace Timelapse.Database
             ImageSet = new ImageSetRow(imageSetTable.Rows[0]);
             imageSetTable.Dispose();
         }
-
-        // Try getting the version number as recorded in the ImageSet datatable.
-        // ReSharper disable once UnusedMember.Local
-        private bool TryGetImageSetVersionNumber(out string versionNumber, bool forceUpdate)
-        {
-            versionNumber = string.Empty;
-            if (Database == null)
-            {
-                // The database hasn't been loaded yet
-                return false;
-            }
-
-            if (ImageSet == null || forceUpdate)
-            {
-                // The image set hasn't been loaded yet, so try to load it
-                ImageSetLoadFromDatabase();
-            }
-            if (false == Database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.VersionCompatibility))
-            {
-                // As there is no version column, this must be a really early version.
-                // Return some very low number, which should trigger most checks and updates
-                versionNumber = DatabaseValues.VersionNumberMinimum;
-                return true;
-            }
-
-            if (ImageSet == null)
-            {
-                // This shouldn't happen
-                TracePrint.NullException(nameof(ImageSet));
-                versionNumber = DatabaseValues.VersionNumberMinimum;
-                return true;
-            }
-            versionNumber = ImageSet.VersionCompatability;
-            return true;
-        }
         #endregion
 
-        #region DETECTION - Populate the Database (with progress bar)
+        #region Detections - Populate the Database (with progress bar)
         // To help determine periodic updates to the progress bar 
         private DateTime lastRefreshDateTime = DateTime.Now;
         public bool ReadyToRefresh()
@@ -3455,7 +3435,7 @@ namespace Timelapse.Database
         }
 
         // Get the detections associated with the current file, if any
-        // As part of the, create a DetectionTable in memory that mirrors the database table
+        // As part of this, create a DetectionTable in memory that mirrors the database table
         public DataRow[] GetDetectionsFromFileID(long fileID)
         {
             if (detectionDataTable == null)

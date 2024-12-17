@@ -25,7 +25,7 @@ namespace Timelapse.Database
     {
         // A connection string identifying the  database file. Takes the form:
         // "Data Source=filepath" 
-        public string connectionString { get; }
+        public string ConnectionString { get; }
         public string FilePath { get; }
         #region Constructor
         /// <summary>
@@ -45,7 +45,7 @@ namespace Timelapse.Database
                 DateTimeKind = DateTimeKind.Utc,
                 ForeignKeys = true // Enable foreign keys
             };
-            connectionString = connectionStringBuilder.ConnectionString;
+            ConnectionString = connectionStringBuilder.ConnectionString;
             FilePath = inputFile;
         }
         #endregion
@@ -92,6 +92,11 @@ namespace Timelapse.Database
         // Create a single index named indexName if it doesn't already exist
         public void IndexCreateIfNotExists(string indexName, string tableName, string columnNames)
         {
+            if (false == TableExists(tableName))
+            {
+                // We should only create an index if the table actually exists.
+                return;
+            }
             // Form: CREATE INDEX IF NOT EXISTS indexName ON tableName  (column1, column2...);
             string query = Sql.CreateIndex + Sql.IfNotExists + indexName + Sql.On + tableName + Sql.OpenParenthesis + columnNames + Sql.CloseParenthesis;
             ExecuteNonQuery(query);
@@ -141,7 +146,7 @@ namespace Timelapse.Database
             try
             {
                 // Open the connection
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
 
@@ -173,7 +178,7 @@ namespace Timelapse.Database
                 try
                 {
                     // Open the connection
-                    using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                    using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                     {
                         connection.Open();
 
@@ -257,7 +262,7 @@ namespace Timelapse.Database
 
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {
-            using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+            using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
             {
                 connection.Open();
                 using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -286,7 +291,7 @@ namespace Timelapse.Database
             // Debug.Print("Scalar: " + query);
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -729,7 +734,7 @@ namespace Timelapse.Database
             }
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     using (SQLiteCommand command = new SQLiteCommand(connection))
@@ -773,7 +778,7 @@ namespace Timelapse.Database
             string mostRecentStatement = null;
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     if (progress != null)
@@ -1016,7 +1021,7 @@ namespace Timelapse.Database
            
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     // Rename the table
@@ -1038,7 +1043,7 @@ namespace Timelapse.Database
             {
                 // Create an empty table with the schema based on columnDefinitions
                 CreateTable(destTable, columnDefinitions);
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
 
@@ -1063,7 +1068,7 @@ namespace Timelapse.Database
             try
             {
                 // Open the connection
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     using (SQLiteDataReader reader = GetSchema(connection, tableName))
@@ -1091,7 +1096,7 @@ namespace Timelapse.Database
             try
             {
                 // Open the connection
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     using (SQLiteDataReader reader = GetSchema(connection, tableName))
@@ -1116,7 +1121,7 @@ namespace Timelapse.Database
         {
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
@@ -1152,7 +1157,7 @@ namespace Timelapse.Database
 
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
 
@@ -1214,7 +1219,7 @@ namespace Timelapse.Database
 
             try
             {
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     // Some basic error checking to make sure we can do the operation
@@ -1291,7 +1296,7 @@ namespace Timelapse.Database
                 {
                     newColumnName = key.Trim();
                 }
-                using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                 {
                     connection.Open();
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
@@ -1474,7 +1479,7 @@ namespace Timelapse.Database
         /// </summary>
         public void DropTable(string tableName)
         {
-            using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+            using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
             {
                 connection.Open();
                 DropTable(connection, tableName);
@@ -1565,7 +1570,7 @@ namespace Timelapse.Database
                 using (DataTable dataTable = new DataTable())
                 {
                     // Open the connection
-                    using (SQLiteConnection connection = GetNewSqliteConnection(connectionString))
+                    using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
                     {
                         connection.Open();
                         using (SQLiteCommand command = new SQLiteCommand(connection))

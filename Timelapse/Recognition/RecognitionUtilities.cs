@@ -30,6 +30,7 @@ namespace Timelapse.Recognition
                 // There are no detection-based tables in this database
                 return;
             }
+
             using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.Info))
             {
                 Dictionary<string, object> tmpDict = new Dictionary<string, object>();
@@ -55,6 +56,7 @@ namespace Timelapse.Recognition
                     detectionCategoriesDictionary.Add((string)row[DetectionCategoriesColumns.Category], (string)row[DetectionCategoriesColumns.Label]);
                 }
             }
+
             using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationCategories))
             {
                 int dataTableRowCount = dataTable.Rows.Count;

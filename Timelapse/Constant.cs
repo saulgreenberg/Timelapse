@@ -285,6 +285,7 @@ namespace Timelapse.Constant
         public const string IndexRelativePathFile = "IndexRelativePathFile";
         public const string IndexFile = "IndexFile";
         public const string IndexID = "IndexDetectionID";
+        public const string IndexDetectionVideoID = "IndexDetectionVideoID";
         public const string IndexClassificationID = "IndexClassificationID";
 
         // Marker values
@@ -340,6 +341,7 @@ namespace Timelapse.Constant
         public const string ClassificationCategories = "ClassificationCategories";
         public const string Images = "Images";
         public const string Detections = "Detections";
+        public const string DetectionsVideo = "DetectionsVideo";
         public const string Classifications = "Classifications";
     }
 

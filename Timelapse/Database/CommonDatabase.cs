@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -9,6 +8,7 @@ using Timelapse.Constant;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Recognition;
 using Timelapse.Util;
 using ColumnTuple = Timelapse.DataStructures.ColumnTuple;
 using ColumnTuplesWithWhere = Timelapse.DataStructures.ColumnTuplesWithWhere;
@@ -1884,35 +1884,15 @@ namespace Timelapse.Database
             }
         }
 
-        protected static void AddFrameNumberFrameRateColumnsToDetectionsTableIfNeeded(SQLiteWrapper database)
+        protected static void AddDetectionsVideoTableIfNeeded(SQLiteWrapper database)
         {
-            // Backwards compatability: If the frame_number column isn't in the DetectionTable (if that table exists), add it.
-            if (database.TableExists(Constant.DBTables.Detections))
+            // Backwards compatability: If the DetectionTable exists, add an empty DetectionsVideo table.
+            if (database.TableExists(Constant.DBTables.Detections) && false == database.TableExists(Constant.DBTables.DetectionsVideo))
             {
-                if (false == database.SchemaIsColumnInTable(DBTables.Detections, Constant.DetectionColumns.FrameNumber))
-                {
-                    SchemaColumnDefinition scd = new SchemaColumnDefinition(Constant.DetectionColumns.FrameNumber, Sql.IntegerType);
-                    database.SchemaAddColumnToEndOfTable(DBTables.Detections, scd);
-                }
+                RecognitionDatabases.CreateDetectionsVideoTable(database);
 
-                // While frame rate is an attribute of the file that applies to all detections in a file, 
-                // we replicate it in each detection as otherwise we would have to put it in the DataTable, and 
-                // we really don't want to muck with that as that is more or less reserved for tags.
-                if (false == database.SchemaIsColumnInTable(DBTables.Detections, Constant.DetectionColumns.FrameRate))
-                {
-                    SchemaColumnDefinition scd = new SchemaColumnDefinition(Constant.DetectionColumns.FrameRate, Sql.RealType);
-                    database.SchemaAddColumnToEndOfTable(DBTables.Detections, scd);
-                }
-                // Empty frame number/frame rate are currently null. If we want it to some default, do it by uncommenting the code below.
-                //ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
-                //    ctww.Columns.Add(new ColumnTuple(Constant.DetectionColumns.FrameNumber, 0));
-                //    database.Update(DBTables.Detections, ctww);
-                //ColumnTuplesWithWhere ctww = new ColumnTuplesWithWhere();
-                //    ctww.Columns.Add(new ColumnTuple(Constant.DetectionColumns.FrameRate, 0));
-                //    database.Update(DBTables.Detections, ctww);
             }
         }
-
         #endregion
 
         #region Private static Methods: Create tuples defining the standard controls  (File, RelativePath, DateTime, DeleteFlag)

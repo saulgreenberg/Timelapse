@@ -33,6 +33,7 @@ namespace Timelapse
         // where those duplicates may or may not then appear depending on the select and sort criteria
         public async Task DuplicateCurrentRecord(bool useCurrentValues)
         {
+            // TODO DetectionsVideo
             // Get the current image (or the selected image in the thumbnail grid) and duplicate it.
             // Note that this method shouldn't be called as the menueditDuplicate item will be disabled 
             // if the above conditions aren't met, but we check anyways.
