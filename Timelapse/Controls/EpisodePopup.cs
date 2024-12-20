@@ -287,35 +287,11 @@ namespace Timelapse.Controls
 
             if (isVideo)
             {
-                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null, boundingBoxes.InitialVideoFrame, 0);
+                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null, boundingBoxes.InitialVideoFrame);
             }
             else
             {
                 boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null);
-            }
-            return (canvas);
-        }
-        private static Canvas CreateCanvasWithBoundingBoxesAndImage(Image image, double height, int margin, long fileTableID, bool isVideo)
-        {
-            Canvas canvas = new Canvas
-            {
-                Width = image.Source.Width,
-                Height = height,
-                Background = Brushes.Gray
-            };
-            Canvas.SetLeft(image, 0);
-            Canvas.SetTop(image, 0);
-            canvas.Children.Add(image);
-
-            BoundingBoxes boundingBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(fileTableID, isVideo);
-            
-            if (isVideo)
-            {
-                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null, boundingBoxes.InitialVideoFrame, 0);
-            }
-            else
-            {
-                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, margin);
             }
             return (canvas);
         }

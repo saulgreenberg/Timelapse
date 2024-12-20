@@ -80,7 +80,7 @@ namespace Timelapse.Controls
             this.isProgrammaticUpdate = false;
 
             // Initialize the timer that updates the UI to reflect the current video position 
-            this.TimerUpdatePosition = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250.0) };
+            this.TimerUpdatePosition = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(125.0) };
 
             // Rendering initialization
             this.VideoScale = new ScaleTransform(1.0, 1.0);
@@ -332,28 +332,13 @@ namespace Timelapse.Controls
 
                 // Start searching from a frame a half second before the desired one
                 Point vidSize = GetActualVideoSize();
-                int fromFrame = 0;
-                int span = 0;
-                if (this.FrameRate != null)
-                {
-                    span = (int)Math.Floor((decimal)(this.FrameRate / 2.0));
-                    fromFrame = this.FrameToShow - span;
-                    var lastFrame = (int)Math.Floor((decimal)(this.VideoDurationSeconds * this.FrameRate));
-                    //Debug.Print($"{lastFrame}, {lastFrame - span},");
-                    if (fromFrame < 0)
-                    {
-                        fromFrame = 0;
-                    }
-                    else if (fromFrame > lastFrame - 2 * span)
-                    {
-                       span *= 2;
-                       fromFrame -=  span;
-                    }
-                }
+                int frameWindow = this.FrameRate == null 
+                    ? 0
+                    : (int)Math.Floor((decimal)(this.FrameRate / 2.0));
 
                 if (null != this.BoxesForFile)
                 {
-                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, fromFrame);
+                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, frameWindow);
                     if (this.FrameRate != null)
                     {
                         this.FrameToShow = Convert.ToInt32(Math.Ceiling((double)(SliderScrubbing.Value * this.FrameRate)));
@@ -700,81 +685,14 @@ namespace Timelapse.Controls
                 isProgrammaticUpdate = true;
                 // Start searching from a frame a second before the desired one
                 Point vidSize = GetActualVideoSize();
-                int fromFrame = 0;
-                int span = 0;
-                var lastFrame = (int)Math.Floor((decimal)(this.VideoDurationSeconds * this.FrameRate));
-                if (this.FrameRate != null)
-                {
-                    span = (int)Math.Floor((decimal)(this.FrameRate / 2.0));
-                    fromFrame = this.FrameToShow - span;
-                    if (fromFrame < 0)
-                    {
-                        fromFrame = 0;
-                    }
-                    else if (fromFrame > lastFrame - span)
-                    {
-                        span *= 2;
-                    }
-                }
+                int frameWindow = this.FrameRate == null
+                    ? 0
+                    : (int)Math.Floor((decimal)(this.FrameRate / 2.0));
 
                 if (null != this.BoxesForFile)
                 {
                     //Debug.Print($"{this.FrameToShow}, {fromFrame}, {span}");
-                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, fromFrame);
-                    if (this.FrameRate != null)
-                    {
-                        this.FrameToShow = Convert.ToInt32(Math.Ceiling((double)(SliderScrubbing.Value * this.FrameRate)));
-                    }
-
-                    this.DoButtonBestFrameSetBackgroundColor();
-                }
-
-                isProgrammaticUpdate = false;
-            }
-            catch
-            {
-                isProgrammaticUpdate = false;
-            }
-        }
-
-        private void XUpdateBoundingBoxes()
-        {
-            try
-            {
-                this.ClearBoundingBoxes();
-
-                // Update the bounding boxes
-                if (null == this.MediaElement.Source || this.FrameRate == null || this.VideoDurationSeconds <= 0)
-                {
-                    return;
-                }
-
-                // TracePrint.StackTrace("--->", 5);
-
-                isProgrammaticUpdate = true;
-                if (this.FrameToShow < 0 || null == this.FrameRate || this.FrameRate <= 0)
-                {
-                    // Can't process any bounding boxes
-                    isProgrammaticUpdate = false;
-                    return;
-                }
-
-                // Start searching from a frame a second before the desired one
-                Point vidSize = GetActualVideoSize();
-                int fromFrame = 0;
-                if (this.FrameRate != null)
-                {
-
-                    fromFrame = this.FrameToShow - (int)Math.Floor((decimal)this.FrameRate);
-                    if (fromFrame < 0)
-                    {
-                        fromFrame = 0;
-                    }
-                }
-
-                if (null != this.BoxesForFile)
-                {
-                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, fromFrame);
+                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, 0);
                     if (this.FrameRate != null)
                     {
                         this.FrameToShow = Convert.ToInt32(Math.Ceiling((double)(SliderScrubbing.Value * this.FrameRate)));

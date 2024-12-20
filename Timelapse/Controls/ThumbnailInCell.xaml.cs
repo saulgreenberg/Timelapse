@@ -248,7 +248,7 @@ namespace Timelapse.Controls
                     // So we just reset the bounding box to appear over the first (0th) frame. 
                     boundingBoxes.InitialVideoFrame = 0;
                 }
-                boundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight, 0, tg, boundingBoxes.InitialVideoFrame, 0);
+                boundingBoxes.DrawBoundingBoxesInCanvas(bboxCanvas, Image.Width, ImageHeight, 0, tg, boundingBoxes.InitialVideoFrame);
             }
             else
             {
