@@ -58,10 +58,9 @@
         <!--The Actual Video Player-->
         <Canvas Name="VideoCanvas" ClipToBounds="True" Focusable="True" Grid.Row="0" Grid.Column="0">
             <MediaElement Name="MediaElement" 
-                          MediaOpened = "Video_MediaOpened"
-                          Focusable="True"  LoadedBehavior="Manual" ScrubbingEnabled="True" 
                           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,1" 
-                          />
+                          Focusable="True"  
+                          MediaOpened = "Video_MediaOpened"/>
         </Canvas>
         <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center">
             <Grid Margin="0">

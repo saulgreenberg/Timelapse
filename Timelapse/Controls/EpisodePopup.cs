@@ -291,7 +291,7 @@ namespace Timelapse.Controls
             }
             else
             {
-                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null, boundingBoxes.InitialVideoFrame, 0);
+                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null);
             }
             return (canvas);
         }
@@ -363,8 +363,7 @@ namespace Timelapse.Controls
             int height = 480;
             if (sender is Canvas canvas && canvas.Tag != null)
             {
-                ImageRow imageRow = canvas.Tag as ImageRow;
-                if (imageRow == null)
+                if (!(canvas.Tag is ImageRow imageRow))
                 {
                     return;
                 }

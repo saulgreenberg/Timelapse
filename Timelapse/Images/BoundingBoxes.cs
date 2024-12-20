@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ImageProcessor.Imaging.Quantizers.WuQuantizer;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,86 +37,119 @@ namespace Timelapse.Images
         /// <summary>
         /// If detections are turned on, draw all bounding boxes relative to 0,0 and contrained by width and height within the provided
         /// The width/height should be the actual width/height of the image (also located at 0,0) as it appears in the canvas , which is required if the bounding boxes are to be drawn in the correct places
-        /// if the image has a margin, that should be included as well otherwise set it to 0
+        /// If the image has a margin, that should be included as well otherwise set it to 0
         /// The canvas should also be cleared of prior bounding boxes before this is invoked.
+        /// The bounding box to show should be the closest one to the frameToShow within a half second window.
         /// </summary>
 
         // INVOKED FOR VIDEOS
         public bool DrawBoundingBoxesInCanvas(Canvas canvas, double width, double height, int margin, TransformGroup transformGroup, int frameToShow, int fromFrame)
         {
-            if (canvas == null)
-            {
-                return false;
-            }
-
             // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
-            if (GlobalReferences.DetectionsExists == false || GlobalReferences.HideBoundingBoxes || Keyboard.IsKeyDown(Key.H) || null == this.Boxes || this.Boxes.Count == 0)
+            if (canvas == null || GlobalReferences.DetectionsExists == false || GlobalReferences.HideBoundingBoxes || Keyboard.IsKeyDown(Key.H) || null == this.Boxes || this.Boxes.Count == 0)
             {
                 // As detection or boxes don't exist, there won't be any bounding boxes to draw.
                 // Or, if the user doesn't want them displayed, we don't show them. 
                 return false;
             }
 
-            // Max Confidence is over all bounding boxes, regardless of the categories.
-            // So we just use it as a short cut, i.e., if none of the bounding boxes are above the threshold, we can abort.
-            // Also, we add a slight correction value to the MaxConfidence, so confidences near the threshold will still appear.
+            // If the MaxConfidence over all bounding boxes is below the desired confidence threshold for displaying them, there is no point in continuing. 
+            // We do add a slight correction value to the MaxConfidence, so confidences very near the threshold will still appear.
+            // Implementation note: BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
+            // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
+            // show bounding boxes when the confidence is .4 or more.
             double correction = 0.005;
             if (MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
                 MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
             {
-                // Ignore any bounding box that is below the desired confidence threshold for displaying it.
-                // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
-                // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
-                // show bounding boxes when the confidence is .4 or more.
                 return false;
             }
 
+            int toFrame = frameToShow + frameToShow - fromFrame; // Create a symmetrical search window around the desired frame
+
+            // Sort the boxes. Note that its likely that the Boxes are already sorted, so this should be fast.
             List<BoundingBox> sortedBoxes = Boxes.OrderBy(s => s.FrameNumber).ToList();
             List<BoundingBox> lastSeenBoxes = new List<BoundingBox>();
-            int lastRecordedFrameNumber = 0;
-            foreach (BoundingBox bbox in sortedBoxes)
+            int prevIndex = -1;
+            int nextIndex = -1;
+            int currentIndex = 0;
+            int difference = 10000;
+            foreach (BoundingBox box in sortedBoxes)
             {
-                // The last seen box will be either the bounding boxes with a frame number just before desired frame (if no box is defined for the desired frame), or for that frame number
-                if (bbox.FrameNumber > frameToShow)
+                // Find the Bounding box just before or equal to the frameToShow
+                if (box.FrameNumber < fromFrame)
                 {
-                    // Ignore frames after the desired frameToShow
+                    // Skip this, as we haven't reached the frame
+                    currentIndex++;
+                    continue;
+                }
+                if (box.FrameNumber > toFrame)
+                {
                     break;
                 }
-                if (bbox.FrameNumber >= fromFrame) //SAULXX IF WE HAVE MULTIPLE BOUNDING BOXERS INCORRECTLY DISPLAYED,MAYBE IT SHOULD BE > instead of >=
+
+                if (box.FrameNumber <= frameToShow)
                 {
-                    if (bbox.FrameNumber != lastRecordedFrameNumber)
+                    prevIndex = currentIndex;
+                    difference = frameToShow - sortedBoxes[prevIndex].FrameNumber;
+                }
+                else if (box.FrameNumber > frameToShow
+                         && box.FrameNumber - frameToShow < difference)
+                {
+                    nextIndex = currentIndex;
+                    prevIndex = -1;
+                    break;
+                }
+                currentIndex++;
+            }
+
+            if (prevIndex != -1)
+            {
+                int boxFrameNumber = sortedBoxes[prevIndex].FrameNumber;
+                int i = prevIndex;
+                while (true)
+                {
+                    if (i < 0 || sortedBoxes[i].FrameNumber != boxFrameNumber )
                     {
-                        lastSeenBoxes.Clear();
-                        lastRecordedFrameNumber = bbox.FrameNumber;
+                        // We reached the beginning or a box with a frame number that differs
+                        break;
                     }
-                    // Record the frame closest to the desired one, but only if its within the desired confidence limits
-                    if (bbox.Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
-                        bbox.Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+                    // Record the box, but only if its within the desired confidence limits
+                    if (sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+                        sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
                     {
-                        
+                        i--;
+                        continue;
                     }
-                    else
+                    lastSeenBoxes.Add(sortedBoxes[i]);
+                    i--;
+                }
+            }
+            else if (nextIndex != -1)
+            {
+                int boxFrameNumber = sortedBoxes[nextIndex].FrameNumber;
+                int i = nextIndex;
+                int count = sortedBoxes.Count;
+                while (true)
+                {
+                    if (i > count - 1 || sortedBoxes[i].FrameNumber != boxFrameNumber)
                     {
-                        lastSeenBoxes.Add(bbox);
+                        // We reached the end or a box with a frame number that differs
+                        break;
                     }
+                    // Record the box, but only if its within the desired confidence limits
+                    if (sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+                        sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+                    {
+                        i++;
+                        continue;
+                    }
+                    lastSeenBoxes.Add(sortedBoxes[i]);
+                    i++;
                 }
             }
 
-            if (lastSeenBoxes.Count == 0)
-            {
-                // no frame found with a bounding box in the specified region
-                return false;
-            }
-            //if ((currentBoxes.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
-            //    (currentBoxes.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
-            //{
-            //    // Ignore any bounding box that is below the desired confidence threshold for displaying it.
-            //    // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
-            //    // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
-            //    // show bounding boxes when the confidence is .4 or more.
-            //    return false;
-            //}
-            foreach(BoundingBox bbox in lastSeenBoxes)
+            foreach (BoundingBox bbox in lastSeenBoxes)
             {
                 // Debug.Print($"Drawing frame {bbox.FrameNumber} DesiredFrame:{frameToShow}  EarliestFrame{fromFrame}");
                 DoDrawBoundingBox(canvas, bbox, width, height, margin, transformGroup);
@@ -122,7 +157,93 @@ namespace Timelapse.Images
 
             Panel.SetZIndex(canvas, 1);
             return true;
+
         }
+
+        // THIS IS THE OLDER ONE SECOND WINDOW VERSION - TO BE DELETED
+        //public bool XDrawBoundingBoxesInCanvas(Canvas canvas, double width, double height, int margin, TransformGroup transformGroup, int frameToShow, int fromFrame)
+        //{
+        //    if (canvas == null)
+        //    {
+        //        return false;
+        //    }
+
+        //    // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
+        //    if (GlobalReferences.DetectionsExists == false || GlobalReferences.HideBoundingBoxes || Keyboard.IsKeyDown(Key.H) || null == this.Boxes || this.Boxes.Count == 0)
+        //    {
+        //        // As detection or boxes don't exist, there won't be any bounding boxes to draw.
+        //        // Or, if the user doesn't want them displayed, we don't show them. 
+        //        return false;
+        //    }
+
+        //    // Max Confidence is over all bounding boxes, regardless of the categories.
+        //    // So we just use it as a short cut, i.e., if none of the bounding boxes are above the threshold, we can abort.
+        //    // Also, we add a slight correction value to the MaxConfidence, so confidences near the threshold will still appear.
+        //    double correction = 0.005;
+        //    if (MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+        //        MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+        //    {
+        //        // Ignore any bounding box that is below the desired confidence threshold for displaying it.
+        //        // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
+        //        // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
+        //        // show bounding boxes when the confidence is .4 or more.
+        //        return false;
+        //    }
+
+        //    List<BoundingBox> sortedBoxes = Boxes.OrderBy(s => s.FrameNumber).ToList();
+        //    List<BoundingBox> lastSeenBoxes = new List<BoundingBox>();
+        //    int lastRecordedFrameNumber = 0;
+        //    foreach (BoundingBox bbox in sortedBoxes)
+        //    {
+        //        // The last seen box will be either the bounding boxes with a frame number just before desired frame (if no box is defined for the desired frame), or for that frame number
+        //        if (bbox.FrameNumber > frameToShow)
+        //        {
+        //            // Ignore frames after the desired frameToShow
+        //            break;
+        //        }
+        //        if (bbox.FrameNumber >= fromFrame) //SAULXX IF WE HAVE MULTIPLE BOUNDING BOXERS INCORRECTLY DISPLAYED,MAYBE IT SHOULD BE > instead of >=
+        //        {
+        //            if (bbox.FrameNumber != lastRecordedFrameNumber)
+        //            {
+        //                lastSeenBoxes.Clear();
+        //                lastRecordedFrameNumber = bbox.FrameNumber;
+        //            }
+        //            // Record the frame closest to the desired one, but only if its within the desired confidence limits
+        //            if (bbox.Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+        //                bbox.Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+        //            {
+                        
+        //            }
+        //            else
+        //            {
+        //                lastSeenBoxes.Add(bbox);
+        //            }
+        //        }
+        //    }
+
+        //    if (lastSeenBoxes.Count == 0)
+        //    {
+        //        // no frame found with a bounding box in the specified region
+        //        return false;
+        //    }
+        //    //if ((currentBoxes.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+        //    //    (currentBoxes.Confidence + correction) < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+        //    //{
+        //    //    // Ignore any bounding box that is below the desired confidence threshold for displaying it.
+        //    //    // Note that the BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
+        //    //    // determined in the select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
+        //    //    // show bounding boxes when the confidence is .4 or more.
+        //    //    return false;
+        //    //}
+        //    foreach(BoundingBox bbox in lastSeenBoxes)
+        //    {
+        //        // Debug.Print($"Drawing frame {bbox.FrameNumber} DesiredFrame:{frameToShow}  EarliestFrame{fromFrame}");
+        //        DoDrawBoundingBox(canvas, bbox, width, height, margin, transformGroup);
+        //    }
+
+        //    Panel.SetZIndex(canvas, 1);
+        //    return true;
+        //}
 
         // INVOKED FOR IMAGES
         public bool DrawBoundingBoxesInCanvas(Canvas canvas, double width, double height, int margin = 0, TransformGroup transformGroup = null)
