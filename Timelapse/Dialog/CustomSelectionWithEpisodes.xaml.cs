@@ -196,6 +196,7 @@ namespace Timelapse.Dialog
                 {
                     // If we don't know the recognition type, default to All
                     DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
+                    RankByConfidenceCheckbox.Content = "Rank by detection confidence";
                 }
                 else if (DetectionSelections.RecognitionType == RecognitionType.Detection)
                 {
@@ -210,6 +211,7 @@ namespace Timelapse.Dialog
                     {
                         DetectionCategoryComboBox.SelectedValue = categoryLabel;
                     }
+                    RankByConfidenceCheckbox.Content = "Rank by detection confidence";
                 }
                 else
                 {
@@ -217,6 +219,7 @@ namespace Timelapse.Dialog
                     DetectionCategoryComboBox.SelectedValue = (categoryLabel.Length != 0)
                         ? categoryLabel
                         : DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
+                    RankByConfidenceCheckbox.Content = "Rank by classification confidence";
                 }
                 EnableDetectionControls((bool)UseDetectionsCheckbox.IsChecked);
             }
@@ -1391,6 +1394,7 @@ namespace Timelapse.Dialog
                 DetectionRangeSlider.Minimum = 0;
                 DetectionConfidenceSpinnerLower.Minimum = 0;
                 DetectionConfidenceSpinnerHigher.Minimum = 0;
+                RankByConfidenceCheckbox.Content = "Rank by detection confidence";
             }
             else
             {
@@ -1426,6 +1430,7 @@ namespace Timelapse.Dialog
                     {
                         DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
                     }
+                    RankByConfidenceCheckbox.Content = "Rank by detection confidence";
                 }
                 else
                 {
@@ -1443,6 +1448,7 @@ namespace Timelapse.Dialog
                         {
                             DetectionRangeSlider.LowerValue = DetectionSelections.CurrentClassificationThreshold;
                         }
+                        RankByConfidenceCheckbox.Content = "Rank by classification confidence";
                     }
                     else
                     {
@@ -1453,6 +1459,7 @@ namespace Timelapse.Dialog
                         {
                             DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
                         }
+                        RankByConfidenceCheckbox.Content = "Rank by detection confidence";
                     }
                 }
             }
