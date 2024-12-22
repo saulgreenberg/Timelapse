@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
@@ -50,6 +51,8 @@ namespace Timelapse
         {
             if (false == FileShowHelperPart1(fileIndex, forceUpdate, out bool newFileToDisplay, out ImageRow imageCacheCurrent))
             {
+                // We clear IsNewSelections after files are shown
+                GlobalReferences.TimelapseState.IsNewSelection = false;
                 return;
             }
             // Sync: Get the bounding boxes and markers (if any) for the current image;
@@ -61,6 +64,8 @@ namespace Timelapse
         {
             if (false == FileShowHelperPart1(fileIndex, forceUpdate, out bool newFileToDisplay, out ImageRow imageCacheCurrent))
             {
+                // We clear IsNewSelections after files are shown
+                GlobalReferences.TimelapseState.IsNewSelection = false;
                 return;
             }
             // Async Get the bounding boxes and markers (if any) for the current image;
@@ -262,6 +267,7 @@ namespace Timelapse
             // Display the episode and duplicate text as needed
             DisplayEpisodeTextInImageIfWarranted(fileIndex);
             DuplicateDisplayIndicatorInImageIfWarranted();
+            GlobalReferences.TimelapseState.IsNewSelection = false;
         }
         #endregion
 

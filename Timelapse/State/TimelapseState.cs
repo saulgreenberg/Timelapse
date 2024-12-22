@@ -31,6 +31,11 @@ namespace Timelapse.State
 
         public bool FirstTimeFileLoading { get; set; }
 
+        // Used for tracking whether a new selection was made.
+        // This is used in the ThumbnailGrid overview, where thumbnails should not be reused for new selections
+        // as otherwise wrong thumbnails (matching previous selections) may be displayed.
+        public bool IsNewSelection { get; set; }
+
         private double _boundingBoxDisplayThreshold;
         public double BoundingBoxDisplayThreshold
         {

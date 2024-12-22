@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -165,6 +166,7 @@ namespace Timelapse.Controls
                     if (Math.Abs(gridWidth - oldGridWidth) < .0001 && Math.Abs(gridHeight - oldGridHeight) < .0001)
                     {
                         // If the grid size hasn't changed, we must be navigating
+                        // Or, it could also be due to a new select while in the overview.
                         navigating = true;
                     }
                     else
@@ -202,10 +204,14 @@ namespace Timelapse.Controls
 
                 thumbnailsAlreadyInGrid.Clear(); // we will fill this only if we are navigating
                 int fileTableCount = FileTable.RowCount;
-                if (showFewerCells == null)
+                if (showFewerCells == null && GlobalReferences.TimelapseState.IsNewSelection == false)
                 {
                     // if we made it this far for navigating and resizing, then lets see if we can reuse some of thumbnails
                     // as the cell size should be the same.
+
+                    // Implementation note: if its a new selection (i.e., IsNewSelection is true), we don't go here,
+                    // as new selections will require new thumbnails. If we didn't test for IsNewSelection == false, the retrieved old
+                    // thumbnails from the previous selection may not match what should be displayed in the grid.
                     thumbnailsAlreadyInGrid = GetThumbnailsAlreadyInGrid(desiredCellHeight, fileTableCount);
                 }
 

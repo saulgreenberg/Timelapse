@@ -1265,7 +1265,8 @@ namespace Timelapse.Database
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            // Debug.Print($"SelectFilesAsync Query: {query}");
+            // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            GlobalReferences.TimelapseState.IsNewSelection = true;
             DataTable filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
         }

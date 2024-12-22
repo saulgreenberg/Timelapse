@@ -887,8 +887,14 @@ namespace Timelapse
                 else
                 {
                     // multiple selections are possible in the 
+                    int count = DataHandler.FileDatabase.FileTable.RowCount;
                     foreach (int rowIndex in MarkableCanvas.ThumbnailGrid.GetSelected())
                     {
+                        if (rowIndex >= count)
+                        {
+                            // We are out of bounds!
+                            return;
+                        }
                         IdRowIndex.Add(new Tuple<long, int>(DataHandler.FileDatabase.FileTable[rowIndex].ID, rowIndex));
                     }
                 }
