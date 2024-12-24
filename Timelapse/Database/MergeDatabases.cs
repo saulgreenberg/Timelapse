@@ -1075,7 +1075,7 @@ namespace Timelapse.Database
             {
                 query += QueryAddOffsetToIDInTable(tempDetectionsVideoTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
-            query += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable) + Environment.NewLine; ;
+            query += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable) + Environment.NewLine;
 
             // Update the classifications table, , including adjusting the ID and DetectionID offset as needed
             // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???

@@ -671,6 +671,12 @@ namespace Timelapse.Constant
         // TabOrderInclude
         public const string TabOrderIncludeDateTime = "TabOrderIncludeDateTime";
         public const string TabOrderIncludeDeleteFlag = "TabOrderIncludeDeleteFlag";
+
+        public const string VideoAutoPlay = "VideoAutoPlay";
+        public const string VideoSpeed = "VideoSpeed";
+        public const string VideoRepeat = "VideoRepeat";
+        public const string VideoMute = "VideoMute";
+
     }
 
     public static class SearchTermOperator

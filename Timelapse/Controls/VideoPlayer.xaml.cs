@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Microsoft.WindowsAPICodePack.Shell;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -12,11 +13,7 @@ using Timelapse.DataStructures;
 using Timelapse.Images;
 using RadioButton = System.Windows.Controls.RadioButton;
 using System.Windows.Controls;
-using Timelapse.DebuggingSupport;
-using MetadataExtractor;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using Timelapse.State;
 
 namespace Timelapse.Controls
 {
@@ -103,6 +100,27 @@ namespace Timelapse.Controls
             // Initialize Timer callbacks
             this.TimerUpdatePosition.Tick += TimerUpdatePosition_Tick;
 
+            // Set various controls to their previously saved state.
+            this.CBAutoPlay.IsChecked = GlobalReferences.TimelapseState.VideoAutoPlay;
+            this.CBMute.IsChecked = GlobalReferences.TimelapseState.VideoMute;
+            this.CBRepeat.IsChecked = GlobalReferences.TimelapseState.VideoRepeat;
+
+            if (GlobalReferences.TimelapseState.VideoSpeed == 1)
+            {
+                this.RBSlow.IsChecked = true;
+                this.MediaElement.SpeedRatio = 0.5;
+            }
+            else if (GlobalReferences.TimelapseState.VideoSpeed == 2)
+            {
+                this.RBNormal.IsChecked = true;
+                this.MediaElement.SpeedRatio = 1;
+            }
+            else // if (GlobalReferences.TimelapseState.VideoSpeed == 3)
+            {
+                this.RBFast.IsChecked = true;
+                this.MediaElement.SpeedRatio = 2;
+            }
+
             // For some reason, MediaOpened is invoked twice if we put it here, but not if its in the XAML.
             this.MediaElement.MediaEnded += MediaElementMediaEnded;
             this.MediaElement.Unloaded += MediaElementUnloaded;
@@ -122,6 +140,9 @@ namespace Timelapse.Controls
             this.OpenExternalPlayer.Click += OpenExternalPlayer_Click;
             this.CBMute.Checked += CBMute_CheckedChanged;
             this.CBMute.Unchecked += CBMute_CheckedChanged;
+
+            this.CBRepeat.Checked += CBRepeat_CheckChanged;
+            this.CBRepeat.Unchecked += CBRepeat_CheckChanged;
         }
 
         // Set the flag to indicate that the video player is no longer loaed
@@ -176,6 +197,7 @@ namespace Timelapse.Controls
             }
 
             this.IsEnabled = true;
+
             // Determine and set the FrameRate, FrameToShow, VideoDuraton and Slider Scrubbing Duration values
             this.DoSetFrameRateAndFrameToShowValues();
             this.DoSetDurationValues();
@@ -197,10 +219,10 @@ namespace Timelapse.Controls
             this.UpdateBoundingBoxes();
 
             // This is needed to prime the video
-            this.Play(); 
+            this.Play();
 
             // Pause the video depending on conditions
-            if (Visibility != Visibility.Visible || CBAutoPlay.IsChecked == false )
+            if (Visibility != Visibility.Visible || CBAutoPlay.IsChecked == false)
             {
                 this.Pause();
             }
@@ -257,7 +279,10 @@ namespace Timelapse.Controls
             TimerUpdatePosition.Stop();
             this.MediaElement.Pause();
             this.PlayOrPause.IsChecked = false;
-            this.ShowPosition();
+            if (this.isProgrammaticUpdate == false)
+            {
+                this.ShowPosition();
+            }
         }
 
         // A programmatic equivalent to clicking the play/pause button
@@ -301,6 +326,8 @@ namespace Timelapse.Controls
         }
 
         // Show the current play position in the ScrollBar and TextBox, if possible.
+        // TODO Performance (very minor, likley not worth doing). Sometimes, when scrubbing, the same video frame is updated several times.
+        // To see this, just click on the slider without moving its position.
         private void ShowPosition()
         {
             if (null == this.MediaElement.Source)
@@ -309,8 +336,6 @@ namespace Timelapse.Controls
                 return;
             }
 
-            // TracePrint.StackTrace("--->", 5);
-            //Debug.Print($"ShowPosition:{this.CurrentVideoPosition}");
             isProgrammaticUpdate = true;
             try
             {
@@ -318,7 +343,7 @@ namespace Timelapse.Controls
                 TimeFromStart.Text = this.MediaElementCurrentPosition.ToString(Time.VideoPositionFormat);
                 this.isProgrammaticUpdate = true;
                 SliderScrubbing.Value = this.MediaElementCurrentPosition.TotalSeconds;
-                this.isProgrammaticUpdate = false; 
+                this.isProgrammaticUpdate = false;
 
                 // Update the bounding boxes
                 this.ClearBoundingBoxes();
@@ -332,7 +357,7 @@ namespace Timelapse.Controls
 
                 // Start searching from a frame a half second before the desired one
                 Point vidSize = GetActualVideoSize();
-                int frameWindow = this.FrameRate == null 
+                int frameWindow = this.FrameRate == null
                     ? 0
                     : (int)Math.Floor((decimal)(this.FrameRate / 2.0));
 
@@ -391,9 +416,11 @@ namespace Timelapse.Controls
             MediaElement.Volume = CBMute.IsChecked == true && null != this.MediaElement
                 ? 0
                 : 0.5;
+            GlobalReferences.TimelapseState.VideoMute = CBMute.IsChecked == true;
         }
 
         // The Speed Checkbutton.
+        // Note that some videos don't do anything even if the speed ratio is changed.
         private void SetSpeed_CheckedChanged(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
@@ -401,6 +428,19 @@ namespace Timelapse.Controls
             if (rb?.Tag != null && Double.TryParse((string)rb.Tag, out double newSpeed))
             {
                 this.MediaElement.SpeedRatio = newSpeed;
+               
+                if (rb.Name == "RBFast")
+                {
+                    GlobalReferences.TimelapseState.VideoSpeed = 3;
+                }
+                else  if (rb.Name == "RBSlow")
+                {
+                    GlobalReferences.TimelapseState.VideoSpeed = 1;
+                }
+                else // (rb.Name == "RBNormal")
+                {
+                    GlobalReferences.TimelapseState.VideoSpeed = 2;
+                }
                 this.Play();
             }
         }
@@ -416,6 +456,12 @@ namespace Timelapse.Controls
             {
                 this.Pause();
             }
+            GlobalReferences.TimelapseState.VideoAutoPlay = CBAutoPlay.IsChecked == true;
+        }
+
+        private void CBRepeat_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            GlobalReferences.TimelapseState.VideoRepeat = CBRepeat.IsChecked == true;
         }
 
         // The Open ExternalPlayer button
@@ -457,8 +503,8 @@ namespace Timelapse.Controls
             if (this.FrameRate != null)
             {
                 this.FrameToShow = Convert.ToInt32(System.Math.Floor((double)(SliderScrubbing.Value * this.FrameRate)));
-                this.ShowPosition();
             }
+            // Pause allso updates the position
             this.Pause(); // If a user scrubs, force the video to pause if its playing
         }
 
@@ -692,7 +738,7 @@ namespace Timelapse.Controls
                 if (null != this.BoxesForFile)
                 {
                     //Debug.Print($"{this.FrameToShow}, {fromFrame}, {span}");
-                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, 0);
+                    this.BoxesForFile.DrawBoundingBoxesInCanvas(this.VideoCanvas, vidSize.X, vidSize.Y, 0, this.TransformGroup, this.FrameToShow, frameWindow);
                     if (this.FrameRate != null)
                     {
                         this.FrameToShow = Convert.ToInt32(Math.Ceiling((double)(SliderScrubbing.Value * this.FrameRate)));

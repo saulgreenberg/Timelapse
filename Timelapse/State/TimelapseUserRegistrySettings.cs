@@ -59,6 +59,11 @@ namespace Timelapse.State
         public bool TabOrderIncludeDeleteFlag { get; set; }
         public Size TimelapseWindowSize { get; set; }
         public Rect TimelapseWindowPosition { get; set; }
+
+        public bool VideoAutoPlay { get; set; }
+        public bool VideoRepeat { get; set; }
+        public bool VideoMute { get; set; }
+        public int VideoSpeed { get; set; }
         #endregion
 
         #region Constructors
@@ -131,6 +136,11 @@ namespace Timelapse.State
                 TabOrderIncludeDeleteFlag = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDeleteFlag, false);
                 Throttles.SetDesiredImageRendersPerSecond(registryKey.GetDouble(WindowRegistryKeys.DesiredImageRendersPerSecond, ThrottleValues.DesiredMaximumImageRendersPerSecondDefault));
                 TimelapseWindowPosition = registryKey.GetRect(WindowRegistryKeys.TimelapseWindowPosition, new Rect(0.0, 0.0, 1350.0, 900.0));
+                VideoAutoPlay = registryKey.GetBoolean(WindowRegistryKeys.VideoAutoPlay, false);
+                VideoMute = registryKey.GetBoolean(WindowRegistryKeys.VideoMute, false);
+                VideoRepeat = registryKey.GetBoolean(WindowRegistryKeys.VideoRepeat, false);
+                VideoSpeed = registryKey.GetInteger(WindowRegistryKeys.VideoSpeed, 2);
+
             }
         }
 
@@ -238,6 +248,10 @@ namespace Timelapse.State
                 registryKey.Write(WindowRegistryKeys.TabOrderIncludeDateTime, TabOrderIncludeDateTime);
                 registryKey.Write(WindowRegistryKeys.TabOrderIncludeDeleteFlag, TabOrderIncludeDeleteFlag);
                 registryKey.Write(WindowRegistryKeys.TimelapseWindowPosition, TimelapseWindowPosition);
+                registryKey.Write(WindowRegistryKeys.VideoAutoPlay, VideoAutoPlay);
+                registryKey.Write(WindowRegistryKeys.VideoMute, VideoMute);
+                registryKey.Write(WindowRegistryKeys.VideoRepeat, VideoRepeat);
+                registryKey.Write(WindowRegistryKeys.VideoSpeed, VideoSpeed);
             }
         }
 

@@ -52,6 +52,8 @@ namespace Timelapse.Images
         {
             return DrawBoundingBoxesInCanvas(canvas, width, height, margin, transformGroup, displayedVideoFrame, 0);
         }
+
+
         public bool DrawBoundingBoxesInCanvas(Canvas canvas, double width, double height, int margin, TransformGroup transformGroup, int displayedVideoFrame, int frameWindow)
         {
             // Note that we do this even if detections may not exist, as we need to clear things if the user had just toggled detections off
@@ -90,19 +92,27 @@ namespace Timelapse.Images
             int difference = 10000;
             foreach (BoundingBox box in sortedBoxes)
             {
-
+                if (currentIndex >= sortedBoxes.Count - 1)
+                {
+                    // If we are on the last bounding box, enlarge the frame window so that the bounding box lingers
+                    // for a bit longer. That is instead of the bounding box disappearing after
+                    // a 1/2 second, it will linger for a full second. This seems to be a better heuristic
+                    // for visually indicating an entity that is in the process of moving off the video.The only do
+                    fromFrame -= frameWindow;
+                    toFrame += frameWindow;
+                }
                 if (box.FrameNumber < fromFrame)
                 {
                     // Skip this bounding box, as its below the frame window
                     currentIndex++;
                     continue;
                 }
+
                 if (box.FrameNumber > toFrame)
                 {
                     // Skip this bounding box and break, as its above the frame window
                     break;
                 }
-
                 // as we cycle through, we find the prev/next frames with boxes closest to the frame window
                 if (box.FrameNumber <= displayedVideoFrame)
                 {
@@ -409,20 +419,6 @@ namespace Timelapse.Images
             }
         }
 
-
-        // NOT USED AT THIS POINT AS WE ARE NO LONGER USING A MENU - BUT IF WE DECIDE TO...
-        // ReSharper disable once UnusedMember.Local
-        private void ClassificationUIObject_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is ComboBox cb)
-            {
-                if (e.AddedItems.Count == 1)
-                {
-                    cb.SelectedItem = e.AddedItems[0];
-                    // Debug.Print(e.AddedItems[0].ToString());
-                }
-            }
-        }
         #endregion
 
         #region static internal methods

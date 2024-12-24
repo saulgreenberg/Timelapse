@@ -347,7 +347,7 @@ namespace Timelapse.Controls
                 Tuple<Image, BoundingBoxes> tuple = GetBoundingBoxesAndImage(imageRow, 0, height, imageRow.IsVideo);
                 BoundingBoxes boundingBoxes = tuple.Item2;
                 Image image = tuple.Item1;
-                Canvas clone = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, 0, ((ImageRow)canvas.Tag).ID, ((ImageRow)canvas.Tag).IsVideo);
+                Canvas clone = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, 0, imageRow.ID, imageRow.IsVideo);
 
                 Zoombox zoombox = CreateZoombox();
                 zoombox.Content = clone;
