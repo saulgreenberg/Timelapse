@@ -55,14 +55,14 @@ namespace Timelapse.Util
         {
             mergedDictionary = new Dictionary<string, string>();
 
-            if (dict1 == null && dict2 == null)
+            if (( dict1 == null || dict1.Count == 0 ) && (dict2 == null || dict2.Count == 0))
             {
-                // both null 
+                // both null or empty
                 // so mergedDictionary has 0 items
                 return true;
             }
 
-            if (dict1 == null)
+            if (dict1 == null || dict1.Count == 0)
             {
                 // Stuff in dict2 only (although count could be 0)
                 // mergedDictionary is dict2
@@ -70,7 +70,7 @@ namespace Timelapse.Util
                 return true;
             }
 
-            if (dict2 == null)
+            if (dict2 == null || dict2.Count == 0)
             {
                 // Stuff in dict2 only (although count could be 0)
                 // mergedDictionary is dict1
@@ -91,7 +91,7 @@ namespace Timelapse.Util
                     }
                 }
             }
-            foreach (KeyValuePair<string, string> pair in dict2)
+            foreach (KeyValuePair<string, string> pair in dict1)
             {
                 if (dict1.TryGetValue(pair.Key, out string value))
                 {

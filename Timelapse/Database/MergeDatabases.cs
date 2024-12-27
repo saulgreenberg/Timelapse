@@ -399,7 +399,7 @@ namespace Timelapse.Database
             string attachedDetectionsVideos = attachedSourceDB + Sql.Dot + DBTables.DetectionsVideo;
             queryPhrase += Sql.CreateTemporaryTable + tmpDetectionsVideo + Sql.As
                 + Sql.Select + DetectionColumns.FrameNumber + Sql.Comma + DetectionColumns.FrameRate + Sql.Comma + DetectionColumns.DetectionID + Sql.From + attachedDetectionsVideos
-                + Sql.Join + tmpDetections  + Sql.Using + Sql.OpenParenthesis + DetectionColumns.DetectionID + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
+                + Sql.Join + tmpDetections + Sql.Using + Sql.OpenParenthesis + DetectionColumns.DetectionID + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
             queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tmpDetectionsVideo) + Environment.NewLine;
 
             // Copy the Detection Categories table
@@ -555,7 +555,7 @@ namespace Timelapse.Database
             string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
 
             // Turn Foreign keys off for this transaction as we will be clearing and updating tables with foreign keys.
-            query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine; 
+            query += Sql.PragmaForeignKeysOff + Sql.Semicolon + Environment.NewLine;
 
             // Part 2. Calculate an ID offset (the current max Id), where we will be adding that to all Ids for the entries inserted into the destinationDdb 
             //    This will guarantee that there are no duplicate primary keys.
@@ -587,9 +587,10 @@ namespace Timelapse.Database
             bool updateRecognitions = resultTuple.Item3;
             if (updateRecognitions)
             {
+                SQLiteWrapper db = new SQLiteWrapper(sourceDdbPath);
+                bool sourceDetectionsVideoTableExists = db.TableExists(Constant.DBTables.DetectionsVideo);
                 query = resultTuple.Item2;
-
-                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist);
+                query += QueryPhraseMergeRecognitionTables(offsetId, destinationDdb, attachedSourceDB, destinationRecognitionsExist, sourceDetectionsVideoTableExists);
 
             }
 
@@ -624,7 +625,6 @@ namespace Timelapse.Database
             // Part 9. Check if there are any Detections. If not, delete all the recognition tables as they are no longer relevant
             if (destinationDdb.TableExistsAndEmpty(DBTables.Detections))
             {
-
                 destinationDdb.DropTable(DBTables.Detections);
                 destinationDdb.DropTable(DBTables.DetectionsVideo);
                 destinationDdb.DropTable(DBTables.Classifications);
@@ -632,6 +632,7 @@ namespace Timelapse.Database
                 destinationDdb.DropTable(DBTables.ClassificationCategories);
                 destinationDdb.DropTable(DBTables.Info);
             }
+
             FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists(destinationDdb);
             return DatabaseFileErrorsEnum.Ok;
         }
@@ -692,7 +693,7 @@ namespace Timelapse.Database
             return Sql.AttachDatabase + Sql.Quote(databasePath) + Sql.As + alias + Sql.Semicolon;
         }
 
-        // Form: CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM dataBaseName.tableName;
+        // Form: CREATE TEMPORARY TABLE tempTable AS SELECT * FROM dataBaseName.tableName;
         private static string QueryCreateTemporaryTableFromExistingTable(string tempDataTable, string dataBaseName,
             string tableName)
         {
@@ -820,6 +821,9 @@ namespace Timelapse.Database
             }
             query += QueryAddPrefixToRelativePathInTable(tempDataTable, relativePathDifference, DatabaseColumn.RelativePath) + Environment.NewLine;
             query += QueryInsertTable2DataIntoTable1(DBTables.FileData, tempDataTable, currentDataLabels) + Environment.NewLine;
+
+            // We no longer need the temporary data table, so drop it.
+            query += $"{Sql.DropTableIfExists} {tempDataTable} {Sql.Semicolon} {Environment.NewLine}";
             return query;
         }
 
@@ -857,6 +861,9 @@ namespace Timelapse.Database
                 columns += row[0] + " ";
             }
 
+            // Just to make sure we are starting with a new temporary table
+            query += $"{Sql.DropTableIfExists} {tempMarkersTable} {Sql.Semicolon} {Environment.NewLine}";
+
             query += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As + Sql.Select + columns + Sql.From +
                      attachedSourceDB + Sql.Dot + DBTables.Markers + Sql.Semicolon + Environment.NewLine;
             if (offsetId > 0)
@@ -865,6 +872,9 @@ namespace Timelapse.Database
                 query += QueryAddOffsetToIDInTable(tempMarkersTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
             }
             query += QueryInsertTable2DataIntoTable1(DBTables.Markers, tempMarkersTable) + Environment.NewLine;
+
+            // We no longer need the temporary data table, so drop it.
+            query += $"{Sql.DropTableIfExists} {tempMarkersTable} {Sql.Semicolon} {Environment.NewLine}";
             return query;
         }
 
@@ -911,30 +921,18 @@ namespace Timelapse.Database
                 destinationDetectionCategories, destinationClassificationCategories);
 
             // Condition 1. The destinationDdb doesn't have detections, but we now know that the sourceDdb does,
-            // Thus we need to create the detection tables in the destination database.
+            // Thus we need to create and copy the detection tables in the destination database.
+            // Since we are copying the tables in their entirety, we don't have to create temporary tables.
             if (false == destinationDetectionsExists)
             {
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
 
                 // Import the Detection Categories, Classification Categories and Info from the sourceDdb
-                // To do this, we first create temporary tables from the sourceDdb 
-                query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedSourceDB, DBTables.Info) + Environment.NewLine;
-                query += QueryCreateTemporaryTableFromExistingTable(tempDetectionCategoriesTable, attachedSourceDB,
-                    DBTables.DetectionCategories) + Environment.NewLine;
-                query += QueryCreateTemporaryTableFromExistingTable(tempClassificationCategoriesTable, attachedSourceDB,
-                             DBTables.ClassificationCategories) + Environment.NewLine;
 
                 // Now we insert those tables into the current database
                 query += QueryInsertTableDataFromAnotherDatabase(DBTables.DetectionCategories, attachedSourceDB) + Environment.NewLine;
                 query += QueryInsertTableDataFromAnotherDatabase(DBTables.ClassificationCategories, attachedSourceDB) + Environment.NewLine;
                 query += QueryInsertTableDataFromAnotherDatabase(DBTables.Info, attachedSourceDB) + Environment.NewLine;
-
-                //// Update the various dictionaries to reflect their current values
-                //DictionaryReplaceSecondDictWithFirstDictElements(sourceInfoDictionary, infoDictionary);
-                //DictionaryReplaceSecondDictWithFirstDictElements(sourceDetectionCategories,
-                //    detectionCategories);
-                //DictionaryReplaceSecondDictWithFirstDictElements(sourceClassificationCategories,
-                //    classificationCategories);
 
                 // At this point,we have 
                 // - created the recognition database tables in the destination, 
@@ -942,7 +940,15 @@ namespace Timelapse.Database
                 return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, true);
             }
 
-            // Condition 3.  Both the current database and the database to merged have recognition tables
+            // Condition 2.  Both the current database and the database to merged have recognition tables
+            // To do this, we first create temporary tables from the sourceDdb 
+
+            query += QueryCreateTemporaryTableFromExistingTable(tempInfoTable, attachedSourceDB, DBTables.Info) + Environment.NewLine;
+            query += QueryCreateTemporaryTableFromExistingTable(tempDetectionCategoriesTable, attachedSourceDB,
+                DBTables.DetectionCategories) + Environment.NewLine;
+            query += QueryCreateTemporaryTableFromExistingTable(tempClassificationCategoriesTable, attachedSourceDB,
+                DBTables.ClassificationCategories) + Environment.NewLine;
+
 
             // A. Generate a new info structure that is a best effort combination of the db and json info structure,
             //    and then update the jsonRecognizer to match that. Note the we do it even if no update is really needed, as its lightweight
@@ -958,8 +964,8 @@ namespace Timelapse.Database
                 (string)mergedInfoDictionary[InfoColumns.ClassificationCompletionTime],
                 Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalDetectionThreshold]),
                 Convert.ToDouble(mergedInfoDictionary[InfoColumns.ConservativeDetectionThreshold]),
-                Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalClassificationThreshold]));
-            query += UpdateImageSetTableWithUndefinedBoundingBox();
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalClassificationThreshold])) + Environment.NewLine;
+            query += UpdateImageSetTableWithUndefinedBoundingBox() + Environment.NewLine;
 
             // Update the various dictionaries to reflect their current values
             // DictionaryReplaceSecondDictWithFirstDictElements(mergedInfoDictionary, infoDictionary);
@@ -1005,7 +1011,7 @@ namespace Timelapse.Database
             {
                 // There is something to add
                 if (Dictionaries.MergeDictionaries(sourceClassificationCategories,
-                        classificationCategories,
+                        destinationClassificationCategories,
                         out Dictionary<string, string> mergedClassificationCategories))
                 {
                     // Clear the ClassificationCategories table as we will be completely replacing it
@@ -1039,16 +1045,21 @@ namespace Timelapse.Database
             }
 
             // Condition 6: All is fine, so we now have a query that works for updating various recognition tables
+            // Note that while we shouldn't have to drop the temp tables explicitly (as these are normally deleted when the
+            // database is closed), this is safer in case multiple merges are done, or if there is a crash. 
+            query += $"{Sql.DropTableIfExists} {tempInfoTable} {Sql.Semicolon} {Environment.NewLine}";
+            query += $"{Sql.DropTableIfExists} {tempDetectionCategoriesTable} {Sql.Semicolon} {Environment.NewLine}";
+            query += $"{Sql.DropTableIfExists} {tempClassificationCategoriesTable} {Sql.Semicolon} {Environment.NewLine}";
             return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, true);
         }
 
         // The database to merge in has recognitions, so the SQL query should update the detections table and (if needed) the recognition table.
         private static string QueryPhraseMergeRecognitionTables(long offsetId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, bool destinationRecognitionsExist)
+            string attachedSourceDB, bool destinationRecognitionsExist, bool sourceDetectionsVideoTableExists)
         {
             string query = string.Empty;
             string tempDetectionsTable = "tempDetectionsTable";
-            string tempDetectionsVideoTable = "tempDetectionVideoTable";
+            string tempDetectionsVideoTable = "tempDetectionsVideoTable";
             string tempClassificationsTable = "tempClassificationsTable";
 
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
@@ -1069,13 +1080,16 @@ namespace Timelapse.Database
             }
             query += QueryInsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable) + Environment.NewLine;
 
-            // Now update the DetectionsVideo table, including adjusting the DetectionID offset as needed
-            query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsVideoTable, attachedSourceDB, DBTables.DetectionsVideo) + Environment.NewLine;
-            if (offsetDetectionId > 0)
+            // Now update the DetectionsVideo table (but only if it exists), including adjusting the DetectionID offset as needed
+            if (sourceDetectionsVideoTableExists)
             {
-                query += QueryAddOffsetToIDInTable(tempDetectionsVideoTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
+                query += QueryCreateTemporaryTableFromExistingTable(tempDetectionsVideoTable, attachedSourceDB, DBTables.DetectionsVideo) + Environment.NewLine;
+                if (offsetDetectionId > 0)
+                {
+                    query += QueryAddOffsetToIDInTable(tempDetectionsVideoTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
+                }
+                query += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable) + Environment.NewLine;
             }
-            query += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable) + Environment.NewLine;
 
             // Update the classifications table, , including adjusting the ID and DetectionID offset as needed
             // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???
@@ -1093,6 +1107,13 @@ namespace Timelapse.Database
                 query += QueryAddOffsetToIDInTable(tempClassificationsTable, ClassificationColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
             }
             query += QueryInsertTable2DataIntoTable1(DBTables.Classifications, tempClassificationsTable) + Environment.NewLine;
+
+            query += $"{Sql.DropTableIfExists} {tempDetectionsTable} {Sql.Semicolon} {Environment.NewLine}";
+            if (sourceDetectionsVideoTableExists)
+            {
+                query += $"{Sql.DropTableIfExists} {tempDetectionsVideoTable} {Sql.Semicolon} {Environment.NewLine}";
+            }
+            query += $"{Sql.DropTableIfExists} {tempClassificationsTable} {Sql.Semicolon} {Environment.NewLine}";
             return query;
         }
 

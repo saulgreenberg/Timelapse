@@ -1,7 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Microsoft.WindowsAPICodePack.Shell;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -13,7 +12,6 @@ using Timelapse.DataStructures;
 using Timelapse.Images;
 using RadioButton = System.Windows.Controls.RadioButton;
 using System.Windows.Controls;
-using Timelapse.State;
 
 namespace Timelapse.Controls
 {
