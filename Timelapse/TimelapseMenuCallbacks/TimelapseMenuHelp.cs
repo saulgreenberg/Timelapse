@@ -110,14 +110,16 @@ namespace Timelapse
                     case "MenuItemVideoUsingEcoAssist":
                         ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosUsingEcoAssist));
                         break;
-
+                    case "MenuItemImageRecognitionForVideos":
+                        ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosImageRecognitionForVideos));
+                        break;
+                        
                     case "MenuItemVideoUsingOverview":
                         ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosUsingTheOverview));
                         break;
                     case "MenuItemVideoRandomSampling":
                         ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosRandomSampling));
                         break;
-
 
                     // OLDER
                     case "MenuItemVideoClassifyingDarkImages":
@@ -133,8 +135,6 @@ namespace Timelapse
                     case "MenuItemVideoViewingPopups":
                         ProcessExecution.TryProcessStart(new Uri(prefix + "EpisodePopups.mp4"));
                         break;
-
-                    
                 }
             }
         }

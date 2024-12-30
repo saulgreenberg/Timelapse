@@ -9,6 +9,7 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Point = System.Windows.Point;
 
 namespace Timelapse.ControlsDataEntry
 {
@@ -206,7 +207,6 @@ namespace Timelapse.ControlsDataEntry
                 programmaticState = GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate;
                 GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate = true;
             }
-
             ContentControl.Text = value;
 
             if (GlobalReferences.MainWindow.DataHandler != null)

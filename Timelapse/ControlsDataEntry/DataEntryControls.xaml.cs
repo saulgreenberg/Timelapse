@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataTables;
@@ -18,9 +19,9 @@ namespace Timelapse.ControlsDataEntry
     public partial class DataEntryControls
     {
         #region Public properties and Private Variables
-        public List<DataEntryControl> Controls { get; }
-        public Dictionary<string, DataEntryControl> ControlsByDataLabelThatAreVisible { get; }
-        public Dictionary<string, DataEntryControl> ControlsByDataLabelForExport { get; }
+        public List<DataEntryControl> Controls { get; private set; }
+        public Dictionary<string, DataEntryControl> ControlsByDataLabelThatAreVisible { get; private set; }
+        public Dictionary<string, DataEntryControl> ControlsByDataLabelForExport { get; private set;}
 
         private DataEntryHandler dataEntryHandler;
         #endregion
@@ -47,10 +48,51 @@ namespace Timelapse.ControlsDataEntry
 
             // Depending on how the user interacts with the file import process image set loading can be aborted after controls are generated and then
             // another image set loaded.  Any existing controls therefore need to be cleared.
-            Controls.Clear();
-            ControlsByDataLabelThatAreVisible.Clear();
-            ControlsByDataLabelForExport.Clear();
-            ControlGrid.Inlines.Clear();
+            int error = 0;
+            try
+            {
+                error = 1;
+                this.Controls.Clear();
+                error = 2;
+                ControlsByDataLabelThatAreVisible.Clear();
+                error = 3;
+                ControlsByDataLabelForExport.Clear();
+                error = 4;
+                ControlGrid.Inlines.Clear();
+            }
+            catch (Exception e)
+            {
+                // Alan Dewey reported a problem that seems to stem from an attept to clear the Controls structure.
+                // I couldn't figure out why it was occuring, so hopefully this will fix it.
+                string feedback = $"|| {e.Message} || CreateControls exception: failed call is ";
+                switch (error)
+                {
+                    case 1:
+                        feedback += "Controls.Clear()";
+                        this.Controls = new List<DataEntryControl>();
+                        break;
+                    case 2:
+                        feedback += "ControlsByDataLabelThatAreVisible.Clear()";
+                        this.ControlsByDataLabelThatAreVisible = new Dictionary<string, DataEntryControl>();
+                        break;
+                    case 3:
+                        feedback += "ControlsByDataLabelForExport.Clear()";
+                        this.ControlsByDataLabelForExport = new Dictionary<string, DataEntryControl>();
+                        break;
+                    case 4:
+                        foreach (Inline inline in ControlGrid.Inlines) 
+                        {
+                            ControlGrid.Inlines.Remove(inline);
+                        }
+                        feedback += "ControlGrid.Inlines.Clear()";
+                        break;
+                    case 0:
+                        feedback += "Could not isolate the error";
+                        break;
+                }
+                TracePrint.StackTraceToFile($"|| {feedback}.");
+                this.Controls = new List<DataEntryControl>();
+            }
 
             foreach (ControlRow control in database.Controls)
             {

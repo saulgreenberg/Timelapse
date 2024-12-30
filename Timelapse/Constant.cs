@@ -411,6 +411,7 @@ namespace Timelapse.Constant
         public static string TimelapseVideosQuickPaste = $"{TimelapseVideosUploadLink}/Lesson-QuickPaste.mp4";
         public static string TimelapseVideosDuplicatingRecords = $"{TimelapseVideosUploadLink}/Lesson-DuplicatingRecords.mp4";
         public static string TimelapseVideosUsingEcoAssist = $"{TimelapseVideosUploadLink}/Lesson-UsingEcoAssist.mp4";
+        public static string TimelapseVideosImageRecognitionForVideos = $"{TimelapseVideosUploadLink}/Lesson-ImageRecognitionForVideos.mp4";
         public static string TimelapseVideosUsingTheOverview = $"{TimelapseVideosUploadLink}/Lesson-UsingTheOverview.mp4";
         public static string TimelapseVideosRandomSampling = $"{TimelapseVideosUploadLink}/Lesson-RandomSampling.mp4";
 
@@ -459,7 +460,7 @@ namespace Timelapse.Constant
 
         public static readonly TimeSpan BackupInterval = TimeSpan.FromMinutes(30);
 
-        public const string TraceFile = "Trace.txt"; // FIle name for file containing debug information. Usually written in the same folder containing the template.
+        public const string TraceFile = "TimelapseErrorReport.txt"; // File name for file containing debug information. Usually written in the same folder containing the template.
     }
 
     // Default settings for the FilePlayer

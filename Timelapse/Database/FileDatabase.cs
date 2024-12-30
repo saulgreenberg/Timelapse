@@ -2971,6 +2971,11 @@ namespace Timelapse.Database
             Database.Insert(DBTables.Detections, detectionInsertionStatements);
         }
 
+        public void InsertDetectionsVideo(List<List<ColumnTuple>> detectionsVideoInsertionStatements)
+        {
+            Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements);
+        }
+
         public void InsertClassifications(List<List<ColumnTuple>> classificationInsertionStatements)
         {
             Database.Insert(DBTables.Classifications, classificationInsertionStatements);

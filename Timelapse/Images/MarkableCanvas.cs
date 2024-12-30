@@ -1298,7 +1298,7 @@ namespace Timelapse.Images
                     }
                     break;
                 case Key.F5:
-                    // Try going to the best frame, if there is one
+                    // Refresh the video, if one is showing
                     if (VideoPlayer.IsVisible && null != VideoPlayer?.MediaElement?.Source)
                     {
                         VideoPlayer.TryRefreshSource();

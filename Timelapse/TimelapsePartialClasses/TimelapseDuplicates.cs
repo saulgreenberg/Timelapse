@@ -82,42 +82,51 @@ namespace Timelapse
                     // Create a new detection for each detection row, but using the duplicate's ID
                     List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
                     List<List<ColumnTuple>> classificationInsertionStatements = new List<List<ColumnTuple>>();
+                    List<List<ColumnTuple>> detectionVideoInsertionStatements = new List<List<ColumnTuple>>();
                     foreach (DataRow detectionRow in detectionRows)
                     {
                         detectionInsertionStatements.Clear();
+                        detectionVideoInsertionStatements.Clear();
 
                         // Fill it in with the current file's detection values
                         List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
                         {
                             new ColumnTuple(DetectionColumns.ImageID, duplicateFileID),
-                            new ColumnTuple(DetectionColumns.Category, (string) detectionRow[1]),
-                            new ColumnTuple(DetectionColumns.Conf, (float) Convert.ToDouble(detectionRow[2])),
-                            new ColumnTuple(DetectionColumns.BBox, (string) detectionRow[3]),
+                            new ColumnTuple(DetectionColumns.Category, (string) detectionRow[DetectionColumns.Category]),
+                            new ColumnTuple(DetectionColumns.Conf, (float) Convert.ToDouble(detectionRow[DetectionColumns.Conf])),
+                            new ColumnTuple(DetectionColumns.BBox, (string) detectionRow[DetectionColumns.BBox]),
 
                         };
-                        if (row.IsVideo)
-                        {
-                            if (null != detectionRow[4])
-                            {
-                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.FrameNumber, Convert.ToInt32(detectionRow[4])));
-                            }
-
-                            if (null != detectionRow[5])
-                            {
-                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.FrameRate, (float?)Convert.ToDouble(detectionRow[5])));
-                            }
-                        }
-
+                       
                         detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
                         // Insert the detections into the Detections table
                         DataHandler.FileDatabase.InsertDetection(detectionInsertionStatements);
-
+                        
                         // Get the ID of the duplicate file that was just inserted into the filedata table
                         long detectionID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.Detections, DetectionColumns.DetectionID);
 
+                        // Now get the DetectionsVideo value, if they are present
+                        if (row.IsVideo && null != detectionRow[DetectionColumns.FrameRate] && null != detectionRow[DetectionColumns.FrameNumber])
+                        {
+                            List<ColumnTuple> detectionsVideoColumnsToUpdate = new List<ColumnTuple>
+                            {
+                                new ColumnTuple(DetectionColumns.FrameNumber, Convert.ToInt32(detectionRow[DetectionColumns.FrameNumber])),
+                                new ColumnTuple(DetectionColumns.FrameRate, (float?)Convert.ToDouble(detectionRow[DetectionColumns.FrameRate])),
+                                new ColumnTuple(DetectionColumns.DetectionID, detectionID), 
+
+                            };
+                            detectionVideoInsertionStatements.Add(detectionsVideoColumnsToUpdate);
+                        }
+                        // Insert the DetectionsVideo into the DetectionsVideo table
+                        if (detectionVideoInsertionStatements.Count > 0)
+                        {
+                            DataHandler.FileDatabase.InsertDetectionsVideo(detectionVideoInsertionStatements);
+                        }
+
+
                         // Now get the classifications associated with each detection, if any
-                        DataRow[] classificationDataTableRows = await DataHandler.FileDatabase.GetClassificationsFromDetectionIDAsync((long)detectionRow[0]);
+                        DataRow[] classificationDataTableRows = await DataHandler.FileDatabase.GetClassificationsFromDetectionIDAsync((long)detectionRow[Constant.DetectionColumns.DetectionID]);
                         if (classificationDataTableRows.Length > 0)
                         {
                             // Fill it in with the current file's classification values
@@ -127,18 +136,18 @@ namespace Timelapse
                                 List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>
                                 {
                                     new ColumnTuple(ClassificationColumns.DetectionID, detectionID),
-                                    new ColumnTuple(ClassificationColumns.Category, (string)classificationRow[1]),
-                                    new ColumnTuple(ClassificationColumns.Conf, (float)Convert.ToDouble(classificationRow[2]))
+                                    new ColumnTuple(ClassificationColumns.Category, (string)classificationRow[ClassificationColumns.Category]),
+                                    new ColumnTuple(ClassificationColumns.Conf, (float)Convert.ToDouble(classificationRow[ClassificationColumns.Conf]))
                                 };
                                 classificationInsertionStatements.Add(classificationColumnsToUpdate);
                             }
-                            // Instert the classifications into the Classifications table
+                            // Insert the classifications into the Classifications table
                             DataHandler.FileDatabase.InsertClassifications(classificationInsertionStatements);
                         }
                     }
                 }
 
-                // Regenerate the internal detections and classifications table to include the new detections andclassifications
+                // Regenerate the internal detections and classifications table to include the new detections (which will include the DetectionVideos) and classifications
                 await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();
                 await DataHandler.FileDatabase.RefreshClassificationsDataTableAsync();
 

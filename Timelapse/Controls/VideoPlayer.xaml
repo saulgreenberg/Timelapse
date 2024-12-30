@@ -111,7 +111,7 @@
 
                     </StackPanel>
                     <Border Name="BorderButtonBestFrame" Width="Auto" BorderBrush="Gray" BorderThickness="2">
-                        <Button Name="ButtonBestFrame" Content="Best" Click="ButtonBestFrame_OnClick" Width="40" Padding="5" ToolTip="Go to the video frame with the highest confidence recognition">
+                        <Button Name="ButtonBestFrame" Content="Best&#10;Rec'n" Click="ButtonBestFrame_OnClick" Width="40" Padding="5" ToolTip="Go to the video frame with the highest confidence recognition">
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}">
                                     <Setter Property="Background" Value="Red"/>

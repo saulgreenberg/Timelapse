@@ -44,7 +44,7 @@ namespace Timelapse
                         continue;
                     }
 
-                    float confidence = float.Parse(detectionRow[2].ToString());
+                    float confidence = float.Parse(detectionRow[Constant.DetectionColumns.Conf].ToString());
                     // Determine the maximum confidence of these detections. However, we ignore confidences below the display threshold
                     if (bboxes.MaxConfidence < confidence && confidence >= boundingBoxDisplayThreshold)
                     {
@@ -135,7 +135,7 @@ namespace Timelapse
                         // This shouldn't happen, but...
                         continue;
                     }
-                    float confidence = float.Parse(detectionRow[2].ToString());
+                    float confidence = float.Parse(detectionRow[Constant.DetectionColumns.Conf].ToString());
                     bool setInitialVideoFrame = false;
                     // Determine the maximum confidence of these detections
                     if (bboxes.MaxConfidence < confidence)
