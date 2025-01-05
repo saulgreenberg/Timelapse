@@ -194,28 +194,29 @@ namespace Timelapse.ControlsDataEntry
             }
 
             // ToDO unsolved this very weird bug. where an entry comprised of just the letter 'S' for some reason 
+            // The commented out solution below does not work, as it updates the choice's text box but not the data value.
             // reinvokes the DataEntryHandler's ChoiceControl_SelectionChanged with a null value. While the actual
             // datafield is updated, the choice box shows an empty value. I traced this down to happen only when
             // the separator being present in the combo box, which is bizarre indeed. 
             // I tried temporarily removing the separator but that didn't work.
             // Changing the program state (as done below) does stop the reinvoke from doing anything, but the problem remains.
 
-            bool programmaticState = false;
-            if (GlobalReferences.MainWindow.DataHandler != null)
-            {
-                // Attempt at bug fix
-                programmaticState = GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate;
-                GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate = true;
-            }
+            //bool programmaticState = false;
+            //if (GlobalReferences.MainWindow.DataHandler != null)
+            //{
+            //    // Attempt at bug fix
+            //    programmaticState = GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate;
+            //    GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate = true;
+            //}
             ContentControl.Text = value;
-
-            if (GlobalReferences.MainWindow.DataHandler != null)
-            {
-                // Restore after Attempt at bug fix
-                GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate = programmaticState;
-            }
+            //if (GlobalReferences.MainWindow.DataHandler != null)
+            //{
+            //    // Restore after Attempt at bug fix
+            //    GlobalReferences.MainWindow.DataHandler.IsProgrammaticControlUpdate = programmaticState;
+            //}
             ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
         }
+
         #endregion
 
         #region Hiding, visual Effects and Popup Previews
