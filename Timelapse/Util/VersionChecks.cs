@@ -158,9 +158,16 @@ namespace Timelapse.Util
         /// <returns>True if versionNumber1 is greater than versionNumber2</returns>
         public static bool IsVersion1GreaterThanVersion2(string versionNumber1, string versionNumber2)
         {
-            Version version1 = new Version(versionNumber1);
-            Version version2 = new Version(versionNumber2);
-            return version1 > version2;
+            try
+            {
+                Version version1 = new Version(versionNumber1);
+                Version version2 = new Version(versionNumber2);
+                return version1 > version2;
+            }
+            catch 
+            {
+                return false;
+            }
         }
 
         /// <summary>

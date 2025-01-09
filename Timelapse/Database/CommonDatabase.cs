@@ -1,6 +1,8 @@
-﻿using System;
+﻿using DialogUpgradeFiles.Database;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -1817,6 +1819,35 @@ namespace Timelapse.Database
                 ctww.Columns.Add(new ColumnTuple(Control.ExportToCSV, BooleanValue.False));
                 ctww.SetWhere(new ColumnTuple(Control.Type, DatabaseColumn.DeleteFlag));
                 database.Update(DBTables.Template, ctww);
+            }
+        }
+
+        protected static void AddTemplateInfoTableOrRowIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If there is not Template Info table, create it.
+            if (false == database.TableExists(DBTables.TemplateInfo))
+            {
+                CreateAndPopulateTemplateInfoTable(database);
+                return;
+            }
+            if (database.SchemaIsColumnInTable(DBTables.TemplateInfo, "VersionCompatability"))
+            {
+                // This error is rare and I am not sure what caused it, but the column should be called VersionCompatabily (a typo kept for backwards compatability)
+                database.SchemaRenameColumn(DBTables.TemplateInfo, "VersionCompatability", Constant.DatabaseColumn.VersionCompatibility);
+            }
+            DataTable table = database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.TemplateInfo);
+            if (table.Rows.Count == 0)
+            {
+                // For some (usually backwards compatabililty reason)
+                // Add a row with the version number of the current Timelapse program to the templateinfo table 
+                List<List<ColumnTuple>> templateContents = new List<List<ColumnTuple>>();
+                List<ColumnTuple> versions = new List<ColumnTuple>
+                    {
+                        new ColumnTuple(DatabaseColumn.VersionCompatibility, VersionChecks.GetTimelapseCurrentVersionNumber().ToString()),
+                        new ColumnTuple(DatabaseColumn.BackwardsCompatibility, DatabaseValues.VersionNumberBackwardsCompatible)
+                    };
+                templateContents.Add(versions);
+                database.Insert(DBTables.TemplateInfo, templateContents);
             }
         }
 

@@ -215,10 +215,11 @@ namespace TimelapseTemplateEditor
                     return (string)table.Rows[0][DatabaseColumn.VersionCompatibility];
                 }
             }
-            return VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+
+            string version = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+            // TODO: FIGURE OUT THIS ISSUE
+            return string.IsNullOrWhiteSpace(version) ? "2.3.2.7" : version;
         }
-
-
         #endregion
     }
 }

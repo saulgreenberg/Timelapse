@@ -719,6 +719,9 @@ namespace Timelapse.Database
                 // an old version of the template. Update the table by adding a new ExportToCSV column filled with the appropriate default
                 AddExportToCSVColumnIfNeeded(Database);
 
+                // If there is no TemplateInfo table or a single row within it, create one
+                AddTemplateInfoTableOrRowIfNeeded(templateDatabase.Database);
+
                 // If the Standards column isn't in the ImageSet table or in the template's TemplateInfo table, add it
                 // Note: It should have been added previously to the template table
                 AddStandardToTemplateInfoColumnIfNeeded(templateDatabase.Database);
