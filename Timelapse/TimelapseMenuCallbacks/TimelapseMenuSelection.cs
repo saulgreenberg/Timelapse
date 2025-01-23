@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -36,7 +35,7 @@ namespace Timelapse
             MenuItemSelectFilesMarkedForDeletion.IsEnabled = exists;
 
             // Put a checkmark next to the menu item that matches the stored selection criteria
-            FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum;
+            FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum; ;
 
             MenuItemSelectAllFiles.IsChecked = selection == FileSelectionEnum.All;
             MenuItemSelectByRelativePathTreeView.IsChecked = selection == FileSelectionEnum.Folders;
@@ -45,7 +44,7 @@ namespace Timelapse
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
             MenuItemSelectRandomSample.IsEnabled = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
-            MenuItemSetSearchTerm();
+            this.MenuItemSetSearchTerm();
         }
         #endregion
 
@@ -116,19 +115,27 @@ namespace Timelapse
 
         private void MenuItemSetSearchTerm()
         {
-            if (DataHandler.FileDatabase.FileSelectionEnum != FileSelectionEnum.Folders)
+            SearchTerm relativePathSearchTerm = DataHandler?.FileDatabase?.CustomSelection?.SearchTerms.FirstOrDefault(term => term.DataLabel == DatabaseColumn.RelativePath);
+
+            if (string.IsNullOrEmpty(relativePathSearchTerm?.DatabaseValue))
             {
-                this.tv.UnselectAllItems(tv);
-                Debug.Print("SetUnselected");
-                this.tv.SelectedPath = "";
+                // Nothing relevant found so just collapse everything
+                this.tv.SelectedPath = string.Empty;
+                this.tv.FocusSelection = false;
+                this.tv.UnselectAll();
+                this.tv.CollapseAll();
                 return;
             }
-            SearchTerm relativePathSearchTerm = DataHandler?.FileDatabase?.CustomSelection?.SearchTerms.First(term => term.DataLabel == DatabaseColumn.RelativePath);
-            if (relativePathSearchTerm != null)
+
+            if (false == relativePathSearchTerm.UseForSearching || DataHandler.FileDatabase.FileSelectionEnum != FileSelectionEnum.Folders)
             {
+                // Expand the search term, but we don't want it focused
+                this.tv.FocusSelection = false;
                 this.tv.SelectedPath = relativePathSearchTerm.DatabaseValue;
-                Debug.Print("SetSelectedPath");
+                return;
             }
+            this.tv.FocusSelection = true;
+            this.tv.SelectedPath = relativePathSearchTerm.DatabaseValue;
         }
 
         private void MenuItemSelectByFolderTreeView_ResetFolderList()
@@ -150,8 +157,9 @@ namespace Timelapse
                     continue;
                 }
             }
-            //folderList.Insert(0, "All files");
+            this.tv.SkipSelectionCallback = true;
             this.tv.SetTreeViewContentsToRelativePathList(folderList);
+            this.tv.SkipSelectionCallback = false;
         }
         // Populate the menu. Get the folders from the database, and create a menu item representing it
         private void MenuItemSelectByFolder_GetRelativePathsTreeView()
@@ -161,7 +169,7 @@ namespace Timelapse
         }
         private async void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.tv.IgnoreSelection)
+            if (this.tv.SkipSelectionCallback)
             {
                 return;
             }
@@ -203,7 +211,6 @@ namespace Timelapse
                 };
                 messageBox.ShowDialog();
             }
-            Debug.Print($"TreeView_SelectedItemChanged: {treeViewAsRelativePathMenu.SelectedPath}");
             await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
         }
         #endregion
@@ -250,7 +257,8 @@ namespace Timelapse
                     TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     return;
                 }
-                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
+                //FileSelectionEnum.Custom
+                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, customSelection.FileSelection).ConfigureAwait(true);
             }
             else
             {

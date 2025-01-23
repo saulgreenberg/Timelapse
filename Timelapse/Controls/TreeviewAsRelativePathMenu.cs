@@ -9,11 +9,21 @@ namespace Timelapse.Controls
 {
     public class TreeViewAsRelativePathMenu : TreeView
     {
+        #region Public properties
+        // The currently selected path (e.g., a/b/c)
+        public string SelectedPath { get; set; }
+        // Whether or not to skip executing the Selection callback code
+        // Essentially stops unecessary invocations of that callback, which can lead to performance issues
+        public bool SkipSelectionCallback { get; set; } = false;
 
+        // Whether or not to apply the focus on the selected item
+        public bool FocusSelection { get; set; } = true;
+        #endregion
+
+        #region Private properties
         private ItemProvider ItemProvider { get; set; }
         private List<Item> ItemList { get; set; }
-        public string SelectedPath { get; set; }
-        public bool IgnoreSelection { get; set; } = false;
+        #endregion
 
         #region Constructor
         public TreeViewAsRelativePathMenu()
@@ -30,8 +40,6 @@ namespace Timelapse.Controls
             this.ItemList = ItemProvider.GetItems();
             DataContext = this.ItemList;
         }
-
-
         #endregion
 
         #region Callbacks
@@ -43,11 +51,13 @@ namespace Timelapse.Controls
                 return;
             }
 
-            this.IgnoreSelection = true;
             PathItem item = this.SearchTreeViewForPath(this.SelectedPath);
-            CollapseAll(this);
+            this.UnselectAll();
+            this.CollapseAll();
+            this.SkipSelectionCallback = true;
             this.ShowSelectedItem(this, item);
-            this.IgnoreSelection = false;
+            this.SkipSelectionCallback = false;
+
         }
 
         // Highlight the selected item
@@ -55,7 +65,10 @@ namespace Timelapse.Controls
         {
             if (e.NewValue is PathItem pathItem)
             {
-                if (this.IgnoreSelection) return;
+                if (this.SkipSelectionCallback)
+                {
+                    return;
+                }
                 this.SelectAndHighlightItem(pathItem);
             }
         }
@@ -64,7 +77,10 @@ namespace Timelapse.Controls
         #region Private Search for Path, Select and Show Item
         private PathItem SearchTreeViewForPath(string path)
         {
-            return this.ItemProvider.Search(this.ItemList, path);
+            this.SkipSelectionCallback = true;
+            PathItem pathItem = this.ItemProvider.Search(this.ItemList, path);
+            this.SkipSelectionCallback = false;
+            return pathItem;
         }
 
         // Select and highlight the pathItem if its not already selected
@@ -87,7 +103,7 @@ namespace Timelapse.Controls
             }
         }
 
-        // Expand the tree and highlight the itemToShow
+        // Expand the tree, select and optionally focus the itemToShow
         // Call the TreeView as an ItemsControl to cast it between TreeView and TreeViewItem as we recurse
         private bool ShowSelectedItem(ItemsControl parentContainer, object itemToShow)
         {
@@ -103,14 +119,25 @@ namespace Timelapse.Controls
                 if (currentContainer != null && item == itemToShow)
                 {
                     currentContainer.IsExpanded = true;
-                    currentContainer.IsSelected = true;
-                    currentContainer.Focus(); // Focusing this changes the highlight color to blue rather than shaded grey.
+                    
+                    if (this.FocusSelection)
+                    {
+                        // FocusSelection is set externally, and is set only if the selection is an active one 
+                        // (rather than a setting that is currently inactive)
+                        // Focus will also make the item appear with a  blue (rather than grey) background to show that it is active
+                        currentContainer.IsSelected = true; 
+                        currentContainer.Focus(); // Focusing this changes the highlight color to blue rather than shaded grey.
+                    }
+                    else
+                    {
+                        currentContainer.IsSelected = false;
+                    }
                     currentContainer.BringIntoView();
                     return true;
                 }
             }
 
-            // item is not found at current level, check the children
+            // Item is not found at current level, check the children
             foreach (object item in parentContainer.Items)
             {
                 TreeViewItem currentContainer = (TreeViewItem)parentContainer.ItemContainerGenerator.ContainerFromItem(item);
@@ -136,44 +163,47 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        #region Collapse items
-        public void CollapseAll(TreeView treeView)
+        #region Collapse
+        public void CollapseAll()
         {
-            foreach (var item in treeView.Items)
+            this.SkipSelectionCallback = true;
+            foreach (var item in this.Items)
             {
-                if (treeView.ItemContainerGenerator.ContainerFromItem(item) is TreeViewItem treeViewItem)
+                if (this.ItemContainerGenerator.ContainerFromItem(item) is TreeViewItem treeViewItem)
                 {
-                    CollapseAllItems(treeViewItem);
+                    CollapseAllRecursive(treeViewItem);
                 }
             }
+            this.SkipSelectionCallback = false;
         }
 
-        private void CollapseAllItems(TreeViewItem treeViewItem)
+        private void CollapseAllRecursive(TreeViewItem treeViewItem)
         {
             treeViewItem.IsExpanded = false;
+            treeViewItem.IsSelected = false;
             foreach (var item in treeViewItem.Items)
             {
                 if (treeViewItem.ItemContainerGenerator.ContainerFromItem(item) is TreeViewItem childItem)
                 {
-                    CollapseAllItems(childItem);
+                    CollapseAllRecursive(childItem);
                 }
             }
         }
         #endregion
 
         #region UnselectAll
-        public void UnselectAllItems(TreeView treeView)
+        public void UnselectAll()
         {
-            this.IgnoreSelection = true;
-            foreach (var item in treeView.Items)
+            this.SkipSelectionCallback = true;
+            foreach (var item in this.Items)
             {
-                UnselectAllItemsRecursive((TreeViewItem)treeView.ItemContainerGenerator.ContainerFromItem(item));
+                UnselectAllRecursive((TreeViewItem)this.ItemContainerGenerator.ContainerFromItem(item));
             }
-
-            this.IgnoreSelection = false;
+            this.SkipSelectionCallback = false;
         }
 
-        private void UnselectAllItemsRecursive(TreeViewItem treeViewItem)
+        // Unselect all items in the tree
+        private void UnselectAllRecursive(TreeViewItem treeViewItem)
         {
             if (treeViewItem == null) return;
 
@@ -181,7 +211,7 @@ namespace Timelapse.Controls
 
             foreach (var subItem in treeViewItem.Items)
             {
-                UnselectAllItemsRecursive((TreeViewItem)treeViewItem.ItemContainerGenerator.ContainerFromItem(subItem));
+                UnselectAllRecursive((TreeViewItem)treeViewItem.ItemContainerGenerator.ContainerFromItem(subItem));
             }
         }
         #endregion

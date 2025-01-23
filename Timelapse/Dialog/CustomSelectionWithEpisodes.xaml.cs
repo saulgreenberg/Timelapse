@@ -19,6 +19,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.SearchingAndSorting;
+using Timelapse.State;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
@@ -32,6 +33,7 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class CustomSelectionWithEpisodes
     {
+        public FileSelectionEnum FileSelection;
         #region Private Variables
         private const int DefaultControlWidth = 200;
 
@@ -1248,6 +1250,49 @@ namespace Timelapse.Dialog
             }
             ShowMissingDetectionsCheckbox.IsChecked = false;
         }
+
+        private FileSelectionEnum ChangeSelectionStateIfNeeded()
+        {
+            if (UseDetectionsCheckbox.IsChecked == true)
+            {
+                // We have at least one non-relativePath checkmark, so don't change anything
+                // i.e., this leave it as a custom selection
+                return FileSelectionEnum.Custom;
+            }
+
+            int checkedSelectionsCount = 0;
+            bool relativePathChecked = false;
+            for (int index = database.CustomSelection.SearchTerms.Count - 1; index >= 0; index--)
+            {
+                SearchTerm searchTerm = database.CustomSelection.SearchTerms[index];
+
+                if (searchTerm.UseForSearching == true)
+                {
+                    checkedSelectionsCount++;
+                    if (searchTerm.DataLabel != DatabaseColumn.RelativePath)
+                    {
+                        // We have at least one non-relativePath checkmark, so don't change anything
+                        // i.e., this leave it as a custom selection
+                        return FileSelectionEnum.Custom; ;
+                    }
+                    relativePathChecked = true;
+                }
+            }
+
+            if (checkedSelectionsCount == 0)
+            {
+                // As nothing is selected, this is the same as FileSelection All, so set that
+                return FileSelectionEnum.All;
+            }
+
+            if (checkedSelectionsCount == 1 && relativePathChecked == true)
+            {
+                // As only relative paths are selected, this is the same as FileSelection Folders, so set that
+                return FileSelectionEnum.Folders;
+            }
+            // We shouldn't arrive here...
+            return FileSelectionEnum.Custom;
+        }
         #endregion
 
         #region Search Criteria feedback for each row
@@ -1691,6 +1736,9 @@ namespace Timelapse.Dialog
             {
                 SetDetectionCriteria();
             }
+
+            this.FileSelection = ChangeSelectionStateIfNeeded();
+            this.database.FileSelectionEnum = this.FileSelection;
             DialogResult = true;
         }
 

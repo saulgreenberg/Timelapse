@@ -3059,6 +3059,10 @@ namespace Timelapse.Database
 
             foreach (image image in jsonRecognizer.images)
             {
+                if (image.detections == null)
+                {
+                    continue;
+                }
                 for (int i = image.detections.Count - 1;i >= 0; i--)
                 {
                     // Delete detections whose confidence is lower than the confidence threshold
