@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,12 +39,13 @@ namespace Timelapse
             FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum;
 
             MenuItemSelectAllFiles.IsChecked = selection == FileSelectionEnum.All;
-            MenuItemSelectByRelativePath.IsChecked = selection == FileSelectionEnum.Folders;
+            MenuItemSelectByRelativePathTreeView.IsChecked = selection == FileSelectionEnum.Folders;
 
             MenuItemSelectMissingFiles.IsChecked = selection == FileSelectionEnum.Missing;
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
             MenuItemSelectRandomSample.IsEnabled = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
+            MenuItemSetSearchTerm();
         }
         #endregion
 
@@ -53,7 +55,6 @@ namespace Timelapse
             MenuItem item = (MenuItem)sender;
             FileSelectionEnum selection;
             FileSelectionEnum oldSelection = DataHandler.FileDatabase.FileSelectionEnum;
-
 
             // Any selections below will not trigger a Select with recognitions
             // Consequently, set the bounding box override to 1 i.e., so the over-ride has no effect in the display (if any) of bounding boxes.
@@ -72,9 +73,9 @@ namespace Timelapse
             {
                 selection = FileSelectionEnum.MarkedForDeletion;
             }
-            else if (item == MenuItemSelectByRelativePath)
+            else if (item == MenuItemSelectByRelativePathTreeView)
             {
-                // MenuItemSelectByFolder and its child folders should not be activated from here, 
+                // MenuItemSelectByRelativePathTreeView and its child folders should not be activated from here, 
                 // but we add this test just as a reminder that we haven't forgotten it
                 return;
             }
@@ -82,11 +83,6 @@ namespace Timelapse
             {
                 selection = FileSelectionEnum.All;   // Just in case, this is the fallback operation
             }
-
-
-            // Clear all the checkmarks from the Folder menu
-            // But, not sure where we Treat the other menu checked status as a radio button i.e., we would want to toggle their states so only the clicked menu item is checked. 
-            MenuItemSelectByRelativePath_ClearAllCheckmarks();
 
             // Select and show the files according to the selection made
             if (DataHandler.ImageCache.Current == null)
@@ -104,54 +100,41 @@ namespace Timelapse
         }
         #endregion
 
-        #region Select by Folder Submenu(including submenu opening)
-        private void MenuItemSelectByFolder_SubmenuOpening(object sender, RoutedEventArgs e)
-        {
-            // We don't have to do anything if the folder menu item list, except set its checkmark, if it has previously been populated
-            if (!(sender is MenuItem menu))
-            {
-                // shouldn't happen
-                return;
-            }
+        #region Select By Folder as TreeView
 
-            // Repopulate the menu if needed. 
-            if (menu.Items.Count != 1)
+        private void MenuItemSelectByFolderTreeView_SubmenuOpening(object sender, RoutedEventArgs e)
+        {
+
+            this.MenuItemSetSearchTerm();
+
+            // Repopulate the treeview if needed.
+            if (this.tv.Items.Count == 0)
             {
-                // Gets the folders from the database, and created a menu item representing it
-                MenuItemSelectByFolder_ResetFolderList();
+                this.MenuItemSelectByFolder_GetRelativePathsTreeView();
             }
-            // Set the checkmark to reflect the current search term for the relative path
-            MenuItemFolderListSetCheckmark();
         }
 
-        private void MenuItemFolderListSetCheckmark()
+        private void MenuItemSetSearchTerm()
         {
+            if (DataHandler.FileDatabase.FileSelectionEnum != FileSelectionEnum.Folders)
+            {
+                this.tv.UnselectAllItems(tv);
+                Debug.Print("SetUnselected");
+                this.tv.SelectedPath = "";
+                return;
+            }
             SearchTerm relativePathSearchTerm = DataHandler?.FileDatabase?.CustomSelection?.SearchTerms.First(term => term.DataLabel == DatabaseColumn.RelativePath);
-            if (relativePathSearchTerm == null)
+            if (relativePathSearchTerm != null)
             {
-                return;
-            }
-
-            foreach (MenuItem menuItem in MenuItemSelectByRelativePath.Items)
-            {
-                menuItem.IsChecked = relativePathSearchTerm.UseForSearching && String.Equals((string)menuItem.Header, relativePathSearchTerm.DatabaseValue);
+                this.tv.SelectedPath = relativePathSearchTerm.DatabaseValue;
+                Debug.Print("SetSelectedPath");
             }
         }
 
-        // Populate the menu. Get the folders from the database, and create a menu item representing it
-        private void MenuItemSelectByFolder_ResetFolderList()
+        private void MenuItemSelectByFolderTreeView_ResetFolderList()
         {
-
-            // Clear the list, excepting the first menu item all folders, which should be kept.
-            MenuItem item = (MenuItem)MenuItemSelectByRelativePath.Items[0];
-            MenuItemSelectByRelativePath.Items.Clear();
-            MenuItemSelectByRelativePath.Items.Add(item);
-
-            // Populate the menu . Get the folders from the database, and create a menu item representing it
-            int i = 1;
-            // PERFORMANCE. THIS introduces a delay when there are a large number of files. It is invoked when the user loads images for the first time. 
-            // PROGRESSBAR - at the very least, show a progress bar if needed.
-
+            // Get the folders from the database
+            // PERFORMANCE. This can introduce a delay when there are a large number of files. It is invoked when the user loads images for the first time. 
             List<string> folderList = DataHandler.FileDatabase.GetFoldersFromRelativePaths();//this.DataHandler.FileDatabase.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
             foreach (string header in folderList)
             {
@@ -166,23 +149,23 @@ namespace Timelapse
                 {
                     continue;
                 }
-                // Create a menu item for each folder
-                MenuItem menuitemFolder = new MenuItem
-                {
-                    Header = header,
-                    IsCheckable = true,
-                    ToolTip = "Show only files in the folder (including its own sub-folders): " + header
-                };
-                menuitemFolder.Click += MenuItemSelectFolder_Click;
-                MenuItemSelectByRelativePath.Items.Insert(i++, menuitemFolder);
             }
+            //folderList.Insert(0, "All files");
+            this.tv.SetTreeViewContentsToRelativePathList(folderList);
         }
-
-
-        // A specific folder was selected.
-        private async void MenuItemSelectFolder_Click(object sender, RoutedEventArgs e)
+        // Populate the menu. Get the folders from the database, and create a menu item representing it
+        private void MenuItemSelectByFolder_GetRelativePathsTreeView()
         {
-            if (!(sender is MenuItem mi))
+            // Add the current folders in the database to the treeview
+            this.MenuItemSelectByFolderTreeView_ResetFolderList();
+        }
+        private async void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (this.tv.IgnoreSelection)
+            {
+                return;
+            }
+            if (!(sender is TreeViewAsRelativePathMenu treeViewAsRelativePathMenu))
             {
                 return;
             }
@@ -195,7 +178,7 @@ namespace Timelapse
             }
 
             // If its select all folders, then 
-            if (mi == MenuItemSelectAllFolders)
+            if (treeViewAsRelativePathMenu.SelectedPath == "All files")
             {
                 // its all folders, so just select all folders
                 await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.All).ConfigureAwait(true);
@@ -204,7 +187,7 @@ namespace Timelapse
 
             // Set and only use the relative path as a search term
             DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
-            DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm((string)mi.Header);
+            DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm(treeViewAsRelativePathMenu.SelectedPath);
 
             int count = DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             if (count <= 0)
@@ -214,26 +197,14 @@ namespace Timelapse
                     Message =
                     {
                          Icon = MessageBoxImage.Exclamation,
-                         Reason = $"While the folder {mi.Header} exists, no image data is associated with any files in it.",
+                         Reason = $"While the folder {treeViewAsRelativePathMenu.SelectedPath} exists, no image data is associated with any files in it.",
                          Hint = "Perhaps you removed these files and its data during this session?"
                     }
                 };
                 messageBox.ShowDialog();
             }
-            MenuItemSelectByRelativePath_ClearAllCheckmarks();
-            MenuItemSelectByRelativePath.IsChecked = true;
-            mi.IsChecked = true;
+            Debug.Print($"TreeView_SelectedItemChanged: {treeViewAsRelativePathMenu.SelectedPath}");
             await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Folders).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
-            //await this.FilesSelectAndShowAsync(this.DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);  // Go to the first result (i.e., index 0) in the given selection set
-        }
-
-        private void MenuItemSelectByRelativePath_ClearAllCheckmarks()
-        {
-            MenuItemSelectByRelativePath.IsChecked = false;
-            foreach (MenuItem mi in MenuItemSelectByRelativePath.Items)
-            {
-                mi.IsChecked = false;
-            }
         }
         #endregion
 
@@ -280,10 +251,6 @@ namespace Timelapse
                     return;
                 }
                 await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
-                if (MenuItemSelectCustomSelection.IsChecked || MenuItemSelectCustomSelection.IsChecked)
-                {
-                    MenuItemSelectByRelativePath_ClearAllCheckmarks();
-                }
             }
             else
             {
@@ -291,7 +258,7 @@ namespace Timelapse
                 bool otherMenuItemIsChecked =
                     MenuItemSelectAllFiles.IsChecked ||
                     MenuItemSelectMissingFiles.IsChecked ||
-                    MenuItemSelectByRelativePath.IsChecked ||
+                    MenuItemSelectByRelativePathTreeView.IsChecked ||
                     MenuItemSelectFilesMarkedForDeletion.IsChecked;
                 MenuItemSelectCustomSelection.IsChecked = !otherMenuItemIsChecked;
             }

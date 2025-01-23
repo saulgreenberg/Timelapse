@@ -57,7 +57,6 @@ namespace Timelapse
 
             // Reset the rest of the user interface 
             MarkableCanvas.ThumbnailGrid?.Reset();
-            MenuItemSelectByRelativePath_ClearAllCheckmarks();
             State.Reset();
             DataEntryControlPanel.IsVisible = false;
             MarkableCanvas.ZoomOutAllTheWay();

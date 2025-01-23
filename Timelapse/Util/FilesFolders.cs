@@ -3,6 +3,7 @@ using Microsoft.WindowsAPICodePack.Shell;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using File = System.IO.File;
+using System.Text.RegularExpressions;
+using Timelapse.Extensions;
 
 namespace Timelapse.Util
 {
@@ -645,6 +648,31 @@ namespace Timelapse.Util
 
         #endregion
 
+        #region Public Static Methods - Get Path Parts
+        // Given a relative path return the subfolder path after the first folder e.g., e.g. a\b\c returns b\c
+        // If its a root folder, return "" as there are not folders after that e.g., a returns ""
+        public static string GetRelativePathSubFolder(string path)
+        {
+            int indx = path.NthIndexOf(Path.DirectorySeparatorChar.ToString(), 1);
+            if (indx == -1 || indx == path.Length)
+            {
+                return string.Empty;
+            }
+
+            return path.Substring(indx + 1);
+        }
+
+        // Given a relative path return the first folder in the path e.g. e.g. a\b\c, returns a
+        // If its a root folder, then just return that e.g., a returns a
+        public static string GetRelativePathRootFolder(string path)
+        {
+            int indx = path.NthIndexOf(Path.DirectorySeparatorChar, 1);
+            return indx == -1
+                ? path // the path is just the root folder
+                : path.Substring(0, indx); // trim off everything from the first path separator onwards
+        }
+        #endregion
+
         #region Public Static Methods - Find the difference between two paths
         // Find the difference between two paths (ignoring the file name, if any) and return it
         // For example, given:
@@ -885,6 +913,7 @@ namespace Timelapse.Util
         }
 
         #endregion
+
         #region Private (internal) methods
         // Remove, any files that 
         // - don't exactly match the desired image or video extension, 

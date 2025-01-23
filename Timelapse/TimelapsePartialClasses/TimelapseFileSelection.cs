@@ -124,29 +124,6 @@ namespace Timelapse
                 DataHandler.FileDatabase.BindToDataGrid();
             }
 
-            // Change the selection to reflect what the user selected. Update the menu state accordingly
-            // Set the checked status of the radio button menu items to the selection.
-            //string status;
-            //switch (selection)
-            //{
-            //    case FileSelectionEnum.All:
-            //        status = "All files";
-            //        break;
-            //    case FileSelectionEnum.Custom:
-            //        status = "Custom selection";
-            //        break;
-            //    case FileSelectionEnum.MarkedForDeletion:
-            //        status = "Files marked for deletion";
-            //        break;
-            //    case FileSelectionEnum.Folders:
-            //        status = "Files in a specific folder";
-            //        break;
-            //    case FileSelectionEnum.Missing:
-            //        status = "Missing files";
-            //        break;
-            //    default:
-            //        throw new NotSupportedException($"Unhandled file selection {selection}.");
-            //}
             // Show feedback of the status description in both the status bar and the data entry control panel title
             StatusBar.SetView(status);
             DataEntryControlPanel.Title = $"Image data ({status} selected)";

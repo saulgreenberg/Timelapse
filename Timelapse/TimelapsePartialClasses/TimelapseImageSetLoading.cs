@@ -646,7 +646,7 @@ namespace Timelapse
             EnableOrDisableMenusAndControls();
 
             // Reset the folder list used to construct the Select Folders menu
-            MenuItemSelectByFolder_ResetFolderList();
+            this.MenuItemSelectByFolderTreeView_ResetFolderList();
 
             // Trigger updates to the datagrid pane, if its visible to the user.
             if (DataGridPane.IsVisible)

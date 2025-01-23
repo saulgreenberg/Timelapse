@@ -17,6 +17,7 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.Standards;
 using Timelapse.Util;
 using DialogResult = System.Windows.Forms.DialogResult;
@@ -47,6 +48,8 @@ namespace Timelapse
         #region Menu stub to test some code
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
+            //string s = "012aaaaaaaaa4a6a89a0";
+            //Debug.Print($"{s.NthIndexOf("aa", 3)}");
         }
         #endregion
 
