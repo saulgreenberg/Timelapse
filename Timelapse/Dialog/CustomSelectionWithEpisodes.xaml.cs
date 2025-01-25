@@ -19,12 +19,12 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.SearchingAndSorting;
-using Timelapse.State;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
 using Arguments = Timelapse.DataStructures.Arguments;
 using Control = Timelapse.Constant.Control;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace Timelapse.Dialog
 {
@@ -34,6 +34,7 @@ namespace Timelapse.Dialog
     public partial class CustomSelectionWithEpisodes
     {
         public FileSelectionEnum FileSelection;
+
         #region Private Variables
         private const int DefaultControlWidth = 200;
 
@@ -48,15 +49,34 @@ namespace Timelapse.Dialog
         private bool dontCount;
         private bool dontUpdateRangeSlider;
 
-        // Variables
-        private readonly FileDatabase database;
-        private readonly ImageRow currentImageRow;
-        private readonly DataEntryControls dataEntryControls;
+        // Variables passed into constructor
+        private readonly FileDatabase Database;
+        private readonly ImageRow CurrentImageRow;
+        private readonly DataEntryControls DataEntryControls;
+        private readonly Arguments Arguments;
         private bool dontUpdate = true;
+
+        // The RelativePath control is implemented as a combination DropDownButton with a TreeViewRelativePathMenu as its content
+        private TreeViewWithRelativePaths treeViewWithRelativePaths;
+        private DropDownButton RelativePathButton;
 
         // Remember note fields that contain Episode data
         private string NoteDataLabelContainingEpisodeData;
 
+        // References to the various dateTime labels and controls set when they are created later,
+        // so we can switch their attributes depending on the CheckBoxUseTime state
+        private TextBlock dateTimeLabel1;
+        private TextBlock dateTimeLabel2;
+        private DateTimePicker dateTimeControl1;
+        private DateTimePicker dateTimeControl2;
+
+        // This timer is used to delay showing count information, which could be an expensive operation, as the user may be setting values quickly
+        private readonly DispatcherTimer countTimer = new DispatcherTimer();
+
+        private RecognitionSelections DetectionSelections { get; }
+        #endregion
+
+        #region Controls created ahead of time
         // UseTime Checkbox, funciton is to specify whether the select should use a pure time range instead of a pure date range
         private readonly CheckBox CheckBoxUseTime = new CheckBox
         {
@@ -92,40 +112,30 @@ namespace Timelapse.Dialog
             Width = double.NaN,
             IsEnabled = false
         };
-
-        // References to the various dateTime labels and controls set when they are created later,
-        // so we can switch their attributes depending on the CheckBoxUseTime state
-        private TextBlock dateTimeLabel1;
-        private TextBlock dateTimeLabel2;
-        private DateTimePicker dateTimeControl1;
-        private DateTimePicker dateTimeControl2;
-
-        // This timer is used to delay showing count information, which could be an expensive operation, as the user may be setting values quickly
-        private readonly DispatcherTimer countTimer = new DispatcherTimer();
-
-        private RecognitionSelections DetectionSelections { get; }
         #endregion
 
         #region Constructors and Loading
-        public CustomSelectionWithEpisodes(FileDatabase database, DataEntryControls dataEntryControls, Window owner, RecognitionSelections detectionSelections, ImageRow currentImageRow)
+        public CustomSelectionWithEpisodes(Window owner, FileDatabase database, DataEntryControls dataEntryControls, ImageRow currentImageRow, RecognitionSelections detectionSelections, Arguments arguments)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
 
             InitializeComponent();
 
-            this.database = database;
-            this.currentImageRow = currentImageRow;
-            this.dataEntryControls = dataEntryControls;
-            Owner = owner;
-            countTimer.Interval = TimeSpan.FromMilliseconds(500);
-            countTimer.Tick += CountTimer_Tick;
-
-            // Detections-specific
+            // Save the passed in parameters
+            this.Owner = owner;
+            this.Database = database;
+            this.DataEntryControls = dataEntryControls;
+            this.CurrentImageRow = currentImageRow;
             if (GlobalReferences.DetectionsExists)
             {
-                DetectionSelections = detectionSelections;
+                this.DetectionSelections = detectionSelections; // Detections-specific
             }
+            this.Arguments = arguments;
+
+            // Set up the count timer
+            countTimer.Interval = TimeSpan.FromMilliseconds(500);
+            countTimer.Tick += CountTimer_Tick;
         }
 
         // When the window is loaded, construct all the SearchTerm controls 
@@ -133,7 +143,6 @@ namespace Timelapse.Dialog
         {
             // Used to track whether we are on the 1st or 2nd dateTime control
             bool firstDateTimeControlSeen = false;
-
             // Adds the callback to this checkbox
             CheckBoxUseTime.Checked += CheckBoxUseTime_CheckChanged;
             CheckBoxUseTime.Unchecked += CheckBoxUseTime_CheckChanged;
@@ -163,7 +172,7 @@ namespace Timelapse.Dialog
 
                 // Put Detection and Classification categories in the combo box as human-readable labels
                 // Note that we add "All" to the Detections list as that is a 'bogus' Timelapse-internal category.
-                List<string> labels = database.GetDetectionLabels();
+                List<string> labels = Database.GetDetectionLabels();
                 DetectionCategoryComboBox.Items.Add(RecognizerValues.AllDetectionLabel);
                 foreach (string label in labels)
                 {
@@ -173,7 +182,7 @@ namespace Timelapse.Dialog
                 if (GlobalReferences.UseClassifications)
                 {
                     // Now add classifications
-                    labels = database.GetClassificationLabels();
+                    labels = Database.GetClassificationLabels();
                     if (labels.Count > 0)
                     {
                         // Add a separator
@@ -202,7 +211,7 @@ namespace Timelapse.Dialog
                 }
                 else if (DetectionSelections.RecognitionType == RecognitionType.Detection)
                 {
-                    categoryLabel = database.GetDetectionLabelFromCategory(DetectionSelections.DetectionCategory);
+                    categoryLabel = Database.GetDetectionLabelFromCategory(DetectionSelections.DetectionCategory);
                     if (string.IsNullOrEmpty(DetectionSelections.DetectionCategory) || (DetectionSelections.AllDetections && !DetectionSelections.InterpretAllDetectionsAsEmpty))
                     {
                         // We need an 'All' detection category, which is the union of all categories (except empty).
@@ -217,7 +226,7 @@ namespace Timelapse.Dialog
                 }
                 else
                 {
-                    categoryLabel = database.GetClassificationLabelFromCategory(DetectionSelections.ClassificationCategory);
+                    categoryLabel = Database.GetClassificationLabelFromCategory(DetectionSelections.ClassificationCategory);
                     DetectionCategoryComboBox.SelectedValue = (categoryLabel.Length != 0)
                         ? categoryLabel
                         : DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
@@ -236,12 +245,12 @@ namespace Timelapse.Dialog
             if (GlobalReferences.DetectionsExists)
             {
                 SetDetectionCriteria();
-                ShowMissingDetectionsCheckbox.IsChecked = database.CustomSelection.ShowMissingDetections;
-                NoteDataLabelContainingEpisodeData = database.CustomSelection.EpisodeNoteField;
-                if (database.CustomSelection.EpisodeShowAllIfAnyMatch && EpisodeFieldCheckFormat(currentImageRow, NoteDataLabelContainingEpisodeData))
+                ShowMissingDetectionsCheckbox.IsChecked = Database.CustomSelection.ShowMissingDetections;
+                NoteDataLabelContainingEpisodeData = Database.CustomSelection.EpisodeNoteField;
+                if (Database.CustomSelection.EpisodeShowAllIfAnyMatch && EpisodeFieldCheckFormat(CurrentImageRow, NoteDataLabelContainingEpisodeData))
                 {
                     // Only check the checkbox if it was previously checked and the data field still contains valid Episode data
-                    CheckboxShowAllEpisodeImages.IsChecked = database.CustomSelection.EpisodeShowAllIfAnyMatch;
+                    CheckboxShowAllEpisodeImages.IsChecked = Database.CustomSelection.EpisodeShowAllIfAnyMatch;
                 }
             }
             InitiateShowCountsOfMatchingFiles();
@@ -251,7 +260,7 @@ namespace Timelapse.Dialog
             dontUpdate = true;
 
             // ConfigureFormatForDateTimeCustom the And vs Or conditional Radio Buttons
-            if (database.CustomSelection.TermCombiningOperator == CustomSelectionOperatorEnum.And)
+            if (Database.CustomSelection.TermCombiningOperator == CustomSelectionOperatorEnum.And)
             {
                 RadioButtonTermCombiningAnd.IsChecked = true;
                 RadioButtonTermCombiningOr.IsChecked = false;
@@ -271,7 +280,7 @@ namespace Timelapse.Dialog
             // - the nonStandard controls defined by whoever customized the template 
             int gridRowIndex = 0;
             bool noSeparatorCreated = true;
-            foreach (SearchTerm searchTerm in database.CustomSelection.SearchTerms)
+            foreach (SearchTerm searchTerm in Database.CustomSelection.SearchTerms)
             {
                 // start at 1 as there is already a header row
                 ++gridRowIndex;
@@ -291,11 +300,23 @@ namespace Timelapse.Dialog
                     HorizontalAlignment = HorizontalAlignment.Center,
                     IsChecked = searchTerm.UseForSearching
                 };
-                if (searchTerm.Label == DatabaseColumn.RelativePath && GlobalReferences.MainWindow.Arguments.ConstrainToRelativePath)
+
+                // As we want to disabled the relative path Use checkbox if there are no folders,
+                // we need to remember it so we can do that after we create the relativePathControl
+                CheckBox checkboxforUsingRelativePath = null;
+                if (searchTerm.Label == DatabaseColumn.RelativePath)
                 {
-                    useCurrentRow.IsChecked = true;
-                    useCurrentRow.IsEnabled = false;
+                    checkboxforUsingRelativePath = useCurrentRow;
+
+                    if (this.Arguments.ConstrainToRelativePath)
+                    {
+                        // TODO This is wrong as we want to be able to choose subfolders udner the constrained relative path
+                        // I think its corrected in the menu, but need to test this.
+                        useCurrentRow.IsChecked = true;
+                        useCurrentRow.IsEnabled = false;
+                    }
                 }
+
                 useCurrentRow.Checked += Select_CheckedOrUnchecked;
                 useCurrentRow.Unchecked += Select_CheckedOrUnchecked;
                 Grid.SetRow(useCurrentRow, gridRowIndex);
@@ -441,68 +462,14 @@ namespace Timelapse.Dialog
 
                     // RelativePath
                     case DatabaseColumn.RelativePath:
-                        // Relative path uses a dropdown that shows existing folders
-                        ComboBox relativePathValue = new ComboBox
-                        {
-                            FontWeight = FontWeights.Normal,
-                            IsEnabled = searchTerm.UseForSearching,
-                            Width = DefaultControlWidth,
-                            Height = 25,
-                            Margin = thickness,
-
-                        };
-                        // Create the dropdown menu containing only folders with images in it
-                        Arguments arguments = GlobalReferences.MainWindow.Arguments;
-                        List<string> newFolderList;
-                        if (false == arguments.ConstrainToRelativePath)
-                        {
-                            // We are not constrained to a particular relative path
-                            newFolderList = database.GetFoldersFromRelativePaths();
-                            relativePathValue.ItemsSource = newFolderList;
-                        }
-                        else
-                        {
-                            // We are constrained to a particular relative path
-                            // Generate a folder list that is just the relativePath and its sub-folders
-                            newFolderList = new List<string>();
-                            foreach (string folder in database.GetFoldersFromRelativePaths())
-                            {
-                                // Add the folder to the menu only if it isn't constrained by the relative path arguments
-                                if (arguments.ConstrainToRelativePath && !(folder == arguments.RelativePath || folder.StartsWith(arguments.RelativePath + @"\")))
-                                {
-                                    continue;
-                                }
-
-                                newFolderList.Add(folder);
-                            }
-                            relativePathValue.ItemsSource = newFolderList;
-                        }
-
-                        // Set the relativepath item to the current relative path search term
-                        if (newFolderList.Count > 0)
-                        {
-                            if (relativePathValue.Items.Contains(searchTerm.DatabaseValue))
-                            {
-                                relativePathValue.SelectedItem = searchTerm.DatabaseValue;
-                            }
-                            else
-                            {
-                                relativePathValue.SelectedIndex = 0;
-                            }
-
-                            searchTerm.DatabaseValue = (string)relativePathValue.SelectedValue;
-                        }
-                        relativePathValue.SelectionChanged += FixedChoice_SelectionChanged;
-                        relativePathValue.GotFocus += ControlsDataHelpersCommon.Control_GotFocus;
-                        relativePathValue.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
-                        Grid.SetRow(relativePathValue, gridRowIndex);
-                        Grid.SetColumn(relativePathValue, ValueColumn);
-                        SearchTerms.Children.Add(relativePathValue);
+                        // Relative path uses a dropdown to show existing folders within a specialized treeview control
+                        // As the RelativePath control is somewhat complex to set up, we create it in its on method
+                        this.RelativePathCreateControl(searchTerm, thickness, gridRowIndex, checkboxforUsingRelativePath);
                         break;
 
                     // DateTime
                     case DatabaseColumn.DateTime:
-                        DateTime dateTime = database.CustomSelection.GetDateTimePLAINVERSION(gridRowIndex - 1);
+                        DateTime dateTime = Database.CustomSelection.GetDateTimePLAINVERSION(gridRowIndex - 1);
                         // The DateTime Picker is set to show only the date portion
                         DateTimePicker dateValue = new DateTimePicker
                         {
@@ -557,7 +524,7 @@ namespace Timelapse.Dialog
                                 controlType == Control.AlphaNumeric)
                             {
                                 // Add existing autocompletions for this control
-                                textBoxValue.Autocompletions = dataEntryControls.AutocompletionGetForNote(searchTerm.DataLabel);
+                                textBoxValue.Autocompletions = DataEntryControls.AutocompletionGetForNote(searchTerm.DataLabel);
                             }
 
                             if (controlType == Control.AlphaNumeric)
@@ -590,7 +557,7 @@ namespace Timelapse.Dialog
                                 VerticalAlignment = VerticalAlignment.Center,
                                 VerticalContentAlignment = VerticalAlignment.Top,
                                 HorizontalContentAlignment = HorizontalAlignment.Left,
-                                Style = (Style)dataEntryControls.FindResource("MultiLineBox"),
+                                Style = (Style)DataEntryControls.FindResource("MultiLineBox"),
                             };
                             multiLineValue.TextHasChanged += MultiLineValue_TextHasChanged;
                             Grid.SetRow(multiLineValue, gridRowIndex);
@@ -843,9 +810,9 @@ namespace Timelapse.Dialog
             // Load the available note fields in the Episode ComboBox
             // and set the CustomSelection to the current values
             NoteDataLabelContainingEpisodeData = string.Empty;
-            foreach (ControlRow control in database.Controls)
+            foreach (ControlRow control in Database.Controls)
             {
-                if (control.Type == Control.Note && EpisodeFieldCheckFormat(currentImageRow, control.DataLabel))
+                if (control.Type == Control.Note && EpisodeFieldCheckFormat(CurrentImageRow, control.DataLabel))
                 {
                     // We found a note data label whose value in the current image follows the expected Episode format.
                     // So save it
@@ -855,11 +822,11 @@ namespace Timelapse.Dialog
             }
 
             // Set the UseTime state based on what was last recorded
-            CheckBoxUseTime.IsChecked = database.CustomSelection.UseTimeInsteadOfDate;
+            CheckBoxUseTime.IsChecked = Database.CustomSelection.UseTimeInsteadOfDate;
 
             // Set the selected item to the Note field with episode data in it.
-            database.CustomSelection.EpisodeNoteField = NoteDataLabelContainingEpisodeData;
-            database.CustomSelection.EpisodeShowAllIfAnyMatch = CheckboxShowAllEpisodeImages.IsChecked == true;
+            Database.CustomSelection.EpisodeNoteField = NoteDataLabelContainingEpisodeData;
+            Database.CustomSelection.EpisodeShowAllIfAnyMatch = CheckboxShowAllEpisodeImages.IsChecked == true;
         }
         #endregion
 
@@ -870,7 +837,7 @@ namespace Timelapse.Dialog
             if (sender is CheckBox cb)
             {
                 // Remember the checkbox state
-                database.CustomSelection.UseTimeInsteadOfDate = cb.IsChecked == true;
+                Database.CustomSelection.UseTimeInsteadOfDate = cb.IsChecked == true;
 
                 // The DateTime label should reflect the state
                 if (dateTimeLabel1 != null)
@@ -1006,7 +973,7 @@ namespace Timelapse.Dialog
         private void AndOrRadioButton_Checked(object sender, RoutedEventArgs args)
         {
             RadioButton radioButton = sender as RadioButton;
-            database.CustomSelection.TermCombiningOperator = (radioButton == RadioButtonTermCombiningAnd) ? CustomSelectionOperatorEnum.And : CustomSelectionOperatorEnum.Or;
+            Database.CustomSelection.TermCombiningOperator = (radioButton == RadioButtonTermCombiningAnd) ? CustomSelectionOperatorEnum.And : CustomSelectionOperatorEnum.Or;
             UpdateSearchDialogFeedback();
         }
 
@@ -1025,7 +992,7 @@ namespace Timelapse.Dialog
 
             int row = Grid.GetRow(select);  // And you have the row number...
 
-            SearchTerm searchterms = database.CustomSelection.SearchTerms[row - 1];
+            SearchTerm searchterms = Database.CustomSelection.SearchTerms[row - 1];
             searchterms.UseForSearching = select.IsChecked == true;
 
             TextBlock label = GetGridElement<TextBlock>(LabelColumn, row);
@@ -1051,7 +1018,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(comboBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
             UpdateSearchDialogFeedback();
         }
 
@@ -1067,7 +1034,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
             UpdateSearchDialogFeedback();
         }
 
@@ -1084,7 +1051,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
             UpdateSearchDialogFeedback();
         }
 
@@ -1097,7 +1064,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
             UpdateSearchDialogFeedback();
         }
 
@@ -1110,7 +1077,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
             UpdateSearchDialogFeedback();
         }
 
@@ -1128,7 +1095,7 @@ namespace Timelapse.Dialog
                 // Set the DateTime from the updated value, regardless of whether the UseTime checkbox is checked.
                 // This stores both the date and the time.
                 // Later, the search itself will check whether the UseTime is true or false to determine whether it should parse out the date or time portion.
-                database.CustomSelection.SetDateTime(row - 1, datePicker.Value.Value);
+                Database.CustomSelection.SetDateTime(row - 1, datePicker.Value.Value);
                 UpdateSearchDialogFeedback();
             }
         }
@@ -1150,7 +1117,7 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = comboBox.SelectedValue.ToString(); // Set the corresponding value to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = comboBox.SelectedValue.ToString(); // Set the corresponding value to the current selection
             UpdateSearchDialogFeedback();
         }
 
@@ -1179,7 +1146,7 @@ namespace Timelapse.Dialog
                 }
             }
             int row = Grid.GetRow(checkComboBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkComboBox.Text; // Set the corresponding value to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkComboBox.Text; // Set the corresponding value to the current selection
             UpdateSearchDialogFeedback();
 
         }
@@ -1196,7 +1163,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(checkBox);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkBox.IsChecked.ToString().ToLower(); // Set the corresponding value to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkBox.IsChecked.ToString().ToLower(); // Set the corresponding value to the current selection
             UpdateSearchDialogFeedback();
         }
 
@@ -1209,7 +1176,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(dateTimePicker);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = DateTimeHandler.DateTimeDisplayStringToDataBaseString(dateTimePicker.Text); // Set the corresponding value to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = DateTimeHandler.DateTimeDisplayStringToDataBaseString(dateTimePicker.Text); // Set the corresponding value to the current selection
             UpdateSearchDialogFeedback();
         }
 
@@ -1222,7 +1189,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(dateTimePicker);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = DateTimeHandler.DateDisplayStringToDataBaseString(dateTimePicker.Text); // Set the corresponding value to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = DateTimeHandler.DateDisplayStringToDataBaseString(dateTimePicker.Text); // Set the corresponding value to the current selection
             UpdateSearchDialogFeedback();
         }
 
@@ -1235,7 +1202,7 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(timePicker);  // Get the row number...
-            database.CustomSelection.SearchTerms[row - 1].DatabaseValue = timePicker.Text; // Set the corresponding value to the current selection
+            Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = timePicker.Text; // Set the corresponding value to the current selection
             UpdateSearchDialogFeedback();
         }
 
@@ -1243,7 +1210,7 @@ namespace Timelapse.Dialog
         private void ResetToAllImagesButton_Click(object sender, RoutedEventArgs e)
         {
             UseDetectionsCheckbox.IsChecked = false;
-            for (int row = 1; row <= database.CustomSelection.SearchTerms.Count; row++)
+            for (int row = 1; row <= Database.CustomSelection.SearchTerms.Count; row++)
             {
                 CheckBox select = GetGridElement<CheckBox>(SelectColumn, row);
                 select.IsChecked = false;
@@ -1262,9 +1229,9 @@ namespace Timelapse.Dialog
 
             int checkedSelectionsCount = 0;
             bool relativePathChecked = false;
-            for (int index = database.CustomSelection.SearchTerms.Count - 1; index >= 0; index--)
+            for (int index = Database.CustomSelection.SearchTerms.Count - 1; index >= 0; index--)
             {
-                SearchTerm searchTerm = database.CustomSelection.SearchTerms[index];
+                SearchTerm searchTerm = Database.CustomSelection.SearchTerms[index];
 
                 if (searchTerm.UseForSearching == true)
                 {
@@ -1306,9 +1273,9 @@ namespace Timelapse.Dialog
             // We go backwards, as we don't want to print the AND or OR on the last expression
             bool atLeastOneSearchTermIsSelected = false;
             int multipleNonStandardSelectionsMade = 0;
-            for (int index = database.CustomSelection.SearchTerms.Count - 1; index >= 0; index--)
+            for (int index = Database.CustomSelection.SearchTerms.Count - 1; index >= 0; index--)
             {
-                SearchTerm searchTerm = database.CustomSelection.SearchTerms[index];
+                SearchTerm searchTerm = Database.CustomSelection.SearchTerms[index];
 
                 if (searchTerm.UseForSearching == false)
                 {
@@ -1388,7 +1355,7 @@ namespace Timelapse.Dialog
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            database.CustomSelection.ShowMissingDetections = ShowMissingDetectionsCheckbox.IsChecked == true;
+            Database.CustomSelection.ShowMissingDetections = ShowMissingDetectionsCheckbox.IsChecked == true;
             SetDetectionCriteria();
             InitiateShowCountsOfMatchingFiles();
         }
@@ -1425,7 +1392,7 @@ namespace Timelapse.Dialog
                 DetectionSelections.RecognitionType = RecognitionType.Detection;
                 DetectionSelections.InterpretAllDetectionsAsEmpty = true;
                 DetectionSelections.AllDetections = true; // Empty detections signal that we need to flip the confidence to its inverse, which is then applied to AllDetections
-                DetectionSelections.DetectionCategory = database.GetDetectionCategoryFromLabel(RecognizerValues.NoDetectionLabel);
+                DetectionSelections.DetectionCategory = Database.GetDetectionCategoryFromLabel(RecognizerValues.NoDetectionLabel);
 
                 if (resetSlidersIfNeeded)
                 {
@@ -1482,13 +1449,13 @@ namespace Timelapse.Dialog
                     // Either a Detection ((excluding All and Empty)) or a Classification type 
                     DetectionSelections.AllDetections = false;
                     DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                    string detectionCategory = database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+                    string detectionCategory = Database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
 
                     if (string.IsNullOrWhiteSpace(detectionCategory))
                     {
                         // CLASSIFICATION
                         DetectionSelections.RecognitionType = RecognitionType.Classification;
-                        DetectionSelections.ClassificationCategory = database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+                        DetectionSelections.ClassificationCategory = Database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
                         if (resetSlidersIfNeeded)
                         {
                             DetectionRangeSlider.LowerValue = DetectionSelections.CurrentClassificationThreshold;
@@ -1655,11 +1622,11 @@ namespace Timelapse.Dialog
             RankByConfidenceCheckbox.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
 
             // CHECK THE ONES BELOW TO SEE IF THIS IS THE BEST WAY TO DO THESE
-            SelectionGroupBox.IsEnabled = !database.CustomSelection.ShowMissingDetections;
-            SelectionGroupBox.Background = database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
+            SelectionGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
+            SelectionGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
 
-            DetectionGroupBox.IsEnabled = !database.CustomSelection.ShowMissingDetections;
-            DetectionGroupBox.Background = database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
+            DetectionGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
+            DetectionGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
 
             if (ShowMissingDetectionsCheckbox.IsChecked == true || UseDetectionsCheckbox.IsChecked == true)
             {
@@ -1686,7 +1653,7 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            int count = database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
+            int count = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             QueryMatches.Text = count > 0 ? count.ToString() : "0";
             OkButton.IsEnabled = count > 0; // Dusable OK button if there are no matches
 
@@ -1738,7 +1705,7 @@ namespace Timelapse.Dialog
             }
 
             this.FileSelection = ChangeSelectionStateIfNeeded();
-            this.database.FileSelectionEnum = this.FileSelection;
+            this.Database.FileSelectionEnum = this.FileSelection;
             DialogResult = true;
         }
 
@@ -1759,7 +1726,7 @@ namespace Timelapse.Dialog
         #region EpisodeStuff - Move this code into proper regions later
         private void CheckboxShowAllEpisodeImages_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            if (database == null)
+            if (Database == null)
             {
                 CheckboxShowAllEpisodeImages.IsChecked = false;
                 return;
@@ -1772,12 +1739,12 @@ namespace Timelapse.Dialog
                     // No note fields contain the expected Episode data. Disable this operation and get the heck out of here.
                     Dialogs.CustomSelectEpisodeDataLabelProblem(Owner);
                     CheckboxShowAllEpisodeImages.IsChecked = false;
-                    database.CustomSelection.EpisodeShowAllIfAnyMatch = false;
+                    Database.CustomSelection.EpisodeShowAllIfAnyMatch = false;
                     return;
                 }
 
             }
-            database.CustomSelection.EpisodeShowAllIfAnyMatch = true == CheckboxShowAllEpisodeImages.IsChecked;
+            Database.CustomSelection.EpisodeShowAllIfAnyMatch = true == CheckboxShowAllEpisodeImages.IsChecked;
             UpdateSearchDialogFeedback();
         }
 
@@ -1785,6 +1752,151 @@ namespace Timelapse.Dialog
         {
             string value = row.GetValueDisplayString(dataLabel);
             return (null != value && Regex.IsMatch(value, RegExExpressions.NotEpisodeCharacters));
+        }
+        #endregion
+
+        #region RelativePathControl methods
+        private void RelativePathCreateControl(SearchTerm searchTerm, Thickness thickness, int gridRowIndex, CheckBox checkboxforUsingRelativePath)
+        {
+            // Relative path uses a dropdown button that shows existing relative path folders as a treeview
+            this.RelativePathButton = new DropDownButton
+            {
+                FontWeight = FontWeights.Normal,
+                IsEnabled = searchTerm.UseForSearching,
+                Width = DefaultControlWidth,
+                Height = 25,
+                Margin = thickness,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Background = Brushes.White,
+                MaxDropDownHeight = 350,
+            };
+
+            // Add the TreeViewWithRelativePaths control as the DropDown button's drop down.
+            // This treeview is specialized to show relative paths
+            this.treeViewWithRelativePaths = new TreeViewWithRelativePaths
+            {
+                DontInvoke = true,
+            };
+            this.RelativePathButton.DropDownContent = treeViewWithRelativePaths;
+
+            // Populate the treeview. Enable it only if it has content
+            this.RelativePathControlRepopulateIfNeeded();
+            this.treeViewWithRelativePaths.FocusSelection = true;
+            this.RelativePathButton.IsEnabled = this.treeViewWithRelativePaths.HasContent && (null != checkboxforUsingRelativePath && checkboxforUsingRelativePath.IsChecked == true);
+            if (checkboxforUsingRelativePath != null)
+            {
+                checkboxforUsingRelativePath.IsEnabled = this.treeViewWithRelativePaths.HasContent;
+            }
+            this.treeViewWithRelativePaths.SelectedItemChanged += RelativePathControl_SelectedItemChanged;
+            RelativePathButton.GotFocus += ControlsDataHelpersCommon.Control_GotFocus;
+            RelativePathButton.LostFocus += ControlsDataHelpersCommon.Control_LostFocus;
+
+            Grid.SetRow(RelativePathButton, gridRowIndex);
+            Grid.SetColumn(RelativePathButton, ValueColumn);
+            SearchTerms.Children.Add(RelativePathButton);
+            this.treeViewWithRelativePaths.DontInvoke = false;
+        }
+
+        private void RelativePathControlSetSearchTerm()
+        {
+            SearchTerm relativePathSearchTerm = this.Database?.CustomSelection?.SearchTerms.FirstOrDefault(term => term.DataLabel == DatabaseColumn.RelativePath);
+
+            if (string.IsNullOrEmpty(relativePathSearchTerm?.DatabaseValue))
+            {
+                // Nothing relevant found so just collapse everything
+                this.treeViewWithRelativePaths.SelectedPath = string.Empty;
+                this.treeViewWithRelativePaths.FocusSelection = false;
+                this.treeViewWithRelativePaths.UnselectAll();
+                this.treeViewWithRelativePaths.CollapseAll();
+                return;
+            }
+
+            if (false == relativePathSearchTerm.UseForSearching || this.Database.FileSelectionEnum != FileSelectionEnum.Folders)
+            {
+                // Expand the search term, but we don't want it focused
+                this.treeViewWithRelativePaths.FocusSelection = false;
+                this.treeViewWithRelativePaths.SelectedPath = relativePathSearchTerm.DatabaseValue;
+                return;
+            }
+            this.treeViewWithRelativePaths.FocusSelection = true;
+            this.treeViewWithRelativePaths.SelectedPath = relativePathSearchTerm.DatabaseValue;
+        }
+
+        private void RelativePathControlRepopulateIfNeeded()
+        {
+            this.RelativePathControlSetSearchTerm();
+            this.RelativePathButton.Content = this.treeViewWithRelativePaths.SelectedPath;
+
+            // Repopulate the treeview if needed.
+            if (false == this.treeViewWithRelativePaths.HasContent)
+            {
+                this.RelativePathControlResetFolderList();
+            }
+        }
+
+        // Populate the control. Get the folders from the database, and create a menu item representing it
+        private void RelativePathControlResetFolderList()
+        {
+            // Get the folders from the database
+            // PERFORMANCE. This can introduce a delay when there are a large number of files.
+            // To remedy this, it is only invoked when the user loads images for the first time or when new images are added. 
+            List<string> folderList = this.Database.GetFoldersFromRelativePaths();//this.DataHandler.FileDatabase.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
+
+            if (this.Arguments.ConstrainToRelativePath)
+            {
+                // Because Timelapse was invoked with an argument to constrain it to a particular folder, 
+                // we need to remove paths that are outside the constrained path from the list
+                List<string> newFolderList = new List<string>();
+                foreach (string relativePath in folderList)
+                {
+                    if (string.IsNullOrEmpty(relativePath))
+                    {
+                        // An empty header is actually the root folder. Since we already have an entry representng all files, we don't need it.
+                        continue;
+                    }
+
+                    // Add the folder to the menu only if it isn't constrained by the relative path arguments
+                    if (!(relativePath == this.Arguments.RelativePath || relativePath.StartsWith(this.Arguments.RelativePath + @"\")))
+                    {
+                        continue;
+                    }
+                    newFolderList.Add(relativePath);
+                }
+                folderList = newFolderList;
+            }
+            this.treeViewWithRelativePaths.DontInvoke = true;
+            List<Item> items = this.treeViewWithRelativePaths.SetTreeViewContentsToRelativePathList(folderList);
+            // Because we are not doing the treeview in xaml, we have to set the ItemsSource here
+            this.treeViewWithRelativePaths.ItemsSource = items;
+            this.treeViewWithRelativePaths.DontInvoke = false;
+        }
+
+
+        // The SelectedItemChanged callback: This does the work when a relative path is selected
+        private void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (this.treeViewWithRelativePaths.DontInvoke)
+            {
+                return;
+            }
+            if (!(sender is TreeViewWithRelativePaths treeView))
+            {
+                return;
+            }
+            
+
+            if (treeView.SelectedValue == null)
+            {
+                return;
+            }
+
+            treeView.FocusSelection = true;
+            this.RelativePathButton.Content = treeView.SelectedPath;
+            int row = Grid.GetRow(this.RelativePathButton);  // Get the row number... should always be a valid int
+            this.Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = treeView.SelectedPath; // Set the corresponding value to the current selection
+            this.RelativePathButton.IsOpen = false;
+            this.UpdateSearchDialogFeedback();
         }
         #endregion
     }

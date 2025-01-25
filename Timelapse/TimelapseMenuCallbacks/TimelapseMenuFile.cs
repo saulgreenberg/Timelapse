@@ -48,8 +48,8 @@ namespace Timelapse
         #region Menu stub to test some code
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            //string s = "012aaaaaaaaa4a6a89a0";
-            //Debug.Print($"{s.NthIndexOf("aa", 3)}");
+            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
+            dialog.ShowDialog();
         }
         #endregion
 

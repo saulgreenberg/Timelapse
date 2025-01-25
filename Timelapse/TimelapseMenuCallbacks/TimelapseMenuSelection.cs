@@ -38,11 +38,14 @@ namespace Timelapse
             FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum; ;
 
             MenuItemSelectAllFiles.IsChecked = selection == FileSelectionEnum.All;
+
             MenuItemSelectByRelativePathTreeView.IsChecked = selection == FileSelectionEnum.Folders;
+            MenuItemSelectByRelativePathTreeView.IsEnabled = this.tv.HasContent;
 
             MenuItemSelectMissingFiles.IsChecked = selection == FileSelectionEnum.Missing;
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
+            
             MenuItemSelectRandomSample.IsEnabled = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
             this.MenuItemSetSearchTerm();
         }
@@ -157,9 +160,9 @@ namespace Timelapse
                     continue;
                 }
             }
-            this.tv.SkipSelectionCallback = true;
+            this.tv.DontInvoke = true;
             this.tv.SetTreeViewContentsToRelativePathList(folderList);
-            this.tv.SkipSelectionCallback = false;
+            this.tv.DontInvoke = false;
         }
         // Populate the menu. Get the folders from the database, and create a menu item representing it
         private void MenuItemSelectByFolder_GetRelativePathsTreeView()
@@ -169,11 +172,11 @@ namespace Timelapse
         }
         private async void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (this.tv.SkipSelectionCallback)
+            if (this.tv.DontInvoke)
             {
                 return;
             }
-            if (!(sender is TreeViewAsRelativePathMenu treeViewAsRelativePathMenu))
+            if (!(sender is TreeViewWithRelativePaths TreeViewWithRelativePaths))
             {
                 return;
             }
@@ -186,7 +189,7 @@ namespace Timelapse
             }
 
             // If its select all folders, then 
-            if (treeViewAsRelativePathMenu.SelectedPath == "All files")
+            if (TreeViewWithRelativePaths.SelectedPath == "All files")
             {
                 // its all folders, so just select all folders
                 await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.All).ConfigureAwait(true);
@@ -195,7 +198,7 @@ namespace Timelapse
 
             // Set and only use the relative path as a search term
             DataHandler.FileDatabase.CustomSelection.ClearCustomSearchUses();
-            DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm(treeViewAsRelativePathMenu.SelectedPath);
+            DataHandler.FileDatabase.CustomSelection.SetAndUseRelativePathSearchTerm(TreeViewWithRelativePaths.SelectedPath);
 
             int count = DataHandler.FileDatabase.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             if (count <= 0)
@@ -205,7 +208,7 @@ namespace Timelapse
                     Message =
                     {
                          Icon = MessageBoxImage.Exclamation,
-                         Reason = $"While the folder {treeViewAsRelativePathMenu.SelectedPath} exists, no image data is associated with any files in it.",
+                         Reason = $"While the folder {TreeViewWithRelativePaths.SelectedPath} exists, no image data is associated with any files in it.",
                          Hint = "Perhaps you removed these files and its data during this session?"
                     }
                 };
@@ -243,7 +246,7 @@ namespace Timelapse
             }
 
             // show the dialog and process the resuls
-            CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(DataHandler.FileDatabase, DataEntryControls, this, DataHandler.FileDatabase.CustomSelection.DetectionSelections, DataHandler.ImageCache.Current)
+            CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(this, DataHandler.FileDatabase, DataEntryControls, DataHandler.ImageCache.Current, DataHandler.FileDatabase.CustomSelection.DetectionSelections, this.Arguments)
             {
                 Owner = this
             };

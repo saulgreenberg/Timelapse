@@ -52,7 +52,7 @@
                 <MenuItem Header="_File" IsTabStop="false" SubmenuOpened="File_SubmenuOpening">
 
                     <!-- Test some code here - should only be enabled when developing code -->
-                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Visible" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Collapsed" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
 
                     <!-- Load template, images, and video files... -->
                     <MenuItem Name="MenuItemLoadFiles" Header="_Load template, images, and video files..." Click="MenuItemLoadImages_Click" ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">
@@ -317,13 +317,13 @@
                 <MenuItem Name="MenuItemSelect" Header="_Select" IsEnabled="false" IsTabStop="false" SubmenuOpened="MenuItemSelect_SubmenuOpening" ToolTip="Select a subset of files">
                     <MenuItem Name="MenuItemSelectAllFiles" IsCheckable="True" IsChecked="True" Header="_All files" Click="MenuItemSelectFiles_Click" ToolTip="Shows all files in the root folder and its subfolders"/>
                     <MenuItem Name="MenuItemSelectByRelativePathTreeView" Header="All files in a folder and its subfolders..." IsEnabled="True" SubmenuOpened="MenuItemSelectByFolderTreeView_SubmenuOpening">
-                        <controls:TreeViewAsRelativePathMenu  
+                        <controls:TreeViewWithRelativePaths  
                             x:Name="tv"
                             ItemsSource="{Binding}"
                             Margin="-35,0,-50,0" Padding="5" HorizontalAlignment="Stretch"
                             MaxHeight ="400"
                             SelectedItemChanged="TreeView_SelectedItemChanged" >
-                        </controls:TreeViewAsRelativePathMenu>
+                        </controls:TreeViewWithRelativePaths>
                     </MenuItem>
 
                     <MenuItem Name="MenuItemSelectFilesMarkedForDeletion" IsCheckable="True" IsChecked="False" Header="All files marked for d_eletion" Click="MenuItemSelectFiles_Click" ToolTip="Shows all files marked for deletion"/>

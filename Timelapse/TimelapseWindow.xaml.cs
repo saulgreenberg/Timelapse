@@ -237,6 +237,22 @@ namespace Timelapse
             InstructionPane.IsActive = true;
             EnableOrDisableMenusAndControls();
 
+            // Initialize the Toast notifier, where we set its position, width, etc.
+            ToastNotifier = new Notifier(cfg =>
+            {
+                cfg.PositionProvider = new WindowPositionProvider(
+                    parentWindow: Application.Current.MainWindow,
+                    corner: Corner.BottomLeft,
+                    offsetX: 3,
+                    offsetY: 25);
+                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                    notificationLifetime: TimeSpan.FromSeconds(5),
+                    maximumNotificationCount: MaximumNotificationCount.FromCount(2));
+                cfg.DisplayOptions.Width = 300;
+                cfg.Dispatcher = Application.Current.Dispatcher;
+
+            });
+
             // If Timelapse was started with a -viewonly argument, set it up to initially be in viewonly mode
             if (Arguments.IsViewOnly)
             {
@@ -313,21 +329,7 @@ namespace Timelapse
             //    }
             //}
 
-            // Initialize the Toast notifier, where we set its position, width, etc.
-            ToastNotifier = new Notifier(cfg =>
-            {
-                cfg.PositionProvider = new WindowPositionProvider(
-                    parentWindow: Application.Current.MainWindow,
-                    corner: Corner.BottomLeft,
-                    offsetX: 3,
-                    offsetY: 25);
-                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
-                    notificationLifetime: TimeSpan.FromSeconds(5),
-                    maximumNotificationCount: MaximumNotificationCount.FromCount(2));
-                cfg.DisplayOptions.Width = 300;
-                cfg.Dispatcher = Application.Current.Dispatcher;
 
-            });
         }
 
         private void Window_LocationChanged(object sender, EventArgs e)

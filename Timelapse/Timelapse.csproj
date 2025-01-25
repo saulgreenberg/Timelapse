@@ -248,7 +248,7 @@
     <Compile Include="Controls\OffsetLens.cs" />
     <Compile Include="Controls\ProgressBarArguments.cs" />
     <Compile Include="Controls\EpisodePopup.cs" />
-    <Compile Include="Controls\TreeviewAsRelativePathMenu.cs" />
+    <Compile Include="Controls\TreeviewWithRelativePaths.cs" />
     <Compile Include="Database\FileDatabaseCompareTemplates.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
