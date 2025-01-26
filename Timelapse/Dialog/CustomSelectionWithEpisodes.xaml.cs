@@ -1206,6 +1206,32 @@ namespace Timelapse.Dialog
             UpdateSearchDialogFeedback();
         }
 
+        // The RelativePathControl SelectedItemChanged callback: This does the work when a relative path is selected
+        private void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (this.treeViewWithRelativePaths.DontInvoke)
+            {
+                return;
+            }
+            if (!(sender is TreeViewWithRelativePaths treeView))
+            {
+                return;
+            }
+
+
+            if (treeView.SelectedValue == null)
+            {
+                return;
+            }
+
+            treeView.FocusSelection = true;
+            this.RelativePathButton.Content = treeView.SelectedPath;
+            int row = Grid.GetRow(this.RelativePathButton);  // Get the row number... should always be a valid int
+            this.Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = treeView.SelectedPath; // Set the corresponding value to the current selection
+            this.RelativePathButton.IsOpen = false;
+            this.UpdateSearchDialogFeedback();
+        }
+
         // When this button is pressed, all the search terms checkboxes are cleared, which is equivalent to showing all images
         private void ResetToAllImagesButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1233,14 +1259,14 @@ namespace Timelapse.Dialog
             {
                 SearchTerm searchTerm = Database.CustomSelection.SearchTerms[index];
 
-                if (searchTerm.UseForSearching == true)
+                if (searchTerm.UseForSearching)
                 {
                     checkedSelectionsCount++;
                     if (searchTerm.DataLabel != DatabaseColumn.RelativePath)
                     {
                         // We have at least one non-relativePath checkmark, so don't change anything
                         // i.e., this leave it as a custom selection
-                        return FileSelectionEnum.Custom; ;
+                        return FileSelectionEnum.Custom;
                     }
                     relativePathChecked = true;
                 }
@@ -1252,7 +1278,7 @@ namespace Timelapse.Dialog
                 return FileSelectionEnum.All;
             }
 
-            if (checkedSelectionsCount == 1 && relativePathChecked == true)
+            if (checkedSelectionsCount == 1 && relativePathChecked)
             {
                 // As only relative paths are selected, this is the same as FileSelection Folders, so set that
                 return FileSelectionEnum.Folders;
@@ -1845,26 +1871,23 @@ namespace Timelapse.Dialog
 
             if (this.Arguments.ConstrainToRelativePath)
             {
-                // Because Timelapse was invoked with an argument to constrain it to a particular folder, 
-                // we need to remove paths that are outside the constrained path from the list
+                // Special case.
+                // If we are constrained to the relative path, create a new list that removes folders outside that relative path
                 List<string> newFolderList = new List<string>();
                 foreach (string relativePath in folderList)
                 {
-                    if (string.IsNullOrEmpty(relativePath))
+                    if (false == string.IsNullOrEmpty(relativePath) &&
+                        (relativePath == this.Arguments.RelativePath || relativePath.StartsWith(this.Arguments.RelativePath + @"\")))
                     {
-                        // An empty header is actually the root folder. Since we already have an entry representng all files, we don't need it.
-                        continue;
+                        // An empty header is actually the root folder, which we don't need
+                        // We also don't want any relative paths outside the desired one
+                        // Add the folder to the menu only if it isn't constrained by the relative path arguments
+                        newFolderList.Add(relativePath);
                     }
-
-                    // Add the folder to the menu only if it isn't constrained by the relative path arguments
-                    if (!(relativePath == this.Arguments.RelativePath || relativePath.StartsWith(this.Arguments.RelativePath + @"\")))
-                    {
-                        continue;
-                    }
-                    newFolderList.Add(relativePath);
                 }
                 folderList = newFolderList;
             }
+
             this.treeViewWithRelativePaths.DontInvoke = true;
             List<Item> items = this.treeViewWithRelativePaths.SetTreeViewContentsToRelativePathList(folderList);
             // Because we are not doing the treeview in xaml, we have to set the ItemsSource here
@@ -1872,32 +1895,6 @@ namespace Timelapse.Dialog
             this.treeViewWithRelativePaths.DontInvoke = false;
         }
 
-
-        // The SelectedItemChanged callback: This does the work when a relative path is selected
-        private void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (this.treeViewWithRelativePaths.DontInvoke)
-            {
-                return;
-            }
-            if (!(sender is TreeViewWithRelativePaths treeView))
-            {
-                return;
-            }
-            
-
-            if (treeView.SelectedValue == null)
-            {
-                return;
-            }
-
-            treeView.FocusSelection = true;
-            this.RelativePathButton.Content = treeView.SelectedPath;
-            int row = Grid.GetRow(this.RelativePathButton);  // Get the row number... should always be a valid int
-            this.Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = treeView.SelectedPath; // Set the corresponding value to the current selection
-            this.RelativePathButton.IsOpen = false;
-            this.UpdateSearchDialogFeedback();
-        }
         #endregion
     }
 }

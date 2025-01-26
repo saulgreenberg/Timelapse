@@ -17,7 +17,6 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
-using Timelapse.Extensions;
 using Timelapse.Standards;
 using Timelapse.Util;
 using DialogResult = System.Windows.Forms.DialogResult;

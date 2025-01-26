@@ -2160,6 +2160,25 @@ namespace Timelapse.Dialog
             messageBox.ShowDialog();
         }
 
+        // Tell the user that Timelapse could not open the template specified in the argument
+        public static bool ArgumentRelativPathWithNoTemplatePathDialog(Window owner, string relativePathArgument)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = "A relative path argument was specified without a template argument";
+            return new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Title = title,
+                    Icon = MessageBoxImage.Information,
+                    What = title + $"{Environment.NewLine} • -relativepath {relativePathArgument}",
+                    Reason = $"Timelapse was started with an argument to limit its analysis to images in a particular folder (the relative path).{Environment.NewLine}" +
+                             "However, that only works with the template is specified as an argument as well.",
+                    Solution = "Click Ok to open Timelapse (ignoring that constraint), or Cancel to exit Timelapse."
+                }
+            }.ShowDialog() == true;
+        }
+
         #endregion
 
         #region MessageBox: related to selecting Episodes in the custom select

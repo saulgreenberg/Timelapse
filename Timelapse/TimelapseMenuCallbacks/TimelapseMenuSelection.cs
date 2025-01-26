@@ -35,19 +35,19 @@ namespace Timelapse
             MenuItemSelectFilesMarkedForDeletion.IsEnabled = exists;
 
             // Put a checkmark next to the menu item that matches the stored selection criteria
-            FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum; ;
+            FileSelectionEnum selection = DataHandler.FileDatabase.FileSelectionEnum;
 
             MenuItemSelectAllFiles.IsChecked = selection == FileSelectionEnum.All;
 
-            MenuItemSelectByRelativePathTreeView.IsChecked = selection == FileSelectionEnum.Folders;
-            MenuItemSelectByRelativePathTreeView.IsEnabled = this.tv.HasContent;
+            MenuItemSelectByRelativePath.IsChecked = selection == FileSelectionEnum.Folders;
+            MenuItemSelectByRelativePath.IsEnabled = this.tv.HasContent;
 
             MenuItemSelectMissingFiles.IsChecked = selection == FileSelectionEnum.Missing;
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
             
             MenuItemSelectRandomSample.IsEnabled = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 2;
-            this.MenuItemSetSearchTerm();
+            this.MenuItemSetRelativePathSearchTerm();
         }
         #endregion
 
@@ -75,7 +75,7 @@ namespace Timelapse
             {
                 selection = FileSelectionEnum.MarkedForDeletion;
             }
-            else if (item == MenuItemSelectByRelativePathTreeView)
+            else if (item == MenuItemSelectByRelativePath)
             {
                 // MenuItemSelectByRelativePathTreeView and its child folders should not be activated from here, 
                 // but we add this test just as a reminder that we haven't forgotten it
@@ -103,20 +103,19 @@ namespace Timelapse
         #endregion
 
         #region Select By Folder as TreeView
-
-        private void MenuItemSelectByFolderTreeView_SubmenuOpening(object sender, RoutedEventArgs e)
+        private void MenuItemSelectByFolder_SubmenuOpening(object sender, RoutedEventArgs e)
         {
 
-            this.MenuItemSetSearchTerm();
+            this.MenuItemSetRelativePathSearchTerm();
 
             // Repopulate the treeview if needed.
             if (this.tv.Items.Count == 0)
             {
-                this.MenuItemSelectByFolder_GetRelativePathsTreeView();
+                this.MenuItemSelectByFolder_GetRelativePaths();
             }
         }
 
-        private void MenuItemSetSearchTerm()
+        private void MenuItemSetRelativePathSearchTerm()
         {
             SearchTerm relativePathSearchTerm = DataHandler?.FileDatabase?.CustomSelection?.SearchTerms.FirstOrDefault(term => term.DataLabel == DatabaseColumn.RelativePath);
 
@@ -141,36 +140,42 @@ namespace Timelapse
             this.tv.SelectedPath = relativePathSearchTerm.DatabaseValue;
         }
 
-        private void MenuItemSelectByFolderTreeView_ResetFolderList()
+        private void MenuItemSelectByFolder_ResetFolderList()
         {
             // Get the folders from the database
             // PERFORMANCE. This can introduce a delay when there are a large number of files. It is invoked when the user loads images for the first time. 
             List<string> folderList = DataHandler.FileDatabase.GetFoldersFromRelativePaths();//this.DataHandler.FileDatabase.GetDistinctValuesInColumn(Constant.DBTables.FileData, Constant.DatabaseColumn.RelativePath);
-            foreach (string header in folderList)
-            {
-                if (string.IsNullOrEmpty(header))
-                {
-                    // An empty header is actually the root folder. Since we already have an entry representng all files, we don't need it.
-                    continue;
-                }
 
-                // Add the folder to the menu only if it isn't constrained by the relative path arguments
-                if (Arguments.ConstrainToRelativePath && !(header == Arguments.RelativePath || header.StartsWith(Arguments.RelativePath + @"\")))
+            if (this.Arguments.ConstrainToRelativePath)
+            {
+                // Special case.
+                // If we are constrained to the relative path, create a new list that removes folders outside that relative path
+                List<string> newFolderList = new List<string>();
+                foreach (string relativePath in folderList)
                 {
-                    continue;
+                    if (false == string.IsNullOrEmpty(relativePath) &&
+                        (relativePath == this.Arguments.RelativePath || relativePath.StartsWith(this.Arguments.RelativePath + @"\")))
+                    {
+                        // An empty header is actually the root folder, which we don't need
+                        // We also don't want any relative paths outside the desired one
+                        // Add the folder to the menu only if it isn't constrained by the relative path arguments
+                        newFolderList.Add(relativePath);
+                    }
                 }
+                folderList = newFolderList;
             }
+           
             this.tv.DontInvoke = true;
             this.tv.SetTreeViewContentsToRelativePathList(folderList);
             this.tv.DontInvoke = false;
         }
         // Populate the menu. Get the folders from the database, and create a menu item representing it
-        private void MenuItemSelectByFolder_GetRelativePathsTreeView()
+        private void MenuItemSelectByFolder_GetRelativePaths()
         {
             // Add the current folders in the database to the treeview
-            this.MenuItemSelectByFolderTreeView_ResetFolderList();
+            this.MenuItemSelectByFolder_ResetFolderList();
         }
-        private async void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void MenuItemSelectByFolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (this.tv.DontInvoke)
             {
@@ -269,7 +274,7 @@ namespace Timelapse
                 bool otherMenuItemIsChecked =
                     MenuItemSelectAllFiles.IsChecked ||
                     MenuItemSelectMissingFiles.IsChecked ||
-                    MenuItemSelectByRelativePathTreeView.IsChecked ||
+                    MenuItemSelectByRelativePath.IsChecked ||
                     MenuItemSelectFilesMarkedForDeletion.IsChecked;
                 MenuItemSelectCustomSelection.IsChecked = !otherMenuItemIsChecked;
             }

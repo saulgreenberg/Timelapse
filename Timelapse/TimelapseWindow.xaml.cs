@@ -313,6 +313,18 @@ namespace Timelapse
                     Arguments = new Arguments(null);
                 }
             }
+            else if(Arguments.ConstrainToRelativePath)
+            {
+                // Constrained relative path only works if the template is specified, so this is an error,
+                if (true != Dialogs.ArgumentRelativPathWithNoTemplatePathDialog(this, Arguments.RelativePath))
+                {
+                    Application.Current.Shutdown();
+                }
+                else
+                {
+                    Arguments.RelativePath = string.Empty;
+                }
+            }
 
             if (State.IsViewOnly)
             {

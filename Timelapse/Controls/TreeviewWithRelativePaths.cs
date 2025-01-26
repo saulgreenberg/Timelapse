@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows;
-using Xceed.Wpf.Toolkit.Core.Converters;
 
 namespace Timelapse.Controls
 {
@@ -18,7 +16,7 @@ namespace Timelapse.Controls
         public string SelectedPath { get; set; }
         // Whether or not to invoke some code
         // Used to stop unecessary invocation of the SelectedItemChanged callback, which can otherwise lead to performance issues
-        public bool DontInvoke { get; set; } = false;
+        public bool DontInvoke { get; set; }
 
         // Whether or not to apply the focus on the selected item
         public bool FocusSelection { get; set; } = true;
@@ -240,7 +238,7 @@ namespace Timelapse.Controls
     //       then recursively do that for that elements' child folders
     internal class ItemProvider
     {
-        private List<string> RelativePaths { get; set; }
+        private List<string> RelativePaths { get; }
         internal ItemProvider(List<string> relativePaths)
         {
             this.RelativePaths = relativePaths;

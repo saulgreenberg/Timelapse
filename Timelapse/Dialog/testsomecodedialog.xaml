@@ -3,8 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:Timelapse.Controls"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="Test Some Code Dialog" Height="450" Width="800" Loaded="TestSomeCodeDialog_OnLoaded">
     <Window.Resources>
@@ -26,28 +24,6 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <xctk:DropDownButton  Grid.Row="0" 
-                                  x:Name="DropDownTreeViewButton" 
-                                  Margin="10"
-                                  Width="150"
-                                  Content =" "
-                                  HorizontalAlignment="Left" 
-                                  HorizontalContentAlignment="Left"
-                                  Background="White"
-                                  MaxDropDownHeight="{Binding Value, ElementName=maxDropDownHeight}"
-                                  DropDownPosition="{Binding SelectedItem, ElementName=dropDownPosition}"
-                                  Click="Header_OnClick"
-                                  >
-                <!--Initialized="Tree1_Initialized"-->
-                <xctk:DropDownButton.DropDownContent>
-                    <controls:TreeViewWithRelativePaths 
-                        x:Name="tv" 
-                        SelectedItemChanged="Tree1_SelectedItemChanged"
-                        ItemsSource="{Binding}">
-                    </controls:TreeViewWithRelativePaths>
-                </xctk:DropDownButton.DropDownContent>
-            </xctk:DropDownButton>
         </Grid>
-        <Button Grid.Row="1" Content="Button"></Button>
     </Grid>
 </Window>

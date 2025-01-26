@@ -291,7 +291,7 @@ namespace Timelapse.Controls
             }
             else
             {
-                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height, 0, null);
+                boundingBoxes.DrawBoundingBoxesInCanvas(canvas, image.Source.Width, image.Source.Height);
             }
             return (canvas);
         }

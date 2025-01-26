@@ -316,13 +316,13 @@
                 <!-- Selection Menu -->
                 <MenuItem Name="MenuItemSelect" Header="_Select" IsEnabled="false" IsTabStop="false" SubmenuOpened="MenuItemSelect_SubmenuOpening" ToolTip="Select a subset of files">
                     <MenuItem Name="MenuItemSelectAllFiles" IsCheckable="True" IsChecked="True" Header="_All files" Click="MenuItemSelectFiles_Click" ToolTip="Shows all files in the root folder and its subfolders"/>
-                    <MenuItem Name="MenuItemSelectByRelativePathTreeView" Header="All files in a folder and its subfolders..." IsEnabled="True" SubmenuOpened="MenuItemSelectByFolderTreeView_SubmenuOpening">
+                    <MenuItem Name="MenuItemSelectByRelativePath" Header="All files in a folder and its subfolders..." IsEnabled="True" SubmenuOpened="MenuItemSelectByFolder_SubmenuOpening">
                         <controls:TreeViewWithRelativePaths  
                             x:Name="tv"
                             ItemsSource="{Binding}"
                             Margin="-35,0,-50,0" Padding="5" HorizontalAlignment="Stretch"
                             MaxHeight ="400"
-                            SelectedItemChanged="TreeView_SelectedItemChanged" >
+                            SelectedItemChanged="MenuItemSelectByFolderTreeView_SelectedItemChanged" >
                         </controls:TreeViewWithRelativePaths>
                     </MenuItem>
 

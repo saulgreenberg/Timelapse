@@ -3,7 +3,6 @@ using Microsoft.WindowsAPICodePack.Shell;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +14,6 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using File = System.IO.File;
-using System.Text.RegularExpressions;
 using Timelapse.Extensions;
 
 namespace Timelapse.Util
