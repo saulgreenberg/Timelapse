@@ -1903,6 +1903,24 @@ namespace Timelapse.Dialog
             return result;
         }
 
+        public static void MenuEditDuplicatesPleaseWait(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Please wait a bit before trying multiple duplications";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Problem = "Duplication needs to wait until the previous duplication is completed",
+                    Reason = "When you duplicate a file, Timelapse updates the database, which takes a bit of time." + Environment.NewLine
+                        + "Wait until the previous duplication finishes  before duplicating again.",
+                    Hint = "The cursor will change to a normal cursor when the previous duplication is done.",
+                    Icon = MessageBoxImage.Information
+                }
+            }.ShowDialog();
+        }
+
         public static void MenuEditCouldNotImportQuickPasteEntriesDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

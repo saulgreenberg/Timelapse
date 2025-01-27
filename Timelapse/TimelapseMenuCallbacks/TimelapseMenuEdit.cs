@@ -290,11 +290,19 @@ namespace Timelapse
         #endregion
 
         #region Dupicate the record
+
+        private static bool IsDuplicating = false;
         private async void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
         {
             if (IsDisplayingSingleImage() == false)
             {
                 // We only allow duplication if we are displaying a single image in the main view
+                return;
+            }
+
+            if (IsDuplicating)
+            {
+                Dialogs.MenuEditDuplicatesPleaseWait(this);
                 return;
             }
 
@@ -319,7 +327,12 @@ namespace Timelapse
             {
                 useCurrentValues = bool.TryParse((string)mi.Tag, out bool tmpCurrentValues) && tmpCurrentValues;
             }
+
+            IsDuplicating = true;
+            Mouse.OverrideCursor = Cursors.Wait;
             await DuplicateCurrentRecord(useCurrentValues);
+            Mouse.OverrideCursor = null;
+            IsDuplicating = false;
         }
         #endregion
 
