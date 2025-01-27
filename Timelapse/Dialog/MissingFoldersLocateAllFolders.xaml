@@ -61,9 +61,9 @@
 
                 <DataGrid.Columns>
 
-                    <DataGridTextColumn Header="Folder name" Width="Auto" Binding="{Binding FolderName}"/>
+                    <DataGridTextColumn Header="Folder name" Width="Auto" Binding="{Binding FolderName, Mode=OneWay}"/>
 
-                    <DataGridTextColumn Header="Expected old location" Width="*" Binding="{Binding ExpectedOldLocation}"/>
+                    <DataGridTextColumn Header="Expected old location" Width="*" Binding="{Binding ExpectedOldLocation, Mode=OneWay}"/>
 
                     <DataGridTemplateColumn Width="*" Header="Possible new locations">
                         <DataGridTemplateColumn.CellTemplate>
@@ -75,7 +75,7 @@
                     </DataGridTemplateColumn>
 
                     <!-- Count column -->
-                    <DataGridTextColumn Header="#" Width="Auto" Binding="{Binding Count}"/>
+                    <DataGridTextColumn Header="#" Width="Auto" Binding="{Binding Count, Mode=OneWay}"/>
 
                     <!-- Use column -->
                     <DataGridTemplateColumn Width="Auto" Header="Use?"  >
