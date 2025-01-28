@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Timelapse.Constant;
@@ -214,20 +215,24 @@ namespace Timelapse.Database
                         }
                     }
 
-                    // Check: item(s) in the Choice list removed? 
-                    List<string> ddbDatabaseChoices = Choices.ChoicesFromJson(ddbControl.List).GetAsListWithOptionalEmptyAsNewLine;
-                    List<string> tdbChoices = Choices.ChoicesFromJson(tdbControl.List).GetAsListWithOptionalEmptyAsNewLine;
-                    List<string> tdbChoiceValuesThatAreAbsent = ddbDatabaseChoices.Except(tdbChoices).ToList();
-                    if (tdbChoiceValuesThatAreAbsent.Count > 0)
+                    // Check: item(s) in the Choice list are present in the tdb but not in the ddb (which means those choices can't be displayed or entered)? 
+                    bool choiceListsDiffer = false;
+                    if (ddbControl.Type == Constant.Control.FixedChoice || ddbControl.Type == Constant.Control.MultiChoice)
                     {
-                        // Yes. Add a warning that the removed values not being displayable in the Choice control's menu
-                        AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationWarningsByLevel, level,
-                            $"  \u2022 Choice:    {dataLabel} no longer includes these list values, so it will not display or allow those values to be entered.");
-                        string absentItemsAsString = string.Join<string>(", ", tdbChoiceValuesThatAreAbsent).Replace(Environment.NewLine, "<Empty>");
-                        AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationWarningsByLevel, level,
-                            $"      -  {absentItemsAsString}");
+                        List<string> ddbDatabaseChoices = Choices.ChoicesFromJson(ddbControl.List).GetAsListWithOptionalEmptyAsNewLine;
+                        List<string> tdbChoices = Choices.ChoicesFromJson(tdbControl.List).GetAsListWithOptionalEmptyAsNewLine;
+                        List<string> tdbChoiceValuesThatAreAbsent = ddbDatabaseChoices.Except(tdbChoices).ToList();
+                        if (tdbChoiceValuesThatAreAbsent.Count > 0)
+                        {
+                            // Yes. Add a warning that the removed values not being displayable in the Choice control's menu
+                            AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationWarningsByLevel, level,
+                                $"  \u2022 Choice:    {dataLabel} no longer includes these list values, so it will not display or allow those values to be entered.");
+                            string absentItemsAsString = string.Join<string>(", ", tdbChoiceValuesThatAreAbsent).Replace(Environment.NewLine, "<Empty>");
+                            AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationWarningsByLevel, level,
+                                $"      -  {absentItemsAsString}");
+                            choiceListsDiffer = tdbChoices.Except(ddbDatabaseChoices).ToList().Count > 0;
+                        }
                     }
-
                     // Check: Any other changed values in any of the columns that may affect the UI appearance. 
                     if (ddbControl.ControlOrder != tdbControl.ControlOrder ||
                         ddbControl.SpreadsheetOrder != tdbControl.SpreadsheetOrder ||
@@ -238,7 +243,7 @@ namespace Timelapse.Database
                         ddbControl.Copyable != tdbControl.Copyable ||
                         ddbControl.Visible != tdbControl.Visible ||
                         ddbControl.ExportToCSV != tdbControl.ExportToCSV ||
-                        tdbChoices.Except(ddbDatabaseChoices).ToList().Count > 0)
+                        choiceListsDiffer)
                     {
                         // Yes. Signal syncing of the template is required
                         templateSyncResults.SyncRequiredAsNonCriticalDataFieldAttributesDiffer = true;

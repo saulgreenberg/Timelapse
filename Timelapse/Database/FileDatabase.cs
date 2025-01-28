@@ -952,7 +952,7 @@ namespace Timelapse.Database
                                 if (false == string.IsNullOrWhiteSpace(decimalPositive) && decimalPositive != defaultValueLookup[columnName] && IsCondition.IsDecimalPositive(decimalPositive))
                                 {
                                     // Use the current value, if it exists and is valid
-                                    
+
                                     queryValues.Append($"{Sql.Quote(decimalPositive)}{Sql.Comma}");
                                 }
                                 else
@@ -1140,92 +1140,104 @@ namespace Timelapse.Database
                 }
             }
 
+            // EPISODES-related addition to query.
+            // If the Detectionsand Episodes  is turned on, then the Episode Note field contains values in the Episode format (e.g.) 25:1/8.
+            // We construct a wrapper for selecting files where all files in an episode have at least one file matching the surrounded search condition 
+            if (CustomSelection != null && CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled)
+            {
+                string frontWrapper = SqlPhrase.CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(DBTables.FileData, CustomSelection.EpisodeNoteField, false);
+                string backWrapper = Sql.CloseParenthesis + Sql.CloseParenthesis;
+                query = frontWrapper + query + backWrapper;
+            }
+
+
             // Sort by primary and secondary sort criteria if an image set is actually initialized (i.e., not null)
             if (ImageSet != null)
             {
-                SortTerm[] sortTerm = new SortTerm[2];
-                string[] term = { string.Empty, string.Empty, string.Empty };
+                // If the use click the Rank by Detection or Classification confidence, we have to create a sort term for that
+                // If so, we will insert that into the normal sort term string shortly
+                string rankSortingTerm = string.Empty;
                 if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.DetectionSelections.RankByConfidence)
                 {
                     // Classifications: Override any sorting as we have asked to rank the results by confidence values
-                    term[0] = DatabaseColumn.RelativePath;
-                    term[1] = DBTables.Classifications + "." + ClassificationColumns.Conf;
-                    term[1] += Sql.Descending;
+                    //term[0] = DatabaseColumn.RelativePath;
+                    rankSortingTerm = DBTables.Classifications + "." + ClassificationColumns.Conf;
+                    rankSortingTerm += Sql.Descending;
                 }
                 else if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.DetectionSelections.RankByConfidence)
                 {
                     // Detections: Override any sorting as we have asked to rank the results by confidence values
-                    term[0] = DatabaseColumn.RelativePath;
-                    term[1] = DBTables.Detections + "." + DetectionColumns.Conf;
-                    term[1] += Sql.Descending;
+                    //term[0] = DatabaseColumn.RelativePath;
+                    rankSortingTerm = DBTables.Detections + "." + DetectionColumns.Conf;
+                    rankSortingTerm += Sql.Descending;
                 }
-                else
+
+                // Get the specified sort order. We do this by retrieving the two sort terms
+                // Given the format of the corrected DateTime
+                string[] term = { string.Empty, string.Empty, string.Empty, string.Empty };
+                SortTerm[] sortTerm = new SortTerm[2];
+                for (int i = 0; i <= 1; i++)
                 {
-                    // Get the specified sort order. We do this by retrieving the two sort terms
-                    // Given the format of the corrected DateTime
-                    for (int i = 0; i <= 1; i++)
+                    sortTerm[i] = ImageSet.GetSortTerm(i);
+                    // If we see an empty data label, we don't have to construct any more terms as there will be nothing more to sort
+                    if (string.IsNullOrEmpty(sortTerm[i].DataLabel))
                     {
-                        sortTerm[i] = ImageSet.GetSortTerm(i);
-                        // If we see an empty data label, we don't have to construct any more terms as there will be nothing more to sort
-                        if (string.IsNullOrEmpty(sortTerm[i].DataLabel))
+                        if (i == 0)
                         {
-                            if (i == 0)
-                            {
-                                // If the first term is not set, reset the sort back to the default
-                                ResetSortTermsToDefault(term);
-                            }
-                            break;
-                        }
-
-                        if (sortTerm[i].DataLabel == DatabaseColumn.DateTime)
-                        {
-                            term[i] = $"datetime({DatabaseColumn.DateTime})";
-
-                            // DUPLICATE RECORDS Special case if DateTime is the first search term and there is no 2nd search term. 
-                            // If there are multiple files with the same date/time and one of them is a duplicate,
-                            // then the duplicate may not necessarily appear in a sequence, as ambiguities just use the ID (a duplicate is created with a new ID that may be very distant from the original record).
-                            // So, we default the final sort term to 'File'. However, if this is not the first search term, it can be over-written 
-                            term[2] = DatabaseColumn.File;
-                        }
-                        else if (sortTerm[i].DataLabel == DatabaseColumn.File)
-                        {
-                            // File: the modified term creates a file path by concatenating relative path and file
-                            term[i] =
-                                $"{DatabaseColumn.RelativePath}{Sql.Comma}{DatabaseColumn.File}";
-                        }
-
-                        else if (sortTerm[i].DataLabel != DatabaseColumn.ID
-                                 && false == CustomSelection?.SearchTerms?.Exists(x => x.DataLabel == sortTerm[i].DataLabel))
-                        {
-                            // The Sorting data label doesn't exist (likely because that datalabel was deleted or renamed in the template)
-                            // Note: as ID isn't in the list, we have to check that so it can pass through as a sort option
-                            // Revert back to the default sort everywhere.
+                            // If the first term is not set, reset the sort back to the default
                             ResetSortTermsToDefault(term);
-                            break;
                         }
-                        else if (sortTerm[i].ControlType == Control.Counter ||
-                                 sortTerm[i].ControlType == Control.IntegerAny ||
-                                 sortTerm[i].ControlType == Control.IntegerPositive)
-                        {
-                            // Its a counter or number type: modify sorting of blanks by transforming it into a '-1' and then by casting it as an integer
-                            term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Integer)";
-                        }
-                        else if (sortTerm[i].ControlType == Control.DecimalAny ||
-                                 sortTerm[i].ControlType == Control.DecimalPositive)
-                        {
-                            // Its a decimal type: modify sorting of blanks by transforming it into a '-1' and then by casting it as a decimal
-                            term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Real)";
-                        }
-                        else
-                        {
-                            // Default: just sort by the data label
-                            term[i] = sortTerm[i].DataLabel;
-                        }
-                        // Add Descending sort, if needed. Default is Ascending, so we don't have to add that
-                        if (sortTerm[i].IsAscending == BooleanValue.False)
-                        {
-                            term[i] += Sql.Descending;
-                        }
+                        break;
+                    }
+
+                    if (sortTerm[i].DataLabel == DatabaseColumn.DateTime)
+                    {
+                        term[i] = $"datetime({DatabaseColumn.DateTime})";
+
+                        // DUPLICATE RECORDS Special case if DateTime is the first search term and there is no 2nd search term. 
+                        // If there are multiple files with the same date/time and one of them is a duplicate,
+                        // then the duplicate may not necessarily appear in a sequence, as ambiguities just use the ID (a duplicate is created with a new ID that may be very distant from the original record).
+                        // So, we default the final sort term to 'File'. However, if this is not the first search term, it can be over-written 
+                        term[2] = DatabaseColumn.File;
+                    }
+                    else if (sortTerm[i].DataLabel == DatabaseColumn.File)
+                    {
+                        // File: the modified term creates a file path by concatenating relative path and file
+                        term[i] =
+                            $"{DatabaseColumn.RelativePath}{Sql.Comma}{DatabaseColumn.File}";
+                    }
+
+                    else if (sortTerm[i].DataLabel != DatabaseColumn.ID
+                             && false == CustomSelection?.SearchTerms?.Exists(x => x.DataLabel == sortTerm[i].DataLabel))
+                    {
+                        // The Sorting data label doesn't exist (likely because that datalabel was deleted or renamed in the template)
+                        // Note: as ID isn't in the list, we have to check that so it can pass through as a sort option
+                        // Revert back to the default sort everywhere.
+                        ResetSortTermsToDefault(term);
+                        break;
+                    }
+                    else if (sortTerm[i].ControlType == Control.Counter ||
+                             sortTerm[i].ControlType == Control.IntegerAny ||
+                             sortTerm[i].ControlType == Control.IntegerPositive)
+                    {
+                        // Its a counter or number type: modify sorting of blanks by transforming it into a '-1' and then by casting it as an integer
+                        term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Integer)";
+                    }
+                    else if (sortTerm[i].ControlType == Control.DecimalAny ||
+                             sortTerm[i].ControlType == Control.DecimalPositive)
+                    {
+                        // Its a decimal type: modify sorting of blanks by transforming it into a '-1' and then by casting it as a decimal
+                        term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Real)";
+                    }
+                    else
+                    {
+                        // Default: just sort by the data label
+                        term[i] = sortTerm[i].DataLabel;
+                    }
+                    // Add Descending sort, if needed. Default is Ascending, so we don't have to add that
+                    if (sortTerm[i].IsAscending == BooleanValue.False)
+                    {
+                        term[i] += Sql.Descending;
                     }
                 }
 
@@ -1237,9 +1249,23 @@ namespace Timelapse.Database
 
                 }
 
+                if (!string.IsNullOrEmpty(rankSortingTerm))
+                {
+                    // As there is a rank sort term, we insert that at the beginning of the sort order
+                    query += Sql.OrderBy + rankSortingTerm;
+                }
                 if (!string.IsNullOrEmpty(term[0]))
                 {
-                    query += Sql.OrderBy + term[0];
+                    if (string.IsNullOrEmpty(rankSortingTerm))
+                    {
+                        // Since there was no rank sort term inserted, we  need to insert an OrderBy
+                        query += Sql.OrderBy + term[0];
+                    }
+                    else
+                    {
+                        // As we added a rankSorting term, we already have an OrderBy so we just insert a comma
+                        query += Sql.Comma + term[0];
+                    }
 
                     // If there is a second sort key, add it here
                     if (!string.IsNullOrEmpty(term[1]))
@@ -1252,19 +1278,10 @@ namespace Timelapse.Database
                     {
                         query += Sql.Comma + term[2];
                     }
-                    //query += Sql.Semicolon;
                 }
             }
 
-            // EPISODES-related addition to query.
-            // If the Detectionsand Episodes  is turned on, then the Episode Note field contains values in the Episode format (e.g.) 25:1/8.
-            // We construct a wrapper for selecting files where all files in an episode have at least one file matching the surrounded search condition 
-            if (CustomSelection != null && CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
-            {
-                string frontWrapper = SqlPhrase.CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(DBTables.FileData, CustomSelection.EpisodeNoteField, false);
-                string backWrapper = Sql.CloseParenthesis + Sql.CloseParenthesis;
-                query = frontWrapper + query + backWrapper;
-            }
+
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
@@ -3038,7 +3055,7 @@ namespace Timelapse.Database
         // Sort the detections by frame number if its a video (which helps performance when displaying video bounding boxes)
         public Recognizer RecognizerTrimAndSortRecognitionsAsNeeded(Recognizer jsonRecognizer)
         {
-            if (jsonRecognizer?.images == null  || jsonRecognizer.info?.detector_metadata == null)
+            if (jsonRecognizer?.images == null || jsonRecognizer.info?.detector_metadata == null)
             {
                 // essentially a no-op
                 return jsonRecognizer;
@@ -3063,7 +3080,7 @@ namespace Timelapse.Database
                 {
                     continue;
                 }
-                for (int i = image.detections.Count - 1;i >= 0; i--)
+                for (int i = image.detections.Count - 1; i >= 0; i--)
                 {
                     // Delete detections whose confidence is lower than the confidence threshold
                     // This is done to get rid of detections that have little value.
@@ -3093,7 +3110,7 @@ namespace Timelapse.Database
                 // This will later write the detections into the database in sorted order
                 // I don't actually know if that will preserve the order when they are read back in, but if it does it may 
                 // provide a slight performance advantage for showing bounding boxes on videos
-                image.detections.Sort((x,y) => x.frame_number.CompareTo(y.frame_number));
+                image.detections.Sort((x, y) => x.frame_number.CompareTo(y.frame_number));
             }
 
             return jsonRecognizer;

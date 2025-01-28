@@ -86,7 +86,9 @@ namespace Timelapse.SearchingAndSorting
                     DatabaseValue = control.DefaultValue,
                     Operator = SearchTermOperator.Equal,
                     Label = control.Label,
-                    List = Choices.ChoicesFromJson(control.List).ChoiceList,
+                    List = control.Type == Constant.Control.FixedChoice || control.Type == Constant.Control.MultiChoice 
+                        ? Choices.ChoicesFromJson(control.List).ChoiceList
+                        : new List<string>(),
                     UseForSearching = false
                 };
 

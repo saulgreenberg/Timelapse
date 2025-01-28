@@ -39,7 +39,7 @@
 
                     <StackPanel  Orientation="Horizontal" Margin="58,10,0,0">
                         <TextBlock Text="Select a confidence value (0 - 1):" VerticalAlignment="Top" FontWeight="Bold" Margin="0,0,15,0" />
-                        <Slider Name="SliderConfidence" Width="250" Height="30" VerticalAlignment="Bottom" TickFrequency=".05" IsSnapToTickEnabled="True" ValueChanged="SliderConfidence_ValueChanged" Maximum="1" />
+                        <Slider Name="SliderConfidence" Width="250" Height="30" VerticalAlignment="Bottom" TickFrequency=".01" IsSnapToTickEnabled="True" ValueChanged="SliderConfidence_ValueChanged" Maximum="1" />
                         <TextBlock Name="TextBlockSliderValue" Text="0" Width="25" Margin="5,0,0,0" TextAlignment="Right"/>
                     </StackPanel>
                     
