@@ -29,7 +29,7 @@ namespace Timelapse.Dialog
             NavigateAdditionalLicenseDetails.NavigateUri = ExternalLinks.AdditionalLicenseDetailsLink;
 
             Version curVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            Version.Text = curVersion.ToString();
+            Version.Text = curVersion + Constant.DatabaseValues.VersionPatchNumber;
 
             MostRecentCheckForUpdate = null;
         }
