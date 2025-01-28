@@ -5,4 +5,5 @@
                               ItemsSource="{Binding Items}">
         <TextBlock Text="{Binding Path=Name}" ToolTip="{Binding Path=Path}" />
     </HierarchicalDataTemplate>
+
 </ResourceDictionary>

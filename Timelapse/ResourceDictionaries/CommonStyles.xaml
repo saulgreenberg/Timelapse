@@ -15,4 +15,5 @@
                                     Duration="0:0:0.2"
                                     RepeatBehavior="1x"/>
     </Storyboard>
+
 </ResourceDictionary>

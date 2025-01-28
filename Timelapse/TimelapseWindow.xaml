@@ -317,12 +317,41 @@
                 <MenuItem Name="MenuItemSelect" Header="_Select" IsEnabled="false" IsTabStop="false" SubmenuOpened="MenuItemSelect_SubmenuOpening" ToolTip="Select a subset of files">
                     <MenuItem Name="MenuItemSelectAllFiles" IsCheckable="True" IsChecked="True" Header="_All files" Click="MenuItemSelectFiles_Click" ToolTip="Shows all files in the root folder and its subfolders"/>
                     <MenuItem Name="MenuItemSelectByRelativePath" Header="All files in a folder and its subfolders..." IsEnabled="True" SubmenuOpened="MenuItemSelectByFolder_SubmenuOpening">
+                        
                         <controls:TreeViewWithRelativePaths  
                             x:Name="tv"
                             ItemsSource="{Binding}"
                             Margin="-35,0,-50,0" Padding="5" HorizontalAlignment="Stretch"
                             MaxHeight ="400"
                             SelectedItemChanged="MenuItemSelectByFolderTreeView_SelectedItemChanged" >
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="{x:Type TreeViewItem}">
+                                    <Setter Property="TreeViewItem.IsExpanded" Value="True"/>
+                                    <Setter Property="BorderThickness" Value="1.5"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="BorderBrush" Value="#adc6e5"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="BorderBrush" Value="LightBlue" />
+                                            <!--<Setter Property="Foreground" Value="Black" />
+                                            <Setter Property="Background" Value="LightBlue" />-->
+                                        </Trigger>
+                                        <MultiTrigger>
+                                            <MultiTrigger.Conditions>
+                                                <Condition Property="IsSelected" Value="True"/>
+                                                <Condition Property="IsSelectionActive" Value="False"/>
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="BorderBrush" Value="LightGray"/>
+                                        </MultiTrigger>
+                                    </Style.Triggers>
+                                    <Style.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2"/>
+                                        </Style>
+                                    </Style.Resources>
+                                </Style>
+                            </TreeView.ItemContainerStyle>
                         </controls:TreeViewWithRelativePaths>
                     </MenuItem>
 
