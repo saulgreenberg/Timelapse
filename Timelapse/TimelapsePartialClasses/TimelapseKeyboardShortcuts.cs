@@ -112,6 +112,18 @@ namespace Timelapse
             int keyRepeatCount = State.GetKeyRepeatCount(currentKey);
             switch (currentKey.Key)
             {
+                case Key.S:
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                    {
+                        if (!currentKey.IsRepeat)
+                        {
+                            // Open the custom select dialog. 
+                            // TODO not sure if this allows the custom select dialog to be opened when it shouldn't be...
+                            // should add further checks perhaps?
+                            this.MenuItemSelectCustomSelection_Click(null, null);
+                        }
+                    }
+                    break;
                 case Key.B:                 // Save a Bookmark of the current pan / zoom level of the image
                     MarkableCanvas.SetBookmark();
                     break;
