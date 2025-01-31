@@ -527,6 +527,7 @@
     <Compile Include="Util\IsCondition.cs" />
     <Compile Include="Util\JsonConverters.cs" />
     <Compile Include="Util\Numbers.cs" />
+    <Compile Include="Util\ShortcutFiles.cs" />
     <Compile Include="Util\ValidationCallbacks.cs" />
     <Compile Include="Util\ViewModelBase.cs" />
     <Compile Include="Util\ProcessExecution.cs" />
