@@ -15,6 +15,7 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
 using Control = Timelapse.Constant.Control;
@@ -3103,6 +3104,77 @@ namespace Timelapse.Dialog
             return true == messageBox.ShowDialog();
         }
 
+        #endregion
+
+        #region Shortcut management
+        // Using shortcut
+        public static void ShortcutDetectedDialog(Window owner, string path)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string title = $"A shortcut to a folder containing your images was detected.";
+            Cursor cursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = null;
+            MessageBox messageBox = new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"Timelapse detected a shortcut in your root folder, where it points to:{Environment.NewLine} • {path}",
+                    Result = $"Timelapse will search for images in the shortcut's destination folder.",
+                    Reason = $"Timelapse normally searches for images in your root folder.{Environment.NewLine}"
+                             + $"By including a shortcut, you can locate your images outside of the root folder instead of within it, e.g.,{Environment.NewLine}"
+                             + $" • elsewhere on the local disk,{Environment.NewLine} • on a network drive, or{Environment.NewLine} • in the cloud.{Environment.NewLine}"
+                             + "Your Timelapse .tdb, .ddb and Backup files will still be stored in the root folder you selected.",
+                    Hint = "If you did want Timelapse to use images located in your root folder, remove the shortcut."
+                },
+                DontShowAgain =
+                {
+                    Visibility = Visibility.Visible
+                }
+            };
+            bool? result = messageBox.ShowDialog();
+            if (messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                GlobalReferences.TimelapseState.SuppressShortcutDetectedPrompt = messageBox.DontShowAgain.IsChecked.Value;
+            }
+            Mouse.OverrideCursor = cursor;
+        }
+
+        public static void ShortcutMultipleShortcutsDetectedDialog(Window owner, List<string> paths)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+
+            Cursor cursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = null;
+
+            string title = $"Multiple shortcuts to folders where detected.";
+            string pathList = string.Empty;
+
+            foreach (string path in paths)
+            {
+                pathList += $"{Environment.NewLine} • {path}";
+            }
+
+            MessageBox messageBox = new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Error,
+                    Problem =
+                        $"Timelapse detected multiple shortcuts in your root folder,{Environment.NewLine}each pointing to a folder that could contain your images:{pathList}" +
+                        $"{Environment.NewLine}However, Timelapse does not know which shortcut to use.",
+                    Result = $"Timelapse will abort this operation.",
+                    Reason = $"A shortcut allows you to locate your images outside of the root folder instead of within it, e.g., {Environment.NewLine}"
+                             + $" • elsewhere on the local disk,{Environment.NewLine} • on a network drive, or{Environment.NewLine} • in the cloud.{Environment.NewLine}"
+                             + "Because several shortcuts were found, Timelapse does not know which shortcut's folder it should use.",
+                    Solution = $" If you want Timelapse to use:{Environment.NewLine}" +
+                               $" • a particular shortcut, remove the other shortcuts from the root folder{Environment.NewLine}" +
+                               " • images located in your root folder, remove all shortcuts."
+                },
+            };
+            bool? result = messageBox.ShowDialog();
+            Mouse.OverrideCursor = cursor;
+        }
         #endregion
 
         #region EcoAssist-related dialogs

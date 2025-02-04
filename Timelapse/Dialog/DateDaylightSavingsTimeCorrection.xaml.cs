@@ -59,7 +59,7 @@ namespace Timelapse.Dialog
             NewDate.Content = OriginalDate.Content;
 
             // Display the image. While we should be on a valid image (our assumption), we can still show a missing or corrupted image if needed
-            Image.Source = fileEnumerator.Current.LoadBitmap(fileDatabase.FolderPath, out _);
+            Image.Source = fileEnumerator.Current.LoadBitmap(fileDatabase.RootPathToImages, out _);
             FileName.Content = fileEnumerator.Current.File;
             FileName.ToolTip = FileName.Content;
         }

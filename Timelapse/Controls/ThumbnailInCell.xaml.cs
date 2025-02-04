@@ -78,7 +78,7 @@ namespace Timelapse.Controls
         // Path is the RelativePath/FileName of the image file
         public string Path => (ImageRow == null) ? string.Empty : System.IO.Path.Combine(ImageRow.RelativePath, ImageRow.File);
 
-        public string RootFolder { get; set; }
+        public string RootPathToImages { get; set; }
         #endregion
 
         #region Private Variables
@@ -102,30 +102,8 @@ namespace Timelapse.Controls
             Image.MinWidth = cellWidth;
             Image.MaxWidth = cellWidth;
 
-            RootFolder = string.Empty;
+            this.RootPathToImages = string.Empty;
         }
-
-        // I tried to create a clone so we can add duplicates, but its commented out for now as it doesn't seem to
-        // acheive the correct effect. The problem may not be here...
-        //public ThumbnailInCell CloneMe(int fileTableIndex, int gridIndex, double cellWidth, double cellHeight, int row, int column)
-        //{
-        //    ThumbnailInCell clone = new ThumbnailInCell(cellWidth, cellHeight);
-        //    clone.Image = this.Image;
-        //    clone.Image.Width = cellWidth;
-        //    clone.Image.MinWidth = cellWidth;
-        //    clone.Image.MaxWidth = cellWidth;
-        //    clone.DateTimeLastBitmapWasSet = this.DateTimeLastBitmapWasSet;
-        //    clone.IsBitmapSet = this.IsBitmapSet;
-        //    clone.GridIndex = gridIndex;
-        //    clone.Row = row;
-        //    clone.Column = column;
-        //    clone.Image = this.Image;
-        //    clone.BoundingBoxes = this.BoundingBoxes;
-        //    clone.ImageRow = this.ImageRow;
-        //    clone.RootFolder = this.RootFolder;
-        //    clone.FileTableIndex = this.FileTableIndex;
-        //    return clone;
-        //}
 
         private void ThumbnailInCell_Loaded(object sender, RoutedEventArgs e)
         {
@@ -147,11 +125,11 @@ namespace Timelapse.Controls
             if (ImageRow.IsVideo == false)
             {
                 // Calculate scale factor to ensure that images of different aspect ratios completely fit in the cell
-                double desiredHeight = cellWidth / ImageRow.GetBitmapAspectRatioFromFile(RootFolder);
+                double desiredHeight = cellWidth / ImageRow.GetBitmapAspectRatioFromFile(this.RootPathToImages);
                 double scale = Math.Min(cellWidth / cellWidth, cellHeight / desiredHeight); // 1st term is ScaleWidth, 2nd term is ScaleHeight
                 double finalDesiredWidth = (cellWidth * scale - 8); // Subtract another 2 pixels for the grid border (I think)
 
-                return ImageRow.LoadBitmap(RootFolder, Convert.ToInt32(finalDesiredWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
+                return ImageRow.LoadBitmap(this.RootPathToImages, Convert.ToInt32(finalDesiredWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
             }
 
             // Its a video. If recognitions are used, we need to indicate where in the video timeline we should grab the frame to show
@@ -165,8 +143,8 @@ namespace Timelapse.Controls
             // Also, for some reason the scale adjustment doesn't seem to be needed, not sure why.
             // Note that the nonVideo case belwow should never happen, but just in case...
             return ImageRow is VideoRow videoRow
-                ? videoRow.LoadVideoBitmap(RootFolder, Convert.ToInt32(cellWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, time, out _)
-                : ImageRow.LoadBitmap(RootFolder, Convert.ToInt32(cellWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
+                ? videoRow.LoadVideoBitmap(this.RootPathToImages, Convert.ToInt32(cellWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, time, out _)
+                : ImageRow.LoadBitmap(this.RootPathToImages, Convert.ToInt32(cellWidth), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseWidth, out _);
         }
 
         public void SetThumbnail(BitmapSource bitmapSource)

@@ -751,33 +751,6 @@ namespace Timelapse.ControlsMetadata
         }
         #endregion
 
-        #region Static public methods
-        // Get a file path from the global datahandler. 
-        // If we can't, or if it does not exist, return string.Empty
-        public static string TryGetFilePathFromGlobalDataHandler()
-        {
-            // If anything is null, we defer resetting anything. Note that we may get an update later (e.g., via the timer)
-            MetadataDataEntryHandler handler = GlobalReferences.MainWindow?.MetadataDataHandler;
-            if (handler == null)
-            {
-                TracePrint.NullException(nameof(handler));
-                return null;
-            }
-            //            if (handler.ImageCache?.Current == null)
-            //            {
-            //                TracePrint.NullException(nameof(handler.ImageCache));
-            //                return null;
-            //            }
-            //            if (handler.ImageCache?.CurrentDifferenceState != null && handler.FileDatabase != null)
-            //            {
-            //                // Get the path
-            //                string path = handler.ImageCache.Current.GetFilePath(handler.FileDatabase.FolderPath);
-            //                return File.Exists(path) ? path : null;
-            //            }
-            return null;
-        }
-        #endregion
-
         #region Disposing
 
         public void Dispose()

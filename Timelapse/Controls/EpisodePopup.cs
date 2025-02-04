@@ -303,8 +303,8 @@ namespace Timelapse.Controls
             Image image = new Image
             {
                 Source = imageRow.IsVideo && imageRow is VideoRow videoRow
-                        ? videoRow.LoadVideoBitmap(GlobalReferences.MainWindow.FolderPath, Convert.ToInt32(imageHeight), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, frameTime, out bool isCorruptOrMissing)
-                        : imageRow.LoadBitmap(GlobalReferences.MainWindow.FolderPath, Convert.ToInt32(imageHeight), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, out isCorruptOrMissing)
+                        ? videoRow.LoadVideoBitmap(GlobalReferences.MainWindow.RootPathToImages, Convert.ToInt32(imageHeight), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, frameTime, out bool isCorruptOrMissing)
+                        : imageRow.LoadBitmap(GlobalReferences.MainWindow.RootPathToImages, Convert.ToInt32(imageHeight), ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, out isCorruptOrMissing)
             };
             // Need to scale the image to the correct height
             if (isCorruptOrMissing)

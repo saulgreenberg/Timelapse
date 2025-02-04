@@ -49,17 +49,31 @@ namespace Timelapse
         public MetadataDataEntryHandler MetadataDataHandler { get; set; }
         public TimelapseState State { get; set; }                       // Status information concerning the state of the UI
 
-        public string FolderPath
+        public string RootPathToImages
         {
             get
             {
                 if (DataHandler == null)
                 {
-                    Debug.Print("Weird error in FullSubFolderPath - datahandler is null");
+                    Debug.Print("Error in RootPathToImages - datahandler is null");
                     return string.Empty;
                 }
 
-                return DataHandler.FileDatabase.FolderPath;
+                return DataHandler.FileDatabase.RootPathToImages;
+            }
+        }
+
+        public string RootPathToDatabase
+        {
+            get
+            {
+                if (DataHandler == null)
+                {
+                    Debug.Print("Error in RootPathToDatabase - datahandler is null");
+                    return string.Empty;
+                }
+
+                return DataHandler.FileDatabase.RootPathToDatabase;
             }
         }
 
@@ -357,7 +371,7 @@ namespace Timelapse
 
         private void DeleteTheDeletedFilesFolderIfNeeded()
         {
-            string deletedFolderPath = Path.Combine(DataHandler.FileDatabase.FolderPath, Constant.File.DeletedFilesFolder);
+            string deletedFolderPath = Path.Combine(DataHandler.FileDatabase.RootPathToImages, Constant.File.DeletedFilesFolder);
             string[] extensions = { Constant.File.JpgFileExtension, Constant.File.ASFFileExtension, Constant.File.AviFileExtension, Constant.File.MovFileExtension, Constant.File.Mp4FileExtension };
             int howManyDeletedFiles = Directory.Exists(deletedFolderPath) 
                 ? Directory.GetFiles(deletedFolderPath, "*.*", SearchOption.AllDirectories).Where(f => extensions.Contains(Path.GetExtension(f).ToLower()))
@@ -726,7 +740,7 @@ namespace Timelapse
         private void FolderSelectionDialog_FolderChanging(object sender, CommonFileDialogFolderChangeEventArgs e)
         {
             // require folders to be loaded be either the same folder as the .tdb and .ddb or subfolders of it
-            if (e.Folder.StartsWith(FolderPath, StringComparison.OrdinalIgnoreCase) == false)
+            if (e.Folder.StartsWith(RootPathToImages, StringComparison.OrdinalIgnoreCase) == false)
             {
                 e.Cancel = true;
             }
@@ -826,7 +840,7 @@ namespace Timelapse
             if (e.ImageRow != null && DataHandler.ImageCache.Current != null)
             {
                 // Switch to either the video or image view as needed
-                if (DataHandler.ImageCache.Current.IsVideo && DataHandler.ImageCache.Current.IsDisplayable(FolderPath))
+                if (DataHandler.ImageCache.Current.IsVideo && DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages))
                 {
                     MarkableCanvas.SwitchToVideoView();
                 }

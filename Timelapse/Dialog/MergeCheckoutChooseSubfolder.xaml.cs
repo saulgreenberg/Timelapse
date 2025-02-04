@@ -23,16 +23,18 @@ namespace Timelapse.Dialog
         private readonly string InitialFolder;
         private readonly string TemplateDatabasePath;
         private readonly DataEntryHandler DataHandler;
+        private readonly string ShortcutFolder;
         private bool success = true;
 
         #region Constructor/Loading
-        public MergeCheckoutChooseSubfolder(Window owner, string initialFolder, string templateDatabasePath, DataEntryHandler dataHandler)
+        public MergeCheckoutChooseSubfolder(Window owner, string initialFolder, string templateDatabasePath, DataEntryHandler dataHandler, string shortcutFolder)
         {
             InitializeComponent();
             Owner = owner;
             InitialFolder = initialFolder;
             TemplateDatabasePath = templateDatabasePath;
             DataHandler = dataHandler;
+            ShortcutFolder = shortcutFolder;
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -41,19 +43,75 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region Callbacks
+        private void ButtonChooseFolder_OnClick(object sender, RoutedEventArgs e)
+        {
+            string initialFolderToUse = this.ShortcutFolder ?? InitialFolder;
+            RelativeSubFolderPath = Dialogs.LocateRelativePathUsingOpenFileDialog(initialFolderToUse, String.Empty);
+            if (RelativeSubFolderPath == null)
+            {
+                // User cancelled
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(RelativeSubFolderPath))
+            {
+                txtboxNewFolderName.Text = string.Empty;
+                FullSubFolderPath = string.Empty;
+            }
+            else
+            {
+                txtboxNewFolderName.Text = RelativeSubFolderPath;
+                FullSubFolderPath = Path.Combine(initialFolderToUse, RelativeSubFolderPath);
+            }
+            ButtonCheckOut.IsEnabled = !string.IsNullOrWhiteSpace(RelativeSubFolderPath); // Enable the button only if a folder was specified
+        }
+        private void ButtonCheckOut_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO If its a shortcut file, we need to check for folders and files in the database path, not actual path
+            // ReSharper disable once AssignNullToNotNullAttribute
+            string folderToUse = Path.Combine(InitialFolder, RelativeSubFolderPath);
+            bool pathExists = Directory.Exists(folderToUse);
+            //if (Directory.GetFiles(FullSubFolderPath, "*" + File.FileDatabaseFileExtension).Length > 0)
+            if (pathExists && Directory.GetFiles(folderToUse, "*" + File.FileDatabaseFileExtension).Length > 0)
+            {
+                if (false == Dialogs.MergeWarningCheckOutDdbFileExists(this))
+                {
+                    return;
+                }
+            }
+            else if (pathExists == false)
+            {
+                Directory.CreateDirectory(folderToUse);
+            }
+            DoCheckout();
+        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+        }
+        private void DoneButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = success;
+        }
+        #endregion
+
         #region Do Checkout
         private async void DoCheckout()
         {
             // Copy the template to that folder, generating a unique name if needed
             string tdbFileName = File.DefaultTemplateDatabaseFileName;
-            bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(FullSubFolderPath, tdbFileName, out string newTdbFileName);
+            string folderToUse = Path.Combine(InitialFolder, RelativeSubFolderPath);
+            //bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(FullSubFolderPath, tdbFileName, out string newTdbFileName);
+            bool tdbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(folderToUse, tdbFileName, out string newTdbFileName);
             if (tdbFileNameChanged)
             {
                 tdbFileName = newTdbFileName;
             }
 
             // Copy the main template into that folder, perhaps renaming it
-            string destinationTdbPath = Path.Combine(FullSubFolderPath, tdbFileName);
+            string destinationTdbPath = Path.Combine(folderToUse, tdbFileName);
+            //string destinationTdbPath = Path.Combine(FullSubFolderPath, tdbFileName);
             try
             {
                 System.IO.File.Copy(TemplateDatabasePath, destinationTdbPath);
@@ -89,14 +147,15 @@ namespace Timelapse.Dialog
 
             // Create an empty database in that folder
             string ddbFileName = File.DefaultFileDatabaseFileName;
-            bool ddbFileNameChanged =
-                FilesFolders.GenerateFileNameIfNeeded(FullSubFolderPath, ddbFileName, out string newDdbFileName);
+            //bool ddbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(FullSubFolderPath, ddbFileName, out string newDdbFileName);
+            bool ddbFileNameChanged = FilesFolders.GenerateFileNameIfNeeded(folderToUse, ddbFileName, out string newDdbFileName);
             if (ddbFileNameChanged)
             {
                 // if needed, generate a unique file name
                 ddbFileName = newDdbFileName;
             }
-            string destinationDdbPath = Path.Combine(FullSubFolderPath, ddbFileName);
+            // string destinationDdbPath = Path.Combine(FullSubFolderPath, ddbFileName);
+            string destinationDdbPath = Path.Combine(folderToUse, ddbFileName);
 
             // We have a unique ddb path. Try to create the empty ddb file
             bool result = await MergeDatabases.TryCreateEmptyDatabaseFromTemplateAsync(
@@ -116,6 +175,21 @@ namespace Timelapse.Dialog
                 return;
             }
 
+            // If images are contained in a shortcut, create a shortcut file to the appropriate folder as well
+            // but only if a shortcut file with that target doesn't already exists there
+            string shortcutDestination = string.Empty;
+            if (this.ShortcutFolder != null)
+            {
+                string targetPath = Path.Combine(this.ShortcutFolder, RelativeSubFolderPath);
+                if (false == ShortcutFiles.ExistsShortcutForTargetInFolder(folderToUse, targetPath))
+                {
+                    if (ShortcutFiles.TryCreateShortcutIfNeeded(folderToUse, targetPath))
+                    {
+                        shortcutDestination = RelativeSubFolderPath;
+                    }
+                }
+            }
+
             // Tell the user the name(s) of the created file
             string shortDestinationTdbPath = Path.Combine(RelativeSubFolderPath, tdbFileName);
             string shortDestinationDdbPath = Path.Combine(RelativeSubFolderPath, ddbFileName);
@@ -127,11 +201,12 @@ namespace Timelapse.Dialog
             SetFeedbackAndDoneVisibility();
             DataHandler.FileDatabase.ImageSet.Log +=
                 $"{Environment.NewLine}{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Checked out:  {shortDestinationDdbPath}";
-            RedoMessageBoxWithResults(shortDestinationTdbPath, shortDestinationDdbPath);
+            RedoMessageBoxWithResults(shortDestinationTdbPath, shortDestinationDdbPath, shortcutDestination);
         }
         #endregion
 
-        private void RedoMessageBoxWithResults(string tdbFileName, string ddbFileName)
+        #region UI updates
+        private void RedoMessageBoxWithResults(string tdbFileName, string ddbFileName, string shortcutDestination)
         {
             string fileList;
             string pluralityText = "s are";
@@ -139,28 +214,31 @@ namespace Timelapse.Dialog
             if (false == string.IsNullOrWhiteSpace(tdbFileName) && false == string.IsNullOrWhiteSpace(ddbFileName))
             {
                 // Both files were renamed
-                fileList = $"\u2022 {tdbFileName}{Environment.NewLine}"
-                           + $"\u2022 {ddbFileName}";
+                fileList = $" \u2022 {tdbFileName}{Environment.NewLine}"
+                           + $" \u2022 {ddbFileName}";
             }
             else if (false == string.IsNullOrWhiteSpace(tdbFileName))
             {
                 // The template file only was renamed
                 pluralityText = " is ";
-                fileList = $"\u2022 {tdbFileName}";
+                fileList = $" \u2022 {tdbFileName}";
             }
             else
             {
                 // The datafile only was renamed
                 pluralityText = " is";
-                fileList = $"\u2022 {ddbFileName}";
+                fileList = $" \u2022 {ddbFileName}";
             }
+
+            
 
             Message.What = string.Empty;
             Message.Details = string.Empty;
             Message.Solution = string.Empty;
-            Message.Result = $"Check out completed successfully.{Environment.NewLine}{Environment.NewLine}The checked-out Timelapse file{pluralityText} named in the sub-folder as:{Environment.NewLine}"
-                   + $"{fileList}{Environment.NewLine}{Environment.NewLine}"
-                   + "You can rename those files using Windows Explorer if desired.";
+            Message.Result = $"Check out completed successfully.{Environment.NewLine}{Environment.NewLine}The checked-out Timelapse file{pluralityText} are found in:{Environment.NewLine}"
+                             + $"{fileList}{Environment.NewLine}";
+            if (false == string.IsNullOrWhiteSpace(shortcutDestination))
+                Message.Result += $" • a shortcut to those images was also created in the {shortcutDestination} folder.";
         }
 
         private void SetFeedbackAndDoneVisibility()
@@ -170,49 +248,6 @@ namespace Timelapse.Dialog
             CancelButton.Visibility = Visibility.Collapsed;
             DoneButton.Visibility = Visibility.Visible;
         }
-        #region Callbacks
-        private void ButtonChooseFolder_OnClick(object sender, RoutedEventArgs e)
-        {
-            RelativeSubFolderPath = Dialogs.LocateRelativePathUsingOpenFileDialog(InitialFolder, String.Empty);
-            if (RelativeSubFolderPath == null)
-            {
-                // User cancelled
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(RelativeSubFolderPath))
-            {
-                txtboxNewFolderName.Text = string.Empty;
-                FullSubFolderPath = string.Empty;
-            }
-            else
-            {
-                txtboxNewFolderName.Text = RelativeSubFolderPath;
-                FullSubFolderPath = Path.Combine(InitialFolder, RelativeSubFolderPath);
-            }
-            ButtonCheckOut.IsEnabled = !string.IsNullOrWhiteSpace(RelativeSubFolderPath); // Enable the button only if a folder was specified
-        }
-        private void ButtonCheckOut_Click(object sender, RoutedEventArgs e)
-        {
-            // ReSharper disable once AssignNullToNotNullAttribute
-            if (Directory.GetFiles(FullSubFolderPath, "*" + File.FileDatabaseFileExtension).Length > 0)
-            {
-                if (false == Dialogs.MergeWarningCheckOutDdbFileExists(this))
-                {
-                    return;
-                }
-            }
-            DoCheckout();
-        }
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-        }
         #endregion
-
-        private void DoneButton_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = success;
-        }
     }
 }

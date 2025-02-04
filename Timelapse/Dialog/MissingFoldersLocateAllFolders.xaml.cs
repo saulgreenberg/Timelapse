@@ -308,8 +308,8 @@ namespace Timelapse.Dialog
                 return;
             }
             Dictionary<string, List<string>> missingFoldersAndLikelyLocations = cb.IsChecked == true
-                ? FilesFolders.TryGetMissingFoldersStringent(FileDatabase.FolderPath, MissingRelativePaths, FileDatabase)
-                : FilesFolders.TryGetMissingFolders(FileDatabase.FolderPath, MissingRelativePaths);
+                ? FilesFolders.TryGetMissingFoldersStringent(FileDatabase.RootPathToImages, MissingRelativePaths, FileDatabase)
+                : FilesFolders.TryGetMissingFolders(FileDatabase.RootPathToImages, MissingRelativePaths);
 
             CreateDataTable(missingFoldersAndLikelyLocations);
             PopulateDataGridRow();

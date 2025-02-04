@@ -209,14 +209,14 @@ namespace Timelapse.Dialog
                     if (metadataToolSelected == MetadataToolEnum.MetadataExtractor)
                     {
                         // MetadataExtractor specific code
-                        metadata = ImageMetadataDictionary.LoadMetadata(image.GetFilePath(FileDatabase.FolderPath));
+                        metadata = ImageMetadataDictionary.LoadMetadata(image.GetFilePath(FileDatabase.RootPathToImages));
                     }
                     else // if metadataToolSelected == MetadataToolEnum.ExifTool
                     {
                         // ExifTool specific code - note that we transform results into the same dictionary structure used by the MetadataExtractor
                         // Unlike MetadataExtractor, ExifTool returns TagName instad of Directory.TagName (I think - but does that mean it would break on duplicate values?
                         metadata.Clear();
-                        Dictionary<string, string> exifData = MetadataGrid.ExifToolManager.FetchExifFrom(image.GetFilePath(FileDatabase.FolderPath), tags);
+                        Dictionary<string, string> exifData = MetadataGrid.ExifToolManager.FetchExifFrom(image.GetFilePath(FileDatabase.RootPathToImages), tags);
                         foreach (string tag in tags)
                         {
                             if (exifData.TryGetValue(tag, out var value))

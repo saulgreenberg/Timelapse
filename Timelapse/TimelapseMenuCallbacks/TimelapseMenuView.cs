@@ -27,7 +27,7 @@ namespace Timelapse
             MenuItemBookmarkSetPanZoom.IsEnabled = filesSelectedAndSingleImage;
             MenuItemShowInExplorer.IsEnabled =
                 filesSelectedAndSingleImage &&
-                true == DataHandler?.ImageCache?.Current?.FileExists(DataHandler?.FileDatabase?.FolderPath);
+                true == DataHandler?.ImageCache?.Current?.FileExists(DataHandler?.FileDatabase?.RootPathToImages);
 
         }
         #endregion
@@ -137,7 +137,7 @@ namespace Timelapse
         {
             // Note that the menu item is only selectable if the file actually exists
             // Thus the empty/null test is likely not needed, but...
-            string path = DataHandler?.ImageCache?.Current?.GetFilePath(DataHandler?.FileDatabase?.FolderPath);
+            string path = DataHandler?.ImageCache?.Current?.GetFilePath(DataHandler?.FileDatabase?.RootPathToImages);
             if (false == string.IsNullOrWhiteSpace(path))
             {
                 ProcessExecution.TryProcessStartUsingFileExplorerToSelectFile(path);

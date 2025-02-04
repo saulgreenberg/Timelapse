@@ -15,7 +15,7 @@ namespace Timelapse.DataTables
     {
         #region Public Properties to set / get the various row values
         // Name of the root folder containing the template
-        public string RootFolder
+        public string RootFolderName
         {
             get => Row.GetStringField(DatabaseColumn.RootFolder);
             set => Row.SetField(DatabaseColumn.RootFolder, value);
@@ -108,7 +108,7 @@ namespace Timelapse.DataTables
             List<ColumnTuple> columnTuples = new List<ColumnTuple>
             {
                 //new ColumnTuple(Constant.DatabaseColumn.Selection, (int)this.FileSelection),
-                new ColumnTuple(DatabaseColumn.RootFolder,RootFolder),
+                new ColumnTuple(DatabaseColumn.RootFolder,RootFolderName),
                 new ColumnTuple(DatabaseColumn.Log, Log),
                 new ColumnTuple(DatabaseColumn.MostRecentFileID, MostRecentFileID),
                 new ColumnTuple(DatabaseColumn.VersionCompatibility, VersionCompatability),

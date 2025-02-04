@@ -56,7 +56,7 @@ namespace Timelapse.Dialog
             // Get the image filename and image and display them
             FileName.Content = ImageToCorrect.File;
             FileName.ToolTip = ImageToCorrect.File;
-            SampleImage.Source = ImageToCorrect.LoadBitmap(fileDatabase.FolderPath, out _);
+            SampleImage.Source = ImageToCorrect.LoadBitmap(fileDatabase.RootPathToImages, out _);
 
             // ConfigureFormatForDateTimeCustom datetime picker to the initial date on the images plus callbacks
             initialDate = ImageToCorrect.DateTime;

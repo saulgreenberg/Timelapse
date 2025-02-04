@@ -34,15 +34,15 @@ namespace Timelapse
                 // No-op
                 return;
             }
-            string rootFolder = fileDatabase.ImageSet.RootFolder;
+            string rootFolder = fileDatabase.ImageSet.RootFolderName;
 
             // retrieve and compare the db and actual root folder path names. While there really should be only one entry in the allRootFolderPaths,
             // we still do a check in case there is more than one. If even one entry doesn't match, we use that entry to ask the user if he/she
             // wants to update the root folder to match the actual location of the root folder containing the template, data and image files.
-            string actualRootFolderName = fileDatabase.FolderPath.Split(Path.DirectorySeparatorChar).Last();
+            string actualRootFolderName = fileDatabase.RootPathToDatabase.Split(Path.DirectorySeparatorChar).Last();
             if (false == rootFolder.Equals(actualRootFolderName))
             {
-                fileDatabase.ImageSet.RootFolder = actualRootFolderName;
+                fileDatabase.ImageSet.RootFolderName = actualRootFolderName;
                 fileDatabase.UpdateSyncImageSetToDatabase();
             }
         }
@@ -64,7 +64,7 @@ namespace Timelapse
 
             // We know that at least one or more folders are missing.
             // For each missing folder path, try to find all folders with the same name under the root folder.
-            Dictionary<string, List<string>> matchingFolderNames = FilesFolders.TryGetMissingFolders(fileDatabase.FolderPath, missingRelativePaths);
+            Dictionary<string, List<string>> matchingFolderNames = FilesFolders.TryGetMissingFolders(fileDatabase.RootPathToImages, missingRelativePaths);
             
             // We want to show the normal cursor when we display dialog boxes, so save the current cursor so we can store it.
             Cursor cursor = Mouse.OverrideCursor;
@@ -74,7 +74,7 @@ namespace Timelapse
                 Mouse.OverrideCursor = null;
                 // Present a dialog box that asks the user to locate the missing folders. It will show possible locations for each folder (if any).
                 // The user can then confirm correct locations, manually set the locaton of those folders, or cancel altogether.
-                MissingFoldersLocateAllFolders dialog = new MissingFoldersLocateAllFolders(owner, fileDatabase.FolderPath, missingRelativePaths, matchingFolderNames, fileDatabase);
+                MissingFoldersLocateAllFolders dialog = new MissingFoldersLocateAllFolders(owner, fileDatabase.RootPathToImages, missingRelativePaths, matchingFolderNames, fileDatabase);
                 bool? result = dialog.ShowDialog();
 
                 if (result == true)
@@ -161,7 +161,7 @@ namespace Timelapse
             List<string> missingRelativePaths = new List<string>();
             foreach (string relativePath in allRelativePaths)
             {
-                string path = Path.Combine(fileDatabase.FolderPath, relativePath);
+                string path = Path.Combine(fileDatabase.RootPathToImages, relativePath);
                 if (!Directory.Exists(path))
                 {
                     missingRelativePaths.Add(relativePath);

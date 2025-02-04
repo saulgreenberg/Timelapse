@@ -241,7 +241,7 @@ namespace Timelapse.Dialog
                 TracePrint.NullException(nameof(imageEnumerator.Current));
                 return;
             }
-            bitmap = imageEnumerator.Current.LoadBitmap(fileDatabase.FolderPath, out _).AsWriteable();
+            bitmap = imageEnumerator.Current.LoadBitmap(fileDatabase.RootPathToImages, out _).AsWriteable();
             Image.Source = bitmap;
             FileName.Content = imageEnumerator.Current.File;
             FileName.ToolTip = imageEnumerator.Current.File;
@@ -301,7 +301,7 @@ namespace Timelapse.Dialog
                         // Get the image, and add it to the list of images to be updated if the imageQuality has changed
                         // Note that if the image can't be created, we will just go to the catch.
                         // We also use a TransientLoading, as the estimate of darkness will work just fine on that
-                        imageQuality.Bitmap = file.LoadBitmap(fileDatabase.FolderPath, ImageDisplayIntentEnum.Ephemeral, out bool isCorruptOrMissing).AsWriteable();
+                        imageQuality.Bitmap = file.LoadBitmap(fileDatabase.RootPathToImages, ImageDisplayIntentEnum.Ephemeral, out bool isCorruptOrMissing).AsWriteable();
                         if (isCorruptOrMissing)
                         {
                             // If we can't read the image, just set its darkness to false

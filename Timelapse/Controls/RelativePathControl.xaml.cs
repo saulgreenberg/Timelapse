@@ -59,7 +59,8 @@ namespace Timelapse.Controls
         #region Properties
         public FileDatabase FileDatabase { get; set; }
 
-        private string RootFolder => FileDatabase.FolderPath;
+        // The path to the actual root folder containing images
+        private string RootPathToImages => FileDatabase.RootPathToImages;
 
         public Window ParentDialogWindow { get; set; }
 
@@ -115,7 +116,7 @@ namespace Timelapse.Controls
                 return false;
             }
 
-            List<string> physicalFolders = await BusyCancelIndicator.ProgressWrapper(() => FilesFolders.AsyncGetAllFoldersExceptBackupAndDeletedFolders(FileDatabase.FolderPath, FileDatabase.FolderPath), progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
+            List<string> physicalFolders = await BusyCancelIndicator.ProgressWrapper(() => FilesFolders.AsyncGetAllFoldersExceptBackupAndDeletedFolders(FileDatabase.RootPathToImages, FileDatabase.RootPathToImages), progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
             if (physicalFolders == null)
             {
                 return false;
@@ -200,7 +201,7 @@ namespace Timelapse.Controls
             bool rootNodeContainsImages = rootPathItem != null && rootPathItem.ContainsImages;
             Node rootNode = new Node
             {
-                FolderExists = Directory.Exists(RootFolder),
+                FolderExists = Directory.Exists(this.RootPathToImages),
                 ContainsImages = rootNodeContainsImages,
             };
 
@@ -272,7 +273,7 @@ namespace Timelapse.Controls
                 // This node is a child item as the path isn't empty
                 // So we need to create a new TreeViewItem representing that path, which will be added as a child the existing TreeViewItem
                 // The tag is used to associate a node with its respective TreeViewItem
-                node.FolderExists = Directory.Exists(Path.Combine(RootFolder, node.Path));
+                node.FolderExists = Directory.Exists(Path.Combine(this.RootPathToImages, node.Path));
                 StackPanel sp = CreateTreeViewItemHeaderAsStackPanel(node.Name, node.ContainsImages, node.FolderExists);
                 tvi = new TreeViewItem
                 {
@@ -636,8 +637,8 @@ namespace Timelapse.Controls
             bool isInteriorNode)
         {
             MoveFolderResultEnum result = FilesFolders.TryMoveFolderIfExists(
-                Path.Combine(RootFolder, oldFolderPath),
-                Path.Combine(RootFolder, newFolderPath));
+                Path.Combine(this.RootPathToImages, oldFolderPath),
+                Path.Combine(this.RootPathToImages, newFolderPath));
             if (result == MoveFolderResultEnum.Success)
             {
                 // We assume we can always update the database with no errors. 
@@ -944,8 +945,8 @@ namespace Timelapse.Controls
         MoveFolderResultEnum ExternalMoveFolderIntoFolder(string sourceFolderPath, string destinationFolderPath, bool isDatabaseInteriorNode)
         {
             MoveFolderResultEnum result = FilesFolders.TryMoveFolderIfExists(
-                Path.Combine(RootFolder, sourceFolderPath),
-                Path.Combine(RootFolder, destinationFolderPath));
+                Path.Combine(this.RootPathToImages, sourceFolderPath),
+                Path.Combine(this.RootPathToImages, destinationFolderPath));
             if (result == MoveFolderResultEnum.Success)
             {
                 // We assume we can always update the database with no errors. 
@@ -971,7 +972,7 @@ namespace Timelapse.Controls
             {
                 return;
             }
-            string fullFolderPath = Path.Combine(RootFolder, node.Path);
+            string fullFolderPath = Path.Combine(this.RootPathToImages, node.Path);
 
             // Try to delete the folder
             if (!Directory.EnumerateFileSystemEntries(fullFolderPath).Any())
@@ -1017,7 +1018,7 @@ namespace Timelapse.Controls
             }
 
             // Generate a unique name for the New folder (e.g., if a 'New folder' already exists, it will return (and check) New folder_1 etc).
-            FilesFolders.GenerateFileNameIfNeeded(Path.Combine(RootFolder, node.Path), NewFolder,
+            FilesFolders.GenerateFileNameIfNeeded(Path.Combine(this.RootPathToImages, node.Path), NewFolder,
                 out string newFolderName);
 
             string newFullFolderPath = Path.Combine(node.Path, newFolderName);
@@ -1098,7 +1099,7 @@ namespace Timelapse.Controls
         private CreateSubfolderResultEnum DoCreateNewFolder(string folderPath, string folderName)
         {
             CreateSubfolderResultEnum result =
-                FilesFolders.TryCreateSubfolderInFolder(Path.Combine(RootFolder, folderPath), folderName);
+                FilesFolders.TryCreateSubfolderInFolder(Path.Combine(this.RootPathToImages, folderPath), folderName);
             if (result == CreateSubfolderResultEnum.Success)
             {
                 // No need to update the database, as Timelapse will not have a record of images associated with it
@@ -1112,7 +1113,7 @@ namespace Timelapse.Controls
         #region Section: Move images/ videos from source folder into a newly created new folder
         private void MoveImagesToNewFolder(TreeViewItem sourceTvi, Node sourceNode)
         {
-            string fullSourcePath = Path.Combine(RootFolder, sourceNode.Path);
+            string fullSourcePath = Path.Combine(this.RootPathToImages, sourceNode.Path);
 
             // Create the destination folder (usually a variation of 'New folder')
             TreeViewItem destinationTvi = CreateNewFolder(sourceTvi, false);
@@ -1135,7 +1136,7 @@ namespace Timelapse.Controls
             }
 
             destinationTvi.IsSelected = true;
-            string fullDestinationPath = Path.Combine(RootFolder, destinationNode.Path);
+            string fullDestinationPath = Path.Combine(this.RootPathToImages, destinationNode.Path);
 
             // Get all the image/video files in the source folder and try to move them to the destination
             List<string> imageAndVideoFiles = FilesFolders.GetAllImageAndVideoFilesInASingleFolder(fullSourcePath);
@@ -1291,7 +1292,7 @@ namespace Timelapse.Controls
 
                 Node node = (Node)tvi.Tag;
 
-                string newFolderPath = Path.Combine(RootFolder, node.Path);
+                string newFolderPath = Path.Combine(this.RootPathToImages, node.Path);
                 if (LogicalTreeHelper.FindLogicalNode(cm, "DeleteMenuItem") is MenuItem deleteMenuItem)
                 {
                     // If the folder doesn't exist, or if the folder isn't empty (or flagged as containing photos), disable the Delete MenuItem
@@ -1349,7 +1350,7 @@ namespace Timelapse.Controls
                 // If the folder doesn't exists, flash the node and don't start the editing operation
                 if (node.FolderExists)
                 {
-                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(RootFolder,
+                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootPathToImages,
                         node.Path));
                 }
                 //FLASH FLASH FLASH

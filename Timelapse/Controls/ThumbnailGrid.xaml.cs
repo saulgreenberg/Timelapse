@@ -41,9 +41,9 @@ namespace Timelapse.Controls
         // FileTableStartIndex needs to be set externally
         public int FileTableStartIndex { get; set; }
 
-        // FullSubFolderPath needs to be set externally
-        // The root folder containing the template
-        public string FolderPath { get; set; }
+        // RootPathToImages needs to be set externally
+        // The root folder containing the images
+        public string RootPathToImages { get; set; }
 
         // The number of columns that exist in the grid
         public int AvailableColumns => Grid.ColumnDefinitions.Count;
@@ -229,7 +229,7 @@ namespace Timelapse.Controls
                     // way to do it is to grab the aspect ratio of the first image that will be displayed in the Thumbnail Grid. If it doesn't exist, we just use a default aspect ratio
                     // Another option - to avoid the cost of gettng a bitmap on a video - is to check if its a video (jut check the path suffix) and if so use the default aspect ratio OR
                     // use FFMPEG Probe (but that may mean another dll?)
-                    BitmapSource bm = FileTable[FileTableStartIndex].LoadBitmap(FolderPath, ImageValues.PreviewWidth32, ImageDisplayIntentEnum.Ephemeral,
+                    BitmapSource bm = FileTable[FileTableStartIndex].LoadBitmap(RootPathToImages, ImageValues.PreviewWidth32, ImageDisplayIntentEnum.Ephemeral,
                         ImageDimensionEnum.UseWidth, out _);
                     cellWidth = (bm == null || bm.PixelHeight == 0)
                         ? Convert.ToInt32(desiredCellHeight * Constant.ThumbnailGrid.AspectRatioDefault)
@@ -946,7 +946,7 @@ namespace Timelapse.Controls
                 GridIndex = gridIndex,
                 Row = row,
                 Column = column,
-                RootFolder = FolderPath,
+                RootPathToImages = RootPathToImages,
                 ImageRow = FileTable[fileTableIndex],
                 FileTableIndex = fileTableIndex,
                 BoundingBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(FileTable[fileTableIndex].ID, true),

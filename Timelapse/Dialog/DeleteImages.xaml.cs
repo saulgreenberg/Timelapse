@@ -117,7 +117,7 @@ namespace Timelapse.Dialog
                 filePath = filePath.Length <= maxPathLength ? filePath : "..." + filePath.Substring(filePath.Length - maxPathLength, maxPathLength);
             }
 
-            SingleImageViewer.Source = imageRow.LoadBitmap(fileDatabase.FolderPath, ImageValues.PreviewWidth480, out _);
+            SingleImageViewer.Source = imageRow.LoadBitmap(fileDatabase.RootPathToImages, ImageValues.PreviewWidth480, out _);
             SingleFilePanel.ToolTip = Path.Combine(imageRow.RelativePath, imageRow.File);
             SingleImageViewer.ToolTip = Path.Combine(imageRow.RelativePath, imageRow.File);
             SingleFileNameRun.Text = filePath;
@@ -360,7 +360,7 @@ namespace Timelapse.Dialog
                                       // SAULXXX Note that we should likely pop up a dialog box that displays non-missing files that we can't (for whatever reason) delete
                                       // SAULXXX If we can't delete it, we may want to abort changing the various DeleteFlag 
                                       // SAULXXX A good way is to put an 'image.ImageFileExists' field in, and then do various tests on that.
-                        if (image.TryMoveFileToDeletedFilesFolder(fileDatabase.FolderPath, backupDeletedFiles))
+                        if (image.TryMoveFileToDeletedFilesFolder(fileDatabase.RootPathToImages, backupDeletedFiles))
                         {
                             // keep track of the number of files actually delted
                             filesDeleted++;
@@ -425,7 +425,7 @@ namespace Timelapse.Dialog
             ImageRow ir = (ImageRow)lbi.Tag;
             Image image = new Image
             {
-                Source = ir.LoadBitmap(fileDatabase.FolderPath, ImageValues.PreviewWidth384, out _),
+                Source = ir.LoadBitmap(fileDatabase.RootPathToImages, ImageValues.PreviewWidth384, out _),
                 Height = 300,
                 HorizontalAlignment = HorizontalAlignment.Left
             };

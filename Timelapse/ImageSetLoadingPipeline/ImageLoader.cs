@@ -15,7 +15,7 @@ namespace Timelapse.ImageSetLoadingPipeline
     public class ImageLoader
     {
         #region Public Properties
-        public string FolderPath => dataHandler.FileDatabase.FolderPath;
+        public string RootPathToImages => dataHandler.FileDatabase.RootPathToImages;
 
         public bool RequiresDatabaseInsert
         {
@@ -37,7 +37,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                 if (bitmapSource == null)
                 {
                     // Lazy load
-                    var task = File.LoadBitmapAsync(FolderPath, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth);
+                    var task = File.LoadBitmapAsync(this.RootPathToImages, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth);
                     task.Wait();
 
                     var loadResult = task.Result;
@@ -75,7 +75,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             // Skip the per-file call to the database
             File = dataHandler.FileDatabase.FileTable.NewRow(fileInfo);
             File.RelativePath = relativePath;
-            File.SetDateTimeFromFileInfo(FolderPath);
+            File.SetDateTimeFromFileInfo(this.RootPathToImages);
 
             return Task.Run(() =>
             {
@@ -83,13 +83,13 @@ namespace Timelapse.ImageSetLoadingPipeline
                 if (GlobalReferences.TimelapseState.MetadataOnLoad != null && GlobalReferences.TimelapseState.MetadataOnLoad.SelectedImageMetadataDataLabels != null &&
                     GlobalReferences.TimelapseState.MetadataOnLoad.SelectedImageMetadataDataLabels.Count > 0)
                 {
-                    File.TryReadMetadataAndSetMetadataFields(FolderPath, GlobalReferences.TimelapseState.MetadataOnLoad);
+                    File.TryReadMetadataAndSetMetadataFields(this.RootPathToImages, GlobalReferences.TimelapseState.MetadataOnLoad);
                 }
 
                 // Try to update the datetime (which is currently recorded as the file's date) with the metadata date time the image was taken instead
                 // Note that videos do not have these metadata fields
                 // Strategy is to set date from either the metadata or the file time depending on what is available
-                File.TryReadDateTimeOriginalFromMetadata(FolderPath);
+                File.TryReadDateTimeOriginalFromMetadata(this.RootPathToImages);
 
                 // This completes processing, but it may be some time before the task is checked for completion.
                 // for purposes of reporting progress, call the completion delegate provided.

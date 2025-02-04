@@ -57,7 +57,7 @@ namespace Timelapse.DebuggingSupport
         // ReSharper disable once UnusedMember.Global
         public static void StackTraceToFile(string message)
         {
-            using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.FolderPath, File.TraceFile), true))
+            using (StreamWriter file = new StreamWriter(Path.Combine(GlobalReferences.MainWindow.RootPathToDatabase, File.TraceFile), true))
             {
                 file.WriteLine(GetMethodNameStack(message, 5));
                 file.WriteLine("----");

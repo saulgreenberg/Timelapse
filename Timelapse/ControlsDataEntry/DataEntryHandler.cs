@@ -1352,7 +1352,7 @@ namespace Timelapse.ControlsDataEntry
             if (handler.ImageCache?.CurrentDifferenceState != null && handler.FileDatabase != null)
             {
                 // Get the path
-                string path = handler.ImageCache.Current.GetFilePath(handler.FileDatabase.FolderPath);
+                string path = handler.ImageCache.Current.GetFilePath(handler.FileDatabase.RootPathToImages);
                 return File.Exists(path) ? path : null;
             }
             return null;

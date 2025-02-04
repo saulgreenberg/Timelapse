@@ -141,7 +141,7 @@ namespace Timelapse.Dialog
                     // Get the image (if its there), get the new dates/times, and add it to the list of images to be updated 
                     // Note that if the image can't be created, we will just to the catch.
                     bool usingMetadataTimestamp = true;
-                    if (file.FileExists(fileDatabase.FolderPath) == false)
+                    if (file.FileExists(fileDatabase.RootPathToImages) == false)
                     {
                         // The file does not exist. Generate a feedback message
                         missingFiles++;
@@ -149,11 +149,11 @@ namespace Timelapse.Dialog
                     else
                     {
                         // Read the date from the file, and check to see if its different from the recorded date
-                        DateTimeAdjustmentEnum dateTimeAdjustment = file.TryReadDateTimeOriginalFromMetadata(fileDatabase.FolderPath);
+                        DateTimeAdjustmentEnum dateTimeAdjustment = file.TryReadDateTimeOriginalFromMetadata(fileDatabase.RootPathToImages);
                         if (dateTimeAdjustment == DateTimeAdjustmentEnum.MetadataNotUsed)
                         {
                             // We couldn't read the metadata, so get a candidate date/time from the file info instead
-                            file.SetDateTimeFromFileInfo(fileDatabase.FolderPath);
+                            file.SetDateTimeFromFileInfo(fileDatabase.RootPathToImages);
                             usingMetadataTimestamp = false;
                         }
                         DateTime rescannedDateTime = file.DateTimeIncorporatingOffsetPLAINVERSION;

@@ -667,6 +667,7 @@ namespace Timelapse.Constant
         public const string SuppressSelectedDaylightSavingsCorrectionPrompt = "SuppressSelectedDaylightSavingsCorrectionPrompt";
         public const string SuppressSelectedPopulateFieldFromMetadataPrompt = "SuppressSelectedPopulateFieldFromMetadataPrompt";
         public const string SuppressSelectedRereadDatesFromFilesPrompt = "SuppressSelectedRereadDatesFromFilesPrompt";
+        public const string SuppressShortcutDetectedPrompt = "SuppressShortcutDetectedPrompt";
         public const string SuppressWarningToUpdateDBFilesToSQLPrompt = "SuppressWarningToUpdateDBFilesToSQL";
 
         // TabOrderInclude

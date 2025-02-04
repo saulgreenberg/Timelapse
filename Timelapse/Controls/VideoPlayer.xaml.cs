@@ -601,7 +601,7 @@ namespace Timelapse.Controls
                     return null;
                 }
 
-                string currentPath = mainWindow.DataHandler.ImageCache.Current.GetFilePath(GlobalReferences.MainWindow.DataHandler.FileDatabase.FolderPath);
+                string currentPath = mainWindow.DataHandler.ImageCache.Current.GetFilePath(GlobalReferences.MainWindow.DataHandler.FileDatabase.RootPathToImages);
                 frameRate = VideoPlayer.GetFrameRateFromFile(currentPath);
                 if (frameRate <= 0)
                 {

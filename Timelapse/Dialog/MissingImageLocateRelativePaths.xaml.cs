@@ -38,7 +38,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Private Variables
-        private readonly string FolderPath;
+        private readonly string RootPathToImages;
         private ObservableCollection<Tuple<string, string, bool>> observableCollection; // A tuple defining the contents of the datagrid
         private IList<DataGridCellInfo> selectedRowTuple; // Will contain the tuple of the row corresponding to the selected cell
         #endregion
@@ -58,8 +58,8 @@ namespace Timelapse.Dialog
                 return;
             }
 
-            Owner = owner;
-            FolderPath = fileDatabase.FolderPath;
+            this.Owner = owner;
+            this.RootPathToImages = fileDatabase.RootPathToImages;
 
             // Show the file name and its full relative path in the UI
             RunImageName.Text = fileName;
@@ -123,7 +123,7 @@ namespace Timelapse.Dialog
             }
 
             Tuple<string, string, bool> tuple = (Tuple<string, string, bool>)dgr.Item;
-            string path = Path.Combine(FolderPath, tuple.Item1);
+            string path = Path.Combine(this.RootPathToImages, tuple.Item1);
             Image image = new Image
             {
                 Source = FilesFolders.GetFileTypeByItsExtension(path) == FileExtensionEnum.IsImage
@@ -165,7 +165,7 @@ namespace Timelapse.Dialog
             {
                 case 0:
                     // Show the folder in the file explorer
-                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(FolderPath, possibleFolderLocation));
+                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootPathToImages, possibleFolderLocation));
                     break;
                 case 3:
                     // Use checkmark has been selected. 
