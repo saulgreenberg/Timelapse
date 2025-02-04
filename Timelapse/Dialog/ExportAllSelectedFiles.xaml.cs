@@ -160,7 +160,7 @@ namespace Timelapse.Dialog
                     ? ir.RelativePath.Replace('\\', '.')
                     : string.Empty;
 
-                    sourceFile = Path.Combine(FileDatabase.FolderPath, ir.RelativePath, ir.File);
+                    sourceFile = Path.Combine(FileDatabase.RootPathToImages, ir.RelativePath, ir.File);
                     destFile = string.IsNullOrWhiteSpace(fileNamePrefix)
                     ? Path.Combine(path, fileNamePrefix + ir.File)
                     : Path.Combine(path, fileNamePrefix + '.' + ir.File);

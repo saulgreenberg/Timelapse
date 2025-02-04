@@ -80,7 +80,7 @@ namespace Timelapse
         private void MenuItemQuickPasteImportFromDB_Click(object sender, RoutedEventArgs e)
         {
             if (Dialogs.TryGetFileFromUserUsingOpenFileDialog("Import QuickPaste entries by selecting the Timelapse database (.ddb) file from the image folder where you had used them.",
-                                             Path.Combine(DataHandler.FileDatabase.FolderPath, Constant.File.DefaultFileDatabaseFileName),
+                                             Path.Combine(DataHandler.FileDatabase.RootPathToDatabase, Constant.File.DefaultFileDatabaseFileName),
                                              String.Format("Database files (*{0})|*{0}", Constant.File.FileDatabaseFileExtension),
                                              Constant.File.FileDatabaseFileExtension,
                                              out string ddbFile))
@@ -114,7 +114,7 @@ namespace Timelapse
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
-            if (DataHandler.ImageCache.Current != null && DataHandler.ImageCache.Current.IsDisplayable(FolderPath) == false)
+            if (DataHandler.ImageCache.Current != null && DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
                 Dialogs.MenuEditPopulateDataFieldWithMetadataDialog(this);
@@ -136,7 +136,7 @@ namespace Timelapse
                                                                    State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
             {
-                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(FolderPath), false);
+                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages), false);
                 if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
@@ -153,7 +153,7 @@ namespace Timelapse
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
-            if (DataHandler.ImageCache.Current != null && DataHandler.ImageCache.Current.IsDisplayable(FolderPath) == false)
+            if (DataHandler.ImageCache.Current != null && DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages) == false)
             {
                 // There are no displayable images, and thus no metadata to choose from, so abort
                 Dialogs.MenuEditRereadDateTimesFromMetadataDialog(this);
@@ -174,7 +174,7 @@ namespace Timelapse
                     TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     return;
                 }
-                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(FolderPath), true);
+                PopulateFieldsWithMetadata populateField = new PopulateFieldsWithMetadata(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages), true);
                 if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
@@ -364,7 +364,7 @@ namespace Timelapse
 
                 // Enable the delete current file option only if we are not on the thumbnail grid 
                 MenuItemDeleteCurrentFileAndData.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false; // Only show this option if the thumbnail grid is visible
-                MenuItemDeleteCurrentFile.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false && DataHandler?.ImageCache?.Current != null && DataHandler.ImageCache.Current.IsDisplayable(FolderPath);
+                MenuItemDeleteCurrentFile.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false && DataHandler?.ImageCache?.Current != null && DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages);
                 MenuItemDeleteCurrentData.IsEnabled = MarkableCanvas.IsThumbnailGridVisible == false;
 
             }
@@ -516,7 +516,7 @@ namespace Timelapse
                     }
                 }
             }
-            if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(DataHandler.FileDatabase.FolderPath, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
+            if (longestFile != null && IsCondition.IsPathLengthTooLong(Path.Combine(DataHandler.FileDatabase.RootPathToImages, longestFile.RelativePath, Constant.File.DeletedFilesFolder, longestFile.File), FilePathTypeEnum.Deleted))
             {
                 // Path is too long to back up
                 if (Dialogs.FilePathDeletedFileTooLongDialog(this) == false)
@@ -711,7 +711,7 @@ namespace Timelapse
             // Don't do anything if the image actually exists. This should not fire, as this menu item is only enabled 
             // if there is a current image that doesn't exist. But just in case...
 
-            if (null == DataHandler?.ImageCache?.Current || File.Exists(FilesFolders.GetFullPath(DataHandler.FileDatabase.FolderPath, DataHandler?.ImageCache?.Current)))
+            if (null == DataHandler?.ImageCache?.Current || File.Exists(FilesFolders.GetFullPath(DataHandler.FileDatabase.RootPathToImages, DataHandler?.ImageCache?.Current)))
             {
                 return;
             }
@@ -722,7 +722,7 @@ namespace Timelapse
                 TracePrint.NullException(nameof(DataHandler));
                 return;
             }
-            string folderPath = DataHandler.FileDatabase.FolderPath;
+            string folderPath = DataHandler.FileDatabase.RootPathToImages;
             ImageRow currentImage = DataHandler?.ImageCache?.Current;
 
             if (null == currentImage)
@@ -788,7 +788,7 @@ namespace Timelapse
                 {
                     // Its a potential candidate if its not already referenced but it exists in that relative path folder
                     if (false == DataHandler.FileDatabase.ExistsRelativePathAndFileInDataTable(matchingPath.Item1, otherMissingFile)
-                        && File.Exists(FilesFolders.GetFullPath(FolderPath, matchingPath.Item1, otherMissingFile)))
+                        && File.Exists(FilesFolders.GetFullPath(RootPathToImages, matchingPath.Item1, otherMissingFile)))
                     {
                         orphanMissingFiles.Add(otherMissingFile);
                     }

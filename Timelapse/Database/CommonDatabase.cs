@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DialogUpgradeFiles.Database;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -164,6 +165,7 @@ namespace Timelapse.Database
                 // Note that we don't have to do this for the metadataTemplate as it follows the new versions' spec
                 AddExportToCSVColumnIfNeeded(commonDatabase.Database);
                 AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded(commonDatabase.Database);
+                AddStandardToTemplateInfoColumnIfNeeded(commonDatabase.Database);
 
                 // Load (or reload) the Controls data structure from the template table in the database
                 await commonDatabase.LoadControlsFromTemplateDBSortedByControlOrderAsync();

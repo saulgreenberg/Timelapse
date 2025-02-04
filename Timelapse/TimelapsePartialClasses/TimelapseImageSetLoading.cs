@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.ExceptionServices;
+using System.Runtime.Serialization.Formatters;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -73,7 +74,7 @@ namespace Timelapse
             return await TryOpenTemplateAndBeginLoadFoldersAsync(tdbDatabasePath, string.Empty);
         }
 
-        private async Task<Tuple<bool, string>> TryOpenTemplateAndBeginLoadFoldersAsync(string tdbDatabasePath, string fileDatabaseFilePath)
+        private async Task<Tuple<bool, string>> TryOpenTemplateAndBeginLoadFoldersAsync(string tdbDatabasePath, string fileDatabaseFilePath, bool checkForShortcuts = true)
         {
             State.MostRecentImageSets.SetMostRecent(tdbDatabasePath);
             RecentFileSets_Refresh();
@@ -231,7 +232,7 @@ namespace Timelapse
             // - we know if the user wants to use the old or the new template (if they differ in a meaningful way)
             // So lets load the database for real. The useTemplateDBTemplate signals whether to use the template stored in the ddb, or to use the tdb template.
             FileDatabase fileDatabase = await FileDatabase
-                .CreateOrOpenAsync(fileDatabaseFilePath, templateDatabase, State.CustomSelectionTermCombiningOperator, templateSyncResults, backUpJustMade)
+                .CreateOrOpenAsync(fileDatabaseFilePath, templateDatabase, State.CustomSelectionTermCombiningOperator, templateSyncResults, backUpJustMade, checkForShortcuts)
                 .ConfigureAwait(true);
 
             // Check: Unrecognized control
@@ -240,6 +241,40 @@ namespace Timelapse
                 // If there is an unrecognized control, inform the user and abort
                 Dialogs.TemplateIncludesControlOfUnknownType(this, "unknown control in the Timelapse .ddb data file.");
                 return new Tuple<bool, string>(false, string.Empty);
+            }
+
+            // Check: Are we using a shortcut to an external image folder? (i.e., ShrotcutFoldersFound is not null)
+            // If one shortcut, use that. If there is more than one, that can be a problem as we can't determine what folder to use
+            if (fileDatabase.ShortcutFoldersFound != null)
+            {
+                // if Count is 0, we just continue with no shortcuts
+                if (fileDatabase.ShortcutFoldersFound.Count == 1)
+                {
+                    // This is fine. Just generate a message so the user knows what is going on
+                    if (State.SuppressShortcutDetectedPrompt == false)
+                    {
+                        Dialogs.ShortcutDetectedDialog(GlobalReferences.MainWindow, fileDatabase.ShortcutFoldersFound[0]);
+                    }
+                    else
+                    {
+                        MessageOptions toastOptions = new MessageOptions
+                        {
+                            FontSize = 14, // set notification font size
+                            FreezeOnMouseEnter = true, // set the option to prevent notification dissapearing automatically if user move cursor on it
+                            UnfreezeOnMouseLeave = true,
+
+                        };
+                        string toastMessage = $"Shortcut detected.{Environment.NewLine}- It will be used to search for images.";
+                        ToastNotifier.ShowInformation(toastMessage, toastOptions);
+
+                    }
+                }
+                else if (fileDatabase.ShortcutFoldersFound.Count > 1)
+                {
+                    // This is an error. Generate a message and abort.
+                    Dialogs.ShortcutMultipleShortcutsDetectedDialog(GlobalReferences.MainWindow, fileDatabase.ShortcutFoldersFound);
+                    return new Tuple<bool, string>(false, string.Empty);
+                }
             }
 
             // TODO: SHOULDN'T WE DO THE DEFAULT SYNCHRONIZATION IN THE PREVIOUS STEPS?
@@ -313,7 +348,7 @@ namespace Timelapse
             // If this is a new image database, try to load images (if any) from the folder...  
             if (importImagesAsNewDDBFile)
             {
-                if (false == TryBeginImageFolderLoad(FolderPath, FolderPath, true))
+                if (false == TryBeginImageFolderLoad(RootPathToImages, RootPathToImages, true))
                 {
                     return new Tuple<bool, string>(false, fileDatabaseFilePath);
                 }
@@ -610,7 +645,7 @@ namespace Timelapse
             quickPasteEntries = QuickPasteOperations.QuickPasteEntriesFromJSON(DataHandler.FileDatabase, DataHandler.FileDatabase.ImageSet.QuickPasteAsJSON);
 
             DataHandler.FileDatabase.FileSelectionEnum = DataHandler.FileDatabase.GetCustomSelectionFromJSON();
-           
+
             // If recognitions are selected, we set the over-ride of which bounding boxes are displayed by expanding the range to include the selection confidence values.
             CustomSelection.SetDetectionRanges(DataHandler.FileDatabase.CustomSelection.DetectionSelections);
 

@@ -57,8 +57,10 @@ namespace Timelapse.Database
         /// <summary>Gets the file name of the database on disk.</summary>
         public string FileName { get; private set; }
 
-        /// <summary>Get the complete path to the folder containing the database.</summary>
-        public string FolderPath { get; }
+        /// <summary>Get the complete path to the folder containing the images.</summary>
+        public string RootPathToImages { get; }
+        /// <summary>Get the complete path to the folder containing the database files.</summary>
+        public string RootPathToDatabase { get; }
 
         public Dictionary<string, string> DataLabelFromStandardControlType { get; }
 
@@ -69,6 +71,11 @@ namespace Timelapse.Database
 
         public ImageSetRow ImageSet { get; private set; }
 
+        // A list of potential shortcuts found to the image folder. If there is only one, then its a valid shortcut
+        public List<string> ShortcutFoldersFound { get; private set; } 
+
+        // Whether a shortcut to the image folder is being
+        public bool IsShortcutToImageFolder { get; private set; }
         // contains the markers
         public DataTables.DataTableBackedList<MarkerRow> Markers { get; private set; }
 
@@ -103,12 +110,45 @@ namespace Timelapse.Database
         #endregion
 
         #region Create or Open the Database
-        private FileDatabase(string filePath)
+        private FileDatabase(string filePath, bool useShortcuts)
                     : base(filePath)
         {
             DataLabelFromStandardControlType = new Dictionary<string, string>();
             disposed = false;
-            FolderPath = Path.GetDirectoryName(filePath);
+            RootPathToDatabase = Path.GetDirectoryName(filePath);
+            if (useShortcuts == false)
+            {
+                RootPathToImages = RootPathToDatabase;
+                this.ShortcutFoldersFound = null;
+            }
+            else
+            {
+                // Get the shortcuts. If we have one, we can use that. If we have more than one, we have a problem
+                List<string> shortcutPathsToImages = ShortcutFiles.GetUniqueFolderTargetsFromPath(RootPathToDatabase);
+                if (shortcutPathsToImages.Count == 0)
+                {
+                    // No shortcuts, so use the root folder to search for images
+                    RootPathToImages = RootPathToDatabase;
+                }
+                else if (shortcutPathsToImages.Count == 1)
+                {
+                    // We have a single shortcut, which means we should use that for our images.
+                    // By setting MultipleShortcuts to the destination folder paths, higher level callers can examine that
+                    // to see if there are multiple shortcuts, and if so abort and generate an error dialog.
+                    RootPathToImages = shortcutPathsToImages[0];
+                    this.ShortcutFoldersFound = shortcutPathsToImages;
+                    this.IsShortcutToImageFolder = true;
+                }
+                else if (shortcutPathsToImages.Count > 1)
+                {
+                    // We have multiple shortcuts, which is a problem as we don't know what folder to use for our images.
+                    // By setting MultipleShortcuts to the destination folder paths, higher level callers can examine that
+                    // to see if there are multiple shortcuts, and if so abort and generate an error dialog.
+                    RootPathToImages = RootPathToDatabase; //likely not needed as we will be aborting...
+                    this.ShortcutFoldersFound = shortcutPathsToImages;
+                }
+            }
+
             FileName = Path.GetFileName(filePath);
             FileTableColumnsByDataLabel = new Dictionary<string, FileTableColumn>();
         }
@@ -119,17 +159,23 @@ namespace Timelapse.Database
             FilesFolders.TryDeleteFileIfExists(ddbFilePath);
 
             // initialize the database if it's newly created
-            FileDatabase fileDatabase = new FileDatabase(ddbFilePath);
+            FileDatabase fileDatabase = new FileDatabase(ddbFilePath, false);
             await fileDatabase.OnDatabaseCreatedAsync(templateDatabase).ConfigureAwait(true);
             return fileDatabase;
         }
 
-        public static async Task<FileDatabase> CreateOrOpenAsync(string filePath, CommonDatabase templateDatabase, CustomSelectionOperatorEnum customSelectionTermCombiningOperator, TemplateSyncResults templateSyncResults, bool backupFileJustMade)
+        public static async Task<FileDatabase> CreateOrOpenAsync(string filePath, CommonDatabase templateDatabase, CustomSelectionOperatorEnum customSelectionTermCombiningOperator, TemplateSyncResults templateSyncResults, bool backupFileJustMade, bool checkForShortcuts)
         {
             // check for an existing database before instantiating the database as SQL wrapper instantiation creates the database file
             bool populateDatabase = !File.Exists(filePath);
 
-            FileDatabase fileDatabase = new FileDatabase(filePath);
+            FileDatabase fileDatabase = new FileDatabase(filePath, checkForShortcuts);
+            if (fileDatabase.ShortcutFoldersFound != null && fileDatabase.ShortcutFoldersFound.Count > 1)
+            {
+                // Multiple shortcuts are present, so we don't know what folder to use for our image set.
+                // Abort where the error will be handled by a higher level caller
+                return fileDatabase;
+            }
             if (backupFileJustMade)
             {
                 // if a backup of the db was very recently made, we just update it in this version to avoid doubly creating a backup file
@@ -224,7 +270,7 @@ namespace Timelapse.Database
             Version timelapseCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber();
             List<ColumnTuple> columnsToUpdate = new List<ColumnTuple>
             {
-                new ColumnTuple(DatabaseColumn.RootFolder, Path.GetFileName(FolderPath)),
+                new ColumnTuple(DatabaseColumn.RootFolder, Path.GetFileName(RootPathToDatabase)),
                 new ColumnTuple(DatabaseColumn.Log, DatabaseValues.ImageSetDefaultLog),
                 new ColumnTuple(DatabaseColumn.MostRecentFileID, DatabaseValues.InvalidID),
                 //new ColumnTuple(Constant.DatabaseColumn.Selection, allImages.ToString()),
@@ -614,7 +660,8 @@ namespace Timelapse.Database
             {
                 return null;
             }
-            FileDatabase fileDatabase = new FileDatabase(filePath);
+
+            FileDatabase fileDatabase = new FileDatabase(filePath, false);
             if (fileDatabase.Database.PragmaGetQuickCheck() == false || fileDatabase.DoesTableExist(DBTables.FileData) == false)
             {
                 // The database file is likely corrupt, possibly due to missing a key table, is an empty file, or is otherwise unreadable
@@ -1374,7 +1421,7 @@ namespace Timelapse.Database
                             true, false));
                     }
 
-                    if (!File.Exists(Path.Combine(FolderPath, image.RelativePath, image.File)))
+                    if (!File.Exists(Path.Combine(RootPathToImages, image.RelativePath, image.File)))
                     {
                         commaSeparatedListOfIDs += image.ID + ",";
                     }
@@ -2333,7 +2380,7 @@ namespace Timelapse.Database
             {
                 return false;
             }
-            return FileTable[rowIndex].IsDisplayable(FolderPath);
+            return FileTable[rowIndex].IsDisplayable(RootPathToImages);
         }
 
         // Find the next displayable file at or after the provided row in the current image set.
@@ -2507,14 +2554,14 @@ namespace Timelapse.Database
         #region File retrieval and manipulation
         public void RenameFileDatabase(string newFileName)
         {
-            if (File.Exists(Path.Combine(FolderPath, FileName)))
+            if (File.Exists(Path.Combine(RootPathToDatabase, FileName)))
             {
                 // SAULXXX Should really check for failure, as TryMove will return true/false
                 FilesFolders.TryMoveFileIfExists(
-                     Path.Combine(FolderPath, FileName),
-                     Path.Combine(FolderPath, newFileName));  // Change the file name to the new file name
+                     Path.Combine(RootPathToDatabase, FileName),
+                     Path.Combine(RootPathToDatabase, newFileName));  // Change the file name to the new file name
                 FileName = newFileName; // Store the file name
-                Database = new SQLiteWrapper(Path.Combine(FolderPath, newFileName));          // Recreate the database connecction
+                Database = new SQLiteWrapper(Path.Combine(RootPathToDatabase, newFileName));          // Recreate the database connecction
             }
         }
 

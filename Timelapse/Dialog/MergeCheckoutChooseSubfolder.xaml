@@ -18,6 +18,7 @@
                                       &#10;   a portion of the master database whose entries contain that sub-folder's relative path."
                             Hint = "&#x2022; Give that sub-folder to others to analyze. Once done, check in that sub-folder's  
                                       &#10;   database back into the master, which updates the data.
+                                      &#10;&#x2022; If desired, you can rename the above files using Windows Explorer.
                                       &#10;&#x2022; Recommended reading: 'Merging Databases' in the Timelape Reference Guide."/>
         <StackPanel Name="PanelGetFolder" Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" >
             <Rectangle Fill="#FF868686" Height="2" />

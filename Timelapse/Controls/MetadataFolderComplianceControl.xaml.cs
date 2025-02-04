@@ -30,7 +30,7 @@ namespace Timelapse.Controls
         private MetadataFolderComplianceViewer ParentDialogWindow { get; set; }
 
         private int metadataInfoRowCount;
-        private string RootFolder => FileDatabase.FolderPath;
+        private string RootPathToImages => FileDatabase.RootPathToImages;
         private DataTableBackedList<MetadataInfoRow> MetadataInfo => FileDatabase.MetadataInfo;
         
         // A list of the relative paths contained by the Timelapse database, passed into the control.
@@ -92,7 +92,7 @@ namespace Timelapse.Controls
                 return false;
             }
 
-            List<string> physicalFolders = await BusyCancelIndicator.ProgressWrapper(() => FilesFolders.AsyncGetAllFoldersExceptBackupAndDeletedFolders(FileDatabase.FolderPath, FileDatabase.FolderPath), progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
+            List<string> physicalFolders = await BusyCancelIndicator.ProgressWrapper(() => FilesFolders.AsyncGetAllFoldersExceptBackupAndDeletedFolders(FileDatabase.RootPathToImages, FileDatabase.RootPathToImages), progressHandler, cancelTokenSource, "Retrieving folders. Please wait...", true);
             if (physicalFolders == null)
             {
                 return false;
@@ -176,7 +176,7 @@ namespace Timelapse.Controls
             bool rootNodeContainsImages = rootPathItem != null && rootPathItem.ContainsImages;
             Node rootNode = new Node
             {
-                FolderExists = Directory.Exists(RootFolder),
+                FolderExists = Directory.Exists(this.RootPathToImages),
                 ContainsImages = rootNodeContainsImages,
             };
 
@@ -277,7 +277,7 @@ namespace Timelapse.Controls
                 // This node is a child item as the path isn't empty
                 // So we need to create a new TreeViewItem representing that path, which will be added as a child the existing TreeViewItem
                 // The tag is used to associate a node with its respective TreeViewItem
-                node.FolderExists = Directory.Exists(Path.Combine(RootFolder, node.Path));
+                node.FolderExists = Directory.Exists(Path.Combine(RootPathToImages, node.Path));
                 Grid FolderGrid = CreateTreeViewItemHeaderAsStackPanel(node, node.Name, node.ContainsImages, node.FolderExists);
                 tvi = new TreeViewItem
                 {
@@ -377,8 +377,7 @@ namespace Timelapse.Controls
                 // If the folder doesn't exists, flash the node and don't start the editing operation
                 if (node.FolderExists)
                 {
-                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(RootFolder,
-                        node.Path));
+                    ProcessExecution.TryProcessStartUsingFileExplorerOnFolder(Path.Combine(this.RootPathToImages, node.Path));
                 }
                 //FLASH FLASH FLASH
             }

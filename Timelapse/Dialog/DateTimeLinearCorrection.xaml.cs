@@ -99,13 +99,13 @@ namespace Timelapse.Dialog
             // ConfigureFormatForDateTimeCustom the earliest date (in datetime picker) and its image
             earliestImageName.Content = earliestImageRow.File;
             earliestImageDate.Content = DateTimeHandler.ToStringDisplayDateTime(earliestImageDateTime);
-            imageEarliest.Source = earliestImageRow.LoadBitmap(fileDatabase.FolderPath, out _);
+            imageEarliest.Source = earliestImageRow.LoadBitmap(fileDatabase.RootPathToImages, out _);
 
             // ConfigureFormatForDateTimeCustom the latest date (in datetime picker) and its image
             latestImageName.Content = latestImageRow.File;
             CreateControls.Configure(dateTimePickerLatestDateTime, DateTimeFormatEnum.DateAndTime, latestImageDateTime);
             dateTimePickerLatestDateTime.ValueChanged += DateTimePicker_ValueChanged;
-            imageLatest.Source = latestImageRow.LoadBitmap(fileDatabase.FolderPath, out _);
+            imageLatest.Source = latestImageRow.LoadBitmap(fileDatabase.RootPathToImages, out _);
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)

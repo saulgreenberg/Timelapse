@@ -71,7 +71,7 @@ namespace Timelapse
             string jsonFileName = File.RecognitionJsonDataFileName;
             if (false == Dialogs.TryGetFileFromUserUsingOpenFileDialog(
                       "Select a .json file that contains the recognition data. It will be merged into the current image set",
-                      Path.Combine(DataHandler.FileDatabase.FolderPath, jsonFileName),
+                      Path.Combine(DataHandler.FileDatabase.RootPathToImages, jsonFileName),
                       String.Format("JSon files (*{0})|*{0}", File.JsonFileExtension),
                       File.JsonFileExtension,
                       out string jsonFilePath))
@@ -119,10 +119,10 @@ namespace Timelapse
                 //    - json recognizer file was found in a sub-folder somewhere under the root folder
                 //    - json recognizer's image paths do not have the sub-folder prefix
                 //    - at least one file is found that matches a path comprising and added sub-folder prefix
-                string subFolderPrefix = RecognitionUtilities.GetRecognizersFileSubfolderPathIfAny(DataHandler.FileDatabase.FolderPath, jsonFilePath);
+                string subFolderPrefix = RecognitionUtilities.GetRecognizersFileSubfolderPathIfAny(DataHandler.FileDatabase.RootPathToImages, jsonFilePath);
                 if (false == string.IsNullOrEmpty(subFolderPrefix))
                 {
-                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, DataHandler.FileDatabase.RootPathToImages, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
@@ -156,7 +156,7 @@ namespace Timelapse
                 else
                 {
                     // Likely outside the root folder. Check the paths again, and generate an error message if needed
-                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, DataHandler.FileDatabase.FolderPath, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
+                    RecognizerPathTestResults resultRecognizerPathTest = await RecognitionUtilities.IsRecognizersFilePathsLikelyRelativeToTheSubfolder(jsonRecognitions, DataHandler.FileDatabase.RootPathToImages, subFolderPrefix, progress, GlobalReferences.CancelTokenSource);
 
                     // If the operation was cancelled, abort.
                     if (resultRecognizerPathTest == RecognizerPathTestResults.Cancelled)
@@ -255,9 +255,9 @@ namespace Timelapse
                 {
                     // Some folders missing - show which folder paths in the DB are not in the recognizer file
                     // Trim the uneeded path from the jsonFilePath
-                    string trimmedJsonPath = null == DataHandler?.FileDatabase?.FolderPath
+                    string trimmedJsonPath = null == DataHandler?.FileDatabase?.RootPathToImages
                         ? jsonFilePath
-                        : Path.GetDirectoryName(jsonFilePath.Substring(DataHandler.FileDatabase.FolderPath.Length + 1));
+                        : Path.GetDirectoryName(jsonFilePath.Substring(DataHandler.FileDatabase.RootPathToImages.Length + 1));
                     Dialogs.MenuFileRecognitionDataImportedOnlyForSomeFoldersDialog(this, trimmedJsonPath, details);
                 }
                 else
@@ -370,7 +370,7 @@ namespace Timelapse
             string homepath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string initialFolderPath = DataHandler?.FileDatabase?.FolderPath ?? myDocuments;
+            string initialFolderPath = DataHandler?.FileDatabase?.RootPathToImages ?? myDocuments;
             // Since we don't have an image set, ask the user to select the folder.
             // Or maybe we should always do that, where we use the initial folder as the root folder if the image set is open.
             if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Run EcoAssist on the selected folder", initialFolderPath, out string selectedFolderPath))

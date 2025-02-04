@@ -73,7 +73,7 @@ namespace Timelapse.Images
 
 
             // If the current image is marked as corrupted, we will only show the original (replacement) image
-            if (Current == null || !Current.IsDisplayable(Database.FolderPath))
+            if (Current == null || !Current.IsDisplayable(Database.RootPathToImages))
             {
                 CurrentDifferenceState = ImageDifferenceEnum.Unaltered;
                 return;
@@ -117,7 +117,7 @@ namespace Timelapse.Images
         #region Public Methods - Calculate difference and get difference availability
         public ImageDifferenceResultEnum TryCalculateDifference()
         {
-            if (Current == null || Current.IsVideo || Current.IsDisplayable(Database.FolderPath) == false)
+            if (Current == null || Current.IsVideo || Current.IsDisplayable(Database.RootPathToImages) == false)
             {
                 CurrentDifferenceState = ImageDifferenceEnum.Unaltered;
                 return ImageDifferenceResultEnum.CurrentImageNotAvailable;
@@ -160,7 +160,7 @@ namespace Timelapse.Images
             }
 
             // We need three valid images: the current one, the previous one, and the next one.
-            if (Current == null || Current.IsVideo || Current.IsDisplayable(Database.FolderPath) == false)
+            if (Current == null || Current.IsVideo || Current.IsDisplayable(Database.RootPathToImages) == false)
             {
                 CurrentDifferenceState = ImageDifferenceEnum.Unaltered;
                 return ImageDifferenceResultEnum.CurrentImageNotAvailable;
@@ -318,7 +318,7 @@ namespace Timelapse.Images
                     // Force update clears the caches, which in turn always forces synchronous loading of the requested bitmap 
                     // from disk as it cannot cached. This is necessary, in case (for example)  a 'missing' placeholder image was used and the image
                     // was later restored. If we don't clear the cache, the placeholder image would be used instead.
-                    bitmap = fileRow.LoadBitmap(Database.FolderPath, out _);
+                    bitmap = fileRow.LoadBitmap(Database.RootPathToImages, out _);
                     prefetechesByID.Clear();
                     unalteredBitmapsByID.Clear();
                     CacheBitmap(fileRow.ID, bitmap);
@@ -344,7 +344,7 @@ namespace Timelapse.Images
                         // No cached bitmaps are available.
                         // synchronously load the requested bitmap from disk as it isn't cached, 
                         // doesn't have a prefetch running, and is needed right now by the caller
-                        bitmap = fileRow.LoadBitmap(Database.FolderPath, out bool isCorruptOrMissing);
+                        bitmap = fileRow.LoadBitmap(Database.RootPathToImages, out bool isCorruptOrMissing);
                         if (isCorruptOrMissing == false)
                         {
                             CacheBitmap(fileRow.ID, bitmap);
@@ -407,7 +407,7 @@ namespace Timelapse.Images
             }
 
             file = Database.FileTable[fileRow];
-            return file.IsDisplayable(Database.FolderPath);
+            return file.IsDisplayable(Database.RootPathToImages);
         }
 
         private bool TryGetNextBitmapAsWriteable(out WriteableBitmap nextBitmap)
@@ -435,7 +435,7 @@ namespace Timelapse.Images
 
             Task prefetch = Task.Run(() => //Task.Factory.StartNew(() => SEE CA2008. Replacing this with Task.Run is recommended
             {
-                BitmapSource nextBitmap = nextFile.LoadBitmap(Database.FolderPath, out _);
+                BitmapSource nextBitmap = nextFile.LoadBitmap(Database.RootPathToImages, out _);
                 CacheBitmap(nextFile.ID, nextBitmap);
                 prefetechesByID.TryRemove(nextFile.ID, out _);
             });

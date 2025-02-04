@@ -37,7 +37,7 @@ namespace Timelapse.Dialog
             InitializeComponent();
             this.fileDatabase = fileDatabase;
             ambiguousDatesList = new List<AmbiguousDateRange>();
-            DateChangeFeedback.FolderPath = fileDatabase.FolderPath;
+            DateChangeFeedback.RootPathToImages = fileDatabase.RootPathToImages;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

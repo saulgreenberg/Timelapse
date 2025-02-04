@@ -715,7 +715,7 @@ namespace Timelapse.Util
             {
                 return string.Empty;
             }
-            return Path.Combine(fileDatabase.FolderPath, imageRow.RelativePath, imageRow.File);
+            return Path.Combine(fileDatabase.RootPathToImages, imageRow.RelativePath, imageRow.File);
         }
 
         public static string GetFullPath(string rootPath, ImageRow imageRow)

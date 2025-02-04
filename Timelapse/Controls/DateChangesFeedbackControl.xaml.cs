@@ -22,7 +22,7 @@ namespace Timelapse.Controls
         public string Column2Name { get; set; }
         public string Column3Name { get; set; }
         public string Column4Name { get; set; }
-        public string FolderPath { get; set; }
+        public string RootPathToImages { get; set; }
 
         // This collection will hold tuples, where each tuple contains the contents for a row that will be shown in the datagrid  
         private readonly ObservableCollection<FeedbackRowTuple> feedbackRows;
@@ -41,7 +41,7 @@ namespace Timelapse.Controls
 
             feedbackRows = new ObservableCollection<FeedbackRowTuple>();
             feedbackGrid.ItemsSource = feedbackRows;
-            FolderPath = string.Empty;
+            this.RootPathToImages = string.Empty;
         }
 
         // Label the datagrid feedback columns with the appropriate headers
@@ -141,7 +141,7 @@ namespace Timelapse.Controls
             // Load an image from thie image row (specified in the tuple.Tag)
             Image image = new Image
             {
-                Source = ir.LoadBitmap(FolderPath, ImageValues.PreviewWidth480, out bool _)
+                Source = ir.LoadBitmap(this.RootPathToImages, ImageValues.PreviewWidth480, out bool _)
             };
             row.ToolTip = image;
         }

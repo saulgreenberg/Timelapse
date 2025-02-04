@@ -117,11 +117,11 @@ namespace Timelapse
         // Add Images to Image Set 
         private void MenuItemAddImagesToImageSet_Click(object sender, RoutedEventArgs e)
         {
-            if (ShowFolderSelectionDialog(FolderPath, out string folderPath))
+            if (ShowFolderSelectionDialog(RootPathToImages, out string folderPath))
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 StatusBar.SetMessage("Adding images, please wait...");
-                TryBeginImageFolderLoad(FolderPath, folderPath, false);
+                TryBeginImageFolderLoad(RootPathToImages, folderPath, false);
             }
         }
         #endregion
@@ -161,7 +161,7 @@ namespace Timelapse
 
             // Because a non-empty destination Ddb path was provided, it will just load that Ddb even if other Ddb's are available in that folder
             Mouse.OverrideCursor = Cursors.Wait;
-            Tuple<bool, string> results = await TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath, destinationDdbPath).ConfigureAwait(true);
+            Tuple<bool, string> results = await TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath, destinationDdbPath, false).ConfigureAwait(true);
             if (results.Item1 == false)
             {
                 StatusBar.SetMessage(abortMessage);
@@ -217,7 +217,7 @@ namespace Timelapse
         {
             // Get the relative and full path to the desired sub-folder location 
             MergeCheckoutChooseSubfolder mergeCheckoutChooseSubfolder =
-                new MergeCheckoutChooseSubfolder(this, DataHandler.FileDatabase.FolderPath, templateDatabase.FilePath, DataHandler);
+                new MergeCheckoutChooseSubfolder(this, DataHandler.FileDatabase.RootPathToDatabase, templateDatabase.FilePath, DataHandler, DataHandler.FileDatabase.IsShortcutToImageFolder ? DataHandler.FileDatabase.RootPathToImages : null);
 
             StatusBar.SetMessage(false == mergeCheckoutChooseSubfolder.ShowDialog()
                 ? "Check out database aborted."
@@ -241,7 +241,7 @@ namespace Timelapse
             }
 
             // Generate the candidate file name/path 
-            string csvFileName = File.CSVImageDataFileName;
+            string csvFileName = Path.Combine(DataHandler.FileDatabase.RootPathToDatabase,File.CSVImageDataFileName);
 
             // Get the selected filepath from the user
             if (false == Dialogs.TryGetFileFromUserUsingSaveFileDialog(
@@ -265,7 +265,7 @@ namespace Timelapse
             }
 
             // Backup the csv file if it exists, as the export will overwrite it. 
-            StatusBar.SetMessage(FileBackup.TryCreateBackup(FolderPath, selectedCSVFilePath)
+            StatusBar.SetMessage(FileBackup.TryCreateBackup(RootPathToDatabase, selectedCSVFilePath)
                 ? "Backup of csv file made."
                 : "No csv file backup was made.");
 
@@ -274,7 +274,7 @@ namespace Timelapse
                 // Show the Busy indicator
                 BusyCancelIndicator.IsBusy = true;
                 if (false == await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, selectedCSVFilePath,
-                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolder))
+                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName))
                 {
                     Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);
                     BusyCancelIndicator.IsBusy = false;
@@ -330,7 +330,7 @@ namespace Timelapse
             string csvFileName = Path.GetFileNameWithoutExtension(DataHandler.FileDatabase.FileName) + File.CsvFileExtension;
             if (Dialogs.TryGetFileFromUserUsingOpenFileDialog(
                                  "Select a .csv file to merge into the current image set",
-                                 Path.Combine(DataHandler.FileDatabase.FolderPath, csvFileName),
+                                 Path.Combine(DataHandler.FileDatabase.RootPathToDatabase, csvFileName),
                                  String.Format("Comma separated value files (*{0})|*{0}", File.CsvFileExtension),
                                  File.CsvFileExtension,
                                  out string csvFilePath) == false)
@@ -340,7 +340,7 @@ namespace Timelapse
 
             // Create a backup database file
             StatusBar.SetMessage(
-                FileBackup.TryCreateBackup(FolderPath, DataHandler.FileDatabase.FileName)
+                FileBackup.TryCreateBackup(RootPathToDatabase, DataHandler.FileDatabase.FileName)
                     ? "Backup of data file made."
                     : "No data file backup was made.");
 
@@ -394,7 +394,7 @@ namespace Timelapse
             }
 
             // Get the folder path
-            string initialFolderPath = DataHandler.FileDatabase.FolderPath;
+            string initialFolderPath = DataHandler.FileDatabase.RootPathToDatabase;
 
             if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog(
                     $"Select a folder to contain the {File.CsvExportFolder} folder and its csv files",
@@ -470,7 +470,7 @@ namespace Timelapse
                 // Show the Busy indicator
                 BusyCancelIndicator.IsBusy = true;
                 if (false == await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, imageFilePath,
-                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolder))
+                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName))
                 {
                     Dialogs.FileCantOpen(GlobalReferences.MainWindow, imageFilePath, true);
                     BusyCancelIndicator.IsBusy = false;
@@ -536,7 +536,7 @@ namespace Timelapse
             // Get a folder path from the user
             if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog(
                     $"Select a folder to contain the {File.CamtrapDPExportFolder} folder and CamtrapDP files",
-                    DataHandler.FileDatabase.FolderPath, out string camTrapDPFolder))
+                    DataHandler.FileDatabase.RootPathToDatabase, out string camTrapDPFolder))
             {
                 StatusBar.SetMessage("Export cancelled.");
                 return;
@@ -629,7 +629,7 @@ namespace Timelapse
                 return;
             }
 
-            if (!DataHandler.ImageCache.Current.IsDisplayable(FolderPath))
+            if (!DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages))
             {
                 // Can't export the currently displayed image as a file
                 Dialogs.MenuFileCantExportCurrentImageDialog(this);
@@ -650,7 +650,7 @@ namespace Timelapse
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
                     // Set the source and destination file names, including the complete path
-                    string sourcePath = DataHandler.ImageCache.Current.GetFilePath(FolderPath);
+                    string sourcePath = DataHandler.ImageCache.Current.GetFilePath(RootPathToImages);
                     string destFileName = dialog.FileName;
 
                     // Try to copy the source file to the destination, overwriting the destination file if it already exists.
@@ -687,13 +687,13 @@ namespace Timelapse
             };
             if (true == renameFileDatabase.ShowDialog())
             {
-                if (IsCondition.IsPathLengthTooLong(Path.Combine(FolderPath, renameFileDatabase.NewFilename), FilePathTypeEnum.DDB))
+                if (IsCondition.IsPathLengthTooLong(Path.Combine(RootPathToDatabase, renameFileDatabase.NewFilename), FilePathTypeEnum.DDB))
                 {
-                    Dialogs.DatabaseRenamedPathTooLongDialog(this, Path.Combine(FolderPath, renameFileDatabase.NewFilename));
+                    Dialogs.DatabaseRenamedPathTooLongDialog(this, Path.Combine(RootPathToDatabase, renameFileDatabase.NewFilename));
                     StatusBar.SetMessage("Database file not renamed");
                     return;
                 }
-                if (System.IO.File.Exists(Path.Combine(FolderPath, renameFileDatabase.NewFilename)))
+                if (System.IO.File.Exists(Path.Combine(RootPathToDatabase, renameFileDatabase.NewFilename)))
                 {
                     Dialogs.FileExistsDialog(this, renameFileDatabase.NewFilename);
                     return;
@@ -701,7 +701,7 @@ namespace Timelapse
                 DataHandler.FileDatabase.RenameFileDatabase(renameFileDatabase.NewFilename);
                 StatusBar.SetMessage("Database file renamed");
                 Title = $"{Defaults.MainWindowBaseTitle} ({renameFileDatabase.NewFilename})";
-                if (IsCondition.IsPathLengthTooLong(Path.Combine(FolderPath, renameFileDatabase.NewFilename), FilePathTypeEnum.Backup))
+                if (IsCondition.IsPathLengthTooLong(Path.Combine(RootPathToDatabase, renameFileDatabase.NewFilename), FilePathTypeEnum.Backup))
                 {
                     Dialogs.BackupPathTooLongDialog(this);
                 }

@@ -40,8 +40,10 @@ namespace Timelapse.Dialog
             SuppressSelectedDaylightSavingsCorrectionPrompt.IsChecked = state.SuppressSelectedDaylightSavingsCorrectionPrompt;
             SuppressSelectedPopulateFieldFromMetadataPrompt.IsChecked = state.SuppressSelectedPopulateFieldFromMetadataPrompt;
             SuppressSelectedRereadDatesFromFilesPrompt.IsChecked = state.SuppressSelectedRereadDatesFromFilesPrompt;
-            // this.SuppressWarningToUpdateDBFilesToSQL.IsChecked = this.state.SuppressWarningToUpdateDBFilesToSQLPrompt;
-            SuppressOpeningWithOlderTimelapseVersionDialog.IsChecked = state.SuppressOpeningWithOlderTimelapseVersionDialog;
+            SuppressShortcutDetectedPrompt.IsChecked = state.SuppressShortcutDetectedPrompt;
+           
+        // this.SuppressWarningToUpdateDBFilesToSQL.IsChecked = this.state.SuppressWarningToUpdateDBFilesToSQLPrompt;
+        SuppressOpeningWithOlderTimelapseVersionDialog.IsChecked = state.SuppressOpeningWithOlderTimelapseVersionDialog;
             SuppressPropagateFromLastNonEmptyValuePrompt.IsChecked = state.SuppressPropagateFromLastNonEmptyValuePrompt;
         }
         #endregion
@@ -121,6 +123,12 @@ namespace Timelapse.Dialog
         {
             CheckBox cb = (CheckBox)sender;
             state.SuppressSelectedRereadDatesFromFilesPrompt = cb.IsChecked == true;
+        }
+
+        private void SuppressShortcutDetectedPrompt_Click(object sender, RoutedEventArgs _)
+        {
+            CheckBox cb = (CheckBox)sender;
+            state.SuppressShortcutDetectedPrompt = cb.IsChecked == true;
         }
 
         private void SuppressWarningToUpdateDBFilesToSQL_Click(object sender, RoutedEventArgs _)

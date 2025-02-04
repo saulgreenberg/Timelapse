@@ -141,7 +141,7 @@ namespace Timelapse
             }
 
             // Reset the ThumbnailGrid to the current image
-            MarkableCanvas.ThumbnailGrid.FolderPath = FolderPath;
+            MarkableCanvas.ThumbnailGrid.RootPathToImages = RootPathToImages;
             MarkableCanvas.ThumbnailGrid.FileTableStartIndex = fileIndex;
             MarkableCanvas.ThumbnailGrid.FileTable = DataHandler.FileDatabase.FileTable;
 
@@ -201,13 +201,12 @@ namespace Timelapse
             {
                 if (imageCacheCurrent.IsVideo)
                 {
-                    if (false == MarkableCanvas.SetNewVideo(imageCacheCurrent.GetFileInfo(DataHandler.FileDatabase.FolderPath), displayMarkers, fileIndex))
+                    if (false == MarkableCanvas.SetNewVideo(imageCacheCurrent.GetFileInfo(DataHandler.FileDatabase.RootPathToImages), displayMarkers, fileIndex))
                     {
                         // the video image is missing. We need to regenerate the bounding boxes for the 'best' detection so it appears over the missing file.
                         bboxes = GetBoundingBoxesForCurrentFile(imageCacheCurrent.ID, true);
                         MarkableCanvas.BoundingBoxes = bboxes;
                     }
-                    //MarkableCanvas.SetNewVideo(imageCacheCurrent.GetFileInfo(DataHandler.FileDatabase.FolderPath), displayMarkers, fileIndex);
                     EnableImageManipulationMenus(false);
                 }
                 else

@@ -53,6 +53,7 @@ namespace Timelapse.State
         public bool SuppressSelectedDaylightSavingsCorrectionPrompt { get; set; }
         public bool SuppressSelectedPopulateFieldFromMetadataPrompt { get; set; }
         public bool SuppressSelectedRereadDatesFromFilesPrompt { get; set; }
+        public bool SuppressShortcutDetectedPrompt { get; set; }
         public bool SuppressWarningToUpdateDBFilesToSQLPrompt { get; set; }
         public Throttles Throttles { get; }
         public bool TabOrderIncludeDateTime { get; set; }
@@ -131,6 +132,7 @@ namespace Timelapse.State
                 SuppressSelectedDaylightSavingsCorrectionPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedDaylightSavingsCorrectionPrompt, false);
                 SuppressSelectedPopulateFieldFromMetadataPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, false);
                 SuppressSelectedRereadDatesFromFilesPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, false);
+                SuppressShortcutDetectedPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressShortcutDetectedPrompt, false);
                 SuppressWarningToUpdateDBFilesToSQLPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, false);
                 TabOrderIncludeDateTime = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDateTime, false);
                 TabOrderIncludeDeleteFlag = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDeleteFlag, false);
@@ -244,6 +246,7 @@ namespace Timelapse.State
                 registryKey.Write(WindowRegistryKeys.SuppressSelectedDaylightSavingsCorrectionPrompt, SuppressSelectedDaylightSavingsCorrectionPrompt);
                 registryKey.Write(WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, SuppressSelectedPopulateFieldFromMetadataPrompt);
                 registryKey.Write(WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, SuppressSelectedRereadDatesFromFilesPrompt);
+                registryKey.Write(WindowRegistryKeys.SuppressShortcutDetectedPrompt, SuppressShortcutDetectedPrompt);
                 registryKey.Write(WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, SuppressWarningToUpdateDBFilesToSQLPrompt);
                 registryKey.Write(WindowRegistryKeys.TabOrderIncludeDateTime, TabOrderIncludeDateTime);
                 registryKey.Write(WindowRegistryKeys.TabOrderIncludeDeleteFlag, TabOrderIncludeDeleteFlag);
