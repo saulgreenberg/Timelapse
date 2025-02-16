@@ -282,6 +282,9 @@
     <Compile Include="Dialog\PopulateFieldWithGUID.xaml.cs">
       <DependentUpon>PopulateFieldWithGUID.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialog\RecognitionExplorer.xaml.cs">
+      <DependentUpon>RecognitionExplorer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialog\RecognitionOptionsForBoundingBox.xaml.cs">
       <DependentUpon>RecognitionOptionsForBoundingBox.xaml</DependentUpon>
     </Compile>
@@ -650,6 +653,10 @@
     <Page Include="Dialog\PopulateFieldWithGUID.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialog\RecognitionExplorer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Dialog\RecognitionOptionsForBoundingBox.xaml">
       <SubType>Designer</SubType>

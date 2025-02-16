@@ -46,13 +46,11 @@ namespace Timelapse
         #endregion
 
         #region Menu stub to test some code
-        private async void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
+        private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this, this.DataHandler?.FileDatabase);
-            if (dialog.ShowDialog() == true && null != DataHandler?.ImageCache?.Current?.ID)
+            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
+            if (dialog.ShowDialog() == true )
             {
-                //FileSelectionEnum.Custom
-                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
             }
         }
         #endregion

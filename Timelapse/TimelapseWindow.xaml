@@ -52,7 +52,7 @@
                 <MenuItem Header="_File" IsTabStop="false" SubmenuOpened="File_SubmenuOpening">
 
                     <!-- Test some code here - should only be enabled when developing code -->
-                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Visible" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Collapsed" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
 
                     <!-- Load template, images, and video files... -->
                     <MenuItem Name="MenuItemLoadFiles" Header="_Load template, images, and video files..." Click="MenuItemLoadImages_Click" ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">
@@ -357,7 +357,13 @@
 
                     <MenuItem Name="MenuItemSelectFilesMarkedForDeletion" IsCheckable="True" IsChecked="False" Header="All files marked for d_eletion" Click="MenuItemSelectFiles_Click" ToolTip="Shows all files marked for deletion"/>
                     <Separator/>
-                    <MenuItem Name="MenuItemSelectCustomSelection" IsCheckable="True" IsChecked="False" Header="_Custom selection..."  ToolTip="Create a custom selection to display only particular files" Click="MenuItemSelectCustomSelection_Click"/>
+                    <MenuItem Name="MenuItemSelectCustomSelection" IsCheckable="True" IsChecked="False" Header="_Custom selection..."  
+                              ToolTip="Create a custom selection using filters to display a subset of files.&#10;Filters include your choice of data fields and values and/or particular recognitions.&#10;The custom selection only displays files that match those filters." 
+                              Click="MenuItemSelectCustomSelection_Click"/>
+
+                    <!-- Test some code here - should only be enabled when developing code -->
+                    <MenuItem Name="MenuItemRecognitionExplorer" Header="_Using the Recognitions Explorer..." Visibility="Visible" Click="MenuItemSelectRecognitionExplorer_Click" ToolTip="View recognitions and their counts.&#10;Select a detection (or classification if any) to modify the current selection"/>
+
                     <Separator/>
                     <MenuItem Name="MenuItemSelectMissingFiles" IsCheckable="True" IsChecked="False" Header="_Missing files in the current selection" Click="MenuItemSelectFiles_Click" ToolTip="Show the subset of files in the current selection that are missing (likely because they were moved, renamed or deleted)"/>
                     <MenuItem Name="MenuItemSelectRandomSample" Header="Create a random sample from the current selection..." Click="MenuItemSelectRandomSample_Click" ToolTip="Randomly sample and select a subset of files from the current selection"/>
