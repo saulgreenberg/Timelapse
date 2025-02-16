@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using Timelapse.DataStructures;
 using System.Linq;
@@ -16,6 +17,7 @@ using Timelapse.SearchingAndSorting;
 using Timelapse.Recognition;
 using System.Windows.Media;
 using Timelapse.Extensions;
+using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 
 namespace Timelapse.Dialog
@@ -120,12 +122,16 @@ namespace Timelapse.Dialog
             // Detection-related initialization for the first query:
             // - Initialize the Detection confidence range and SliderDetectionConf value
             // - Display the current Confidence range in the detections title
-            SliderDetectionConf.Value = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
+            SliderDetectionConf.LowerValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
                 ? Math.Round(DetectionSelections.ConfidenceThreshold1ForUI, 2)
                 : Math.Round(Database.GetTypicalDetectionThreshold(), 2);
-            DetectionSelections.ConfidenceThreshold2ForUI = 1;
-            // SliderDetectionConf.Value = Math.Round(DetectionSelections.ConfidenceThreshold1ForUI, 2);
-            this.DisplayDetectionConfidenceRange(Math.Round(SliderDetectionConf.Value, 2));
+
+            SliderDetectionConf.HigherValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
+                ? Math.Round(this.ConfidenceThreshold2ForUI, 2)
+                : 1;
+
+            this.DetectionSelections.ConfidenceThreshold2ForUI = SliderDetectionConf.HigherValue;
+            this.DisplayDetectionConfidenceRange(Math.Round(SliderDetectionConf.LowerValue, 2));
 
             // Clear the counts for each detection category held in the DetectionCounts
             // This will also create and entry for each detection category if it doesn't already exist.
@@ -138,7 +144,7 @@ namespace Timelapse.Dialog
             SliderClassificationConf.Value = this.UseRecognitions && this.RecognitionType == RecognitionType.Classification
                 ? Math.Round(this.ConfidenceThreshold1ForUI, 2)
                 : Math.Round(Database.GetTypicalClassificationThreshold(), 2);
-            
+
             DisplayClassificationConfidenceRange(Math.Round(SliderClassificationConf.Value, 2));
             this.Database.CreateClassificationCategoriesDictionaryIfNeeded();
             this.ClassificationCategories = this.Database.classificationCategoriesDictionary;
@@ -184,15 +190,17 @@ namespace Timelapse.Dialog
         public async Task DoCountRecognitionsAsync(CancellationTokenSource cancellationTokenSource, RecognitionTypeEnum recognitionType)
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            double lowerDetectionConfidenceValue = Math.Round(this.SliderDetectionConf.Value, 2);
-            double lowerClassificationConfidenceValue = Math.Round(this.SliderClassificationConf.Value, 2);
+            double lowerDetectionConf = Math.Round(this.SliderDetectionConf.LowerValue, 2);
+            double lowerClassificationConf = Math.Round(this.SliderClassificationConf.Value, 2);
+            double higherDetectionConf = Math.Round(this.SliderDetectionConf.HigherValue, 2);
+
             await Task.Run(() =>
             {
                 bool success = false;
                 if (recognitionType == RecognitionTypeEnum.Detections || recognitionType == RecognitionTypeEnum.DetectionsAndClassifications)
                 {
 
-                    success = DoCountDetections(cancellationTokenSource, lowerDetectionConfidenceValue);
+                    success = DoCountDetections(cancellationTokenSource, lowerDetectionConf, higherDetectionConf);
                     if (false == success)
                     {
                         return;
@@ -202,14 +210,14 @@ namespace Timelapse.Dialog
                 if (recognitionType == RecognitionTypeEnum.Classifications || recognitionType == RecognitionTypeEnum.DetectionsAndClassifications)
                 {
 
-                    success = DoCountClassifications(cancellationTokenSource, lowerClassificationConfidenceValue);
+                    success = DoCountClassifications(cancellationTokenSource, lowerClassificationConf);
                 }
 
             }, cancellationTokenSource.Token);
             Mouse.OverrideCursor = null;
         }
 
-        private bool DoCountDetections(CancellationTokenSource cancellationTokenSource, double lowerConfidenceValue)
+        private bool DoCountDetections(CancellationTokenSource cancellationTokenSource, double lowerConfidenceValue, double higherConfidenceValue)
         {
             if (cancellationTokenSource.Token.IsCancellationRequested)
             {
@@ -221,7 +229,7 @@ namespace Timelapse.Dialog
             DetectionSelections.AllDetections = true;
             DetectionSelections.InterpretAllDetectionsAsEmpty = false;
             this.DetectionSelections.ConfidenceThreshold1ForUI = lowerConfidenceValue;
-            this.DetectionSelections.ConfidenceThreshold2ForUI = 1;
+            this.DetectionSelections.ConfidenceThreshold2ForUI = higherConfidenceValue;
 
             int allFilesCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             if (cancellationTokenSource.Token.IsCancellationRequested)
@@ -365,7 +373,14 @@ namespace Timelapse.Dialog
                 : CurrentlySelectedRecognition.CategoryName;
             if (CurrentlySelectedRecognition.RecognitionType == RecognitionTypeEnum.Detections)
             {
-                msg += $" detections ≥ {this.SliderDetectionConf.Value:f2}";
+                if (Math.Abs(this.SliderDetectionConf.HigherValue - 1) < .009)
+                {
+                    msg += $" detections ≥ {this.SliderDetectionConf.LowerValue:f2}";
+                }
+                else
+                {
+                    msg += $" detections: {this.SliderDetectionConf.LowerValue:f2}\u2194{this.SliderDetectionConf.HigherValue:f2}";
+                }
             }
             else
             {
@@ -405,6 +420,11 @@ namespace Timelapse.Dialog
         private void DisplayDetectionConfidenceRange(double lowerConfidence)
         {
             this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.DetectionSelections.ConfidenceThreshold2ForUI:f2})";
+        }
+
+        private void DisplayDetectionConfidenceRange(double lowerConfidence, double higherConfidence)
+        {
+            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
         }
 
         private void DisplayClassificationConfidenceRange(double lowerConfidence)
@@ -617,20 +637,22 @@ namespace Timelapse.Dialog
         // When the detection drag is in progress
         // - disable the detection controls
         // - display the updated slider value
-        private bool isDetectionSliderDragging;
+        private bool isDetectionSliderMouseDown;
+        private bool isValueChanged = false;
         private void SliderDetectionConf_OnDragDelta(object sender, DragDeltaEventArgs e)
         {
+            return;
             if (!(sender is Slider slider) || null == this.DetectionCategories)
             {
                 return;
             }
 
-            if (false == isDetectionSliderDragging)
+            if (false == isDetectionSliderMouseDown)
             {
                 // disable the detection controls when dragging begins and set values to -1
                 this.DetectionControlsEnableState(false, true);
             }
-            isDetectionSliderDragging = true;
+            isDetectionSliderMouseDown = true;
             this.DisplayDetectionConfidenceRange(Math.Round(slider.Value, 2));
             this.ClearSelectionsAndScrollToTop(this.DataGridDetections);
             this.CurrentlySelectedRecognition.IsRecognitionSelected = false;
@@ -641,13 +663,14 @@ namespace Timelapse.Dialog
         // - update the detection count to the new confidence value, but only if it differs
         private async void SliderDetectionConf_OnDragCompleted(object sender, DragCompletedEventArgs e)
         {
+            return;
             if (!(sender is Slider slider) || null == this.DetectionCategories)
             {
                 return;
             }
 
             bool noChange = Math.Abs(Math.Round(slider.Value, 2) - this.DetectionSelections.ConfidenceThreshold1ForUI) < .01;
-            isDetectionSliderDragging = false;
+            isDetectionSliderMouseDown = false;
             this.DetectionControlsEnableState(true, true);
 
             if (!noChange)
@@ -667,6 +690,85 @@ namespace Timelapse.Dialog
                 await this.DoCountRecognitionsAsync(new CancellationTokenSource(), RecognitionTypeEnum.Detections);
             }
         }
+
+        // We only want to update counts after a slider action is completed, while at the same time display 
+        // the current slider range. To make this work,
+        // - we update the slider values whenever there is a change from the previous values.
+        // - we only trigger counting on a mouse up event
+        private void SliderDetectionConf_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            this.isDetectionSliderMouseDown = false;
+            SliderDetectionConf_ValueChanged(this.SliderDetectionConf, null);
+        }
+
+        private void SliderDetectionConf_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            this.isDetectionSliderMouseDown = true;
+        }
+
+        private async void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
+        {
+            // Abort if we can't do anything
+            if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
+            {
+                return;
+            }
+
+            // Abort if nothing has changed  in the current slider interaction, i.e., the value has not been changed previously
+            // and there are no changes between the current slider values vs the current confidence values
+            if (isValueChanged == false &&
+                Math.Abs(Math.Round(slider.LowerValue, 2) - this.DetectionSelections.ConfidenceThreshold1ForUI) < .01 &&
+                Math.Abs(Math.Round(slider.HigherValue, 2) - this.DetectionSelections.ConfidenceThreshold2ForUI) < .01)
+            {
+                return;
+            }
+
+            if (isDetectionSliderMouseDown)
+            {
+                // The user is likely in the midst of adjusting the slider values e.g., by dragging.
+                // We only want to update the display as described below, but not actually do any counting
+                // as that is an expensive operation.
+
+                // Disable the detection datagrid including clearing the current selection and recognition
+                this.DetectionControlsEnableState(false, true);
+                this.ClearSelectionsAndScrollToTop(this.DataGridDetections);
+                this.CurrentlySelectedRecognition.IsRecognitionSelected = false;
+
+                // Show the current slider values 
+                this.DisplayDetectionConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
+
+                // Clear the current counts
+                this.ClearCountsInDetectionCountsCollection();
+
+                this.isValueChanged = true;
+                return;
+            }
+
+            // The user has finished updating the sliders, so we want to both update the display 
+            // and counts
+
+            // Enable the detection datagrid 
+            this.DetectionControlsEnableState(true, true);
+
+            // Set and display the new confidence thresholds
+            double lowerConf = Math.Round(slider.LowerValue, 2);
+            double higherConf = Math.Round(slider.HigherValue, 2);
+            this.DetectionSelections.ConfidenceThreshold1ForUI = lowerConf;
+            this.DetectionSelections.ConfidenceThreshold2ForUI = higherConf;
+            this.DisplayDetectionConfidenceRange(lowerConf, higherConf);
+
+            // Clear the current counts and start counting the new ones
+            this.ClearCountsInDetectionCountsCollection();
+            this.isValueChanged = false;
+
+            // Recount classifications. 
+            // Note that we don't clear counts as we are rebuilding the entire list
+            // Cancel the last operation, then reset the token for the next operation
+            this.TokenSource.Cancel();
+            this.TokenSource = new CancellationTokenSource();
+            await this.DoCountRecognitionsAsync(new CancellationTokenSource(), RecognitionTypeEnum.Detections);
+        }
+
         // Classification slider -
         // - only drags are allowed (no click to increment or keyboard shortcuts)
         // - disable Classification controls when dragging to provide feedback
@@ -746,8 +848,8 @@ namespace Timelapse.Dialog
                         DetectionSelections.RecognitionType = RecognitionType.Detection;
                         this.DetectionSelections.DetectionCategory = string.Empty;
                         this.DetectionSelections.ClassificationCategory = string.Empty;
-                        this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.Value;
-                        this.DetectionSelections.ConfidenceThreshold2ForUI = 1;
+                        this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.LowerValue;
+                        this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderDetectionConf.HigherValue;
                         //this.DetectionSelections.RankByConfidence = false;
                         this.CustomSelection.ShowMissingDetections = false;
                         this.DialogResult = true;
@@ -762,8 +864,8 @@ namespace Timelapse.Dialog
                         DetectionSelections.RecognitionType = RecognitionType.Detection;
                         this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber;
                         this.DetectionSelections.ClassificationCategory = string.Empty;
-                        this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.Value;
-                        this.DetectionSelections.ConfidenceThreshold2ForUI = 1;
+                        this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.LowerValue;
+                        this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderDetectionConf.HigherValue;
                         //this.DetectionSelections.RankByConfidence = false;
                         this.CustomSelection.ShowMissingDetections = false;
                         this.DialogResult = true;
@@ -777,8 +879,8 @@ namespace Timelapse.Dialog
                     DetectionSelections.RecognitionType = RecognitionType.Detection;
                     this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber;
                     this.DetectionSelections.ClassificationCategory = string.Empty;
-                    this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.Value;
-                    this.DetectionSelections.ConfidenceThreshold2ForUI = 1;
+                    this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.LowerValue;
+                    this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderDetectionConf.HigherValue;
                     //this.DetectionSelections.RankByConfidence = false;
                     this.CustomSelection.ShowMissingDetections = false;
                     //this.CustomSelection.EpisodeShowAllIfAnyMatch = false;
@@ -937,5 +1039,6 @@ namespace Timelapse.Dialog
             None
         }
         #endregion
+
     }
 }

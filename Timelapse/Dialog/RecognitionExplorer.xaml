@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="Recognition Explorer" Height="640" Width="640" Loaded="RecognitionsExplorer_OnLoaded">
@@ -31,7 +32,7 @@
             <TextBlock Name="TBMessage"
                        FontSize="16" FontWeight="Normal" FontStyle="Italic"
                        Text=" total files in the current selection (ignoring recognitions)" HorizontalAlignment="Left"/>
-            
+
         </StackPanel>
 
         <!--Detections-->
@@ -51,13 +52,22 @@
             </TextBlock>
 
             <!--Detections slider-->
-            <Slider Grid.Row="1" Name="SliderDetectionConf" 
-                    Maximum="1"  
-                    TickFrequency="0.05" TickPlacement="BottomRight" 
-                    LargeChange="0"  SmallChange="0" 
-                    Thumb.DragDelta="SliderDetectionConf_OnDragDelta"
-                    Thumb.DragCompleted ="SliderDetectionConf_OnDragCompleted"
-                   />
+            <xctk:RangeSlider Grid.Row="1" 
+                              Name="SliderDetectionConf" 
+                              Margin="0,0,0,5"
+                              Minimum="0" Maximum="1" 
+                              LowerValue=".2" HigherValue="1" 
+                              RangeBackground="Gold" 
+                              HigherRangeBackground="Transparent"
+                              LowerRangeBackground="Transparent"
+                              TickFrequency="0.1" TickPlacement="None"
+                              Step="0.1"
+                              IsSnapToTickEnabled="False"
+                              PreviewMouseLeftButtonDown="SliderDetectionConf_OnPreviewMouseLeftButtonDown"
+                              PreviewMouseLeftButtonUp="SliderDetectionConf_OnPreviewMouseLeftButtonUp"
+                              LowerValueChanged="SliderDetectionConf_ValueChanged" 
+                              HigherValueChanged="SliderDetectionConf_ValueChanged"
+            />
 
             <!--Detections Datagrid-->
             <DataGrid Grid.Row="2" Grid.Column="0" 

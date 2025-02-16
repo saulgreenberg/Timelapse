@@ -86,7 +86,7 @@
                         <xceed:RangeSlider Name="DetectionRangeSlider"  IsEnabled="True" HorizontalAlignment="Left"  VerticalAlignment="Center"
                                        HigherValue="1" LowerValue=".8" Maximum="1" Minimum="0" Step="0.01" 
                                        Width="200" 
-                                       HigherValueChanged="DetectionRangeSlider_HigherValueChanged" LowerValueChanged="DetectionRangeSlider_LowerValueChanged" 
+                                       HigherValueChanged="DetectionRangeSlider_HigherValueChanged" LowerValueChanged="DetectionRangeSlider_LowerValueChanged"  
                                        HigherRangeBackground="WhiteSmoke" RangeBackground="Gold" LowerRangeBackground="WhiteSmoke"/>
                     </Border>
 
@@ -96,7 +96,7 @@
                               VerticalContentAlignment="Center" FontWeight="DemiBold"
                               Content="Include all files in an episode when at least one file matches" IsChecked="False"
                               Checked="CheckboxShowAllEpisodeImages_CheckedChanged" Unchecked="CheckboxShowAllEpisodeImages_CheckedChanged"
-                                  ToolTip="Show all files in an episodewhere at least one file in that episode matches the search criteria"/>
+                                  ToolTip="Show all files in an episode where at least one file in that episode matches the search criteria"/>
                     </StackPanel>
                 </Grid>
             </GroupBox>

@@ -2122,15 +2122,13 @@ namespace Timelapse.Database
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
-                Debug.Print("Detection");
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
                 // Create a partial query that returns a count of classifications matching some conditions
                 // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-                query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
-                Debug.Print("Classification");
+                query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count); ;
             }
             else
             {
@@ -2172,7 +2170,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             // Uncommment this to see the actual complete query
-            Debug.Print("File Counts: " + query);
+            // Debug.Print("File Counts: " + query);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 
