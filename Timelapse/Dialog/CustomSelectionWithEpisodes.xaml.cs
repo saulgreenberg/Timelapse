@@ -1472,7 +1472,7 @@ namespace Timelapse.Dialog
                 }
                 else
                 {
-                    // Either a Detection ((excluding All and Empty)) or a Classification type 
+                    // Either a Detection (excluding All and Empty) or a Classification type 
                     DetectionSelections.AllDetections = false;
                     DetectionSelections.InterpretAllDetectionsAsEmpty = false;
                     string detectionCategory = Database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);

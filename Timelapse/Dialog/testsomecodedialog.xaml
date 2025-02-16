@@ -4,26 +4,147 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Test Some Code Dialog" Height="450" Width="800" Loaded="TestSomeCodeDialog_OnLoaded">
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/ResourceDictionaries/TreeViewHierarchicalDataTemplate.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Title="Recognition Explorer" Height="640" Width="640" Loaded="RecognitionsExplorer_OnLoaded">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
 
-        <Grid>
+        <!--Title-->
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" FontSize="16" FontWeight="Bold" Margin="10" 
+                   Text="Recognitions Explorer" HorizontalAlignment="Center"/>
+
+        <!--Feedback -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="10,0,10,0" >
+            <TextBlock Name="TBTotalFiles"
+                       FontSize="16" 
+                       Text="" HorizontalAlignment="Left"/>
+            <TextBlock Name="TBMessage"
+                       FontSize="16" FontWeight="Normal" FontStyle="Italic"
+                       Text=" total files in the current selection (ignoring recognitions)" HorizontalAlignment="Left"/>
+            
+        </StackPanel>
+
+        <!--Detections-->
+        <Grid Grid.Row="2" Grid.Column="0" Margin="10">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+
+            <!--Detections label-->
+
+            <TextBlock Name="TBDetectionsLabel" 
+                       Grid.Row="0" Grid.Column="0"  FontSize="16" HorizontalAlignment="Center" Margin="0,10,0,0" 
+                       Text="Detections ">
+                    <Run Name="TBDetectionsCount" Text=""/>
+            </TextBlock>
+
+            <!--Detections slider-->
+            <Slider Grid.Row="1" Name="SliderDetectionConf" 
+                    Maximum="1"  
+                    TickFrequency="0.05" TickPlacement="BottomRight" 
+                    LargeChange="0"  SmallChange="0" 
+                    Thumb.DragDelta="SliderDetectionConf_OnDragDelta"
+                    Thumb.DragCompleted ="SliderDetectionConf_OnDragCompleted"
+                   />
+
+            <!--Detections Datagrid-->
+            <DataGrid Grid.Row="2" Grid.Column="0" 
+                      Name="DataGridDetections" 
+                      ItemsSource ="{Binding DetectionCountsCollection}"
+                      IsReadOnly ="True"
+                      HorizontalGridLinesBrush="LightGray"
+                      VerticalGridLinesBrush="LightGray"
+                      CanUserSortColumns="True"
+                      SelectionChanged="DataGridDetections_OnSelectionChanged"/>
         </Grid>
+
+
+        <!--Classifications-->
+        <Grid Grid.Row="2" Grid.Column="1" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!--Classifications label-->
+
+            <TextBlock Name="TBClassificationsLabel" 
+                           Grid.Row="0" Grid.Column="0"  HorizontalAlignment="Center" Margin="0,10,0,0" FontSize="16">
+                           <Run Text="Classifications "/>
+                           <Run Name="TBClassificationsCount" Text=""/>
+            </TextBlock>
+
+            <!--Classifications slider -->
+            <Slider Grid.Row="1" Name="SliderClassificationConf"  
+                    Maximum="1"  
+                    TickFrequency="0.05" TickPlacement="BottomRight" 
+                    LargeChange="0" SmallChange="0"
+                    Thumb.DragDelta="SliderClassificationConf_OnDragDelta"
+                    Thumb.DragCompleted ="SliderClassificationConf_OnDragCompleted"
+                    />
+
+            <!--Classifications DataGrid-->
+            <DataGrid Grid.Row="2" Grid.Column="0" 
+                      Name="DataGridClassifications" 
+                      ItemsSource ="{Binding ClassificationCountsCollection}"
+                      IsReadOnly ="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      HorizontalGridLinesBrush="LightGray"
+                      VerticalGridLinesBrush="LightGray"
+                      CanUserSortColumns="True"
+                      SelectionChanged="DataGridClassifications_OnSelectionChanged">
+                <!--Hide rows with a count of 0-->
+                <DataGrid.RowStyle>
+                    <Style TargetType="{x:Type DataGridRow}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Count}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+
+            </DataGrid>
+
+            <!--Empty Classifications Label-->
+            <TextBlock Name="TBBelowClassificationsLabel" 
+                       Grid.Row="3" Grid.Column="0" HorizontalAlignment="Center" Margin="0,10,0,0" FontSize="16"  >
+                <Run Text="Classifications"/>
+                <Run Name="TBBelowClassificationValue" Text="" />
+            </TextBlock>
+
+            <!--Empty Classifications DataGrid-->
+            <Border Grid.Row="4" BorderBrush="DarkGray" BorderThickness="1" Padding="3">
+                <ScrollViewer Name="EmptyClassificationsScrollViewer"  VerticalScrollBarVisibility="Auto">
+                    <ItemsControl Name="LBEmptyClassifications"  />
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!--Bottom feedback and buttons-->
+        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" >
+            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10,0,10,0">
+                <Run FontWeight="Bold">Select: </Run>
+                <Run Name="TBSelectionFeedback">None</Run>
+            </TextBlock>
+            <Button Name="Cancel" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="Cancel_Click">_Cancel</Button>
+            <Button Name="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Select</Button>
+        </StackPanel>
     </Grid>
 </Window>

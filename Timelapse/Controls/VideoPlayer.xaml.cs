@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Microsoft.WindowsAPICodePack.Shell;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -231,6 +232,7 @@ namespace Timelapse.Controls
         private void MediaElementMediaEnded(object sender, RoutedEventArgs e)
         {
             this.Pause();
+            
             SliderScrubbing.Value = SliderScrubbing.Minimum; // Go back to the beginning
             if (CBRepeat.IsChecked == true)
             {

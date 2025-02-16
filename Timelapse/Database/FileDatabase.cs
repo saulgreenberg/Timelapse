@@ -23,6 +23,7 @@ using Timelapse.Recognition;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Standards;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using Control = Timelapse.Constant.Control;
 using File = System.IO.File;
 using Path = System.IO.Path;
@@ -41,10 +42,10 @@ namespace Timelapse.Database
 
         // These two dictionaries mirror the contents of the detectionCategory and classificationCategory database table
         // for faster access
-        private Dictionary<string, string> detectionCategoriesDictionary;
-        private Dictionary<string, string> classificationCategoriesDictionary;
-        private DataTable detectionDataTable; // Mirrors the database detection table
-        private DataTable classificationsDataTable; // Mirrors the database classification table
+        public Dictionary<string, string> detectionCategoriesDictionary;
+        public Dictionary<string, string> classificationCategoriesDictionary;
+        public DataTable detectionDataTable; // Mirrors the database detection table
+        public DataTable classificationsDataTable; // Mirrors the database classification table
 
         #endregion
 
@@ -1328,8 +1329,6 @@ namespace Timelapse.Database
                 }
             }
 
-
-
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
             // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
@@ -2102,6 +2101,7 @@ namespace Timelapse.Database
         // - Select Count(*) FROM (Select * From Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id WHERE <some condition> GROUP BY Detections.Id HAVING  MAX  ( Detections.conf )  <= 0.9)
         // - Select Count(*) FROM (Select * From Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id  INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID WHERE DataTable.Person<>'true' 
         // AND Classifications.category = 6 GROUP BY Classifications.classificationID HAVING  MAX  (Classifications.conf ) BETWEEN 0.8 AND 1 
+        
         public int CountAllFilesMatchingSelectionCondition(FileSelectionEnum fileSelection)
         {
             string query;
@@ -2122,6 +2122,7 @@ namespace Timelapse.Database
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
+                Debug.Print("Detection");
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
@@ -2129,6 +2130,7 @@ namespace Timelapse.Database
                 // Create a partial query that returns a count of classifications matching some conditions
                 // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
                 query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
+                Debug.Print("Classification");
             }
             else
             {
@@ -2170,7 +2172,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             // Uncommment this to see the actual complete query
-            // Debug.Print("File Counts: " + query);
+            Debug.Print("File Counts: " + query);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 
@@ -2235,7 +2237,7 @@ namespace Timelapse.Database
             query += Sql.CloseParenthesis;
 
             // Uncommment this to see the actual complete query
-            //Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetScalarFromSelectAsInt(query).ToString() );
+            Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetScalarFromSelectAsInt(query).ToString() );
             return Database.ScalarGetScalarFromSelectAsInt(query) != 0;
         }
 

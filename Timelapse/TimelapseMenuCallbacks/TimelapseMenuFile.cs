@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.TextFormatting;
 using DialogUpgradeFiles;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -45,10 +46,14 @@ namespace Timelapse
         #endregion
 
         #region Menu stub to test some code
-        private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
-            dialog.ShowDialog();
+            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this, this.DataHandler?.FileDatabase);
+            if (dialog.ShowDialog() == true && null != DataHandler?.ImageCache?.Current?.ID)
+            {
+                //FileSelectionEnum.Custom
+                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
+            }
         }
         #endregion
 

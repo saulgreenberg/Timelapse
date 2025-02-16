@@ -3085,11 +3085,11 @@ namespace Timelapse.Dialog
                 {
                     Title = title,
                     What = $"Do you know that your recognition image file paths don't match your existing files?{Environment.NewLine}" +
-                           "This could be a problem unless its intensional.",
+                           "This could be a problem unless its intentional.",
                     Reason = $"There are two likely reasons for this mismatch.{Environment.NewLine}" +
-                             $"1. This is an unintensional error, possibly due to the location of your recognizer file.{Environment.NewLine}" +
+                             $"1. This is an unintentional error, possibly due to the location of your recognizer file.{Environment.NewLine}" +
                              $"   You should correct this.{Environment.NewLine}" +
-                              "2. This is not an error, as you intensionally located your images elsewhere and will resolve this later.",
+                              "2. This is not an error, as you intentionally located your images elsewhere and will resolve this later.",
                     Solution = $"Depending on the reason, you may want to:{Environment.NewLine}" +
                                $"\u2022 'Cancel' to stop importing so you can check to see what is going on (see hint below).{Environment.NewLine}" +
                                "\u2022 'Okay' to import the recognitions anyways (if you know how to resolve this)",
@@ -3132,7 +3132,7 @@ namespace Timelapse.Dialog
                     Visibility = Visibility.Visible
                 }
             };
-            bool? result = messageBox.ShowDialog();
+            messageBox.ShowDialog();
             if (messageBox.DontShowAgain.IsChecked.HasValue)
             {
                 GlobalReferences.TimelapseState.SuppressShortcutDetectedPrompt = messageBox.DontShowAgain.IsChecked.Value;
@@ -3172,7 +3172,7 @@ namespace Timelapse.Dialog
                                " • images located in your root folder, remove all shortcuts."
                 },
             };
-            bool? result = messageBox.ShowDialog();
+            messageBox.ShowDialog();
             Mouse.OverrideCursor = cursor;
         }
         #endregion
