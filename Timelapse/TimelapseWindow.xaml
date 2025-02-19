@@ -361,8 +361,8 @@
                               ToolTip="Create a custom selection using filters to display a subset of files.&#10;Filters include your choice of data fields and values and/or particular recognitions.&#10;The custom selection only displays files that match those filters." 
                               Click="MenuItemSelectCustomSelection_Click"/>
 
-                    <!-- Test some code here - should only be enabled when developing code -->
-                    <MenuItem Name="MenuItemRecognitionExplorer" Header="_Using the Recognitions Explorer..." Visibility="Visible" Click="MenuItemSelectRecognitionExplorer_Click" ToolTip="View recognitions and their counts.&#10;Select a detection (or classification if any) to modify the current selection"/>
+                    <!-- Recognition Explorer -->
+                    <MenuItem Name="MenuItemRecognitionExplorer" Header="_Using the Recognitions Explorer..." Visibility="Collapsed" Click="MenuItemSelectRecognitionExplorer_Click" ToolTip="View recognitions and their counts.&#10;Select a detection (or classification if any) to modify the current selection" />
 
                     <Separator/>
                     <MenuItem Name="MenuItemSelectMissingFiles" IsCheckable="True" IsChecked="False" Header="_Missing files in the current selection" Click="MenuItemSelectFiles_Click" ToolTip="Show the subset of files in the current selection that are missing (likely because they were moved, renamed or deleted)"/>

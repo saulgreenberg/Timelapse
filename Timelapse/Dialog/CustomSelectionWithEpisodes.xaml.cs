@@ -157,7 +157,7 @@ namespace Timelapse.Dialog
             // Set the state of the detections to the last used ones (or to its defaults)
             if (GlobalReferences.DetectionsExists)
             {
-                this.ButtonRecognitionExplorer.Visibility = Visibility.Visible;
+                this.ButtonRecognitionExplorer.Visibility = Visibility.Hidden;// Visibility.Visible;
                 DetectionGroupBox.Visibility = Visibility.Visible;
                 Detections2Panel.Visibility = Visibility.Visible;
                 UseDetectionsCheckbox.IsChecked = DetectionSelections.UseRecognition;

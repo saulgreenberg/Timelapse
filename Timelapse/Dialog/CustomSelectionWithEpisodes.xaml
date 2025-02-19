@@ -103,7 +103,7 @@
             <StackPanel Name="Detections2Panel" Orientation="Vertical" Margin="0,15,0,0" >
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files the recognizer did not process"  IsChecked="False" VerticalAlignment="Top" Margin="10,0,0,0" Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
                 <Button Name="ButtonRecognitionExplorer" Content="Select using Recognitions Explorer" ToolTip="The Recognitions Explorer displays the number of files matching each recognition"
-                        Margin="10,10,0,0" Height="30" Width="200" HorizontalAlignment="Left" Visibility="Collapsed"
+                        Margin="10,10,0,0" Height="30" Width="200" HorizontalAlignment="Left" Visibility="Hidden"
                         Click="ButtonRecognitionExplorer_OnClick"/>
                 
                 <StackPanel  Orientation="Vertical" Margin="10,18,0,0">
