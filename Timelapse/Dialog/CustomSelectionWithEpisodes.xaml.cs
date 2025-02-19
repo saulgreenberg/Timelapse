@@ -157,6 +157,7 @@ namespace Timelapse.Dialog
             // Set the state of the detections to the last used ones (or to its defaults)
             if (GlobalReferences.DetectionsExists)
             {
+                this.ButtonRecognitionExplorer.Visibility = Visibility.Visible;
                 DetectionGroupBox.Visibility = Visibility.Visible;
                 Detections2Panel.Visibility = Visibility.Visible;
                 UseDetectionsCheckbox.IsChecked = DetectionSelections.UseRecognition;
@@ -1342,6 +1343,21 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Detection-specific methods and callbacks
+
+        private void ButtonRecognitionExplorer_OnClick(object sender, RoutedEventArgs e)
+        {
+            RecognitionExplorer dialog = new RecognitionExplorer(this, this.Database);
+            if (dialog.ShowDialog() == true)
+            {
+                // update the current detection settings
+                this.UseDetectionsCheckbox.IsChecked = true;
+                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceThreshold1ForUI;
+                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceThreshold2ForUI;
+                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceThreshold1ForUI;
+                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceThreshold2ForUI;
+
+            }
+        }
         private void UseDetections_CheckedChanged(object sender, RoutedEventArgs e)
         {
             if (dontInvoke)
@@ -1896,5 +1912,6 @@ namespace Timelapse.Dialog
         }
 
         #endregion
+
     }
 }

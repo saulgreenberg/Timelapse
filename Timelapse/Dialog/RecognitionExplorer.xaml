@@ -100,13 +100,22 @@
             </TextBlock>
 
             <!--Classifications slider -->
-            <Slider Grid.Row="1" Name="SliderClassificationConf"  
-                    Maximum="1"  
-                    TickFrequency="0.05" TickPlacement="BottomRight" 
-                    LargeChange="0" SmallChange="0"
-                    Thumb.DragDelta="SliderClassificationConf_OnDragDelta"
-                    Thumb.DragCompleted ="SliderClassificationConf_OnDragCompleted"
-                    />
+            <xctk:RangeSlider Grid.Row="1" Name="SliderClassificationConf"  
+                                    Margin="0,0,0,5"
+                                    Minimum="0" Maximum="1" 
+                                    LowerValue=".75" HigherValue="1" 
+                                    RangeBackground="Gold" 
+                                    HigherRangeBackground="Transparent"
+                                    LowerRangeBackground="Transparent"
+                                    TickFrequency="0.1" TickPlacement="None"
+                                    Step="0.1"
+                                    IsSnapToTickEnabled="False"
+                                    PreviewMouseLeftButtonDown="SliderClassificationConf_OnPreviewMouseLeftButtonDown"
+                                    PreviewMouseLeftButtonUp="SliderClassificationConf_OnPreviewMouseLeftButtonUp"
+                                    PreviewKeyDown="SliderClassificationConf_OnPreviewKeyDown"
+                                    LowerValueChanged="SliderClassificationConf_ValueChanged" 
+                                    HigherValueChanged="SliderClassificationConf_ValueChanged">
+            </xctk:RangeSlider>
 
             <!--Classifications DataGrid-->
             <DataGrid Grid.Row="2" Grid.Column="0" 
@@ -135,8 +144,8 @@
             <!--Empty Classifications Label-->
             <TextBlock Name="TBBelowClassificationsLabel" 
                        Grid.Row="3" Grid.Column="0" HorizontalAlignment="Center" Margin="0,10,0,0" FontSize="16"  >
-                <Run Text="Classifications"/>
-                <Run Name="TBBelowClassificationValue" Text="" />
+                <Run Text="Classifications "/>
+                <Run Name="TBBelowClassificationValue" Text="with 0 counts" />
             </TextBlock>
 
             <!--Empty Classifications DataGrid-->

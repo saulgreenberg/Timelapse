@@ -103,13 +103,15 @@
 
             <StackPanel Name="Detections2Panel" Orientation="Vertical" Margin="0,15,0,0" >
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files the recognizer did not process"  IsChecked="False" VerticalAlignment="Top" Margin="10,0,0,0" Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
-
+                <Button Name="ButtonRecognitionExplorer" Content="Select using Recognitions Explorer" ToolTip="The Recognitions Explorer displays the number of files matching each recognition"
+                        Margin="10,10,0,0" Height="30" Width="200" HorizontalAlignment="Left" Visibility="Collapsed"
+                        Click="ButtonRecognitionExplorer_OnClick"/>
+                
                 <StackPanel  Orientation="Vertical" Margin="10,18,0,0">
                     <StackPanel  Orientation="Horizontal">
-                        <TextBlock Name="QueryMatches2" Text="{Binding ElementName=QueryMatches,Path=Text }"  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,85,0,0"/>
-                        <TextBlock Text=" files match your query" VerticalAlignment="Center" Margin="0,85,0,0"/>
+                        <TextBlock Name="QueryMatches2" Text="{Binding ElementName=QueryMatches,Path=Text }"  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,55,0,0"/>
+                        <TextBlock Text=" files match your query" VerticalAlignment="Center" Margin="0,55,0,0"/>
                     </StackPanel>
-                    <!--<TextBlock Name="QueryFileMatchNote" HorizontalAlignment="Left"  Margin="0,2,0,5" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0"  FontSize="12"/>-->
                 </StackPanel>
 
             </StackPanel>

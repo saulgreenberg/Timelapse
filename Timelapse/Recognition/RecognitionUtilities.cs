@@ -329,7 +329,7 @@ namespace Timelapse.Recognition
                             $"Checking image paths ({i:N0}/{sTotalImages}...)", true, false));
                         Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
-                    if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix))
+                    if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix + Path.DirectorySeparatorChar))
                     {
                         // Probable that Recognizer is relative to the root folder: At least one image path begins with the subfolderPrefix name
                         // Debug.Print("Probable that Recognizer is relative to the root folder: At least one image path begins with the subfolderPrefix name.");
