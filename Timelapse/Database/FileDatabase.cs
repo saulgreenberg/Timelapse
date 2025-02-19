@@ -2170,7 +2170,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             // Uncommment this to see the actual complete query
-            // Debug.Print("File Counts: " + query);
+            //Debug.Print("File Counts: " + query);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 
@@ -2235,7 +2235,7 @@ namespace Timelapse.Database
             query += Sql.CloseParenthesis;
 
             // Uncommment this to see the actual complete query
-            Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetScalarFromSelectAsInt(query).ToString() );
+            // Debug.Print("File Exists: " + query + ":" + this.Database.ScalarGetScalarFromSelectAsInt(query).ToString() );
             return Database.ScalarGetScalarFromSelectAsInt(query) != 0;
         }
 

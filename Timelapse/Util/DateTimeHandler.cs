@@ -161,39 +161,45 @@ namespace Timelapse.Util
             return dateTime.ToString(Time.DateTimeDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"));
         }
 
-        public static string ToStringDatabaseDate(DateTime dateTime)
+        public static string ToStringDatabaseDate(DateTime dateTime, bool insertSpaceBefore = false)
         {
             // yyyy-MM-dd | 2021-04-05
-            return dateTime.ToString(Time.DateDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{dateTime.ToString(Time.DateDatabaseFormat, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
 
-        public static string ToStringDisplayDateTime(DateTime dateTime)
+        public static string ToStringDisplayDateTime(DateTime dateTime, bool insertSpaceBefore = false)
         {
             // dd-MMM-yyyy HH:mm:ss | 05-Apr-2021 18:05:01
-            return dateTime.ToString(Time.DateTimeDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{dateTime.ToString(Time.DateTimeDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
 
-        public static string ToStringDisplayDatePortion(DateTime date)
+        public static string ToStringDisplayDatePortion(DateTime date, bool insertSpaceBefore = false)
         {
             // dd-MMM-yyyy | 05-Apr-2021
-            return date.ToString(Time.DateDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{date.ToString(Time.DateDisplayFormat, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
-        public static string ToStringTime(DateTime dateTime)
+        public static string ToStringTime(DateTime dateTime, bool insertSpaceBefore = false)
         {
             // HH:mm:ss | 18:05:01
-            return dateTime.ToString(Time.TimeFormat, CultureInfo.CreateSpecificCulture("en-US"));
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{dateTime.ToString(Time.TimeFormat, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
 
-        public static string ToStringCSVDateTimeWithTSeparator(DateTime dateTime)
+        public static string ToStringCSVDateTimeWithTSeparator(DateTime dateTime, bool insertSpaceBefore = false)
         {
             //  yyyy-MM-dd'T'HH:mm:ss | 2021-04-05'T'18:05:01
-            return dateTime.ToString(Time.DateTimeCSVWithTSeparator, CultureInfo.CreateSpecificCulture("en-US"));
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{dateTime.ToString(Time.DateTimeCSVWithTSeparator, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
 
-        public static string ToStringCSVDateTimeWithoutTSeparator(DateTime dateTime)
+        public static string ToStringCSVDateTimeWithoutTSeparator(DateTime dateTime, bool insertSpaceBefore = false)
         {
             //  yyyy-MM-dd' 'HH:mm:ss' | 2021-04-05' '18:05:01
-            return dateTime.ToString(Time.DateTimeCSVWithoutTSeparator, CultureInfo.CreateSpecificCulture("en-US"));
+            string prefix = insertSpaceBefore ? " " : string.Empty; 
+            return $"{prefix}{dateTime.ToString(Time.DateTimeCSVWithoutTSeparator, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
         #endregion
 

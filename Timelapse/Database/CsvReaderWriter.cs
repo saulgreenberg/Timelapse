@@ -131,25 +131,23 @@ namespace Timelapse.Database
                                         if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                         {
                                             // Export both the separate Date and Time column data with or without a space as needed
-                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                            csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateString(), includeComma));
+                                            csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateString(csvInsertSpaceBeforeDates), includeComma));
                                             includeComma = true;
-                                            csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVTimeString(), includeComma));
+                                            csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVTimeString(csvInsertSpaceBeforeDates), includeComma));
                                         }
                                         else
                                         {
                                             // Export the single DateTime column data
-                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                             if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
                                             {
                                                 // with the T separator
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateTimeWithTSeparatorString(), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateTimeWithTSeparatorString(csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                             else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
                                             {
                                                 // without the T separator
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateTimeWithoutTSeparatorString(), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateTimeWithoutTSeparatorString(csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                         }
@@ -161,25 +159,24 @@ namespace Timelapse.Database
                                     {
                                         if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                         {
-                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                             if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
                                             {
                                                 // Export both the separate Date and Time column data with or without a space as needed
 
                                                 // with the T separator
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                             else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
                                             {
                                                 // without the T separator
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                             else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                             {
                                                 // dd-MMM-yyyy HH:mm:ss
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDateTime(dateTime), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDateTime(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                         }
@@ -197,16 +194,15 @@ namespace Timelapse.Database
                                     {
                                         if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                         {
-                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                             if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                             {
                                                 // dd-MMM-yyyy HH:mm:ss
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDatePortion(dateTime), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDatePortion(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                             else
                                             {
-                                                csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDatabaseDate(dateTime), includeComma));
+                                                csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDatabaseDate(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                 includeComma = true;
                                             }
                                         }
@@ -223,8 +219,7 @@ namespace Timelapse.Database
                                     {
                                         if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                         {
-                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
-                                            csvRow.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringTime(dateTime), includeComma));
+                                            csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringTime(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                             includeComma = true;
                                         }
                                         else
@@ -356,7 +351,6 @@ namespace Timelapse.Database
                                         continue;
                                     }
 
-                                    string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
                                     switch (dataLabelAndType.Value)
                                     {
                                         case Control.DateTime_:
@@ -366,19 +360,19 @@ namespace Timelapse.Database
                                                 if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeColumnWithTSeparator)
                                                 {
                                                     // with the T separator
-                                                    rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime), includeComma));
+                                                    rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithTSeparator(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                     includeComma = true;
                                                 }
                                                 else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn)
                                                 {
                                                     // without the T separator
-                                                    rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime), includeComma));
+                                                    rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                     includeComma = true;
                                                 }
                                                 else if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                                 {
                                                     // dd-MMM-yyyy HH:mm:ss
-                                                    rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDateTime(dateTime), includeComma));
+                                                    rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDateTime(dateTime, csvInsertSpaceBeforeDates), includeComma));
                                                     includeComma = true;
                                                 }
                                             }
@@ -395,12 +389,12 @@ namespace Timelapse.Database
                                             {
                                                 if (csvDateTimeOptions == CSVDateTimeOptionsEnum.DateAndTimeColumns)
                                                 {
-                                                    rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDatePortion(date), includeComma));
+                                                    rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDisplayDatePortion(date, csvInsertSpaceBeforeDates), includeComma));
                                                     includeComma = true;
                                                 }
                                                 else
                                                 {
-                                                    rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDatabaseDate(date), includeComma));
+                                                    rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(DateTimeHandler.ToStringDatabaseDate(date, csvInsertSpaceBeforeDates), includeComma));
                                                     includeComma = true;
                                                 }
                                             }
@@ -413,7 +407,8 @@ namespace Timelapse.Database
                                             break;
                                         case Control.Time_:
                                             // Export the  Time_ column
-                                            rowBuilder.Append(prefix + CSVHelpers.CSVToCommaSeparatedValue(row[dataLabelAndType.Key], includeComma));
+                                            string prefix = csvInsertSpaceBeforeDates ? " " : string.Empty;
+                                            rowBuilder.Append(CSVHelpers.CSVToCommaSeparatedValue(prefix + row[dataLabelAndType.Key], includeComma));
                                             includeComma = true;
                                             break;
                                         default:

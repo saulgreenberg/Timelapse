@@ -122,29 +122,33 @@ namespace Timelapse.DataTables
         }
 
         // Should be invoked only with the csvDateTimeOptions to one of the DateTime column formats
-        public string GetValueCSVDateTimeWithTSeparatorString()
+        public string GetValueCSVDateTimeWithTSeparatorString(bool insertSpaceBefore)
         {
             // Convert this.DateTime (a DateTimeOffset) to a DateTime, where we add in the offset amount
-            return DateTimeHandler.ToStringCSVDateTimeWithTSeparator(DateTime);
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{DateTimeHandler.ToStringCSVDateTimeWithTSeparator(DateTime)}";
         }
 
         // Should be invoked only with the csvDateTimeOptions to one of the DateTime column formats
-        public string GetValueCSVDateTimeWithoutTSeparatorString()
+        public string GetValueCSVDateTimeWithoutTSeparatorString(bool insertSpaceBefore)
         {
             // Convert this.DateTime (a DateTimeOffset) to a DateTime
-            return DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(DateTime);
+            string prefix = insertSpaceBefore ? " " : string.Empty;
+            return $"{prefix}{DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(DateTime)}";
         }
 
-        public string GetValueCSVDateString()
+      public string GetValueCSVDateString(bool insertSpaceBefore)
         {
+            string prefix = insertSpaceBefore ? " " : string.Empty;
             // Convert this.DateTime to a displayable Date for the CSV file
-            return DateTimeHandler.ToStringDisplayDatePortion(DateTime);
+            return $"{prefix}{DateTimeHandler.ToStringDisplayDatePortion(DateTime)}";
         }
 
-        public string GetValueCSVTimeString()
+        public string GetValueCSVTimeString(bool insertSpaceBefore)
         {
+            string prefix = insertSpaceBefore ? " " : string.Empty;
             // Convert this.DateTime to a displayable Date for the CSV file
-            return DateTimeHandler.ToStringTime(DateTime);
+            return $"{prefix}{DateTimeHandler.ToStringTime(DateTime)}";
         }
 
         // Given a control and its data label, get its value as a string to display to the user in the UI
