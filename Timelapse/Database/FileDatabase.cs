@@ -1189,9 +1189,9 @@ namespace Timelapse.Database
             }
 
             // EPISODES-related addition to query.
-            // If the Detectionsand Episodes  is turned on, then the Episode Note field contains values in the Episode format (e.g.) 25:1/8.
+            // If EpisodeShowAllIfAnyMatch is turned on, and the Episode Note field contains values in the Episode format (e.g.) 25:1/8....
             // We construct a wrapper for selecting files where all files in an episode have at least one file matching the surrounded search condition 
-            if (CustomSelection != null && CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled)
+            if (CustomSelection != null && CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
             {
                 string frontWrapper = SqlPhrase.CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(DBTables.FileData, CustomSelection.EpisodeNoteField, false);
                 string backWrapper = Sql.CloseParenthesis + Sql.CloseParenthesis;
@@ -2158,10 +2158,10 @@ namespace Timelapse.Database
             }
 
             // EPISODES-related addition to query.
-            // If the Detectionsand Episodes  is turned on, then the Episode Note field contains values in the Episode format (e.g.) 25:1/8.
+            // If Episodes  is turned on, then the Episode Note field contains values in the Episode format (e.g.) 25:1/8.
             // We construct a wrapper for counting  files where all files in an episode have at least one file matching the surrounded search condition 
             if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty
-                && fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled)
+                && fileSelection == FileSelectionEnum.Custom)
             {
                 // Remove from the front of the string
                 query = query.Replace(Sql.SelectCountStarFrom, string.Empty);

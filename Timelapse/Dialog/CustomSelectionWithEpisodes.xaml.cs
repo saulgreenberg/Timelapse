@@ -247,13 +247,38 @@ namespace Timelapse.Dialog
             {
                 SetDetectionCriteria();
                 ShowMissingDetectionsCheckbox.IsChecked = Database.CustomSelection.ShowMissingDetections;
-                NoteDataLabelContainingEpisodeData = Database.CustomSelection.EpisodeNoteField;
-                if (Database.CustomSelection.EpisodeShowAllIfAnyMatch && EpisodeFieldCheckFormat(CurrentImageRow, NoteDataLabelContainingEpisodeData))
+  
+            }
+
+            // Episode-related:
+            // Check if there is an episode data field and if so, enable the appropriate checkbox and its value
+            // TODO Cleanup up the episode stuff 
+            // TODO: Why are we bothering with the Database.CustomSelection.EpisodeNoteField if we recreate its value each time?
+            // TODO: But if we use it, then we have to consider whether it actually holds a valid episode... or whether that field even exists anymore (e.g., due to a change in the template)
+            bool isEpisodeAvailable = false;
+            
+            NoteDataLabelContainingEpisodeData = string.Empty;
+            foreach (ControlRow control in Database.Controls)
+            {
+                if (control.Type == Control.Note && EpisodeFieldCheckFormat(CurrentImageRow, control.DataLabel))
                 {
-                    // Only check the checkbox if it was previously checked and the data field still contains valid Episode data
-                    CheckboxShowAllEpisodeImages.IsChecked = Database.CustomSelection.EpisodeShowAllIfAnyMatch;
+                    // We found a note data label whose value in the current image follows the expected Episode format.
+                    // So save it
+                    NoteDataLabelContainingEpisodeData = control.DataLabel;
+                    Database.CustomSelection.EpisodeNoteField = control.DataLabel;
+                    isEpisodeAvailable = true;
+                    break;
                 }
             }
+            if (Database.CustomSelection.EpisodeShowAllIfAnyMatch && isEpisodeAvailable)
+            {
+                // Only check the checkbox if it was previously checked and the data field still contains valid Episode data
+                CheckboxShowAllEpisodeImages.IsChecked = Database.CustomSelection.EpisodeShowAllIfAnyMatch;
+            }
+            // The episode controls are only enabled if detections is enabled
+            CheckboxShowAllEpisodeImages.FontWeight = isEpisodeAvailable ? FontWeights.Normal : FontWeights.Light;
+            CheckboxShowAllEpisodeImages.IsEnabled = isEpisodeAvailable;
+
             InitiateShowCountsOfMatchingFiles();
             DetectionCategoryComboBox.SelectionChanged += DetectionCategoryComboBox_SelectionChanged;
 
@@ -808,20 +833,7 @@ namespace Timelapse.Dialog
             dontUpdate = false;
             UpdateSearchDialogFeedback();
 
-            // Load the available note fields in the Episode ComboBox
-            // and set the CustomSelection to the current values
-            NoteDataLabelContainingEpisodeData = string.Empty;
-            foreach (ControlRow control in Database.Controls)
-            {
-                if (control.Type == Control.Note && EpisodeFieldCheckFormat(CurrentImageRow, control.DataLabel))
-                {
-                    // We found a note data label whose value in the current image follows the expected Episode format.
-                    // So save it
-                    NoteDataLabelContainingEpisodeData = control.DataLabel;
-                    break;
-                }
-            }
-
+ 
             // Set the UseTime state based on what was last recorded
             CheckBoxUseTime.IsChecked = Database.CustomSelection.UseTimeInsteadOfDate;
 
@@ -1653,9 +1665,6 @@ namespace Timelapse.Dialog
             ToLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
             DetectionRangeSlider.RangeBackground = confidenceControlsEnabled ? Brushes.Gold : Brushes.LightGray;
 
-            // The episode contorls are only enabled if detections is enabled
-            CheckboxShowAllEpisodeImages.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
-            CheckboxShowAllEpisodeImages.IsEnabled = isEnabled;
 
             // There remainder depends upon the use detections isEnable state only
             DetectionCategoryComboBox.IsEnabled = isEnabled;
@@ -1792,6 +1801,10 @@ namespace Timelapse.Dialog
 
         private static bool EpisodeFieldCheckFormat(ImageRow row, string dataLabel)
         {
+            if (string.IsNullOrWhiteSpace(dataLabel))
+            {
+                return false;
+            }
             string value = row.GetValueDisplayString(dataLabel);
             return (null != value && Regex.IsMatch(value, RegExExpressions.NotEpisodeCharacters));
         }

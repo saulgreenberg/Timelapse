@@ -56,7 +56,6 @@
                         <RowDefinition Height="Auto" MinHeight="25" />
                         <RowDefinition Height="Auto" MinHeight="25" />
                         <RowDefinition Height="Auto" MinHeight="25" />
-                        <RowDefinition Height="Auto" MinHeight="25" />
                         <RowDefinition/>
                     </Grid.RowDefinitions>
 
@@ -91,13 +90,13 @@
                     </Border>
 
                     <!--Row 4 Option to show episode info -->
-                    <StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="0,5,0,0"  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3">
+                    <!--<StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="0,5,0,0"  Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3">
                         <CheckBox Name="CheckboxShowAllEpisodeImages" 
                               VerticalContentAlignment="Center" FontWeight="DemiBold"
                               Content="Include all files in an episode when at least one file matches" IsChecked="False"
                               Checked="CheckboxShowAllEpisodeImages_CheckedChanged" Unchecked="CheckboxShowAllEpisodeImages_CheckedChanged"
                                   ToolTip="Show all files in an episode where at least one file in that episode matches the search criteria"/>
-                    </StackPanel>
+                    </StackPanel>-->
                 </Grid>
             </GroupBox>
 
@@ -117,6 +116,16 @@
             </StackPanel>
 
         </StackPanel>
+
+        <!--Row 4 Option to show episode info -->
+        <StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="30,5,0,0"  DockPanel.Dock="Top" >
+            <CheckBox Name="CheckboxShowAllEpisodeImages" 
+                      VerticalContentAlignment="Center" FontWeight="DemiBold"
+                      Content="Include all files in an episode when at least one file matches" IsChecked="False"
+                      Checked="CheckboxShowAllEpisodeImages_CheckedChanged" Unchecked="CheckboxShowAllEpisodeImages_CheckedChanged"
+                      ToolTip="Show all files in an episode where at least one file in that episode matches the search criteria"/>
+        </StackPanel>
+
         <!--Selection Panel-->
         <GroupBox Name="SelectionGroupBox" Header="Select images and videos that match these terms " FontWeight="Bold" FontStyle="Italic" Height="Auto" DockPanel.Dock="Bottom" Margin="10,15,5,0" Padding="0,10,0,00">
             <DockPanel>
@@ -132,6 +141,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
+                       
                         <TextBlock Padding ="10,0,5,0" FontWeight="Bold" Text="Select" Grid.Row="0" Grid.Column="0"/>
                         <TextBlock Padding ="5,0,5,0" FontWeight="Bold" Text="Label" Grid.Row="0" Grid.Column="1"/>
                         <TextBlock Padding ="5,0,5,0" FontWeight="Bold" Text="Expression" Grid.Row="0" Grid.Column="2"/>
