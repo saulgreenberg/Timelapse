@@ -3181,37 +3181,37 @@ namespace Timelapse.Dialog
         public static void EcoAssistCouldNotBeStarted(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "EcoAssist could not be started";
+            const string title = "AddaxAI (EcoAssist) could not be started";
 
             new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"EcoAssist could not be started, but we don't know why.{Environment.NewLine}" +
-                           $"\u2022 You can try to re-download and install EcoAssist again, or{Environment.NewLine}" +
-                           "\u2022 Check for the access and execution permissions for EcoAssist (perhaps your computer setup has restrictions?)."
+                    What = $"AddaxAI (EcoAssist) could not be started, but we don't know why.{Environment.NewLine}" +
+                           $"\u2022 You can try to re-download and install AddaxAI again, or{Environment.NewLine}" +
+                           "\u2022 Check for the access and execution permissions for AddaxAI (perhaps your computer setup has restrictions?)."
                 }
             }.ShowDialog();
         }
         public static bool? EcoAssistAlreadyDownloaded(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "A version of EcoAssist is already installed ";
+            const string title = "A version of AddaxAI (EcoAssist) is already installed ";
 
             return new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"A version of EcoAssist is already installed.{Environment.NewLine}" +
-                           $"As installation takes about 10-15 minutes, you may want to avoid reinstalling EcoAssist unless:{Environment.NewLine}" +
+                    What = $"A version of AddaxAI (EcoAssist) is already installed.{Environment.NewLine}" +
+                           $"As installation takes about 10-15 minutes, you may want to avoid reinstalling AddaxAI unless:{Environment.NewLine}" +
                            $"\u2022 you know that a new version is available, or{Environment.NewLine}" +
-                           $"\u2022 you are having issues with EcoAssist, and want to reinstall it,{Environment.NewLine}" +
-                           "\u2022 you are unsure if this is the latest and greatest EcoAssist version.",
+                           $"\u2022 you are having issues with AddaxAI, and want to reinstall it,{Environment.NewLine}" +
+                           "\u2022 you are unsure if this is the latest and greatest AddaxAI version.",
                     Hint = $"Select:{Environment.NewLine}" +
-                           $"• 'Okay' to continue with the EcoAssist installation, or{Environment.NewLine}" +
-                           "• 'Cancel' to return to Timelapse without re-installing EcoAssist."
+                           $"• 'Okay' to continue with the AddaxAI installation, or{Environment.NewLine}" +
+                           "• 'Cancel' to return to Timelapse without re-installing AddaxAI."
                 }
             }.ShowDialog();
         }
@@ -3219,14 +3219,14 @@ namespace Timelapse.Dialog
         public static bool? EcoAssistNotInstalled(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "EcoAssist doesn't appear to be installed.";
+            const string title = "AddaxAI (EcoAssist) doesn't appear to be installed.";
 
             return new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"The EcoAssist image recognizer does not appear to be installed.{Environment.NewLine}" +
+                    What = $"The AddaxAI (EcoAssist) image recognizer does not appear to be installed.{Environment.NewLine}" +
                            $"But if you want to try to run the uninstaller anyways, press Ok.{Environment.NewLine}",
                 }
             }.ShowDialog();
@@ -3235,21 +3235,21 @@ namespace Timelapse.Dialog
         public static bool? EcoAssistInstallationInformaton(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Install EcoAssist (from web site) - Overview ";
+            const string title = "Install AddaxAI (EcoAssist) (from web site) - Overview ";
 
             return new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"An overview of the EcoAssist installation process.{Environment.NewLine}" +
-                           $"\u2022 The EcoAssist Windows Installation web page will appear.{Environment.NewLine}" +
+                    What = $"An overview of the AddaxAI (EcoAssist) installation process.{Environment.NewLine}" +
+                           $"\u2022 The AddaxAI Windows Installation web page will appear.{Environment.NewLine}" +
                            $"\u2022 Click its 'Download...' button, and then open the just-downloaded 'Install.bat' file in your Downloads folder.{Environment.NewLine}" +
                            $"\u2022 If a 'Windows protected your PC' dialog appears, select 'More Info' and 'Run anyway'.{Environment.NewLine}" +
                            $"\u2022 A window appears. Follow the prompts, if any. {Environment.NewLine}" +
-                           $"\u2022 Intallation takes ~5-15 minutes. Lots of technical feedback will be displayed.{Environment.NewLine}" +
-                           "\u2022 It takes time: EcoAssist relies on Python Anaconda Data Science Platform, which is a big.",
-                    Hint = $"It takes time as EcoAssist relies on Python Anaconda Data Science Platform, which is a big.{Environment.NewLine}" +
+                           $"\u2022 Installation takes ~5-15 minutes. {Environment.NewLine}" +
+                           "\u2022 Lots of technical feedback will be displayed as the large Python Anaconda Data Science Platform is loaded.",
+                    Hint = $"It takes time as AddaxAI relies on Python Anaconda Data Science Platform, which is a big.{Environment.NewLine}" +
                            "Try to avoid interrupting the installation, as cleaning up an aborted installation can be messy."
                 }
             }.ShowDialog();
@@ -3258,21 +3258,21 @@ namespace Timelapse.Dialog
         public static bool? EcoAssistApplicationInstructions(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "EcoAssist is starting up (about 5 - 20 seconds)...";
+            const string title = "AddaxAI (EcoAssist) is starting up (about 5 - 20 seconds)...";
 
             return new MessageBox(title, owner)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"The EcoAssist application should start up shortly. When it does:{Environment.NewLine}" +
+                    What = $"The AddaxAI (EcoAssist) application should start up shortly. When it does:{Environment.NewLine}" +
                            $" 1. Select the model you want to use{Environment.NewLine}" +
                            $"    (the default model shows detections with broad animal/person/vehicle classifications){Environment.NewLine}" +
                            $" 2. Click 'Start processing', which will start processing your images.{Environment.NewLine}" +
                             " 3. You will be notified when your image recognition is completed.",
                     Hint = $"Be patient. Image recognition takes time.{Environment.NewLine}" +
                            $" • you may want to run this overnight if you have (say) tens or hundreds of thousands of images.{Environment.NewLine}" +
-                           " • you can continue with your other work (including Timelapse work) while EcoAssist is running.",
+                           " • you can continue with your other work (including Timelapse work) while AddaxAI is running.",
                 }
             }.ShowDialog();
         }

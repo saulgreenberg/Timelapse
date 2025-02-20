@@ -316,15 +316,17 @@ namespace Timelapse
         #endregion
 
         #region EcoAssist menu items
-
         // Adjust menu based on whether Ecoassist is installed
+        // NOTE: EcoAssist is now called AddaxAI. To smooth out the transition of names, we check both ecoassist paths and addax paths.
         private void MenuItem_OnEcoAssistSubmenuOpened(object sender, RoutedEventArgs e)
         {
             string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
             string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
-
-            // Enable runing ecoassist only if the Ecoassist executable seems to be installed.
-            MenuItemEcoAssistRun.IsEnabled = System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2);
+            string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
+            string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
+            // Enable running ecoassist only if the Ecoassist executable seems to be installed.
+            MenuItemEcoAssistRun.IsEnabled = System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2) ||
+                                             System.IO.File.Exists(addaxAIExecutable1) || System.IO.File.Exists(addaxAIExecutable2);
         }
 
         // Download and install ecoassist. 
@@ -332,9 +334,12 @@ namespace Timelapse
         {
             string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),  EcoAssist.EcoAssistSubfolderExecutable);
             string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
+            string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
+            string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
 
             // If an installation already exists, check with the user to see if he/she wants to continue...
-            if (System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2))
+            if (System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2) ||
+                System.IO.File.Exists(addaxAIExecutable1) || System.IO.File.Exists(addaxAIExecutable2))
             {
                 if (false == Dialogs.EcoAssistAlreadyDownloaded(this))
                 {
@@ -345,7 +350,7 @@ namespace Timelapse
             // Give the user information about the installation...
             if (true == Dialogs.EcoAssistInstallationInformaton(this))
             {
-                ProcessExecution.TryProcessStart(new Uri(EcoAssist.EcoAssistDownload));
+                ProcessExecution.TryProcessStart(new Uri(AddaxAI.AddaxAIDownload));
             }
         }
 
@@ -353,16 +358,19 @@ namespace Timelapse
         {
             string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
             string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
+            string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
+            string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
 
             // If an installation already exists, check with the user to see if he/she wants to continue...
-            if (false == System.IO.File.Exists(ecoAssistExecutable1) && false == System.IO.File.Exists(ecoAssistExecutable2))
+            if (false == System.IO.File.Exists(ecoAssistExecutable1) && false == System.IO.File.Exists(ecoAssistExecutable2) &&
+                false == System.IO.File.Exists(addaxAIExecutable1) && false == System.IO.File.Exists(addaxAIExecutable2))
             {
                 if (false == Dialogs.EcoAssistNotInstalled(this))
                 {
                     return;
                 }
             }
-            ProcessExecution.TryProcessStart(new Uri(EcoAssist.EcoAssistUninstallDownload));
+            ProcessExecution.TryProcessStart(new Uri(AddaxAI.AddaxAIUninstallDownload));
         }
 
         private void MenuItemEcoAssistRun_Click(object sender, RoutedEventArgs e)
@@ -373,12 +381,17 @@ namespace Timelapse
             string initialFolderPath = DataHandler?.FileDatabase?.RootPathToImages ?? myDocuments;
             // Since we don't have an image set, ask the user to select the folder.
             // Or maybe we should always do that, where we use the initial folder as the root folder if the image set is open.
-            if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Run EcoAssist on the selected folder", initialFolderPath, out string selectedFolderPath))
+            if (false == Dialogs.TryGetFolderFromUserUsingOpenFileDialog("Run AddaxAI (EcoAssist) on the selected folder", initialFolderPath, out string selectedFolderPath))
             {
                 return;
             }
 
-            string cmd = $@"/k (cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || (cd /d {homepath} && ""{homepath}\EcoAssist_files\EcoAssist\open.bat"" timelapse ""{selectedFolderPath}"" ) ";
+            //string cmd = $@"/k (cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || (cd /d {homepath} && ""{homepath}\EcoAssist_files\EcoAssist\open.bat"" timelapse ""{selectedFolderPath}"" ) ";
+            string cmd = $@"/k ";
+                   cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
+                   cmd += $@"(cd /d {homepath} && ""{homepath}\{AddaxAI.AddaxAISubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) || ";
+                   cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
+                   cmd += $@"(cd /d {homepath} && ""{homepath}\{EcoAssist.EcoAssistSubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) ";
             if (false == ProcessExecution.TryProcessRunCommand(cmd))
             {
                 Dialogs.EcoAssistCouldNotBeStarted(this);
@@ -392,7 +405,7 @@ namespace Timelapse
                     FreezeOnMouseEnter = true, // set the option to prevent notification disappearing automatically if user move cursor on it
                     UnfreezeOnMouseLeave = true
                 };
-                ToastNotifier.ShowInformation("The EcoAssist application should appear shortly in a separate window (about 2-20 seconds)", toastOptions);
+                ToastNotifier.ShowInformation("The AddaxAI (EcoAssist) application should appear shortly in a separate window (about 2-20 seconds)", toastOptions);
             }
         }
         #endregion

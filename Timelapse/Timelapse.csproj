@@ -1115,6 +1115,9 @@
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Icons\AddaxAI.png" />
+    <Resource Include="Icons\AddaxAIUninstall.png" />
+    <Resource Include="Icons\AddaxAIUpload.png" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">

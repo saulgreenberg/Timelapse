@@ -317,7 +317,7 @@
                 <MenuItem Name="MenuItemSelect" Header="_Select" IsEnabled="false" IsTabStop="false" SubmenuOpened="MenuItemSelect_SubmenuOpening" ToolTip="Select a subset of files">
                     <MenuItem Name="MenuItemSelectAllFiles" IsCheckable="True" IsChecked="True" Header="_All files" Click="MenuItemSelectFiles_Click" ToolTip="Shows all files in the root folder and its subfolders"/>
                     <MenuItem Name="MenuItemSelectByRelativePath" Header="All files in a folder and its subfolders..." IsEnabled="True" SubmenuOpened="MenuItemSelectByFolder_SubmenuOpening">
-                        
+
                         <controls:TreeViewWithRelativePaths  
                             x:Name="tv"
                             ItemsSource="{Binding}"
@@ -410,28 +410,28 @@
 
                     <Separator />
                     <!-- EcoAsssist -->
-                    <MenuItem Header="EcoAssist Image Recognizer..." SubmenuOpened="MenuItem_OnEcoAssistSubmenuOpened" >
+                    <MenuItem Header="AddaxAI (EcoAssist) Image Recognizer..." SubmenuOpened="MenuItem_OnEcoAssistSubmenuOpened" >
                         <MenuItem.Icon>
-                            <Image Source="Icons/ecoAssist.png" />
+                            <Image Source="Icons/AddaxAI.png" />
                         </MenuItem.Icon>
 
-                        <MenuItem Name="MenuItemEcoAssistRun" Header="Run EcoAssist recognizer on a folder..." IsEnabled="True" Click="MenuItemEcoAssistRun_Click" ToolTip="Run the EcoAssist recognizer on a folder that you select">
+                        <MenuItem Name="MenuItemEcoAssistRun" Header="Run AddaxAI (EcoAssist) recognizer on a folder..." IsEnabled="True" Click="MenuItemEcoAssistRun_Click" ToolTip="Run the EcoAssist recognizer on a folder that you select">
                             <MenuItem.Icon>
-                                <Image Source="Icons/EcoAssist.png" />
+                                <Image Source="Icons/AddaxAI.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
                         <Separator />
 
-                        <MenuItem Name="MenuItemEcoAssistDownload" Header="Install EcoAssist image recognizer (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
+                        <MenuItem Name="MenuItemEcoAssistDownload" Header="Install AddaxAI (EcoAssist) image recognizer (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
                             <MenuItem.Icon>
-                                <Image Source="Icons/EcoAssistUpload.png" />
+                                <Image Source="Icons/AddaxAIUpload.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
-                        <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Uninstall EcoAssist (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistUninstall_Click" ToolTip="Go to the Uninstall EcoAssist web page to download the EcoAssist Unninstall utility">
+                        <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Uninstall AddaxAI (EcoAssist) (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistUninstall_Click" ToolTip="Go to the Uninstall EcoAssist web page to download the EcoAssist Unninstall utility">
                             <MenuItem.Icon>
-                                <Image Source="Icons/EcoAssistUninstall.png" />
+                                <Image Source="Icons/AddaxAIUninstall.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
@@ -676,13 +676,13 @@
                         <Separator/>
                         <MenuItem Header="Image recognition" IsEnabled="False"/>
 
-                        <MenuItem Name="MenuItemVideoUsingEcoAssist" Header="Using EcoAssist for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses EcoAssist to do its image recognition. This video illustrates how to use EcoAssist.">
+                        <MenuItem Name="MenuItemVideoUsingEcoAssist" Header="Using AddaxAI (EcoAssist) for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses AddaxAI (EcoAssist) to do its image recognition. This video illustrates how to use AddaxAI.">
                             <MenuItem.Icon>
                                 <Image Source="Icons/MediaControl-PlayButton.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
-                        <MenuItem Name="MenuItemImageRecognitionForVideos" Header="Image recognition for Videos" Click="MenuVideoPlay_Click" ToolTip="This video illustrates how image recognition works in the Video Player and how to use EcoAssist to do video recognition">
+                        <MenuItem Name="MenuItemImageRecognitionForVideos" Header="Image recognition for Videos" Click="MenuVideoPlay_Click" ToolTip="This video illustrates how image recognition works in the Video Player and how to use AddaxAI (EcoAssist) to do video recognition">
                             <MenuItem.Icon>
                                 <Image Source="Icons/MediaControl-PlayButton.png" />
                             </MenuItem.Icon>

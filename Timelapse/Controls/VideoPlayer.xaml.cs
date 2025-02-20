@@ -100,8 +100,10 @@ namespace Timelapse.Controls
 
             // Set various controls to their previously saved state.
             this.CBAutoPlay.IsChecked = GlobalReferences.TimelapseState.VideoAutoPlay;
-            this.CBMute.IsChecked = GlobalReferences.TimelapseState.VideoMute;
             this.CBRepeat.IsChecked = GlobalReferences.TimelapseState.VideoRepeat;
+            this.CBMute.IsChecked = GlobalReferences.TimelapseState.VideoMute;
+            this.CBMute_CheckedChanged(null, null); // and set the mute state
+
 
             if (GlobalReferences.TimelapseState.VideoSpeed == 1)
             {

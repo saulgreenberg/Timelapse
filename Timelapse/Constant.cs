@@ -360,6 +360,14 @@ namespace Timelapse.Constant
         public const string EcoAssistUninstallDownload = @"https://addaxdatascience.com/windows-uninstall/";
         public const string EcoAssistSubfolderExecutable = @"EcoAssist_files\EcoAssist\open.bat";
     }
+
+    public static class AddaxAI
+    {
+        public const string AddaxAIDownload = @"https://addaxdatascience.com/addaxai-windows/";
+        public const string AddaxAIUninstallDownload = @"https://addaxdatascience.com/windows-uninstall/";
+        public const string AddaxAISubfolderExecutable = @"AddaxAI_files\AddaxAI\open.bat";
+    }
+
     public static class EpisodeDefaults
     {
         public static readonly double TimeThresholdDefault = 2; // 2 Minutes - the default
