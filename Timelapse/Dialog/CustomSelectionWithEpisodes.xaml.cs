@@ -157,10 +157,10 @@ namespace Timelapse.Dialog
             // Set the state of the detections to the last used ones (or to its defaults)
             if (GlobalReferences.DetectionsExists)
             {
-                this.ButtonRecognitionExplorer.Visibility = Visibility.Hidden;// Visibility.Visible;
-                DetectionGroupBox.Visibility = Visibility.Visible;
-                Detections2Panel.Visibility = Visibility.Visible;
-                UseDetectionsCheckbox.IsChecked = DetectionSelections.UseRecognition;
+                this.ButtonRecognitionExplorer.Visibility = Visibility.Visible;
+                RecognitionsGroupBox.Visibility = Visibility.Visible;
+                Recognitions2Panel.Visibility = Visibility.Visible;
+                EnableRecognitionsCheckbox.IsChecked = DetectionSelections.UseRecognition;
 
                 // Set the spinner and sliders to the last used values
                 DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceThreshold1ForUI;
@@ -169,7 +169,7 @@ namespace Timelapse.Dialog
                 DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceThreshold2ForUI;
 
                 // Set the Rank by Confidence
-                RankByConfidenceCheckbox.IsChecked = DetectionSelections.RankByConfidence;
+                RankByDetectionConfidenceCheckbox.IsChecked = DetectionSelections.RankByConfidence;
 
                 // Put Detection and Classification categories in the combo box as human-readable labels
                 // Note that we add "All" to the Detections list as that is a 'bogus' Timelapse-internal category.
@@ -208,7 +208,7 @@ namespace Timelapse.Dialog
                 {
                     // If we don't know the recognition type, default to All
                     DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
-                    RankByConfidenceCheckbox.Content = "Rank by detection confidence";
+                    RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
                 }
                 else if (DetectionSelections.RecognitionType == RecognitionType.Detection)
                 {
@@ -223,7 +223,7 @@ namespace Timelapse.Dialog
                     {
                         DetectionCategoryComboBox.SelectedValue = categoryLabel;
                     }
-                    RankByConfidenceCheckbox.Content = "Rank by detection confidence";
+                    RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
                 }
                 else
                 {
@@ -231,14 +231,14 @@ namespace Timelapse.Dialog
                     DetectionCategoryComboBox.SelectedValue = (categoryLabel.Length != 0)
                         ? categoryLabel
                         : DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
-                    RankByConfidenceCheckbox.Content = "Rank by classification confidence";
+                    RankByDetectionConfidenceCheckbox.Content = "by classification confidence";
                 }
-                EnableDetectionControls((bool)UseDetectionsCheckbox.IsChecked);
+                EnableDetectionControls((bool)EnableRecognitionsCheckbox.IsChecked);
             }
             else
             {
-                DetectionGroupBox.Visibility = Visibility.Collapsed;
-                Detections2Panel.Visibility = Visibility.Collapsed;
+                RecognitionsGroupBox.Visibility = Visibility.Collapsed;
+                Recognitions2Panel.Visibility = Visibility.Collapsed;
                 DetectionSelections?.ClearAllDetectionsUses();
             }
             dontInvoke = false;
@@ -1248,7 +1248,7 @@ namespace Timelapse.Dialog
         // When this button is pressed, all the search terms checkboxes are cleared, which is equivalent to showing all images
         private void ResetToAllImagesButton_Click(object sender, RoutedEventArgs e)
         {
-            UseDetectionsCheckbox.IsChecked = false;
+            EnableRecognitionsCheckbox.IsChecked = false;
             for (int row = 1; row <= Database.CustomSelection.SearchTerms.Count; row++)
             {
                 CheckBox select = GetGridElement<CheckBox>(SelectColumn, row);
@@ -1259,7 +1259,7 @@ namespace Timelapse.Dialog
 
         private FileSelectionEnum ChangeSelectionStateIfNeeded()
         {
-            if (UseDetectionsCheckbox.IsChecked == true)
+            if (EnableRecognitionsCheckbox.IsChecked == true)
             {
                 // We have at least one non-relativePath checkmark, so don't change anything
                 // i.e., this leave it as a custom selection
@@ -1362,7 +1362,7 @@ namespace Timelapse.Dialog
             if (dialog.ShowDialog() == true)
             {
                 // update the current detection settings
-                this.UseDetectionsCheckbox.IsChecked = true;
+                this.EnableRecognitionsCheckbox.IsChecked = true;
                 DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceThreshold1ForUI;
                 DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceThreshold2ForUI;
                 DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceThreshold1ForUI;
@@ -1377,7 +1377,7 @@ namespace Timelapse.Dialog
                 return;
             }
             // Enable or disable the controls depending on the various checkbox states
-            EnableDetectionControls(UseDetectionsCheckbox.IsChecked == true);
+            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
 
             SetDetectionCriteria();
             InitiateShowCountsOfMatchingFiles();
@@ -1389,7 +1389,7 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            DetectionSelections.UseRecognition = UseDetectionsCheckbox.IsChecked == true;
+            DetectionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
             if (DetectionSelections.UseRecognition)
             {
                 SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
@@ -1404,7 +1404,7 @@ namespace Timelapse.Dialog
             CustomSelection.SetDetectionRanges(DetectionSelections);
 
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
-            EnableDetectionControls(UseDetectionsCheckbox.IsChecked == true);
+            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
         }
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
@@ -1460,7 +1460,7 @@ namespace Timelapse.Dialog
                 DetectionRangeSlider.Minimum = 0;
                 DetectionConfidenceSpinnerLower.Minimum = 0;
                 DetectionConfidenceSpinnerHigher.Minimum = 0;
-                RankByConfidenceCheckbox.Content = "Rank by detection confidence";
+                RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
             }
             else
             {
@@ -1496,7 +1496,7 @@ namespace Timelapse.Dialog
                     {
                         DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
                     }
-                    RankByConfidenceCheckbox.Content = "Rank by detection confidence";
+                    RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
                 }
                 else
                 {
@@ -1514,7 +1514,7 @@ namespace Timelapse.Dialog
                         {
                             DetectionRangeSlider.LowerValue = DetectionSelections.CurrentClassificationThreshold;
                         }
-                        RankByConfidenceCheckbox.Content = "Rank by classification confidence";
+                        RankByDetectionConfidenceCheckbox.Content = "by classification confidence";
                     }
                     else
                     {
@@ -1525,7 +1525,7 @@ namespace Timelapse.Dialog
                         {
                             DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
                         }
-                        RankByConfidenceCheckbox.Content = "Rank by detection confidence";
+                        RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
                     }
                 }
             }
@@ -1624,6 +1624,10 @@ namespace Timelapse.Dialog
         // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
         private void DetectionRangeSlider_HigherValueChanged(object sender, RoutedEventArgs e)
         {
+            if (IsLoaded == false || ignoreSpinnerUpdates)
+            {
+                return;
+            }
             // Round up the value to the nearest 2 decimal places,
             // and update the spinner (also in two decimal places) only if the value differs
             // This stops the spinner from updated if values change in the 3rd decimal place and beyond
@@ -1660,26 +1664,26 @@ namespace Timelapse.Dialog
             DetectionConfidenceSpinnerLower.IsEnabled = confidenceControlsEnabled;
             DetectionConfidenceSpinnerHigher.IsEnabled = confidenceControlsEnabled;
             DetectionRangeSlider.IsEnabled = confidenceControlsEnabled;
-            ConfidenceLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
-            FromLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
-            ToLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
+            DetectionConfidenceLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
+            //FromLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
+            //ToLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
             DetectionRangeSlider.RangeBackground = confidenceControlsEnabled ? Brushes.Gold : Brushes.LightGray;
 
 
             // There remainder depends upon the use detections isEnable state only
             DetectionCategoryComboBox.IsEnabled = isEnabled;
-            CategoryLabel.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
-            RankByConfidenceCheckbox.IsEnabled = isEnabled;
-            RankByConfidenceCheckbox.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
+            DetectionCategoryLabel.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
+            RankByDetectionConfidenceCheckbox.IsEnabled = isEnabled;
+            RankByDetectionConfidenceCheckbox.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
 
             // CHECK THE ONES BELOW TO SEE IF THIS IS THE BEST WAY TO DO THESE
             SelectionGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
             SelectionGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
 
-            DetectionGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
-            DetectionGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
+            RecognitionsGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
+            RecognitionsGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
 
-            if (ShowMissingDetectionsCheckbox.IsChecked == true || UseDetectionsCheckbox.IsChecked == true)
+            if (ShowMissingDetectionsCheckbox.IsChecked == true || EnableRecognitionsCheckbox.IsChecked == true)
             {
                 ResetToAllImagesButton.IsEnabled = true;
             }
@@ -1689,9 +1693,9 @@ namespace Timelapse.Dialog
         {
             // Need to disable confidence sliders/spinners depending on the state of this checkbox and use detections
             // ALso need to restore state of this checkbox between repeated uses in Window_Loaded.
-            DetectionSelections.RankByConfidence = RankByConfidenceCheckbox.IsChecked == true;
+            DetectionSelections.RankByConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
             InitiateShowCountsOfMatchingFiles();
-            EnableDetectionControls(UseDetectionsCheckbox.IsChecked == true);
+            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
         }
         #endregion
 
