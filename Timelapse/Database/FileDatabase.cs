@@ -1331,7 +1331,7 @@ namespace Timelapse.Database
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
             GlobalReferences.TimelapseState.IsNewSelection = true;
             DataTable filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
@@ -2128,7 +2128,9 @@ namespace Timelapse.Database
                 // CLASSIFICATIONS
                 // Create a partial query that returns a count of classifications matching some conditions
                 // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-                query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count); ;
+                //query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
+                query = SqlPhrase.SelectCountClassificationsWithinDetections(SelectTypesEnum.Count, CustomSelection.GetFilesWhere(true), CustomSelection);
+                return Database.ScalarGetScalarFromSelectAsInt(query);
             }
             else
             {

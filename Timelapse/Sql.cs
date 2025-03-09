@@ -1,6 +1,11 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Diagnostics;
+using System.Globalization;
 using Timelapse.Constant;
 using Timelapse.Enums;
+using Timelapse.Recognition;
+using Timelapse.SearchingAndSorting;
+using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 
 // ReSharper disable UnusedMember.Global
 namespace Timelapse
@@ -267,6 +272,47 @@ namespace Timelapse
         //    return phrase + Sql.From + Constant.DBTables.Detections + Sql.InnerJoin + Constant.DBTables.FileData +
         //            Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.IdenticalToSet2 + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
         //}
+
+
+        // Count Form:  Select COUNT  ( * )  FROM (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
+        // Star Form:   SELECT  DISTINCT                           DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
+        // One Form     SELECT ONE           FROM (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
+        public static string SelectCountClassificationsWithinDetections(SelectTypesEnum selectType, string where, CustomSelection customSelection)
+        {
+            if (selectType != SelectTypesEnum.Count)
+            {
+                return string.Empty;
+            }
+
+            string detectionCategory = customSelection.DetectionSelections.DetectionCategory;
+            double detectionConf1 = customSelection.DetectionSelections.ConfidenceThreshold1ForUI;
+            double detectionConf2 = customSelection.DetectionSelections.ConfidenceThreshold2ForUI;
+            string classificationCategory = customSelection.DetectionSelections.ClassificationCategory;
+            double classificationConf1 = .45;
+            // Create a temporary table to hold intermediate results
+            string phrase = $"Drop Table If Exists tmp; {Environment.NewLine}";
+            phrase += $" Create Temporary Table tmp As SELECT DataTable.*, Detections.*, Classifications.* FROM Classifications  " +
+                      $" INNER JOIN DataTable ON DataTable.Id = Detections.Id" +
+                      $" INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID " +
+                      $" WHERE " +
+                      $" Detections.category = 1 AND Detections.conf " +
+                      $" BETWEEN {detectionConf1} AND {detectionConf2}";
+            if (false == string.IsNullOrEmpty(where))
+            {
+                phrase += $"{Sql.And} {where} ";
+            }
+            // Not sure if this is needed
+            phrase += $" ORDER BY RelativePath, datetime(DateTime), File;{Environment.NewLine}";
+
+            phrase +=
+                $"SELECT Count(*) from (" +
+                $"Select Distinct File,RelativePath from tmp " +
+                $"where \"category:1\" = {classificationCategory}" +
+                $" AND \"conf:1\" >= {classificationConf1}" +
+                $")";
+            Debug.Print(phrase);
+            return phrase;
+        }
 
         /// <summary>
         /// 

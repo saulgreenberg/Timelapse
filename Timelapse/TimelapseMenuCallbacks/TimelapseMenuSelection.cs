@@ -46,7 +46,7 @@ namespace Timelapse
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
 
-            //MenuItemRecognitionExplorer.IsEnabled = DataHandler?.FileDatabase?.DetectionsExists() ?? false;
+            MenuItemRecognitionExplorer.IsEnabled = DataHandler?.FileDatabase?.DetectionsExists() ?? false;
 
             MenuItemSelectRandomSample.IsEnabled = DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
             this.MenuItemSetRelativePathSearchTerm();

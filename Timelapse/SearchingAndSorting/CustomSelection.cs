@@ -253,8 +253,14 @@ namespace Timelapse.SearchingAndSorting
         #endregion
 
         #region Public Methods- GetFilesWhere() creates and returns a well-formed query
-        // Create and return the query composed from the search term list
+
         public string GetFilesWhere()
+        {
+            return GetFilesWhere(false);
+        }
+        // Create and return the query composed from the search term list
+        // If { is true, we return only  search terms related to the data fields (i.e., no Detection or Classification terms)
+        public string GetFilesWhere(bool dataFieldsOnly)
         {
             string where = string.Empty;
 
@@ -299,7 +305,7 @@ namespace Timelapse.SearchingAndSorting
             }
 
             // If no detections, we are done. Return the current where clause
-            if (GlobalReferences.DetectionsExists == false || DetectionSelections.Enabled == false)
+            if (dataFieldsOnly || GlobalReferences.DetectionsExists == false || DetectionSelections.Enabled == false)
             {
                 return where;
             }
