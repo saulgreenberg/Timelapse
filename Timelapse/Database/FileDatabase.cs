@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -73,7 +75,7 @@ namespace Timelapse.Database
         public ImageSetRow ImageSet { get; private set; }
 
         // A list of potential shortcuts found to the image folder. If there is only one, then its a valid shortcut
-        public List<string> ShortcutFoldersFound { get; private set; } 
+        public List<string> ShortcutFoldersFound { get; private set; }
 
         // Whether a shortcut to the image folder is being
         public bool IsShortcutToImageFolder { get; private set; }
@@ -1205,14 +1207,14 @@ namespace Timelapse.Database
                 // If the use click the Rank by Detection or Classification confidence, we have to create a sort term for that
                 // If so, we will insert that into the normal sort term string shortly
                 string rankSortingTerm = string.Empty;
-                if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.DetectionSelections.RankByConfidence)
+                if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.DetectionSelections.RankByDetectionConfidence)
                 {
                     // Classifications: Override any sorting as we have asked to rank the results by confidence values
                     //term[0] = DatabaseColumn.RelativePath;
                     rankSortingTerm = DBTables.Classifications + "." + ClassificationColumns.Conf;
                     rankSortingTerm += Sql.Descending;
                 }
-                else if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.DetectionSelections.RankByConfidence)
+                else if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.DetectionSelections.RankByDetectionConfidence)
                 {
                     // Detections: Override any sorting as we have asked to rank the results by confidence values
                     //term[0] = DatabaseColumn.RelativePath;
@@ -2101,7 +2103,7 @@ namespace Timelapse.Database
         // - Select Count(*) FROM (Select * From Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id WHERE <some condition> GROUP BY Detections.Id HAVING  MAX  ( Detections.conf )  <= 0.9)
         // - Select Count(*) FROM (Select * From Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id  INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID WHERE DataTable.Person<>'true' 
         // AND Classifications.category = 6 GROUP BY Classifications.classificationID HAVING  MAX  (Classifications.conf ) BETWEEN 0.8 AND 1 
-        
+
         public int CountAllFilesMatchingSelectionCondition(FileSelectionEnum fileSelection)
         {
             string query;
@@ -2126,10 +2128,32 @@ namespace Timelapse.Database
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
-                // Create a partial query that returns a count of classifications matching some conditions
-                // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
+                // Create a complete query that returns a count of classifications matching some conditions
+
+                // OLD Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
                 //query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
-                query = SqlPhrase.SelectCountClassificationsWithinDetections(SelectTypesEnum.Count, CustomSelection.GetFilesWhere(true), CustomSelection);
+                // Get the category number of the "Animal" detection category
+                string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
+                if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
+                {
+                    // This should only happen if the json was missing a detection animal category
+                    return 0;
+                }
+
+                if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
+                {
+                    // Episode version of the query
+                    query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.DetectionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField);
+                    Debug.Print("-----------Episode");
+                }
+                else
+                {
+                    // Non-episode version of the query
+                    query = SqlPhrase.SelectCountClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.DetectionSelections, animalDetectionCategoryNumber);
+                    Debug.Print("----------No Episode");
+                }
+
+                Debug.Print(query);
                 return Database.ScalarGetScalarFromSelectAsInt(query);
             }
             else
@@ -2172,7 +2196,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             // Uncommment this to see the actual complete query
-            //Debug.Print("File Counts: " + query);
+            Debug.Print("File Counts: " + query);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 

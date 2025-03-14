@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
@@ -22,7 +23,8 @@ namespace Timelapse.Recognition
         // Detection type: All (Recognized images with at least one Detection / Classification
         public bool AllDetections { get; set; }
 
-        public bool RankByConfidence { get; set; }
+        public bool RankByDetectionConfidence { get; set; }  // For Detections. Kept this way for backwards compatability
+        public bool RankByClassificationConfidence { get; set; } = false;
 
         // Whether its a detection, classification, or none
         public RecognitionType RecognitionType { get; set; }
@@ -34,16 +36,19 @@ namespace Timelapse.Recognition
         public string ClassificationCategory { get; set; }
 
         // The Confidence thresholds, used by the select user interface
-        public double ConfidenceThreshold1ForUI
+        public double ConfidenceDetectionThresholdLowerForUI
         {
             get => CurrentDetectionThreshold;
             set => CurrentDetectionThreshold = value;
         }
 
-        public double ConfidenceThreshold2ForUI { get; set; }
+        public double ConfidenceDetectionThresholdUpperForUI { get; set; }
+
+        public double ClassificationConfidenceThresholdUpperForUI { get; set; } = 1;
+        public double ClassificationConfidenceThresholdLowerForUI { get; set; } = 0.6;
 
         // Transforms the confidence threshold as needed, depending on the select operation
-        public Tuple<double, double> ConfidenceThresholdForSelect
+        public Tuple<double, double> ConfidenceDetectionThresholdForSelect
         {
             get
             {
@@ -60,21 +65,21 @@ namespace Timelapse.Recognition
                     // If Threshold2 is .99 in the UI for empty items, we invert that, but to just above 0
                     // so we capture all the non-zero items (i.e., all images with detections in that range) as otherwise it could
                     //  omit the rare image with a max detection between 0 and .01
-                    lowerBound = (Math.Abs(ConfidenceThreshold2ForUI - 0.99) < .0001) ? justAboveZero : 1.0 - ConfidenceThreshold2ForUI;
-                    upperBound = 1.0 - ConfidenceThreshold1ForUI;
+                    lowerBound = (Math.Abs(ConfidenceDetectionThresholdUpperForUI - 0.99) < .0001) ? justAboveZero : 1.0 - ConfidenceDetectionThresholdUpperForUI;
+                    upperBound = 1.0 - ConfidenceDetectionThresholdLowerForUI;
 
                 }
                 else if (AllDetections)
                 {
                     // We don't want All detections to include images with no detections (i.e., Confidence range includes 0), so if we see a zero, we 
                     // alter that to just above zero.
-                    lowerBound = ConfidenceThreshold1ForUI == 0 ? justAboveZero : ConfidenceThreshold1ForUI;
-                    upperBound = ConfidenceThreshold2ForUI == 0 ? justAboveZero : ConfidenceThreshold2ForUI;
+                    lowerBound = ConfidenceDetectionThresholdLowerForUI == 0 ? justAboveZero : ConfidenceDetectionThresholdLowerForUI;
+                    upperBound = ConfidenceDetectionThresholdUpperForUI == 0 ? justAboveZero : ConfidenceDetectionThresholdUpperForUI;
                 }
                 else
                 {
-                    lowerBound = ConfidenceThreshold1ForUI;
-                    upperBound = ConfidenceThreshold2ForUI;
+                    lowerBound = ConfidenceDetectionThresholdLowerForUI;
+                    upperBound = ConfidenceDetectionThresholdUpperForUI;
                 }
                 return new Tuple<double, double>(lowerBound, upperBound);
             }
@@ -126,12 +131,12 @@ namespace Timelapse.Recognition
             RecognitionType = RecognitionType.Empty;
 
             DetectionCategory = "1";
-            ConfidenceThreshold2ForUI = 1;
+            ConfidenceDetectionThresholdUpperForUI = 1;
 
             ClassificationCategory = "1";
 
             InterpretAllDetectionsAsEmpty = false;
-            RankByConfidence = false;
+            RankByDetectionConfidence = false;
         }
         #endregion
 

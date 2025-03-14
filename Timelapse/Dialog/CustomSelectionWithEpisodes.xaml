@@ -43,10 +43,10 @@
         </DockPanel>
 
         <!--Recognitions Area-->
-        <Grid DockPanel.Dock="Top">
+        <Grid DockPanel.Dock="Top" Margin="10,0,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="0" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" MinHeight="25"/>
@@ -56,77 +56,80 @@
             <GroupBox Name="RecognitionsGroupBox" Grid.Row="0" Grid.Column="0">
                 <GroupBox.Header >
                     <StackPanel Orientation="Horizontal">
-                        <CheckBox Name="EnableRecognitionsCheckbox" Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="False" Checked="UseDetections_CheckedChanged" Unchecked="UseDetections_CheckedChanged"/>
+                        <CheckBox Name="EnableRecognitionsCheckbox" Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="False" Checked="EnableRecognitions_CheckedChanged" Unchecked="EnableRecognitions_CheckedChanged"/>
                         <TextBlock Text="Enable recognition selections" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left"  />
                     </StackPanel>
                 </GroupBox.Header>
 
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="80" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" MinHeight="25"/>
-                    </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <!--<controls:RecognitionSelector x:Name="RecognitionSelector"  RecognitionSelectionEvent="RecognitionSelector_OnRecognitionSelectionEvent"/>-->
 
-                    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical" 
+                    <Grid Visibility="Visible">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" MinHeight="25"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical" 
                                 VerticalAlignment="Top"
                                 Margin="0,20,5,0">
-                        <TextBlock Name="DetectionCategoryLabel" Text="Category" 
+                            <TextBlock Name="DetectionCategoryLabel" Text="Category" 
                                FontWeight="DemiBold" 
                                HorizontalAlignment="Right" 
                                Margin="0,0,5,0"/>
 
-                        <TextBlock Name="DetectionConfidenceLabel" Text="Confidence" 
+                            <TextBlock Name="DetectionConfidenceLabel" Text="Confidence" 
                                FontWeight="DemiBold" 
                                HorizontalAlignment="Right" 
                                Margin="0,15,5,0"/>
 
-                        <TextBlock Name="SortByConfidenceLabel" Text="Sort" 
+                            <TextBlock Name="SortByConfidenceLabel" Text="or, sort by" 
                                    FontWeight="DemiBold" 
                                    HorizontalAlignment="Right" 
                                    Margin="0,12,5,0"/>
-                    </StackPanel>
-                    <!--Detections Groupbox-->
-                    <GroupBox Name="DetectionsGroupBox" Grid.Row="0" Grid.Column="1" Header="Detections">
-                        <Grid Width="Auto" Height="Auto" DockPanel.Dock="Bottom" Margin="5,0,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" MinHeight="25" />
-                                <RowDefinition Height="Auto" MinHeight="25" />
-                                <RowDefinition Height="Auto" MinHeight="25" />
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-
-                            <!--Row 0 Detection Category Menu-->
-
-                            <ComboBox Name="DetectionCategoryComboBox" FontWeight="Normal"   SelectedIndex="1" Grid.Row="0" Grid.Column="0" IsEnabled="False" Margin="0" HorizontalAlignment="Stretch"/>
-
-                            <!--Row 1 Detection Confidence-->
-
-                            <Grid Grid.Row="1" Grid.Column="0" Margin="0,5,0,0">
+                        </StackPanel>
+                        <!--Detections Groupbox-->
+                        <GroupBox Name="DetectionsGroupBox" Grid.Row="0" Grid.Column="1" Header="Detections">
+                            <Grid Width="Auto" Height="Auto" DockPanel.Dock="Bottom" Margin="5,0,0,0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="48" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="48" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"  />
+                                    <RowDefinition Height="Auto" MinHeight="25" />
+                                    <RowDefinition Height="Auto" MinHeight="25" />
+                                    <RowDefinition Height="Auto" MinHeight="25" />
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
-                                <xceed:DoubleUpDown Name="DetectionConfidenceSpinnerLower" 
+
+                                <!--Row 0 Detection Category Menu-->
+
+                                <ComboBox Name="DetectionCategoryComboBox" FontWeight="Normal"   SelectedIndex="1" Grid.Row="0" Grid.Column="0" IsEnabled="False" Margin="0" HorizontalAlignment="Stretch"/>
+
+                                <!--Row 1 Detection Confidence-->
+
+                                <Grid Grid.Row="1" Grid.Column="0" Margin="0,5,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="48" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"  />
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <xceed:DoubleUpDown Name="DetectionConfidenceSpinnerLower" 
                                                         Grid.Row="0" Grid.Column="0" 
                                                         Margin="0,0,3,0" 
                                                         FontWeight="Normal" FormatString="F2" 
                                                         Value="0" Increment="0.05"  Maximum="1" Minimum="0" 
-                                                        IsEnabled="true" 
+                                                        IsEnabled="false" 
                                                         ValueChanged="DetectionConfidenceSpinnerLower_ValueChanged"/>
 
-                                <xceed:RangeSlider Name="DetectionRangeSlider"  IsEnabled="True" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" 
+                                    <xceed:RangeSlider Name="DetectionRangeSlider"  IsEnabled="True" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" 
                                                    HigherValue="1" LowerValue=".8" Maximum="1" Minimum="0" Step="0.01"
                                                    HigherValueChanged="DetectionRangeSlider_HigherValueChanged" LowerValueChanged="DetectionRangeSlider_LowerValueChanged"  
                                                    HigherRangeBackground="Transparent"
@@ -135,91 +138,90 @@
                                                    TickFrequency=".2"
                                                    TickPlacement="BottomRight"/>
 
-                                <xceed:DoubleUpDown Name="DetectionConfidenceSpinnerHigher"  
+                                    <xceed:DoubleUpDown Name="DetectionConfidenceSpinnerHigher"  
                                                     Grid.Row="0" Grid.Column="2" 
                                                     Margin="3,0,0,0"
                                                     FontWeight="Normal" FormatString="F2" 
                                                     Value="1" Increment="0.05" Maximum="1" Minimum="0" 
-                                                    IsEnabled="true" 
+                                                    IsEnabled="false" 
                                                     ValueChanged="DetectionConfidenceSpinnerHigher_ValueChanged"/>
-                            </Grid>
+                                </Grid>
 
-                            <!--Row 2 Rank By Confidence Checkbox-->
-                            <CheckBox Name="RankByDetectionConfidenceCheckbox" Content="by detection confidence" Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" 
+                                <!--Row 2 Rank By Confidence Checkbox-->
+                                <RadioButton Name="RankByDetectionConfidenceCheckbox" GroupName="RankByConf" Content="by detection confidence" Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" 
                                       VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
                                       Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
                                       ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
-                        </Grid>
-                    </GroupBox>
+                            </Grid>
+                        </GroupBox>
 
-                    <!-- Classifications GroupBox-->
-                    <GroupBox Name="ClassificationsGroupBox" Grid.Row="0" Grid.Column="2" Header="Classifications">
-                        <Grid Width="Auto" Height="Auto" DockPanel.Dock="Bottom" Margin="5,0,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" MinHeight="25" />
-                                <RowDefinition Height="Auto" MinHeight="25" />
-                                <RowDefinition Height="Auto" MinHeight="25" />
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-
-                            <!--Row 0 Detection Category Menu-->
-                            <TextBlock Name="ClassificationCategoryLabel" Text="Category" FontWeight="DemiBold" 
-                Grid.Row="0" Grid.Column="0" 
-                VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="1,0,5,5"/>
-                            <ComboBox Name="ClassificationCategoryComboBox" FontWeight="Normal"   SelectedIndex="1" Grid.Row="0" Grid.Column="0" IsEnabled="False" Margin="0" HorizontalAlignment="Stretch"/>
-                            <!--Row 1 Classification Confidence-->
-
-                            <Grid Grid.Row="1" Grid.Column="0" Margin="0,5,0,0">
+                        <!-- Classifications GroupBox-->
+                        <GroupBox Name="ClassificationsGroupBox" Grid.Row="0" Grid.Column="2" Header="Classifications">
+                            <Grid Width="Auto" Height="Auto" DockPanel.Dock="Bottom" Margin="5,0,0,0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="0" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="48" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"  />
+                                    <RowDefinition Height="Auto" MinHeight="25" />
+                                    <RowDefinition Height="Auto" MinHeight="25" />
+                                    <RowDefinition Height="Auto" MinHeight="25" />
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
 
-                                <!--<xceed:DoubleUpDown Name="ClassificationConfidenceSpinnerLower" 
-                                 Grid.Row="0" Grid.Column="0" 
-                                 Margin="0,0,3,0" 
-                                 FontWeight="Normal" FormatString="F2" 
-                                 Value="0" Increment="0.05"  Maximum="1" Minimum="0" 
-                                 IsEnabled="true" 
-                                 ValueChanged="DetectionConfidenceSpinnerLower_ValueChanged"/>-->
+                                <!--Row 0 Classification Category Menu-->
+                                <TextBlock Name="ClassificationCategoryLabel" Text="Category" FontWeight="DemiBold" 
+                                    Grid.Row="0" Grid.Column="0" 
+                                    VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="1,0,5,5"/>
+                                <ComboBox Name="ClassificationCategoryComboBox" FontWeight="Normal"   SelectedIndex="1" Grid.Row="0" Grid.Column="0" IsEnabled="True" Margin="0" HorizontalAlignment="Stretch"/>
+                                <!--Row 1 Classification Confidence-->
 
-                                <Slider Name="ClassificationRangeSlider"  IsEnabled="True" 
-                                        HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                <Grid Grid.Row="1" Grid.Column="0" Margin="0,5,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="25"  />
+                                    </Grid.RowDefinitions>
+
+                                    <xceed:DoubleUpDown Name="ClassificationConfidenceSpinnerLower" 
+                                         Grid.Row="0" Grid.Column="0" 
+                                         Margin="0,0,3,0" 
+                                         FontWeight="Normal" FormatString="F2" 
+                                         Value="0" Increment="0.05"  Maximum="1" Minimum="0" 
+                                         IsEnabled="false" 
+                                         ValueChanged="ClassificationConfidenceSpinnerLower_ValueChanged"/>
+
+                                    <Slider Name="ClassificationRangeSlider"  IsEnabled="True" VerticalAlignment="Top"
                                         Grid.Row="0" Grid.Column="1" 
                                         Maximum="1" SmallChange="0.01" TickFrequency="0.2" TickPlacement="BottomRight" 
-                                        ValueChanged="DetectionRangeSlider_LowerValueChanged"  
-                                />
+                                        ValueChanged="ClassificationSlider_ValueChanged"  Margin="0,0,0,0"  
+                                    />
 
-                                <xceed:DoubleUpDown Name="ClassificationConfidenceSpinnerHigher"  
-                             Grid.Row="0" Grid.Column="2" 
-                             Margin="3,0,0,0"
-                             FontWeight="Normal" FormatString="F2" 
-                             Value="1" Increment="0.05" Maximum="1" Minimum="0" 
-                             IsEnabled="true" 
-                             ValueChanged="DetectionConfidenceSpinnerHigher_ValueChanged"/>
+                                    <!--<xceed:DoubleUpDown Name="ClassificationConfidenceSpinnerHigher"  
+                                         Grid.Row="0" Grid.Column="3" 
+                                         Margin="2,0,0,112"
+                                         FontWeight="Normal" FormatString="F2" 
+                                         Value="1" Increment="0.05" Maximum="1" Minimum="0" 
+                                         IsEnabled="true" 
+                                         ValueChanged="ClassificationRangeSlider_HigherValueChanged"/>-->
+                                </Grid>
+
+                                <!--Row 2 Rank By Confidence Checkbox-->
+                                <RadioButton Name="RankByClassificationConfidenceCheckbox" GroupName="RankByConf" Content="by classification confidence" Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" 
+                                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                                             Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
+                                             ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
                             </Grid>
-
-                            <!--Row 2 Rank By Confidence Checkbox-->
-                            <CheckBox Name="RankByClassificationConfidenceCheckbox" Content="by classification confidence" Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" 
-                                VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
-                                Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
-                                ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
-                        </Grid>
-                    </GroupBox>
-                </Grid>
+                        </GroupBox>
+                    </Grid>
+                </StackPanel>
             </GroupBox>
 
 
             <!--Other Recognition-related controls-->
-            <StackPanel Grid.Row="0" Grid.Column="1" Name="Recognitions2Panel" Orientation="Vertical" Margin="0,0,0,0" >
+            <StackPanel Grid.Row="0" Grid.Column="1" Name="Recognitions2Panel" Orientation="Vertical" Margin="0,0,0,0" Visibility="Collapsed">
                 <Button Name="ButtonRecognitionExplorer" Content="Recognitions Explorer" ToolTip="The Recognitions Explorer displays the number of files matching each recognition"
                         Margin="10,10,10,0" Height="30"  HorizontalAlignment="Stretch" Visibility="Visible"
                         Click="ButtonRecognitionExplorer_OnClick"/>

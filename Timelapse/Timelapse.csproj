@@ -236,6 +236,9 @@
     <Compile Include="Controls\MetadataFolderComplianceControl.xaml.cs">
       <DependentUpon>MetadataFolderComplianceControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\RecognitionSelector.xaml.cs">
+      <DependentUpon>RecognitionSelector.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\RelativePathControl.xaml.cs">
       <DependentUpon>RelativePathControl.xaml</DependentUpon>
     </Compile>
@@ -305,6 +308,7 @@
     <Compile Include="Enums\UpdateStateEnum.cs" />
     <Compile Include="Enums\MoveFolderResultEnum.cs" />
     <Compile Include="Enums\SelectMissingFilesResultEnum.cs" />
+    <Compile Include="EventArguments\RecognitionSelectionChangedEventArgs.cs" />
     <Compile Include="Extensions\StringExtension.cs" />
     <Compile Include="Extensions\TextBlockExtension.cs" />
     <Compile Include="Recognition\RecognitionDatabases.cs" />
@@ -599,6 +603,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\MetadataFolderComplianceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\RecognitionSelector.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

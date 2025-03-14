@@ -256,11 +256,11 @@ namespace Timelapse.SearchingAndSorting
 
         public string GetFilesWhere()
         {
-            return GetFilesWhere(false);
+            return GetFilesWhere(false, false);
         }
         // Create and return the query composed from the search term list
         // If { is true, we return only  search terms related to the data fields (i.e., no Detection or Classification terms)
-        public string GetFilesWhere(bool dataFieldsOnly)
+        public string GetFilesWhere(bool dataFieldsOnly,bool excludeWhereString)
         {
             string where = string.Empty;
 
@@ -282,12 +282,13 @@ namespace Timelapse.SearchingAndSorting
             // Combine the non-standard terms using the operator defined by the user (either AND or OR)
             string nonStandarWhere = CombineSearchTermsAndOperator(nonstandardSearchTerms, TermCombiningOperator);
 
+            string whereString = excludeWhereString ? string.Empty : Sql.Where;
             // Combine the standardWhere and nonStandardWhere clauses, depending if one or both of them exists
             if (false == string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We have both standard and non-standard clauses, so surround them with parenthesis and combine them with an AND
                 // Form: WHERE (standardWhere clauses) AND (nonStandardWhere clauses)
-                where += Sql.Where + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis
+                where += whereString + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis
                           + Sql.And
                           + Sql.OpenParenthesis + nonStandarWhere + Sql.CloseParenthesis;
             }
@@ -295,13 +296,13 @@ namespace Timelapse.SearchingAndSorting
             {
                 // We only have a standard clause
                 // Form: WHERE (standardWhere clauses)
-                where += Sql.Where + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis;
+                where += whereString + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis;
             }
             else if (string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We only have a non-standard clause
                 // Form: WHERE nonStandardWhere clauses
-                where += Sql.Where + nonStandarWhere;
+                where += whereString + nonStandarWhere;
             }
 
             // If no detections, we are done. Return the current where clause
@@ -328,7 +329,7 @@ namespace Timelapse.SearchingAndSorting
             bool addAndOr = false;
             if (string.IsNullOrEmpty(where) && DetectionSelections.AllDetections == false && DetectionSelections.InterpretAllDetectionsAsEmpty == false)
             {
-                where += Sql.Where;
+                where += whereString;
             }
             else
             {
@@ -364,17 +365,18 @@ namespace Timelapse.SearchingAndSorting
             // Note that a confidence of 0 captures empty items with 0 confidence i.e., images with no detections in them
             // For the All category, we really don't wan't to include those, so the confidence has been bumped up slightly(in Item1) above 0
             // For the Empty category, we invert the confidence
-            Tuple<double, double> confidenceBounds = DetectionSelections.ConfidenceThresholdForSelect;
-            if (DetectionSelections.RecognitionType == RecognitionType.Detection && DetectionSelections.RankByConfidence == false)
+           
+            if (DetectionSelections.RecognitionType == RecognitionType.Detection && DetectionSelections.RankByDetectionConfidence == false)
             {
+                Tuple<double, double> detectionConfidenceBounds = DetectionSelections.ConfidenceDetectionThresholdForSelect;
                 // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
-                where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(confidenceBounds.Item1, confidenceBounds.Item2);
+                where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
             }
-            else if (DetectionSelections.RecognitionType == RecognitionType.Classification && DetectionSelections.RankByConfidence == false)
+            else if (DetectionSelections.RecognitionType == RecognitionType.Classification && DetectionSelections.RankByDetectionConfidence == false)
             {
                 // Classification. Form: GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) e.g.,  BETWEEN 0.8 AND 1
                 // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
-                where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(confidenceBounds.Item1, confidenceBounds.Item2);
+                where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(DetectionSelections.CurrentClassificationThreshold, 1);
             }
             return where;
         }
@@ -686,7 +688,7 @@ namespace Timelapse.SearchingAndSorting
                     // the ones that have low confidence bounding boxes that are still useful.
                     ?  0.1
                         // For non-empty, set the over-ride to include the bounding boxes within the current range
-                    :  recognitionSelections.ConfidenceThreshold1ForUI;
+                    :  recognitionSelections.ConfidenceDetectionThresholdLowerForUI;
             }
             else
             {

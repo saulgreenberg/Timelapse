@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,11 +18,13 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.EventArguments;
 using Timelapse.Recognition;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
+using static Timelapse.Controls.RecognitionSelector;
 using Arguments = Timelapse.DataStructures.Arguments;
 using Control = Timelapse.Constant.Control;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
@@ -150,6 +153,7 @@ namespace Timelapse.Dialog
             // Adjust this dialog window position 
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
+
             // Detections-specific
             dontCount = true;
             dontInvoke = true;
@@ -159,17 +163,21 @@ namespace Timelapse.Dialog
             {
                 this.ButtonRecognitionExplorer.Visibility = Visibility.Visible;
                 RecognitionsGroupBox.Visibility = Visibility.Visible;
-                Recognitions2Panel.Visibility = Visibility.Visible;
+                //Recognitions2Panel.Visibility = Visibility.Visible;
                 EnableRecognitionsCheckbox.IsChecked = DetectionSelections.UseRecognition;
 
                 // Set the spinner and sliders to the last used values
-                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceThreshold1ForUI;
-                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceThreshold2ForUI;
-                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceThreshold1ForUI;
-                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceThreshold2ForUI;
+                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
+                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
+                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
+                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
 
-                // Set the Rank by Confidence
-                RankByDetectionConfidenceCheckbox.IsChecked = DetectionSelections.RankByConfidence;
+                ClassificationRangeSlider.Value = DetectionSelections.ClassificationConfidenceThresholdLowerForUI;
+                ClassificationRangeSlider.Maximum = DetectionSelections.ClassificationConfidenceThresholdUpperForUI;
+
+                // Set the Rank by Confidence for detections
+                RankByDetectionConfidenceCheckbox.IsChecked = DetectionSelections.RankByDetectionConfidence; // For detections
+                RankByClassificationConfidenceCheckbox.IsChecked = DetectionSelections.RankByClassificationConfidence;
 
                 // Put Detection and Classification categories in the combo box as human-readable labels
                 // Note that we add "All" to the Detections list as that is a 'bogus' Timelapse-internal category.
@@ -194,15 +202,15 @@ namespace Timelapse.Dialog
                             Focusable = false,
                             IsEnabled = false
                         };
-                        DetectionCategoryComboBox.Items.Add(separator);
+                        ClassificationCategoryComboBox.Items.Add(separator);
                         foreach (string label in labels)
                         {
-                            DetectionCategoryComboBox.Items.Add(label);
+                            ClassificationCategoryComboBox.Items.Add(label);
                         }
                     }
                 }
 
-                // Set the combobox selection to the last used one.
+                // Set the Detection combobox selection to the last used one.
                 string categoryLabel;
                 if (DetectionSelections.RecognitionType == RecognitionType.Empty)
                 {
@@ -228,10 +236,10 @@ namespace Timelapse.Dialog
                 else
                 {
                     categoryLabel = Database.GetClassificationLabelFromCategory(DetectionSelections.ClassificationCategory);
-                    DetectionCategoryComboBox.SelectedValue = (categoryLabel.Length != 0)
+                    ClassificationCategoryComboBox.SelectedValue = (categoryLabel.Length != 0)
                         ? categoryLabel
-                        : DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
-                    RankByDetectionConfidenceCheckbox.Content = "by classification confidence";
+                        : ClassificationCategoryComboBox.SelectedValue = null;
+                    RankByClassificationConfidenceCheckbox.Content = "by classification confidence";
                 }
                 EnableDetectionControls((bool)EnableRecognitionsCheckbox.IsChecked);
             }
@@ -247,7 +255,7 @@ namespace Timelapse.Dialog
             {
                 SetDetectionCriteria();
                 ShowMissingDetectionsCheckbox.IsChecked = Database.CustomSelection.ShowMissingDetections;
-  
+
             }
 
             // Episode-related:
@@ -256,7 +264,7 @@ namespace Timelapse.Dialog
             // TODO: Why are we bothering with the Database.CustomSelection.EpisodeNoteField if we recreate its value each time?
             // TODO: But if we use it, then we have to consider whether it actually holds a valid episode... or whether that field even exists anymore (e.g., due to a change in the template)
             bool isEpisodeAvailable = false;
-            
+
             NoteDataLabelContainingEpisodeData = string.Empty;
             foreach (ControlRow control in Database.Controls)
             {
@@ -281,6 +289,7 @@ namespace Timelapse.Dialog
 
             InitiateShowCountsOfMatchingFiles();
             DetectionCategoryComboBox.SelectionChanged += DetectionCategoryComboBox_SelectionChanged;
+            ClassificationCategoryComboBox.SelectionChanged += ClassificationCategoryComboBox_SelectionChanged;
 
             // Selection-specific
             dontUpdate = true;
@@ -833,7 +842,7 @@ namespace Timelapse.Dialog
             dontUpdate = false;
             UpdateSearchDialogFeedback();
 
- 
+
             // Set the UseTime state based on what was last recorded
             CheckBoxUseTime.IsChecked = Database.CustomSelection.UseTimeInsteadOfDate;
 
@@ -1301,6 +1310,16 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region EventHandler: from RecognitionSelector
+        private void RecognitionSelector_OnRecognitionSelectionEvent(object sender, RecognitionSelectionChangedEventArgs e)
+        {
+            if (sender is RecognitionSelector recognitionSelections)
+            {
+                Debug.Print($"Recognition selection changed: {e.DetectionCategoryNumber}:{e.DetectionCategory} {e.ClassificationCategoryNumber}:{e.ClassificationCategory}");
+            }
+        }
+        #endregion
+
         #region Search Criteria feedback for each row
         // Updates the feedback and control enablement to reflect the contents of the search list,
         private void UpdateSearchDialogFeedback()
@@ -1363,14 +1382,14 @@ namespace Timelapse.Dialog
             {
                 // update the current detection settings
                 this.EnableRecognitionsCheckbox.IsChecked = true;
-                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceThreshold1ForUI;
-                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceThreshold2ForUI;
-                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceThreshold1ForUI;
-                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceThreshold2ForUI;
+                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
+                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
+                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
+                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
 
             }
         }
-        private void UseDetections_CheckedChanged(object sender, RoutedEventArgs e)
+        private void EnableRecognitions_CheckedChanged(object sender, RoutedEventArgs e)
         {
             if (dontInvoke)
             {
@@ -1393,8 +1412,35 @@ namespace Timelapse.Dialog
             if (DetectionSelections.UseRecognition)
             {
                 SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
-                DetectionSelections.ConfidenceThreshold1ForUI = DetectionConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionConfidenceSpinnerLower.Value);
-                DetectionSelections.ConfidenceThreshold2ForUI = DetectionConfidenceSpinnerHigher.Value == null ? 0 : Round2(DetectionConfidenceSpinnerHigher.Value);
+                DetectionSelections.ConfidenceDetectionThresholdLowerForUI = DetectionConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionConfidenceSpinnerLower.Value);
+                DetectionSelections.ConfidenceDetectionThresholdUpperForUI = DetectionConfidenceSpinnerHigher.Value == null ? 0 : Round2(DetectionConfidenceSpinnerHigher.Value);
+            }
+
+            // The BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
+            // determined in this select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
+            // show bounding boxes when the confidence is .4 or more. On the other  hand, we don't want to show spurious detections when empty is selected,
+            // so we set a minimum value.
+            CustomSelection.SetDetectionRanges(DetectionSelections);
+
+            // Enable / alter looks and behavour of detecion UI to match whether detections should be used
+            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
+
+            SetClassificationCriteriaForComboBox(resetSlidersIfNeeded);
+           // DetectionSelections.ClassificationConfidenceThresholdLowerForUI = this.ClassificationConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionSelections.ClassificationConfidenceThresholdLowerForUI);
+        }
+
+        private void SetDetectionCriteriaOrig(bool resetSlidersIfNeeded = false)
+        {
+            if (IsLoaded == false || dontInvoke)
+            {
+                return;
+            }
+            DetectionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
+            if (DetectionSelections.UseRecognition)
+            {
+                SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
+                DetectionSelections.ConfidenceDetectionThresholdLowerForUI = DetectionConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionConfidenceSpinnerLower.Value);
+                DetectionSelections.ConfidenceDetectionThresholdUpperForUI = DetectionConfidenceSpinnerHigher.Value == null ? 0 : Round2(DetectionConfidenceSpinnerHigher.Value);
             }
 
             // The BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
@@ -1424,6 +1470,17 @@ namespace Timelapse.Dialog
             InitiateShowCountsOfMatchingFiles();
         }
 
+        private void ClassificationCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (IsLoaded == false)
+            {
+                return;
+            }
+            // Invoke this with a true argument, which forces the confidence values to be reset based upon the selection
+            SetDetectionCriteria(false);
+            InitiateShowCountsOfMatchingFiles();
+        }
+
         private void SetDetectionCriteriaForComboBox(bool resetSlidersIfNeeded)
         {
             ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
@@ -1435,7 +1492,6 @@ namespace Timelapse.Dialog
                 // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
                 DetectionRangeSlider.HigherValue = 1.0;
                 DetectionSelections.CurrentDetectionThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
-                DetectionSelections.CurrentClassificationThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
             }
 
             if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.NoDetectionLabel)
@@ -1460,7 +1516,6 @@ namespace Timelapse.Dialog
                 DetectionRangeSlider.Minimum = 0;
                 DetectionConfidenceSpinnerLower.Minimum = 0;
                 DetectionConfidenceSpinnerHigher.Minimum = 0;
-                RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
             }
             else
             {
@@ -1483,9 +1538,6 @@ namespace Timelapse.Dialog
                     DetectionConfidenceSpinnerHigher.Value = RecognizerValues.MinimumDetectionValue;
                 }
 
-                //this.DetectionSelections.ConfidenceThreshold1ForUI = this.DetectionConfidenceSpinnerLower.Value == null  ? Constant.RecognizerValues.MinimumDetectionValue : Round2(this.DetectionConfidenceSpinnerLower.Value);
-                //this.DetectionSelections.ConfidenceThreshold2ForUI = this.DetectionConfidenceSpinnerHigher.Value == null ? Constant.RecognizerValues.MinimumDetectionValue : Round2(this.DetectionConfidenceSpinnerHigher.Value);
-
                 if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.AllDetectionLabel)
                 {
                     // ALL (which is a detection)
@@ -1496,7 +1548,6 @@ namespace Timelapse.Dialog
                     {
                         DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
                     }
-                    RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
                 }
                 else
                 {
@@ -1505,29 +1556,66 @@ namespace Timelapse.Dialog
                     DetectionSelections.InterpretAllDetectionsAsEmpty = false;
                     string detectionCategory = Database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
 
-                    if (string.IsNullOrWhiteSpace(detectionCategory))
+                    // DETECTION
+                    DetectionSelections.RecognitionType = RecognitionType.Detection;
+                    DetectionSelections.DetectionCategory = detectionCategory;
+                    if (resetSlidersIfNeeded)
                     {
-                        // CLASSIFICATION
-                        DetectionSelections.RecognitionType = RecognitionType.Classification;
-                        DetectionSelections.ClassificationCategory = Database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
-                        if (resetSlidersIfNeeded)
-                        {
-                            DetectionRangeSlider.LowerValue = DetectionSelections.CurrentClassificationThreshold;
-                        }
-                        RankByDetectionConfidenceCheckbox.Content = "by classification confidence";
-                    }
-                    else
-                    {
-                        // DETECTION
-                        DetectionSelections.RecognitionType = RecognitionType.Detection;
-                        DetectionSelections.DetectionCategory = detectionCategory;
-                        if (resetSlidersIfNeeded)
-                        {
-                            DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
-                        }
-                        RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
+                        DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
                     }
                 }
+            }
+            ignoreSpinnerUpdates = false;
+        }
+
+        private void SetClassificationCriteriaForComboBox(bool resetSlidersIfNeeded)
+        {
+            ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
+
+            // Set various flags and values depending on what was selected in the combo box
+            if (resetSlidersIfNeeded)
+            {
+                // These reset settings universally apply regardless of the recognition type
+                // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
+                ClassificationRangeSlider.Maximum = 1.0;
+                DetectionSelections.CurrentClassificationThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
+            }
+
+            // Set the minium values for the slider and spinner
+            // These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
+            ClassificationRangeSlider.Minimum = RecognizerValues.MinimumClassificationValue;
+            ClassificationConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumClassificationValue;
+
+            // Resetting the minimum doesn't necessarily change the value if its below the minimum
+            if (ClassificationConfidenceSpinnerLower.Value == null || ClassificationConfidenceSpinnerLower.Value < RecognizerValues.MinimumClassificationValue)
+            {
+                ClassificationConfidenceSpinnerLower.Value = RecognizerValues.MinimumClassificationValue;
+            }
+
+            // A Classification type 
+            DetectionSelections.AllDetections = false;
+            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
+            string classificationCategory = Database.GetClassificationCategoryFromLabel((string)ClassificationCategoryComboBox.SelectedItem);
+
+            if (string.IsNullOrWhiteSpace(classificationCategory))
+            {
+                // Nothing selected, so revert to detection
+                DetectionSelections.RecognitionType = RecognitionType.Detection;
+                DetectionSelections.ClassificationCategory = string.Empty;
+                //DetectionSelections.ClassificationCategory = Database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+            }
+            else
+            {
+                // CLASSIFICATION
+                DetectionSelections.RecognitionType = RecognitionType.Classification;
+                // TODO: ANIMAL IS CASE SENSITIVE AND CATEGORY SENSITIVE
+                DetectionSelections.DetectionCategory = Database.GetDetectionCategoryFromLabel("animal");
+                DetectionSelections.ClassificationCategory = classificationCategory;
+
+            }
+            if (resetSlidersIfNeeded)
+            {
+                ClassificationRangeSlider.Value = DetectionSelections.CurrentClassificationThreshold;
             }
             ignoreSpinnerUpdates = false;
         }
@@ -1592,6 +1680,7 @@ namespace Timelapse.Dialog
 
         private void DetectionConfidenceSpinnerHigher_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            return;
             if (IsLoaded == false || ignoreSpinnerUpdates)
             {
                 return;
@@ -1616,6 +1705,36 @@ namespace Timelapse.Dialog
             else
             {
                 dontUpdateRangeSlider = false;
+            }
+            InitiateShowCountsOfMatchingFiles();
+        }
+
+        // We just take the Classification value as is
+        // TODO: If we want a range slider instead, probably want to do something similar to detection confidence so an upper and lower setting aren't quite the same. 
+        private void ClassificationConfidenceSpinnerLower_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (IsLoaded == false || ignoreSpinnerUpdates)
+            {
+                return;
+            }
+
+            if (dontUpdateRangeSlider == false)
+            {
+                ClassificationRangeSlider.Value = ClassificationConfidenceSpinnerLower.Value ?? 0;
+            }
+            else
+            {
+                dontUpdateRangeSlider = false;
+            }
+
+            if (ClassificationConfidenceSpinnerLower.Value != null)
+            {
+                DetectionSelections.CurrentClassificationThreshold = (double)ClassificationConfidenceSpinnerLower.Value;
+            }
+            else
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(ClassificationConfidenceSpinnerLower.Value));
             }
             InitiateShowCountsOfMatchingFiles();
         }
@@ -1656,13 +1775,57 @@ namespace Timelapse.Dialog
             }
         }
 
+
+        // Classification range slider callback - Upper range
+        // Modify this if you want to use a range slider vs a normal slider
+        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
+        //private void ClassificationRangeSlider_HigherValueChanged(object sender, RoutedEventArgs e)
+        //{
+        //    if (IsLoaded == false || ignoreSpinnerUpdates)
+        //    {
+        //        return;
+        //    }
+        //    // Round up the value to the nearest 2 decimal places,
+        //    // and update the spinner (also in two decimal places) only if the value differs
+        //    // This stops the spinner from updated if values change in the 3rd decimal place and beyond
+
+        //    double value = Round2(ClassificationRangeSlider.HigherValue);
+        //    if (Math.Abs(value - Round2(ClassificationConfidenceSpinnerHigher.Value)) > .0001)
+        //    {
+        //        dontUpdateRangeSlider = true;
+        //        ClassificationConfidenceSpinnerHigher.Value = value;
+        //        dontUpdateRangeSlider = false;
+        //    }
+        //}
+
+        // Classification range slider callback - Lower range
+        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
+        private void ClassificationSlider_ValueChanged(object sender, RoutedEventArgs e)
+        {
+            // Round up the value to the nearest 2 decimal places,
+            // and update the spinner (also in two decimal places) only if the value differs
+            // This stops the spinner from updated if values change in the 3rd decimal place and beyond
+            double value = Round2(ClassificationRangeSlider.Value);
+            if (Math.Abs(value - Round2(ClassificationConfidenceSpinnerLower.Value)) > .0001)
+            {
+                dontUpdateRangeSlider = true;
+                ClassificationConfidenceSpinnerLower.Value = value;
+                dontUpdateRangeSlider = false;
+            }
+        }
+
         // Enable or disable the controls depending on the parameter
         private void EnableDetectionControls(bool isEnabled)
         {
+            // TODO ENABLE THIS WHEN RECOGNITIONSELECTOR IS PUT BACK IN
+            //this.RecognitionSelector.Visibility = isEnabled
+            //    ? Visibility.Visible
+            //    : Visibility.Collapsed;
+
             // Various confidence controls are enabled only if useDetections is set and the rank by confidence is unchecked
-            bool confidenceControlsEnabled = isEnabled && !DetectionSelections.RankByConfidence;
-            DetectionConfidenceSpinnerLower.IsEnabled = confidenceControlsEnabled;
-            DetectionConfidenceSpinnerHigher.IsEnabled = confidenceControlsEnabled;
+            bool confidenceControlsEnabled = isEnabled && !DetectionSelections.RankByDetectionConfidence;
+            //DetectionConfidenceSpinnerLower.IsEnabled = confidenceControlsEnabled;
+            //DetectionConfidenceSpinnerHigher.IsEnabled = confidenceControlsEnabled;
             DetectionRangeSlider.IsEnabled = confidenceControlsEnabled;
             DetectionConfidenceLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
             //FromLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
@@ -1693,7 +1856,7 @@ namespace Timelapse.Dialog
         {
             // Need to disable confidence sliders/spinners depending on the state of this checkbox and use detections
             // ALso need to restore state of this checkbox between repeated uses in Window_Loaded.
-            DetectionSelections.RankByConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
+            DetectionSelections.RankByDetectionConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
             InitiateShowCountsOfMatchingFiles();
             EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
         }
@@ -1929,6 +2092,7 @@ namespace Timelapse.Dialog
         }
 
         #endregion
+
 
     }
 }

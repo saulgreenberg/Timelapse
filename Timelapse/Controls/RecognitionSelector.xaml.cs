@@ -17,15 +17,37 @@ using System.Windows.Media;
 using Timelapse.Extensions;
 using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
+using Timelapse.EventArguments;
 
-namespace Timelapse.Dialog
+
+namespace Timelapse.Controls
 {
+    //
+    // TODO If a setting is changed in Custom Selection, we need to reset everything. Maybe a method to invoke that?
+    // TODO Sort by recognition or classification confidence as radio button
+    // TODO Sort by recognition or classification confidence: wire it up
+    // TODO SendRecognitionSelectionEvent() - likely easier by setting variables vs calculating it all again
+    // TODO Unselect classifications i.e. to select only a detection
+    // TODO Do we need file counts here (at far right)?
+    // TODO Show only files the recognizer did not process
+    // TODO Do classification numbers constrained by the detection confidence
+    // TODO Raise Selection Events so they can be seen by CustomSelection 
+    // TODO CustomSelection turn of timer count for total files when counts are being done (maybe? unsure if I have to) 
+    // TODO RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
+    // TODO ShowMissingDetectionsCheckbox_CheckedChanged
+
     /// <summary>
-    /// TODO: Would be nice to have a click to drag...
-    /// TODO: Maybe IsSnapToTickEnabled="True" with 0.01 and no ticks?
-    /// TODO: Make it actually select when select an item
+    /// Control for displaying and selecting detections and classification recognitions
+    /// It display Detections categories along with a count.
+    /// When a detection category is selected, its displays the classification categories along with a count for that selected detection.
+    /// Auxiliary controls are included to let a user sort by either detection or classification confidence.
+    /// The general way it works is that
+    /// - the current selection parameters are copied saved
+    /// - queries are done on by altering the copied parameters to generate and display the categories and count
+    /// - the current selection parameters are restored
+    /// - actually selecting categories and classifications (and/or associated recognition controls) updates the current selection parameters 
     /// </summary>
-    public partial class RecognitionExplorer
+    public partial class RecognitionSelector
     {
         #region Properties and Variables
         // Accessing external parameters
@@ -36,6 +58,8 @@ namespace Timelapse.Dialog
         // Dictionaries that will eventually hold the Detection and Classification categories  
         private Dictionary<string, string> DetectionCategories;
         private Dictionary<string, string> ClassificationCategories;
+
+
 
         // These collections are used to store the various Count results as they are updated.
         // They serve as ItemsSource to the corresponding DataGrid and ListBox controls 
@@ -64,20 +88,17 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Constructor / Loaded
-        public RecognitionExplorer(Window owner, FileDatabase database)
+        public RecognitionSelector()
         {
             InitializeComponent();
-            this.Owner = owner;
-            this.Database = database;
-            this.CustomSelection = database?.CustomSelection;
-            this.DetectionSelections = database?.CustomSelection?.DetectionSelections;
+            // So we can access the database and the various custom selection parameters
+            this.Database = GlobalReferences.MainWindow.DataHandler?.FileDatabase;
+            this.CustomSelection = Database?.CustomSelection;
+            this.DetectionSelections = Database?.CustomSelection?.DetectionSelections;
         }
 
-        private async void RecognitionsExplorer_OnLoaded(object sender, RoutedEventArgs e)
+        private async void RecognitionsSelector_OnLoaded(object sender, RoutedEventArgs e)
         {
-            // Adjust this dialog window position 
-            Dialogs.TryPositionAndFitDialogIntoWindow(this);
-
             // Alter the default look of  Datagrid
             SetDataGridCategoryCountLook(this.DataGridDetections);
             SetDataGridCategoryCountLook(this.DataGridClassifications);
@@ -85,18 +106,16 @@ namespace Timelapse.Dialog
             //Abort if there is nothing to show
             if (this.Database == null)
             {
-                this.TBMessage.Text = "No image set loaded";
                 this.DisableAllControls();
                 return;
             }
             if (GlobalReferences.DetectionsExists == false)
             {
-                this.TBMessage.Text = "No recognitions are present in this image set.";
                 this.DisableAllControls();
                 return;
             }
 
-            // If we make it here, recognitions are turned on for this image set
+            // If we make it here, recognitions are available for this image set
 
             // Ensure the detection categories are populated
             // - abort if there are none (likely a problem with the json file?)
@@ -104,7 +123,6 @@ namespace Timelapse.Dialog
             this.DetectionCategories = Database.detectionCategoriesDictionary;
             if (null == this.DetectionCategories || this.DetectionCategories.Count == 0)
             {
-                this.TBMessage.Text = "Your recognitions are missing the detection categories";
                 this.DisableAllControls();
                 return;
             }
@@ -153,7 +171,7 @@ namespace Timelapse.Dialog
 
             // Count and display the total number of files in the current selection with recognitions turned off
             int totalFiles = DoCountFilesInCurrentSelectionWithRecognitionsOff(); // database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            this.TBTotalFiles.Text = $"{totalFiles}";
+            //this.TBTotalFiles.Text = $"{totalFiles}";
 
             this.DisplayCurrentSelection();
 
@@ -178,9 +196,6 @@ namespace Timelapse.Dialog
             await this.DoCountRecognitionsAsync(new CancellationTokenSource(), recognitionTypeEnum);
             this.TryHighlightSelection();
         }
-
-
-
         #endregion
 
         #region Highlight selection
@@ -291,7 +306,10 @@ namespace Timelapse.Dialog
 
                     success = DoCountClassifications(cancellationTokenSource, lowerClassificationConf, higherClassificationConf);
                 }
-
+                // XXXX ADDED TEST THIS SEEMS TO APPROX DO THE TRICK BUT NEED TO CHECK
+                // XXXX LIKELY DOESN"T DO THE SELECTION PROPERLY
+                // NOTE SQL ERROR ON CLASSIFICATIONS
+                // this.ParametersRestoreOriginalRecognitions();
             }, cancellationTokenSource.Token);
             Mouse.OverrideCursor = null;
         }
@@ -411,12 +429,16 @@ namespace Timelapse.Dialog
 
                 // Add the count to each category, where counts will appear incrementally on the DataGrid (if non-0) in sorted order
                 // (0 entries are collapsed in the style)
-                
+
                 this.SetClassificationCountForCategory(categoryName, distinctCount);
-                Application.Current.Dispatcher.Invoke((Action)delegate
+                if (this.DataGridClassifications.Columns.Count > 0)
                 {
-                    SortDataGrid(this.DataGridClassifications, 0, ListSortDirection.Descending);
-                });
+                    Application.Current.Dispatcher.Invoke((Action)delegate
+                    {
+
+                        SortDataGrid(this.DataGridClassifications, 0, ListSortDirection.Descending);
+                    });
+                }
 
                 if (distinctCount == 0)
                 {
@@ -439,11 +461,11 @@ namespace Timelapse.Dialog
         {
             if (this.CurrentlySelectedRecognition.IsRecognitionSelected == false)
             {
-                this.TBSelectionFeedback.Text = "No recognition selected.";
-                this.OkButton.IsEnabled = false;
+                //this.TBSelectionFeedback.Text = "No recognition selected.";
+                //this.OkButton.IsEnabled = false;
                 return;
             }
-            this.OkButton.IsEnabled = true;
+            //this.OkButton.IsEnabled = true;
 
             // Category name (1st letter in caps)
             string msg = CurrentlySelectedRecognition.CategoryName.Length > 1
@@ -471,7 +493,7 @@ namespace Timelapse.Dialog
                     msg += $" classifications: {this.SliderClassificationConf.LowerValue:f2}\u2194{this.SliderClassificationConf.HigherValue:f2}";
                 }
             }
-            this.TBSelectionFeedback.Text = msg;
+            //this.TBSelectionFeedback.Text = msg;
         }
 
         // Set the look of  Datagrid holding the CategoryCount values
@@ -521,7 +543,7 @@ namespace Timelapse.Dialog
         // Disable the various controls, usually because there is nothing to show
         private void DisableAllControls()
         {
-            this.TBTotalFiles.Text = string.Empty;
+            //this.TBTotalFiles.Text = string.Empty;
             this.DataGridDetections.IsEnabled = false;
             this.SliderDetectionConf.IsEnabled = false;
             this.TBDetectionsLabel.Foreground = Brushes.DarkGray;
@@ -531,7 +553,7 @@ namespace Timelapse.Dialog
         private void DisableClassificationControls()
         {
             this.TBClassificationsLabel.Foreground = Brushes.DarkGray;
-            this.TBBelowClassificationsLabel.Foreground = Brushes.DarkGray;
+            //this.TBBelowClassificationsLabel.Foreground = Brushes.DarkGray;
             this.SliderClassificationConf.IsEnabled = false;
             this.ClassificationControlsEnableState(false, false);
         }
@@ -642,6 +664,7 @@ namespace Timelapse.Dialog
             {
                 if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
                 {
+
                     // The user selected All. By convention (and only used in this class), All is mapped to the category string in AllCategoryNumber (-1)
                     if (categoryCount.Category == Constant.RecognizerValues.AllDetectionLabel)
                     {
@@ -650,6 +673,8 @@ namespace Timelapse.Dialog
                         this.CurrentlySelectedRecognition.CategoryName = categoryCount.Category;
                         this.CurrentlySelectedRecognition.CategoryNumber = this.AllCategoryNumber;
                         this.DisplayCurrentSelection();
+
+                        SendRecognitionSelectionEvent();
                         return;
                     }
 
@@ -673,6 +698,7 @@ namespace Timelapse.Dialog
                         this.CurrentlySelectedRecognition.CategoryName = categoryCount.Category;
                         this.CurrentlySelectedRecognition.CategoryNumber = categoryNumber;
                         this.DisplayCurrentSelection();
+                        SendRecognitionSelectionEvent();
                         return;
                     }
                 }
@@ -708,6 +734,8 @@ namespace Timelapse.Dialog
                         this.CurrentlySelectedRecognition.CategoryName = categoryCount.Category;
                         this.CurrentlySelectedRecognition.CategoryNumber = categoryNumber;
                         this.DisplayCurrentSelection();
+                        SendRecognitionSelectionEvent();
+
                         return;
                     }
                 }
@@ -724,7 +752,7 @@ namespace Timelapse.Dialog
         // - display the updated slider value
         private bool isDetectionSliderMouseDown;
         private bool isDetectionValueChanged = false;
-  
+
         // We only want to update counts after a slider action is completed, while at the same time display 
         // the current slider range. To make this work,
         // - we update the slider values whenever there is a change from the previous values.
@@ -920,7 +948,7 @@ namespace Timelapse.Dialog
                         this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderDetectionConf.LowerValue;
                         this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderDetectionConf.HigherValue;
                         this.CustomSelection.ShowMissingDetections = false;
-                        this.DialogResult = true;
+                        //this.DialogResult = true;
                         return;
                     }
 
@@ -930,11 +958,11 @@ namespace Timelapse.Dialog
                         DetectionSelections.AllDetections = true;
                         DetectionSelections.InterpretAllDetectionsAsEmpty = true;
                         DetectionSelections.RecognitionType = RecognitionType.Detection;
-                        this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber; 
+                        this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber;
                         this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderDetectionConf.LowerValue;
                         this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderDetectionConf.HigherValue;
                         this.CustomSelection.ShowMissingDetections = false;
-                        this.DialogResult = true;
+                        //this.DialogResult = true;
                         return;
                     }
 
@@ -946,7 +974,6 @@ namespace Timelapse.Dialog
                     this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderDetectionConf.LowerValue;
                     this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderDetectionConf.HigherValue;
                     this.CustomSelection.ShowMissingDetections = false;
-                    this.DialogResult = true;
                     return;
                 }
 
@@ -961,7 +988,7 @@ namespace Timelapse.Dialog
                     this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderClassificationConf.LowerValue;
                     this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderClassificationConf.HigherValue;
                     this.CustomSelection.ShowMissingDetections = false;
-                    this.DialogResult = true;
+                    //this.DialogResult = true;
                 }
             }
         }
@@ -970,7 +997,7 @@ namespace Timelapse.Dialog
         {
             this.TokenSource.Cancel();
             this.ParametersRestoreOriginalRecognitions();
-            this.DialogResult = false;
+            //this.DialogResult = false;
         }
         #endregion
 
@@ -1065,6 +1092,7 @@ namespace Timelapse.Dialog
             {
                 LBEmptyClassifications.ItemsSource = null;
                 LBEmptyClassifications.ItemsSource = ClassificationEmptyCountsList;
+                this.DropDownEmptyLabel.Text = $"({ClassificationEmptyCountsList.Count} items)";
             });
         }
         private void AddClassificationEmptyCountsListAndUpdateListBox(string categoryName)
@@ -1080,6 +1108,7 @@ namespace Timelapse.Dialog
             {
                 this.LBEmptyClassifications.ItemsSource = null;
                 this.LBEmptyClassifications.ItemsSource = ClassificationEmptyCountsList;
+                this.DropDownEmptyLabel.Text = $"({ClassificationEmptyCountsList.Count} items)";
             });
         }
 
@@ -1133,6 +1162,94 @@ namespace Timelapse.Dialog
             None
         }
         #endregion
+
+        #region Custom Selection Event
+        public event EventHandler<RecognitionSelectionChangedEventArgs> RecognitionSelectionEvent;
+
+        private void SendRecognitionSelectionEvent()
+        {
+            string detectionCategory = string.Empty;
+            string detectionNumber = string.Empty;
+            string classificationCategory = string.Empty;
+            string classificationNumber = string.Empty;
+
+            // Get the current Detection selection, if any
+            if (this.DataGridDetections.SelectedItems.Count == 1 && this.DataGridDetections.SelectedItems[0] is CategoryCount categoryCountDetections)
+            {
+                if (categoryCountDetections.Category == Constant.RecognizerValues.AllDetectionLabel)
+                {
+                    detectionCategory = categoryCountDetections.Category;
+                    detectionNumber = this.AllCategoryNumber;
+                }
+                else
+                {
+                    // Get the category number from its name
+                    string categoryNumber = string.Empty;
+                    foreach (KeyValuePair<string, string> kvp in this.DetectionCategories)
+                    {
+                        if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryCountDetections.Category))
+                        {
+                            categoryNumber = kvp.Key;
+                            break;
+                        }
+                    }
+
+                    if (categoryNumber != string.Empty)
+                    {
+                        detectionCategory = categoryCountDetections.Category;
+                        detectionNumber = categoryNumber;
+                    }
+                }
+            }
+
+            // Get the current Classification selection, if any
+            if (DataGridClassifications.SelectedItems.Count == 1 && DataGridClassifications.SelectedItems[0] is CategoryCount categoryCountClassifications)
+            {
+                // The user selected a category (which could include empty)
+                string categoryNumber = string.Empty;
+
+                // Get the category number from its name
+                foreach (KeyValuePair<string, string> kvp in this.ClassificationCategories)
+                {
+                    if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryCountClassifications.Category))
+                    {
+                        categoryNumber = kvp.Key;
+                        break;
+                    }
+                }
+
+                if (categoryNumber != string.Empty)
+                {
+                    classificationCategory = categoryCountClassifications.Category;
+                    classificationNumber = categoryNumber;
+                }
+            }
+
+            // Send the event
+            // Note that this could include
+            // - detections only
+            // - detections and classifications
+            // - no selections
+            // It should not include classifications only
+            RecognitionSelectionChangedEventArgs e = new RecognitionSelectionChangedEventArgs(
+                detectionCategory,
+                detectionNumber,
+                classificationCategory,
+                classificationNumber);
+            RecognitionSelectionEvent?.Invoke(this, e);
+        }
+        #endregion
+
+        private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+
 
     }
 }
