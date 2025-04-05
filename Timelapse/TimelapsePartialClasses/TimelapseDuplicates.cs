@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +11,7 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Recognition;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse
@@ -97,7 +99,12 @@ namespace Timelapse
                             new ColumnTuple(DetectionColumns.BBox, (string) detectionRow[DetectionColumns.BBox]),
 
                         };
-                       
+                        // Add classification values to the detection row if they exist, otherwise they will be null
+                        if (detectionRow[DetectionColumns.Classification] != DBNull.Value)
+                        {
+                            detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detectionRow[DetectionColumns.Classification]));
+                            detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, (float)Convert.ToDouble(detectionRow[DetectionColumns.ClassificationConf])));
+                        }
                         detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
                         // Insert the detections into the Detections table
@@ -125,31 +132,30 @@ namespace Timelapse
                         }
 
 
-                        // Now get the classifications associated with each detection, if any
-                        DataRow[] classificationDataTableRows = await DataHandler.FileDatabase.GetClassificationsFromDetectionIDAsync((long)detectionRow[Constant.DetectionColumns.DetectionID]);
-                        if (classificationDataTableRows.Length > 0)
-                        {
-                            // Fill it in with the current file's classification values
-                            classificationInsertionStatements.Clear();
-                            foreach (DataRow classificationRow in classificationDataTableRows)
-                            {
-                                List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>
-                                {
-                                    new ColumnTuple(ClassificationColumns.DetectionID, detectionID),
-                                    new ColumnTuple(ClassificationColumns.Category, (string)classificationRow[ClassificationColumns.Category]),
-                                    new ColumnTuple(ClassificationColumns.Conf, (float)Convert.ToDouble(classificationRow[ClassificationColumns.Conf]))
-                                };
-                                classificationInsertionStatements.Add(classificationColumnsToUpdate);
-                            }
-                            // Insert the classifications into the Classifications table
-                            DataHandler.FileDatabase.InsertClassifications(classificationInsertionStatements);
-                        }
+                        //// Now get the classifications associated with each detection, if any
+                        //DataRow[] classificationDataTableRows = await DataHandler.FileDatabase.GetClassificationsFromDetectionIDAsync((long)detectionRow[Constant.DetectionColumns.DetectionID]);
+                        //if (classificationDataTableRows.Length > 0)
+                        //{
+                        //    // Fill it in with the current file's classification values
+                        //    classificationInsertionStatements.Clear();
+                        //    foreach (DataRow classificationRow in classificationDataTableRows)
+                        //    {
+                        //        List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>
+                        //        {
+                        //            new ColumnTuple(ClassificationColumns.DetectionID, detectionID),
+                        //            new ColumnTuple(ClassificationColumns.Category, (string)classificationRow[ClassificationColumns.Category]),
+                        //            new ColumnTuple(ClassificationColumns.Conf, (float)Convert.ToDouble(classificationRow[ClassificationColumns.Conf]))
+                        //        };
+                        //        classificationInsertionStatements.Add(classificationColumnsToUpdate);
+                        //    }
+                        //    // Insert the classifications into the Classifications table
+                        //    DataHandler.FileDatabase.InsertClassifications(classificationInsertionStatements);
+                        //}
                     }
                 }
 
                 // Regenerate the internal detections and classifications table to include the new detections (which will include the DetectionVideos) and classifications
                 await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();
-                await DataHandler.FileDatabase.RefreshClassificationsDataTableAsync();
 
                 // Check if we need this...
                 DataHandler.FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();

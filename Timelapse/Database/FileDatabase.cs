@@ -44,8 +44,6 @@ namespace Timelapse.Database
         public Dictionary<string, string> detectionCategoriesDictionary;
         public Dictionary<string, string> classificationCategoriesDictionary;
         public DataTable detectionDataTable; // Mirrors the database detection table
-        public DataTable classificationsDataTable; // Mirrors the database classification table
-
         #endregion
 
         #region Properties
@@ -1902,18 +1900,6 @@ namespace Timelapse.Database
             string query = $"{Sql.SelectStarFrom} {DBTables.Detections} {Sql.LeftJoin} {DBTables.DetectionsVideo} {Sql.Using} {Sql.OpenParenthesis} {DetectionColumns.DetectionID} {Sql.CloseParenthesis}";
             detectionDataTable = await Database.GetDataTableFromSelectAsync(query);
         }
-
-        // Refresh the Classifications DataTable (sync and async)
-        // TODO Delete
-        public void RefreshClassificationsDataTable()
-        {
-            classificationsDataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.Classifications);
-        }
-        // TODO Delete
-        public async Task RefreshClassificationsDataTableAsync()
-        {
-            classificationsDataTable = await Database.GetDataTableFromSelectAsync(Sql.SelectStarFrom + DBTables.Classifications);
-        }
         #endregion
 
         #region Update File Dates and Times
@@ -3280,8 +3266,6 @@ namespace Timelapse.Database
                     // Also Update this comment: Resetting these tables to null will force reading the new values into them
                     detectionDataTable = null; // to force repopulating the data structure if it already exists.
                     detectionCategoriesDictionary = null;
-                    classificationCategoriesDictionary = null;
-                    classificationsDataTable = null;
 
                     // If we were told to tryMerge and detections exist, we merge the json file detecctions with the db detections. If so, we also have to do some error checking and possibly updates
                     // for the detection and classification categories and the info structure
@@ -3646,44 +3630,6 @@ namespace Timelapse.Database
                 return null;
             }
             return await Task.Run(() => detectionDataTable.Select(DatabaseColumn.ID + Sql.Equal + fileID));
-        }
-
-        // Get the detections associated with the current file, if any
-        public DataRow[] GetClassificationsFromDetectionID(long detectionID)
-        {
-            if (classificationsDataTable == null)
-            {
-                //this.classificationsDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Classifications);
-                RefreshClassificationsDataTable();
-            }
-
-            if (classificationsDataTable == null)
-            {
-                // Shouldn't happen as the above should reset it
-                TracePrint.NullException(nameof(classificationsDataTable));
-                return null;
-            }
-            // Note that because IDs are in the database as a string, we convert it
-            return classificationsDataTable.Select(ClassificationColumns.DetectionID + Sql.Equal + detectionID);
-        }
-
-        // Get the classifications associated with the current file, if any
-        public async Task<DataRow[]> GetClassificationsFromDetectionIDAsync(long detectionID)
-        {
-            if (classificationsDataTable == null)
-            {
-                //this.classificationsDataTable = this.Database.GetDataTableFromSelect(Sql.SelectStarFrom + Constant.DBTables.Classifications);
-                await RefreshClassificationsDataTableAsync();
-            }
-
-            if (classificationsDataTable == null)
-            {
-                // Shouldn't happen as the above should reset it
-                TracePrint.NullException(nameof(classificationsDataTable));
-                return null;
-            }
-            // Note that because IDs are in the database as a string, we convert it
-            return classificationsDataTable.Select(ClassificationColumns.DetectionID + Sql.Equal + detectionID);
         }
 
         // Return the label that matches the detection category 
@@ -4190,7 +4136,6 @@ namespace Timelapse.Database
                 FileTable?.Dispose();
                 Markers?.Dispose();
                 detectionDataTable?.Dispose();
-                classificationsDataTable?.Dispose();
             }
 
             base.Dispose(disposing);
@@ -4211,8 +4156,6 @@ namespace Timelapse.Database
                 // Release various data tables
                 detectionDataTable?.Clear();
                 detectionDataTable = null;
-                classificationsDataTable?.Clear();
-                classificationsDataTable = null;
 
                 // Release the bound grid
                 if (boundGrid != null)

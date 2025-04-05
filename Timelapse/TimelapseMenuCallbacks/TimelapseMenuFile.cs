@@ -206,7 +206,6 @@ namespace Timelapse
                 if (DataHandler.FileDatabase.DetectionsExists(true))
                 {
                     await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();
-                    await DataHandler.FileDatabase.RefreshClassificationsDataTableAsync();
                 }
             }
 
