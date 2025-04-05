@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -1905,10 +1904,12 @@ namespace Timelapse.Database
         }
 
         // Refresh the Classifications DataTable (sync and async)
+        // TODO Delete
         public void RefreshClassificationsDataTable()
         {
             classificationsDataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.Classifications);
         }
+        // TODO Delete
         public async Task RefreshClassificationsDataTableAsync()
         {
             classificationsDataTable = await Database.GetDataTableFromSelectAsync(Sql.SelectStarFrom + DBTables.Classifications);
@@ -2572,6 +2573,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Index creation and dropping
+        // TODO DELETE CLASSIFICATION STUFF
         public void IndexCreateForDetectionsAndClassificationsIfNotExists()
         {
             Database.IndexCreateIfNotExists(DatabaseValues.IndexID, DBTables.Detections, DatabaseColumn.ID);
@@ -3211,7 +3213,7 @@ namespace Timelapse.Database
                     for (int j = detection.classifications.Count - 1; j >= 0; j--)
                     {
                         // get the confidence of that classification
-                        double conf = (double) detection.classifications[j][1];//double.Parse(detection.classifications[j][1].ToString());
+                        double conf = double.Parse(detection.classifications[j][1].ToString());
 
                         if (conf < minimumClassificationConfidence)
                         {
@@ -3665,7 +3667,7 @@ namespace Timelapse.Database
             return classificationsDataTable.Select(ClassificationColumns.DetectionID + Sql.Equal + detectionID);
         }
 
-        // Get the detections associated with the current file, if any
+        // Get the classifications associated with the current file, if any
         public async Task<DataRow[]> GetClassificationsFromDetectionIDAsync(long detectionID)
         {
             if (classificationsDataTable == null)

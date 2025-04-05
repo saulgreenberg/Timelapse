@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
+using Timelapse.Recognition;
 using BoundingBox = Timelapse.Images.BoundingBox;
 using BoundingBoxes = Timelapse.Images.BoundingBoxes;
 
@@ -18,6 +21,7 @@ namespace Timelapse
             return GetBoundingBoxesForCurrentFile(fileID, false);
         }
         // for each image, get a list of detections and fill in the bounding box information for it. 
+        // TODO: MERGE ASYNC AND SYNC VERSIONS. I SUSPECT DIFFERENCES ARE MINIMAL
         public BoundingBoxes GetBoundingBoxesForCurrentFile(long fileID, bool initialFrameOnly)
         {
             double boundingBoxDisplayThreshold = null == GlobalReferences.TimelapseState 
@@ -54,9 +58,6 @@ namespace Timelapse
 
                     string detectionCategoryLabel = DataHandler.FileDatabase.GetDetectionLabelFromCategory((string)detectionRow[DetectionColumns.Category]);
 
-                    DataRow[] classificationDataTableRows = DataHandler.FileDatabase.GetClassificationsFromDetectionID((long)detectionRow[DetectionColumns.DetectionID]);
-                    List<KeyValuePair<string, string>> classifications = new List<KeyValuePair<string, string>>();
-
                     int frameNumber = 0; // if there is no frame number, user the 1st frame. It may be wrong, but better than nothing.
                     if (detectionRow.Table.Columns.Contains(DetectionColumns.FrameNumber))
                     {
@@ -85,14 +86,16 @@ namespace Timelapse
                         }
                     }
 
-                    foreach (DataRow classificationRow in classificationDataTableRows)
+                    // Get the classifications for this detection, if any
+                    List<KeyValuePair<string, string>> classifications = new List<KeyValuePair<string, string>>();
+                    if (detectionRow[DetectionColumns.Classification] != System.DBNull.Value && detectionRow[DetectionColumns.ClassificationConf] != System.DBNull.Value)
                     {
-                        double conf = (double)classificationRow[DetectionColumns.Conf];
-                        if (conf > 0.00)
+                        string classification = (string)detectionRow[DetectionColumns.Classification];
+                        double classificationConf = (double)Double.Parse((string)detectionRow[DetectionColumns.ClassificationConf].ToString());
+                        if (classificationConf > 0.00)
                         {
-                            string classificationCategoryLabel =
-                                DataHandler.FileDatabase.GetClassificationLabelFromCategory((string)classificationRow[ClassificationColumns.Category]);
-                            classifications.Add(new KeyValuePair<string, string>(classificationCategoryLabel, conf.ToString(CultureInfo.InvariantCulture)));
+                            string classificationCategoryLabel = DataHandler.FileDatabase.GetClassificationLabelFromCategory(classification);
+                            classifications.Add(new KeyValuePair<string, string>(classificationCategoryLabel, classificationConf.ToString(CultureInfo.InvariantCulture)));
                         }
                     }
 
@@ -145,9 +148,6 @@ namespace Timelapse
                     }
                     string detectionCategoryLabel = DataHandler.FileDatabase.GetDetectionLabelFromCategory((string)detectionRow[DetectionColumns.Category]);
 
-                    DataRow[] classificationDataTableRows = await DataHandler.FileDatabase.GetClassificationsFromDetectionIDAsync((long)detectionRow[DetectionColumns.DetectionID]);
-                    List<KeyValuePair<string, string>> classifications = new List<KeyValuePair<string, string>>();
-
                     int frameNumber = 0; // if there is no frame number, use the 0th frame. It may be wrong, but better than nothing.
                     if (detectionRow.Table.Columns.Contains(DetectionColumns.FrameNumber))
                     {
@@ -176,13 +176,16 @@ namespace Timelapse
                         }
                     }
 
-                    foreach (DataRow classificationRow in classificationDataTableRows)
+                    // Get the classifications for this detection, if any
+                    List<KeyValuePair<string, string>> classifications = new List<KeyValuePair<string, string>>();
+                    if (detectionRow[DetectionColumns.Classification] != System.DBNull.Value && detectionRow[DetectionColumns.ClassificationConf] != System.DBNull.Value)
                     {
-                        double conf = (double)classificationRow[DetectionColumns.Conf];
-                        if (conf > 0.00)
+                        string classification = (string)detectionRow[DetectionColumns.Classification];
+                        double classificationConf = (double)Double.Parse((string)detectionRow[DetectionColumns.ClassificationConf].ToString());
+                        if (classificationConf > 0.00)
                         {
-                            string classificationCategoryLabel = DataHandler.FileDatabase.GetClassificationLabelFromCategory((string)classificationRow[ClassificationColumns.Category]);
-                            classifications.Add(new KeyValuePair<string, string>(classificationCategoryLabel, conf.ToString(CultureInfo.InvariantCulture)));
+                            string classificationCategoryLabel = DataHandler.FileDatabase.GetClassificationLabelFromCategory(classification);
+                            classifications.Add(new KeyValuePair<string, string>(classificationCategoryLabel, classificationConf.ToString(CultureInfo.InvariantCulture)));
                         }
                     }
 

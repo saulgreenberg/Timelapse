@@ -873,6 +873,8 @@ namespace Timelapse.Constant
         public const string ImageID = DatabaseColumn.ID; // Foreign key
         public const string Category = "category";
         public const string Conf = "conf";
+        public const string Classification = "classification";
+        public const string ClassificationConf = "classification_conf";
         public const string BBox = "bbox";
         public const string FrameNumber = "frame_number";
         public const string FrameRate = "frame_rate";

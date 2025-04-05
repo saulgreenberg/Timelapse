@@ -84,8 +84,8 @@ namespace Timelapse.Recognition
                 new SchemaColumnDefinition(DetectionColumns.Category,  Sql.StringType),
                 new SchemaColumnDefinition(DetectionColumns.Conf,  Sql.Real),
                 new SchemaColumnDefinition(DetectionColumns.BBox,  Sql.StringType), // Will need to parse it into new new double[4]
-                //new SchemaColumnDefinition(DetectionColumns.FrameNumber, Sql.IntegerType),
-                //new SchemaColumnDefinition(DetectionColumns.FrameRate, Sql.RealType),
+                new SchemaColumnDefinition(DetectionColumns.Classification,  Sql.StringType),
+                new SchemaColumnDefinition(DetectionColumns.ClassificationConf,  Sql.Real),
                 new SchemaColumnDefinition(DetectionColumns.ImageID, Sql.IntegerType), // Foreign key: ImageID
                 new SchemaColumnDefinition("FOREIGN KEY ( " + DetectionColumns.ImageID + " )", "REFERENCES " + DBTables.FileData + " ( " + DetectionColumns.ImageID + " ) " + " ON DELETE CASCADE "),
             };
@@ -95,6 +95,7 @@ namespace Timelapse.Recognition
             RecognitionDatabases.CreateDetectionsVideoTable(database);
 
             // Classifications 
+            // TODO DELETE CLASSIFICATION STUFF
             columnDefinitions = new List<SchemaColumnDefinition>
             {
                 new SchemaColumnDefinition(ClassificationColumns.ClassificationID, Sql.IntegerType + Sql.PrimaryKey),
@@ -358,6 +359,13 @@ namespace Timelapse.Recognition
                                         new ColumnTuple(DetectionColumns.Conf, detection.conf),
                                         new ColumnTuple(DetectionColumns.BBox, bboxAsString),
                                     };
+
+                                    // Add classification values to the detection row if they exist, otherwise they will be null
+                                    if (detection.classifications?.Count > 0)
+                                    {
+                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detection.classifications[0][0]));
+                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, String.Format(CultureInfo.InvariantCulture, "{0}", (double)Double.Parse((string)detection.classifications[0][1].ToString()))));
+                                    }
                                     detectionInsertionStatements.Add(detectionColumnsToUpdate);
                                 }
                                 else if (detection.frame_number >= 0 && null != image.frame_rate && image.frame_rate > 0)
@@ -372,6 +380,14 @@ namespace Timelapse.Recognition
                                         new ColumnTuple(DetectionColumns.Conf, detection.conf),
                                         new ColumnTuple(DetectionColumns.BBox, bboxAsString),
                                     };
+
+                                    // Add classification values to the detection row if they exist, otherwise they will be null
+                                    if (detection.classifications?.Count > 0)
+                                    {
+                                        // Add classification to the detection table as it exists
+                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detection.classifications[0][0]));
+                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, String.Format(CultureInfo.InvariantCulture, "{0}", (double)Double.Parse((string)detection.classifications[0][1].ToString()))));
+                                    }
                                     detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
                                     // Now add the frame rate/frame number to the DetectionsVideo table
@@ -384,6 +400,7 @@ namespace Timelapse.Recognition
                                     detectionVideoInsertionStatements.Add(detectionVideoColumnsToUpdate);
                                 }
 
+                                //TODO DELETE CLASSIFICATION STUFF
                                 // If the detection has some classification info, then add that to the classifications data table
                                 foreach (Object[] classification in detection.classifications)
                                 {
@@ -401,6 +418,7 @@ namespace Timelapse.Recognition
                             }
                         }
                         // If there are no detections, we populate it with values that indicate that.
+                        // The classification columns will be null as they are not specified
                         if (image.detections.Count == 0 || noDetectionsIncluded)
                         {
                             string bboxAsString = string.Empty;
@@ -418,6 +436,7 @@ namespace Timelapse.Recognition
                 }
                 detectionDB.Insert(DBTables.Detections, detectionInsertionStatements, progress, "Adding detections", 1000);
                 detectionDB.Insert(DBTables.DetectionsVideo, detectionVideoInsertionStatements, progress, "Adding detections for Video", 1000);
+                // TODO DELETE CLASSIFICATION STUFF
                 detectionDB.Insert(DBTables.Classifications, classificationInsertionStatements, progress, "Adding classifications", 1000);
                 fileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
                 dataTable?.Dispose();
