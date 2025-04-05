@@ -647,7 +647,7 @@ namespace Timelapse
             DataHandler.FileDatabase.FileSelectionEnum = DataHandler.FileDatabase.GetCustomSelectionFromJSON();
 
             // If recognitions are selected, we set the over-ride of which bounding boxes are displayed by expanding the range to include the selection confidence values.
-            CustomSelection.SetDetectionRanges(DataHandler.FileDatabase.CustomSelection.DetectionSelections);
+            CustomSelection.SetDetectionRanges(DataHandler.FileDatabase.CustomSelection.RecognitionSelections);
 
             // if this is completion of an existing .ddb open, set the current selection and the image index to the ones from the previous session with the image set
             // also if this is completion of import to a new .ddb

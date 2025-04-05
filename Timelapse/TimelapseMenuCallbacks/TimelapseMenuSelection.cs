@@ -253,7 +253,7 @@ namespace Timelapse
             }
 
             // show the dialog and process the resuls
-            CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(this, DataHandler.FileDatabase, DataEntryControls, DataHandler.ImageCache.Current, DataHandler.FileDatabase.CustomSelection.DetectionSelections, this.Arguments)
+            CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(this, DataHandler.FileDatabase, DataEntryControls, DataHandler.ImageCache.Current, DataHandler.FileDatabase.CustomSelection.RecognitionSelections, this.Arguments)
             {
                 Owner = this
             };

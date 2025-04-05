@@ -168,7 +168,7 @@ namespace Timelapse.Util
             {
                 // Template tests for .tdb files
                 // Template Test: at least one row exists with the type file (to ensure its not an empty table)
-                if (0 == db.ScalarGetScalarFromSelectAsInt(Sql.SelectCountStarFrom + DBTables.Template + Sql.Where + Sql.TypeEquals + Sql.Quote(DatabaseColumn.File)))
+                if (0 == db.ScalarGetScalarFromSelectAsInt(Sql.SelectCountStarFromForm + DBTables.Template + Sql.Where + Sql.TypeEquals + Sql.Quote(DatabaseColumn.File)))
                 {
                     return DatabaseFileErrorsEnum.InvalidDatabase;
                 }

@@ -52,7 +52,7 @@
                 <MenuItem Header="_File" IsTabStop="false" SubmenuOpened="File_SubmenuOpening">
 
                     <!-- Test some code here - should only be enabled when developing code -->
-                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Collapsed" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <MenuItem Name="MenuItemTestSomeCode" Header="_Test some code" Visibility="Visible" Click="MenuItemTestSomeCode_Click" ToolTip="Used internally to test some could. Should not be visible." />
 
                     <!-- Load template, images, and video files... -->
                     <MenuItem Name="MenuItemLoadFiles" Header="_Load template, images, and video files..." Click="MenuItemLoadImages_Click" ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">

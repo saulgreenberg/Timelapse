@@ -346,7 +346,7 @@ namespace Timelapse.Standards
                     }
                     //if (datapackage.project.individualAnimals == null) // bools are never null
                     //{
-                        missingDataPackageFields.Add(" • Project: individual animals is required but is empty.");
+                    //    missingDataPackageFields.Add(" • Project: individual animals is required but is empty.");
                     //}
 
                     if (datapackage.project.observationLevel == null || datapackage.project.observationLevel.Count == 0)
@@ -607,6 +607,7 @@ namespace Timelapse.Standards
                                     if (dataLabel == CamtrapDPConstants.Observations.ObservationID)
                                     {
                                         observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(CamtrapDPConstants.Observations.DeploymentID, true));
+                                        includeObservationComma = true;
                                         observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(CamtrapDPConstants.Observations.MediaID, true));
                                     }
                                 }

@@ -31,7 +31,7 @@ namespace Timelapse.Dialog
         // Accessing external parameters
         private readonly FileDatabase Database;
         private readonly CustomSelection CustomSelection;
-        private readonly RecognitionSelections DetectionSelections;
+        private readonly RecognitionSelections RecognitionSelections;
 
         // Dictionaries that will eventually hold the Detection and Classification categories  
         private Dictionary<string, string> DetectionCategories;
@@ -70,7 +70,7 @@ namespace Timelapse.Dialog
             this.Owner = owner;
             this.Database = database;
             this.CustomSelection = database?.CustomSelection;
-            this.DetectionSelections = database?.CustomSelection?.DetectionSelections;
+            this.RecognitionSelections = database?.CustomSelection?.RecognitionSelections;
         }
 
         private async void RecognitionsExplorer_OnLoaded(object sender, RoutedEventArgs e)
@@ -121,14 +121,14 @@ namespace Timelapse.Dialog
             // - Initialize the Detection confidence range and SliderDetectionConf value
             // - Display the current Confidence range in the detections title
             SliderDetectionConf.LowerValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
-                ? Math.Round(DetectionSelections.ConfidenceThreshold1ForUI, 2)
+                ? Math.Round(RecognitionSelections.DetectionConfidenceLowerForUI, 2)
                 : Math.Round(Database.GetTypicalDetectionThreshold(), 2);
 
             SliderDetectionConf.HigherValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
                 ? Math.Round(this.ConfidenceThreshold2ForUI, 2)
                 : 1;
 
-            this.DetectionSelections.ConfidenceThreshold2ForUI = SliderDetectionConf.HigherValue;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = SliderDetectionConf.HigherValue;
             this.DisplayDetectionConfidenceRange(Math.Round(SliderDetectionConf.LowerValue, 2));
 
             // Clear the counts for each detection category held in the DetectionCounts
@@ -228,7 +228,7 @@ namespace Timelapse.Dialog
                 // Special case to interpret all and empty categories 
                 if (this.AllDetections && this.InterpretAllDetectionsAsEmpty)
                 {
-                    selectedCategoryName = Constant.RecognizerValues.NoDetectionLabel;
+                    selectedCategoryName = Constant.RecognizerValues.EmptyDetectionLabel;
 
                 }
                 else if (this.AllDetections && false == this.InterpretAllDetectionsAsEmpty)
@@ -259,9 +259,9 @@ namespace Timelapse.Dialog
         private int DoCountFilesInCurrentSelectionWithRecognitionsOff()
         {
             // Get the total number of files in the current selection without recognitions
-            DetectionSelections.UseRecognition = false;
+            RecognitionSelections.UseRecognition = false;
             int totalFiles = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            DetectionSelections.UseRecognition = true;
+            RecognitionSelections.UseRecognition = true;
             return totalFiles;
         }
 
@@ -304,11 +304,10 @@ namespace Timelapse.Dialog
             }
 
             // All category count 
-            DetectionSelections.RecognitionType = RecognitionType.Detection;
-            DetectionSelections.AllDetections = true;
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            this.DetectionSelections.ConfidenceThreshold1ForUI = lowerConfidenceValue;
-            this.DetectionSelections.ConfidenceThreshold2ForUI = higherConfidenceValue;
+            RecognitionSelections.AllDetections = true;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConfidenceValue;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConfidenceValue;
 
             int allFilesCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             if (cancellationTokenSource.Token.IsCancellationRequested)
@@ -317,9 +316,9 @@ namespace Timelapse.Dialog
                 return false;
             }
             this.SetDetectionCountForCategory("All", allFilesCount);
-            DetectionSelections.AllDetections = false;
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            DetectionSelections.UseRecognition = true;
+            RecognitionSelections.AllDetections = false;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+            RecognitionSelections.UseRecognition = true;
 
             if (cancellationTokenSource.Token.IsCancellationRequested)
             {
@@ -328,7 +327,7 @@ namespace Timelapse.Dialog
 
             // Empty category count  
             // TODO: EMPTY NUMBERS DONT MAKE SENSE, OR DO THEY?
-            DetectionSelections.InterpretAllDetectionsAsEmpty = true;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = true;
             int emptyFilesCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             if (cancellationTokenSource.Token.IsCancellationRequested)
             {
@@ -337,7 +336,7 @@ namespace Timelapse.Dialog
             }
 
             this.SetDetectionCountForCategory("Empty", emptyFilesCount);
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
 
             // Individual category counts
             foreach (KeyValuePair<string, string> kvp in DetectionCategories)
@@ -348,7 +347,7 @@ namespace Timelapse.Dialog
                 }
 
                 if (kvp.Key == "0") continue; // Skip empty
-                DetectionSelections.DetectionCategory = kvp.Key;
+                RecognitionSelections.DetectionCategoryNumber = kvp.Key;
                 int distinctCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
                 if (cancellationTokenSource.Token.IsCancellationRequested)
                 {
@@ -380,10 +379,9 @@ namespace Timelapse.Dialog
             }
 
             // Set search criteria to classifications
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            DetectionSelections.RecognitionType = RecognitionType.Classification;
-            this.DetectionSelections.ConfidenceThreshold1ForUI = lowerConfidenceValue;
-            this.DetectionSelections.ConfidenceThreshold2ForUI = higherConfidenceValue;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConfidenceValue;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConfidenceValue;
 
             // Initialize by clearing the various lists
             this.ClearCountsInClassificationCountsCollection();
@@ -403,7 +401,7 @@ namespace Timelapse.Dialog
                 }
 
                 string categoryNumber = kvp.Key;
-                DetectionSelections.ClassificationCategory = categoryNumber;
+                RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
                 string categoryName = kvp.Value;
 
                 // Get the count for the current classification category
@@ -504,7 +502,7 @@ namespace Timelapse.Dialog
         }
         private void DisplayDetectionConfidenceRange(double lowerConfidence)
         {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.DetectionSelections.ConfidenceThreshold2ForUI:f2})";
+            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.RecognitionSelections.DetectionConfidenceHigherForUI:f2})";
         }
 
         private void DisplayDetectionConfidenceRange(double lowerConfidence, double higherConfidence)
@@ -585,15 +583,15 @@ namespace Timelapse.Dialog
         // As we will alter some of these, we will restore them later back to its original values
         private void ParametersSaveOriginalRecognitions()
         {
-            this.UseRecognitions = this.DetectionSelections.UseRecognition;
-            this.DetectionCategory = DetectionSelections.DetectionCategory;
-            this.ClassificationCategory = DetectionSelections.ClassificationCategory;
-            this.AllDetections = DetectionSelections.AllDetections;
-            this.InterpretAllDetectionsAsEmpty = DetectionSelections.InterpretAllDetectionsAsEmpty;
-            this.ConfidenceThreshold1ForUI = DetectionSelections.ConfidenceThreshold1ForUI;
-            this.ConfidenceThreshold2ForUI = DetectionSelections.ConfidenceThreshold2ForUI;
-            this.RecognitionType = DetectionSelections.RecognitionType;
-            this.RankByConfidence = DetectionSelections.RankByConfidence;
+            this.UseRecognitions = this.RecognitionSelections.UseRecognition;
+            this.DetectionCategory = RecognitionSelections.DetectionCategoryNumber;
+            this.ClassificationCategory = RecognitionSelections.ClassificationCategoryNumber;
+            this.AllDetections = RecognitionSelections.AllDetections;
+            this.InterpretAllDetectionsAsEmpty = RecognitionSelections.InterpretAllDetectionsAsEmpty;
+            this.ConfidenceThreshold1ForUI = RecognitionSelections.DetectionConfidenceLowerForUI;
+            this.ConfidenceThreshold2ForUI = RecognitionSelections.DetectionConfidenceHigherForUI;
+            this.RecognitionType = RecognitionSelections.RecognitionType;
+            this.RankByConfidence = RecognitionSelections.RankByDetectionConfidence;
             this.ShowMissingDetections = CustomSelection.ShowMissingDetections;
             this.RandomSample = CustomSelection.RandomSample;
             this.EpisodeShowAllIfAnyMatch = CustomSelection.EpisodeShowAllIfAnyMatch;
@@ -601,18 +599,17 @@ namespace Timelapse.Dialog
 
         private void ParametersRestoreOriginalRecognitions()
         {
-            if (null != DetectionSelections)
+            if (null != RecognitionSelections)
             {
                 // Restore original selection parameters as we may have alter some of these
-                this.DetectionSelections.UseRecognition = this.UseRecognitions;
-                this.DetectionSelections.DetectionCategory = this.DetectionCategory;
-                this.DetectionSelections.AllDetections = this.AllDetections;
-                this.DetectionSelections.InterpretAllDetectionsAsEmpty = this.InterpretAllDetectionsAsEmpty;
-                this.DetectionSelections.ConfidenceThreshold1ForUI = this.ConfidenceThreshold1ForUI;
-                this.DetectionSelections.ConfidenceThreshold2ForUI = this.ConfidenceThreshold2ForUI;
-                this.DetectionSelections.RecognitionType = this.RecognitionType;
-                this.DetectionSelections.ClassificationCategory = this.ClassificationCategory;
-                this.DetectionSelections.RankByConfidence = this.RankByConfidence;
+                this.RecognitionSelections.UseRecognition = this.UseRecognitions;
+                this.RecognitionSelections.DetectionCategoryNumber = this.DetectionCategory;
+                this.RecognitionSelections.AllDetections = this.AllDetections;
+                this.RecognitionSelections.InterpretAllDetectionsAsEmpty = this.InterpretAllDetectionsAsEmpty;
+                this.RecognitionSelections.DetectionConfidenceLowerForUI = this.ConfidenceThreshold1ForUI;
+                this.RecognitionSelections.DetectionConfidenceHigherForUI = this.ConfidenceThreshold2ForUI;
+                this.RecognitionSelections.ClassificationCategoryNumber = this.ClassificationCategory;
+                this.RecognitionSelections.RankByDetectionConfidence = this.RankByConfidence;
             }
             if (null != CustomSelection)
             {
@@ -625,10 +622,8 @@ namespace Timelapse.Dialog
         private void ParametersIntializeAsDetections()
         {
             // Initialize parameters
-            DetectionSelections.AllDetections = false;
-            DetectionSelections.RecognitionType = RecognitionType.Detection;
-
-            DetectionSelections.RankByConfidence = false;
+            RecognitionSelections.AllDetections = false;
+            RecognitionSelections.RankByDetectionConfidence = false;
             CustomSelection.ShowMissingDetections = false;
             CustomSelection.EpisodeShowAllIfAnyMatch = false;
         }
@@ -758,8 +753,8 @@ namespace Timelapse.Dialog
             // Abort if nothing has changed  in the current slider interaction, i.e., the value has not been changed previously
             // and there are no changes between the current slider values vs the current confidence values
             if (isDetectionValueChanged == false &&
-                Math.Abs(Math.Round(slider.LowerValue, 2) - this.DetectionSelections.ConfidenceThreshold1ForUI) < .01 &&
-                Math.Abs(Math.Round(slider.HigherValue, 2) - this.DetectionSelections.ConfidenceThreshold2ForUI) < .01)
+                Math.Abs(Math.Round(slider.LowerValue, 2) - this.RecognitionSelections.DetectionConfidenceLowerForUI) < .01 &&
+                Math.Abs(Math.Round(slider.HigherValue, 2) - this.RecognitionSelections.DetectionConfidenceHigherForUI) < .01)
             {
                 return;
             }
@@ -794,8 +789,8 @@ namespace Timelapse.Dialog
             // Set and display the new confidence thresholds
             double lowerConf = Math.Round(slider.LowerValue, 2);
             double higherConf = Math.Round(slider.HigherValue, 2);
-            this.DetectionSelections.ConfidenceThreshold1ForUI = lowerConf;
-            this.DetectionSelections.ConfidenceThreshold2ForUI = higherConf;
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConf;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConf;
             this.DisplayDetectionConfidenceRange(lowerConf, higherConf);
 
             // Clear the current counts and start counting the new ones
@@ -843,8 +838,8 @@ namespace Timelapse.Dialog
             // Abort if nothing has changed  in the current slider interaction, i.e., the value has not been changed previously
             // and there are no changes between the current slider values vs the current confidence values
             if (isClassificationValueChanged == false &&
-                Math.Abs(Math.Round(slider.LowerValue, 2) - this.DetectionSelections.ConfidenceThreshold1ForUI) < .01 &&
-                Math.Abs(Math.Round(slider.HigherValue, 2) - this.DetectionSelections.ConfidenceThreshold2ForUI) < .01)
+                Math.Abs(Math.Round(slider.LowerValue, 2) - this.RecognitionSelections.DetectionConfidenceLowerForUI) < .01 &&
+                Math.Abs(Math.Round(slider.HigherValue, 2) - this.RecognitionSelections.DetectionConfidenceHigherForUI) < .01)
             {
                 return;
             }
@@ -879,8 +874,8 @@ namespace Timelapse.Dialog
             // Set and display the new confidence thresholds
             double lowerConf = Math.Round(slider.LowerValue, 2);
             double higherConf = Math.Round(slider.HigherValue, 2);
-            this.DetectionSelections.ConfidenceThreshold1ForUI = lowerConf;
-            this.DetectionSelections.ConfidenceThreshold2ForUI = higherConf;
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConf;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConf;
             this.DisplayClassificationConfidenceRange(lowerConf, higherConf);
 
             // Clear the current counts and start counting the new ones
@@ -906,7 +901,7 @@ namespace Timelapse.Dialog
             if (this.CurrentlySelectedRecognition.IsRecognitionSelected)
             {
                 // A recognition is selected, so ensure that UseRecognition is on
-                this.DetectionSelections.UseRecognition = true;
+                this.RecognitionSelections.UseRecognition = true;
 
                 if (this.CurrentlySelectedRecognition.RecognitionType == RecognitionTypeEnum.Detections)
                 {
@@ -914,11 +909,10 @@ namespace Timelapse.Dialog
                     if (this.CurrentlySelectedRecognition.CategoryNumber == this.AllCategoryNumber)
                     {
                         // Detections: All
-                        DetectionSelections.AllDetections = true;
-                        DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                        DetectionSelections.RecognitionType = RecognitionType.Detection;
-                        this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.LowerValue;
-                        this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderDetectionConf.HigherValue;
+                        RecognitionSelections.AllDetections = true;
+                        RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+                        this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SliderDetectionConf.LowerValue;
+                        this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SliderDetectionConf.HigherValue;
                         this.CustomSelection.ShowMissingDetections = false;
                         this.DialogResult = true;
                         return;
@@ -927,24 +921,22 @@ namespace Timelapse.Dialog
                     if (this.CurrentlySelectedRecognition.CategoryNumber == "0")
                     {
                         // Detections: Empty
-                        DetectionSelections.AllDetections = true;
-                        DetectionSelections.InterpretAllDetectionsAsEmpty = true;
-                        DetectionSelections.RecognitionType = RecognitionType.Detection;
-                        this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber; 
-                        this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.LowerValue;
-                        this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderDetectionConf.HigherValue;
+                        RecognitionSelections.AllDetections = true;
+                        RecognitionSelections.InterpretAllDetectionsAsEmpty = true;
+                        this.RecognitionSelections.DetectionCategoryNumber = this.CurrentlySelectedRecognition.CategoryNumber; 
+                        this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SliderDetectionConf.LowerValue;
+                        this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SliderDetectionConf.HigherValue;
                         this.CustomSelection.ShowMissingDetections = false;
                         this.DialogResult = true;
                         return;
                     }
 
                     // Detections: A non-Empty, non-All category
-                    DetectionSelections.AllDetections = false;
-                    DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                    DetectionSelections.RecognitionType = RecognitionType.Detection;
-                    this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber;
-                    this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderDetectionConf.LowerValue;
-                    this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderDetectionConf.HigherValue;
+                    RecognitionSelections.AllDetections = false;
+                    RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+                    this.RecognitionSelections.DetectionCategoryNumber = this.CurrentlySelectedRecognition.CategoryNumber;
+                    this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SliderDetectionConf.LowerValue;
+                    this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SliderDetectionConf.HigherValue;
                     this.CustomSelection.ShowMissingDetections = false;
                     this.DialogResult = true;
                     return;
@@ -953,13 +945,11 @@ namespace Timelapse.Dialog
                 if (this.CurrentlySelectedRecognition.RecognitionType == RecognitionTypeEnum.Classifications)
                 {
                     // Classification
-                    DetectionSelections.AllDetections = false;
-                    DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-
-                    DetectionSelections.RecognitionType = RecognitionType.Classification;
-                    this.DetectionSelections.ClassificationCategory = this.CurrentlySelectedRecognition.CategoryNumber;
-                    this.DetectionSelections.ConfidenceThreshold1ForUI = this.SliderClassificationConf.LowerValue;
-                    this.DetectionSelections.ConfidenceThreshold2ForUI = this.SliderClassificationConf.HigherValue;
+                    RecognitionSelections.AllDetections = false;
+                    RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+                    this.RecognitionSelections.ClassificationCategoryNumber = this.CurrentlySelectedRecognition.CategoryNumber;
+                    this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SliderClassificationConf.LowerValue;
+                    this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SliderClassificationConf.HigherValue;
                     this.CustomSelection.ShowMissingDetections = false;
                     this.DialogResult = true;
                 }
@@ -1007,7 +997,7 @@ namespace Timelapse.Dialog
             foreach (KeyValuePair<string, string> kvp in DetectionCategories)
             {
                 if (kvp.Key == "0") continue; // Skip empty
-                DetectionSelections.DetectionCategory = kvp.Key;
+                RecognitionSelections.DetectionCategoryNumber = kvp.Key;
                 string categoryName = kvp.Value;
                 this.SetDetectionCountForCategory(categoryName, -1);
             }
@@ -1046,7 +1036,7 @@ namespace Timelapse.Dialog
             // Classification: clear the count in Category 
             foreach (KeyValuePair<string, string> kvp in ClassificationCategories)
             {
-                DetectionSelections.ClassificationCategory = kvp.Key;
+                RecognitionSelections.ClassificationCategoryNumber = kvp.Key;
                 string categoryName = kvp.Value;
                 this.SetClassificationCountForCategory(categoryName, 0);
             }

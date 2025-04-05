@@ -28,7 +28,7 @@ namespace Timelapse.SearchingAndSorting
 
         public CustomSelectionOperatorEnum TermCombiningOperator { get; set; }
         public bool ShowMissingDetections { get; set; }
-        public RecognitionSelections DetectionSelections { get; set; }
+        public RecognitionSelections RecognitionSelections { get; set; }
 
         // Episode-specific data
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
@@ -67,7 +67,7 @@ namespace Timelapse.SearchingAndSorting
             // Check the arguments for null 
             ThrowIf.IsNullArgument(templateTable, nameof(templateTable));
 
-            DetectionSelections = new RecognitionSelections();
+            RecognitionSelections = new RecognitionSelections();
             SearchTerms = new List<SearchTerm>();
             TermCombiningOperator = termCombiningOperator;
 
@@ -86,7 +86,7 @@ namespace Timelapse.SearchingAndSorting
                     DatabaseValue = control.DefaultValue,
                     Operator = SearchTermOperator.Equal,
                     Label = control.Label,
-                    List = control.Type == Constant.Control.FixedChoice || control.Type == Constant.Control.MultiChoice 
+                    List = control.Type == Constant.Control.FixedChoice || control.Type == Constant.Control.MultiChoice
                         ? Choices.ChoicesFromJson(control.List).ChoiceList
                         : new List<string>(),
                     UseForSearching = false
@@ -256,11 +256,11 @@ namespace Timelapse.SearchingAndSorting
 
         public string GetFilesWhere()
         {
-            return GetFilesWhere(false);
+            return GetFilesWhere(false, false);
         }
         // Create and return the query composed from the search term list
         // If { is true, we return only  search terms related to the data fields (i.e., no Detection or Classification terms)
-        public string GetFilesWhere(bool dataFieldsOnly)
+        public string GetFilesWhere(bool dataFieldsOnly, bool excludeWhereString)
         {
             string where = string.Empty;
 
@@ -282,12 +282,13 @@ namespace Timelapse.SearchingAndSorting
             // Combine the non-standard terms using the operator defined by the user (either AND or OR)
             string nonStandarWhere = CombineSearchTermsAndOperator(nonstandardSearchTerms, TermCombiningOperator);
 
+            string whereString = excludeWhereString ? string.Empty : Sql.Where;
             // Combine the standardWhere and nonStandardWhere clauses, depending if one or both of them exists
             if (false == string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We have both standard and non-standard clauses, so surround them with parenthesis and combine them with an AND
                 // Form: WHERE (standardWhere clauses) AND (nonStandardWhere clauses)
-                where += Sql.Where + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis
+                where += whereString + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis
                           + Sql.And
                           + Sql.OpenParenthesis + nonStandarWhere + Sql.CloseParenthesis;
             }
@@ -295,17 +296,17 @@ namespace Timelapse.SearchingAndSorting
             {
                 // We only have a standard clause
                 // Form: WHERE (standardWhere clauses)
-                where += Sql.Where + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis;
+                where += whereString + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis;
             }
             else if (string.IsNullOrWhiteSpace(standardWhere) && false == string.IsNullOrWhiteSpace(nonStandarWhere))
             {
                 // We only have a non-standard clause
                 // Form: WHERE nonStandardWhere clauses
-                where += Sql.Where + nonStandarWhere;
+                where += whereString + nonStandarWhere;
             }
 
-            // If no detections, we are done. Return the current where clause
-            if (dataFieldsOnly || GlobalReferences.DetectionsExists == false || DetectionSelections.Enabled == false)
+            // If no detections, or if the detectons of of RecognitionType none, we are done. Return the current where clause
+            if (dataFieldsOnly || GlobalReferences.DetectionsExists == false || RecognitionSelections.UseRecognition == false || RecognitionSelections.RecognitionType == RecognitionType.Empty)
             {
                 return where;
             }
@@ -316,19 +317,19 @@ namespace Timelapse.SearchingAndSorting
 
             // There are four basic forms to come up as follows, which determines whether we should add 'WHERE'
             // The first is a detection and uses the detection category (i.e., any category but All Detections)
-            // - WHERE Detections.category = <DetectionCategory> GROUP BY ...
+            // - WHERE Detections.category = <DetectionCategoryNumber> GROUP BY ...
             // The second is a dection but does not use a detection category(i.e., All Detections chosen)
             // - GROUP BY ...
             // XXXX The third uses applies to both
-            // - WHERE Detections.category = <DetectionCategory> GROUP BY ...
+            // - WHERE Detections.category = <DetectionCategoryNumber> GROUP BY ...
             // - GROUP BY...
 
             // Form: WHERE or AND/OR
             // Add Where if we are using the first form, otherwise AND
             bool addAndOr = false;
-            if (string.IsNullOrEmpty(where) && DetectionSelections.AllDetections == false && DetectionSelections.InterpretAllDetectionsAsEmpty == false)
+            if (string.IsNullOrEmpty(where) && RecognitionSelections.AllDetections == false && RecognitionSelections.InterpretAllDetectionsAsEmpty == false)
             {
-                where += Sql.Where;
+                where += whereString;
             }
             else
             {
@@ -337,26 +338,28 @@ namespace Timelapse.SearchingAndSorting
 
             // DETECTION, NOT ALL
             // FORM: 
-            //   If its a detection:  Detections.category = <DetectionCategory>  
-            //   If its a classification:  Classifications.category = <DetectionCategory>  
+            //   If its a detection:  Detections.category = <DetectionCategoryNumber>  
+            //   If its a classification:  Classifications.category = <DetectionCategoryNumber>  
             // Only added if we are using a detection category (i.e., any category but All Detections)
-            if (DetectionSelections.AllDetections == false && DetectionSelections.InterpretAllDetectionsAsEmpty == false)
+            if (RecognitionSelections.AllDetections == false && RecognitionSelections.InterpretAllDetectionsAsEmpty == false && RecognitionSelections.RecognitionType != RecognitionType.Empty)
             {
                 if (addAndOr)
                 {
                     where += Sql.And;
                 }
-                if (DetectionSelections.RecognitionType == RecognitionType.Detection)
+
+
+                if (RecognitionSelections.RecognitionType == RecognitionType.Detection)
                 {
                     // a DETECTION
-                    // FORM Detections.Category = <DetectionCategory> 
-                    where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(DetectionSelections.DetectionCategory);
+                    // FORM Detections.Category = <DetectionCategoryNumber> 
+                    where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(RecognitionSelections.DetectionCategoryNumber);
                 }
                 else
                 {
                     // a CLASSIFICATION, 
-                    // FORM Classifications.Category = <ClassificationCategory> 
-                    where += SqlPhrase.ClassificationsCategoryEqualsClassificationCategory(DetectionSelections.ClassificationCategory);
+                    // FORM Classifications.Category = <ClassificationCategoryNumber> 
+                    where += SqlPhrase.ClassificationsCategoryEqualsClassificationCategory(RecognitionSelections.ClassificationCategoryNumber);
                 }
             }
 
@@ -364,17 +367,18 @@ namespace Timelapse.SearchingAndSorting
             // Note that a confidence of 0 captures empty items with 0 confidence i.e., images with no detections in them
             // For the All category, we really don't wan't to include those, so the confidence has been bumped up slightly(in Item1) above 0
             // For the Empty category, we invert the confidence
-            Tuple<double, double> confidenceBounds = DetectionSelections.ConfidenceThresholdForSelect;
-            if (DetectionSelections.RecognitionType == RecognitionType.Detection && DetectionSelections.RankByConfidence == false)
+
+            if (RecognitionSelections.RecognitionType == RecognitionType.Detection && RecognitionSelections.RankByDetectionConfidence == false)
             {
+                Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
                 // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
-                where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(confidenceBounds.Item1, confidenceBounds.Item2);
+                where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
             }
-            else if (DetectionSelections.RecognitionType == RecognitionType.Classification && DetectionSelections.RankByConfidence == false)
+            else if (RecognitionSelections.RecognitionType == RecognitionType.Classification && RecognitionSelections.RankByDetectionConfidence == false)
             {
                 // Classification. Form: GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) e.g.,  BETWEEN 0.8 AND 1
                 // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
-                where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(confidenceBounds.Item1, confidenceBounds.Item2);
+                where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(RecognitionSelections.CurrentClassificationThreshold, 1);
             }
             return where;
         }
@@ -388,7 +392,7 @@ namespace Timelapse.SearchingAndSorting
             // If there are two time terms and the select goes over midnight, we combine them with an OR instead of AND
             // This allows a select between (say) 10pm and 7am
             // ReSharper disable once PossibleMultipleEnumeration
-            bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(UseTimeInsteadOfDate, searchTerms, DetectionSelections.Enabled, out string combinedTimeTerm);
+            bool areTimeTermsCombined = CombineTimeSearchTermsIfNeeded(UseTimeInsteadOfDate, searchTerms, RecognitionSelections.UseRecognition, out string combinedTimeTerm);
 
             bool timeHandled = false; // Allows us to track whether we are on the first or second time term
             // ReSharper disable once PossibleMultipleEnumeration
@@ -417,7 +421,7 @@ namespace Timelapse.SearchingAndSorting
                 else
                 {
                     // If we are using detections, then we have to qualify the data label e.g., DataTable.X
-                    string dataLabel = DetectionSelections.Enabled ? DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
+                    string dataLabel = RecognitionSelections.UseRecognition ? DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
 
                     // Check to see if the search term is querying for an empty string
                     if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)
@@ -657,9 +661,9 @@ namespace Timelapse.SearchingAndSorting
             {
                 searchTerm.UseForSearching = false;
             }
-            if (GlobalReferences.DetectionsExists && DetectionSelections != null)
+            if (GlobalReferences.DetectionsExists && RecognitionSelections != null)
             {
-                DetectionSelections.ClearAllDetectionsUses();
+                RecognitionSelections.ClearAllDetectionsUses();
             }
             ShowMissingDetections = false;
         }
@@ -680,13 +684,13 @@ namespace Timelapse.SearchingAndSorting
             // When recognitions are selected, we may over-ride which bounding boxes are displayed by expanding the range to include the selection confidence values.
             if (recognitionSelections.UseRecognition)
             {
-                GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = recognitionSelections.InterpretAllDetectionsAsEmpty 
+                GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = recognitionSelections.InterpretAllDetectionsAsEmpty
                     // For empty, set the over-ride to a small value i.e., equal to epsilon
                     // This avoids displaying spurious bounding boxes (extremely low confidence ones) while still showing
                     // the ones that have low confidence bounding boxes that are still useful.
-                    ?  0.1
-                        // For non-empty, set the over-ride to include the bounding boxes within the current range
-                    :  recognitionSelections.ConfidenceThreshold1ForUI;
+                    ? 0.1
+                    // For non-empty, set the over-ride to include the bounding boxes within the current range
+                    : recognitionSelections.DetectionConfidenceLowerForUI;
             }
             else
             {

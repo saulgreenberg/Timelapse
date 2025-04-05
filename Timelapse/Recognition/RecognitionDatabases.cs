@@ -217,7 +217,7 @@ namespace Timelapse.Recognition
                     columnsToUpdate = new List<ColumnTuple>
                     {
                         new ColumnTuple(DetectionCategoriesColumns.Category, RecognizerValues.NoDetectionCategory),
-                        new ColumnTuple(DetectionCategoriesColumns.Label, RecognizerValues.NoDetectionLabel)
+                        new ColumnTuple(DetectionCategoriesColumns.Label, RecognizerValues.EmptyDetectionLabel)
                     };
                     insertionStatements.Insert(0, columnsToUpdate);
                 }

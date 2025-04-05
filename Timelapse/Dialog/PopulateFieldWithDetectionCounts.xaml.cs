@@ -65,7 +65,9 @@ namespace Timelapse.Dialog
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            DialogResult = true;
+            // By default, DialogResult is false if the window close button is selected
+            // i.e., its the same as cancel. So setting the DialogResult is not needed.
+            // DialogResult = true;
         }
 
         private void SliderConfidence_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

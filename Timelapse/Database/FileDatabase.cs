@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -23,7 +24,6 @@ using Timelapse.Recognition;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Standards;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit.Core.Converters;
 using Control = Timelapse.Constant.Control;
 using File = System.IO.File;
 using Path = System.IO.Path;
@@ -73,7 +73,7 @@ namespace Timelapse.Database
         public ImageSetRow ImageSet { get; private set; }
 
         // A list of potential shortcuts found to the image folder. If there is only one, then its a valid shortcut
-        public List<string> ShortcutFoldersFound { get; private set; } 
+        public List<string> ShortcutFoldersFound { get; private set; }
 
         // Whether a shortcut to the image folder is being
         public bool IsShortcutToImageFolder { get; private set; }
@@ -1126,6 +1126,7 @@ namespace Timelapse.Database
         /// </summary>
         public async Task SelectFilesAsync(FileSelectionEnum selection)
         {
+            DataTable filesTable;
             string query = string.Empty;
             this.ResetAfterPossibleRelativePathChanges();
 
@@ -1158,19 +1159,56 @@ namespace Timelapse.Database
                     // Form: SELECT DataTable.* FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL
                     query += SqlPhrase.SelectMissingDetections(SelectTypesEnum.Star);
                 }
-                else if (GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
+                else if (GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
                 {
                     // DETECTIONS
                     // Create a partial query that returns detections matching some conditions
                     // Form: SELECT DataTable.* FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                     query += SqlPhrase.SelectDetections(SelectTypesEnum.Star);
                 }
-                else if (GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+                else if (GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
                 {
                     // CLASSIFICATIONS 
-                    // Create a partial query that returns classifications matching some conditions
+                    // OLD
+                    //Create a partial query that returns classifications matching some conditions
                     // Form: SELECT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-                    query += SqlPhrase.SelectClassifications(SelectTypesEnum.Star);
+                    //query += SqlPhrase.SelectClassifications(SelectTypesEnum.Star);
+                    if (null == this.detectionCategoriesDictionary)
+                    {
+                        return;
+                    }
+                    string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
+                    if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
+                    {
+                        // This should only happen if the json was missing a detection animal category
+                        // TODO Raise error dialog
+                        return;
+                    }
+                    if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
+                    {
+                        // Episode version of the query
+                        query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, false);
+                        //Debug.Print("-----------Episode");
+                    }
+                    else
+                    {
+                        // Non-episode version of the query
+                        List<string> columns = SchemaGetColumns(Constant.DBTables.FileData);
+                        string commaSeparatedColumns = string.Join(Sql.Comma, columns);
+                        query = SqlPhrase.SelectClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, commaSeparatedColumns);
+                        //Debug.Print("----------No Episode");
+                    }
+                    // Non-episode version of the query
+                    //NEW
+                    // ADD: SORT, Random
+                    // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
+                    // Async call allows busyindicator to run smoothly
+                    Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+                    GlobalReferences.TimelapseState.IsNewSelection = true;
+                    filesTable = await Database.GetDataTableFromSelectAsync(query);
+                    filesTable.PrimaryKey = new DataColumn[] { filesTable.Columns[Constant.DatabaseColumn.ID] }; // Set the primary key to the ID column
+                    FileTable = new FileTable(filesTable);
+                    return;
                 }
                 else
                 {
@@ -1205,14 +1243,14 @@ namespace Timelapse.Database
                 // If the use click the Rank by Detection or Classification confidence, we have to create a sort term for that
                 // If so, we will insert that into the normal sort term string shortly
                 string rankSortingTerm = string.Empty;
-                if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.DetectionSelections.RankByConfidence)
+                if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
                 {
                     // Classifications: Override any sorting as we have asked to rank the results by confidence values
                     //term[0] = DatabaseColumn.RelativePath;
                     rankSortingTerm = DBTables.Classifications + "." + ClassificationColumns.Conf;
                     rankSortingTerm += Sql.Descending;
                 }
-                else if (CustomSelection != null && CustomSelection.DetectionSelections.UseRecognition && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.DetectionSelections.RankByConfidence)
+                else if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
                 {
                     // Detections: Override any sorting as we have asked to rank the results by confidence values
                     //term[0] = DatabaseColumn.RelativePath;
@@ -1331,9 +1369,9 @@ namespace Timelapse.Database
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
             GlobalReferences.TimelapseState.IsNewSelection = true;
-            DataTable filesTable = await Database.GetDataTableFromSelectAsync(query);
+            filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
         }
 
@@ -2101,7 +2139,6 @@ namespace Timelapse.Database
         // - Select Count(*) FROM (Select * From Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id WHERE <some condition> GROUP BY Detections.Id HAVING  MAX  ( Detections.conf )  <= 0.9)
         // - Select Count(*) FROM (Select * From Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id  INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID WHERE DataTable.Person<>'true' 
         // AND Classifications.category = 6 GROUP BY Classifications.classificationID HAVING  MAX  (Classifications.conf ) BETWEEN 0.8 AND 1 
-        
         public int CountAllFilesMatchingSelectionCondition(FileSelectionEnum fileSelection)
         {
             string query;
@@ -2116,27 +2153,48 @@ namespace Timelapse.Database
                 query = SqlPhrase.SelectMissingDetections(SelectTypesEnum.Count);
                 skipWhere = true;
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
             {
                 // DETECTIONS
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
-                // Create a partial query that returns a count of classifications matching some conditions
-                // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
+                // Create a complete query that returns a count of classifications matching some conditions
+
+                // OLD Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
                 //query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
-                query = SqlPhrase.SelectCountClassificationsWithinDetections(SelectTypesEnum.Count, CustomSelection.GetFilesWhere(true), CustomSelection);
+                // Get the category number of the "Animal" detection category
+                string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
+                if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
+                {
+                    // This should only happen if the json was missing a detection animal category
+                    return 0;
+                }
+
+                if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
+                {
+                    // Episode version of the query
+                    query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, true);
+                    //Debug.Print("-----------Episode");
+                }
+                else
+                {
+                    // Non-episode version of the query
+                    query = SqlPhrase.SelectCountClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, true);
+                    //Debug.Print("----------No Episode");
+                }
+                Debug.Print("ClassificationCounts:" + query);
                 return Database.ScalarGetScalarFromSelectAsInt(query);
             }
             else
             {
                 // STANDARD (NO DETECTIONS/CLASSIFICATIONS)
                 // Create a query that returns a count that does not consider detections
-                query = Sql.SelectCountStarFrom + DBTables.FileData;
+                query = Sql.SelectCountStarFromForm + DBTables.FileData;
             }
 
             // PART 2 of Query
@@ -2151,7 +2209,7 @@ namespace Timelapse.Database
                     {
                         query += where;
                     }
-                    if (fileSelection == FileSelectionEnum.Custom && CustomSelection.DetectionSelections.Enabled)
+                    if (fileSelection == FileSelectionEnum.Custom && CustomSelection.RecognitionSelections.UseRecognition)// && CustomSelection.RecognitionSelections.RecognitionType != RecognitionType.Empty)
                     {
                         // Add a close parenthesis if we are querying for detections
                         query += Sql.CloseParenthesis;
@@ -2166,13 +2224,14 @@ namespace Timelapse.Database
                 && fileSelection == FileSelectionEnum.Custom)
             {
                 // Remove from the front of the string
-                query = query.Replace(Sql.SelectCountStarFrom, string.Empty);
+                query = query.Replace(Sql.SelectCountStarFromForm, string.Empty);
                 string frontWrapper = SqlPhrase.CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(DBTables.FileData, CustomSelection.EpisodeNoteField, true);
                 string backWrapper = Sql.CloseParenthesis;
                 query = frontWrapper + query + backWrapper;
             }
-            // Uncommment this to see the actual complete query
-            //Debug.Print("File Counts: " + query);
+            //Uncommment this to see the actual complete query
+            // Debug.Print("File Counts: " + query);
+            //Debug.Print(XXX2++ + ":DetectionCounts");
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 
@@ -2198,14 +2257,14 @@ namespace Timelapse.Database
                 query += SqlPhrase.SelectMissingDetections(SelectTypesEnum.One);
                 skipWhere = true;
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Detection)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
             {
                 // DETECTIONS
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query += SqlPhrase.SelectDetections(SelectTypesEnum.One);
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
                 // Create a partial query that returns a count of classifications matching some conditions
@@ -2228,7 +2287,7 @@ namespace Timelapse.Database
                 {
                     query += where;
                 }
-                if (fileSelection == FileSelectionEnum.Custom && CustomSelection.DetectionSelections.Enabled && CustomSelection.DetectionSelections.RecognitionType == RecognitionType.Classification)
+                if (fileSelection == FileSelectionEnum.Custom && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
                 {
                     // Add a close parenthesis if we are querying for detections. Not sure where the unbalanced parenthesis is coming from! Needs some checking.
                     query += Sql.CloseParenthesis;
@@ -2247,7 +2306,7 @@ namespace Timelapse.Database
 
         public int CountAllFilesMatchingRelativePath(string RelativePath)
         {
-            string query = Sql.SelectCountStarFrom + DBTables.FileData + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(RelativePath);
+            string query = Sql.SelectCountStarFromForm + DBTables.FileData + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(RelativePath);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
         #endregion
@@ -3131,6 +3190,9 @@ namespace Timelapse.Database
                 }
                 for (int i = image.detections.Count - 1; i >= 0; i--)
                 {
+                    // Round the confidence to three decimal places, as we really don't need massive precision. I suspect even that is excessive
+                    image.detections[i].conf = (float)Math.Round(image.detections[i].conf, Constant.RecognizerValues.ConfidenceDecimalPlaces);
+
                     // Delete detections whose confidence is lower than the confidence threshold
                     // This is done to get rid of detections that have little value.
                     if (image.detections[i].conf < minimumDetectionConfidence)
@@ -3139,19 +3201,17 @@ namespace Timelapse.Database
                         continue;
                     }
 
-                    // Delete low confidence classifications
-                    foreach (detection detection in image.detections) // (int j = image.detections[i].classifications.Count - 1; j >= 0; j--)
+                    detection detection = image.detections[i]; // (int j = image.detections[i].classifications.Count - 1; j >= 0; j--)
+                    for (int j = detection.classifications.Count - 1; j >= 0; j--)
                     {
-                        for (int j = detection.classifications.Count - 1; j >= 0; j--)
+                        double conf = double.Parse(detection.classifications[j][1].ToString());
+                        // Round the confidence to three decimal places, as we really don't need massive precision. I suspect even that is excessive
+                        conf = Math.Round(conf, Constant.RecognizerValues.ConfidenceDecimalPlaces);
+                        detection.classifications[j][1] = conf;
+                        // Debug.Print(detection.classifications[j][1].ToString());
+                        if (conf < minimumClassificationConfidence)
                         {
-                            // foreach (Object[] classification in detection.classifications)
-                            {
-                                double conf = Double.Parse(detection.classifications[j][1].ToString());
-                                if (conf < minimumClassificationConfidence)
-                                {
-                                    detection.classifications.RemoveAt(j);
-                                }
-                            }
+                            detection.classifications.RemoveAt(j);
                         }
                     }
                 }
@@ -3943,16 +4003,18 @@ namespace Timelapse.Database
 
                 // Check various recognition settings.
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us
-                bool parseResultDetectionCategory = Int32.TryParse(customSelectionFromJson.DetectionSelections.DetectionCategory, out int detectionCategoryAsInt);
-                bool parseResultClassificaitonCategory = Int32.TryParse(customSelectionFromJson.DetectionSelections.ClassificationCategory, out int classificationCategoryAsInt);
-                if (customSelectionFromJson.DetectionSelections.Enabled &&
-                      customSelectionFromJson.DetectionSelections.UseRecognition &&
-                      false == DetectionsExists() ||
-                      parseResultDetectionCategory == false ||
-                      detectionCategoryAsInt >= detectionCategoriesDictionary?.Count ||
-                      parseResultClassificaitonCategory == false ||
-                      classificationCategoryAsInt >= detectionCategoriesDictionary?.Count
-                    )
+                int detectionCategoryAsInt = Int32.MaxValue;
+                bool parseResultDetectionCategory = null != customSelectionFromJson.RecognitionSelections?.DetectionCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.DetectionCategoryNumber, out detectionCategoryAsInt);
+                //bool parseResultClassificationCategory = null != customSelectionFromJson.RecognitionSelections?.ClassificationCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.ClassificationCategoryNumber, out classificationCategoryAsInt);
+                if (null == customSelectionFromJson.RecognitionSelections?.UseRecognition ||
+                      customSelectionFromJson.RecognitionSelections.UseRecognition &&
+                        customSelectionFromJson.RecognitionSelections.UseRecognition &&
+                        false == DetectionsExists() ||
+                        parseResultDetectionCategory == false ||
+                        detectionCategoryAsInt >= detectionCategoriesDictionary?.Count //||
+                        //parseResultClassificationCategory == false ||
+                        //classificationCategoryAsInt >= detectionCategoriesDictionary?.Count
+                        )
                 {
                     // Didn't pass the test. Use the default
                     CustomSelection = new CustomSelection(Controls);
@@ -4040,7 +4102,7 @@ namespace Timelapse.Database
                 CustomSelection = customSelectionFromJson;
 
                 // Set the FileSelectionEnum state
-                if (CustomSelection.DetectionSelections.UseRecognition)
+                if (CustomSelection.RecognitionSelections.UseRecognition)
                 {
                     // Recognition is always custom
                     return FileSelectionEnum.Custom;

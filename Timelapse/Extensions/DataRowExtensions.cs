@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MS.WindowsAPICodePack.Internal;
+using System;
 using System.Data;
 using System.Diagnostics;
 using Timelapse.Constant;
@@ -87,6 +88,18 @@ namespace Timelapse.Extensions
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(row, nameof(row));
+            //var foo = row[column];
+
+            //try
+            //{
+            //    var result = Convert.ToInt64(foo);
+            //    Debug.Print("Success as long:<" + result.ToString() + ">");
+            //    return (long)result;
+            //}
+            //catch (Exception e)
+            //{
+            //    Debug.Print("Fail as long:<" + foo.ToString() + ">");
+            //}
 
             return (long)row[column];
         }

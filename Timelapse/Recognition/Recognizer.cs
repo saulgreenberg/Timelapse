@@ -36,7 +36,7 @@ namespace Timelapse.Recognition
         {
             detection_categories = new Dictionary<string, string>
             {
-                { RecognizerValues.NoDetectionCategory, RecognizerValues.NoDetectionLabel },
+                { RecognizerValues.NoDetectionCategory, RecognizerValues.EmptyDetectionLabel },
                 { "2", "person" },
                 { "4", "vehicle" }
             };
@@ -48,7 +48,7 @@ namespace Timelapse.Recognition
         {
             classification_categories = new Dictionary<string, string>
             {
-                { RecognizerValues.NoDetectionCategory, RecognizerValues.NoDetectionLabel },
+                { RecognizerValues.NoDetectionCategory, RecognizerValues.EmptyDetectionLabel },
             };
         }
         #endregion
