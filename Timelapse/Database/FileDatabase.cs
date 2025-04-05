@@ -3109,7 +3109,8 @@ namespace Timelapse.Database
             Database.Insert(DBTables.Classifications, classificationInsertionStatements);
         }
 
-        // Try to read the recognition data from the Json file into the Recognizer structure
+        // Try to read the recognition data from the Json file into the Recognizer structure,
+        // where we trim detections/classifications below a certain confidence level and only keep the best classification
         // A progress bar is displayed
         // Success: returns a filled in Recognizer structure
         // Failure: returns null
@@ -3136,6 +3137,7 @@ namespace Timelapse.Database
                             {
                                 JsonSerializer serializer = new JsonSerializer();
                                 jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
+                                // trim detections/ classifications below a certain confidence level and only keep the best classification
                                 jsonRecognizer = RecognizerTrimAndSortRecognitionsAsNeeded(jsonRecognizer);
                             }
                         }
@@ -3159,7 +3161,8 @@ namespace Timelapse.Database
             return jsonRecognizer;
         }
 
-        // Trim low-confidence detections and classifications from the recognizer data structure, and
+        // Trim low-confidence detections and classifications from the recognizer data structure,
+        // Trim all but the highest-confidence classification
         // Sort the detections by frame number if its a video (which helps performance when displaying video bounding boxes)
         public Recognizer RecognizerTrimAndSortRecognitionsAsNeeded(Recognizer jsonRecognizer)
         {
@@ -3201,19 +3204,39 @@ namespace Timelapse.Database
                         continue;
                     }
 
-                    detection detection = image.detections[i]; // (int j = image.detections[i].classifications.Count - 1; j >= 0; j--)
+                    // For each detection, find the highest confidence classification (if any)
+                    detection detection = image.detections[i];
+                    object[] highestConfidenceClassification = null;
+                    double highestConfidenceFound = -1;
                     for (int j = detection.classifications.Count - 1; j >= 0; j--)
                     {
-                        double conf = double.Parse(detection.classifications[j][1].ToString());
-                        // Round the confidence to three decimal places, as we really don't need massive precision. I suspect even that is excessive
-                        conf = Math.Round(conf, Constant.RecognizerValues.ConfidenceDecimalPlaces);
-                        detection.classifications[j][1] = conf;
-                        // Debug.Print(detection.classifications[j][1].ToString());
+                        // get the confidence of that classification
+                        double conf = (double) detection.classifications[j][1];//double.Parse(detection.classifications[j][1].ToString());
+
                         if (conf < minimumClassificationConfidence)
                         {
-                            detection.classifications.RemoveAt(j);
+                            // Skip this classification if it is below the minimum confidence threshold
+                            continue;
+                        }
+
+                        if (conf > highestConfidenceFound)
+                        {
+                            // We have a new highest confidence classification
+                            highestConfidenceFound = conf;
+                            highestConfidenceClassification = detection.classifications[j];
                         }
                     }
+
+                    // If we have a highest confidence classification, replace the classification list with just that classification
+                    // As we do that, also round its confidence to three decimal places, as we really don't need massive precision.
+                    detection.classifications.Clear();
+                    if (null != highestConfidenceClassification)
+                    {
+                        highestConfidenceClassification[1] = Math.Round(highestConfidenceFound, Constant.RecognizerValues.ConfidenceDecimalPlaces);
+                        detection.classifications.Add(highestConfidenceClassification);
+                    }
+                    // At this point there should only be a single classification, with
+                    // other lower ranking classifications filtered out
                 }
                 // Sort the detections by frame number, if any
                 // This will later write the detections into the database in sorted order
