@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using Timelapse.DataStructures;
 using System.Linq;
@@ -18,33 +19,31 @@ using Timelapse.Extensions;
 using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Timelapse.EventArguments;
-
+using Timelapse.Constant;
+using Cursors = System.Windows.Input.Cursors;
+using DataGrid = System.Windows.Controls.DataGrid;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace Timelapse.Controls
 {
-    //
-    // TODO If a setting is changed in Custom Selection, we need to reset everything. Maybe a method to invoke that?
-    // TODO Sort by recognition or classification confidence as radio button
-    // TODO Sort by recognition or classification confidence: wire it up
-    // TODO SendRecognitionSelectionEvent() - likely easier by setting variables vs calculating it all again
-    // TODO Unselect classifications i.e. to select only a detection
-    // TODO Do we need file counts here (at far right)?
-    // TODO Show only files the recognizer did not process
-    // TODO Do classification numbers constrained by the detection confidence
-    // TODO Raise Selection Events so they can be seen by CustomSelection 
-    // TODO CustomSelection turn of timer count for total files when counts are being done (maybe? unsure if I have to) 
-    // TODO RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
-    // TODO ShowMissingDetectionsCheckbox_CheckedChanged
+    // TODO Conf levels not saved between sessions
+    // TODO add AutoUpdate checkbox? for selection and slider only?
+    // TODO Problems Saving/Restoring State?
+    // TODO Implement Show only files the recognizer did not process
+    // TODO Implement RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
+    // TODO Implement ShowMissingDetectionsCheckbox_CheckedChanged
+    // TODO SQL select files
+    // TODO Category numbers on import and merge
 
     /// <summary>
-    /// Control for displaying and selecting detections and classification recognitions
-    /// It display Detections categories along with a count.
-    /// When a detection category is selected, its displays the classification categories along with a count for that selected detection.
-    /// Auxiliary controls are included to let a user sort by either detection or classification confidence.
-    /// The general way it works is that
-    /// - the current selection parameters are copied saved
-    /// - queries are done on by altering the copied parameters to generate and display the categories and count
-    /// - the current selection parameters are restored
+    /// Control for displaying and selecting detections and classification recognitions. It:
+    /// - display Detections and classification categories (if any) along with a count.
+    /// - generates an event that is seen by its parent (CustomSelectionWithEpisodes) which in turn invokes the Refresh Counts event
+    /// - contains auxiliary controls are included to let a user sort by either detection or classification confidence.
+    /// The general way RefreshCounts works is that
+    /// - the current RecognitionSelection parameters are copied saved
+    /// - queries are done on by altering the original RecognitionSelection parameters to generate and display the categories and count for the given confidence boudns
+    /// - the RecognitionSelection parameters are restored
     /// - actually selecting categories and classifications (and/or associated recognition controls) updates the current selection parameters 
     /// </summary>
     public partial class RecognitionSelector
@@ -53,13 +52,13 @@ namespace Timelapse.Controls
         // Accessing external parameters
         private readonly FileDatabase Database;
         private readonly CustomSelection CustomSelection;
-        private readonly RecognitionSelections DetectionSelections;
+        private readonly RecognitionSelections RecognitionSelections;
+
+        private readonly int? NoValue = null;
 
         // Dictionaries that will eventually hold the Detection and Classification categories  
         private Dictionary<string, string> DetectionCategories;
         private Dictionary<string, string> ClassificationCategories;
-
-
 
         // These collections are used to store the various Count results as they are updated.
         // They serve as ItemsSource to the corresponding DataGrid and ListBox controls 
@@ -68,685 +67,207 @@ namespace Timelapse.Controls
         public List<string> ClassificationEmptyCountsList { get; set; } = new List<string>();
 
         // Original selection parameters so we can restore them as needed on exit
-        private bool UseRecognitions;
-        private string DetectionCategory;
-        private string ClassificationCategory;
-        private bool AllDetections;
-        private bool InterpretAllDetectionsAsEmpty;
-        private double ConfidenceThreshold1ForUI;
-        private double ConfidenceThreshold2ForUI;
-        private RecognitionType RecognitionType;
-        private bool RankByConfidence;
+        private RecognitionSelections SavedRecognitionSelections;
         private bool ShowMissingDetections;
         private int RandomSample;
         private bool EpisodeShowAllIfAnyMatch;
 
-        // The currently selected recognition, if any. This will be used to replace the original selection parameters
-        private readonly CurrentSelection CurrentlySelectedRecognition = new CurrentSelection();
-        private readonly string AllCategoryNumber = "-1";
-        private CancellationTokenSource TokenSource = new CancellationTokenSource();
-        #endregion
+        // State variables
+        private bool classificationsExist;
+        private bool ignoreSelection;
+        private bool sliderConfidenceInitialMovement;
+        private bool onlyUpdateClassificationCount;
+        private CategoryCount savedSelectedCategoryCount = null;
 
-        #region Constructor / Loaded
-        public RecognitionSelector()
-        {
-            InitializeComponent();
-            // So we can access the database and the various custom selection parameters
-            this.Database = GlobalReferences.MainWindow.DataHandler?.FileDatabase;
-            this.CustomSelection = Database?.CustomSelection;
-            this.DetectionSelections = Database?.CustomSelection?.DetectionSelections;
-        }
-
-        private async void RecognitionsSelector_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            // Alter the default look of  Datagrid
-            SetDataGridCategoryCountLook(this.DataGridDetections);
-            SetDataGridCategoryCountLook(this.DataGridClassifications);
-
-            //Abort if there is nothing to show
-            if (this.Database == null)
-            {
-                this.DisableAllControls();
-                return;
-            }
-            if (GlobalReferences.DetectionsExists == false)
-            {
-                this.DisableAllControls();
-                return;
-            }
-
-            // If we make it here, recognitions are available for this image set
-
-            // Ensure the detection categories are populated
-            // - abort if there are none (likely a problem with the json file?)
-            this.Database.CreateDetectionCategoriesDictionaryIfNeeded();
-            this.DetectionCategories = Database.detectionCategoriesDictionary;
-            if (null == this.DetectionCategories || this.DetectionCategories.Count == 0)
-            {
-                this.DisableAllControls();
-                return;
-            }
-
-            //
-            // At this point we should at least have some detections to try to count, so lets get going.
-            // 
-
-            // Save the original recognition parameters, so we can restore them later
-            // Then initialize parameters to use recognitions
-            this.ParametersSaveOriginalRecognitions();
-
-            // Detection-related initialization for the first query:
-            // - Initialize the Detection confidence range and SliderDetectionConf value
-            // - Display the current Confidence range in the detections title
-            SliderDetectionConf.LowerValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
-                ? Math.Round(DetectionSelections.ConfidenceDetectionThresholdLowerForUI, 2)
-                : Math.Round(Database.GetTypicalDetectionThreshold(), 2);
-
-            SliderDetectionConf.HigherValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Detection
-                ? Math.Round(this.ConfidenceThreshold2ForUI, 2)
-                : 1;
-
-            this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = SliderDetectionConf.HigherValue;
-            this.DisplayDetectionConfidenceRange(Math.Round(SliderDetectionConf.LowerValue, 2));
-
-            // Clear the counts for each detection category held in the DetectionCounts
-            // This will also create and entry for each detection category if it doesn't already exist.
-            this.ClearCountsInDetectionCountsCollection();
-
-            // Classifications
-            // - Display the current Confidence range in the classifications title
-            // - Retrieve the classification categories
-            // - Generate a count for each category, splitting them into two lists
-            SliderClassificationConf.LowerValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Classification
-                ? Math.Round(this.ConfidenceThreshold1ForUI, 2)
-                : Math.Round(Database.GetTypicalClassificationThreshold(), 2);
-            SliderClassificationConf.HigherValue = this.UseRecognitions && this.RecognitionType == RecognitionType.Classification
-                ? Math.Round(this.ConfidenceThreshold2ForUI, 2)
-                : 1;
-            DisplayClassificationConfidenceRange(Math.Round(SliderClassificationConf.LowerValue, 2), Math.Round(SliderClassificationConf.HigherValue, 2));
-            this.Database.CreateClassificationCategoriesDictionaryIfNeeded();
-            this.ClassificationCategories = this.Database.classificationCategoriesDictionary;
-
-            this.ParametersIntializeAsDetections();
-
-            // Count and display the total number of files in the current selection with recognitions turned off
-            int totalFiles = DoCountFilesInCurrentSelectionWithRecognitionsOff(); // database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            //this.TBTotalFiles.Text = $"{totalFiles}";
-
-            this.DisplayCurrentSelection();
-
-            // Get the recognition counts for both detections and (if they are present) classifications
-            RecognitionTypeEnum recognitionTypeEnum = RecognitionTypeEnum.DetectionsAndClassifications;
-            if (this.ClassificationCategories == null || this.ClassificationCategories.Count == 0)
-            {
-                // As there are no classifications in this image set,
-                // - disable the classificatin controls
-                // - set things to only update the detection counts
-                this.DisableClassificationControls();
-                recognitionTypeEnum = RecognitionTypeEnum.Detections;
-            }
-            else
-            {
-                // We have classifications, so clear the counts
-                this.ClearCountsInClassificationCountsCollection();
-            }
-
-            // Generate the counts, while keeping the current selection (if any) highlit
-            this.TryHighlightSelection();
-            await this.DoCountRecognitionsAsync(new CancellationTokenSource(), recognitionTypeEnum);
-            this.TryHighlightSelection();
-        }
-        #endregion
-
-        #region Highlight selection
-        // Try to highlight the currently selected item, if possible
-        private void TryHighlightSelection()
-        {
-            if (this.UseRecognitions == false)
-            {
-                return;
-            }
-
-            DataGrid dataGrid = null;
-            ObservableCollection<CategoryCount> countsCollection = null;
-            Dictionary<string, string> categoryDictionary = null;
-            string selectedCategoryNumber = string.Empty;
-
-            // Initialize the above depending upon whether its a detection or classification
-            if (this.RecognitionType == RecognitionType.Detection && null != this.DetectionCategories)
-            {
-                // Detection
-                dataGrid = this.DataGridDetections;
-                countsCollection = this.DetectionCountsCollection;
-                categoryDictionary = this.DetectionCategories;
-                selectedCategoryNumber = this.AllDetections ? string.Empty : this.DetectionCategory;
-            }
-            else if (this.RecognitionType == RecognitionType.Classification && null != this.ClassificationCategories)
-            {
-                // Classification
-                dataGrid = this.DataGridClassifications;
-                countsCollection = this.ClassificationCountsCollection;
-                categoryDictionary = this.ClassificationCategories;
-                selectedCategoryNumber = this.ClassificationCategory;
-            }
-
-            if (null == dataGrid || countsCollection == null || categoryDictionary == null)
-            {
-                // Abort if we can't do anything
-                return;
-            }
-
-            // Get the actual category name from its category number
-            categoryDictionary.TryGetValue(selectedCategoryNumber, out string selectedCategoryName);
-            if (selectedCategoryName == null)
-            {
-                // Special case to interpret all and empty categories 
-                if (this.AllDetections && this.InterpretAllDetectionsAsEmpty)
-                {
-                    selectedCategoryName = Constant.RecognizerValues.NoDetectionLabel;
-
-                }
-                else if (this.AllDetections && false == this.InterpretAllDetectionsAsEmpty)
-                {
-                    selectedCategoryName = Constant.RecognizerValues.AllDetectionLabel;
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            // Get the category count item matching the category name
-            CategoryCount categoryCount = countsCollection.FirstOrDefault(x => x.Category == selectedCategoryName);
-            if (categoryCount == null)
-            {
-                return;
-            }
-
-            // Finally, select that item in the data grid, making sure its visible and highlit
-            dataGrid.SelectedItem = categoryCount;
-            dataGrid.ScrollIntoView(categoryCount);
-            dataGrid.Focus();
-        }
+        // To hold passed in constructor arguments, used to set the busy state and to use the progress indicator
+        private readonly BusyableDialogWindow Owner;
+        private readonly BusyCancelIndicator BusyCancelIndicator;
         #endregion
 
         #region Counting
-        private int DoCountFilesInCurrentSelectionWithRecognitionsOff()
+        // An externally invoked method by the parent to refresh the counts
+        private async Task RecognitionsRefreshCounts()
         {
-            // Get the total number of files in the current selection without recognitions
-            DetectionSelections.UseRecognition = false;
-            int totalFiles = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            DetectionSelections.UseRecognition = true;
-            return totalFiles;
+            this.ClearCountsAndResetUI();
+
+            // Counting can be long-running, so we want to make it a cancellable operation
+            this.BusyCancelIndicator.IsBusy = true;
+            this.RecognitionSelectionsSaveState();
+            bool allCountsCompleted = await this.DoCountRecognitionsAsync(true, true);
+            if (false == allCountsCompleted)
+            {
+                this.ClearCountsAndResetUI();
+            }
+            else
+            {
+                this.BtnCountRecognitions.IsEnabled = false;
+            }
+            this.RecognitionSelectionsRestoreState();
+            this.TryHighlightCurrentSelection();
+            this.BusyCancelIndicator.IsBusy = false;
+            this.onlyUpdateClassificationCount = false;
         }
 
-        public async Task DoCountRecognitionsAsync(CancellationTokenSource cancellationTokenSource, RecognitionTypeEnum recognitionType)
+        private async Task<bool> DoCountRecognitionsAsync(bool countDetections, bool countClassifications)
         {
-            Mouse.OverrideCursor = Cursors.Wait;
             double lowerDetectionConf = Math.Round(this.SliderDetectionConf.LowerValue, 2);
             double higherDetectionConf = Math.Round(this.SliderDetectionConf.HigherValue, 2);
             double lowerClassificationConf = Math.Round(this.SliderClassificationConf.LowerValue, 2);
             double higherClassificationConf = Math.Round(this.SliderClassificationConf.HigherValue, 2);
 
-            await Task.Run(() =>
+            try
             {
-                bool success = false;
-                if (recognitionType == RecognitionTypeEnum.Detections || recognitionType == RecognitionTypeEnum.DetectionsAndClassifications)
+                bool isCompletelyCompleted = await Task.Run(() =>
                 {
-
-                    success = DoCountDetections(cancellationTokenSource, lowerDetectionConf, higherDetectionConf);
-                    if (false == success)
+                    bool allCountsCompleted;
+                    if (countDetections && (this.onlyUpdateClassificationCount == false || this.DetectionCountsCollectionHasCounts() == false))
                     {
-                        return;
+                        string savedClassificationCategoryNumber = this.RecognitionSelections.ClassificationCategoryNumber;
+                        this.RecognitionSelections.ClassificationCategoryNumber = string.Empty;
+                        allCountsCompleted = DoCountDetections(lowerDetectionConf, higherDetectionConf);
+                        this.RecognitionSelections.ClassificationCategoryNumber = savedClassificationCategoryNumber;
+                        if (!allCountsCompleted)
+                        {
+                            return false;
+                        }
                     }
-                }
 
-                if (recognitionType == RecognitionTypeEnum.Classifications || recognitionType == RecognitionTypeEnum.DetectionsAndClassifications)
-                {
+                    if (countClassifications)
+                    {
+                        allCountsCompleted = DoCountClassifications(lowerClassificationConf, higherClassificationConf);
+                        if (!allCountsCompleted)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
 
-                    success = DoCountClassifications(cancellationTokenSource, lowerClassificationConf, higherClassificationConf);
-                }
-                // XXXX ADDED TEST THIS SEEMS TO APPROX DO THE TRICK BUT NEED TO CHECK
-                // XXXX LIKELY DOESN"T DO THE SELECTION PROPERLY
-                // NOTE SQL ERROR ON CLASSIFICATIONS
-                // this.ParametersRestoreOriginalRecognitions();
-            }, cancellationTokenSource.Token);
-            Mouse.OverrideCursor = null;
+                return isCompletelyCompleted;
+            }
+            catch (TaskCanceledException)
+            {
+                // The task was cancelled. Restore everything
+                // Note that we have to reset the token so we can cancel subsequent counts
+                this.Owner.TokenReset();
+                return false;
+            }
         }
 
-        private bool DoCountDetections(CancellationTokenSource cancellationTokenSource, double lowerConfidenceValue, double higherConfidenceValue)
+        private bool DoCountDetections(double lowerConfidenceValue, double higherConfidenceValue)
         {
-            if (cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                return false;
-            }
+            // Set the confidence bounds
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConfidenceValue;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConfidenceValue;
 
             // All category count 
-            DetectionSelections.RecognitionType = RecognitionType.Detection;
-            DetectionSelections.AllDetections = true;
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = lowerConfidenceValue;
-            this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = higherConfidenceValue;
+            // Check if cancelled, and/or show progress
+            this.ShowProgressOrAbortIfCancelled(true, Constant.RecognizerValues.AllDetectionLabel);
 
+            // Set parameters to count the All state
+            RecognitionSelections.AllDetections = true;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+
+            // Do the count and update the display
             int allFilesCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            if (cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                // Don't bother showing the results if its been cancelled
-                return false;
-            }
-            this.SetDetectionCountForCategory("All", allFilesCount);
-            DetectionSelections.AllDetections = false;
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            DetectionSelections.UseRecognition = true;
+            this.SetDetectionCountForCategory(Constant.RecognizerValues.AllDetectionLabel, allFilesCount);
 
-            if (cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                return false;
-            }
+            // Empty category count 
+            // Check if cancelled, and/or show progress
+            this.ShowProgressOrAbortIfCancelled(true, Constant.RecognizerValues.EmptyDetectionLabel);
 
-            // Empty category count  
-            // TODO: EMPTY NUMBERS DONT MAKE SENSE, OR DO THEY?
-            DetectionSelections.InterpretAllDetectionsAsEmpty = true;
+            // Set parameters to count the Empty state  
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = true;
             int emptyFilesCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            if (cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                // Don't bother showing the results if its been cancelled
-                return false;
-            }
+            this.SetDetectionCountForCategory(Constant.RecognizerValues.EmptyDetectionLabel, emptyFilesCount);
 
-            this.SetDetectionCountForCategory("Empty", emptyFilesCount);
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
 
-            // Individual category counts
+            // Individual detection category count 
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+            RecognitionSelections.AllDetections = false;
             foreach (KeyValuePair<string, string> kvp in DetectionCategories)
             {
-                if (cancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    return false;
-                }
-
                 if (kvp.Key == "0") continue; // Skip empty
-                DetectionSelections.DetectionCategory = kvp.Key;
+
+                // Check if cancelled, and/or show progress
+                this.ShowProgressOrAbortIfCancelled(true, kvp.Value);
+
+                // Set parameters to count this individual
+                RecognitionSelections.DetectionCategoryNumber = kvp.Key;
+
+                // Do the count and update the display
                 int distinctCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-                if (cancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    // Don't bother showing the results if its been cancelled
-                    return false;
-                }
                 string categoryName = kvp.Value;
                 this.SetDetectionCountForCategory(categoryName, distinctCount);
             }
 
             return true;
         }
-        private bool DoCountClassifications(CancellationTokenSource cancellationTokenSource, double lowerConfidenceValue, double higherConfidenceValue)
+        private bool DoCountClassifications(double lowerConfidenceValue, double higherConfidenceValue)
         {
-            Application.Current.Dispatcher.Invoke((Action)delegate
-            {
-                this.DataGridClassifications.IsEnabled = false;
-                this.LBEmptyClassifications.IsEnabled = false;
-            });
-
             // Abort if there are no classifications
-            if (this.ClassificationCategories == null || this.ClassificationCategories.Count == 0 || cancellationTokenSource.Token.IsCancellationRequested)
+            if (this.ClassificationCategories == null || this.ClassificationCategories.Count == 0 || this.Owner.Token.IsCancellationRequested)
             {
-                Application.Current.Dispatcher.Invoke((Action)delegate
-                {
-                    this.ClassificationControlsEnableState(true, true);
-                });
                 return false;
             }
 
             // Set search criteria to classifications
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            DetectionSelections.RecognitionType = RecognitionType.Classification;
-            this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = lowerConfidenceValue;
-            this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = higherConfidenceValue;
+            RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+            this.RecognitionSelections.ClassificationConfidenceLowerForUI = lowerConfidenceValue;
+            this.RecognitionSelections.ClassificationConfidenceHigherForUI = higherConfidenceValue;
 
             // Initialize by clearing the various lists
-            this.ClearCountsInClassificationCountsCollection();
-            this.ClearClassificationEmptyCountsListAndUpdateListBox();
+            this.ClearClassificationCounts();
 
             // For each category, generate the count and update the appropriate lists
             foreach (KeyValuePair<string, string> kvp in this.ClassificationCategories)
             {
-                // If cancelled, enable
-                if (cancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    Application.Current.Dispatcher.Invoke((Action)delegate
-                    {
-                        this.ClassificationControlsEnableState(true, true);
-                    });
-                    return false;
-                }
+                this.ShowProgressOrAbortIfCancelled(false, kvp.Value);
 
+                // Set parameters to count this classification
                 string categoryNumber = kvp.Key;
-                DetectionSelections.ClassificationCategory = categoryNumber;
+                RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
                 string categoryName = kvp.Value;
 
-                // Get the count for the current classification category
+                // Do the count and update the display
                 int distinctCount = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-
-                // Add the count to each category, where counts will appear incrementally on the DataGrid (if non-0) in sorted order
-                // (0 entries are collapsed in the style)
-
                 this.SetClassificationCountForCategory(categoryName, distinctCount);
+
+                // Sort the datagrid by its count
                 if (this.DataGridClassifications.Columns.Count > 0)
                 {
                     Application.Current.Dispatcher.Invoke((Action)delegate
                     {
-
                         SortDataGrid(this.DataGridClassifications, 0, ListSortDirection.Descending);
+                        this.DataGridClassifications.ScrollIntoViewFirstRow();
                     });
-                }
-
-                if (distinctCount == 0)
-                {
-                    // 0 count: Add the category to the Listbox
-                    this.AddClassificationEmptyCountsListAndUpdateListBox(categoryName);
                 }
             }
 
-            // Done! Enable the controls 
-            Application.Current.Dispatcher.Invoke((Action)delegate
-            {
-                this.ClassificationControlsEnableState(true, true);
-            });
             return true;
         }
         #endregion
 
-        #region UI Display Updates
-        private void DisplayCurrentSelection()
+        #region Button Callbacks - BtnCountRecognitions - OnClick
+        private async void BtnCountRecognitions_OnClick(object sender, RoutedEventArgs e)
         {
-            if (this.CurrentlySelectedRecognition.IsRecognitionSelected == false)
-            {
-                //this.TBSelectionFeedback.Text = "No recognition selected.";
-                //this.OkButton.IsEnabled = false;
-                return;
-            }
-            //this.OkButton.IsEnabled = true;
-
-            // Category name (1st letter in caps)
-            string msg = CurrentlySelectedRecognition.CategoryName.Length > 1
-                ? CurrentlySelectedRecognition.CategoryName[0].ToString().ToUpper() + CurrentlySelectedRecognition.CategoryName.Substring(1)
-                : CurrentlySelectedRecognition.CategoryName;
-            if (CurrentlySelectedRecognition.RecognitionType == RecognitionTypeEnum.Detections)
-            {
-                if (Math.Abs(this.SliderDetectionConf.HigherValue - 1) < .009)
-                {
-                    msg += $" detections ≥ {this.SliderDetectionConf.LowerValue:f2}";
-                }
-                else
-                {
-                    msg += $" detections: {this.SliderDetectionConf.LowerValue:f2}\u2194{this.SliderDetectionConf.HigherValue:f2}";
-                }
-            }
-            else
-            {
-                if (Math.Abs(this.SliderClassificationConf.HigherValue - 1) < .009)
-                {
-                    msg += $" classifications ≥ {this.SliderClassificationConf.LowerValue:f2}";
-                }
-                else
-                {
-                    msg += $" classifications: {this.SliderClassificationConf.LowerValue:f2}\u2194{this.SliderClassificationConf.HigherValue:f2}";
-                }
-            }
-            //this.TBSelectionFeedback.Text = msg;
-        }
-
-        // Set the look of  Datagrid holding the CategoryCount values
-        private static void SetDataGridCategoryCountLook(DataGrid dataGrid)
-        {
-            if (dataGrid.Columns.Count <= 1)
-            {
-                return;
-            }
-            // Category column: Try to size to just fit the widest category content
-            dataGrid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-
-            // Count column: Fill the remaining space, if any
-            dataGrid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Star);
-        }
-
-        private void ClearSelectionsAndScrollToTop(DataGrid dataGrid)
-        {
-            this.DataGridDetections.UnselectAllCells();
-            this.DataGridClassifications.UnselectAllCells();
-            if (dataGrid == this.DataGridDetections)
-            {
-                this.DataGridDetections.ScrollIntoViewFirstRow();
-            }
-            else
-            {
-                this.DataGridClassifications.ScrollIntoViewFirstRow();
-                this.EmptyClassificationsScrollViewer.ScrollToTop();
-            }
-        }
-        private void DisplayDetectionConfidenceRange(double lowerConfidence)
-        {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI:f2})";
-        }
-
-        private void DisplayDetectionConfidenceRange(double lowerConfidence, double higherConfidence)
-        {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
-        }
-
-        private void DisplayClassificationConfidenceRange(double lowerConfidence, double higherConfidence)
-        {
-            this.TBClassificationsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
-            //this.TBBelowClassificationValue.Text = $"(with 0 counts in the above range or absent)";
-        }
-
-        // Disable the various controls, usually because there is nothing to show
-        private void DisableAllControls()
-        {
-            //this.TBTotalFiles.Text = string.Empty;
-            this.DataGridDetections.IsEnabled = false;
-            this.SliderDetectionConf.IsEnabled = false;
-            this.TBDetectionsLabel.Foreground = Brushes.DarkGray;
-            this.DisableClassificationControls();
-        }
-
-        private void DisableClassificationControls()
-        {
-            this.TBClassificationsLabel.Foreground = Brushes.DarkGray;
-            //this.TBBelowClassificationsLabel.Foreground = Brushes.DarkGray;
-            this.SliderClassificationConf.IsEnabled = false;
-            this.ClassificationControlsEnableState(false, false);
-        }
-
-
-        private void DetectionControlsEnableState(bool enableState, bool updateCursorToMatchState)
-        {
-            if (updateCursorToMatchState)
-            {
-                Mouse.OverrideCursor = enableState ? null : Cursors.Wait;
-            }
-            this.DataGridDetections.IsEnabled = enableState;
-        }
-
-        private void ClassificationControlsEnableState(bool enableState, bool updateCursorToMatchState)
-        {
-            if (updateCursorToMatchState)
-            {
-                Mouse.OverrideCursor = enableState ? null : Cursors.Wait;
-            }
-            this.DataGridClassifications.IsEnabled = enableState;
-            this.LBEmptyClassifications.IsEnabled = enableState; //enableState;
-        }
-
-        // Sort the given data grid by the first column (i.e., the Count) in ascending order
-        public static void SortDataGrid(DataGrid dataGrid, int columnIndex = 0, ListSortDirection sortDirection = ListSortDirection.Ascending)
-        {
-            var column = dataGrid.Columns[columnIndex];
-
-            // Clear current sort descriptions
-            dataGrid.Items.SortDescriptions.Clear();
-
-            // Add the new sort description
-            dataGrid.Items.SortDescriptions.Add(new SortDescription(column.SortMemberPath, sortDirection));
-
-            // Apply sort
-            foreach (var col in dataGrid.Columns)
-            {
-                col.SortDirection = null;
-            }
-            column.SortDirection = sortDirection;
-
-            // Refresh items to display sort
-            dataGrid.Items.Refresh();
+            await this.RecognitionsRefreshCounts();
         }
         #endregion
 
-        #region Save/Restore/Initialize original selection parameters
-
-        // Save the original selection parameters.
-        // As we will alter some of these, we will restore them later back to its original values
-        private void ParametersSaveOriginalRecognitions()
+        #region Checkbox Callbacks - RankByConfidence, ShowMissingDetections
+        private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            this.UseRecognitions = this.DetectionSelections.UseRecognition;
-            this.DetectionCategory = DetectionSelections.DetectionCategory;
-            this.ClassificationCategory = DetectionSelections.ClassificationCategory;
-            this.AllDetections = DetectionSelections.AllDetections;
-            this.InterpretAllDetectionsAsEmpty = DetectionSelections.InterpretAllDetectionsAsEmpty;
-            this.ConfidenceThreshold1ForUI = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
-            this.ConfidenceThreshold2ForUI = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
-            this.RecognitionType = DetectionSelections.RecognitionType;
-            this.RankByConfidence = DetectionSelections.RankByDetectionConfidence;
-            this.ShowMissingDetections = CustomSelection.ShowMissingDetections;
-            this.RandomSample = CustomSelection.RandomSample;
-            this.EpisodeShowAllIfAnyMatch = CustomSelection.EpisodeShowAllIfAnyMatch;
+
         }
 
-        private void ParametersRestoreOriginalRecognitions()
+        private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            if (null != DetectionSelections)
-            {
-                // Restore original selection parameters as we may have alter some of these
-                this.DetectionSelections.UseRecognition = this.UseRecognitions;
-                this.DetectionSelections.DetectionCategory = this.DetectionCategory;
-                this.DetectionSelections.AllDetections = this.AllDetections;
-                this.DetectionSelections.InterpretAllDetectionsAsEmpty = this.InterpretAllDetectionsAsEmpty;
-                this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.ConfidenceThreshold1ForUI;
-                this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.ConfidenceThreshold2ForUI;
-                this.DetectionSelections.RecognitionType = this.RecognitionType;
-                this.DetectionSelections.ClassificationCategory = this.ClassificationCategory;
-                this.DetectionSelections.RankByDetectionConfidence = this.RankByConfidence;
-            }
-            if (null != CustomSelection)
-            {
-                this.CustomSelection.ShowMissingDetections = this.ShowMissingDetections;
-                this.CustomSelection.RandomSample = this.RandomSample;
-                this.CustomSelection.EpisodeShowAllIfAnyMatch = this.EpisodeShowAllIfAnyMatch;
-            }
-        }
 
-        private void ParametersIntializeAsDetections()
-        {
-            // Initialize parameters
-            DetectionSelections.AllDetections = false;
-            DetectionSelections.RecognitionType = RecognitionType.Detection;
-
-            DetectionSelections.RankByDetectionConfidence = false;
-            CustomSelection.ShowMissingDetections = false;
-            CustomSelection.EpisodeShowAllIfAnyMatch = false;
-        }
-
-        #endregion
-
-        #region UI callbacks - OnSelectionChanged
-        private void DataGridDetections_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is DataGrid dataGrid)
-            {
-                if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
-                {
-
-                    // The user selected All. By convention (and only used in this class), All is mapped to the category string in AllCategoryNumber (-1)
-                    if (categoryCount.Category == Constant.RecognizerValues.AllDetectionLabel)
-                    {
-                        this.CurrentlySelectedRecognition.IsRecognitionSelected = true;
-                        this.CurrentlySelectedRecognition.RecognitionType = RecognitionTypeEnum.Detections;
-                        this.CurrentlySelectedRecognition.CategoryName = categoryCount.Category;
-                        this.CurrentlySelectedRecognition.CategoryNumber = this.AllCategoryNumber;
-                        this.DisplayCurrentSelection();
-
-                        SendRecognitionSelectionEvent();
-                        return;
-                    }
-
-                    // The user selected a category (which could include empty)
-                    string categoryNumber = string.Empty;
-
-                    // Get the category number from its name
-                    foreach (KeyValuePair<string, string> kvp in this.DetectionCategories)
-                    {
-                        if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryCount.Category))
-                        {
-                            categoryNumber = kvp.Key;
-                            break;
-                        }
-                    }
-                    if (categoryNumber != string.Empty)
-                    {
-                        // Set it to the selected category
-                        this.CurrentlySelectedRecognition.IsRecognitionSelected = true;
-                        this.CurrentlySelectedRecognition.RecognitionType = RecognitionTypeEnum.Detections;
-                        this.CurrentlySelectedRecognition.CategoryName = categoryCount.Category;
-                        this.CurrentlySelectedRecognition.CategoryNumber = categoryNumber;
-                        this.DisplayCurrentSelection();
-                        SendRecognitionSelectionEvent();
-                        return;
-                    }
-                }
-                // Something went wrong. Feedback???
-                this.CurrentlySelectedRecognition.IsRecognitionSelected = false;
-                this.DisplayCurrentSelection();
-            }
-        }
-
-        private void DataGridClassifications_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is DataGrid dataGrid)
-            {
-                if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
-                {
-                    // The user selected a category (which could include empty)
-                    string categoryNumber = string.Empty;
-
-                    // Get the category number from its name
-                    foreach (KeyValuePair<string, string> kvp in this.ClassificationCategories)
-                    {
-                        if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryCount.Category))
-                        {
-                            categoryNumber = kvp.Key;
-                            break;
-                        }
-                    }
-                    if (categoryNumber != string.Empty)
-                    {
-                        // Set it to the selected category
-                        this.CurrentlySelectedRecognition.IsRecognitionSelected = true;
-                        this.CurrentlySelectedRecognition.RecognitionType = RecognitionTypeEnum.Classifications;
-                        this.CurrentlySelectedRecognition.CategoryName = categoryCount.Category;
-                        this.CurrentlySelectedRecognition.CategoryNumber = categoryNumber;
-                        this.DisplayCurrentSelection();
-                        SendRecognitionSelectionEvent();
-
-                        return;
-                    }
-                }
-                // Something went wrong. Feedback???
-                this.CurrentlySelectedRecognition.IsRecognitionSelected = false;
-                this.DisplayCurrentSelection();
-            }
         }
         #endregion
 
-        #region Slider Detection Confidence 
+        #region Slider: Detection Confidence Callbacks
         // When the detection drag is in progress
         // - disable the detection controls
         // - display the updated slider value
@@ -775,7 +296,7 @@ namespace Timelapse.Controls
                 e.Handled = true;
             }
         }
-        private async void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
+        private void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
         {
             // Abort if we can't do anything
             if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
@@ -786,8 +307,8 @@ namespace Timelapse.Controls
             // Abort if nothing has changed  in the current slider interaction, i.e., the value has not been changed previously
             // and there are no changes between the current slider values vs the current confidence values
             if (isDetectionValueChanged == false &&
-                Math.Abs(Math.Round(slider.LowerValue, 2) - this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI) < .01 &&
-                Math.Abs(Math.Round(slider.HigherValue, 2) - this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI) < .01)
+                Math.Abs(Math.Round(slider.LowerValue, 2) - this.RecognitionSelections.DetectionConfidenceLowerForUI) < .01 &&
+                Math.Abs(Math.Round(slider.HigherValue, 2) - this.RecognitionSelections.DetectionConfidenceHigherForUI) < .01)
             {
                 return;
             }
@@ -798,48 +319,58 @@ namespace Timelapse.Controls
                 // We only want to update the display as described below, but not actually do any counting
                 // as that is an expensive operation.
 
-                // Disable the detection datagrid including clearing the current selection and recognition
-                this.DetectionControlsEnableState(false, true);
-                this.ClearSelectionsAndScrollToTop(this.DataGridDetections);
-                this.CurrentlySelectedRecognition.IsRecognitionSelected = false;
+                if (this.sliderConfidenceInitialMovement == false)
+                {
+                    // We only need to do this the first time things are being moved
 
+                    // Clearing the current selection and recognition
+                    this.ClearSelectionsAndScrollToTop(this.DataGridDetections);
+                    this.sliderConfidenceInitialMovement = true;
+
+                    // As the user is scrolling, indicate this by clearing the current counts (ie., to NoValue)
+                    this.ClearCountsAndResetUI();
+
+                    // Disable the detection datagrid 
+                    this.DetectionDataGridEnableState(false, true);
+                    this.ClassificationDataGridListBoxEnableState(false, true);
+                    this.isDetectionValueChanged = true;
+                }
                 // Show the current slider values 
                 this.DisplayDetectionConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
-
-                // Clear the current counts
-                this.ClearCountsInDetectionCountsCollection();
-
-                this.isDetectionValueChanged = true;
+                this.onlyUpdateClassificationCount = false;
                 return;
             }
 
             // The user has finished updating the sliders, so we want to both update the display 
             // and counts
+            this.sliderConfidenceInitialMovement = false;
+            this.onlyUpdateClassificationCount = false;
 
             // Enable the detection datagrid 
-            this.DetectionControlsEnableState(true, true);
+            this.DetectionDataGridEnableState(true, true);
+            this.ClassificationDataGridListBoxEnableState(true, true);
+
+            // The CountRecogntions button is enabled so that the user can recount recogntions
+            this.BtnCountRecognitions.IsEnabled = true;
 
             // Set and display the new confidence thresholds
             double lowerConf = Math.Round(slider.LowerValue, 2);
             double higherConf = Math.Round(slider.HigherValue, 2);
-            this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = lowerConf;
-            this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = higherConf;
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConf;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConf;
             this.DisplayDetectionConfidenceRange(lowerConf, higherConf);
+            this.SetEmptyDetectionCategoryLabel();
 
-            // Clear the current counts and start counting the new ones
-            this.ClearCountsInDetectionCountsCollection();
+            // Clear the current counts 
+            this.ClearCountsAndResetUI();
             this.isDetectionValueChanged = false;
 
-            // Recount classifications. 
-            // Note that we don't clear counts as we are rebuilding the entire list
-            // Cancel the last operation, then reset the token for the next operation
-            this.TokenSource.Cancel();
-            this.TokenSource = new CancellationTokenSource();
-            await this.DoCountRecognitionsAsync(new CancellationTokenSource(), RecognitionTypeEnum.Detections);
+            // Send a recognition selection event to the parent
+            this.SendRecognitionSelectionEvent(true);
         }
         #endregion
 
-        #region Slider Classification Confidence Callbacks
+        #region Slider: Classification Confidence Callbacks
         // Classification slider -
         // When the classification drag is in progress
         // - disable the classification controls
@@ -859,8 +390,9 @@ namespace Timelapse.Controls
         private void SliderClassificationConf_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             this.isClassificationSliderMouseDown = true;
+            this.savedSelectedCategoryCount = (CategoryCount)DataGridClassifications?.SelectedItem;
         }
-        private async void SliderClassificationConf_ValueChanged(object sender, RoutedEventArgs e)
+        private void SliderClassificationConf_ValueChanged(object sender, RoutedEventArgs e)
         {
             // Abort if we can't do anything
             if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
@@ -871,8 +403,8 @@ namespace Timelapse.Controls
             // Abort if nothing has changed  in the current slider interaction, i.e., the value has not been changed previously
             // and there are no changes between the current slider values vs the current confidence values
             if (isClassificationValueChanged == false &&
-                Math.Abs(Math.Round(slider.LowerValue, 2) - this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI) < .01 &&
-                Math.Abs(Math.Round(slider.HigherValue, 2) - this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI) < .01)
+                Math.Abs(Math.Round(slider.LowerValue, 2) - this.RecognitionSelections.ClassificationConfidenceLowerForUI) < .01 &&
+                Math.Abs(Math.Round(slider.HigherValue, 2) - this.RecognitionSelections.ClassificationConfidenceHigherForUI) < .01)
             {
                 return;
             }
@@ -883,133 +415,688 @@ namespace Timelapse.Controls
                 // We only want to update the display as described below, but not actually do any counting
                 // as that is an expensive operation.
 
-                // Disable the detection datagrid including clearing the current selection and recognition
-                this.ClassificationControlsEnableState(false, true);
+                // As the user is in the midst of scrolling, provide feedback by
+                // disabling the detection datagrid and clearing the current classification selection and recognition
+                this.ClassificationDataGridListBoxEnableState(false, true);
                 this.ClearSelectionsAndScrollToTop(this.DataGridClassifications);
-                this.CurrentlySelectedRecognition.IsRecognitionSelected = false;
 
                 // Show the current slider values 
                 this.DisplayClassificationConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
 
                 // Clear the current counts
-                this.ClearCountsInClassificationCountsCollection();
-                this.ClearClassificationEmptyCountsListAndUpdateListBox();
+                this.onlyUpdateClassificationCount = true;
+                this.ClearClassificationCounts();
                 this.isClassificationValueChanged = true;
                 return;
             }
 
-            // The user has finished updating the sliders, so we want to both update the display 
-            // and counts
+            // The user has finished updating the sliders, so we want to both update the display and counts
 
-            // Enable the detection datagrid 
-            this.ClassificationControlsEnableState(true, true);
+            // Enable the classification datagrid 
+            this.ClassificationDataGridListBoxEnableState(true, true);
+
+            // The CountRecogntions button is enabled so that the user can recount recogntions
+            this.BtnCountRecognitions.IsEnabled = true;
 
             // Set and display the new confidence thresholds
             double lowerConf = Math.Round(slider.LowerValue, 2);
             double higherConf = Math.Round(slider.HigherValue, 2);
-            this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = lowerConf;
-            this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = higherConf;
+            this.RecognitionSelections.ClassificationConfidenceLowerForUI = lowerConf;
+            this.RecognitionSelections.ClassificationConfidenceHigherForUI = higherConf;
             this.DisplayClassificationConfidenceRange(lowerConf, higherConf);
-
-            // Clear the current counts and start counting the new ones
-            this.ClearCountsInClassificationCountsCollection();
-            this.ClearClassificationEmptyCountsListAndUpdateListBox();
+            this.DataGridClassifications.SelectedItem = this.savedSelectedCategoryCount;
+            this.TryHighlightCurrentSelection();
             this.isClassificationValueChanged = false;
+            this.onlyUpdateClassificationCount = true;
 
-            // Recount classifications. 
-            // Note that we don't clear counts as we are rebuilding the entire list
-            // Cancel the last operation, then reset the token for the next operation
-            this.TokenSource.Cancel();
-            this.TokenSource = new CancellationTokenSource();
-            await this.DoCountRecognitionsAsync(new CancellationTokenSource(), RecognitionTypeEnum.Classifications);
+            // Send a recognition selection event to the parent
+            this.SendRecognitionSelectionEvent(true);
         }
         #endregion
 
-        #region UI Callbacks - Button clicks
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        #region DataGrid Callbacks - OnSelectionChanged 
+        private void DataGridDetections_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.TokenSource.Cancel();
-            this.ParametersRestoreOriginalRecognitions();
+            this.DoDataGridDetections_OnSelectionChanged(sender, RecognitionTypeEnum.Detections);
+        }
 
-            if (this.CurrentlySelectedRecognition.IsRecognitionSelected)
+        private void DoDataGridDetections_OnSelectionChanged(object sender, RecognitionTypeEnum recognitionType)
+        {
+            if (this.ignoreSelection)
             {
-                // A recognition is selected, so ensure that UseRecognition is on
-                this.DetectionSelections.UseRecognition = true;
+                return;
+            }
 
-                if (this.CurrentlySelectedRecognition.RecognitionType == RecognitionTypeEnum.Detections)
+            this.RecognitionSelections.ClassificationCategoryNumber = string.Empty;
+            if (sender is DataGrid dataGrid)
+            {
+                if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
                 {
-                    // Detections
-                    if (this.CurrentlySelectedRecognition.CategoryNumber == this.AllCategoryNumber)
+                    // Alter the RecognitionSelection parameters so that the parent can redo the count on it
+                    // All special case: By convention, All is mapped to the category string in AllCategoryNumber (NoValue)
+                    if (categoryCount.Category == Constant.RecognizerValues.AllDetectionLabel)
                     {
-                        // Detections: All
-                        DetectionSelections.AllDetections = true;
-                        DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                        DetectionSelections.RecognitionType = RecognitionType.Detection;
-                        this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderDetectionConf.LowerValue;
-                        this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderDetectionConf.HigherValue;
-                        this.CustomSelection.ShowMissingDetections = false;
-                        //this.DialogResult = true;
+                        // Set to the currently selected item
+                        this.RecognitionSelections.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
+                        this.RecognitionSelections.AllDetections = true;
+                        this.RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+
+                        // Update the datagrid
+                        if (categoryCount.Category != Constant.RecognizerValues.AnimalDetectionLabel)
+                        {
+                            // Unselect classifications when the Detection category is not Animal
+                            this.ignoreSelection = true;
+                            this.DataGridClassifications.SelectedItem = null;
+                            this.ignoreSelection = false;
+                        }
+                        this.SendRecognitionSelectionEvent(false);
                         return;
                     }
 
-                    if (this.CurrentlySelectedRecognition.CategoryNumber == "0")
+
+                    // The user selected a category (which could include empty)
+                    string selectedCategory = categoryCount.Category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel)
+                        ? Constant.RecognizerValues.EmptyDetectionLabel
+                        : categoryCount.Category;
+
+                    // Change the recognitionSelection attributes to match Empty
+                    if (selectedCategory == Constant.RecognizerValues.EmptyDetectionLabel)
                     {
-                        // Detections: Empty
-                        DetectionSelections.AllDetections = true;
-                        DetectionSelections.InterpretAllDetectionsAsEmpty = true;
-                        DetectionSelections.RecognitionType = RecognitionType.Detection;
-                        this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber;
-                        this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderDetectionConf.LowerValue;
-                        this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderDetectionConf.HigherValue;
-                        this.CustomSelection.ShowMissingDetections = false;
-                        //this.DialogResult = true;
-                        return;
+                        this.RecognitionSelections.AllDetections = true;
+                        this.RecognitionSelections.InterpretAllDetectionsAsEmpty = true;
+                    }
+                    else
+                    {
+                        this.RecognitionSelections.AllDetections = false;
+                        this.RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
                     }
 
-                    // Detections: A non-Empty, non-All category
-                    DetectionSelections.AllDetections = false;
-                    DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                    DetectionSelections.RecognitionType = RecognitionType.Detection;
-                    this.DetectionSelections.DetectionCategory = this.CurrentlySelectedRecognition.CategoryNumber;
-                    this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderDetectionConf.LowerValue;
-                    this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderDetectionConf.HigherValue;
-                    this.CustomSelection.ShowMissingDetections = false;
-                    return;
-                }
+                    // Get the category number from its name
+                    string categoryNumber = GetCategoryNumberFromCategoryName(DetectionCategories, selectedCategory);
+                    if (categoryNumber != string.Empty)
+                    {
+                        // Set it to the selected category
+                        this.RecognitionSelections.DetectionCategoryNumber = categoryNumber;
+                        if (selectedCategory != Constant.RecognizerValues.AnimalDetectionLabel)
+                        {
+                            // Unselect classifications when the Detection category is not Animal
+                            this.ignoreSelection = true;
+                            this.DataGridClassifications.SelectedItem = null;
+                            this.ignoreSelection = false;
+                        }
 
-                if (this.CurrentlySelectedRecognition.RecognitionType == RecognitionTypeEnum.Classifications)
-                {
-                    // Classification
-                    DetectionSelections.AllDetections = false;
-                    DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-
-                    DetectionSelections.RecognitionType = RecognitionType.Classification;
-                    this.DetectionSelections.ClassificationCategory = this.CurrentlySelectedRecognition.CategoryNumber;
-                    this.DetectionSelections.ConfidenceDetectionThresholdLowerForUI = this.SliderClassificationConf.LowerValue;
-                    this.DetectionSelections.ConfidenceDetectionThresholdUpperForUI = this.SliderClassificationConf.HigherValue;
-                    this.CustomSelection.ShowMissingDetections = false;
-                    //this.DialogResult = true;
+                        // Send event, but don't redo the count on recognitions
+                        this.SendRecognitionSelectionEvent(false);
+                    }
                 }
             }
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
+        // The classification selection has changed
+        // 
+        private void DataGridClassifications_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.TokenSource.Cancel();
-            this.ParametersRestoreOriginalRecognitions();
-            //this.DialogResult = false;
+            if (this.ignoreSelection)
+            {
+                return;
+            }
+
+            if (sender is DataGrid dataGrid)
+            {
+                if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
+                {
+                    // The user selected a category
+                    string categoryNumber = GetCategoryNumberFromCategoryName(this.ClassificationCategories, categoryCount.Category);
+
+                    if (categoryNumber != string.Empty)
+                    {
+                        // Set the Classification Category to the selected entity
+                        this.RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
+
+                        // Because we are selecting a classification, we should ensure that the Detections Category is set to Animal
+                        this.RecognitionSelections.AllDetections = false;
+                        this.RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+                        string animalCategoryNumber = GetCategoryNumberFromCategoryName(DetectionCategories, Constant.RecognizerValues.AnimalDetectionLabel);
+                        this.RecognitionSelections.DetectionCategoryNumber = animalCategoryNumber;
+
+                        CategoryCount animalCategoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category.StartsWith(Constant.RecognizerValues.AnimalDetectionLabel));
+                        if (animalCategoryCount != null)
+                        {
+                            // Set the selected item to Animal
+                            // We then invoke the DataGridDetections_OnSelectionChanged to set the detection appropriately,
+                            // and to trigger SendRecognitionSelectionEvent();
+                            this.ignoreSelection = true;
+                            this.DataGridDetections.SelectedItem = animalCategoryCount;
+                            this.ignoreSelection = false;
+                        }
+                        this.SendRecognitionSelectionEvent(false);
+                    }
+                }
+            }
         }
         #endregion
 
-        #region Setting and Clearing DetectionCountsCollection
-        // Given a category and a count, add or update it in the DetectionCountsCollection
-        private void SetDetectionCountForCategory(string category, int count)
+        #region Highlight selection
+        // Try to highlight the currently selected item, if possible
+        // Used only by OnLoaded to show the initial selections.
+        private void TryHighlightCurrentSelection()
         {
-            var categoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category == category);
-            if (null == categoryCount)
+            if (string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber) && string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
             {
+                // Nothing was selected
+                this.ignoreSelection = true;
+                this.DataGridDetections.SelectedItem = null;
+                this.DataGridClassifications.SelectedItem = null;
+                this.ignoreSelection = false;
+                return;
+            }
+
+            if (false == string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber))
+            {
+                // We have a selected detection. Get its name 
+                string selectedDetectionCategoryName;
+                if (this.RecognitionSelections.DetectionCategoryNumber == Constant.RecognizerValues.AllDetectionCategoryNumber)
+                {
+                    selectedDetectionCategoryName = Constant.RecognizerValues.AllDetectionLabel;
+                }
+                else if (this.RecognitionSelections.DetectionCategoryNumber == Constant.RecognizerValues.EmptyDetectionCategoryNumber)
+                {
+                    selectedDetectionCategoryName = Constant.RecognizerValues.EmptyDetectionLabel;
+                }
+                else
+                {
+                    this.DetectionCategories.TryGetValue(this.RecognitionSelections.DetectionCategoryNumber, out selectedDetectionCategoryName);
+                }
+
+                if (selectedDetectionCategoryName == null)
+                {
+                    // Special case to interpret all and empty categories 
+                    if (this.RecognitionSelections.AllDetections && this.RecognitionSelections.InterpretAllDetectionsAsEmpty)
+                    {
+                        selectedDetectionCategoryName = Constant.RecognizerValues.EmptyDetectionLabel;
+                    }
+                    else if (this.RecognitionSelections.AllDetections && false == this.RecognitionSelections.InterpretAllDetectionsAsEmpty)
+                    {
+                        selectedDetectionCategoryName = Constant.RecognizerValues.AllDetectionLabel;
+                    }
+                    else
+                    {
+                        // Something went wrong
+                        return;
+                    }
+                }
+                // Get the category count item matching the category name
+                CategoryCount detectionCategoryCount = this.DetectionCountsCollection.FirstOrDefault(x => x.Category == selectedDetectionCategoryName);
+                if (detectionCategoryCount == null)
+                {
+                    detectionCategoryCount = this.DetectionCountsCollection.FirstOrDefault(x => x.Category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel));
+                    if (detectionCategoryCount == null)
+                    {
+                        // Something went wrong
+                        return;
+                    }
+                }
+
+                // Finally, select that item in the data grid, making sure its visible and highlit
+                this.ignoreSelection = true;
+                this.DataGridDetections.SelectedItem = detectionCategoryCount;
+                if (string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+                {
+                    this.DataGridClassifications.SelectedItem = null;
+                }
+                this.ignoreSelection = false;
+                this.DataGridDetections.ScrollIntoView(detectionCategoryCount);
+                this.DataGridDetections.Focus();
+            }
+
+            // If we have a classification selected, highlight it
+            if (false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            {
+                // Classification
+                this.ClassificationCategories.TryGetValue(this.RecognitionSelections.ClassificationCategoryNumber, out string selectedClassificationCategoryName);
+                if (selectedClassificationCategoryName == null)
+                {
+                    return;
+                }
+                CategoryCount classificationCategoryCount = this.ClassificationCountsCollection.FirstOrDefault(x => x.Category == selectedClassificationCategoryName);
+                if (classificationCategoryCount == null)
+                {
+                    // Something went wrong
+                    return;
+                }
+                // Finally, select that item in the data grid, making sure its visible and highlit
+                this.ignoreSelection = true;
+                this.DataGridClassifications.SelectedItem = classificationCategoryCount;
+                this.ignoreSelection = false;
+                this.DataGridClassifications.ScrollIntoView(classificationCategoryCount);
+                this.DataGridClassifications.Focus();
+            }
+            else
+            {
+                this.DataGridClassifications.SelectedItem = null;
+                this.DataGridClassifications.ScrollIntoViewFirstRow();
+            }
+        }
+        #endregion
+
+        #region Custom Selection Event
+        public event EventHandler<RecognitionSelectionChangedEventArgs> RecognitionSelectionEvent;
+
+        private void SendRecognitionSelectionEvent(bool refreshRecognitionCountsRequired)
+        {
+            string detectionCategoryLabel = string.Empty;
+            string classificationCategoryLabel = string.Empty;
+
+            // Get the current Detection selection, if any
+            if (this.DataGridDetections.SelectedItems.Count == 1 && this.DataGridDetections.SelectedItems[0] is CategoryCount categoryCountDetections)
+            {
+                detectionCategoryLabel = categoryCountDetections.Category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel)
+                    ? Constant.RecognizerValues.EmptyDetectionLabel
+                    : categoryCountDetections.Category;
+            }
+
+            // Get the current Classification selection, if any
+            if (DataGridClassifications.SelectedItems.Count == 1 && DataGridClassifications.SelectedItems[0] is CategoryCount categoryCountClassifications)
+            {
+                classificationCategoryLabel = categoryCountClassifications.Category;
+            }
+
+            // Compose the argument and send the event
+            RecognitionSelectionChangedEventArgs e = new RecognitionSelectionChangedEventArgs(detectionCategoryLabel, classificationCategoryLabel, refreshRecognitionCountsRequired);
+            RecognitionSelectionEvent?.Invoke(this, e);
+        }
+        #endregion
+
+        #region Public methods, invoked by Parent
+
+        public void UpdateDisplayOfTotalFileCounts(string count)
+        {
+            this.MatchingFilesCountLabel.Text = (count == "1")
+                ? " file matches your query"
+                : " files match your query";
+            this.MatchingFilesCount.Text = count;
+        }
+        #endregion
+
+        #region --------------------------DONE------------------
+        // DONE
+        #endregion
+
+        #region Constructor
+        public RecognitionSelector(BusyableDialogWindow owner, BusyCancelIndicator busyCancelIndicator)
+        {
+            InitializeComponent();
+            // So we can access the database and the various custom selection parameters
+            this.Database = GlobalReferences.MainWindow.DataHandler?.FileDatabase;
+            this.CustomSelection = Database?.CustomSelection;
+            this.RecognitionSelections = Database?.CustomSelection?.RecognitionSelections;
+            this.Owner = owner;
+            this.BusyCancelIndicator = busyCancelIndicator;
+        }
+        #endregion
+
+        #region OnLoaded
+        private void RecognitionsSelector_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            // Set the look of the two Datagrids
+            SetDataGridCategoryCountLook(this.DataGridDetections);
+            SetDataGridCategoryCountLook(this.DataGridClassifications);
+
+            // Abort if there is nothing to show
+            if (this.Database == null)
+            {
+                this.EnableOrDisableAllControls(false, false, false);
+                return;
+            }
+
+            // If we make it here, recognitions are available for this image set
+
+            // Populate the detection categories
+            this.Database.CreateDetectionCategoriesDictionaryIfNeeded();
+            this.DetectionCategories = Database.detectionCategoriesDictionary;
+            if (null == this.DetectionCategories || this.DetectionCategories.Count == 0)
+            {
+                // Shouldn't happen: there are no detection categories! (likely a problem with the json file?)
+                this.EnableOrDisableAllControls(false, false, false);
+                return;
+            }
+
+            // Set the detection sliders, etc to the appropriate values
+            this.SetDetectionControlsToInitialValues();
+
+            // At this point we should at least have some detections.
+            // So now we need to handle classifications, if any
+            // Try to Populate the classification categories
+            this.Database.CreateClassificationCategoriesDictionaryIfNeeded();
+            this.ClassificationCategories = this.Database.classificationCategoriesDictionary;
+            if (this.ClassificationCategories == null || this.ClassificationCategories.Count == 0)
+            {
+                // No classifications for this image set
+                this.classificationsExist = false;
+                this.ClassificationControlsCollapse();
+            }
+            else
+            {
+                // Set the classification sliders to the appropriate values, initialize classifications, etc
+                this.classificationsExist = true;
+                this.SetClassificationControlsToInitialValues();
+            }
+            this.TryHighlightCurrentSelection();
+            this.SendRecognitionSelectionEvent(false);
+        }
+        #endregion
+
+        #region Save/Restore RecognitionSelections Parameters
+
+        // Save the original selection parameters.
+        // As we will alter some of these, we will restore them later back to its original values
+        private void RecognitionSelectionsSaveState()
+        {
+            this.SavedRecognitionSelections = new RecognitionSelections
+            {
+                UseRecognition = this.RecognitionSelections.UseRecognition,
+                DetectionCategoryNumber = RecognitionSelections.DetectionCategoryNumber,
+                ClassificationCategoryNumber = RecognitionSelections.ClassificationCategoryNumber,
+                AllDetections = RecognitionSelections.AllDetections,
+                InterpretAllDetectionsAsEmpty = RecognitionSelections.InterpretAllDetectionsAsEmpty,
+                DetectionConfidenceLowerForUI = RecognitionSelections.DetectionConfidenceLowerForUI,
+                DetectionConfidenceHigherForUI = RecognitionSelections.DetectionConfidenceHigherForUI,
+                RankByDetectionConfidence = RecognitionSelections.RankByDetectionConfidence
+            };
+
+            this.ShowMissingDetections = CustomSelection.ShowMissingDetections;
+            this.RandomSample = CustomSelection.RandomSample;
+            this.EpisodeShowAllIfAnyMatch = CustomSelection.EpisodeShowAllIfAnyMatch;
+        }
+
+        private void RecognitionSelectionsRestoreState()
+        {
+            if (null != RecognitionSelections)
+            {
+                // Restore original selection parameters as we may have alter some of these
+                this.RecognitionSelections.UseRecognition = this.SavedRecognitionSelections.UseRecognition;
+                this.RecognitionSelections.DetectionCategoryNumber = this.SavedRecognitionSelections.DetectionCategoryNumber;
+                this.RecognitionSelections.AllDetections = this.SavedRecognitionSelections.AllDetections;
+                this.RecognitionSelections.InterpretAllDetectionsAsEmpty = this.SavedRecognitionSelections.InterpretAllDetectionsAsEmpty;
+                this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SavedRecognitionSelections.DetectionConfidenceLowerForUI;
+                this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SavedRecognitionSelections.DetectionConfidenceHigherForUI;
+                this.RecognitionSelections.ClassificationCategoryNumber = this.SavedRecognitionSelections.ClassificationCategoryNumber;
+                this.RecognitionSelections.RankByDetectionConfidence = this.SavedRecognitionSelections.RankByDetectionConfidence;
+            }
+
+            if (null == CustomSelection)
+            {
+                return;
+            }
+            this.CustomSelection.ShowMissingDetections = this.ShowMissingDetections;
+            this.CustomSelection.RandomSample = this.RandomSample;
+            this.CustomSelection.EpisodeShowAllIfAnyMatch = this.EpisodeShowAllIfAnyMatch;
+        }
+        #endregion
+
+        #region Set detection and classification controls (sliders, labels, counts) to initial values 
+        // Detection-related initialization to saved (original) parameter values
+        // - only invoked in OnLoaded
+        private void SetDetectionControlsToInitialValues()
+        {
+            // Set the current Confidence range in the detection sliders
+            this.SliderDetectionConf.LowerValue = Math.Round(this.RecognitionSelections.DetectionConfidenceLowerForUI, 2);
+            this.SliderDetectionConf.HigherValue = Math.Round(this.RecognitionSelections.DetectionConfidenceHigherForUI, 2);
+
+            // Display the current Confidence range in the detections title
+            this.DisplayDetectionConfidenceRange(Math.Round(this.SliderDetectionConf.LowerValue, 2));
+
+            // Clear the counts for each detection category held in the DetectionCounts
+            // This will also create an entry for each detection category as they don't already exist.
+            this.ClearDetectionCounts();
+        }
+
+        // Classification-related initialization to saved (original) parameter values
+        // - only invoked in OnLoaded
+        private void SetClassificationControlsToInitialValues()
+        {
+            if (false == this.classificationsExist)
+            {
+                return;
+            }
+            // Set the current Confidence range in the classification sliders
+            this.SliderClassificationConf.LowerValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceLowerForUI, 2);
+            this.SliderClassificationConf.HigherValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceHigherForUI, 2);
+
+            // Display the current Confidence range in the classifications title
+            this.DisplayClassificationConfidenceRange(Math.Round(this.SliderClassificationConf.LowerValue, 2), Math.Round(SliderClassificationConf.HigherValue, 2));
+
+            // Clear the counts for each classification category held in the DetectionCounts
+            // This will also create an entry for each classification category as they don't already exist.
+            // Initialize classifications, where each has an empty count
+            this.ClearAllClassifications();
+        }
+        #endregion
+
+        #region Enable/Disable controls
+        // Disable all the recognition controls, usually because there is nothing to show
+        // This is likely redundant, as the recognitions selector should NOT be created if there is nothing to show.
+        private void EnableOrDisableAllControls(bool enableAllControls, bool enableCancelButton, bool updateCursorToMatchState)
+        {
+            // Enable/disable the detection datagrid and detection slider
+            this.DetectionDataGridEnableState(enableAllControls, updateCursorToMatchState);
+            this.SliderDetectionConf.IsEnabled = enableAllControls;
+
+            // Enable/disable the classification controls
+            this.ClassificationDataGridListBoxEnableState(enableAllControls, updateCursorToMatchState);
+            this.SliderClassificationConf.IsEnabled = enableAllControls;
+
+            // Enable/disable the buttons and checkbox 
+            this.BtnCountRecognitions.IsEnabled = enableAllControls;
+            this.RankByDetectionConfidenceCheckbox.IsEnabled = enableAllControls;
+            this.RankByClassificationConfidenceCheckbox.IsEnabled = enableAllControls;
+            this.ShowMissingDetectionsCheckbox.IsEnabled = enableAllControls;
+
+            // Adjust all label colors i.e., disabled is gray, enabled is black
+            Brush labelColor = enableAllControls ? Brushes.Black : Brushes.DarkGray;
+            this.TBDetectionsLabel.Foreground = labelColor;
+            this.TBClassificationsLabel.Foreground = labelColor;
+            this.RankByDetectionConfidenceCheckbox.Foreground = labelColor;
+            this.RankByClassificationConfidenceCheckbox.Foreground = labelColor;
+            this.ShowMissingDetectionsCheckbox.Foreground = labelColor;
+        }
+
+        private void DetectionDataGridEnableState(bool enableState, bool updateCursorToMatchState)
+        {
+            if (updateCursorToMatchState)
+            {
+                Mouse.OverrideCursor = enableState ? null : Cursors.Wait;
+            }
+            this.DataGridDetections.IsEnabled = enableState;
+        }
+
+        private void ClassificationDataGridListBoxEnableState(bool enableState, bool updateCursorToMatchState)
+        {
+            if (updateCursorToMatchState)
+            {
+                Mouse.OverrideCursor = enableState ? null : Cursors.Wait;
+            }
+            this.DataGridClassifications.IsEnabled = enableState;
+        }
+
+
+        // Collapse the classification controls (because no classifications are present)
+        // - only be invoked via the OnLoaded event
+        private void ClassificationControlsCollapse()
+        {
+            this.GridClassifications.Visibility = Visibility.Collapsed;
+            this.ClassificationColumnWidth.Width = new GridLength(0);
+        }
+        #endregion
+
+        #region Datagrid: Set its look or clear its selections, or sort it by count
+        // Set the look of  Datagrid holding the CategoryCount values
+        private static void SetDataGridCategoryCountLook(DataGrid dataGrid)
+        {
+            if (dataGrid.Columns.Count <= 1)
+            {
+                return;
+            }
+            // Category column: Try to size to just fit the widest category content
+            dataGrid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+
+            // Count column: Fill the remaining space, if any
+            dataGrid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Star);
+        }
+
+        // Clear the datagrid selection and scroll it to its top.
+        private void ClearSelectionsAndScrollToTop(DataGrid dataGrid)
+        {
+            this.DataGridDetections.UnselectAllCells();
+            this.DataGridClassifications.UnselectAllCells();
+            dataGrid.ScrollIntoViewFirstRow();
+        }
+
+        // Sort the given data grid by the indicated column (Count is 0, Category name is 1) in the appropriate order
+        public static void SortDataGrid(DataGrid dataGrid, int columnIndex = 0, ListSortDirection sortDirection = ListSortDirection.Ascending)
+        {
+            var column = dataGrid.Columns[columnIndex];
+
+            // Clear current sort descriptions
+            dataGrid.Items.SortDescriptions.Clear();
+
+            // Add the new sort description
+            dataGrid.Items.SortDescriptions.Add(new SortDescription(column.SortMemberPath, sortDirection));
+
+            // Apply sort
+            foreach (var col in dataGrid.Columns)
+            {
+                col.SortDirection = null;
+            }
+            column.SortDirection = sortDirection;
+
+            // Refresh items to display sort
+            dataGrid.Items.Refresh();
+        }
+        #endregion
+
+        #region Display text feedback for Detection/Classification confidence range
+        private void DisplayDetectionConfidenceRange(double lowerConfidence)
+        {
+            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.RecognitionSelections.DetectionConfidenceHigherForUI:f2})";
+        }
+
+        private void DisplayDetectionConfidenceRange(double lowerConfidence, double higherConfidence)
+        {
+            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
+        }
+
+        private void DisplayClassificationConfidenceRange(double lowerConfidence, double higherConfidence)
+        {
+            this.TBClassificationsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
+        }
+        #endregion
+
+        #region Clear Counts
+        public void ClearCountsAndResetUI()
+        {
+            if (this.DetectionCategories == null)
+            {
+                // We need to do this in case we haven't completely created the RecogntionsSelector
+                return;
+            }
+            // Clear the counts
+            if (this.onlyUpdateClassificationCount == false)
+            {
+                this.ClearDetectionCounts();
+            }
+            this.ClearAllClassifications();
+
+            // Highlight the current selection, if any
+            this.TryHighlightCurrentSelection();
+
+            // The button is enabled so that the user can count recogntions
+            this.BtnCountRecognitions.IsEnabled = true;
+        }
+
+        // Clear the counts for each detection category held in the DetectionCounts
+        // This will also create and entry for each deteccton category if it doesn't already exist.
+        private void ClearDetectionCounts()
+        {
+            // Clear the All and Empty categories 
+            this.SetDetectionCountForCategory(Constant.RecognizerValues.AllDetectionLabel, NoValue);
+            this.SetDetectionCountForCategory(Constant.RecognizerValues.EmptyDetectionLabel, NoValue);
+
+            // Detections: clear the count in Category 
+            foreach (KeyValuePair<string, string> kvp in DetectionCategories)
+            {
+                if (kvp.Key == "0") continue; // Skip empty
+                // RecognitionSelections.DetectionCategoryNumber = kvp.Key;
+                string categoryName = kvp.Value;
+                this.SetDetectionCountForCategory(categoryName, NoValue);
+            }
+        }
+
+        // Clear all counts associated with classifications.
+        // This will also:
+        // - clear the the EmptyClassifications and disable it
+        // - sort the datagrid by its classifications (as the counts will all be the same)
+        private void ClearAllClassifications()
+        {
+            // Abort if there are no classifications
+            if (this.ClassificationCategories?.Count == 0)
+            {
+                return;
+            }
+
+            // Initialize by clearing the various lists
+            // Note that the first method will also initialize the collection if needed
+            this.ClearClassificationCounts();
+            //this.ClearEmptyClassificationCounts();
+
+            // Enable the controls  as needed, and sort the classifications by the classifications column
+            Application.Current.Dispatcher.Invoke((Action)delegate
+            {
+                this.ClassificationDataGridListBoxEnableState(true, true);
+                if (this.DataGridClassifications.Columns.Count > 1)
+                {
+                    SortDataGrid(this.DataGridClassifications, 1, ListSortDirection.Ascending);
+                }
+            });
+        }
+
+        // Clear the counts for each classification category held in theclassificationCounts
+        // This will also create and entry for each classification category if it doesn't already exist.
+        private void ClearClassificationCounts()
+        {
+            if (ClassificationCategories == null)
+            {
+                return;
+            }
+            // Classification: clear the count in Category 
+            string savedCategoryNumber = RecognitionSelections.ClassificationCategoryNumber;
+            foreach (KeyValuePair<string, string> kvp in ClassificationCategories)
+            {
+                RecognitionSelections.ClassificationCategoryNumber = kvp.Key;
+                string categoryName = kvp.Value;
+                this.SetClassificationCountForCategory(categoryName, NoValue);
+            }
+
+            RecognitionSelections.ClassificationCategoryNumber = savedCategoryNumber;
+        }
+        #endregion
+
+        #region Set individual category detection or recognition counts and category labels
+        // Given a category and a count, add or update it in the DetectionCountsCollection
+        private void SetDetectionCountForCategory(string category, int? count)
+        {
+            var categoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category.StartsWith(category));
+            if (null == categoryCount)
+
+            {   // We need to add it to the DetectionsCountCollection
                 Application.Current.Dispatcher.Invoke((Action)delegate
                 {
+                    if (category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel))
+                    {
+                        double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
+                        string symbol = lowerValue == 0 ? "=" : "<";
+                        category = $"{Constant.RecognizerValues.EmptyDetectionLabel} or Detections {symbol} {lowerValue}";
+                    }
                     CategoryCount cc = new CategoryCount(category, count);
                     this.DetectionCountsCollection.Add(cc);
                     cc.NotifyPropertyChanged("Count");
@@ -1017,33 +1104,14 @@ namespace Timelapse.Controls
             }
             else
             {
+                // Its already in the DetectionCountsCollection, so just update the count
                 categoryCount.Count = count;
                 categoryCount.NotifyPropertyChanged("Count");
             }
         }
 
-        // Clear the counts for each detection category held in the DetectionCounts
-        // This will also create and entry for each deteccton category if it doesn't already exist.
-        private void ClearCountsInDetectionCountsCollection()
-        {
-            // Clear the All and Empty categories 
-            this.SetDetectionCountForCategory("All", -1);
-            this.SetDetectionCountForCategory("Empty", -1);
-
-            // Detections: clear the count in Category 
-            foreach (KeyValuePair<string, string> kvp in DetectionCategories)
-            {
-                if (kvp.Key == "0") continue; // Skip empty
-                DetectionSelections.DetectionCategory = kvp.Key;
-                string categoryName = kvp.Value;
-                this.SetDetectionCountForCategory(categoryName, -1);
-            }
-        }
-        #endregion
-
-        #region Setting and ClearingClassificationCountsCollection
         // Given a category and a count, add or update it in the DetectionCountsCollection
-        private void SetClassificationCountForCategory(string category, int count)
+        private void SetClassificationCountForCategory(string category, int? count)
         {
             var categoryCount = this.ClassificationCountsCollection.FirstOrDefault(i => i.Category == category);
             if (null == categoryCount)
@@ -1062,65 +1130,87 @@ namespace Timelapse.Controls
             }
         }
 
-        // Clear the counts for each classification category held in theclassificationCounts
-        // This will also create and entry for each classification category if it doesn't already exist.
-        private void ClearCountsInClassificationCountsCollection()
+        private void SetEmptyDetectionCategoryLabel()
         {
-            if (ClassificationCategories == null)
+            var categoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel));
+            if (null == categoryCount)
             {
+                // Hmmm. We should always have an Empty category
                 return;
             }
-            // Classification: clear the count in Category 
-            foreach (KeyValuePair<string, string> kvp in ClassificationCategories)
-            {
-                DetectionSelections.ClassificationCategory = kvp.Key;
-                string categoryName = kvp.Value;
-                this.SetClassificationCountForCategory(categoryName, 0);
-            }
-        }
 
-        private void ClearClassificationEmptyCountsListAndUpdateListBox()
-        {
-            if (ClassificationEmptyCountsList == null)
-            {
-                return;
-            }
-            ClassificationEmptyCountsList.Clear();
-
-            // There's probably a more efficient way to do this, but its works 
+            // Modify the Empty label in the DetectionsCountCollection
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                LBEmptyClassifications.ItemsSource = null;
-                LBEmptyClassifications.ItemsSource = ClassificationEmptyCountsList;
-                this.DropDownEmptyLabel.Text = $"({ClassificationEmptyCountsList.Count} items)";
+                double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
+                string symbol = lowerValue == 0 ? "=" : "<";
+                categoryCount.Category = $"{Constant.RecognizerValues.EmptyDetectionLabel} or Detections {symbol} {lowerValue}";
+                categoryCount.NotifyPropertyChanged("Category");
             });
         }
-        private void AddClassificationEmptyCountsListAndUpdateListBox(string categoryName)
+        #endregion
+
+        #region Show progress during counting, or Abort operation if cancelled
+        private void ShowProgressOrAbortIfCancelled(bool countingDetections, string entity)
         {
-            if (this.ClassificationEmptyCountsList == null)
+            if (this.Owner.Token.IsCancellationRequested)
             {
-                return;
+                throw new TaskCanceledException();
             }
-            this.ClassificationEmptyCountsList.Add(categoryName);
 
-            // There's probably a more elegant way to do this via Notifies, but its works 
-            Application.Current.Dispatcher.Invoke((Action)delegate
+            string what = countingDetections ? "detections" : "classifications";
+            this.Owner.Progress.Report(new ProgressBarArguments(0, $"Counting {what} ({entity}). Please wait", true, true));
+            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
+        }
+        #endregion
+
+        #region Helpers
+        // Given a detection or classification category dictionary and a category name,
+        // - return its category number 
+        private static string GetCategoryNumberFromCategoryName(Dictionary<string, string> categoryDictionary, string categoryName)
+        {
+            // Get the category number from its name
+            foreach (KeyValuePair<string, string> kvp in categoryDictionary)
             {
-                this.LBEmptyClassifications.ItemsSource = null;
-                this.LBEmptyClassifications.ItemsSource = ClassificationEmptyCountsList;
-                this.DropDownEmptyLabel.Text = $"({ClassificationEmptyCountsList.Count} items)";
-            });
+                if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryName))
+                {
+                    return kvp.Key;
+                }
+            }
+
+            return string.Empty;
         }
 
+        // Check if there are any missing counts in the collection
+        private bool DetectionCountsCollectionHasCounts()
+        {
+            foreach (CategoryCount cc in this.DetectionCountsCollection)
+            {
+                if (cc.Count == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region Enum RecognitionTypeEnum
+        public enum RecognitionTypeEnum
+        {
+            Detections,
+            Classifications,
+            None
+        }
         #endregion
 
         #region Class CategoryCount defines an element containing a detection category and its current count
         public class CategoryCount : INotifyPropertyChanged
         {
-
-            public int Count { get; set; }
+            public int? Count { get; set; }
             public string Category { get; set; }
-            public CategoryCount(string category, int count)
+            public CategoryCount(string category, int? count)
             {
                 this.Category = category;
                 this.Count = count;
@@ -1134,122 +1224,15 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        #region Class CurrentSelection
-        public class CurrentSelection
+        #region UNUSED (DELETE?)
+        private void RecognitionParametersInitializeAsDetections()
         {
-            public bool IsRecognitionSelected { get; set; } = false;
-            public RecognitionTypeEnum RecognitionType { get; set; }
-            // Reminder: A Category of "0" is empty; and "-1" is All
-            public string CategoryName { get; set; }
-            public string CategoryNumber { get; set; }
-
-            public CurrentSelection()
-            {
-                this.IsRecognitionSelected = false;
-                this.RecognitionType = RecognitionTypeEnum.None;
-                this.CategoryName = string.Empty;
-                this.CategoryNumber = string.Empty;
-            }
+            // Initialize parameters
+            RecognitionSelections.AllDetections = false;
+            RecognitionSelections.RankByDetectionConfidence = false;
+            CustomSelection.ShowMissingDetections = false;
+            CustomSelection.EpisodeShowAllIfAnyMatch = false;
         }
         #endregion
-
-        #region Enum RecognitionTypeEnum
-        public enum RecognitionTypeEnum
-        {
-            Detections,
-            Classifications,
-            DetectionsAndClassifications,
-            None
-        }
-        #endregion
-
-        #region Custom Selection Event
-        public event EventHandler<RecognitionSelectionChangedEventArgs> RecognitionSelectionEvent;
-
-        private void SendRecognitionSelectionEvent()
-        {
-            string detectionCategory = string.Empty;
-            string detectionNumber = string.Empty;
-            string classificationCategory = string.Empty;
-            string classificationNumber = string.Empty;
-
-            // Get the current Detection selection, if any
-            if (this.DataGridDetections.SelectedItems.Count == 1 && this.DataGridDetections.SelectedItems[0] is CategoryCount categoryCountDetections)
-            {
-                if (categoryCountDetections.Category == Constant.RecognizerValues.AllDetectionLabel)
-                {
-                    detectionCategory = categoryCountDetections.Category;
-                    detectionNumber = this.AllCategoryNumber;
-                }
-                else
-                {
-                    // Get the category number from its name
-                    string categoryNumber = string.Empty;
-                    foreach (KeyValuePair<string, string> kvp in this.DetectionCategories)
-                    {
-                        if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryCountDetections.Category))
-                        {
-                            categoryNumber = kvp.Key;
-                            break;
-                        }
-                    }
-
-                    if (categoryNumber != string.Empty)
-                    {
-                        detectionCategory = categoryCountDetections.Category;
-                        detectionNumber = categoryNumber;
-                    }
-                }
-            }
-
-            // Get the current Classification selection, if any
-            if (DataGridClassifications.SelectedItems.Count == 1 && DataGridClassifications.SelectedItems[0] is CategoryCount categoryCountClassifications)
-            {
-                // The user selected a category (which could include empty)
-                string categoryNumber = string.Empty;
-
-                // Get the category number from its name
-                foreach (KeyValuePair<string, string> kvp in this.ClassificationCategories)
-                {
-                    if (EqualityComparer<string>.Default.Equals(kvp.Value, categoryCountClassifications.Category))
-                    {
-                        categoryNumber = kvp.Key;
-                        break;
-                    }
-                }
-
-                if (categoryNumber != string.Empty)
-                {
-                    classificationCategory = categoryCountClassifications.Category;
-                    classificationNumber = categoryNumber;
-                }
-            }
-
-            // Send the event
-            // Note that this could include
-            // - detections only
-            // - detections and classifications
-            // - no selections
-            // It should not include classifications only
-            RecognitionSelectionChangedEventArgs e = new RecognitionSelectionChangedEventArgs(
-                detectionCategory,
-                detectionNumber,
-                classificationCategory,
-                classificationNumber);
-            RecognitionSelectionEvent?.Invoke(this, e);
-        }
-        #endregion
-
-        private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-
     }
 }

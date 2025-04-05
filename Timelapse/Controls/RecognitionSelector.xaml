@@ -16,14 +16,14 @@
                 <RowDefinition Height="250"/>
 
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions >
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Name="ClassificationColumnWidth" Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!--Detections-->
-            <Grid Grid.Row="2" Grid.Column="0" Margin="10,0,0,0">
+            <Grid Name="DetectionsGrid" Grid.Row="2" Grid.Column="0" Margin="10,0,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -46,7 +46,7 @@
                               Margin="0,0,0,5"
                               Minimum="0" Maximum="1" 
                               LowerValue=".2" HigherValue="1" 
-                              RangeBackground="Gold" 
+                              RangeBackground="{x:Static SystemColors.HighlightBrush}" 
                               HigherRangeBackground="Transparent"
                               LowerRangeBackground="Transparent"
                               TickFrequency="0.1" TickPlacement="None"
@@ -61,22 +61,34 @@
                 <!--Detections Datagrid-->
                 <DataGrid Grid.Row="2" Grid.Column="0" 
                       Name="DataGridDetections" 
+                      BorderBrush="{x:Static SystemColors.HighlightBrush}"
                       ItemsSource ="{Binding DetectionCountsCollection}"
                       IsReadOnly ="True"
                       HorizontalGridLinesBrush="LightGray"
                       VerticalGridLinesBrush="LightGray"
                       CanUserSortColumns="True"
-                      SelectionChanged="DataGridDetections_OnSelectionChanged"/>
-                
+                      SelectionChanged="DataGridDetections_OnSelectionChanged">
+                    <DataGrid.Resources>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Style.Triggers>
+                                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
+                                    <Setter Property="Foreground" Value="White" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Resources>
+                </DataGrid>
+
                 <!-- Rank By Confidence Checkbox-->
-                <RadioButton Name="RankByDetectionConfidenceCheckbox" GroupName="RankByRadioButtons" Content="Sort by detection confidence" Grid.Row="3" Grid.Column="0" Margin="0,10,0,0" 
+                <RadioButton Name="RankByDetectionConfidenceCheckbox" GroupName="RankByRadioButtons" Content="Sort by detection confidence" Grid.Row="3" Grid.Column="0" Margin="5,10,0,0" 
                           VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
                           Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
                           ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
             </Grid>
 
             <!--Classifications-->
-            <Grid Grid.Row="2" Grid.Column="1" Margin="10,0,10,0">
+            <Grid Name="GridClassifications" Grid.Row="2" Grid.Column="1" Margin="10,0,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -90,7 +102,7 @@
                 <TextBlock Name="TBClassificationsLabel" 
                            Grid.Row="0" Grid.Column="0"  
                            HorizontalAlignment="Center" Margin="0,0,0,0" >
-                           <Run Text="Classifications " FontWeight="Bold" />
+                           <Run Text="Animal Classifications " FontWeight="Bold" />
                            <Run Name="TBClassificationsCount" Text="" FontWeight="Normal" />
                 </TextBlock>
 
@@ -99,7 +111,7 @@
                                     Margin="0,0,0,5"
                                     Minimum="0" Maximum="1" 
                                     LowerValue=".75" HigherValue="1" 
-                                    RangeBackground="Gold" 
+                                    RangeBackground="SaddleBrown" 
                                     HigherRangeBackground="Transparent"
                                     LowerRangeBackground="Transparent"
                                     TickFrequency="0.1" TickPlacement="None"
@@ -113,7 +125,7 @@
                 </xctk:RangeSlider>
 
                 <!--Classifications DataGrid-->
-                <DataGrid Grid.Row="2" Grid.Column="0" 
+                <DataGrid Grid.Row="2" Grid.Column="0" BorderBrush="RosyBrown"
                       Name="DataGridClassifications" 
                       ItemsSource ="{Binding ClassificationCountsCollection}"
                       IsReadOnly ="True"
@@ -128,49 +140,41 @@
                         <Style TargetType="{x:Type DataGridRow}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Count}" Value="0">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Setter Property="Foreground" Value="Gray"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
-
+                    <DataGrid.Resources>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Style.Triggers>
+                                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                                    <Setter Property="Background" Value="SaddleBrown" />
+                                    <Setter Property="Foreground" Value="White" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Resources>
                 </DataGrid>
 
-                <!--Empty Classifications -->
-                <xctk:DropDownButton Grid.Row="3" Name="DropDownEmptyClassifications" 
-                                     DropDownPosition="Bottom"
-                                     Margin="0,10,0,0">
-                    <xctk:DropDownButton.DropDownContent >
-                        <Border  BorderBrush="DarkGray" BorderThickness="1" Padding="3,3,3,3"  >
-                            <ScrollViewer Name="EmptyClassificationsScrollViewer"  VerticalScrollBarVisibility="Visible" CanContentScroll="True" Height="250" Width="{Binding ActualWidth, ElementName=DropDownEmptyClassifications}" >
-                                    <ItemsControl Name="LBEmptyClassifications" MinWidth ="200" />
-                                </ScrollViewer>
-                            </Border>
-                    </xctk:DropDownButton.DropDownContent>
-
-                    <TextBlock >
-                        <Run Text="Empty classification categories" FontWeight="Bold"/>
-                        <Run Name="DropDownEmptyLabel" Text="" FontWeight="Normal"/>
-                    </TextBlock>
-                </xctk:DropDownButton>
-
                 <!--Row 2 Rank By Confidence Checkbox-->
-                <RadioButton Name="RankByClassificationConfidenceCheckbox" GroupName="RankByRadioButtons" Content="Sort by classification confidence" Grid.Row="4" Grid.Column="0" Margin="0,10,0,0" 
+                <RadioButton Name="RankByClassificationConfidenceCheckbox" GroupName="RankByRadioButtons" Content="Sort by classification confidence" Grid.Row="4" Grid.Column="0" Margin="5,10,0,0" 
                           VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
                           Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
                           ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
             </Grid>
 
             <!--Other Recognition-related controls-->
-            <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" Name="Recognitions2Panel" Orientation="Vertical" Margin="0,15,0,0" >
+            <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" Name="Recognitions2Panel" Orientation="Vertical" Margin="10,15,0,0" >
                 <StackPanel  Orientation="Vertical" >
-                    <StackPanel  Orientation="Horizontal" >
-                        <TextBlock Name="QueryMatches2" Text="{Binding ElementName=QueryMatches,Path=Text }"  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,0,0,0"/>
-                        <TextBlock Text=" files match your query" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock Name="MatchingFilesCount" Text=""  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                        <TextBlock Name="MatchingFilesCountLabel" Text="" VerticalAlignment="Center" Margin="0,0,0,0"/>
                     </StackPanel>
+                    <Button Name="BtnCountRecognitions" Content ="Count recognitions" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
                 </StackPanel>
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files&#10;the recognizer did not&#10; process" 
-                          IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="10,145,0,0" 
+                          IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,135,0,0" 
                           Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
             </StackPanel>
         </Grid>

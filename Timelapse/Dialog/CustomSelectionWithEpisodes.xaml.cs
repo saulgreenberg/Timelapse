@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -24,7 +25,6 @@ using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
-using static Timelapse.Controls.RecognitionSelector;
 using Arguments = Timelapse.DataStructures.Arguments;
 using Control = Timelapse.Constant.Control;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
@@ -50,7 +50,6 @@ namespace Timelapse.Dialog
         // Detections variables
         private bool dontInvoke;
         private bool dontCount;
-        private bool dontUpdateRangeSlider;
 
         // Variables passed into constructor
         private readonly FileDatabase Database;
@@ -58,6 +57,7 @@ namespace Timelapse.Dialog
         private readonly DataEntryControls DataEntryControls;
         private readonly Arguments Arguments;
         private bool dontUpdate = true;
+        private bool RefreshRecognitionCountsRequired = true;
 
         // The RelativePath control is implemented as a combination DropDownButton with a TreeViewRelativePathMenu as its content
         private TreeViewWithRelativePaths treeViewWithRelativePaths;
@@ -74,9 +74,10 @@ namespace Timelapse.Dialog
         private DateTimePicker dateTimeControl2;
 
         // This timer is used to delay showing count information, which could be an expensive operation, as the user may be setting values quickly
-        private readonly DispatcherTimer countTimer = new DispatcherTimer();
+        private readonly DispatcherTimer CountTimer = new DispatcherTimer();
 
-        private RecognitionSelections DetectionSelections { get; }
+        private RecognitionSelector RecognitionSelector;
+        private RecognitionSelections RecognitionSelections { get; }
         #endregion
 
         #region Controls created ahead of time
@@ -118,7 +119,8 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Constructors and Loading
-        public CustomSelectionWithEpisodes(Window owner, FileDatabase database, DataEntryControls dataEntryControls, ImageRow currentImageRow, RecognitionSelections detectionSelections, Arguments arguments)
+        public CustomSelectionWithEpisodes(Window owner, FileDatabase database, DataEntryControls dataEntryControls,
+            ImageRow currentImageRow, RecognitionSelections recognitionSelections, Arguments arguments) : base(owner)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
@@ -132,27 +134,30 @@ namespace Timelapse.Dialog
             this.CurrentImageRow = currentImageRow;
             if (GlobalReferences.DetectionsExists)
             {
-                this.DetectionSelections = detectionSelections; // Detections-specific
+                this.RecognitionSelections = recognitionSelections; // Detections-specific
             }
             this.Arguments = arguments;
 
             // Set up the count timer
-            countTimer.Interval = TimeSpan.FromMilliseconds(500);
-            countTimer.Tick += CountTimer_Tick;
+            CountTimer.Interval = TimeSpan.FromMilliseconds(500);
+            CountTimer.Tick += CountTimer_Tick;
         }
 
         // When the window is loaded, construct all the SearchTerm controls 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // Set up a progress handler that will update the progress bar
+            InitalizeProgressHandler(BusyCancelIndicator);
+
             // Used to track whether we are on the 1st or 2nd dateTime control
             bool firstDateTimeControlSeen = false;
-            // Adds the callback to this checkbox
+
+            // Add callback to this checkbox
             CheckBoxUseTime.Checked += CheckBoxUseTime_CheckChanged;
             CheckBoxUseTime.Unchecked += CheckBoxUseTime_CheckChanged;
 
             // Adjust this dialog window position 
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-
 
             // Detections-specific
             dontCount = true;
@@ -161,100 +166,25 @@ namespace Timelapse.Dialog
             // Set the state of the detections to the last used ones (or to its defaults)
             if (GlobalReferences.DetectionsExists)
             {
-                this.ButtonRecognitionExplorer.Visibility = Visibility.Visible;
-                RecognitionsGroupBox.Visibility = Visibility.Visible;
-                //Recognitions2Panel.Visibility = Visibility.Visible;
-                EnableRecognitionsCheckbox.IsChecked = DetectionSelections.UseRecognition;
-
-                // Set the spinner and sliders to the last used values
-                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
-                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
-                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
-                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
-
-                ClassificationRangeSlider.Value = DetectionSelections.ClassificationConfidenceThresholdLowerForUI;
-                ClassificationRangeSlider.Maximum = DetectionSelections.ClassificationConfidenceThresholdUpperForUI;
-
-                // Set the Rank by Confidence for detections
-                RankByDetectionConfidenceCheckbox.IsChecked = DetectionSelections.RankByDetectionConfidence; // For detections
-                RankByClassificationConfidenceCheckbox.IsChecked = DetectionSelections.RankByClassificationConfidence;
-
-                // Put Detection and Classification categories in the combo box as human-readable labels
-                // Note that we add "All" to the Detections list as that is a 'bogus' Timelapse-internal category.
-                List<string> labels = Database.GetDetectionLabels();
-                DetectionCategoryComboBox.Items.Add(RecognizerValues.AllDetectionLabel);
-                foreach (string label in labels)
+                this.RecognitionsGroupBox.Visibility = Visibility.Visible;
+                this.EnableRecognitionsCheckbox.IsChecked = this.RecognitionSelections.UseRecognition;
+                if (this.RecognitionSelections.UseRecognition)
                 {
-                    DetectionCategoryComboBox.Items.Add(label);
+                    this.RecognitionsGroupBox.Background = Brushes.Azure;
+                    this.CreateRecognitionSelectorControl();
                 }
-
-                if (GlobalReferences.UseClassifications)
-                {
-                    // Now add classifications
-                    labels = Database.GetClassificationLabels();
-                    if (labels.Count > 0)
-                    {
-                        // Add a separator
-                        ComboBoxItem separator = new ComboBoxItem
-                        {
-                            BorderBrush = Brushes.Black,
-                            BorderThickness = new Thickness(0, 0, 0, 2),
-                            Focusable = false,
-                            IsEnabled = false
-                        };
-                        ClassificationCategoryComboBox.Items.Add(separator);
-                        foreach (string label in labels)
-                        {
-                            ClassificationCategoryComboBox.Items.Add(label);
-                        }
-                    }
-                }
-
-                // Set the Detection combobox selection to the last used one.
-                string categoryLabel;
-                if (DetectionSelections.RecognitionType == RecognitionType.Empty)
-                {
-                    // If we don't know the recognition type, default to All
-                    DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
-                    RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
-                }
-                else if (DetectionSelections.RecognitionType == RecognitionType.Detection)
-                {
-                    categoryLabel = Database.GetDetectionLabelFromCategory(DetectionSelections.DetectionCategory);
-                    if (string.IsNullOrEmpty(DetectionSelections.DetectionCategory) || (DetectionSelections.AllDetections && !DetectionSelections.InterpretAllDetectionsAsEmpty))
-                    {
-                        // We need an 'All' detection category, which is the union of all categories (except empty).
-                        // Because All is a bogus detection category (since its not part of the detection data), we have to set it explicitly
-                        DetectionCategoryComboBox.SelectedValue = RecognizerValues.AllDetectionLabel;
-                    }
-                    else
-                    {
-                        DetectionCategoryComboBox.SelectedValue = categoryLabel;
-                    }
-                    RankByDetectionConfidenceCheckbox.Content = "by detection confidence";
-                }
-                else
-                {
-                    categoryLabel = Database.GetClassificationLabelFromCategory(DetectionSelections.ClassificationCategory);
-                    ClassificationCategoryComboBox.SelectedValue = (categoryLabel.Length != 0)
-                        ? categoryLabel
-                        : ClassificationCategoryComboBox.SelectedValue = null;
-                    RankByClassificationConfidenceCheckbox.Content = "by classification confidence";
-                }
-                EnableDetectionControls((bool)EnableRecognitionsCheckbox.IsChecked);
             }
             else
             {
-                RecognitionsGroupBox.Visibility = Visibility.Collapsed;
-                Recognitions2Panel.Visibility = Visibility.Collapsed;
-                DetectionSelections?.ClearAllDetectionsUses();
+                this.RecognitionsGroupBox.Visibility = Visibility.Collapsed;
+                RecognitionSelections?.ClearAllDetectionsUses();
             }
             dontInvoke = false;
             dontCount = false;
             if (GlobalReferences.DetectionsExists)
             {
                 SetDetectionCriteria();
-                ShowMissingDetectionsCheckbox.IsChecked = Database.CustomSelection.ShowMissingDetections;
+                //ShowMissingDetectionsCheckbox.IsChecked = Database.CustomSelection.ShowMissingDetections;
 
             }
 
@@ -286,10 +216,7 @@ namespace Timelapse.Dialog
             // The episode controls are only enabled if detections is enabled
             CheckboxShowAllEpisodeImages.FontWeight = isEpisodeAvailable ? FontWeights.Normal : FontWeights.Light;
             CheckboxShowAllEpisodeImages.IsEnabled = isEpisodeAvailable;
-
             InitiateShowCountsOfMatchingFiles();
-            DetectionCategoryComboBox.SelectionChanged += DetectionCategoryComboBox_SelectionChanged;
-            ClassificationCategoryComboBox.SelectionChanged += ClassificationCategoryComboBox_SelectionChanged;
 
             // Selection-specific
             dontUpdate = true;
@@ -840,8 +767,7 @@ namespace Timelapse.Dialog
                 }
             }
             dontUpdate = false;
-            UpdateSearchDialogFeedback();
-
+            await UpdateSearchDialogFeedback(false);
 
             // Set the UseTime state based on what was last recorded
             CheckBoxUseTime.IsChecked = Database.CustomSelection.UseTimeInsteadOfDate;
@@ -849,6 +775,74 @@ namespace Timelapse.Dialog
             // Set the selected item to the Note field with episode data in it.
             Database.CustomSelection.EpisodeNoteField = NoteDataLabelContainingEpisodeData;
             Database.CustomSelection.EpisodeShowAllIfAnyMatch = CheckboxShowAllEpisodeImages.IsChecked == true;
+        }
+        #endregion
+
+        #region RecognitionSelector - Create/Destroy
+        // Create the RecognitionSelector control 
+        private void CreateRecognitionSelectorControl()
+        {
+            if (this.RecognitionSelector != null)
+            {
+                // This shouldn't happen
+                return;
+            }
+
+            // Create the RecognitionSelector
+            this.RecognitionSelector = new RecognitionSelector(this, this.BusyCancelIndicator)
+            {
+                Margin = new Thickness(0, 10, 10, 10),
+                Visibility = Visibility.Visible,
+                Background = Brushes.Azure
+            };
+
+            // Adjust the Groupbox appearance to contain it
+            this.RecognitionsGroupBox.BorderThickness = new Thickness(2);
+            this.RecognitonsGroupBoxHeaderText.FontWeight = FontWeights.DemiBold;
+            this.RecognitionsGroupBox.Content = this.RecognitionSelector;
+
+            // Create an event handler to receive RecognitionSelector events
+            this.RecognitionSelector.RecognitionSelectionEvent += RecognitionSelector_OnRecognitionSelectionEvent;
+        }
+
+        // Destroy the RecognitionSelector control
+        private void DestroyRecognitionSelectorControl()
+        {
+            // Remove the RecognitionSelector event handler
+            this.RecognitionSelector.RecognitionSelectionEvent -= RecognitionSelector_OnRecognitionSelectionEvent;
+            this.RecognitionSelector = null;
+            this.RecognitionsGroupBox.BorderThickness = new Thickness(0);
+            this.RecognitonsGroupBoxHeaderText.FontWeight = FontWeights.Normal;
+            this.RecognitionsGroupBox.Content = null;
+        }
+        #endregion
+
+        #region RecognitionSelector - EventHandler
+        private void RecognitionSelector_OnRecognitionSelectionEvent(object sender, RecognitionSelectionChangedEventArgs e)
+        {
+            this.RefreshRecognitionCountsRequired = e.RefreshRecognitionCountsRequired;
+            this.RecognitonsGroupBoxFeedback.Text = ComposeRecognitionsSelectionFeedback(e.DetectionCategoryLabel, e.ClassificationCategoryLabel);
+            this.CountTimer.Start();
+        }
+
+        private static string ComposeRecognitionsSelectionFeedback(string detectionCategory, string classificationCategory)
+        {
+            if (string.IsNullOrEmpty(detectionCategory) && string.IsNullOrEmpty(classificationCategory))
+            {
+                return (" (No recognitions selected)");
+            }
+
+            if (false == string.IsNullOrEmpty(detectionCategory) && string.IsNullOrEmpty(classificationCategory))
+            {
+                return ($" ({detectionCategory})");
+            }
+
+            if (string.IsNullOrEmpty(detectionCategory) && false == string.IsNullOrEmpty(classificationCategory))
+            {
+                return ($" ({classificationCategory})");
+            }
+
+            return ($" ({detectionCategory}:{classificationCategory})");
         }
         #endregion
 
@@ -992,18 +986,18 @@ namespace Timelapse.Dialog
 
         #region Query formation callbacks
         // Radio buttons for determing if we use And or Or
-        private void AndOrRadioButton_Checked(object sender, RoutedEventArgs args)
+        private async void AndOrRadioButton_Checked(object sender, RoutedEventArgs args)
         {
             RadioButton radioButton = sender as RadioButton;
             Database.CustomSelection.TermCombiningOperator = (radioButton == RadioButtonTermCombiningAnd) ? CustomSelectionOperatorEnum.And : CustomSelectionOperatorEnum.Or;
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // Select: When the use checks or unchecks the checkbox for a row
         // - activate or deactivate the search criteria for that row
         // - update the searchterms to reflect the new status 
         // - update the UI to activate or deactivate (or show or hide) its various search terms
-        private void Select_CheckedOrUnchecked(object sender, RoutedEventArgs args)
+        private async void Select_CheckedOrUnchecked(object sender, RoutedEventArgs args)
         {
             if (sender is CheckBox select == false)
             {
@@ -1025,13 +1019,13 @@ namespace Timelapse.Dialog
             expression.IsEnabled = select.IsChecked == true;
             value.IsEnabled = select.IsChecked == true;
 
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // Operator: The user has selected a new expression
         // - set its corresponding search term in the searchList data structure
         // - update the UI to show the search criteria 
-        private void Operator_SelectionChanged(object sender, SelectionChangedEventArgs args)
+        private async void Operator_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
             if (sender is ComboBox comboBox == false)
             {
@@ -1041,13 +1035,13 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(comboBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // Value (Counters and Notes): The user has selected a new value
         // - set its corresponding search term in the searchList data structure
         // - update the UI to show the search criteria 
-        private void Note_TextChanged(object sender, TextChangedEventArgs args)
+        private async void Note_TextChanged(object sender, TextChangedEventArgs args)
         {
             if (sender is TextBox textBox == false)
             {
@@ -1057,14 +1051,14 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // Value (Counters and Notes): The user has selected a new value
         // - set its corresponding search term in the searchList data structure
         // - update the UI to show the search criteria 
 
-        private void MultiLineValue_TextHasChanged(object sender, EventArgs e)
+        private async void MultiLineValue_TextHasChanged(object sender, EventArgs e)
         {
             if (sender is MultiLineTextEditor textBox == false)
             {
@@ -1074,10 +1068,10 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
-        private void Integer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
+        private async void Integer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
         {
             if (sender is IntegerUpDown textBox == false)
             {
@@ -1087,10 +1081,10 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
-        private void Decimal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
+        private async void Decimal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
         {
             if (sender is DoubleUpDown textBox == false)
             {
@@ -1100,11 +1094,11 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(textBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = textBox.Text;
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // Value (DateTime): we need to construct a string DateTime from it
-        private void DateTime_SelectedDateChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
+        private async void DateTime_SelectedDateChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
         {
             if (sender is DateTimePicker datePicker == false)
             {
@@ -1118,14 +1112,14 @@ namespace Timelapse.Dialog
                 // This stores both the date and the time.
                 // Later, the search itself will check whether the UseTime is true or false to determine whether it should parse out the date or time portion.
                 Database.CustomSelection.SetDateTime(row - 1, datePicker.Value.Value);
-                UpdateSearchDialogFeedback();
+                await UpdateSearchDialogFeedback();
             }
         }
 
         // Value (FixedChoice): The user has selected a new value 
         // - set its corresponding search term in the searchList data structure
         // - update the UI to show the search criteria 
-        private void FixedChoice_SelectionChanged(object sender, SelectionChangedEventArgs args)
+        private async void FixedChoice_SelectionChanged(object sender, SelectionChangedEventArgs args)
         {
             if (sender is ComboBox comboBox == false)
             {
@@ -1140,11 +1134,11 @@ namespace Timelapse.Dialog
                 return;
             }
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = comboBox.SelectedValue.ToString(); // Set the corresponding value to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // Value: (MultiChoice)
-        private void CheckComboBox_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
+        private async void CheckComboBox_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
         {
             if (sender is CheckComboBox checkComboBox == false)
             {
@@ -1169,14 +1163,14 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(checkComboBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkComboBox.Text; // Set the corresponding value to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
 
         }
 
         // Value (Flags): The user has checked or unchecked a new value 
         // - set its corresponding search term in the searchList data structure
         // - update the UI to show the search criteria 
-        private void Flag_CheckedOrUnchecked(object sender, RoutedEventArgs e)
+        private async void Flag_CheckedOrUnchecked(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox checkBox == false)
             {
@@ -1186,10 +1180,10 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(checkBox);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = checkBox.IsChecked.ToString().ToLower(); // Set the corresponding value to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
-        private void DateTimeCustomPicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void DateTimeCustomPicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (sender is DateTimePicker dateTimePicker == false)
             {
@@ -1199,10 +1193,10 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(dateTimePicker);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = DateTimeHandler.DateTimeDisplayStringToDataBaseString(dateTimePicker.Text); // Set the corresponding value to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
-        private void DatePicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void DatePicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (sender is DateTimePicker dateTimePicker == false)
             {
@@ -1212,10 +1206,10 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(dateTimePicker);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = DateTimeHandler.DateDisplayStringToDataBaseString(dateTimePicker.Text); // Set the corresponding value to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
-        private void TimePicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void TimePicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (sender is TimePicker timePicker == false)
             {
@@ -1225,11 +1219,11 @@ namespace Timelapse.Dialog
             }
             int row = Grid.GetRow(timePicker);  // Get the row number...
             Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = timePicker.Text; // Set the corresponding value to the current selection
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         // The RelativePathControl SelectedItemChanged callback: This does the work when a relative path is selected
-        private void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (this.treeViewWithRelativePaths.DontInvoke)
             {
@@ -1251,19 +1245,19 @@ namespace Timelapse.Dialog
             int row = Grid.GetRow(this.RelativePathButton);  // Get the row number... should always be a valid int
             this.Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = treeView.SelectedPath; // Set the corresponding value to the current selection
             this.RelativePathButton.IsOpen = false;
-            this.UpdateSearchDialogFeedback();
+            await this.UpdateSearchDialogFeedback();
         }
 
         // When this button is pressed, all the search terms checkboxes are cleared, which is equivalent to showing all images
         private void ResetToAllImagesButton_Click(object sender, RoutedEventArgs e)
         {
-            EnableRecognitionsCheckbox.IsChecked = false;
+            //EnableRecognitionsCheckbox.IsChecked = false;
             for (int row = 1; row <= Database.CustomSelection.SearchTerms.Count; row++)
             {
                 CheckBox select = GetGridElement<CheckBox>(SelectColumn, row);
                 select.IsChecked = false;
             }
-            ShowMissingDetectionsCheckbox.IsChecked = false;
+            //ShowMissingDetectionsCheckbox.IsChecked = false;
         }
 
         private FileSelectionEnum ChangeSelectionStateIfNeeded()
@@ -1310,24 +1304,21 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region EventHandler: from RecognitionSelector
-        private void RecognitionSelector_OnRecognitionSelectionEvent(object sender, RecognitionSelectionChangedEventArgs e)
-        {
-            if (sender is RecognitionSelector recognitionSelections)
-            {
-                Debug.Print($"Recognition selection changed: {e.DetectionCategoryNumber}:{e.DetectionCategory} {e.ClassificationCategoryNumber}:{e.ClassificationCategory}");
-            }
-        }
-        #endregion
-
         #region Search Criteria feedback for each row
         // Updates the feedback and control enablement to reflect the contents of the search list,
-        private void UpdateSearchDialogFeedback()
+
+        private async Task UpdateSearchDialogFeedback(bool refreshRecognitionSelectorCount = true)
         {
             if (dontUpdate)
             {
                 return;
             }
+
+            if (null != this.RecognitionSelector && refreshRecognitionSelectorCount)
+            {
+                this.RecognitionSelector.ClearCountsAndResetUI();
+            }
+
             // We go backwards, as we don't want to print the AND or OR on the last expression
             bool atLeastOneSearchTermIsSelected = false;
             int multipleNonStandardSelectionsMade = 0;
@@ -1356,8 +1347,9 @@ namespace Timelapse.Dialog
             InitiateShowCountsOfMatchingFiles();
 
             // Enable  the reset button if at least one search term (including detections) is enabled
-            ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected
-                                                    || ShowMissingDetectionsCheckbox.IsChecked == true;
+            // ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected
+            //                                         || ShowMissingDetectionsCheckbox.IsChecked == true;
+            ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected;
 
             // Enable the and/or radio buttons if more than one non-standard selection was made
             RadioButtonTermCombiningAnd.IsEnabled = multipleNonStandardSelectionsMade > 1;
@@ -1374,29 +1366,26 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Detection-specific methods and callbacks
-
-        private void ButtonRecognitionExplorer_OnClick(object sender, RoutedEventArgs e)
-        {
-            RecognitionExplorer dialog = new RecognitionExplorer(this, this.Database);
-            if (dialog.ShowDialog() == true)
-            {
-                // update the current detection settings
-                this.EnableRecognitionsCheckbox.IsChecked = true;
-                DetectionRangeSlider.LowerValue = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
-                DetectionRangeSlider.HigherValue = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
-                DetectionConfidenceSpinnerLower.Value = DetectionSelections.ConfidenceDetectionThresholdLowerForUI;
-                DetectionConfidenceSpinnerHigher.Value = DetectionSelections.ConfidenceDetectionThresholdUpperForUI;
-
-            }
-        }
         private void EnableRecognitions_CheckedChanged(object sender, RoutedEventArgs e)
         {
             if (dontInvoke)
             {
                 return;
             }
+
+            if (this.EnableRecognitionsCheckbox.IsChecked == true)
+            {
+                this.CreateRecognitionSelectorControl();
+                RecognitionsGroupBox.Background = Brushes.Azure;
+            }
+            else
+            {
+                this.DestroyRecognitionSelectorControl();
+                this.RecognitonsGroupBoxFeedback.Text = string.Empty;
+                RecognitionsGroupBox.Background = Brushes.White;
+            }
             // Enable or disable the controls depending on the various checkbox states
-            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
+            // EnableRecognitionControls(EnableRecognitionsCheckbox.IsChecked == true);
 
             SetDetectionCriteria();
             InitiateShowCountsOfMatchingFiles();
@@ -1408,473 +1397,60 @@ namespace Timelapse.Dialog
             {
                 return;
             }
-            DetectionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
-            if (DetectionSelections.UseRecognition)
+            RecognitionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
+            if (RecognitionSelections.UseRecognition)
             {
-                SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
-                DetectionSelections.ConfidenceDetectionThresholdLowerForUI = DetectionConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionConfidenceSpinnerLower.Value);
-                DetectionSelections.ConfidenceDetectionThresholdUpperForUI = DetectionConfidenceSpinnerHigher.Value == null ? 0 : Round2(DetectionConfidenceSpinnerHigher.Value);
+                //SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
             }
 
             // The BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
             // determined in this select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
             // show bounding boxes when the confidence is .4 or more. On the other  hand, we don't want to show spurious detections when empty is selected,
             // so we set a minimum value.
-            CustomSelection.SetDetectionRanges(DetectionSelections);
+            CustomSelection.SetDetectionRanges(RecognitionSelections);
 
             // Enable / alter looks and behavour of detecion UI to match whether detections should be used
-            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
+            // EnableRecognitionControls(EnableRecognitionsCheckbox.IsChecked == true);
 
-            SetClassificationCriteriaForComboBox(resetSlidersIfNeeded);
-           // DetectionSelections.ClassificationConfidenceThresholdLowerForUI = this.ClassificationConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionSelections.ClassificationConfidenceThresholdLowerForUI);
-        }
-
-        private void SetDetectionCriteriaOrig(bool resetSlidersIfNeeded = false)
-        {
-            if (IsLoaded == false || dontInvoke)
-            {
-                return;
-            }
-            DetectionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
-            if (DetectionSelections.UseRecognition)
-            {
-                SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
-                DetectionSelections.ConfidenceDetectionThresholdLowerForUI = DetectionConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionConfidenceSpinnerLower.Value);
-                DetectionSelections.ConfidenceDetectionThresholdUpperForUI = DetectionConfidenceSpinnerHigher.Value == null ? 0 : Round2(DetectionConfidenceSpinnerHigher.Value);
-            }
-
-            // The BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
-            // determined in this select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
-            // show bounding boxes when the confidence is .4 or more. On the other  hand, we don't want to show spurious detections when empty is selected,
-            // so we set a minimum value.
-            CustomSelection.SetDetectionRanges(DetectionSelections);
-
-            // Enable / alter looks and behavour of detecion UI to match whether detections should be used
-            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
-        }
-
-        private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
-        {
-            Database.CustomSelection.ShowMissingDetections = ShowMissingDetectionsCheckbox.IsChecked == true;
-            SetDetectionCriteria();
-            InitiateShowCountsOfMatchingFiles();
-        }
-        private void DetectionCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (IsLoaded == false)
-            {
-                return;
-            }
-            // Invoke this with a true argument, which forces the confidence values to be reset based upon the selection
-            SetDetectionCriteria(true);
-            InitiateShowCountsOfMatchingFiles();
-        }
-
-        private void ClassificationCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (IsLoaded == false)
-            {
-                return;
-            }
-            // Invoke this with a true argument, which forces the confidence values to be reset based upon the selection
-            SetDetectionCriteria(false);
-            InitiateShowCountsOfMatchingFiles();
-        }
-
-        private void SetDetectionCriteriaForComboBox(bool resetSlidersIfNeeded)
-        {
-            ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
-
-            // Set various flags and values depending on what was selected in the combo box
-            if (resetSlidersIfNeeded)
-            {
-                // These reset settings universally apply regardless of the recognition type
-                // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
-                DetectionRangeSlider.HigherValue = 1.0;
-                DetectionSelections.CurrentDetectionThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
-            }
-
-            if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.NoDetectionLabel)
-            {
-                // EMPTY
-                // Note that Empties are special cases of an All Detection (which is why its recognition type is still a Detection and both AllDetections and EmptyDetections are true).
-                // What actually happens is that other code flips the confidence values in the query to 1 - the current higher and lowever slider settings (e.g., from 1-1 to 0-0). 
-                DetectionSelections.RecognitionType = RecognitionType.Detection;
-                DetectionSelections.InterpretAllDetectionsAsEmpty = true;
-                DetectionSelections.AllDetections = true; // Empty detections signal that we need to flip the confidence to its inverse, which is then applied to AllDetections
-                DetectionSelections.DetectionCategory = Database.GetDetectionCategoryFromLabel(RecognizerValues.NoDetectionLabel);
-
-                if (resetSlidersIfNeeded)
-                {
-                    // Default is ConservativeDetection Threshold - 1.0, i.e.,to only show images where the recognizer has not found any detections.
-                    // As the EmptyDetections is true, other code will special case this by actually doing a query on 1 - these values
-                    DetectionRangeSlider.HigherValue = 1.0;
-                    DetectionRangeSlider.LowerValue = 1 - RecognitionSelections.ConservativeDetectionThreshold;
-                }
-
-                // Set the minium values for the slider and spinner, which is 0 fpr Empty detections
-                DetectionRangeSlider.Minimum = 0;
-                DetectionConfidenceSpinnerLower.Minimum = 0;
-                DetectionConfidenceSpinnerHigher.Minimum = 0;
-            }
-            else
-            {
-                // A non-empty selection
-                DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-
-                // Set the minium values for the slider and spinner
-                // These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
-                DetectionRangeSlider.Minimum = RecognizerValues.MinimumDetectionValue;
-                DetectionConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumDetectionValue;
-                DetectionConfidenceSpinnerHigher.Minimum = RecognizerValues.MinimumDetectionValue;
-
-                // Resetting the minimum doesn't necessarily change the value if its below the minimum
-                if (DetectionConfidenceSpinnerLower.Value == null || DetectionConfidenceSpinnerLower.Value < RecognizerValues.MinimumDetectionValue)
-                {
-                    DetectionConfidenceSpinnerLower.Value = RecognizerValues.MinimumDetectionValue;
-                }
-                if (DetectionConfidenceSpinnerHigher.Value == null || DetectionConfidenceSpinnerHigher.Value < RecognizerValues.MinimumDetectionValue)
-                {
-                    DetectionConfidenceSpinnerHigher.Value = RecognizerValues.MinimumDetectionValue;
-                }
-
-                if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.AllDetectionLabel)
-                {
-                    // ALL (which is a detection)
-                    DetectionSelections.RecognitionType = RecognitionType.Detection;
-                    DetectionSelections.AllDetections = true;
-                    DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                    if (resetSlidersIfNeeded)
-                    {
-                        DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
-                    }
-                }
-                else
-                {
-                    // Either a Detection (excluding All and Empty) or a Classification type 
-                    DetectionSelections.AllDetections = false;
-                    DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-                    string detectionCategory = Database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
-
-                    // DETECTION
-                    DetectionSelections.RecognitionType = RecognitionType.Detection;
-                    DetectionSelections.DetectionCategory = detectionCategory;
-                    if (resetSlidersIfNeeded)
-                    {
-                        DetectionRangeSlider.LowerValue = DetectionSelections.CurrentDetectionThreshold;
-                    }
-                }
-            }
-            ignoreSpinnerUpdates = false;
-        }
-
-        private void SetClassificationCriteriaForComboBox(bool resetSlidersIfNeeded)
-        {
-            ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
-
-            // Set various flags and values depending on what was selected in the combo box
-            if (resetSlidersIfNeeded)
-            {
-                // These reset settings universally apply regardless of the recognition type
-                // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
-                ClassificationRangeSlider.Maximum = 1.0;
-                DetectionSelections.CurrentClassificationThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
-            }
-
-            // Set the minium values for the slider and spinner
-            // These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
-            ClassificationRangeSlider.Minimum = RecognizerValues.MinimumClassificationValue;
-            ClassificationConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumClassificationValue;
-
-            // Resetting the minimum doesn't necessarily change the value if its below the minimum
-            if (ClassificationConfidenceSpinnerLower.Value == null || ClassificationConfidenceSpinnerLower.Value < RecognizerValues.MinimumClassificationValue)
-            {
-                ClassificationConfidenceSpinnerLower.Value = RecognizerValues.MinimumClassificationValue;
-            }
-
-            // A Classification type 
-            DetectionSelections.AllDetections = false;
-            DetectionSelections.InterpretAllDetectionsAsEmpty = false;
-            string classificationCategory = Database.GetClassificationCategoryFromLabel((string)ClassificationCategoryComboBox.SelectedItem);
-
-            if (string.IsNullOrWhiteSpace(classificationCategory))
-            {
-                // Nothing selected, so revert to detection
-                DetectionSelections.RecognitionType = RecognitionType.Detection;
-                DetectionSelections.ClassificationCategory = string.Empty;
-                //DetectionSelections.ClassificationCategory = Database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
-            }
-            else
-            {
-                // CLASSIFICATION
-                DetectionSelections.RecognitionType = RecognitionType.Classification;
-                // TODO: ANIMAL IS CASE SENSITIVE AND CATEGORY SENSITIVE
-                DetectionSelections.DetectionCategory = Database.GetDetectionCategoryFromLabel("animal");
-                DetectionSelections.ClassificationCategory = classificationCategory;
-
-            }
-            if (resetSlidersIfNeeded)
-            {
-                ClassificationRangeSlider.Value = DetectionSelections.CurrentClassificationThreshold;
-            }
-            ignoreSpinnerUpdates = false;
-        }
-
-        // Note that for either of these, we avoid a race condition where each tries to update the other by
-        // setting this.ignoreSpinnerUpdates to true, which will cancel the operation
-        private bool ignoreSpinnerUpdates;
-        private void DetectionConfidenceSpinnerLower_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (IsLoaded == false || ignoreSpinnerUpdates)
-            {
-                return;
-            }
-
-            // If the user has set the upper spinner to less than the lower spinner,
-            // reset it to the value of the lower spinner. That is, don't allow the user to 
-            // go below the lower spinner value.
-            if (DetectionConfidenceSpinnerLower.Value > DetectionConfidenceSpinnerHigher.Value)
-            {
-                ignoreSpinnerUpdates = true;
-                DetectionConfidenceSpinnerLower.Value = DetectionConfidenceSpinnerHigher.Value;
-                ignoreSpinnerUpdates = false;
-            }
-            SetDetectionCriteria();
-
-            if (dontUpdateRangeSlider == false)
-            {
-                DetectionRangeSlider.LowerValue = DetectionConfidenceSpinnerLower.Value ?? 0;
-            }
-            else
-            {
-                dontUpdateRangeSlider = false;
-            }
-
-
-            if (DetectionSelections.RecognitionType == RecognitionType.Detection)
-            {
-                if (DetectionConfidenceSpinnerLower.Value != null)
-                {
-                    DetectionSelections.CurrentDetectionThreshold = (double)DetectionConfidenceSpinnerLower.Value;
-                }
-                else
-                {
-                    // Shouldn't happen
-                    TracePrint.NullException(nameof(DetectionConfidenceSpinnerLower.Value));
-                }
-            }
-            else if (DetectionSelections.RecognitionType == RecognitionType.Classification)
-            {
-                if (DetectionConfidenceSpinnerLower.Value != null)
-                {
-                    DetectionSelections.CurrentDetectionThreshold = (double)DetectionConfidenceSpinnerLower.Value;
-                }
-                else
-                {
-                    // Shouldn't happen
-                    TracePrint.NullException(nameof(DetectionConfidenceSpinnerLower.Value));
-                }
-            }
-            InitiateShowCountsOfMatchingFiles();
-        }
-
-        private void DetectionConfidenceSpinnerHigher_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            return;
-            if (IsLoaded == false || ignoreSpinnerUpdates)
-            {
-                return;
-            }
-
-            // If the user has set the upper spinner to less than the lower spinner,
-            // reset it to the value of the lower spinner. That is, don't allow the user to 
-            // go below the lower spinner value.
-            if (DetectionConfidenceSpinnerHigher.Value < DetectionConfidenceSpinnerLower.Value)
-            {
-                ignoreSpinnerUpdates = true;
-                DetectionConfidenceSpinnerHigher.Value = DetectionConfidenceSpinnerLower.Value;
-                ignoreSpinnerUpdates = false;
-            }
-            SetDetectionCriteria();
-
-            if (dontUpdateRangeSlider == false)
-            {
-                DetectionRangeSlider.HigherValue = DetectionConfidenceSpinnerHigher.Value ?? 0;
-                dontUpdateRangeSlider = false;
-            }
-            else
-            {
-                dontUpdateRangeSlider = false;
-            }
-            InitiateShowCountsOfMatchingFiles();
-        }
-
-        // We just take the Classification value as is
-        // TODO: If we want a range slider instead, probably want to do something similar to detection confidence so an upper and lower setting aren't quite the same. 
-        private void ClassificationConfidenceSpinnerLower_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (IsLoaded == false || ignoreSpinnerUpdates)
-            {
-                return;
-            }
-
-            if (dontUpdateRangeSlider == false)
-            {
-                ClassificationRangeSlider.Value = ClassificationConfidenceSpinnerLower.Value ?? 0;
-            }
-            else
-            {
-                dontUpdateRangeSlider = false;
-            }
-
-            if (ClassificationConfidenceSpinnerLower.Value != null)
-            {
-                DetectionSelections.CurrentClassificationThreshold = (double)ClassificationConfidenceSpinnerLower.Value;
-            }
-            else
-            {
-                // Shouldn't happen
-                TracePrint.NullException(nameof(ClassificationConfidenceSpinnerLower.Value));
-            }
-            InitiateShowCountsOfMatchingFiles();
-        }
-
-        // Detection range slider callback - Upper range
-        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
-        private void DetectionRangeSlider_HigherValueChanged(object sender, RoutedEventArgs e)
-        {
-            if (IsLoaded == false || ignoreSpinnerUpdates)
-            {
-                return;
-            }
-            // Round up the value to the nearest 2 decimal places,
-            // and update the spinner (also in two decimal places) only if the value differs
-            // This stops the spinner from updated if values change in the 3rd decimal place and beyond
-            double value = Round2(DetectionRangeSlider.HigherValue);
-            if (Math.Abs(value - Round2(DetectionConfidenceSpinnerHigher.Value)) > .0001)
-            {
-                dontUpdateRangeSlider = true;
-                DetectionConfidenceSpinnerHigher.Value = value;
-                dontUpdateRangeSlider = false;
-            }
-        }
-
-        // Detection range slider callback - Lower range
-        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
-        private void DetectionRangeSlider_LowerValueChanged(object sender, RoutedEventArgs e)
-        {
-            // Round up the value to the nearest 2 decimal places,
-            // and update the spinner (also in two decimal places) only if the value differs
-            // This stops the spinner from updated if values change in the 3rd decimal place and beyond
-            double value = Round2(DetectionRangeSlider.LowerValue);
-            if (Math.Abs(value - Round2(DetectionConfidenceSpinnerLower.Value)) > .0001)
-            {
-                dontUpdateRangeSlider = true;
-                DetectionConfidenceSpinnerLower.Value = value;
-                dontUpdateRangeSlider = false;
-            }
-        }
-
-
-        // Classification range slider callback - Upper range
-        // Modify this if you want to use a range slider vs a normal slider
-        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
-        //private void ClassificationRangeSlider_HigherValueChanged(object sender, RoutedEventArgs e)
-        //{
-        //    if (IsLoaded == false || ignoreSpinnerUpdates)
-        //    {
-        //        return;
-        //    }
-        //    // Round up the value to the nearest 2 decimal places,
-        //    // and update the spinner (also in two decimal places) only if the value differs
-        //    // This stops the spinner from updated if values change in the 3rd decimal place and beyond
-
-        //    double value = Round2(ClassificationRangeSlider.HigherValue);
-        //    if (Math.Abs(value - Round2(ClassificationConfidenceSpinnerHigher.Value)) > .0001)
-        //    {
-        //        dontUpdateRangeSlider = true;
-        //        ClassificationConfidenceSpinnerHigher.Value = value;
-        //        dontUpdateRangeSlider = false;
-        //    }
-        //}
-
-        // Classification range slider callback - Lower range
-        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
-        private void ClassificationSlider_ValueChanged(object sender, RoutedEventArgs e)
-        {
-            // Round up the value to the nearest 2 decimal places,
-            // and update the spinner (also in two decimal places) only if the value differs
-            // This stops the spinner from updated if values change in the 3rd decimal place and beyond
-            double value = Round2(ClassificationRangeSlider.Value);
-            if (Math.Abs(value - Round2(ClassificationConfidenceSpinnerLower.Value)) > .0001)
-            {
-                dontUpdateRangeSlider = true;
-                ClassificationConfidenceSpinnerLower.Value = value;
-                dontUpdateRangeSlider = false;
-            }
-        }
-
-        // Enable or disable the controls depending on the parameter
-        private void EnableDetectionControls(bool isEnabled)
-        {
-            // TODO ENABLE THIS WHEN RECOGNITIONSELECTOR IS PUT BACK IN
-            //this.RecognitionSelector.Visibility = isEnabled
-            //    ? Visibility.Visible
-            //    : Visibility.Collapsed;
-
-            // Various confidence controls are enabled only if useDetections is set and the rank by confidence is unchecked
-            bool confidenceControlsEnabled = isEnabled && !DetectionSelections.RankByDetectionConfidence;
-            //DetectionConfidenceSpinnerLower.IsEnabled = confidenceControlsEnabled;
-            //DetectionConfidenceSpinnerHigher.IsEnabled = confidenceControlsEnabled;
-            DetectionRangeSlider.IsEnabled = confidenceControlsEnabled;
-            DetectionConfidenceLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
-            //FromLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
-            //ToLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
-            DetectionRangeSlider.RangeBackground = confidenceControlsEnabled ? Brushes.Gold : Brushes.LightGray;
-
-
-            // There remainder depends upon the use detections isEnable state only
-            DetectionCategoryComboBox.IsEnabled = isEnabled;
-            DetectionCategoryLabel.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
-            RankByDetectionConfidenceCheckbox.IsEnabled = isEnabled;
-            RankByDetectionConfidenceCheckbox.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
-
-            // CHECK THE ONES BELOW TO SEE IF THIS IS THE BEST WAY TO DO THESE
-            SelectionGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
-            SelectionGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
-
-            RecognitionsGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
-            RecognitionsGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
-
-            if (ShowMissingDetectionsCheckbox.IsChecked == true || EnableRecognitionsCheckbox.IsChecked == true)
-            {
-                ResetToAllImagesButton.IsEnabled = true;
-            }
-        }
-
-        private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
-        {
-            // Need to disable confidence sliders/spinners depending on the state of this checkbox and use detections
-            // ALso need to restore state of this checkbox between repeated uses in Window_Loaded.
-            DetectionSelections.RankByDetectionConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
-            InitiateShowCountsOfMatchingFiles();
-            EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
+            //SetClassificationCriteriaForComboBox(resetSlidersIfNeeded);
         }
         #endregion
 
         #region Common to Selections and Detections
         private void CountTimer_Tick(object sender, EventArgs e)
         {
-            countTimer.Stop();
+            CountTimer.Stop();
             // This is set everytime a selection is made
             if (dontCount)
             {
                 return;
             }
+            //Debug.Print($"AllDetections: {this.RecognitionSelections.AllDetections}");
+            //Debug.Print($"RecognitionType:{this.RecognitionSelections.RecognitionType}");
+            //Debug.Print( $"DetectionCategoryNumber:{this.RecognitionSelections.DetectionCategoryNumber} | {this.RecognitionSelections.DetectionConfidenceLowerForUI} - {this.RecognitionSelections.DetectionConfidenceHigherForUI}");
+            //Debug.Print($"InterpretAllDetectionsAsEmpty:{this.RecognitionSelections.InterpretAllDetectionsAsEmpty}");
+
+            //Debug.Print($"ClassificationCategoryNumber:{this.RecognitionSelections.ClassificationCategoryNumber}");
+
             int count = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
-            QueryMatches.Text = count > 0 ? count.ToString() : "0";
+            MatchingFilesCount.Text = count > 0 ? count.ToString() : "0";
+            this.MatchingFilesCountLabel.Text = count == 1
+                ? " file matches your query"
+                : " files match your query";
+
             OkButton.IsEnabled = count > 0; // Dusable OK button if there are no matches
 
+            if (null != this.RecognitionSelector)
+            {
+                this.RecognitionSelector.UpdateDisplayOfTotalFileCounts(MatchingFilesCount.Text);
+                if (this.RefreshRecognitionCountsRequired)
+                {
+                    // await this.RecognitionSelector.RecognitionsRefreshCounts();
+                    this.RecognitionSelector.ClearCountsAndResetUI();
+                }
+            }
+
+            this.RefreshRecognitionCountsRequired = true;
             // Uncomment this to add feedback to the File count line desribing the kinds of files selected
             //if (this.UseDetectionsCheckbox.IsChecked == false)
             //{
@@ -1882,7 +1458,7 @@ namespace Timelapse.Dialog
             //}
             //else
             //{
-            //    if ((string)this.DetectionCategoryComboBox.SelectedItem == Constant.RecognizerValues.NoDetectionLabel)
+            //    if ((string)this.DetectionCategoryComboBox.SelectedItem == Constant.RecognizerValues.EmptyDetectionLabel)
             //    {
             //        if (this.DetectionRangeSlider.LowerValue == 1)
             //        {
@@ -1910,8 +1486,8 @@ namespace Timelapse.Dialog
         // Start the timer that will show how many files match the current selection
         private void InitiateShowCountsOfMatchingFiles()
         {
-            countTimer.Stop();
-            countTimer.Start();
+            CountTimer.Stop();
+            CountTimer.Start();
         }
 
         // Apply the selection if the Ok button is clicked
@@ -1934,15 +1510,8 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region Static helpers
-        private static double Round2(double? value)
-        {
-            return value == null ? 0 : Math.Round((double)value, 2);
-        }
-        #endregion
-
         #region EpisodeStuff - Move this code into proper regions later
-        private void CheckboxShowAllEpisodeImages_CheckedChanged(object sender, RoutedEventArgs e)
+        private async void CheckboxShowAllEpisodeImages_CheckedChanged(object sender, RoutedEventArgs e)
         {
             if (Database == null)
             {
@@ -1963,7 +1532,7 @@ namespace Timelapse.Dialog
 
             }
             Database.CustomSelection.EpisodeShowAllIfAnyMatch = true == CheckboxShowAllEpisodeImages.IsChecked;
-            UpdateSearchDialogFeedback();
+            await UpdateSearchDialogFeedback();
         }
 
         private static bool EpisodeFieldCheckFormat(ImageRow row, string dataLabel)
@@ -2090,9 +1659,599 @@ namespace Timelapse.Dialog
             this.treeViewWithRelativePaths.ItemsSource = items;
             this.treeViewWithRelativePaths.DontInvoke = false;
         }
-
         #endregion
 
+        #region TO DELETE
 
+        //private void SetDetectionCriteriaOrig(bool resetSlidersIfNeeded = false)
+        //{
+        //    if (IsLoaded == false || dontInvoke)
+        //    {
+        //        return;
+        //    }
+        //    RecognitionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
+        //    if (RecognitionSelections.UseRecognition)
+        //    {
+        //        SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
+        //        RecognitionSelections.DetectionConfidenceLowerForUI = DetectionConfidenceSpinnerLower.Value == null ? 0 : Round2(DetectionConfidenceSpinnerLower.Value);
+        //        RecognitionSelections.DetectionConfidenceHigherForUI = DetectionConfidenceSpinnerHigher.Value == null ? 0 : Round2(DetectionConfidenceSpinnerHigher.Value);
+        //    }
+
+        //    // The BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
+        //    // determined in this select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 
+        //    // show bounding boxes when the confidence is .4 or more. On the other  hand, we don't want to show spurious detections when empty is selected,
+        //    // so we set a minimum value.
+        //    CustomSelection.SetDetectionRanges(RecognitionSelections);
+
+        //    // Enable / alter looks and behavour of detecion UI to match whether detections should be used
+        //    EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
+        //}
+
+
+        //private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
+        //{
+        //// Need to disable confidence sliders/spinners depending on the state of this checkbox and use detections
+        //// ALso need to restore state of this checkbox between repeated uses in Window_Loaded.
+        //RecognitionSelections.RankByDetectionConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
+        //InitiateShowCountsOfMatchingFiles();
+        //EnableDetectionControls(EnableRecognitionsCheckbox.IsChecked == true);
+        //}
+
+        // Note that for either of these, we avoid a race condition where each tries to update the other by
+        // setting this.ignoreSpinnerUpdates to true, which will cancel the operation
+        //private bool ignoreSpinnerUpdates;
+        //private void DetectionConfidenceSpinnerLower_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        //{
+        //if (IsLoaded == false || ignoreSpinnerUpdates)
+        //{
+        //    return;
+        //}
+
+        //// If the user has set the upper spinner to less than the lower spinner,
+        //// reset it to the value of the lower spinner. That is, don't allow the user to 
+        //// go below the lower spinner value.
+        //if (DetectionConfidenceSpinnerLower.Value > DetectionConfidenceSpinnerHigher.Value)
+        //{
+        //    ignoreSpinnerUpdates = true;
+        //    DetectionConfidenceSpinnerLower.Value = DetectionConfidenceSpinnerHigher.Value;
+        //    ignoreSpinnerUpdates = false;
+        //}
+        //SetDetectionCriteria();
+
+        //if (dontUpdateRangeSlider == false)
+        //{
+        //    DetectionRangeSlider.LowerValue = DetectionConfidenceSpinnerLower.Value ?? 0;
+        //}
+        //else
+        //{
+        //    dontUpdateRangeSlider = false;
+        //}
+
+
+        //if (RecognitionSelections.RecognitionType == RecognitionType.Detection)
+        //{
+        //    if (DetectionConfidenceSpinnerLower.Value != null)
+        //    {
+        //        RecognitionSelections.CurrentDetectionThreshold = (double)DetectionConfidenceSpinnerLower.Value;
+        //    }
+        //    else
+        //    {
+        //        // Shouldn't happen
+        //        TracePrint.NullException(nameof(DetectionConfidenceSpinnerLower.Value));
+        //    }
+        //}
+        //else if (RecognitionSelections.RecognitionType == RecognitionType.Classification)
+        //{
+        //    if (DetectionConfidenceSpinnerLower.Value != null)
+        //    {
+        //        RecognitionSelections.CurrentDetectionThreshold = (double)DetectionConfidenceSpinnerLower.Value;
+        //    }
+        //    else
+        //    {
+        //        // Shouldn't happen
+        //        TracePrint.NullException(nameof(DetectionConfidenceSpinnerLower.Value));
+        //    }
+        //}
+        //InitiateShowCountsOfMatchingFiles();
+        //}
+
+        //private void DetectionConfidenceSpinnerHigher_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        //{
+        //if (IsLoaded == false || ignoreSpinnerUpdates)
+        //{
+        //    return;
+        //}
+
+        //// If the user has set the upper spinner to less than the lower spinner,
+        //// reset it to the value of the lower spinner. That is, don't allow the user to 
+        //// go below the lower spinner value.
+        //if (DetectionConfidenceSpinnerHigher.Value < DetectionConfidenceSpinnerLower.Value)
+        //{
+        //    ignoreSpinnerUpdates = true;
+        //    DetectionConfidenceSpinnerHigher.Value = DetectionConfidenceSpinnerLower.Value;
+        //    ignoreSpinnerUpdates = false;
+        //}
+        //SetDetectionCriteria();
+
+        //if (dontUpdateRangeSlider == false)
+        //{
+        //    DetectionRangeSlider.HigherValue = DetectionConfidenceSpinnerHigher.Value ?? 0;
+        //    dontUpdateRangeSlider = false;
+        //}
+        //else
+        //{
+        //    dontUpdateRangeSlider = false;
+        //}
+        //InitiateShowCountsOfMatchingFiles();
+        //}
+
+        // We just take the Classification value as is
+        // TODO: If we want a range slider instead, probably want to do something similar to detection confidence so an upper and lower setting aren't quite the same. 
+        //private void ClassificationConfidenceSpinnerLower_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        //{
+        //if (IsLoaded == false || ignoreSpinnerUpdates)
+        //{
+        //    return;
+        //}
+
+        //if (dontUpdateRangeSlider == false)
+        //{
+        //    ClassificationRangeSlider.Value = ClassificationConfidenceSpinnerLower.Value ?? 0;
+        //}
+        //else
+        //{
+        //    dontUpdateRangeSlider = false;
+        //}
+
+        //if (ClassificationConfidenceSpinnerLower.Value != null)
+        //{
+        //    RecognitionSelections.CurrentClassificationThreshold = (double)ClassificationConfidenceSpinnerLower.Value;
+        //}
+        //else
+        //{
+        //    // Shouldn't happen
+        //    TracePrint.NullException(nameof(ClassificationConfidenceSpinnerLower.Value));
+        //}
+        //InitiateShowCountsOfMatchingFiles();
+        //}
+
+        // Detection range slider callback - Upper range
+        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
+        //private void DetectionRangeSlider_HigherValueChanged(object sender, RoutedEventArgs e)
+        //{
+        //if (IsLoaded == false || ignoreSpinnerUpdates)
+        //{
+        //    return;
+        //}
+        //// Round up the value to the nearest 2 decimal places,
+        //// and update the spinner (also in two decimal places) only if the value differs
+        //// This stops the spinner from updated if values change in the 3rd decimal place and beyond
+        //double value = Round2(DetectionRangeSlider.HigherValue);
+        //if (Math.Abs(value - Round2(DetectionConfidenceSpinnerHigher.Value)) > .0001)
+        //{
+        //    dontUpdateRangeSlider = true;
+        //    DetectionConfidenceSpinnerHigher.Value = value;
+        //    dontUpdateRangeSlider = false;
+        //}
+        //}
+
+        // Detection range slider callback - Lower range
+        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
+        //private void DetectionRangeSlider_LowerValueChanged(object sender, RoutedEventArgs e)
+        //{
+        //// Round up the value to the nearest 2 decimal places,
+        //// and update the spinner (also in two decimal places) only if the value differs
+        //// This stops the spinner from updated if values change in the 3rd decimal place and beyond
+        //double value = Round2(DetectionRangeSlider.LowerValue);
+        //if (Math.Abs(value - Round2(DetectionConfidenceSpinnerLower.Value)) > .0001)
+        //{
+        //    dontUpdateRangeSlider = true;
+        //    DetectionConfidenceSpinnerLower.Value = value;
+        //    dontUpdateRangeSlider = false;
+        //}
+        //}
+
+
+        // Classification range slider callback - Upper range
+        // Modify this if you want to use a range slider vs a normal slider
+        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
+        //private void ClassificationRangeSlider_HigherValueChanged(object sender, RoutedEventArgs e)
+        //{
+        //    if (IsLoaded == false || ignoreSpinnerUpdates)
+        //    {
+        //        return;
+        //    }
+        //    // Round up the value to the nearest 2 decimal places,
+        //    // and update the spinner (also in two decimal places) only if the value differs
+        //    // This stops the spinner from updated if values change in the 3rd decimal place and beyond
+
+        //    double value = Round2(ClassificationRangeSlider.HigherValue);
+        //    if (Math.Abs(value - Round2(ClassificationConfidenceSpinnerHigher.Value)) > .0001)
+        //    {
+        //        dontUpdateRangeSlider = true;
+        //        ClassificationConfidenceSpinnerHigher.Value = value;
+        //        dontUpdateRangeSlider = false;
+        //    }
+        //}
+
+        // Classification range slider callback - Lower range
+        // Note that this does not invoke this.SetDetectionCriteria(), as that is done as a side effect of invoking the spinner
+        //private void ClassificationSlider_ValueChanged(object sender, RoutedEventArgs e)
+        //{
+        //// Round up the value to the nearest 2 decimal places,
+        //// and update the spinner (also in two decimal places) only if the value differs
+        //// This stops the spinner from updated if values change in the 3rd decimal place and beyond
+        //double value = Round2(ClassificationRangeSlider.Value);
+        //if (Math.Abs(value - Round2(ClassificationConfidenceSpinnerLower.Value)) > .0001)
+        //{
+        //    dontUpdateRangeSlider = true;
+        //    ClassificationConfidenceSpinnerLower.Value = value;
+        //    dontUpdateRangeSlider = false;
+        //}
+        //}
+
+
+        // Enable or disable the controls depending on the parameter
+        //private void EnableRecognitionControls(bool isEnabled)
+        //{
+
+        // Enable / Disable the recognition Selector
+        //this.RecognitionSelector.Visibility = isEnabled
+        //   ? Visibility.Visible
+        //   : Visibility.Collapsed;
+        //this.RecognitionsGroupBox.Background = isEnabled
+        //   ? Brushes.Azure
+        //   : Brushes.White;
+        //this.RecognitionsGroupBox.BorderThickness = isEnabled
+        //   ? new Thickness(2)
+        //   : new Thickness(0);
+        //RecognitonsGroupBoxHeaderText.FontWeight = isEnabled
+        //    ? FontWeights.DemiBold
+        //    : FontWeights.Normal;
+
+
+        //// Various confidence controls are enabled only if useDetections is set and the rank by confidence is unchecked
+        //bool confidenceControlsEnabled = isEnabled && !RecognitionSelections.RankByDetectionConfidence;
+        ////DetectionConfidenceSpinnerLower.IsEnabled = confidenceControlsEnabled;
+        ////DetectionConfidenceSpinnerHigher.IsEnabled = confidenceControlsEnabled;
+        //DetectionRangeSlider.IsEnabled = confidenceControlsEnabled;
+        //DetectionConfidenceLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
+        ////FromLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
+        ////ToLabel.FontWeight = confidenceControlsEnabled ? FontWeights.Normal : FontWeights.Light;
+        //DetectionRangeSlider.RangeBackground = confidenceControlsEnabled ? Brushes.Gold : Brushes.LightGray;
+
+
+        //// There remainder depends upon the use detections isEnable state only
+        //DetectionCategoryComboBox.IsEnabled = isEnabled;
+        //DetectionCategoryLabel.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
+        //RankByDetectionConfidenceCheckbox.IsEnabled = isEnabled;
+        //RankByDetectionConfidenceCheckbox.FontWeight = isEnabled ? FontWeights.Normal : FontWeights.Light;
+
+        //// CHECK THE ONES BELOW TO SEE IF THIS IS THE BEST WAY TO DO THESE
+        //SelectionGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
+        //SelectionGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
+
+        //RecognitionsGroupBox.IsEnabled = !Database.CustomSelection.ShowMissingDetections;
+        //RecognitionsGroupBox.Background = Database.CustomSelection.ShowMissingDetections ? Brushes.LightGray : Brushes.White;
+
+        //if (ShowMissingDetectionsCheckbox.IsChecked == true || EnableRecognitionsCheckbox.IsChecked == true)
+        //{
+        //    ResetToAllImagesButton.IsEnabled = true;
+        //}
+        //}
+
+        //private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
+        //{
+        //    //Database.CustomSelection.ShowMissingDetections = ShowMissingDetectionsCheckbox.IsChecked == true;
+        //    //SetDetectionCriteria();
+        //    //InitiateShowCountsOfMatchingFiles();
+        //}
+
+        //private void DetectionCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        //{
+        //    if (IsLoaded == false)
+        //    {
+        //        return;
+        //    }
+        //    // Invoke this with a true argument, which forces the confidence values to be reset based upon the selection
+        //    SetDetectionCriteria(true);
+        //    InitiateShowCountsOfMatchingFiles();
+        //}
+
+        //private void ClassificationCategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        //{
+        //    if (IsLoaded == false)
+        //    {
+        //        return;
+        //    }
+        //    // Invoke this with a true argument, which forces the confidence values to be reset based upon the selection
+        //    SetDetectionCriteria(false);
+        //    InitiateShowCountsOfMatchingFiles();
+        //}
+
+
+        //private void SetDetectionCriteriaForComboBox(bool resetSlidersIfNeeded)
+        //{
+        //ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
+
+        //// Set various flags and values depending on what was selected in the combo box
+        //if (resetSlidersIfNeeded)
+        //{
+        //    // These reset settings universally apply regardless of the recognition type
+        //    // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
+        //    DetectionRangeSlider.HigherValue = 1.0;
+        //    RecognitionSelections.CurrentDetectionThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
+        //}
+
+        //if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.EmptyDetectionLabel)
+        //{
+        //    // EMPTY
+        //    // Note that Empties are special cases of an All Detection (which is why its recognition type is still a Detection and both AllDetections and EmptyDetections are true).
+        //    // What actually happens is that other code flips the confidence values in the query to 1 - the current higher and lowever slider settings (e.g., from 1-1 to 0-0). 
+        //    RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //    RecognitionSelections.InterpretAllDetectionsAsEmpty = true;
+        //    RecognitionSelections.AllDetections = true; // Empty detections signal that we need to flip the confidence to its inverse, which is then applied to AllDetections
+        //    RecognitionSelections.DetectionCategoryNumber = Database.GetDetectionCategoryFromLabel(RecognizerValues.EmptyDetectionLabel);
+
+        //    if (resetSlidersIfNeeded)
+        //    {
+        //        // Default is ConservativeDetection Threshold - 1.0, i.e.,to only show images where the recognizer has not found any detections.
+        //        // As the EmptyDetections is true, other code will special case this by actually doing a query on 1 - these values
+        //        DetectionRangeSlider.HigherValue = 1.0;
+        //        DetectionRangeSlider.LowerValue = 1 - RecognitionSelections.ConservativeDetectionThreshold;
+        //    }
+
+        //    // Set the minium values for the slider and spinner, which is 0 fpr Empty detections
+        //    DetectionRangeSlider.Minimum = 0;
+        //    DetectionConfidenceSpinnerLower.Minimum = 0;
+        //    DetectionConfidenceSpinnerHigher.Minimum = 0;
+        //}
+        //else
+        //{
+        //    // A non-empty selection
+        //    RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+
+        //    // Set the minium values for the slider and spinner
+        //    // These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
+        //    DetectionRangeSlider.Minimum = RecognizerValues.MinimumDetectionValue;
+        //    DetectionConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumDetectionValue;
+        //    DetectionConfidenceSpinnerHigher.Minimum = RecognizerValues.MinimumDetectionValue;
+
+        //    // Resetting the minimum doesn't necessarily change the value if its below the minimum
+        //    if (DetectionConfidenceSpinnerLower.Value == null || DetectionConfidenceSpinnerLower.Value < RecognizerValues.MinimumDetectionValue)
+        //    {
+        //        DetectionConfidenceSpinnerLower.Value = RecognizerValues.MinimumDetectionValue;
+        //    }
+        //    if (DetectionConfidenceSpinnerHigher.Value == null || DetectionConfidenceSpinnerHigher.Value < RecognizerValues.MinimumDetectionValue)
+        //    {
+        //        DetectionConfidenceSpinnerHigher.Value = RecognizerValues.MinimumDetectionValue;
+        //    }
+
+        //    if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.AllDetectionLabel)
+        //    {
+        //        // ALL (which is a detection)
+        //        RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //        RecognitionSelections.AllDetections = true;
+        //        RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+        //        if (resetSlidersIfNeeded)
+        //        {
+        //            DetectionRangeSlider.LowerValue = RecognitionSelections.CurrentDetectionThreshold;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // Either a Detection (excluding All and Empty) or a Classification type 
+        //        RecognitionSelections.AllDetections = false;
+        //        RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+        //        string detectionCategory = Database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+
+        //        // DETECTION
+        //        RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //        RecognitionSelections.DetectionCategoryNumber = detectionCategory;
+        //        if (resetSlidersIfNeeded)
+        //        {
+        //            DetectionRangeSlider.LowerValue = RecognitionSelections.CurrentDetectionThreshold;
+        //        }
+        //    }
+        //}
+        //ignoreSpinnerUpdates = false;
+        //}
+
+        //private void SetClassificationCriteriaForComboBox(bool resetSlidersIfNeeded)
+        //{
+        //ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
+
+        //// Set various flags and values depending on what was selected in the combo box
+        //if (resetSlidersIfNeeded)
+        //{
+        //    // These reset settings universally apply regardless of the recognition type
+        //    // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
+        //    ClassificationRangeSlider.Maximum = 1.0;
+        //    RecognitionSelections.CurrentClassificationThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
+        //}
+
+        //// Set the minium values for the slider and spinner
+        //// These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
+        //ClassificationRangeSlider.Minimum = RecognizerValues.MinimumClassificationValue;
+        //ClassificationConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumClassificationValue;
+
+        //// Resetting the minimum doesn't necessarily change the value if its below the minimum
+        //if (ClassificationConfidenceSpinnerLower.Value == null || ClassificationConfidenceSpinnerLower.Value < RecognizerValues.MinimumClassificationValue)
+        //{
+        //    ClassificationConfidenceSpinnerLower.Value = RecognizerValues.MinimumClassificationValue;
+        //}
+
+        //// A Classification type 
+        //RecognitionSelections.AllDetections = false;
+        //RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+        //string classificationCategory = Database.GetClassificationCategoryFromLabel((string)ClassificationCategoryComboBox.SelectedItem);
+
+        //if (string.IsNullOrWhiteSpace(classificationCategory))
+        //{
+        //    // Nothing selected, so revert to detection
+        //    RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //    RecognitionSelections.ClassificationCategoryNumber = string.Empty;
+        //    //RecognitionSelections.ClassificationCategoryNumber = Database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+        //}
+        //else
+        //{
+        //    // CLASSIFICATION
+        //    RecognitionSelections.RecognitionType = RecognitionType.Classification;
+        //    // TODO: ANIMAL IS CASE SENSITIVE AND CATEGORY SENSITIVE
+        //    RecognitionSelections.DetectionCategoryNumber = Database.GetDetectionCategoryFromLabel("animal");
+        //    RecognitionSelections.ClassificationCategoryNumber = classificationCategory;
+
+        //}
+        //if (resetSlidersIfNeeded)
+        //{
+        //    ClassificationRangeSlider.Value = RecognitionSelections.CurrentClassificationThreshold;
+        //}
+        //ignoreSpinnerUpdates = false;
+        //}
+
+        //private void SetDetectionCriteriaForComboBox(bool resetSlidersIfNeeded)
+        //{
+        //ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
+
+        //// Set various flags and values depending on what was selected in the combo box
+        //if (resetSlidersIfNeeded)
+        //{
+        //    // These reset settings universally apply regardless of the recognition type
+        //    // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
+        //    DetectionRangeSlider.HigherValue = 1.0;
+        //    RecognitionSelections.CurrentDetectionThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
+        //}
+
+        //if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.EmptyDetectionLabel)
+        //{
+        //    // EMPTY
+        //    // Note that Empties are special cases of an All Detection (which is why its recognition type is still a Detection and both AllDetections and EmptyDetections are true).
+        //    // What actually happens is that other code flips the confidence values in the query to 1 - the current higher and lowever slider settings (e.g., from 1-1 to 0-0). 
+        //    RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //    RecognitionSelections.InterpretAllDetectionsAsEmpty = true;
+        //    RecognitionSelections.AllDetections = true; // Empty detections signal that we need to flip the confidence to its inverse, which is then applied to AllDetections
+        //    RecognitionSelections.DetectionCategoryNumber = Database.GetDetectionCategoryFromLabel(RecognizerValues.EmptyDetectionLabel);
+
+        //    if (resetSlidersIfNeeded)
+        //    {
+        //        // Default is ConservativeDetection Threshold - 1.0, i.e.,to only show images where the recognizer has not found any detections.
+        //        // As the EmptyDetections is true, other code will special case this by actually doing a query on 1 - these values
+        //        DetectionRangeSlider.HigherValue = 1.0;
+        //        DetectionRangeSlider.LowerValue = 1 - RecognitionSelections.ConservativeDetectionThreshold;
+        //    }
+
+        //    // Set the minium values for the slider and spinner, which is 0 fpr Empty detections
+        //    DetectionRangeSlider.Minimum = 0;
+        //    DetectionConfidenceSpinnerLower.Minimum = 0;
+        //    DetectionConfidenceSpinnerHigher.Minimum = 0;
+        //}
+        //else
+        //{
+        //    // A non-empty selection
+        //    RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+
+        //    // Set the minium values for the slider and spinner
+        //    // These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
+        //    DetectionRangeSlider.Minimum = RecognizerValues.MinimumDetectionValue;
+        //    DetectionConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumDetectionValue;
+        //    DetectionConfidenceSpinnerHigher.Minimum = RecognizerValues.MinimumDetectionValue;
+
+        //    // Resetting the minimum doesn't necessarily change the value if its below the minimum
+        //    if (DetectionConfidenceSpinnerLower.Value == null || DetectionConfidenceSpinnerLower.Value < RecognizerValues.MinimumDetectionValue)
+        //    {
+        //        DetectionConfidenceSpinnerLower.Value = RecognizerValues.MinimumDetectionValue;
+        //    }
+        //    if (DetectionConfidenceSpinnerHigher.Value == null || DetectionConfidenceSpinnerHigher.Value < RecognizerValues.MinimumDetectionValue)
+        //    {
+        //        DetectionConfidenceSpinnerHigher.Value = RecognizerValues.MinimumDetectionValue;
+        //    }
+
+        //    if ((string)DetectionCategoryComboBox.SelectedItem == RecognizerValues.AllDetectionLabel)
+        //    {
+        //        // ALL (which is a detection)
+        //        RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //        RecognitionSelections.AllDetections = true;
+        //        RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+        //        if (resetSlidersIfNeeded)
+        //        {
+        //            DetectionRangeSlider.LowerValue = RecognitionSelections.CurrentDetectionThreshold;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // Either a Detection (excluding All and Empty) or a Classification type 
+        //        RecognitionSelections.AllDetections = false;
+        //        RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+        //        string detectionCategory = Database.GetDetectionCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+
+        //        // DETECTION
+        //        RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //        RecognitionSelections.DetectionCategoryNumber = detectionCategory;
+        //        if (resetSlidersIfNeeded)
+        //        {
+        //            DetectionRangeSlider.LowerValue = RecognitionSelections.CurrentDetectionThreshold;
+        //        }
+        //    }
+        //}
+        //ignoreSpinnerUpdates = false;
+        //}
+
+        //private void SetClassificationCriteriaForComboBox(bool resetSlidersIfNeeded)
+        //{
+        //ignoreSpinnerUpdates = true; // as otherwise resetting sliders/spinners will reinvoke this
+
+        //// Set various flags and values depending on what was selected in the combo box
+        //if (resetSlidersIfNeeded)
+        //{
+        //    // These reset settings universally apply regardless of the recognition type
+        //    // The higher limit is always 1.0. Resetting the lower limit to its undefined state signals that default values should be looked up and used.
+        //    ClassificationRangeSlider.Maximum = 1.0;
+        //    RecognitionSelections.CurrentClassificationThreshold = RecognizerValues.Undefined; // As its a new JSON, resetting sets it back to detections, so we can use the default value.
+        //}
+
+        //// Set the minium values for the slider and spinner
+        //// These are just a titch above 0, which means the results will only include items with a detection, but never include purely empty items (i.e., items with no detections)
+        //ClassificationRangeSlider.Minimum = RecognizerValues.MinimumClassificationValue;
+        //ClassificationConfidenceSpinnerLower.Minimum = RecognizerValues.MinimumClassificationValue;
+
+        //// Resetting the minimum doesn't necessarily change the value if its below the minimum
+        //if (ClassificationConfidenceSpinnerLower.Value == null || ClassificationConfidenceSpinnerLower.Value < RecognizerValues.MinimumClassificationValue)
+        //{
+        //    ClassificationConfidenceSpinnerLower.Value = RecognizerValues.MinimumClassificationValue;
+        //}
+
+        //// A Classification type 
+        //RecognitionSelections.AllDetections = false;
+        //RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+        //string classificationCategory = Database.GetClassificationCategoryFromLabel((string)ClassificationCategoryComboBox.SelectedItem);
+
+        //if (string.IsNullOrWhiteSpace(classificationCategory))
+        //{
+        //    // Nothing selected, so revert to detection
+        //    RecognitionSelections.RecognitionType = RecognitionType.Detection;
+        //    RecognitionSelections.ClassificationCategoryNumber = string.Empty;
+        //    //RecognitionSelections.ClassificationCategoryNumber = Database.GetClassificationCategoryFromLabel((string)DetectionCategoryComboBox.SelectedItem);
+        //}
+        //else
+        //{
+        //    // CLASSIFICATION
+        //    RecognitionSelections.RecognitionType = RecognitionType.Classification;
+        //    // TODO: ANIMAL IS CASE SENSITIVE AND CATEGORY SENSITIVE
+        //    RecognitionSelections.DetectionCategoryNumber = Database.GetDetectionCategoryFromLabel("animal");
+        //    RecognitionSelections.ClassificationCategoryNumber = classificationCategory;
+
+        //}
+        //if (resetSlidersIfNeeded)
+        //{
+        //    ClassificationRangeSlider.Value = RecognitionSelections.CurrentClassificationThreshold;
+        //}
+        //ignoreSpinnerUpdates = false;
+        //}
+
+        //private static double Round2(double? value)
+        //{
+        //    return value == null ? 0 : Math.Round((double)value, 2);
+        //}
+        #endregion
     }
 }

@@ -196,9 +196,9 @@ namespace Timelapse
 
             // Reset a bunch of stuff here, as I am not sure if its handled in the OnFolderLoadingComplete method
             // Only reset these if we actually imported some detections, as otherwise nothing has changed.
-            if (DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
+            if (DataHandler?.FileDatabase?.CustomSelection?.RecognitionSelections != null)
             {
-                DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
+                DataHandler.FileDatabase.CustomSelection.RecognitionSelections.DetectionConfidenceLowerForUI = -1; // this forces it to use the default in the new JSON
             }
             if (DataHandler?.FileDatabase != null)
             {

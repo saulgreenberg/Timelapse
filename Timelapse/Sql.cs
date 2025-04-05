@@ -125,12 +125,12 @@ namespace Timelapse
 
         public const string SelectCount = " SELECT COUNT ";
         public const string SelectDistinctCount = " SELECT DISTINCT COUNT ";
-        public const string SelectCountStarFrom = SelectCount + OpenParenthesis + Star + CloseParenthesis + From;
+        public const string SelectCountStarFromForm = SelectCount + OpenParenthesis + Star + CloseParenthesis + From;
         public const string SelectDistinctCountStarFrom = SelectDistinctCount + OpenParenthesis + Star + CloseParenthesis + From;
         public const string SelectExists = " SELECT EXISTS ";
         public const string SelectNameFromPragmaTableInfo = Select + Name + From + " PRAGMA_TABLE_INFO ";
         public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Select + Name + From + SqlMaster + Where + TypeEqualsTable + And + Name + Equal;
-        public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = SelectCountStarFrom + SqlMaster + Where + TypeEqualsIndex + And + Name + Equal;
+        public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = SelectCountStarFromForm + SqlMaster + Where + TypeEqualsIndex + And + Name + Equal;
         public static string SelectSqlFromSqliteMasterWhereTypeEqualTableAndNameEquals = $"{Select} sql {From} {SqlMaster} {Where} {TypeEqualsTable} {And} {Name} {Equal}";
         public const string Semicolon = " ; ";
         public const string Set = " SET ";
@@ -248,7 +248,7 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
+                phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
@@ -287,16 +287,37 @@ namespace Timelapse
         //  (
         //      Select Distinct File,RelativePath from TmpCombinedTable where "category:1" = 1 AND "conf:1" >= 0.6
         //  )
-        public static string SelectCountClassificationsWithinDetections(string where, RecognitionSelections detectionSelections, string detectionCategory)
+        public static string SelectCountClassificationsWithinDetections(string where, RecognitionSelections detectionSelections, string detectionCategory, bool asCountQuery)
         {
+            // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
             // Create a temporary table to hold intermediate results
             string phrase = CreateTempTableForDetectionsAndClassifications(where, detectionSelections, detectionCategory, Constant.DBTables.TmpCombinedTable);
+            string selectFromString = asCountQuery
+                ? Sql.SelectCountStarFromForm
+                : Sql.SelectStarFrom;
             return phrase +=
-                $"SELECT Count(*) from (" +
+                $"{selectFromString} (" +
                 $"Select Distinct File,RelativePath from {Constant.DBTables.TmpCombinedTable} " +
-                $"where \"category:1\" = {detectionSelections.ClassificationCategory}" +
-                $" AND \"conf:1\" >= {detectionSelections.CurrentClassificationThreshold}" +
+                $"where \"category:1\" = {detectionSelections.ClassificationCategoryNumber}" +
+                $" AND \"conf:1\" >= {detectionSelections.ClassificationConfidenceLowerForUI}" +
+                $" AND \"conf:1\" <= {detectionSelections.ClassificationConfidenceHigherForUI}" +
                 $")";
+        }
+
+        public static string SelectClassificationsWithinDetections(string where, RecognitionSelections detectionSelections, string detectionCategory, string commaSeparatedColumns)
+        {
+            // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
+            // Create a temporary table to hold intermediate results
+            string phrase = CreateTempTableForDetectionsAndClassifications(where, detectionSelections, detectionCategory, Constant.DBTables.TmpCombinedTable);
+            
+             phrase +=
+                $"{Sql.SelectStarFrom} (" +
+                $"Select Distinct {commaSeparatedColumns} from {Constant.DBTables.TmpCombinedTable} " +
+                $"where \"category:1\" = {detectionSelections.ClassificationCategoryNumber}" +
+                $" AND \"conf:1\" {Sql.Between} {detectionSelections.ClassificationConfidenceLowerForUI} AND {detectionSelections.ClassificationConfidenceHigherForUI}" + 
+                $");";
+             phrase += "Drop Table If Exists TmpCombinedTable;";
+             return phrase;
         }
 
         // Generate counts for each classification category which includes images in accompanying episodes.
@@ -323,14 +344,18 @@ namespace Timelapse
         //         )
         //     )
         // )
-        public static string SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(string where, RecognitionSelections detectionSelections, string detectionCategory, string episodeNoteField)
+        public static string SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(string where, RecognitionSelections detectionSelections, string detectionCategory, string episodeNoteField, bool asCountQuery)
         {
+            // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
             // Create a temporary table to hold intermediate results
             string phrase = CreateTempTableForDetectionsAndClassifications(where, detectionSelections, detectionCategory, Constant.DBTables.TmpCombinedTable);
             string columnsAsCommaSeparatedString = $" {Constant.DatabaseColumn.File}, {Constant.DatabaseColumn.RelativePath}, {episodeNoteField} ";
             string tmp_EpisodeNoteField = $"{Constant.DBTables.TmpCombinedTable}.{episodeNoteField}";
+            string selectFromString = asCountQuery
+                ? Sql.SelectCountStarFromForm
+                : Sql.SelectStarFrom;
             return phrase +=
-                $"SELECT Count(*) from " +
+                $"{selectFromString} " +
                 $"(" +
                 $"    Select Distinct {columnsAsCommaSeparatedString} from {Constant.DBTables.TmpCombinedTable} " +
                 $"    WHERE  SUBSTR({tmp_EpisodeNoteField}, 0, INSTR({tmp_EpisodeNoteField}, ':'))  In " +
@@ -339,7 +364,9 @@ namespace Timelapse
                 $"        (" +
                 $"              SELECT {columnsAsCommaSeparatedString} from " +
                 $"              (" +
-                $"                   Select Distinct * from {Constant.DBTables.TmpCombinedTable} where \"category:1\" = {detectionSelections.ClassificationCategory} AND \"conf:1\" >= {detectionSelections.CurrentClassificationThreshold} " +
+                $"                   Select Distinct * from {Constant.DBTables.TmpCombinedTable} where \"category:1\" = {detectionSelections.ClassificationCategoryNumber} " +
+                $"                      AND \"conf:1\" >= {detectionSelections.ClassificationConfidenceLowerForUI} " +
+                $"                      AND \"conf:1\" <= {detectionSelections.ClassificationConfidenceHigherForUI} " +
                 $"              )" +
                 $"         ) " +
                 $"    )" +
@@ -366,7 +393,7 @@ namespace Timelapse
                       $" INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID " +
                       $" WHERE " +
                       $" Detections.category = {detectionCategory} AND " +
-                      $" Detections.conf BETWEEN {detectionSelections.ConfidenceDetectionThresholdLowerForUI} AND {detectionSelections.ConfidenceDetectionThresholdUpperForUI}";
+                      $" Detections.conf BETWEEN {detectionSelections.DetectionConfidenceLowerForUI} AND {detectionSelections.DetectionConfidenceHigherForUI}";
             if (false == string.IsNullOrEmpty(where))
             {
                 phrase += $"{Sql.And} {where} ";
@@ -391,7 +418,7 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct;
+                phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
@@ -580,7 +607,7 @@ namespace Timelapse
             // Count form:   
             // Select form:  (
             string frontwrapper = countOnly
-                ? Sql.SelectCountStarFrom
+                ? Sql.SelectCountStarFromForm
                 : Sql.SelectStarFrom;
             frontwrapper += tableName + Sql.Where + Sql.Substr + Sql.OpenParenthesis + tableName + Sql.Dot + episodeNoteField + Sql.Comma + "0" + Sql.Comma
                                 + Sql.Instr + Sql.OpenParenthesis + tableName + Sql.Dot + episodeNoteField + Sql.Comma + Sql.Quote(":") + Sql.CloseParenthesis + Sql.CloseParenthesis

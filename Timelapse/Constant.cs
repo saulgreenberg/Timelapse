@@ -881,9 +881,10 @@ namespace Timelapse.Constant
     public static class RecognizerValues
     {
         public const string NoDetectionCategory = "0";
-        public const string NoDetectionLabel = "Empty";
+        public const string AllDetectionCategoryNumber = "-1";
+        public const string EmptyDetectionLabel = "Empty";
+        public const string EmptyDetectionCategoryNumber = "0";
         public const string AllDetectionLabel = "All";
-
         public const string AnimalDetectionLabel = "animal";
 
         // Detection/classifications whose confidence values are below these are removed from an
@@ -892,6 +893,7 @@ namespace Timelapse.Constant
         // it uses a fraction of that instead.
         public const float MinimumDetectionValue = 0.03F;
         public const float MinimumClassificationValue = 0.03F;
+        public const int ConfidenceDecimalPlaces = 3;
 
         // Recognizer defaults. Different versions of Megadetector produce different confidence values.
         // The values below reflect  Megadetector v4, which is the likely detector if no overrides 

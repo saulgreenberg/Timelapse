@@ -44,9 +44,9 @@ namespace Timelapse
             // As we are starting afresh, no detections should now exists.
             // As well, we want to reset the current detection threshold to a value that indicates it is undefined.
             GlobalReferences.DetectionsExists = false;
-            if (DataHandler?.FileDatabase?.CustomSelection?.DetectionSelections != null)
+            if (DataHandler?.FileDatabase?.CustomSelection?.RecognitionSelections != null)
             {
-                DataHandler.FileDatabase.CustomSelection.DetectionSelections.CurrentDetectionThreshold = -1; // this forces it to use the default in the new JSON
+                DataHandler.FileDatabase.CustomSelection.RecognitionSelections.DetectionConfidenceLowerForUI = -1; // this forces it to use the default in the new JSON
             }
 
             // Clear the data grid

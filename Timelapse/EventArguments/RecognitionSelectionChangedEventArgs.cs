@@ -1,22 +1,18 @@
 ﻿using System;
+
 namespace Timelapse.EventArguments
 {
-    /// <summary>
-    /// The RecognitionSelectionChangedEventArgs event argument contains 
-    /// - the textual category of the current detecton and/or classification selection (string.Empty if none)
-    /// </summary>
+    // RecognitionSelectionChangedEventArgs 
     public class RecognitionSelectionChangedEventArgs :EventArgs
     {
-        public string DetectionCategory;
-        public string DetectionCategoryNumber;
-        public string ClassificationCategory;
-        public string ClassificationCategoryNumber;
-        public RecognitionSelectionChangedEventArgs(string detectionCategory, string detectionCategoryNumber, string classificationCategory, string classificationCategoryNumber)
+        public string DetectionCategoryLabel;           // User friendly labels for the selected categories, if any
+        public string ClassificationCategoryLabel;      // User friendly labels for the selected categories, if any
+        public bool RefreshRecognitionCountsRequired;   // Whether its necessary to refresh the recognition counts
+        public RecognitionSelectionChangedEventArgs(string detectionCategoryLabel, string classificationCategoryLabel, bool refreshRecognitionCountsRequired)
         {
-            DetectionCategory = detectionCategory;
-            DetectionCategoryNumber = detectionCategoryNumber;
-            ClassificationCategory = classificationCategory;
-            ClassificationCategoryNumber = classificationCategoryNumber;
+            DetectionCategoryLabel = detectionCategoryLabel;
+            ClassificationCategoryLabel = classificationCategoryLabel;
+            RefreshRecognitionCountsRequired = refreshRecognitionCountsRequired;
         }
     }
 }

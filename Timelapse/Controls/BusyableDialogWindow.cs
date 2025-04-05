@@ -23,8 +23,8 @@ namespace Timelapse.Controls
     {
         #region Cancellation Token
         // Token to let us cancel the task
-        private readonly CancellationTokenSource tokenSource;
-        protected CancellationToken Token { get; set; }
+        private CancellationTokenSource tokenSource;
+        public CancellationToken Token { get; set; }
         protected CancellationTokenSource TokenSource => tokenSource;
         #endregion
 
@@ -53,6 +53,12 @@ namespace Timelapse.Controls
             Closed += BusyableDialogWindow_Closed;
         }
 
+        public void TokenReset()
+        {
+            this.tokenSource.Dispose();
+            this.tokenSource = new CancellationTokenSource();
+            this.Token = tokenSource.Token;
+        }
         // Fit the dialog into the calling window
         private void BusyableDialogWindow_Loaded(object sender, RoutedEventArgs e)
         {
@@ -62,7 +68,7 @@ namespace Timelapse.Controls
 
         #region Protected - Progress handler Initialization plus refresh
         protected Progress<ProgressBarArguments> ProgressHandler { get; set; }
-        protected IProgress<ProgressBarArguments> Progress { get; set; }
+        public IProgress<ProgressBarArguments> Progress { get; set; }
 
         /// <summary>
         /// Hook up the busy indicator to the progress handler.
