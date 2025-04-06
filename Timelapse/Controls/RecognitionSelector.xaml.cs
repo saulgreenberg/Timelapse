@@ -326,7 +326,6 @@ namespace Timelapse.Controls
                     // We only need to do this the first time things are being moved
 
                     // Clearing the current selection and recognition
-                    this.ClearSelectionsAndScrollToTop(this.DataGridDetections);
                     this.sliderConfidenceInitialMovement = true;
 
                     // As the user is scrolling, indicate this by clearing the current counts (ie., to NoValue)
@@ -420,7 +419,6 @@ namespace Timelapse.Controls
                 // As the user is in the midst of scrolling, provide feedback by
                 // disabling the detection datagrid and clearing the current classification selection and recognition
                 this.ClassificationDataGridListBoxEnableState(false, true);
-                this.ClearSelectionsAndScrollToTop(this.DataGridClassifications);
 
                 // Show the current slider values 
                 this.DisplayClassificationConfidenceRange();
@@ -1231,17 +1229,6 @@ namespace Timelapse.Controls
             {
                 this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
             }
-        }
-        #endregion
-
-        #region UNUSED (DELETE?)
-        private void RecognitionParametersInitializeAsDetections()
-        {
-            // Initialize parameters
-            RecognitionSelections.AllDetections = false;
-            RecognitionSelections.RankByDetectionConfidence = false;
-            CustomSelection.ShowMissingDetections = false;
-            CustomSelection.EpisodeShowAllIfAnyMatch = false;
         }
         #endregion
     }

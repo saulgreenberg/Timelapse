@@ -160,23 +160,13 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Detections-specific
-
-
             // Set the state of the detections to the last used ones (or to its defaults)
             if (GlobalReferences.DetectionsExists)
             {
                 this.RecognitionsGroupBox.Visibility = Visibility.Visible;
                 this.EnableRecognitionsCheckbox.IsChecked = this.RecognitionSelections.UseRecognition;
-                dontCount = false;
+                dontInvoke = false;
                 this.EnableRecognitions_CheckedChanged(null, null);
-                dontInvoke = true;
-
-                //this.EnableRecognitionsCheckbox.IsChecked = this.RecognitionSelections.UseRecognition;
-                //if (this.RecognitionSelections.UseRecognition)
-                //{
-                //    this.RecognitionsGroupBox.Background = Brushes.Azure;
-                //    this.CreateRecognitionSelectorControl();
-                //}
             }
             else
             {
