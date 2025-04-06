@@ -241,9 +241,8 @@ namespace Timelapse.Database
             if (sourceDdb.TableExists(DBTables.Detections))
             {
                 RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
-                bool checkoutClassificationsTable = sourceDdb.TableExistsAndNotEmpty(DBTables.Classifications);
-                bool checkoutClassificationCategoriesTable = sourceDdb.TableExistsAndNotEmpty(DBTables.Classifications);
-                query += QueryCheckoutRecognitionTables(attachedSourceDB, relativePath, checkoutClassificationsTable, checkoutClassificationCategoriesTable) + Environment.NewLine;
+                bool checkoutClassificationCategoriesTable = sourceDdb.TableExistsAndNotEmpty(DBTables.ClassificationCategories);
+                query += QueryCheckoutRecognitionTables(attachedSourceDB, relativePath, checkoutClassificationCategoriesTable) + Environment.NewLine;
                 query += Sql.PragmaForeignKeysOn + Sql.Semicolon + Environment.NewLine;
             }
 
@@ -375,7 +374,7 @@ namespace Timelapse.Database
 
         // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
         //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
-        private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationsTable, bool checkoutClassificationCategoriesTable)
+        private static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationCategoriesTable)
         {
             // TODO DetectionsVideo
             string attachedDataTable = attachedSourceDB + Sql.Dot + DBTables.FileData;
@@ -407,21 +406,6 @@ namespace Timelapse.Database
 
             // Copy the Info table 
             queryPhrase += QueryCheckoutCopyCompleteTable("tmpInfo", DBTables.Info, attachedSourceDB);
-
-            // Copy the Classifications table matching the detection ids of the just copied detection table if not empty
-            if (checkoutClassificationsTable)
-            {
-                string tmpClassifications = "tmpClassifications";
-                string attachedClassifications = attachedSourceDB + Sql.Dot + DBTables.Classifications;
-                queryPhrase += Sql.CreateTemporaryTable + tmpClassifications + Sql.As
-                               + Sql.Select + DBTables.Classifications + Sql.DotStar + Sql.From + attachedClassifications
-                               + Sql.Join + tmpDetections + Sql.On
-                               + attachedClassifications + Sql.Dot + ClassificationColumns.DetectionID
-                               + Sql.Equal + tmpDetections + Sql.Dot + DetectionColumns.DetectionID
-                               + Sql.Semicolon + Environment.NewLine;
-
-                queryPhrase += QueryInsertTable2DataIntoTable1(DBTables.Classifications, tmpClassifications) + Environment.NewLine;
-            }
 
             // Copy the Classification Categories table if not empty
             if (checkoutClassificationCategoriesTable)
@@ -627,13 +611,12 @@ namespace Timelapse.Database
             {
                 destinationDdb.DropTable(DBTables.Detections);
                 destinationDdb.DropTable(DBTables.DetectionsVideo);
-                destinationDdb.DropTable(DBTables.Classifications);
                 destinationDdb.DropTable(DBTables.DetectionCategories);
                 destinationDdb.DropTable(DBTables.ClassificationCategories);
                 destinationDdb.DropTable(DBTables.Info);
             }
 
-            FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists(destinationDdb);
+            FileDatabase.IndexCreateForDetectionsIfNotExists(destinationDdb);
             return DatabaseFileErrorsEnum.Ok;
         }
 
@@ -1060,7 +1043,6 @@ namespace Timelapse.Database
             string query = string.Empty;
             string tempDetectionsTable = "tempDetectionsTable";
             string tempDetectionsVideoTable = "tempDetectionsVideoTable";
-            string tempClassificationsTable = "tempClassificationsTable";
 
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
             // The offeset should be 0 if there are no detections in the main DB, as we will be creating the detection table and then just adding to it.
@@ -1091,29 +1073,11 @@ namespace Timelapse.Database
                 query += QueryInsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable) + Environment.NewLine;
             }
 
-            // Update the classifications table, , including adjusting the ID and DetectionID offset as needed
-            // TODO: IS THIS NEEDED IF THERE ARE NO RECOGNITIONS IN THE TABLE???
-            long offsetClassificationId = (destinationRecognitionsExist)
-                ? destinationDdb.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID)
-                : 0;
-            query += QueryCreateTemporaryTableFromExistingTable(tempClassificationsTable, attachedSourceDB, DBTables.Classifications) + Environment.NewLine;
-            if (offsetClassificationId > 0)
-            {
-                query += QueryAddOffsetToIDInTable(tempClassificationsTable, ClassificationColumns.ClassificationID, offsetClassificationId) + Environment.NewLine;
-            }
-
-            if (offsetDetectionId > 0)
-            {
-                query += QueryAddOffsetToIDInTable(tempClassificationsTable, ClassificationColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
-            }
-            query += QueryInsertTable2DataIntoTable1(DBTables.Classifications, tempClassificationsTable) + Environment.NewLine;
-
             query += $"{Sql.DropTableIfExists} {tempDetectionsTable} {Sql.Semicolon} {Environment.NewLine}";
             if (sourceDetectionsVideoTableExists)
             {
                 query += $"{Sql.DropTableIfExists} {tempDetectionsVideoTable} {Sql.Semicolon} {Environment.NewLine}";
             }
-            query += $"{Sql.DropTableIfExists} {tempClassificationsTable} {Sql.Semicolon} {Environment.NewLine}";
             return query;
         }
 

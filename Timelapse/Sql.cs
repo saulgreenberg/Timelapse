@@ -440,21 +440,6 @@ namespace Timelapse
 
             return phrase;
         }
-        //public static string SelectClassifications(bool useCountForm)
-        //{
-        //    string phrase = useCountForm
-        //        ? Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct
-        //        : Sql.SelectDistinct;
-        //    //     : Sql.SelectDistinct + Constant.DBTables.Classifications + Sql.Dot + Constant.ClassificationColumns.Conf + Sql.Comma;
-        //    phrase += Constant.DBTables.FileData + Sql.DotStar + Sql.From + Constant.DBTables.Classifications +
-        //            Sql.InnerJoin + Constant.DBTables.FileData + Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID +
-        //            Sql.IdenticalToSet2 + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
-        //    // and now append INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-        //    phrase += Sql.InnerJoin + Constant.DBTables.Detections + Sql.On +
-        //        Constant.DBTables.Detections + Sql.Dot + Constant.DetectionColumns.DetectionID + Sql.IdenticalToSet2 +
-        //        Constant.DBTables.Classifications + "." + Constant.DetectionColumns.DetectionID;
-        //    return phrase;
-        //}
 
         /// <summary>
         /// Sql phrase used in Where
@@ -542,7 +527,6 @@ namespace Timelapse
         /// <returns>Detections.Category = detectionCategory</returns>
         public static string DetectionCategoryEqualsDetectionCategory(string detectionCategory)
         {
-            // TODO DetectionsVideo
             return DBTables.Detections + "." + DetectionColumns.Category + Sql.Equal + detectionCategory;
         }
 
@@ -554,7 +538,7 @@ namespace Timelapse
         ///
         public static string ClassificationsCategoryEqualsClassificationCategory(string classificationCategory)
         {
-            return DBTables.Classifications + "." + DetectionColumns.Category + Sql.Equal + classificationCategory;
+            return DBTables.Detections + "." + DetectionColumns.Classification + Sql.Equal + classificationCategory;
         }
 
         /// <summary>
@@ -583,6 +567,17 @@ namespace Timelapse
                 Sql.Having + Sql.Max +
                 Sql.OpenParenthesis + DBTables.Classifications + "." + DetectionColumns.Conf + Sql.CloseParenthesis +
                 Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
+        }
+
+        // Count the number of classifications held by a particular detection.
+        // First two number specifies detecton confidence range, second two numbers the classification confidence range, and the classifications is the particular classification of interest
+        // Form:  AND  Detections.conf  BETWEEN  0.3  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.5  AND  1
+        public static string ClassificationWithinDetection(double detectionConfLower, double detectionConfHigher, string classificationCategory, double classificationConfLower,
+            double classificationConfHigher)
+        {
+            return $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Conf} {Sql.Between} {detectionConfLower} {Sql.And} {detectionConfHigher} " +
+                   $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Classification} {Sql.Equal} {Sql.Quote(classificationCategory)}" +
+                   $"{Sql.And} {DBTables.Detections}.{DetectionColumns.ClassificationConf} {Sql.Between} {classificationConfLower} {Sql.And} {classificationConfHigher}";
         }
 
         /// <summary>

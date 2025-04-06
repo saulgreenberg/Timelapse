@@ -1243,9 +1243,9 @@ namespace Timelapse.Database
                 if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
                 {
                     // Classifications: Override any sorting as we have asked to rank the results by confidence values
-                    //term[0] = DatabaseColumn.RelativePath;
-                    rankSortingTerm = DBTables.Classifications + "." + ClassificationColumns.Conf;
-                    rankSortingTerm += Sql.Descending;
+                    // TODO: REDO RankSorting for Classification.  THE TWO LINES BELOW WERE THE ORIGINALS
+                    //rankSortingTerm = DBTables.Classifications + "." + ClassificationColumns.Conf;
+                    //rankSortingTerm += Sql.Descending;
                 }
                 else if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
                 {
@@ -2156,26 +2156,32 @@ namespace Timelapse.Database
                 //query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
                 // Get the category number of the "Animal" detection category
                 string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
+
                 if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
                 {
                     // This should only happen if the json was missing a detection animal category
                     return 0;
                 }
 
-                if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
+                query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
+
+                if (false)
                 {
-                    // Episode version of the query
-                    query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, true);
-                    //Debug.Print("-----------Episode");
+                    if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
+                    {
+                        // Episode version of the query
+                        query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, true);
+                        //Debug.Print("-----------Episode");
+                    }
+                    else
+                    {
+                        // Non-episode version of the query
+                        query = SqlPhrase.SelectCountClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, true);
+                        //Debug.Print("----------No Episode");
+                    }
+                    Debug.Print("ClassificationCounts:" + query);
+                    return Database.ScalarGetScalarFromSelectAsInt(query);
                 }
-                else
-                {
-                    // Non-episode version of the query
-                    query = SqlPhrase.SelectCountClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, true);
-                    //Debug.Print("----------No Episode");
-                }
-                Debug.Print("ClassificationCounts:" + query);
-                return Database.ScalarGetScalarFromSelectAsInt(query);
             }
             else
             {
@@ -2217,7 +2223,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             //Uncommment this to see the actual complete query
-            // Debug.Print("File Counts: " + query);
+            Debug.Print("File Counts: " + query);
             //Debug.Print(XXX2++ + ":DetectionCounts");
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
@@ -2253,10 +2259,12 @@ namespace Timelapse.Database
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
             {
+                //TODO Rework Classn Query
                 // CLASSIFICATIONS
                 // Create a partial query that returns a count of classifications matching some conditions
                 // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
                 query += SqlPhrase.SelectClassifications(SelectTypesEnum.One);
+                //query += SqlPhrase.SelectDetections(SelectTypesEnum.One);
             }
             else
             {
@@ -2559,22 +2567,19 @@ namespace Timelapse.Database
         #endregion
 
         #region Index creation and dropping
-        // TODO DELETE CLASSIFICATION STUFF
-        public void IndexCreateForDetectionsAndClassificationsIfNotExists()
+        public void IndexCreateForDetectionsIfNotExists()
         {
             Database.IndexCreateIfNotExists(DatabaseValues.IndexID, DBTables.Detections, DatabaseColumn.ID);
             // Even though DetectionsVideo has foreign key relation to Detections, we create an index as its not done automatically.
             Database.IndexCreateIfNotExists(DatabaseValues.IndexDetectionVideoID, DBTables.DetectionsVideo, DetectionColumns.DetectionID);
-            Database.IndexCreateIfNotExists(DatabaseValues.IndexClassificationID, DBTables.Classifications, DetectionColumns.DetectionID);
         }
 
         // static version of the above
-        public static void IndexCreateForDetectionsAndClassificationsIfNotExists(SQLiteWrapper database)
+        public static void IndexCreateForDetectionsIfNotExists(SQLiteWrapper database)
         {
             database.IndexCreateIfNotExists(DatabaseValues.IndexID, DBTables.Detections, DatabaseColumn.ID);
             // Even though DetectionsVideo has foreign key relation to Detections, we create an index as its not done automatically.
             database.IndexCreateIfNotExists(DatabaseValues.IndexDetectionVideoID, DBTables.DetectionsVideo, DetectionColumns.DetectionID);
-            database.IndexCreateIfNotExists(DatabaseValues.IndexClassificationID, DBTables.Classifications, DetectionColumns.DetectionID);
         }
 
         public void IndexCreateForFileAndRelativePathIfNotExists()
@@ -3092,11 +3097,6 @@ namespace Timelapse.Database
             Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements);
         }
 
-        public void InsertClassifications(List<List<ColumnTuple>> classificationInsertionStatements)
-        {
-            Database.Insert(DBTables.Classifications, classificationInsertionStatements);
-        }
-
         // Try to read the recognition data from the Json file into the Recognizer structure,
         // where we trim detections/classifications below a certain confidence level and only keep the best classification
         // A progress bar is displayed
@@ -3259,7 +3259,6 @@ namespace Timelapse.Database
 
                     // the starting index to be used for inserts using the DetectionID
                     long dbStartingDetectionID = 1;
-                    long dbStartingClassificationID = 1;
 
                     // Resetting these tables to null will force reading the new values into them
                     // TODO: Put this somewhere else in case the user aborts the update!
@@ -3267,7 +3266,7 @@ namespace Timelapse.Database
                     detectionDataTable = null; // to force repopulating the data structure if it already exists.
                     detectionCategoriesDictionary = null;
 
-                    // If we were told to tryMerge and detections exist, we merge the json file detecctions with the db detections. If so, we also have to do some error checking and possibly updates
+                    // If we were told to tryMerge and detections exist, we merge the json file detections with the db detections. If so, we also have to do some error checking and possibly updates
                     // for the detection and classification categories and the info structure
                     bool mergeDetections = tryMerge && DetectionsExists();
                     if (mergeDetections)
@@ -3368,11 +3367,11 @@ namespace Timelapse.Database
                         dbStartingDetectionID++;
 
                         // As we may be inserting classification records as well, get the max ClassificationID, and add 1 to it. This will be the starting classificationID for insertions
-                        if (Database.TableExistsAndNotEmpty(DBTables.Classifications))
-                        {
-                            dbStartingClassificationID = Database.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID);
-                            dbStartingClassificationID++;
-                        }
+                        //if (Database.TableExistsAndNotEmpty(DBTables.Classifications))
+                        //{
+                        //    dbStartingClassificationID = Database.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID);
+                        //    dbStartingClassificationID++;
+                        //}
 
                         // Foreach  detection, check if it exists in the database detection table.
                         // If it does, delete all references to that file (via the ID) in the database
@@ -3409,7 +3408,7 @@ namespace Timelapse.Database
                         if (queries.Count > 0)
                         {
                             // If the index wasn't created previously, make sure its there as otherwise its painfully slow.
-                            IndexCreateForDetectionsAndClassificationsIfNotExists();
+                            IndexCreateForDetectionsIfNotExists();
                             // Delete these detections and classifications
                             Database.ExecuteNonQueryWrappedInBeginEnd(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
                         }
@@ -3436,7 +3435,7 @@ namespace Timelapse.Database
                     // (e.g., 225 seconds for 2,000,000 images and their detections). Note that I batch insert 50,000 statements at a time. 
 
                     // Populate the detection tables, which includes it own progress bar indicator
-                    RecognitionDatabases.PopulateTables(jsonRecognizer, this, Database, string.Empty, dbStartingDetectionID, dbStartingClassificationID, progress, 1000);
+                    RecognitionDatabases.PopulateTables(jsonRecognizer, this, Database, string.Empty, dbStartingDetectionID, progress, 1000);
                     // DetectionExists needs to be primed if it is to save its DetectionExists state
                     DetectionsExists(true);
                     return RecognizerImportResultEnum.Success;
@@ -3983,8 +3982,8 @@ namespace Timelapse.Database
                         false == DetectionsExists() ||
                         parseResultDetectionCategory == false ||
                         detectionCategoryAsInt >= detectionCategoriesDictionary?.Count //||
-                        //parseResultClassificationCategory == false ||
-                        //classificationCategoryAsInt >= detectionCategoriesDictionary?.Count
+                                                                                       //parseResultClassificationCategory == false ||
+                                                                                       //classificationCategoryAsInt >= detectionCategoriesDictionary?.Count
                         )
                 {
                     // Didn't pass the test. Use the default

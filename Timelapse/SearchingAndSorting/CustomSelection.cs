@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -266,10 +267,10 @@ namespace Timelapse.SearchingAndSorting
 
             // Collect all the standard search terms which the user currently selected as UseForSearching
             IEnumerable<SearchTerm> standardSearchTerms = SearchTerms.Where(term => term.UseForSearching
-            && (term.DataLabel == DatabaseColumn.File ||
-               term.DataLabel == DatabaseColumn.RelativePath ||
-               term.DataLabel == DatabaseColumn.DateTime ||
-               term.DataLabel == DatabaseColumn.DeleteFlag));
+                                                                                    && (term.DataLabel == DatabaseColumn.File ||
+                                                                                        term.DataLabel == DatabaseColumn.RelativePath ||
+                                                                                        term.DataLabel == DatabaseColumn.DateTime ||
+                                                                                        term.DataLabel == DatabaseColumn.DeleteFlag));
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
             // ReSharper disable once PossibleMultipleEnumeration
@@ -289,8 +290,8 @@ namespace Timelapse.SearchingAndSorting
                 // We have both standard and non-standard clauses, so surround them with parenthesis and combine them with an AND
                 // Form: WHERE (standardWhere clauses) AND (nonStandardWhere clauses)
                 where += whereString + Sql.OpenParenthesis + standardWhere + Sql.CloseParenthesis
-                          + Sql.And
-                          + Sql.OpenParenthesis + nonStandarWhere + Sql.CloseParenthesis;
+                         + Sql.And
+                         + Sql.OpenParenthesis + nonStandarWhere + Sql.CloseParenthesis;
             }
             else if (false == string.IsNullOrWhiteSpace(standardWhere) && string.IsNullOrWhiteSpace(nonStandarWhere))
             {
@@ -306,7 +307,8 @@ namespace Timelapse.SearchingAndSorting
             }
 
             // If no detections, or if the detectons of of RecognitionType none, we are done. Return the current where clause
-            if (dataFieldsOnly || GlobalReferences.DetectionsExists == false || RecognitionSelections.UseRecognition == false || RecognitionSelections.RecognitionType == RecognitionType.Empty)
+            if (dataFieldsOnly || GlobalReferences.DetectionsExists == false || RecognitionSelections.UseRecognition == false ||
+                RecognitionSelections.RecognitionType == RecognitionType.Empty)
             {
                 return where;
             }
@@ -341,26 +343,29 @@ namespace Timelapse.SearchingAndSorting
             //   If its a detection:  Detections.category = <DetectionCategoryNumber>  
             //   If its a classification:  Classifications.category = <DetectionCategoryNumber>  
             // Only added if we are using a detection category (i.e., any category but All Detections)
-            if (RecognitionSelections.AllDetections == false && RecognitionSelections.InterpretAllDetectionsAsEmpty == false && RecognitionSelections.RecognitionType != RecognitionType.Empty)
+            if (RecognitionSelections.AllDetections == false && RecognitionSelections.InterpretAllDetectionsAsEmpty == false &&
+                RecognitionSelections.RecognitionType != RecognitionType.Empty)
             {
                 if (addAndOr)
                 {
                     where += Sql.And;
                 }
 
-
-                if (RecognitionSelections.RecognitionType == RecognitionType.Detection)
+                // Form example: Detections.Category = detectionCategory
+                // The code below ensures that the detection category number is always set to Animal when counting classifications.
+                string detectionCategoryNumber; 
+                if (this.RecognitionSelections.RecognitionType == RecognitionType.Detection)
                 {
-                    // a DETECTION
-                    // FORM Detections.Category = <DetectionCategoryNumber> 
-                    where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(RecognitionSelections.DetectionCategoryNumber);
+                    detectionCategoryNumber = RecognitionSelections.DetectionCategoryNumber;
                 }
                 else
                 {
-                    // a CLASSIFICATION, 
-                    // FORM Classifications.Category = <ClassificationCategoryNumber> 
-                    where += SqlPhrase.ClassificationsCategoryEqualsClassificationCategory(RecognitionSelections.ClassificationCategoryNumber);
+                    // Look up the animal category number. If for some reason we can't find it (but we should), default to what we hope is correct.
+                    detectionCategoryNumber = GlobalReferences.MainWindow.DataHandler.FileDatabase.detectionCategoriesDictionary.FirstOrDefault(
+                        x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key 
+                        ?? Constant.RecognizerValues.AnimalDetectionCategoryNumber;
                 }
+                where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(detectionCategoryNumber);
             }
 
             // Form:  see below to use the confidence range
@@ -370,15 +375,19 @@ namespace Timelapse.SearchingAndSorting
 
             if (RecognitionSelections.RecognitionType == RecognitionType.Detection && RecognitionSelections.RankByDetectionConfidence == false)
             {
-                Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
                 // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
+                Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
                 where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
             }
             else if (RecognitionSelections.RecognitionType == RecognitionType.Classification && RecognitionSelections.RankByDetectionConfidence == false)
             {
-                // Classification. Form: GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) e.g.,  BETWEEN 0.8 AND 1
                 // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
-                where += SqlPhrase.GroupByClassificationsIdHavingMaxClassificationsConf(RecognitionSelections.CurrentClassificationThreshold, 1);
+                // where includes datalabel fields (if any), detection category at a given confidence, classification category at a given confidence
+                // Example form:  WHERE  ( DataTable.Note0 IS NULL  OR DataTable.Note0 =  '')  AND Detections.category = 1 AND  Detections.conf  BETWEEN  0.85  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.6  AND  1
+                Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
+                where += SqlPhrase.ClassificationWithinDetection(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2,
+                    RecognitionSelections.ClassificationCategoryNumber, RecognitionSelections.ClassificationConfidenceLowerForUI,
+                    RecognitionSelections.ClassificationConfidenceHigherForUI);
             }
             return where;
         }
