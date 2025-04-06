@@ -538,6 +538,11 @@ namespace Timelapse.SearchingAndSorting
                 where += whereForTerm;
             }
             // Done. Return this portion of the where clause
+            if (false == string.IsNullOrWhiteSpace(where))
+            {
+                // surround it in brackets - this is needed to ensure that OR conditions are properly grouped
+                where = $"({where})";
+            }
             return where;
         }
 

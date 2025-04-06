@@ -1182,18 +1182,13 @@ namespace Timelapse.Database
                     if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
                     {
                         // Episode version of the query
-                        query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, false);
+                        query += SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, false);
                         //Debug.Print("-----------Episode");
                     }
                     else
                     {
                         // Non-episode version of the query
-                        query = SqlPhrase.SelectDetections(SelectTypesEnum.Star);
-
-                        //List<string> columns = SchemaGetColumns(Constant.DBTables.FileData);
-                        //string commaSeparatedColumns = string.Join(Sql.Comma, columns);
-                        //query = SqlPhrase.SelectClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, commaSeparatedColumns);
-                        //Debug.Print("----------No Episode");
+                        query += SqlPhrase.SelectDetections(SelectTypesEnum.Star);
                     }
                     // Non-episode version of the query
                     //NEW

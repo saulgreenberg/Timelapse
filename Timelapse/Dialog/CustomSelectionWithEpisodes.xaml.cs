@@ -899,7 +899,7 @@ namespace Timelapse.Dialog
             // Haader text
             TextBlock tbHeader = new TextBlock
             {
-                Text = "Choose how terms are combined using either",
+                Text = "Choose how terms below are combined:",
                 VerticalAlignment = VerticalAlignment.Center,
                 FontWeight = FontWeights.Normal,
             };
