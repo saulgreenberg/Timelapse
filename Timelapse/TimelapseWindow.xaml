@@ -310,7 +310,6 @@
                     <MenuItem Name="MenuItemViewDifferencesCombined" Header="_View combined image differences" Click="MenuItemViewDifferencesCombined_Click" InputGestureText="&#x2193;" ToolTip="View an enhancement that simultaneously shows the differences between the current image vs. the next and previous files."/>
                     <Separator/>
                     <MenuItem Name="MenuItemShowInExplorer" Header="_Show in Explorer" Click="MenuItemShowInExplorer_Click" ToolTip="Show this file in a Windows Explorer window"/>
-
                 </MenuItem>
 
                 <!-- Selection Menu -->
@@ -360,10 +359,6 @@
                     <MenuItem Name="MenuItemSelectCustomSelection" IsCheckable="True" IsChecked="False" Header="_Custom selection..."  
                               ToolTip="Create a custom selection using filters to display a subset of files.&#10;Filters include your choice of data fields and values and/or particular recognitions.&#10;The custom selection only displays files that match those filters." 
                               Click="MenuItemSelectCustomSelection_Click"/>
-
-                    <!-- Recognition Explorer -->
-                    <MenuItem Name="MenuItemRecognitionExplorer" Header="_Using the Recognitions Explorer..." Visibility="Visible" Click="MenuItemSelectRecognitionExplorer_Click" ToolTip="View recognitions and their counts.&#10;Select a detection (or classification if any) to modify the current selection" />
-
                     <Separator/>
                     <MenuItem Name="MenuItemSelectMissingFiles" IsCheckable="True" IsChecked="False" Header="_Missing files in the current selection" Click="MenuItemSelectFiles_Click" ToolTip="Show the subset of files in the current selection that are missing (likely because they were moved, renamed or deleted)"/>
                     <MenuItem Name="MenuItemSelectRandomSample" Header="Create a random sample from the current selection..." Click="MenuItemSelectRandomSample_Click" ToolTip="Randomly sample and select a subset of files from the current selection"/>

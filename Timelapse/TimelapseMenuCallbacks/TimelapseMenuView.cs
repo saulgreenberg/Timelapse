@@ -28,7 +28,6 @@ namespace Timelapse
             MenuItemShowInExplorer.IsEnabled =
                 filesSelectedAndSingleImage &&
                 true == DataHandler?.ImageCache?.Current?.FileExists(DataHandler?.FileDatabase?.RootPathToImages);
-
         }
         #endregion
 

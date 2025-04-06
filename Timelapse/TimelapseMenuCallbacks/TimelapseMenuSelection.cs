@@ -46,8 +46,6 @@ namespace Timelapse
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
 
-            MenuItemRecognitionExplorer.IsEnabled = DataHandler?.FileDatabase?.DetectionsExists() ?? false;
-
             MenuItemSelectRandomSample.IsEnabled = DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
             this.MenuItemSetRelativePathSearchTerm();
         }
@@ -279,18 +277,6 @@ namespace Timelapse
                     MenuItemSelectByRelativePath.IsChecked ||
                     MenuItemSelectFilesMarkedForDeletion.IsChecked;
                 MenuItemSelectCustomSelection.IsChecked = !otherMenuItemIsChecked;
-            }
-        }
-        #endregion
-
-        #region Recognition Explorer
-        // Display the recognition explorer, and redo the selection to the current selection values as needed
-        private async void MenuItemSelectRecognitionExplorer_Click(object sender, RoutedEventArgs e)
-        {
-            RecognitionExplorer dialog = new RecognitionExplorer(this, this.DataHandler?.FileDatabase);
-            if (dialog.ShowDialog() == true && null != DataHandler?.ImageCache?.Current?.ID)
-            {
-                await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.Custom).ConfigureAwait(true);
             }
         }
         #endregion

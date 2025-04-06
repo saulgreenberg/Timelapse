@@ -20,6 +20,7 @@ using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Timelapse.EventArguments;
 using Timelapse.Constant;
+using Timelapse.State;
 using Cursors = System.Windows.Input.Cursors;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -75,6 +76,7 @@ namespace Timelapse.Controls
         // State variables
         private bool classificationsExist;
         private bool ignoreSelection;
+        private bool ignoreSliderUpdate;
         private bool sliderConfidenceInitialMovement;
         private bool onlyUpdateClassificationCount;
         private CategoryCount savedSelectedCategoryCount = null;
@@ -298,8 +300,8 @@ namespace Timelapse.Controls
         }
         private void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
         {
-            // Abort if we can't do anything
-            if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
+            // Abort if we can't or shouldn't do anything
+            if (!(sender is RangeSlider slider) || null == this.DetectionCategories || ignoreSliderUpdate)
             {
                 return;
             }
@@ -394,8 +396,8 @@ namespace Timelapse.Controls
         }
         private void SliderClassificationConf_ValueChanged(object sender, RoutedEventArgs e)
         {
-            // Abort if we can't do anything
-            if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
+            // Abort if we can't or shouldn't do anything
+            if (!(sender is RangeSlider slider) || null == this.DetectionCategories || ignoreSliderUpdate)
             {
                 return;
             }
@@ -801,6 +803,8 @@ namespace Timelapse.Controls
                 InterpretAllDetectionsAsEmpty = RecognitionSelections.InterpretAllDetectionsAsEmpty,
                 DetectionConfidenceLowerForUI = RecognitionSelections.DetectionConfidenceLowerForUI,
                 DetectionConfidenceHigherForUI = RecognitionSelections.DetectionConfidenceHigherForUI,
+                ClassificationConfidenceLowerForUI = RecognitionSelections.ClassificationConfidenceLowerForUI,
+                ClassificationConfidenceHigherForUI = RecognitionSelections.ClassificationConfidenceHigherForUI,
                 RankByDetectionConfidence = RecognitionSelections.RankByDetectionConfidence
             };
 
@@ -820,6 +824,8 @@ namespace Timelapse.Controls
                 this.RecognitionSelections.InterpretAllDetectionsAsEmpty = this.SavedRecognitionSelections.InterpretAllDetectionsAsEmpty;
                 this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SavedRecognitionSelections.DetectionConfidenceLowerForUI;
                 this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SavedRecognitionSelections.DetectionConfidenceHigherForUI;
+                this.RecognitionSelections.ClassificationConfidenceLowerForUI = this.SavedRecognitionSelections.ClassificationConfidenceLowerForUI;
+                this.RecognitionSelections.ClassificationConfidenceHigherForUI = this.SavedRecognitionSelections.ClassificationConfidenceHigherForUI;
                 this.RecognitionSelections.ClassificationCategoryNumber = this.SavedRecognitionSelections.ClassificationCategoryNumber;
                 this.RecognitionSelections.RankByDetectionConfidence = this.SavedRecognitionSelections.RankByDetectionConfidence;
             }
@@ -840,8 +846,10 @@ namespace Timelapse.Controls
         private void SetDetectionControlsToInitialValues()
         {
             // Set the current Confidence range in the detection sliders
+            this.ignoreSliderUpdate = true;
             this.SliderDetectionConf.LowerValue = Math.Round(this.RecognitionSelections.DetectionConfidenceLowerForUI, 2);
             this.SliderDetectionConf.HigherValue = Math.Round(this.RecognitionSelections.DetectionConfidenceHigherForUI, 2);
+            this.ignoreSliderUpdate = false;
 
             // Display the current Confidence range in the detections title
             this.DisplayDetectionConfidenceRange();
@@ -860,8 +868,10 @@ namespace Timelapse.Controls
                 return;
             }
             // Set the current Confidence range in the classification sliders
+            this.ignoreSliderUpdate = true;
             this.SliderClassificationConf.LowerValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceLowerForUI, 2);
             this.SliderClassificationConf.HigherValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceHigherForUI, 2);
+            this.ignoreSliderUpdate = false;
 
             // Display the current Confidence range in the classifications title
             this.DisplayClassificationConfidenceRange();
