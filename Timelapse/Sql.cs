@@ -555,24 +555,15 @@ namespace Timelapse
                 Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
         }
 
-        /// <summary>
-        /// Sql phrase used in Where
-        /// </summary>
-        /// <param name="lowerBound"></param>
-        /// <param name="upperBound"></param>
-        /// <returns>GROUP BY Classifications.classificationID HAVING MAX  ( Classifications.conf ) BETWEEN lowerBound AND upperBound</returns>
-        public static string GroupByClassificationsIdHavingMaxClassificationsConf(double lowerBound, double upperBound)
+        public static string DetectionsByDetectionCategoryAndConfidence(double detectionConfLower, double detectionConfHigher)
         {
-            return Sql.GroupBy + DBTables.Classifications + "." + ClassificationColumns.ClassificationID +
-                Sql.Having + Sql.Max +
-                Sql.OpenParenthesis + DBTables.Classifications + "." + DetectionColumns.Conf + Sql.CloseParenthesis +
-                Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
+            return $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Conf} {Sql.Between} {detectionConfLower} {Sql.And} {detectionConfHigher} ";
         }
 
         // Count the number of classifications held by a particular detection.
         // First two number specifies detecton confidence range, second two numbers the classification confidence range, and the classifications is the particular classification of interest
         // Form:  AND  Detections.conf  BETWEEN  0.3  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.5  AND  1
-        public static string ClassificationWithinDetection(double detectionConfLower, double detectionConfHigher, string classificationCategory, double classificationConfLower,
+        public static string ClassificationsByDetectionsAndClassificationCategoryAndConfidence(double detectionConfLower, double detectionConfHigher, string classificationCategory, double classificationConfLower,
             double classificationConfHigher)
         {
             return $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Conf} {Sql.Between} {detectionConfLower} {Sql.And} {detectionConfHigher} " +

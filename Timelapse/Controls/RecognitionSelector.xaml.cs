@@ -336,7 +336,7 @@ namespace Timelapse.Controls
                     this.isDetectionValueChanged = true;
                 }
                 // Show the current slider values 
-                this.DisplayDetectionConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
+                this.DisplayDetectionConfidenceRange();
                 this.onlyUpdateClassificationCount = false;
                 return;
             }
@@ -358,7 +358,7 @@ namespace Timelapse.Controls
             double higherConf = Math.Round(slider.HigherValue, 2);
             this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConf;
             this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConf;
-            this.DisplayDetectionConfidenceRange(lowerConf, higherConf);
+            this.DisplayDetectionConfidenceRange();
             this.SetEmptyDetectionCategoryLabel();
 
             // Clear the current counts 
@@ -421,7 +421,7 @@ namespace Timelapse.Controls
                 this.ClearSelectionsAndScrollToTop(this.DataGridClassifications);
 
                 // Show the current slider values 
-                this.DisplayClassificationConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
+                this.DisplayClassificationConfidenceRange();
 
                 // Clear the current counts
                 this.onlyUpdateClassificationCount = true;
@@ -443,7 +443,7 @@ namespace Timelapse.Controls
             double higherConf = Math.Round(slider.HigherValue, 2);
             this.RecognitionSelections.ClassificationConfidenceLowerForUI = lowerConf;
             this.RecognitionSelections.ClassificationConfidenceHigherForUI = higherConf;
-            this.DisplayClassificationConfidenceRange(lowerConf, higherConf);
+            this.DisplayClassificationConfidenceRange();
             this.DataGridClassifications.SelectedItem = this.savedSelectedCategoryCount;
             this.TryHighlightCurrentSelection();
             this.isClassificationValueChanged = false;
@@ -650,7 +650,7 @@ namespace Timelapse.Controls
             }
 
             // If we have a classification selected, highlight it
-            if (false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            if (null != this.ClassificationCategories && false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
             {
                 // Classification
                 this.ClassificationCategories.TryGetValue(this.RecognitionSelections.ClassificationCategoryNumber, out string selectedClassificationCategoryName);
@@ -844,7 +844,7 @@ namespace Timelapse.Controls
             this.SliderDetectionConf.HigherValue = Math.Round(this.RecognitionSelections.DetectionConfidenceHigherForUI, 2);
 
             // Display the current Confidence range in the detections title
-            this.DisplayDetectionConfidenceRange(Math.Round(this.SliderDetectionConf.LowerValue, 2));
+            this.DisplayDetectionConfidenceRange();
 
             // Clear the counts for each detection category held in the DetectionCounts
             // This will also create an entry for each detection category as they don't already exist.
@@ -864,7 +864,7 @@ namespace Timelapse.Controls
             this.SliderClassificationConf.HigherValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceHigherForUI, 2);
 
             // Display the current Confidence range in the classifications title
-            this.DisplayClassificationConfidenceRange(Math.Round(this.SliderClassificationConf.LowerValue, 2), Math.Round(SliderClassificationConf.HigherValue, 2));
+            this.DisplayClassificationConfidenceRange();
 
             // Clear the counts for each classification category held in the DetectionCounts
             // This will also create an entry for each classification category as they don't already exist.
@@ -976,19 +976,14 @@ namespace Timelapse.Controls
         #endregion
 
         #region Display text feedback for Detection/Classification confidence range
-        private void DisplayDetectionConfidenceRange(double lowerConfidence)
+        private void DisplayDetectionConfidenceRange()
         {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.RecognitionSelections.DetectionConfidenceHigherForUI:f2})";
+            this.TBDetectionsCount.Text = $"({Math.Round(this.SliderDetectionConf.LowerValue, 2):f2} - {Math.Round(this.SliderDetectionConf.HigherValue, 2):f2})";
         }
 
-        private void DisplayDetectionConfidenceRange(double lowerConfidence, double higherConfidence)
+        private void DisplayClassificationConfidenceRange()
         {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
-        }
-
-        private void DisplayClassificationConfidenceRange(double lowerConfidence, double higherConfidence)
-        {
-            this.TBClassificationsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
+            this.TBClassificationsCount.Text = $"({Math.Round(this.SliderClassificationConf.LowerValue, 2):f2} - {Math.Round(this.SliderClassificationConf.HigherValue, 2):f2})";
         }
         #endregion
 
@@ -1095,7 +1090,9 @@ namespace Timelapse.Controls
                     {
                         double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                         string symbol = lowerValue == 0 ? "=" : "<";
-                        category = $"{Constant.RecognizerValues.EmptyDetectionLabel} or Detections {symbol} {lowerValue}";
+                        category = lowerValue == 0
+                        ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
                     }
                     CategoryCount cc = new CategoryCount(category, count);
                     this.DetectionCountsCollection.Add(cc);
@@ -1144,7 +1141,10 @@ namespace Timelapse.Controls
             {
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                 string symbol = lowerValue == 0 ? "=" : "<";
-                categoryCount.Category = $"{Constant.RecognizerValues.EmptyDetectionLabel} or Detections {symbol} {lowerValue}";
+                categoryCount.Category = lowerValue == 0
+                        ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
+
                 categoryCount.NotifyPropertyChanged("Category");
             });
         }

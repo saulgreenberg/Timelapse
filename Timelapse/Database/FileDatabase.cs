@@ -1166,19 +1166,17 @@ namespace Timelapse.Database
                 else if (GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
                 {
                     // CLASSIFICATIONS 
-                    // OLD
-                    //Create a partial query that returns classifications matching some conditions
-                    // Form: SELECT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-                    //query += SqlPhrase.SelectClassifications(SelectTypesEnum.Star);
+                    // Same form as Detections but with error checks
                     if (null == this.detectionCategoriesDictionary)
                     {
+                        // Error
                         return;
                     }
-                    string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
+                    string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x 
+                        => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
                     if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
                     {
                         // This should only happen if the json was missing a detection animal category
-                        // TODO Raise error dialog
                         return;
                     }
                     if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
@@ -1190,9 +1188,11 @@ namespace Timelapse.Database
                     else
                     {
                         // Non-episode version of the query
-                        List<string> columns = SchemaGetColumns(Constant.DBTables.FileData);
-                        string commaSeparatedColumns = string.Join(Sql.Comma, columns);
-                        query = SqlPhrase.SelectClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, commaSeparatedColumns);
+                        query = SqlPhrase.SelectDetections(SelectTypesEnum.Star);
+
+                        //List<string> columns = SchemaGetColumns(Constant.DBTables.FileData);
+                        //string commaSeparatedColumns = string.Join(Sql.Comma, columns);
+                        //query = SqlPhrase.SelectClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, commaSeparatedColumns);
                         //Debug.Print("----------No Episode");
                     }
                     // Non-episode version of the query
@@ -1200,12 +1200,12 @@ namespace Timelapse.Database
                     // ADD: SORT, Random
                     // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
                     // Async call allows busyindicator to run smoothly
-                    Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
-                    GlobalReferences.TimelapseState.IsNewSelection = true;
-                    filesTable = await Database.GetDataTableFromSelectAsync(query);
-                    filesTable.PrimaryKey = new DataColumn[] { filesTable.Columns[Constant.DatabaseColumn.ID] }; // Set the primary key to the ID column
-                    FileTable = new FileTable(filesTable);
-                    return;
+                    //Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+                    //GlobalReferences.TimelapseState.IsNewSelection = true;
+                    //filesTable = await Database.GetDataTableFromSelectAsync(query);
+                    //filesTable.PrimaryKey = new DataColumn[] { filesTable.Columns[Constant.DatabaseColumn.ID] }; // Set the primary key to the ID column
+                    //FileTable = new FileTable(filesTable);
+                    //return;
                 }
                 else
                 {
@@ -1216,10 +1216,10 @@ namespace Timelapse.Database
 
             if (CustomSelection != null && (GlobalReferences.DetectionsExists == false || CustomSelection.ShowMissingDetections == false))
             {
-                string conditionalExpression = CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(selection);
-                if (string.IsNullOrEmpty(conditionalExpression) == false)
+                string whereExpression = CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(selection);
+                if (string.IsNullOrEmpty(whereExpression) == false)
                 {
-                    query += conditionalExpression;
+                    query += whereExpression;
                 }
             }
 
@@ -1366,7 +1366,7 @@ namespace Timelapse.Database
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
             GlobalReferences.TimelapseState.IsNewSelection = true;
             filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
@@ -2142,46 +2142,21 @@ namespace Timelapse.Database
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
             {
-                // DETECTIONS
-                // Create a query that returns a count of detections matching some conditions
+                // DETECTIONS 
+                // Create a query that returns a count of detections matching some conditions (which can include classifications within a detection)
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
             {
                 // CLASSIFICATIONS
-                // Create a complete query that returns a count of classifications matching some conditions
-
-                // OLD Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-                //query = SqlPhrase.SelectClassifications(SelectTypesEnum.Count);
-                // Get the category number of the "Animal" detection category
-                string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
-
-                if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
+                // Same form as Detections but with error checks
+                if (null == this.detectionCategoriesDictionary)
                 {
-                    // This should only happen if the json was missing a detection animal category
-                    return 0;
+                    // Error
+                    return -1;
                 }
-
                 query = SqlPhrase.SelectDetections(SelectTypesEnum.Count);
-
-                if (false)
-                {
-                    if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
-                    {
-                        // Episode version of the query
-                        query = SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, true);
-                        //Debug.Print("-----------Episode");
-                    }
-                    else
-                    {
-                        // Non-episode version of the query
-                        query = SqlPhrase.SelectCountClassificationsWithinDetections(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, true);
-                        //Debug.Print("----------No Episode");
-                    }
-                    Debug.Print("ClassificationCounts:" + query);
-                    return Database.ScalarGetScalarFromSelectAsInt(query);
-                }
             }
             else
             {

@@ -340,8 +340,6 @@ namespace Timelapse.SearchingAndSorting
 
             // DETECTION, NOT ALL
             // FORM: 
-            //   If its a detection:  Detections.category = <DetectionCategoryNumber>  
-            //   If its a classification:  Classifications.category = <DetectionCategoryNumber>  
             // Only added if we are using a detection category (i.e., any category but All Detections)
             if (RecognitionSelections.AllDetections == false && RecognitionSelections.InterpretAllDetectionsAsEmpty == false &&
                 RecognitionSelections.RecognitionType != RecognitionType.Empty)
@@ -353,16 +351,17 @@ namespace Timelapse.SearchingAndSorting
 
                 // Form example: Detections.Category = detectionCategory
                 // The code below ensures that the detection category number is always set to Animal when counting classifications.
-                string detectionCategoryNumber; 
+                string detectionCategoryNumber;
                 if (this.RecognitionSelections.RecognitionType == RecognitionType.Detection)
                 {
                     detectionCategoryNumber = RecognitionSelections.DetectionCategoryNumber;
                 }
                 else
                 {
+                    // TODO: SHOULD PROBABLY FLAG THIS AS AN ERROR OR  NOOP IF THERE IS NO CATEGORY ANIMAL
                     // Look up the animal category number. If for some reason we can't find it (but we should), default to what we hope is correct.
                     detectionCategoryNumber = GlobalReferences.MainWindow.DataHandler.FileDatabase.detectionCategoriesDictionary.FirstOrDefault(
-                        x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key 
+                        x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key
                         ?? Constant.RecognizerValues.AnimalDetectionCategoryNumber;
                 }
                 where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(detectionCategoryNumber);
@@ -375,9 +374,22 @@ namespace Timelapse.SearchingAndSorting
 
             if (RecognitionSelections.RecognitionType == RecognitionType.Detection && RecognitionSelections.RankByDetectionConfidence == false)
             {
-                // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
                 Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
-                where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+
+
+                if (this.RecognitionSelections.AllDetections && this.RecognitionSelections.InterpretAllDetectionsAsEmpty)
+                {
+                    // Empty needs to operate on the MAX confidence of all detections within an image,
+                    // as otherwise it will identify an image as empty if one of its detections happens to be below the confidence
+                    // even if others are above it.
+                    // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
+                    where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+                }
+                else
+                {
+                    // ALl other detection types
+                    where += SqlPhrase.DetectionsByDetectionCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+                }
             }
             else if (RecognitionSelections.RecognitionType == RecognitionType.Classification && RecognitionSelections.RankByDetectionConfidence == false)
             {
@@ -385,7 +397,7 @@ namespace Timelapse.SearchingAndSorting
                 // where includes datalabel fields (if any), detection category at a given confidence, classification category at a given confidence
                 // Example form:  WHERE  ( DataTable.Note0 IS NULL  OR DataTable.Note0 =  '')  AND Detections.category = 1 AND  Detections.conf  BETWEEN  0.85  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.6  AND  1
                 Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
-                where += SqlPhrase.ClassificationWithinDetection(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2,
+                where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2,
                     RecognitionSelections.ClassificationCategoryNumber, RecognitionSelections.ClassificationConfidenceLowerForUI,
                     RecognitionSelections.ClassificationConfidenceHigherForUI);
             }
