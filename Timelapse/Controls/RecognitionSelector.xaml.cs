@@ -272,6 +272,7 @@ namespace Timelapse.Controls
                 // Disable controls
                 SlidersEnableState(enableState);
             }
+            this.SetEmptyDetectionCategoryLabel();
             // Send a recognition selection event to the parent
             this.SendRecognitionSelectionEvent(true);
         }
@@ -812,6 +813,11 @@ namespace Timelapse.Controls
             if (false == this.classificationsExist)
             {
                 this.RankByClassificationConfidenceCheckbox.Visibility = Visibility.Collapsed;
+                if (this.RankByClassificationConfidenceCheckbox.IsChecked == true)
+                {
+                    // We can't rank by classification if there are none!
+                    this.RankByNone.IsChecked = true;
+                }
             }
 
             this.TryHighlightCurrentSelection();
@@ -1140,8 +1146,7 @@ namespace Timelapse.Controls
                     if (category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel))
                     {
                         double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
-                        string symbol = lowerValue == 0 ? "=" : "<";
-                        category = lowerValue == 0
+                        category = lowerValue == 0 && RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
                         : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
                     }
@@ -1191,8 +1196,7 @@ namespace Timelapse.Controls
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
-                string symbol = lowerValue == 0 ? "=" : "<";
-                categoryCount.Category = lowerValue == 0
+                categoryCount.Category = lowerValue == 0 || (RecognitionSelections.RankByDetectionConfidence || RecognitionSelections.RankByClassificationConfidence)
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
                         : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
 

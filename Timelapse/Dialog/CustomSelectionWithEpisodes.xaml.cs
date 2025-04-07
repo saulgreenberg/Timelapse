@@ -139,7 +139,7 @@ namespace Timelapse.Dialog
             this.Arguments = arguments;
 
             // Set up the count timer
-            CountTimer.Interval = TimeSpan.FromMilliseconds(500);
+            CountTimer.Interval = TimeSpan.FromMilliseconds(250);
             CountTimer.Tick += CountTimer_Tick;
         }
 

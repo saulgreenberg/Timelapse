@@ -1235,21 +1235,21 @@ namespace Timelapse.Database
                 // If the use click the Rank by Detection or Classification confidence, we have to create a sort term for that
                 // If so, we will insert that into the normal sort term string shortly
                 string rankSortingTerm = string.Empty;
-                if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
-                {
-                    // Classifications: Override any sorting as we have asked to rank the results by confidence values
-                    // TODO: REDO RankSorting for Classification.  THE TWO LINES BELOW WERE THE ORIGINALS
-                    //rankSortingTerm = DBTables.Classifications + "." + ClassificationColumns.Conf;
-                    //rankSortingTerm += Sql.Descending;
-                }
-                else if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
+
+                if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
                 {
                     // Detections: Override any sorting as we have asked to rank the results by confidence values
                     //term[0] = DatabaseColumn.RelativePath;
                     rankSortingTerm = DBTables.Detections + "." + DetectionColumns.Conf;
                     rankSortingTerm += Sql.Descending;
                 }
-
+                else if (CustomSelection != null && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification && CustomSelection.RecognitionSelections.RankByClassificationConfidence)
+                {
+                    // Classifications: Override any sorting as we have asked to rank the results by confidence values
+                    // TODO: REDO RankSorting for Classification.  THE TWO LINES BELOW WERE THE ORIGINALS
+                    rankSortingTerm = DBTables.Classifications + "." + DetectionColumns.Classification;
+                    rankSortingTerm += Sql.Descending;
+                }
                 // Get the specified sort order. We do this by retrieving the two sort terms
                 // Given the format of the corrected DateTime
                 string[] term = { string.Empty, string.Empty, string.Empty, string.Empty };

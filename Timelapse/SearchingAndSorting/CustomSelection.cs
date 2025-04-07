@@ -372,34 +372,53 @@ namespace Timelapse.SearchingAndSorting
             // For the All category, we really don't wan't to include those, so the confidence has been bumped up slightly(in Item1) above 0
             // For the Empty category, we invert the confidence
 
-            if (RecognitionSelections.RecognitionType == RecognitionType.Detection && RecognitionSelections.RankByDetectionConfidence == false)
+            if (RecognitionSelections.RecognitionType == RecognitionType.Detection )
             {
-                Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
-
-
-                if (this.RecognitionSelections.AllDetections && this.RecognitionSelections.InterpretAllDetectionsAsEmpty)
+                if (RecognitionSelections.RankByDetectionConfidence == false)
                 {
-                    // Empty needs to operate on the MAX confidence of all detections within an image,
-                    // as otherwise it will identify an image as empty if one of its detections happens to be below the confidence
-                    // even if others are above it.
-                    // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
-                    where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+                    
+                    Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
+                    if (this.RecognitionSelections.AllDetections && this.RecognitionSelections.InterpretAllDetectionsAsEmpty)
+                    {
+                        // Empty needs to operate on the MAX confidence of all detections within an image,
+                        // as otherwise it will identify an image as empty if one of its detections happens to be below the confidence
+                        // even if others are above it.
+                        // Detection. Form: Group By Detections.Id Having Max ( Detections.conf ) BETWEEN <Item1> AND <Item2>  e.g.. Between .8 and 1
+                        where += SqlPhrase.GroupByDetectionsIdHavingMaxDetectionsConf(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+                    }
+                    else
+                    {
+                        // All other detection types
+                        where += SqlPhrase.DetectionsByDetectionCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+                    }
                 }
                 else
                 {
-                    // ALl other detection types
-                    where += SqlPhrase.DetectionsByDetectionCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2);
+                    if (RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty)
+                    {
+                        where += SqlPhrase.DetectionsByDetectionCategoryAndConfidence(0, 0);
+
+                    }
+                    // Note: we omit this phrase if we are ranking by detection confidence, as it will then return all classifications
                 }
             }
-            else if (RecognitionSelections.RecognitionType == RecognitionType.Classification && RecognitionSelections.RankByDetectionConfidence == false)
+            else if (RecognitionSelections.RecognitionType == RecognitionType.Classification)
             {
-                // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
-                // where includes datalabel fields (if any), detection category at a given confidence, classification category at a given confidence
-                // Example form:  WHERE  ( DataTable.Note0 IS NULL  OR DataTable.Note0 =  '')  AND Detections.category = 1 AND  Detections.conf  BETWEEN  0.85  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.6  AND  1
-                Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
-                where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2,
-                    RecognitionSelections.ClassificationCategoryNumber, RecognitionSelections.ClassificationConfidenceLowerForUI,
-                    RecognitionSelections.ClassificationConfidenceHigherForUI);
+                if (RecognitionSelections.RankByDetectionConfidence == false && RecognitionSelections.RankByClassificationConfidence == false)
+                {
+                    // Note: we omit this phrase if we are ranking by confidence, as we want to return all classifications
+                    // where includes datalabel fields (if any), detection category at a given confidence, classification category at a given confidence
+                    // Example form:  WHERE  ( DataTable.Note0 IS NULL  OR DataTable.Note0 =  '')  AND Detections.category = 1 AND  Detections.conf  BETWEEN  0.85  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.6  AND  1
+                    Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
+                    where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2,
+                        RecognitionSelections.ClassificationCategoryNumber, RecognitionSelections.ClassificationConfidenceLowerForUI,
+                        RecognitionSelections.ClassificationConfidenceHigherForUI);
+                }
+                else
+                {
+                    where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(0, 1,
+                        RecognitionSelections.ClassificationCategoryNumber, 0,1);
+                }
             }
             return where;
         }
