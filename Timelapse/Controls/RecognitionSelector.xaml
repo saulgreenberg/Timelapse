@@ -166,6 +166,8 @@
                 </StackPanel>
                 <!-- Sorting by Confidence -->
                 <TextBlock Text="Sort all by:" FontWeight="Bold" Margin="0,10,0,0"/>
+
+                <!-- Rank By Confidence Checkbox-->
                 <StackPanel Name="SPRadioButtonsRankBy" Orientation="Vertical">
                     <RadioButton Name="RankByDetectionConfidenceCheckbox"
                              Tag="Detections"
@@ -173,7 +175,7 @@
                              Content="detection confidence" Margin="5,2,0,0" 
                              VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
                              Checked="RankByConfidence_CheckedChanged" 
-                             ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
+                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by detection confidence and then by classification confidence"/>
 
                     <RadioButton Name="RankByClassificationConfidenceCheckbox" 
                              Tag="Classifications"
@@ -181,7 +183,7 @@
                              Content="classification confidence" Margin="5,2,0,0" 
                              VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
                              Checked="RankByConfidence_CheckedChanged" 
-                             ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
+                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by classification confidence and then by detection confidence"/>
 
                     <RadioButton Name="RankByNone" 
                              GroupName="RankByRadioButtons" 
@@ -189,13 +191,12 @@
                              Content="none" Margin="5,2,0,0" 
                              VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
                              Checked="RankByConfidence_CheckedChanged" 
-                             ToolTip="Dont' sort by confidence"/>
+                             ToolTip="Returns all selected files within the chosen confidence range"/>
                 </StackPanel>
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files&#10;the recognizer did not&#10; process" 
                           IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,135,0,0" 
                           Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
-                <!-- Rank By Detection Confidence Checkbox-->
-
+                
             </StackPanel>
         </Grid>
     </Grid>

@@ -376,7 +376,6 @@ namespace Timelapse.SearchingAndSorting
             {
                 if (RecognitionSelections.RankByDetectionConfidence == false)
                 {
-                    
                     Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
                     if (this.RecognitionSelections.AllDetections && this.RecognitionSelections.InterpretAllDetectionsAsEmpty)
                     {
@@ -394,12 +393,11 @@ namespace Timelapse.SearchingAndSorting
                 }
                 else
                 {
+                    // Sorting works on everything. So we need to get all detections, so we use the confidence range of 0 to 1
                     if (RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty)
                     {
                         where += SqlPhrase.DetectionsByDetectionCategoryAndConfidence(0, 0);
-
                     }
-                    // Note: we omit this phrase if we are ranking by detection confidence, as it will then return all classifications
                 }
             }
             else if (RecognitionSelections.RecognitionType == RecognitionType.Classification)
@@ -414,8 +412,9 @@ namespace Timelapse.SearchingAndSorting
                         RecognitionSelections.ClassificationCategoryNumber, RecognitionSelections.ClassificationConfidenceLowerForUI,
                         RecognitionSelections.ClassificationConfidenceHigherForUI);
                 }
-                else
+                else 
                 {
+                    // Sorting works on everything. So need to get all detections and classifications, so we use the confidence range of 0 to 1 for both
                     where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(0, 1,
                         RecognitionSelections.ClassificationCategoryNumber, 0,1);
                 }

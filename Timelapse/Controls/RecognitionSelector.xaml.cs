@@ -24,6 +24,7 @@ using Timelapse.State;
 using Cursors = System.Windows.Input.Cursors;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using static System.Windows.Forms.AxHost;
 
 namespace Timelapse.Controls
 {
@@ -266,13 +267,18 @@ namespace Timelapse.Controls
                 this.RecognitionSelections.RankByClassificationConfidence = RankByClassificationConfidenceCheckbox.IsChecked == true;
             }
 
-            bool enableState = false == this.RecognitionSelections.RankByDetectionConfidence && 
+            bool enableState = false == this.RecognitionSelections.RankByDetectionConfidence &&
                                false == RecognitionSelections.RankByClassificationConfidence;
             {
                 // Disable controls
                 SlidersEnableState(enableState);
             }
+            // The Empty category will only show Empty when a Ranking checkbox is checked
             this.SetEmptyDetectionCategoryLabel();
+
+            // Reset rank by classification if needed
+            this.EnableDisableRankByClassificationCheckbox(!string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber));
+
             // Send a recognition selection event to the parent
             this.SendRecognitionSelectionEvent(true);
         }
@@ -281,6 +287,18 @@ namespace Timelapse.Controls
         {
 
         }
+
+        // Disable the classification radio button if no classification is selected and switches Rank to None
+        // as we shouldn't be sorting by classifications
+        private void EnableDisableRankByClassificationCheckbox(bool isClassificationSelected)
+        {
+            this.RankByClassificationConfidenceCheckbox.IsEnabled = isClassificationSelected;
+            if (false == isClassificationSelected && true == this.RankByClassificationConfidenceCheckbox.IsChecked)
+            {
+                this.RankByNone.IsChecked = true;
+            }
+        }
+
         #endregion
 
         #region Slider: Detection Confidence Callbacks
@@ -486,6 +504,7 @@ namespace Timelapse.Controls
             {
                 if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
                 {
+
                     // Alter the RecognitionSelection parameters so that the parent can redo the count on it
                     // All special case: By convention, All is mapped to the category string in AllCategoryNumber (NoValue)
                     if (categoryCount.Category == Constant.RecognizerValues.AllDetectionLabel)
@@ -501,12 +520,13 @@ namespace Timelapse.Controls
                             // Unselect classifications when the Detection category is not Animal
                             this.ignoreSelection = true;
                             this.DataGridClassifications.SelectedItem = null;
+                            this.EnableDisableRankByClassificationCheckbox(false);
+
                             this.ignoreSelection = false;
                         }
                         this.SendRecognitionSelectionEvent(false);
                         return;
                     }
-
 
                     // The user selected a category (which could include empty)
                     string selectedCategory = categoryCount.Category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel)
@@ -536,6 +556,7 @@ namespace Timelapse.Controls
                             // Unselect classifications when the Detection category is not Animal
                             this.ignoreSelection = true;
                             this.DataGridClassifications.SelectedItem = null;
+                            this.EnableDisableRankByClassificationCheckbox(false);
                             this.ignoreSelection = false;
                         }
 
@@ -566,6 +587,7 @@ namespace Timelapse.Controls
                     {
                         // Set the Classification Category to the selected entity
                         this.RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
+                        this.EnableDisableRankByClassificationCheckbox(true);
 
                         // Because we are selecting a classification, we should ensure that the Detections Category is set to Animal
                         this.RecognitionSelections.AllDetections = false;
