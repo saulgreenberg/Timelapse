@@ -95,7 +95,7 @@ namespace Timelapse.Controls
             // Counting can be long-running, so we want to make it a cancellable operation
             this.BusyCancelIndicator.IsBusy = true;
             this.RecognitionSelectionsSaveState();
-            bool allCountsCompleted = await this.DoCountRecognitionsAsync(true, true);
+            bool allCountsCompleted = await this.DoCountRecognitionsAsync(true, this.classificationsExist);
             if (false == allCountsCompleted)
             {
                 this.ClearCountsAndResetUI();
@@ -260,7 +260,20 @@ namespace Timelapse.Controls
         #region Checkbox Callbacks - RankByConfidence, ShowMissingDetections
         private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
         {
+            if (sender is RadioButton radioBtn)
+            {
+                this.RecognitionSelections.RankByDetectionConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
+                this.RecognitionSelections.RankByClassificationConfidence = RankByClassificationConfidenceCheckbox.IsChecked == true;
+            }
 
+            bool enableState = false == this.RecognitionSelections.RankByDetectionConfidence && 
+                               false == RecognitionSelections.RankByClassificationConfidence;
+            {
+                // Disable controls
+                SlidersEnableState(enableState);
+            }
+            // Send a recognition selection event to the parent
+            this.SendRecognitionSelectionEvent(true);
         }
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
@@ -333,7 +346,7 @@ namespace Timelapse.Controls
 
                     // Disable the detection datagrid 
                     this.DetectionDataGridEnableState(false, true);
-                    this.ClassificationDataGridListBoxEnableState(false, true);
+                    this.ClassificationDataGridEnableState(false, true);
                     this.isDetectionValueChanged = true;
                 }
                 // Show the current slider values 
@@ -349,7 +362,7 @@ namespace Timelapse.Controls
 
             // Enable the detection datagrid 
             this.DetectionDataGridEnableState(true, true);
-            this.ClassificationDataGridListBoxEnableState(true, true);
+            this.ClassificationDataGridEnableState(true, true);
 
             // The CountRecogntions button is enabled so that the user can recount recogntions
             this.BtnCountRecognitions.IsEnabled = true;
@@ -418,7 +431,7 @@ namespace Timelapse.Controls
 
                 // As the user is in the midst of scrolling, provide feedback by
                 // disabling the detection datagrid and clearing the current classification selection and recognition
-                this.ClassificationDataGridListBoxEnableState(false, true);
+                this.ClassificationDataGridEnableState(false, true);
 
                 // Show the current slider values 
                 this.DisplayClassificationConfidenceRange();
@@ -433,7 +446,7 @@ namespace Timelapse.Controls
             // The user has finished updating the sliders, so we want to both update the display and counts
 
             // Enable the classification datagrid 
-            this.ClassificationDataGridListBoxEnableState(true, true);
+            this.ClassificationDataGridEnableState(true, true);
 
             // The CountRecogntions button is enabled so that the user can recount recogntions
             this.BtnCountRecognitions.IsEnabled = true;
@@ -781,6 +794,26 @@ namespace Timelapse.Controls
                 this.classificationsExist = true;
                 this.SetClassificationControlsToInitialValues();
             }
+
+            // Set the rank by confidence checkboxes to their initial value
+            if (this.RecognitionSelections.RankByDetectionConfidence == true)
+            {
+                this.RankByDetectionConfidenceCheckbox.IsChecked = true;
+            }
+            else if (this.RecognitionSelections.RankByClassificationConfidence == true)
+            {
+                this.RankByClassificationConfidenceCheckbox.IsChecked = true;
+            }
+            else
+            {
+                this.RankByNone.IsChecked = true;
+            }
+
+            if (false == this.classificationsExist)
+            {
+                this.RankByClassificationConfidenceCheckbox.Visibility = Visibility.Collapsed;
+            }
+
             this.TryHighlightCurrentSelection();
             this.SendRecognitionSelectionEvent(false);
         }
@@ -891,7 +924,7 @@ namespace Timelapse.Controls
             this.SliderDetectionConf.IsEnabled = enableAllControls;
 
             // Enable/disable the classification controls
-            this.ClassificationDataGridListBoxEnableState(enableAllControls, updateCursorToMatchState);
+            this.ClassificationDataGridEnableState(enableAllControls, updateCursorToMatchState);
             this.SliderClassificationConf.IsEnabled = enableAllControls;
 
             // Enable/disable the buttons and checkbox 
@@ -918,7 +951,7 @@ namespace Timelapse.Controls
             this.DataGridDetections.IsEnabled = enableState;
         }
 
-        private void ClassificationDataGridListBoxEnableState(bool enableState, bool updateCursorToMatchState)
+        private void ClassificationDataGridEnableState(bool enableState, bool updateCursorToMatchState)
         {
             if (updateCursorToMatchState)
             {
@@ -934,6 +967,16 @@ namespace Timelapse.Controls
         {
             this.GridClassifications.Visibility = Visibility.Collapsed;
             this.ClassificationColumnWidth.Width = new GridLength(0);
+        }
+
+        private void SlidersEnableState(bool enableState)
+        {
+            // Show/Hide the detection and classification slider
+            this.SliderDetectionConf.Visibility = enableState ? Visibility.Visible : Visibility.Hidden;
+            this.TBDetectionsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
+
+            this.SliderClassificationConf.Visibility = enableState ? Visibility.Visible : Visibility.Hidden;
+            this.TBClassificationsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
         }
         #endregion
 
@@ -1055,7 +1098,7 @@ namespace Timelapse.Controls
             // Enable the controls  as needed, and sort the classifications by the classifications column
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                this.ClassificationDataGridListBoxEnableState(true, true);
+                this.ClassificationDataGridEnableState(true, true);
                 if (this.DataGridClassifications.Columns.Count > 1)
                 {
                     SortDataGrid(this.DataGridClassifications, 1, ListSortDirection.Ascending);
@@ -1231,5 +1274,6 @@ namespace Timelapse.Controls
             }
         }
         #endregion
+
     }
 }
