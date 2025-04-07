@@ -819,7 +819,7 @@ namespace Timelapse.Database
                             }
 
                             command.CommandText = statement;
-                            //Debug.Print(command.CommandText);
+                            Debug.Print(command.CommandText);
                             // Note: Its more efficient to do it this way than to send
                             // a bunch of semicolon-separated statements as a single query
                             rowsUpdated += command.ExecuteNonQuery();
@@ -1535,7 +1535,9 @@ namespace Timelapse.Database
                     // The table does not exists
                     return false;
                 }
-                query = $"SELECT COUNT(*)_ FROM {tableName}";
+
+                return TableHasContent(tableName);
+                query = $"{Sql.SelectCountStarFrom} {tableName} {Sql.LimitOne}";
                 // If > 0 elements, then it both exists and has content so return true otherwise false
                 return ScalarGetScalarFromSelectAsInt(query) != 0;
             }
@@ -1544,21 +1546,31 @@ namespace Timelapse.Database
         // Return true iff the table exists, but is empty
         public bool TableExistsAndEmpty(string tableName)
         {
-            string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
-            using (DataTable datatable = GetDataTableFromSelect(query))
-            {
-                if (datatable.Rows.Count == 0)
-                {
-                    // Table does not exist
-                    return false;
-                }
-                query = $"SELECT COUNT(*)_ FROM {tableName}";
-                // If 0 elements, then its empty so return true otherwise false
-                return ScalarGetScalarFromSelectAsInt(query) == 0;
-            }
+            //string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
+            //using (DataTable datatable = GetDataTableFromSelect(query))
+            //{
+            //    if (datatable.Rows.Count == 0)
+            //    {
+            //        // Table does not exist
+            //        return false;
+            //    }
+            //    query = $"{Sql.SelectCountStarFrom} {tableName} {Sql.LimitOne}";
+            //    // If 0 elements, then its empty so return true otherwise false
+            //    return ScalarGetScalarFromSelectAsInt(query) == 0;
+            //}
+            return !TableExistsAndNotEmpty(tableName);
         }
         #endregion
 
+        #region Rows Exist
+        // Return true iff the table exists, but is empty
+        public bool TableHasContent(string tableName)
+        {
+            string query = $"{Sql.SelectCountStarFrom} {tableName} {Sql.LimitOne}";
+            // If > 0 elements, then it both exists and has content so return true otherwise false
+            return ScalarGetScalarFromSelectAsInt(query) != 0;
+        }
+        #endregion
         #region Pragmas
         // PRAGMA Quick_Check
         // Checks for database integrity. Note that if it is really corrupt, it will generate an internal exception that is corrupt.

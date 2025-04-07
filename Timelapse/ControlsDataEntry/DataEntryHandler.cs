@@ -514,7 +514,6 @@ namespace Timelapse.ControlsDataEntry
             // Update the files from the next row (as we are copying from the current row) to the end.
             Mouse.OverrideCursor = Cursors.Wait;
             int nextRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow + 1 : ThumbnailGrid.GetSelected()[0] + 1;
-            //this.FileDatabase.UpdateFiles(imageRow, control.DataLabel, nextRowIndex, this.FileDatabase.CountAllCurrentlySelectedFiles - 1);
             FileDatabase.UpdateFiles(imageRow, control, nextRowIndex, FileDatabase.CountAllCurrentlySelectedFiles - 1);
             Mouse.OverrideCursor = null;
         }

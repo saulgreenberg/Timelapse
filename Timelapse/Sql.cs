@@ -121,17 +121,18 @@ namespace Timelapse
         public const string SelectDistinct = " SELECT DISTINCT ";
         public const string SelectDistinctStar = " SELECT DISTINCT * ";
         public const string SelectOne = " SELECT 1 ";
+        public const string SelectOneFrom = " SELECT 1 " + Sql.From;
         public const string SelectStar = Select + Star; // SELECT * "
         public const string SelectStarFrom = SelectStar + From; // SELECT * FROM "
 
         public const string SelectCount = " SELECT COUNT ";
         public const string SelectDistinctCount = " SELECT DISTINCT COUNT ";
-        public const string SelectCountStarFromForm = SelectCount + OpenParenthesis + Star + CloseParenthesis + From;
+        public const string SelectCountStarFrom = SelectCount + OpenParenthesis + Star + CloseParenthesis + From;
         public const string SelectDistinctCountStarFrom = SelectDistinctCount + OpenParenthesis + Star + CloseParenthesis + From;
         public const string SelectExists = " SELECT EXISTS ";
         public const string SelectNameFromPragmaTableInfo = Select + Name + From + " PRAGMA_TABLE_INFO ";
         public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Select + Name + From + SqlMaster + Where + TypeEqualsTable + And + Name + Equal;
-        public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = SelectCountStarFromForm + SqlMaster + Where + TypeEqualsIndex + And + Name + Equal;
+        public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = SelectCountStarFrom + SqlMaster + Where + TypeEqualsIndex + And + Name + Equal;
         public static string SelectSqlFromSqliteMasterWhereTypeEqualTableAndNameEquals = $"{Select} sql {From} {SqlMaster} {Where} {TypeEqualsTable} {And} {Name} {Equal}";
         public const string Semicolon = " ; ";
         public const string Set = " SET ";
@@ -249,7 +250,7 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
+                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
@@ -271,7 +272,7 @@ namespace Timelapse
             string columnsAsCommaSeparatedString = $" {Constant.DatabaseColumn.File}, {Constant.DatabaseColumn.RelativePath}, {episodeNoteField} ";
             string tmp_EpisodeNoteField = $"{Constant.DBTables.TmpCombinedTable}.{episodeNoteField}";
             string selectFromString = asCountQuery
-                ? Sql.SelectCountStarFromForm
+                ? Sql.SelectCountStarFrom
                 : Sql.SelectStarFrom;
             return phrase +=
                 $"{selectFromString} " +
@@ -337,7 +338,7 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
+                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
@@ -528,7 +529,7 @@ namespace Timelapse
             // Count form:   
             // Select form:  (
             string frontwrapper = countOnly
-                ? Sql.SelectCountStarFromForm
+                ? Sql.SelectCountStarFrom
                 : Sql.SelectStarFrom;
             frontwrapper += tableName + Sql.Where + Sql.Substr + Sql.OpenParenthesis + tableName + Sql.Dot + episodeNoteField + Sql.Comma + "0" + Sql.Comma
                                 + Sql.Instr + Sql.OpenParenthesis + tableName + Sql.Dot + episodeNoteField + Sql.Comma + Sql.Quote(":") + Sql.CloseParenthesis + Sql.CloseParenthesis
