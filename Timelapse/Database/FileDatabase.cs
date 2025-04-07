@@ -596,7 +596,8 @@ namespace Timelapse.Database
                 }
             }
 
-            // TODO COndition 5 Update Classification tables if needed
+            // Version 2.3.2.9 changed how recognition tables are managed.
+            // Update those tables to their new format if needed
             this.UpdateOldStyleRecognitionTablesIfNeeded();
         }
 
