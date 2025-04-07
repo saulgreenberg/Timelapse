@@ -48,10 +48,11 @@ namespace Timelapse
         #region Menu stub to test some code
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
-            if (dialog.ShowDialog() == true )
-            {
-            }
+            this.DataHandler.FileDatabase.UpdateOldStyleRecognitionTablesIfNeeded();
+            //TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
+            //if (dialog.ShowDialog() == true )
+            //{
+            //}
         }
         #endregion
 

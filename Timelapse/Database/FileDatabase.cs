@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -594,6 +595,9 @@ namespace Timelapse.Database
                     }
                 }
             }
+
+            // TODO COndition 5 Update Classification tables if needed
+            this.UpdateOldStyleRecognitionTablesIfNeeded();
         }
 
         private static SchemaColumnDefinition CreateFileDataColumnDefinition(CommonControlRow control)
@@ -2158,7 +2162,7 @@ namespace Timelapse.Database
             {
                 // STANDARD (NO DETECTIONS/CLASSIFICATIONS)
                 // Create a query that returns a count that does not consider detections
-                query = Sql.SelectCountStarFromForm + DBTables.FileData;
+                query = Sql.SelectCountStarFrom + DBTables.FileData;
             }
 
             // PART 2 of Query
@@ -2188,7 +2192,7 @@ namespace Timelapse.Database
                 && fileSelection == FileSelectionEnum.Custom)
             {
                 // Remove from the front of the string
-                query = query.Replace(Sql.SelectCountStarFromForm, string.Empty);
+                query = query.Replace(Sql.SelectCountStarFrom, string.Empty);
                 string frontWrapper = SqlPhrase.CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(DBTables.FileData, CustomSelection.EpisodeNoteField, true);
                 string backWrapper = Sql.CloseParenthesis;
                 query = frontWrapper + query + backWrapper;
@@ -2259,7 +2263,7 @@ namespace Timelapse.Database
 
         public int CountAllFilesMatchingRelativePath(string RelativePath)
         {
-            string query = Sql.SelectCountStarFromForm + DBTables.FileData + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(RelativePath);
+            string query = Sql.SelectCountStarFrom + DBTables.FileData + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(RelativePath);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
         #endregion
@@ -4077,6 +4081,84 @@ namespace Timelapse.Database
         private void ResetAfterPossibleRelativePathChanges()
         {
             this.GetRelativePathsInCurrentSelection = null;
+        }
+        #endregion
+
+        #region Update Old-style Classification table
+        // Timelapse version 2.3.2.9 changed how recognition tables were managed. 
+        // Prior versions could include a separate detection and classification table.
+        // The new version merges the classification data into the detection table
+        // While we still need a classification table to be present for backwards compatability, we clear its data.
+        // This means that pre=2.3.2.9 versions will not be able to access the classification data
+        public void UpdateOldStyleRecognitionTablesIfNeeded()
+        {
+            // First, update the Detection table to include the new columns
+            if (this.Database.TableExists(DBTables.Detections))
+            {
+                // Add the two column to the detection table if they don't exist
+                if (false == this.Database.SchemaIsColumnInTable(DBTables.Detections, DetectionColumns.Classification))
+                {
+                    // add the Classification  column to the detection table
+                    this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new SchemaColumnDefinition(DetectionColumns.Classification, Sql.Text));
+                }
+                if (false == this.Database.SchemaIsColumnInTable(DBTables.Detections, Constant.DetectionColumns.ClassificationConf))
+                {
+                    // add the ClassificationConf  column to the detection table
+                    this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new SchemaColumnDefinition(DetectionColumns.ClassificationConf, Sql.Real));
+                }
+            }
+
+            // Now check to see if there are any classifications to update table
+            if (this.Database.TableExists(DBTables.Classifications) == false)
+            {
+                // No need to do anything if the table doesn't exist
+                return;
+            }
+
+            if (false == this.Database.TableHasContent(DBTables.Classifications))
+            {
+                // Just delete the classifications table as it has no content, which means there is nothing to update
+                this.Database.DropTable(DBTables.Classifications);
+                return;
+            }
+
+            // The classification table has content.We need to update the detection table columns
+            // To do this, for each detection we get its maximum classification confidence (if any) and update the detection table with those values
+            string query = $"{Sql.Select} {Constant.ClassificationColumns.ClassificationID}, {Constant.ClassificationColumns.Category}, " +
+                           $"{Sql.Max}({Constant.ClassificationColumns.Conf}), {Constant.DetectionColumns.DetectionID} " +
+                           $"{Sql.From} {DBTables.Classifications} {Sql.GroupBy}({Constant.DetectionColumns.DetectionID})";
+            DataTable dataTable = this.Database.GetDataTableFromSelect(query);
+
+            // Now update each detection as needed
+            int dataTableRowCount = dataTable.Rows.Count;
+            List<ColumnTuplesWithWhere> columnsTuplesWithWhereList = new List<ColumnTuplesWithWhere>();    // holds columns which have changed for the current control
+            string newConfColumnName = $"MAX ({ClassificationColumns.Conf})";
+            for (int i = 0; i < dataTableRowCount; i++)
+            {
+                DataRow row = dataTable.Rows[i];
+                if (row[ClassificationColumns.Category] == DBNull.Value) continue;
+                if (row[newConfColumnName] == DBNull.Value) continue;
+                string category = (string)row[ClassificationColumns.Category];
+                float conf = (float)(double)row[newConfColumnName];
+                long detectionID = (long) row[Constant.DetectionColumns.DetectionID];
+                Debug.Print($"{category} {conf} {detectionID}");
+                List<ColumnTuple> columnTupleList = new List<ColumnTuple>
+                {
+                    new ColumnTuple(DetectionColumns.Classification, category),
+                    new ColumnTuple(DetectionColumns.ClassificationConf, conf)
+                };
+
+                ColumnTuplesWithWhere columnTupleWithWhere = new ColumnTuplesWithWhere(columnTupleList, new ColumnTuple(Constant.DetectionColumns.DetectionID, detectionID));
+                columnsTuplesWithWhereList.Add(columnTupleWithWhere);
+            }
+            Database.Update(DBTables.Detections, columnsTuplesWithWhereList);
+
+            // For backwards compatability we need the classification table to be present.
+            // While we can't drop it (at least not for now), we can delete its data.
+            // Note that this means that version prior to 2.3.2.8 will not be able to access
+            // classification data on updated ddb files
+            this.Database.DeleteAllRowsInTables(new List<string>() {DBTables.Classifications});
+            //this.Database.DropTable(DBTables.Classifications);
         }
         #endregion
 
