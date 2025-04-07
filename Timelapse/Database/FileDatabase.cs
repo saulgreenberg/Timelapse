@@ -2221,21 +2221,13 @@ namespace Timelapse.Database
                 query += SqlPhrase.SelectMissingDetections(SelectTypesEnum.One);
                 skipWhere = true;
             }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
+            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition 
+                     && (CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection || CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification))
             {
-                // DETECTIONS
+                // DETECTIONS AND CLASSIFICATIONS
                 // Create a query that returns a count of detections matching some conditions
                 // Form: SELECT COUNT  ( * )  FROM  (  SELECT * FROM Detections INNER JOIN DataTable ON DataTable.Id = Detections.Id
                 query += SqlPhrase.SelectDetections(SelectTypesEnum.One);
-            }
-            else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
-            {
-                //TODO Rework Classn Query
-                // CLASSIFICATIONS
-                // Create a partial query that returns a count of classifications matching some conditions
-                // Form: Select COUNT  ( * )  FROM  (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-                query += SqlPhrase.SelectClassifications(SelectTypesEnum.One);
-                //query += SqlPhrase.SelectDetections(SelectTypesEnum.One);
             }
             else
             {
@@ -2252,11 +2244,6 @@ namespace Timelapse.Database
                 if (!string.IsNullOrEmpty(where))
                 {
                     query += where;
-                }
-                if (fileSelection == FileSelectionEnum.Custom && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Classification)
-                {
-                    // Add a close parenthesis if we are querying for detections. Not sure where the unbalanced parenthesis is coming from! Needs some checking.
-                    query += Sql.CloseParenthesis;
                 }
             }
             query += Sql.CloseParenthesis;

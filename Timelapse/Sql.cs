@@ -74,6 +74,7 @@ namespace Timelapse
         public const string Instr = " INSTR ";
         public const string IntegerType = " INTEGER ";
         public const string IsNull = " IS NULL ";
+        public const string IsNotNull = " IS NOT NULL ";
         public const string Join = " JOIN ";
         public const string LeftJoin = " LEFT JOIN ";
         public const string Length = " LENGTH ";
@@ -261,89 +262,7 @@ namespace Timelapse
             return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
                     Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
         }
-        //public static string SelectDetections(bool useCountForm)
-        //{
-        //    string phrase = useCountForm
-        //        //? Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectStar
-        //        ? Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + Constant.DBTables.FileData + Sql.DotStar
-        //        : Sql.Select + Constant.DBTables.FileData + Sql.DotStar;
 
-
-        //    return phrase + Sql.From + Constant.DBTables.Detections + Sql.InnerJoin + Constant.DBTables.FileData +
-        //            Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.IdenticalToSet2 + Constant.DBTables.Detections + "." + Constant.DetectionColumns.ImageID;
-        //}
-
-        //  Generate counts for each classification category.
-        // It creates a temporary table, and then does the count on that temporary table 
-        // Form :
-        //  Drop Table If Exists TmpCombinedTable; 
-        //  Create Temporary Table TmpCombinedTable As
-        //     SELECT DataTable.*, Detections.*, Classifications.* FROM Classifications
-        //     INNER JOIN DataTable ON DataTable.Id = Detections.Id
-        //     INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID
-        //     WHERE Detections.category = 1 AND Detections.conf BETWEEN 0.2 AND 1
-        //     ORDER BY RelativePath, datetime(DateTime), File; 
-        // SELECT Count(*) from
-        //  (
-        //      Select Distinct File,RelativePath from TmpCombinedTable where "category:1" = 1 AND "conf:1" >= 0.6
-        //  )
-        public static string SelectCountClassificationsWithinDetections(string where, RecognitionSelections detectionSelections, string detectionCategory, bool asCountQuery)
-        {
-            // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
-            // Create a temporary table to hold intermediate results
-            string phrase = CreateTempTableForDetectionsAndClassifications(where, detectionSelections, detectionCategory, Constant.DBTables.TmpCombinedTable);
-            string selectFromString = asCountQuery
-                ? Sql.SelectCountStarFromForm
-                : Sql.SelectStarFrom;
-            return phrase +=
-                $"{selectFromString} (" +
-                $"Select Distinct File,RelativePath from {Constant.DBTables.TmpCombinedTable} " +
-                $"where \"category:1\" = {detectionSelections.ClassificationCategoryNumber}" +
-                $" AND \"conf:1\" >= {detectionSelections.ClassificationConfidenceLowerForUI}" +
-                $" AND \"conf:1\" <= {detectionSelections.ClassificationConfidenceHigherForUI}" +
-                $")";
-        }
-
-        public static string SelectClassificationsWithinDetections(string where, RecognitionSelections detectionSelections, string detectionCategory, string commaSeparatedColumns)
-        {
-            // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
-            // Create a temporary table to hold intermediate results
-            string phrase = CreateTempTableForDetectionsAndClassifications(where, detectionSelections, detectionCategory, Constant.DBTables.TmpCombinedTable);
-            
-             phrase +=
-                $"{Sql.SelectStarFrom} (" +
-                $"Select Distinct {commaSeparatedColumns} from {Constant.DBTables.TmpCombinedTable} " +
-                $"where \"category:1\" = {detectionSelections.ClassificationCategoryNumber}" +
-                $" AND \"conf:1\" {Sql.Between} {detectionSelections.ClassificationConfidenceLowerForUI} AND {detectionSelections.ClassificationConfidenceHigherForUI}" + 
-                $");";
-             phrase += "Drop Table If Exists TmpCombinedTable;";
-             return phrase;
-        }
-
-        // Generate counts for each classification category which includes images in accompanying episodes.
-        // It creates a temporary table, and then does the count on that temporary table 
-        // Form :
-        //  Drop Table If Exists TmpCombinedTable; 
-        //  Create Temporary Table TmpCombinedTable As
-        //     SELECT DataTable.*, Detections.*, Classifications.* FROM Classifications
-        //     INNER JOIN DataTable ON DataTable.Id = Detections.Id
-        //     INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID
-        //     WHERE Detections.category = 1 AND Detections.conf BETWEEN 0.2 AND 1
-        //     ORDER BY RelativePath, datetime(DateTime), File; 
-        // SELECT Count(*) from
-        // (
-        //     Select Distinct  File, RelativePath, Note0 from TmpCombinedTable
-        //     WHERE  SUBSTR(TmpCombinedTable.Note0, 0, INSTR(TmpCombinedTable.Note0, ':'))  In
-        //     (
-        //         SELECT DISTINCT SUBSTR(Note0, 0, INSTR(Note0, ':'))  FROM
-        //         (
-        //            SELECT File, RelativePath, Note0 from
-        //            (
-        //               Select Distinct * from TmpCombinedTable where "category:1" = 17 AND "conf:1" >= 0.09
-        //            )
-        //         )
-        //     )
-        // )
         public static string SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(string where, RecognitionSelections detectionSelections, string detectionCategory, string episodeNoteField, bool asCountQuery)
         {
             // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
@@ -418,27 +337,43 @@ namespace Timelapse
             string phrase = string.Empty;
             if (selectType == SelectTypesEnum.Count)
             {
-                phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct;
+                phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.Star)
             {
-                phrase = Sql.SelectDistinct;
+                phrase = Sql.Select + DBTables.FileData + Sql.DotStar;
             }
             else if (selectType == SelectTypesEnum.One)
             {
-                phrase = Sql.SelectOne + Sql.From + Sql.OpenParenthesis + Sql.SelectDistinct;
+                phrase = Sql.SelectOne;
             }
+            return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
+                   Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID + Sql.Where + DetectionColumns.Classification + Sql.IsNotNull;
 
-            phrase += DBTables.FileData + Sql.DotStar + Sql.From + DBTables.Classifications +
-                    Sql.InnerJoin + DBTables.FileData + Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID +
-                    Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
+            //string phrase = string.Empty;
+            //if (selectType == SelectTypesEnum.Count)
+            //{
+            //    phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct;
+            //}
+            //else if (selectType == SelectTypesEnum.Star)
+            //{
+            //    phrase = Sql.SelectDistinct;
+            //}
+            //else if (selectType == SelectTypesEnum.One)
+            //{
+            //    phrase = Sql.SelectOne + Sql.From + Sql.OpenParenthesis + Sql.SelectDistinct;
+            //}
 
-            // and now append INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-            phrase += Sql.InnerJoin + DBTables.Detections + Sql.On +
-                DBTables.Detections + Sql.Dot + DetectionColumns.DetectionID + Sql.Equal +
-                DBTables.Classifications + "." + DetectionColumns.DetectionID;
+            //phrase += DBTables.FileData + Sql.DotStar + Sql.From + DBTables.Classifications +
+            //        Sql.InnerJoin + DBTables.FileData + Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID +
+            //        Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
 
-            return phrase;
+            //// and now append INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
+            //phrase += Sql.InnerJoin + DBTables.Detections + Sql.On +
+            //    DBTables.Detections + Sql.Dot + DetectionColumns.DetectionID + Sql.Equal +
+            //    DBTables.Classifications + "." + DetectionColumns.DetectionID;
+
+            //return phrase;
         }
 
         /// <summary>
