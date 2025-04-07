@@ -139,7 +139,7 @@ namespace Timelapse.Dialog
             this.Arguments = arguments;
 
             // Set up the count timer
-            CountTimer.Interval = TimeSpan.FromMilliseconds(500);
+            CountTimer.Interval = TimeSpan.FromMilliseconds(250);
             CountTimer.Tick += CountTimer_Tick;
         }
 
@@ -160,19 +160,13 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             // Detections-specific
-            dontCount = true;
-            dontInvoke = true;
-
             // Set the state of the detections to the last used ones (or to its defaults)
             if (GlobalReferences.DetectionsExists)
             {
                 this.RecognitionsGroupBox.Visibility = Visibility.Visible;
                 this.EnableRecognitionsCheckbox.IsChecked = this.RecognitionSelections.UseRecognition;
-                if (this.RecognitionSelections.UseRecognition)
-                {
-                    this.RecognitionsGroupBox.Background = Brushes.Azure;
-                    this.CreateRecognitionSelectorControl();
-                }
+                dontInvoke = false;
+                this.EnableRecognitions_CheckedChanged(null, null);
             }
             else
             {
@@ -809,8 +803,11 @@ namespace Timelapse.Dialog
         private void DestroyRecognitionSelectorControl()
         {
             // Remove the RecognitionSelector event handler
-            this.RecognitionSelector.RecognitionSelectionEvent -= RecognitionSelector_OnRecognitionSelectionEvent;
-            this.RecognitionSelector = null;
+            if (this.RecognitionSelector != null)
+            {
+                this.RecognitionSelector.RecognitionSelectionEvent -= RecognitionSelector_OnRecognitionSelectionEvent;
+                this.RecognitionSelector = null;
+            }
             this.RecognitionsGroupBox.BorderThickness = new Thickness(0);
             this.RecognitonsGroupBoxHeaderText.FontWeight = FontWeights.Normal;
             this.RecognitionsGroupBox.Content = null;
@@ -899,7 +896,7 @@ namespace Timelapse.Dialog
             // Haader text
             TextBlock tbHeader = new TextBlock
             {
-                Text = "Choose how terms are combined using either",
+                Text = "Choose how terms below are combined:",
                 VerticalAlignment = VerticalAlignment.Center,
                 FontWeight = FontWeights.Normal,
             };

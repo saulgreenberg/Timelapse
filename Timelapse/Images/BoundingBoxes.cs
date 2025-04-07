@@ -322,21 +322,22 @@ namespace Timelapse.Images
             canvas.Children.Add(rect);
             canvas.Tag = Constant.MarkableCanvas.BoundingBoxCanvasTag;
 
-            // Bounding box labelling: Category plus confidence (to two decimal places or epsilon)
+            // Bounding box labelling: Category plus confidence for detection(classication) (to two decimal places or epsilon)
             // Use the primary detection category if there are no classifications, 
             // The bboxLabel contains just the top-ranked classification category + its confidence
             // the bboxTextBlock contains all predicted items + their confidence as a list
             string bboxLabel = (bbox.Classifications.Count == 0)
-                ? bbox.DetectionLabel + " " + ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence)
-                : bbox.Classifications[0].Key + " " + ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Classifications[0].Value)
-                  + "(" + ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence) + ")";
+                ? $"{bbox.DetectionLabel} {ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence)}"
+                : $"{bbox.Classifications[0].Key} " +
+                  $"{ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence)}" +
+                  $"({ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Classifications[0].Value)})";
 
             string bboxTextBlock = string.Empty;
             if (bbox.Classifications.Count > 0)
             {
                 foreach (KeyValuePair<string, string> classification in bbox.Classifications)
                 {
-                    bboxTextBlock += classification.Key + " " + ReformatFloatToTwoDecimalPlacesAndEpsilon(classification.Value) + Environment.NewLine;
+                    bboxTextBlock += $"{classification.Key} {ReformatFloatToTwoDecimalPlacesAndEpsilon(classification.Value)}{Environment.NewLine}";
                 }
 
                 bboxTextBlock = bboxTextBlock.Trim('\r', '\n');

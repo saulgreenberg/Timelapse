@@ -158,7 +158,7 @@ namespace Timelapse
                 await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();
 
                 // Check if we need this...
-                DataHandler.FileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
+                DataHandler.FileDatabase.IndexCreateForDetectionsIfNotExists();
             }
             TryFileShowWithoutSliderCallback(DirectionEnum.Next);
         }

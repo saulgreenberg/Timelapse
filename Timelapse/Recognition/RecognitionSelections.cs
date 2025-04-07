@@ -87,18 +87,12 @@ namespace Timelapse.Recognition
                 double upperBound;
                 if (InterpretAllDetectionsAsEmpty)
                 {
-                    // For Empty category, we want to invert the confidence and only have it less than the lower bound
-                    // e.g confidence of 1 is returned as confidence of 0
-                    // But note that we actually return the confidence of the different threshold in this case, as normally #1 <= #2
-                    // Doing so keeps that relationship after the inversion is done.
-                    // We also swap the lower/upper bound to keep one less than the other
-                    // If Threshold2 is .99 in the UI for empty items, we invert that, but to just above 0
-                    // so we capture all the non-zero items (i.e., all images with detections in that range) as otherwise it could
-                    //  omit the rare image with a max detection between 0 and .01
-                    lowerBound = 0;//(Math.Abs(DetectionConfidenceHigherForUI - 0.99) < .0001) ? justAboveZero : 1.0 - DetectionConfidenceHigherForUI;
+                    // For Empty category, the issue is what to do if the lower bound is not 0 and the upper bound is not 1, as this is now an intermediate value
+                    // So we do a sensible (abeit not very meaningful) workaround, where the empty values are always from 0 to just less than the lowest detection value 
+                    lowerBound = 0;
                     upperBound = DetectionConfidenceLowerForUI - justAboveZero < 0 
                         ? 0 
-                        : DetectionConfidenceLowerForUI - justAboveZero; 
+                        : DetectionConfidenceLowerForUI; 
                 }
                 else if (AllDetections)
                 {

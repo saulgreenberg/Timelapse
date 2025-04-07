@@ -56,7 +56,7 @@
                               PreviewMouseLeftButtonUp="SliderDetectionConf_OnPreviewMouseLeftButtonUp"
                               LowerValueChanged="SliderDetectionConf_ValueChanged" 
                               HigherValueChanged="SliderDetectionConf_ValueChanged"
-            />
+                />
 
                 <!--Detections Datagrid-->
                 <DataGrid Grid.Row="2" Grid.Column="0" 
@@ -64,6 +64,8 @@
                       BorderBrush="{x:Static SystemColors.HighlightBrush}"
                       ItemsSource ="{Binding DetectionCountsCollection}"
                       IsReadOnly ="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
                       HorizontalGridLinesBrush="LightGray"
                       VerticalGridLinesBrush="LightGray"
                       CanUserSortColumns="True"
@@ -79,12 +81,6 @@
                         </Style>
                     </DataGrid.Resources>
                 </DataGrid>
-
-                <!-- Rank By Confidence Checkbox-->
-                <RadioButton Name="RankByDetectionConfidenceCheckbox" GroupName="RankByRadioButtons" Content="Sort by detection confidence" Grid.Row="3" Grid.Column="0" Margin="5,10,0,0" 
-                          VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
-                          Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
-                          ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
             </Grid>
 
             <!--Classifications-->
@@ -125,8 +121,9 @@
                 </xctk:RangeSlider>
 
                 <!--Classifications DataGrid-->
-                <DataGrid Grid.Row="2" Grid.Column="0" BorderBrush="RosyBrown"
+                <DataGrid Grid.Row="2" Grid.Column="0" 
                       Name="DataGridClassifications" 
+                      BorderBrush="RosyBrown"
                       ItemsSource ="{Binding ClassificationCountsCollection}"
                       IsReadOnly ="True"
                       SelectionMode="Single"
@@ -156,12 +153,6 @@
                         </Style>
                     </DataGrid.Resources>
                 </DataGrid>
-
-                <!--Row 2 Rank By Confidence Checkbox-->
-                <RadioButton Name="RankByClassificationConfidenceCheckbox" GroupName="RankByRadioButtons" Content="Sort by classification confidence" Grid.Row="4" Grid.Column="0" Margin="5,10,0,0" 
-                          VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
-                          Checked="RankByConfidence_CheckedChanged" Unchecked="RankByConfidence_CheckedChanged"
-                          ToolTip="Sorts the results by confidence.&#10;The confidence value used (detection or classification) depends upon the 'Recognized entity' menu selection."/>
             </Grid>
 
             <!--Other Recognition-related controls-->
@@ -173,9 +164,39 @@
                     </StackPanel>
                     <Button Name="BtnCountRecognitions" Content ="Count recognitions" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
                 </StackPanel>
+                <!-- Sorting by Confidence -->
+                <TextBlock Text="Sort all by:" FontWeight="Bold" Margin="0,10,0,0"/>
+
+                <!-- Rank By Confidence Checkbox-->
+                <StackPanel Name="SPRadioButtonsRankBy" Orientation="Vertical">
+                    <RadioButton Name="RankByDetectionConfidenceCheckbox"
+                             Tag="Detections"
+                             GroupName="RankByRadioButtons" 
+                             Content="detection confidence" Margin="5,2,0,0" 
+                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                             Checked="RankByConfidence_CheckedChanged" 
+                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by detection confidence and then by classification confidence"/>
+
+                    <RadioButton Name="RankByClassificationConfidenceCheckbox" 
+                             Tag="Classifications"
+                             GroupName="RankByRadioButtons" 
+                             Content="classification confidence" Margin="5,2,0,0" 
+                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                             Checked="RankByConfidence_CheckedChanged" 
+                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by classification confidence and then by detection confidence"/>
+
+                    <RadioButton Name="RankByNone" 
+                             GroupName="RankByRadioButtons" 
+                             Tag="None"
+                             Content="none" Margin="5,2,0,0" 
+                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                             Checked="RankByConfidence_CheckedChanged" 
+                             ToolTip="Returns all selected files within the chosen confidence range"/>
+                </StackPanel>
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files&#10;the recognizer did not&#10; process" 
                           IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,135,0,0" 
                           Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
+                
             </StackPanel>
         </Grid>
     </Grid>

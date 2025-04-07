@@ -20,9 +20,11 @@ using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Timelapse.EventArguments;
 using Timelapse.Constant;
+using Timelapse.State;
 using Cursors = System.Windows.Input.Cursors;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using static System.Windows.Forms.AxHost;
 
 namespace Timelapse.Controls
 {
@@ -75,6 +77,7 @@ namespace Timelapse.Controls
         // State variables
         private bool classificationsExist;
         private bool ignoreSelection;
+        private bool ignoreSliderUpdate;
         private bool sliderConfidenceInitialMovement;
         private bool onlyUpdateClassificationCount;
         private CategoryCount savedSelectedCategoryCount = null;
@@ -93,7 +96,7 @@ namespace Timelapse.Controls
             // Counting can be long-running, so we want to make it a cancellable operation
             this.BusyCancelIndicator.IsBusy = true;
             this.RecognitionSelectionsSaveState();
-            bool allCountsCompleted = await this.DoCountRecognitionsAsync(true, true);
+            bool allCountsCompleted = await this.DoCountRecognitionsAsync(true, this.classificationsExist);
             if (false == allCountsCompleted)
             {
                 this.ClearCountsAndResetUI();
@@ -258,13 +261,44 @@ namespace Timelapse.Controls
         #region Checkbox Callbacks - RankByConfidence, ShowMissingDetections
         private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
         {
+            if (sender is RadioButton radioBtn)
+            {
+                this.RecognitionSelections.RankByDetectionConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
+                this.RecognitionSelections.RankByClassificationConfidence = RankByClassificationConfidenceCheckbox.IsChecked == true;
+            }
 
+            bool enableState = false == this.RecognitionSelections.RankByDetectionConfidence &&
+                               false == RecognitionSelections.RankByClassificationConfidence;
+            {
+                // Disable controls
+                SlidersEnableState(enableState);
+            }
+            // The Empty category will only show Empty when a Ranking checkbox is checked
+            this.SetEmptyDetectionCategoryLabel();
+
+            // Reset rank by classification if needed
+            this.EnableDisableRankByClassificationCheckbox(!string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber));
+
+            // Send a recognition selection event to the parent
+            this.SendRecognitionSelectionEvent(true);
         }
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
 
         }
+
+        // Disable the classification radio button if no classification is selected and switches Rank to None
+        // as we shouldn't be sorting by classifications
+        private void EnableDisableRankByClassificationCheckbox(bool isClassificationSelected)
+        {
+            this.RankByClassificationConfidenceCheckbox.IsEnabled = isClassificationSelected;
+            if (false == isClassificationSelected && true == this.RankByClassificationConfidenceCheckbox.IsChecked)
+            {
+                this.RankByNone.IsChecked = true;
+            }
+        }
+
         #endregion
 
         #region Slider: Detection Confidence Callbacks
@@ -298,8 +332,8 @@ namespace Timelapse.Controls
         }
         private void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
         {
-            // Abort if we can't do anything
-            if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
+            // Abort if we can't or shouldn't do anything
+            if (!(sender is RangeSlider slider) || null == this.DetectionCategories || ignoreSliderUpdate)
             {
                 return;
             }
@@ -324,7 +358,6 @@ namespace Timelapse.Controls
                     // We only need to do this the first time things are being moved
 
                     // Clearing the current selection and recognition
-                    this.ClearSelectionsAndScrollToTop(this.DataGridDetections);
                     this.sliderConfidenceInitialMovement = true;
 
                     // As the user is scrolling, indicate this by clearing the current counts (ie., to NoValue)
@@ -332,11 +365,11 @@ namespace Timelapse.Controls
 
                     // Disable the detection datagrid 
                     this.DetectionDataGridEnableState(false, true);
-                    this.ClassificationDataGridListBoxEnableState(false, true);
+                    this.ClassificationDataGridEnableState(false, true);
                     this.isDetectionValueChanged = true;
                 }
                 // Show the current slider values 
-                this.DisplayDetectionConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
+                this.DisplayDetectionConfidenceRange();
                 this.onlyUpdateClassificationCount = false;
                 return;
             }
@@ -348,7 +381,7 @@ namespace Timelapse.Controls
 
             // Enable the detection datagrid 
             this.DetectionDataGridEnableState(true, true);
-            this.ClassificationDataGridListBoxEnableState(true, true);
+            this.ClassificationDataGridEnableState(true, true);
 
             // The CountRecogntions button is enabled so that the user can recount recogntions
             this.BtnCountRecognitions.IsEnabled = true;
@@ -358,7 +391,7 @@ namespace Timelapse.Controls
             double higherConf = Math.Round(slider.HigherValue, 2);
             this.RecognitionSelections.DetectionConfidenceLowerForUI = lowerConf;
             this.RecognitionSelections.DetectionConfidenceHigherForUI = higherConf;
-            this.DisplayDetectionConfidenceRange(lowerConf, higherConf);
+            this.DisplayDetectionConfidenceRange();
             this.SetEmptyDetectionCategoryLabel();
 
             // Clear the current counts 
@@ -394,8 +427,8 @@ namespace Timelapse.Controls
         }
         private void SliderClassificationConf_ValueChanged(object sender, RoutedEventArgs e)
         {
-            // Abort if we can't do anything
-            if (!(sender is RangeSlider slider) || null == this.DetectionCategories)
+            // Abort if we can't or shouldn't do anything
+            if (!(sender is RangeSlider slider) || null == this.DetectionCategories || ignoreSliderUpdate)
             {
                 return;
             }
@@ -417,11 +450,10 @@ namespace Timelapse.Controls
 
                 // As the user is in the midst of scrolling, provide feedback by
                 // disabling the detection datagrid and clearing the current classification selection and recognition
-                this.ClassificationDataGridListBoxEnableState(false, true);
-                this.ClearSelectionsAndScrollToTop(this.DataGridClassifications);
+                this.ClassificationDataGridEnableState(false, true);
 
                 // Show the current slider values 
-                this.DisplayClassificationConfidenceRange(Math.Round(slider.LowerValue, 2), Math.Round(slider.HigherValue, 2));
+                this.DisplayClassificationConfidenceRange();
 
                 // Clear the current counts
                 this.onlyUpdateClassificationCount = true;
@@ -433,7 +465,7 @@ namespace Timelapse.Controls
             // The user has finished updating the sliders, so we want to both update the display and counts
 
             // Enable the classification datagrid 
-            this.ClassificationDataGridListBoxEnableState(true, true);
+            this.ClassificationDataGridEnableState(true, true);
 
             // The CountRecogntions button is enabled so that the user can recount recogntions
             this.BtnCountRecognitions.IsEnabled = true;
@@ -443,7 +475,7 @@ namespace Timelapse.Controls
             double higherConf = Math.Round(slider.HigherValue, 2);
             this.RecognitionSelections.ClassificationConfidenceLowerForUI = lowerConf;
             this.RecognitionSelections.ClassificationConfidenceHigherForUI = higherConf;
-            this.DisplayClassificationConfidenceRange(lowerConf, higherConf);
+            this.DisplayClassificationConfidenceRange();
             this.DataGridClassifications.SelectedItem = this.savedSelectedCategoryCount;
             this.TryHighlightCurrentSelection();
             this.isClassificationValueChanged = false;
@@ -472,6 +504,7 @@ namespace Timelapse.Controls
             {
                 if (dataGrid.SelectedItems.Count == 1 && dataGrid.SelectedItems[0] is CategoryCount categoryCount)
                 {
+
                     // Alter the RecognitionSelection parameters so that the parent can redo the count on it
                     // All special case: By convention, All is mapped to the category string in AllCategoryNumber (NoValue)
                     if (categoryCount.Category == Constant.RecognizerValues.AllDetectionLabel)
@@ -487,12 +520,13 @@ namespace Timelapse.Controls
                             // Unselect classifications when the Detection category is not Animal
                             this.ignoreSelection = true;
                             this.DataGridClassifications.SelectedItem = null;
+                            this.EnableDisableRankByClassificationCheckbox(false);
+
                             this.ignoreSelection = false;
                         }
                         this.SendRecognitionSelectionEvent(false);
                         return;
                     }
-
 
                     // The user selected a category (which could include empty)
                     string selectedCategory = categoryCount.Category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel)
@@ -522,6 +556,7 @@ namespace Timelapse.Controls
                             // Unselect classifications when the Detection category is not Animal
                             this.ignoreSelection = true;
                             this.DataGridClassifications.SelectedItem = null;
+                            this.EnableDisableRankByClassificationCheckbox(false);
                             this.ignoreSelection = false;
                         }
 
@@ -552,6 +587,7 @@ namespace Timelapse.Controls
                     {
                         // Set the Classification Category to the selected entity
                         this.RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
+                        this.EnableDisableRankByClassificationCheckbox(true);
 
                         // Because we are selecting a classification, we should ensure that the Detections Category is set to Animal
                         this.RecognitionSelections.AllDetections = false;
@@ -650,7 +686,7 @@ namespace Timelapse.Controls
             }
 
             // If we have a classification selected, highlight it
-            if (false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            if (null != this.ClassificationCategories && false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
             {
                 // Classification
                 this.ClassificationCategories.TryGetValue(this.RecognitionSelections.ClassificationCategoryNumber, out string selectedClassificationCategoryName);
@@ -781,6 +817,31 @@ namespace Timelapse.Controls
                 this.classificationsExist = true;
                 this.SetClassificationControlsToInitialValues();
             }
+
+            // Set the rank by confidence checkboxes to their initial value
+            if (this.RecognitionSelections.RankByDetectionConfidence == true)
+            {
+                this.RankByDetectionConfidenceCheckbox.IsChecked = true;
+            }
+            else if (this.RecognitionSelections.RankByClassificationConfidence == true)
+            {
+                this.RankByClassificationConfidenceCheckbox.IsChecked = true;
+            }
+            else
+            {
+                this.RankByNone.IsChecked = true;
+            }
+
+            if (false == this.classificationsExist)
+            {
+                this.RankByClassificationConfidenceCheckbox.Visibility = Visibility.Collapsed;
+                if (this.RankByClassificationConfidenceCheckbox.IsChecked == true)
+                {
+                    // We can't rank by classification if there are none!
+                    this.RankByNone.IsChecked = true;
+                }
+            }
+
             this.TryHighlightCurrentSelection();
             this.SendRecognitionSelectionEvent(false);
         }
@@ -801,6 +862,8 @@ namespace Timelapse.Controls
                 InterpretAllDetectionsAsEmpty = RecognitionSelections.InterpretAllDetectionsAsEmpty,
                 DetectionConfidenceLowerForUI = RecognitionSelections.DetectionConfidenceLowerForUI,
                 DetectionConfidenceHigherForUI = RecognitionSelections.DetectionConfidenceHigherForUI,
+                ClassificationConfidenceLowerForUI = RecognitionSelections.ClassificationConfidenceLowerForUI,
+                ClassificationConfidenceHigherForUI = RecognitionSelections.ClassificationConfidenceHigherForUI,
                 RankByDetectionConfidence = RecognitionSelections.RankByDetectionConfidence
             };
 
@@ -820,6 +883,8 @@ namespace Timelapse.Controls
                 this.RecognitionSelections.InterpretAllDetectionsAsEmpty = this.SavedRecognitionSelections.InterpretAllDetectionsAsEmpty;
                 this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SavedRecognitionSelections.DetectionConfidenceLowerForUI;
                 this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SavedRecognitionSelections.DetectionConfidenceHigherForUI;
+                this.RecognitionSelections.ClassificationConfidenceLowerForUI = this.SavedRecognitionSelections.ClassificationConfidenceLowerForUI;
+                this.RecognitionSelections.ClassificationConfidenceHigherForUI = this.SavedRecognitionSelections.ClassificationConfidenceHigherForUI;
                 this.RecognitionSelections.ClassificationCategoryNumber = this.SavedRecognitionSelections.ClassificationCategoryNumber;
                 this.RecognitionSelections.RankByDetectionConfidence = this.SavedRecognitionSelections.RankByDetectionConfidence;
             }
@@ -840,11 +905,13 @@ namespace Timelapse.Controls
         private void SetDetectionControlsToInitialValues()
         {
             // Set the current Confidence range in the detection sliders
+            this.ignoreSliderUpdate = true;
             this.SliderDetectionConf.LowerValue = Math.Round(this.RecognitionSelections.DetectionConfidenceLowerForUI, 2);
             this.SliderDetectionConf.HigherValue = Math.Round(this.RecognitionSelections.DetectionConfidenceHigherForUI, 2);
+            this.ignoreSliderUpdate = false;
 
             // Display the current Confidence range in the detections title
-            this.DisplayDetectionConfidenceRange(Math.Round(this.SliderDetectionConf.LowerValue, 2));
+            this.DisplayDetectionConfidenceRange();
 
             // Clear the counts for each detection category held in the DetectionCounts
             // This will also create an entry for each detection category as they don't already exist.
@@ -860,11 +927,13 @@ namespace Timelapse.Controls
                 return;
             }
             // Set the current Confidence range in the classification sliders
+            this.ignoreSliderUpdate = true;
             this.SliderClassificationConf.LowerValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceLowerForUI, 2);
             this.SliderClassificationConf.HigherValue = Math.Round(this.RecognitionSelections.ClassificationConfidenceHigherForUI, 2);
+            this.ignoreSliderUpdate = false;
 
             // Display the current Confidence range in the classifications title
-            this.DisplayClassificationConfidenceRange(Math.Round(this.SliderClassificationConf.LowerValue, 2), Math.Round(SliderClassificationConf.HigherValue, 2));
+            this.DisplayClassificationConfidenceRange();
 
             // Clear the counts for each classification category held in the DetectionCounts
             // This will also create an entry for each classification category as they don't already exist.
@@ -883,7 +952,7 @@ namespace Timelapse.Controls
             this.SliderDetectionConf.IsEnabled = enableAllControls;
 
             // Enable/disable the classification controls
-            this.ClassificationDataGridListBoxEnableState(enableAllControls, updateCursorToMatchState);
+            this.ClassificationDataGridEnableState(enableAllControls, updateCursorToMatchState);
             this.SliderClassificationConf.IsEnabled = enableAllControls;
 
             // Enable/disable the buttons and checkbox 
@@ -910,7 +979,7 @@ namespace Timelapse.Controls
             this.DataGridDetections.IsEnabled = enableState;
         }
 
-        private void ClassificationDataGridListBoxEnableState(bool enableState, bool updateCursorToMatchState)
+        private void ClassificationDataGridEnableState(bool enableState, bool updateCursorToMatchState)
         {
             if (updateCursorToMatchState)
             {
@@ -926,6 +995,16 @@ namespace Timelapse.Controls
         {
             this.GridClassifications.Visibility = Visibility.Collapsed;
             this.ClassificationColumnWidth.Width = new GridLength(0);
+        }
+
+        private void SlidersEnableState(bool enableState)
+        {
+            // Show/Hide the detection and classification slider
+            this.SliderDetectionConf.Visibility = enableState ? Visibility.Visible : Visibility.Hidden;
+            this.TBDetectionsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
+
+            this.SliderClassificationConf.Visibility = enableState ? Visibility.Visible : Visibility.Hidden;
+            this.TBClassificationsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
         }
         #endregion
 
@@ -976,19 +1055,14 @@ namespace Timelapse.Controls
         #endregion
 
         #region Display text feedback for Detection/Classification confidence range
-        private void DisplayDetectionConfidenceRange(double lowerConfidence)
+        private void DisplayDetectionConfidenceRange()
         {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {this.RecognitionSelections.DetectionConfidenceHigherForUI:f2})";
+            this.TBDetectionsCount.Text = $"({Math.Round(this.SliderDetectionConf.LowerValue, 2):f2} - {Math.Round(this.SliderDetectionConf.HigherValue, 2):f2})";
         }
 
-        private void DisplayDetectionConfidenceRange(double lowerConfidence, double higherConfidence)
+        private void DisplayClassificationConfidenceRange()
         {
-            this.TBDetectionsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
-        }
-
-        private void DisplayClassificationConfidenceRange(double lowerConfidence, double higherConfidence)
-        {
-            this.TBClassificationsCount.Text = $"({lowerConfidence:f2} - {higherConfidence:f2})";
+            this.TBClassificationsCount.Text = $"({Math.Round(this.SliderClassificationConf.LowerValue, 2):f2} - {Math.Round(this.SliderClassificationConf.HigherValue, 2):f2})";
         }
         #endregion
 
@@ -1052,7 +1126,7 @@ namespace Timelapse.Controls
             // Enable the controls  as needed, and sort the classifications by the classifications column
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                this.ClassificationDataGridListBoxEnableState(true, true);
+                this.ClassificationDataGridEnableState(true, true);
                 if (this.DataGridClassifications.Columns.Count > 1)
                 {
                     SortDataGrid(this.DataGridClassifications, 1, ListSortDirection.Ascending);
@@ -1094,8 +1168,9 @@ namespace Timelapse.Controls
                     if (category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel))
                     {
                         double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
-                        string symbol = lowerValue == 0 ? "=" : "<";
-                        category = $"{Constant.RecognizerValues.EmptyDetectionLabel} or Detections {symbol} {lowerValue}";
+                        category = lowerValue == 0 && RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty
+                        ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
                     }
                     CategoryCount cc = new CategoryCount(category, count);
                     this.DetectionCountsCollection.Add(cc);
@@ -1143,8 +1218,10 @@ namespace Timelapse.Controls
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
-                string symbol = lowerValue == 0 ? "=" : "<";
-                categoryCount.Category = $"{Constant.RecognizerValues.EmptyDetectionLabel} or Detections {symbol} {lowerValue}";
+                categoryCount.Category = lowerValue == 0 || (RecognitionSelections.RankByDetectionConfidence || RecognitionSelections.RankByClassificationConfidence)
+                        ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
+
                 categoryCount.NotifyPropertyChanged("Category");
             });
         }
@@ -1224,15 +1301,5 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        #region UNUSED (DELETE?)
-        private void RecognitionParametersInitializeAsDetections()
-        {
-            // Initialize parameters
-            RecognitionSelections.AllDetections = false;
-            RecognitionSelections.RankByDetectionConfidence = false;
-            CustomSelection.ShowMissingDetections = false;
-            CustomSelection.EpisodeShowAllIfAnyMatch = false;
-        }
-        #endregion
     }
 }

@@ -645,6 +645,12 @@ namespace Timelapse
             quickPasteEntries = QuickPasteOperations.QuickPasteEntriesFromJSON(DataHandler.FileDatabase, DataHandler.FileDatabase.ImageSet.QuickPasteAsJSON);
 
             DataHandler.FileDatabase.FileSelectionEnum = DataHandler.FileDatabase.GetCustomSelectionFromJSON();
+            if (DataHandler.FileDatabase.Database.TableExists(DBTables.Detections))
+            {
+                // Populate the detection categories
+                DataHandler.FileDatabase.CreateDetectionCategoriesDictionaryIfNeeded();
+                DataHandler.FileDatabase.CreateClassificationCategoriesDictionaryIfNeeded();
+            }
 
             // If recognitions are selected, we set the over-ride of which bounding boxes are displayed by expanding the range to include the selection confidence values.
             CustomSelection.SetDetectionRanges(DataHandler.FileDatabase.CustomSelection.RecognitionSelections);

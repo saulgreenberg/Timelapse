@@ -31,7 +31,7 @@ namespace Timelapse.Recognition
                 // Case 1. Tables already exist, so clear their contents as indicated.
                 // Always clear info and category tables, but
                 // Only clear detections and recognitions as indicated by the clearDBRecognitionData argument
-                ClearDetectionTables(database, true, true, true, clearDBRecognitionData, clearDBRecognitionData);
+                ClearDetectionTables(database, true, true, true, clearDBRecognitionData);
             }
             else
             {
@@ -93,18 +93,6 @@ namespace Timelapse.Recognition
 
             // Detections Video
             RecognitionDatabases.CreateDetectionsVideoTable(database);
-
-            // Classifications 
-            // TODO DELETE CLASSIFICATION STUFF
-            columnDefinitions = new List<SchemaColumnDefinition>
-            {
-                new SchemaColumnDefinition(ClassificationColumns.ClassificationID, Sql.IntegerType + Sql.PrimaryKey),
-                new SchemaColumnDefinition(ClassificationColumns.Category, Sql.StringType),
-                new SchemaColumnDefinition(ClassificationColumns.Conf,  Sql.Real),
-                new SchemaColumnDefinition(ClassificationColumns.DetectionID, Sql.IntegerType), // Foreign key: ImageID
-                new SchemaColumnDefinition("FOREIGN KEY ( " + ClassificationColumns.DetectionID + " )", "REFERENCES " + DBTables.Detections + " ( " + ClassificationColumns.DetectionID + " ) " + " ON DELETE CASCADE "),
-            };
-            database.CreateTable(DBTables.Classifications, columnDefinitions);
         }
 
         // This is its own method as we also invoke it elsewhere
@@ -123,7 +111,7 @@ namespace Timelapse.Recognition
         #endregion
 
         #region Public: Clear Detection Tables
-        public static void ClearDetectionTables(SQLiteWrapper database, bool clearInfo, bool clearDetectionCategories, bool clearClassificationCategories, bool clearDetections, bool clearClassifications)
+        public static void ClearDetectionTables(SQLiteWrapper database, bool clearInfo, bool clearDetectionCategories, bool clearClassificationCategories, bool clearDetections)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
@@ -141,8 +129,6 @@ namespace Timelapse.Recognition
                 detectionTables.Add(DBTables.Detections);
 
             }
-            if (clearClassifications) detectionTables.Add(DBTables.Classifications);
-
             if (detectionTables.Count > 0)
             {
                 database.DeleteAllRowsInTables(detectionTables);
@@ -154,7 +140,7 @@ namespace Timelapse.Recognition
         // Populate the various Detection Database Tables from the detection data structure.
         // The startDetectionID should be greater than any existing detection ID in the detection table. 
         // This is necessary to make sure we don't add duplicate keys if we are merging detections
-        public static void PopulateTables(Recognizer recognizer, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, long startDetectionID, long startClassificationID, IProgress<ProgressBarArguments> progress, int progressFrequency)
+        public static void PopulateTables(Recognizer recognizer, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, long startDetectionID, IProgress<ProgressBarArguments> progress, int progressFrequency)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(recognizer, nameof(recognizer));
@@ -246,10 +232,8 @@ namespace Timelapse.Recognition
             if (recognizer.images != null && recognizer.images.Count > 0)
             {
                 long detectionIndex = startDetectionID;
-                long classificationIndex = startClassificationID;
                 List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
                 List<List<ColumnTuple>> detectionVideoInsertionStatements = new List<List<ColumnTuple>>();
-                List<List<ColumnTuple>> classificationInsertionStatements = new List<List<ColumnTuple>>();
 
                 // Get a data table containing the ID, RelativePath, and File
                 // and create primary keys for the fields we will search for (for performance speedup)
@@ -399,21 +383,6 @@ namespace Timelapse.Recognition
                                     };
                                     detectionVideoInsertionStatements.Add(detectionVideoColumnsToUpdate);
                                 }
-
-                                //TODO DELETE CLASSIFICATION STUFF
-                                // If the detection has some classification info, then add that to the classifications data table
-                                foreach (Object[] classification in detection.classifications)
-                                {
-                                    List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>
-                                    {
-                                        new ColumnTuple(ClassificationColumns.ClassificationID, classificationIndex),
-                                        new ColumnTuple(ClassificationColumns.DetectionID, detection.detectionID),
-                                        new ColumnTuple(ClassificationColumns.Category, (string)classification[0]),
-                                        new ColumnTuple(ClassificationColumns.Conf, String.Format(CultureInfo.InvariantCulture, "{0}", (float)Double.Parse(classification[1].ToString()))),
-                                    };
-                                    classificationInsertionStatements.Add(classificationColumnsToUpdate);
-                                    classificationIndex++;
-                                }
                                 detectionIndex++;
                             }
                         }
@@ -436,9 +405,7 @@ namespace Timelapse.Recognition
                 }
                 detectionDB.Insert(DBTables.Detections, detectionInsertionStatements, progress, "Adding detections", 1000);
                 detectionDB.Insert(DBTables.DetectionsVideo, detectionVideoInsertionStatements, progress, "Adding detections for Video", 1000);
-                // TODO DELETE CLASSIFICATION STUFF
-                detectionDB.Insert(DBTables.Classifications, classificationInsertionStatements, progress, "Adding classifications", 1000);
-                fileDatabase.IndexCreateForDetectionsAndClassificationsIfNotExists();
+                fileDatabase.IndexCreateForDetectionsIfNotExists();
                 dataTable?.Dispose();
             }
         }

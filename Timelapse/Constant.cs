@@ -342,8 +342,9 @@ namespace Timelapse.Constant
         public const string Images = "Images";
         public const string Detections = "Detections";
         public const string DetectionsVideo = "DetectionsVideo";
-        public const string Classifications = "Classifications";
         public const string TmpCombinedTable = "TmpCombinedTable";
+        public const string Classifications = "Classifications"; // Kepty only for backwards compatability i.e., to update DB to merge old classification tables into the detection table
+
     }
 
     // Default Settings
@@ -888,6 +889,7 @@ namespace Timelapse.Constant
         public const string EmptyDetectionCategoryNumber = "0";
         public const string AllDetectionLabel = "All";
         public const string AnimalDetectionLabel = "animal";
+        public const string AnimalDetectionCategoryNumber = "1"; // This should only be used as the last resort
 
         // Detection/classifications whose confidence values are below these are removed from an
         // imported recognition file, as these are typically of little use. The determination of the actual value
