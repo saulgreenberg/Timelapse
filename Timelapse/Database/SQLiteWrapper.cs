@@ -1537,9 +1537,6 @@ namespace Timelapse.Database
                 }
 
                 return TableHasContent(tableName);
-                query = $"{Sql.SelectCountStarFrom} {tableName} {Sql.LimitOne}";
-                // If > 0 elements, then it both exists and has content so return true otherwise false
-                return ScalarGetScalarFromSelectAsInt(query) != 0;
             }
         }
 
