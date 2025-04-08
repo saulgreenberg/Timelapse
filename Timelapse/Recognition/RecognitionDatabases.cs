@@ -93,6 +93,18 @@ namespace Timelapse.Recognition
 
             // Detections Video
             RecognitionDatabases.CreateDetectionsVideoTable(database);
+
+            // Classifications - only used for backwards compatability
+            columnDefinitions = new List<SchemaColumnDefinition>
+            {
+                new SchemaColumnDefinition(ClassificationColumns.ClassificationID, Sql.IntegerType + Sql.PrimaryKey),
+                new SchemaColumnDefinition(ClassificationColumns.Category, Sql.StringType),
+                new SchemaColumnDefinition(ClassificationColumns.Conf,  Sql.Real),
+                new SchemaColumnDefinition(ClassificationColumns.DetectionID, Sql.IntegerType), // Foreign key: ImageID
+                new SchemaColumnDefinition("FOREIGN KEY ( " + ClassificationColumns.DetectionID + " )", "REFERENCES " + DBTables.Detections + " ( " + ClassificationColumns.DetectionID + " ) " + " ON DELETE CASCADE "),
+            };
+            database.CreateTable(DBTables.Classifications, columnDefinitions);
+
         }
 
         // This is its own method as we also invoke it elsewhere
