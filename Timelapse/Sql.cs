@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Globalization;
+using System.Windows.Forms;
 using Timelapse.Constant;
 using Timelapse.Enums;
 using Timelapse.Recognition;
+using Timelapse.SearchingAndSorting;
+using Control = Timelapse.Constant.Control;
 
 // ReSharper disable UnusedMember.Global
 namespace Timelapse
@@ -30,6 +33,7 @@ namespace Timelapse
         public const string Case = " CASE ";
         public const string CaseWhen = Case + " WHEN ";
         public const string Cast = " CAST ";
+        public const string Coalesce = " COALESCE ";
         public const string Count = " Count ";
         public const string CountStar = Count + OpenParenthesis + Star + CloseParenthesis;
         public const string CreateIndex = " CREATE INDEX ";
@@ -51,6 +55,7 @@ namespace Timelapse
         public const string DropTable = " DROP TABLE ";
         public const string DropTableIfExists = " DROP TABLE IF EXISTS ";
         public const string Else = " ELSE ";
+        public const string EmptyAsDoubleQuote = " '' ";
         public const string End = " END ";
         public const string EndTransaction = " END TRANSACTION ";
         public const string EndTransactionSemiColon = EndTransaction + Semicolon;
@@ -93,6 +98,7 @@ namespace Timelapse
         public const string Null = " NULL ";
         public const string NullAs = Null + " " + As;
         public const string NullAsPlaceHolder = NullAs + Placeholder;
+        public const string NullIf = " NULLIF ";
         public const string Ok = "ok";
         public const string On = " ON ";
         public const string OnConflict = " ON CONFLICT ";
@@ -213,26 +219,13 @@ namespace Timelapse
             {
                 phrase = Sql.SelectOne;
             }
-            //string phrase = useCountForm
-            //    ? Sql.SelectCount + Sql.OpenParenthesis + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.CloseParenthesis
-            //    : Sql.Select + Constant.DBTables.FileData + Sql.DotStar;
+
             return phrase + Sql.From + DBTables.FileData +
                 Sql.LeftJoin + DBTables.Detections +
                 Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID +
                 Sql.Equal + DBTables.Detections + Sql.Dot + DatabaseColumn.ID +
                 Sql.Where + DBTables.Detections + Sql.Dot + DatabaseColumn.ID + Sql.IsNull;
         }
-        //public static string SelectMissingDetections(bool useCountForm)
-        //{
-        //    string phrase = useCountForm
-        //        ? Sql.SelectCount + Sql.OpenParenthesis + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID + Sql.CloseParenthesis
-        //        : Sql.Select + Constant.DBTables.FileData + Sql.DotStar;
-        //    return phrase + Sql.From + Constant.DBTables.FileData +
-        //        Sql.LeftJoin + Constant.DBTables.Detections +
-        //        Sql.On + Constant.DBTables.FileData + Sql.Dot + Constant.DatabaseColumn.ID +
-        //        Sql.IdenticalToSet2 + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID +
-        //        Sql.Where + Constant.DBTables.Detections + Sql.Dot + Constant.DatabaseColumn.ID + Sql.IsNull;
-        //}
 
         /// <summary>
         /// Sql Phrase - Create partial query to return detections
@@ -348,31 +341,6 @@ namespace Timelapse
             }
             return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
                    Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID + Sql.Where + DetectionColumns.Classification + Sql.IsNotNull;
-
-            //string phrase = string.Empty;
-            //if (selectType == SelectTypesEnum.Count)
-            //{
-            //    phrase = Sql.SelectCountStarFromForm + Sql.OpenParenthesis + Sql.SelectDistinct;
-            //}
-            //else if (selectType == SelectTypesEnum.Star)
-            //{
-            //    phrase = Sql.SelectDistinct;
-            //}
-            //else if (selectType == SelectTypesEnum.One)
-            //{
-            //    phrase = Sql.SelectOne + Sql.From + Sql.OpenParenthesis + Sql.SelectDistinct;
-            //}
-
-            //phrase += DBTables.FileData + Sql.DotStar + Sql.From + DBTables.Classifications +
-            //        Sql.InnerJoin + DBTables.FileData + Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID +
-            //        Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
-
-            //// and now append INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-            //phrase += Sql.InnerJoin + DBTables.Detections + Sql.On +
-            //    DBTables.Detections + Sql.Dot + DetectionColumns.DetectionID + Sql.Equal +
-            //    DBTables.Classifications + "." + DetectionColumns.DetectionID;
-
-            //return phrase;
         }
 
         /// <summary>
@@ -546,6 +514,36 @@ namespace Timelapse
         public static string GetMaxColumnValue(string columnName, string tableName)
         {
             return Sql.Select + Sql.Max + Sql.OpenParenthesis + columnName + Sql.CloseParenthesis + Sql.From + tableName;
+        }
+
+        // A partial SQL phrase used as a prefix when selecting a Random sample
+        // Form literal: Select * from DataTable WHERE Id IN (SELECT Id FROM (
+        public static string GetRandomSamplePrefix()
+        {
+            // Select * from DataTable WHERE id IN (SELECT id FROM (
+            return $"{Sql.SelectStarFrom} {DBTables.FileData} {Sql.Where} {Constant.DatabaseColumn.ID} " +
+                     $"{Sql.In} {Sql.OpenParenthesis} {Sql.Select} {Constant.DatabaseColumn.ID} {Sql.From} {Sql.OpenParenthesis}";
+        }
+
+        public static string GetRandomSampleSuffix(int randomSampleCount)
+        {
+            return $"{Sql.CloseParenthesis} {Sql.OrderByRandom} {Sql.Limit} {randomSampleCount} {Sql.CloseParenthesis}";
+        }
+
+        public static string GetOrderByTerm(string sortingTerm)
+        {
+            return $"{Sql.OrderBy} {sortingTerm}";
+        }
+
+        public static string GetCommaThenTerm(string term)
+        {
+            return $"{Sql.Comma} {term}";
+        }
+
+        public static string GetCastCoalesceSorttermAsType(string sortTermDataLabel, string realOrIntType)
+        {
+            return $"{Sql.Cast} {Sql.OpenParenthesis} {Sql.Coalesce} {Sql.OpenParenthesis} {Sql.NullIf}" +
+                   $"{Sql.OpenParenthesis} {sortTermDataLabel} {Sql.Comma} {Sql.EmptyAsDoubleQuote} {Sql.CloseParenthesis} {Sql.Comma} '-1' {Sql.CloseParenthesis} {realOrIntType} {Sql.CloseParenthesis}";
         }
     }
 }

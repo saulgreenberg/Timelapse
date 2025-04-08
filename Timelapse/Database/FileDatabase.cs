@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using DialogUpgradeFiles;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -1133,19 +1134,14 @@ namespace Timelapse.Database
             if (CustomSelection == null)
             {
                 // If no custom selections are configure, then just use a standard query
-                query += Sql.SelectStarFrom + DBTables.FileData;
-
-                // Random selection - Add suffix
-                //if (this.CustomSelection.RandomSample > 0)
-                //{
-                //    query += ") ORDER BY RANDOM() LIMIT 10";
-                //}
+                query += $"{Sql.SelectStarFrom} {DBTables.FileData}";
             }
             else
             {
                 if (CustomSelection.RandomSample > 0)
                 {
-                    query += " Select * from DataTable WHERE id IN (SELECT id FROM ( ";
+                    // Select * from DataTable WHERE id IN (SELECT id FROM (
+                    query += SqlPhrase.GetRandomSamplePrefix();
                 }
 
                 // If its a pre-configured selection type, set the search terms to match that selection type
@@ -1182,33 +1178,12 @@ namespace Timelapse.Database
                         // This should only happen if the json was missing a detection animal category
                         return;
                     }
-                    if (CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
-                    {
-                        // Episode version of the query
-                        query += SqlPhrase.SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(CustomSelection.GetFilesWhere(true, true), CustomSelection.RecognitionSelections, animalDetectionCategoryNumber, CustomSelection.EpisodeNoteField, false);
-                        //Debug.Print("-----------Episode");
-                    }
-                    else
-                    {
-                        // Non-episode version of the query
-                        query += SqlPhrase.SelectDetections(SelectTypesEnum.Star);
-                    }
-                    // Non-episode version of the query
-                    //NEW
-                    // ADD: SORT, Random
-                    // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
-                    // Async call allows busyindicator to run smoothly
-                    //Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
-                    //GlobalReferences.TimelapseState.IsNewSelection = true;
-                    //filesTable = await Database.GetDataTableFromSelectAsync(query);
-                    //filesTable.PrimaryKey = new DataColumn[] { filesTable.Columns[Constant.DatabaseColumn.ID] }; // Set the primary key to the ID column
-                    //FileTable = new FileTable(filesTable);
-                    //return;
+                    query += SqlPhrase.SelectDetections(SelectTypesEnum.Star);
                 }
                 else
                 {
                     // Standard query (ie., no detections, no missing detections, no classifications 
-                    query += Sql.SelectStarFrom + DBTables.FileData;
+                    query += $"{Sql.SelectStarFrom} {DBTables.FileData}";
                 }
             }
 
@@ -1227,10 +1202,9 @@ namespace Timelapse.Database
             if (CustomSelection != null && CustomSelection.EpisodeShowAllIfAnyMatch && CustomSelection.EpisodeNoteField != string.Empty)
             {
                 string frontWrapper = SqlPhrase.CountOrSelectFilesInEpisodeIfOneFileMatchesFrontWrapper(DBTables.FileData, CustomSelection.EpisodeNoteField, false);
-                string backWrapper = Sql.CloseParenthesis + Sql.CloseParenthesis;
-                query = frontWrapper + query + backWrapper;
+                string backWrapper = $"{Sql.CloseParenthesis}{Sql.CloseParenthesis}";
+                query = $"{frontWrapper} {query} {backWrapper}";
             }
-
 
             // Sort by primary and secondary sort criteria if an image set is actually initialized (i.e., not null)
             if (ImageSet != null)
@@ -1304,13 +1278,15 @@ namespace Timelapse.Database
                              sortTerm[i].ControlType == Control.IntegerPositive)
                     {
                         // Its a counter or number type: modify sorting of blanks by transforming it into a '-1' and then by casting it as an integer
-                        term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Integer)";
+                        // Form Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Integer);
+                        term[i] = SqlPhrase.GetCastCoalesceSorttermAsType(sortTerm[i].DataLabel, Sql.AsInteger);
                     }
                     else if (sortTerm[i].ControlType == Control.DecimalAny ||
                              sortTerm[i].ControlType == Control.DecimalPositive)
                     {
                         // Its a decimal type: modify sorting of blanks by transforming it into a '-1' and then by casting it as a decimal
-                        term[i] = $"Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Real)";
+                        // Form: Cast(COALESCE(NULLIF({sortTerm[i].DataLabel}, ''), '-1') as Real)
+                        term[i] = term[i] = SqlPhrase.GetCastCoalesceSorttermAsType(sortTerm[i].DataLabel, Sql.AsReal);
                     }
                     else
                     {
@@ -1327,46 +1303,44 @@ namespace Timelapse.Database
                 // Random selection - Add suffix
                 if (CustomSelection != null && CustomSelection.RandomSample > 0)
                 {
-                    // Original form is  query += String.Format(" ) ORDER BY RANDOM() LIMIT {0} )", this.CustomSelection.RandomSample);
-                    query += Sql.CloseParenthesis + Sql.OrderByRandom + Sql.Limit + CustomSelection.RandomSample + Sql.CloseParenthesis;
-
+                    query += SqlPhrase.GetRandomSampleSuffix(CustomSelection.RandomSample);
                 }
 
                 if (!string.IsNullOrEmpty(rankSortingTerm))
                 {
                     // As there is a rank sort term, we insert that at the beginning of the sort order
-                    query += Sql.OrderBy + rankSortingTerm;
+                    query += SqlPhrase.GetOrderByTerm(rankSortingTerm);
                 }
                 if (!string.IsNullOrEmpty(term[0]))
                 {
                     if (string.IsNullOrEmpty(rankSortingTerm))
                     {
                         // Since there was no rank sort term inserted, we  need to insert an OrderBy
-                        query += Sql.OrderBy + term[0];
+                        query += SqlPhrase.GetOrderByTerm(term[0]);
                     }
                     else
                     {
                         // As we added a rankSorting term, we already have an OrderBy so we just insert a comma
-                        query += Sql.Comma + term[0];
+                        query += SqlPhrase.GetCommaThenTerm(term[0]);
                     }
 
                     // If there is a second sort key, add it here
                     if (!string.IsNullOrEmpty(term[1]))
                     {
-                        query += Sql.Comma + term[1];
+                        query += SqlPhrase.GetCommaThenTerm(term[1]);
                     }
                     // If there is a third sort key (which would only ever be 'File') add it here.
                     // NOTE: I am not sure if this will always work on every occassion, but my limited test says its ok.
                     if (!string.IsNullOrEmpty(term[2]))
                     {
-                        query += Sql.Comma + term[2];
+                        query += SqlPhrase.GetCommaThenTerm(term[2]);
                     }
                 }
             }
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
             GlobalReferences.TimelapseState.IsNewSelection = true;
             DataTable filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
@@ -3539,7 +3513,7 @@ namespace Timelapse.Database
                 dict1Flipped = dict1.ToDictionary(x => x.Value, x => x.Key);
                 dict2Flipped = dict2.ToDictionary(x => x.Value, x => x.Key);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // Just in case there is a duplicate value in the dictionary
                 return false;
@@ -4067,24 +4041,28 @@ namespace Timelapse.Database
             try
             {
                 // Get the stored custom selection, and determine custom selection state (all, relativepath or custom).
-                // Ig there is a problem in the customSelectionFromJson (eg if its null or has no search terms), it will return ALL
+                // If there is a problem in the customSelectionFromJson (eg if its null or has no search terms), it will return ALL
                 CustomSelection customSelectionFromJson = JsonConvert.DeserializeObject<CustomSelection>(ImageSet.SearchTermsAsJSON);
 
                 // Various checks (including null and several settings that could be confusing to the user)
                 if (customSelectionFromJson == null ||
                     customSelectionFromJson.SearchTerms == null ||
-                    customSelectionFromJson.SearchTerms.Count == 0 ||
-                    customSelectionFromJson.RandomSample != 0 ||
-                    customSelectionFromJson.ShowMissingDetections ||
-                    customSelectionFromJson.EpisodeShowAllIfAnyMatch)
+                    customSelectionFromJson.SearchTerms.Count == 0)
+                    //|||| customSelectionFromJson.RandomSample != 0 ||
+                    //customSelectionFromJson.ShowMissingDetections ||
+                    //customSelectionFromJson.EpisodeShowAllIfAnyMatch)
                 {
                     // Didn't pass the test. Use the default
                     CustomSelection = new CustomSelection(Controls);
                     return FileSelectionEnum.All;
                 }
 
+                // Reset both RandomSample and ShowMissingDetections so they are not enabled.
+                customSelectionFromJson.RandomSample = 0;
+                customSelectionFromJson.ShowMissingDetections = false;
+
                 // At this point, customSelectionFromJson should have a valid value
-                List<SearchTerm> stlFromJson = customSelectionFromJson.SearchTerms;
+                List < SearchTerm> stlFromJson = customSelectionFromJson.SearchTerms;
 
                 // Check various recognition settings.
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us

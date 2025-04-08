@@ -282,7 +282,10 @@ namespace Timelapse.Controls
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-
+            this.EnableOrDisableAllControls(ShowMissingDetectionsCheckbox.IsChecked == false, true, false, true);
+            this.Database.CustomSelection.ShowMissingDetections = ShowMissingDetectionsCheckbox.IsChecked == true;
+            // Send a recognition selection event to the parent
+            this.SendRecognitionSelectionEvent(false);
         }
 
         // Disable the classification radio button if no classification is selected and switches Rank to None
@@ -292,7 +295,7 @@ namespace Timelapse.Controls
             this.RankByClassificationConfidenceCheckbox.IsEnabled = isClassificationSelected;
             if (false == isClassificationSelected && true == this.RankByClassificationConfidenceCheckbox.IsChecked)
             {
-                this.RankByNone.IsChecked = true;
+                this.RankByNoneCheckbox.IsChecked = true;
             }
         }
 
@@ -826,7 +829,7 @@ namespace Timelapse.Controls
             }
             else
             {
-                this.RankByNone.IsChecked = true;
+                this.RankByNoneCheckbox.IsChecked = true;
             }
 
             if (false == this.classificationsExist)
@@ -835,9 +838,13 @@ namespace Timelapse.Controls
                 if (this.RankByClassificationConfidenceCheckbox.IsChecked == true)
                 {
                     // We can't rank by classification if there are none!
-                    this.RankByNone.IsChecked = true;
+                    this.RankByNoneCheckbox.IsChecked = true;
                 }
             }
+
+            // Set the show missing detections checkbox to its initial value
+            this.ShowMissingDetectionsCheckbox.IsChecked = this.CustomSelection.ShowMissingDetections;
+
 
             this.TryHighlightCurrentSelection();
             this.SendRecognitionSelectionEvent(false);
@@ -861,7 +868,7 @@ namespace Timelapse.Controls
                 DetectionConfidenceHigherForUI = RecognitionSelections.DetectionConfidenceHigherForUI,
                 ClassificationConfidenceLowerForUI = RecognitionSelections.ClassificationConfidenceLowerForUI,
                 ClassificationConfidenceHigherForUI = RecognitionSelections.ClassificationConfidenceHigherForUI,
-                RankByDetectionConfidence = RecognitionSelections.RankByDetectionConfidence
+                RankByDetectionConfidence = RecognitionSelections.RankByDetectionConfidence,
             };
 
             this.ShowMissingDetections = CustomSelection.ShowMissingDetections;
@@ -942,7 +949,7 @@ namespace Timelapse.Controls
         #region Enable/Disable controls
         // Disable all the recognition controls, usually because there is nothing to show
         // This is likely redundant, as the recognitions selector should NOT be created if there is nothing to show.
-        private void EnableOrDisableAllControls(bool enableAllControls, bool enableCancelButton, bool updateCursorToMatchState)
+        private void EnableOrDisableAllControls(bool enableAllControls, bool enableCancelButton, bool updateCursorToMatchState, bool enableShowMissingDetectionsCheckbox = false)
         {
             // Enable/disable the detection datagrid and detection slider
             this.DetectionDataGridEnableState(enableAllControls, updateCursorToMatchState);
@@ -950,13 +957,14 @@ namespace Timelapse.Controls
 
             // Enable/disable the classification controls
             this.ClassificationDataGridEnableState(enableAllControls, updateCursorToMatchState);
-            this.SliderClassificationConf.IsEnabled = enableAllControls;
-
+            //this.SliderClassificationConf.IsEnabled = enableAllControls;
+            this.SlidersEnableState(enableAllControls); 
             // Enable/disable the buttons and checkbox 
             this.BtnCountRecognitions.IsEnabled = enableAllControls;
             this.RankByDetectionConfidenceCheckbox.IsEnabled = enableAllControls;
             this.RankByClassificationConfidenceCheckbox.IsEnabled = enableAllControls;
-            this.ShowMissingDetectionsCheckbox.IsEnabled = enableAllControls;
+            this.RankByNoneCheckbox.IsEnabled = enableAllControls;
+            this.ShowMissingDetectionsCheckbox.IsEnabled = enableShowMissingDetectionsCheckbox || enableAllControls;
 
             // Adjust all label colors i.e., disabled is gray, enabled is black
             Brush labelColor = enableAllControls ? Brushes.Black : Brushes.DarkGray;
@@ -964,7 +972,12 @@ namespace Timelapse.Controls
             this.TBClassificationsLabel.Foreground = labelColor;
             this.RankByDetectionConfidenceCheckbox.Foreground = labelColor;
             this.RankByClassificationConfidenceCheckbox.Foreground = labelColor;
-            this.ShowMissingDetectionsCheckbox.Foreground = labelColor;
+            this.RankByNoneCheckbox.Foreground = labelColor;
+            if (false == enableShowMissingDetectionsCheckbox)
+            {
+                this.ShowMissingDetectionsCheckbox.Foreground = labelColor;
+            }
+            this.TextBlockSortAllByLabel.Foreground = labelColor;
         }
 
         private void DetectionDataGridEnableState(bool enableState, bool updateCursorToMatchState)
@@ -997,11 +1010,13 @@ namespace Timelapse.Controls
         private void SlidersEnableState(bool enableState)
         {
             // Show/Hide the detection and classification slider
-            this.SliderDetectionConf.Visibility = enableState ? Visibility.Visible : Visibility.Hidden;
+            this.SliderDetectionConf.IsEnabled = enableState;
             this.TBDetectionsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
-
-            this.SliderClassificationConf.Visibility = enableState ? Visibility.Visible : Visibility.Hidden;
+            this.SliderDetectionConf.RangeBackground = enableState ? SystemColors.HighlightBrush : Brushes.DarkGray;
+            
+            this.SliderClassificationConf.IsEnabled = enableState;
             this.TBClassificationsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
+            this.SliderClassificationConf.RangeBackground = enableState ? Brushes.SaddleBrown : Brushes.DarkGray;
         }
         #endregion
 
@@ -1167,7 +1182,7 @@ namespace Timelapse.Controls
                         double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                         category = lowerValue == 0 && RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
-                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThanOrEqual} {lowerValue}";
                     }
                     CategoryCount cc = new CategoryCount(category, count);
                     this.DetectionCountsCollection.Add(cc);
@@ -1217,7 +1232,7 @@ namespace Timelapse.Controls
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                 categoryCount.Category = lowerValue == 0 || (RecognitionSelections.RankByDetectionConfidence || RecognitionSelections.RankByClassificationConfidence)
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
-                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives < {lowerValue}";
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThanOrEqual} {lowerValue}";
 
                 categoryCount.NotifyPropertyChanged("Category");
             });

@@ -13,7 +13,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="250"/>
+                <RowDefinition Height="200"/>
 
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions >
@@ -73,10 +73,14 @@
                     <DataGrid.Resources>
                         <Style TargetType="{x:Type DataGridCell}">
                             <Style.Triggers>
-                                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="DataGridCell.IsSelected" Value="True" />
+                                        <Condition Property="IsEnabled" Value="True" />
+                                    </MultiTrigger.Conditions>
                                     <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
                                     <Setter Property="Foreground" Value="White" />
-                                </Trigger>
+                                </MultiTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.Resources>
@@ -145,10 +149,14 @@
                     <DataGrid.Resources>
                         <Style TargetType="{x:Type DataGridCell}">
                             <Style.Triggers>
-                                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="DataGridCell.IsSelected" Value="True" />
+                                        <Condition Property="IsEnabled" Value="True" />
+                                    </MultiTrigger.Conditions>
                                     <Setter Property="Background" Value="SaddleBrown" />
                                     <Setter Property="Foreground" Value="White" />
-                                </Trigger>
+                                </MultiTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.Resources>
@@ -164,8 +172,9 @@
                     </StackPanel>
                     <Button Name="BtnCountRecognitions" Content ="Count recognitions" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
                 </StackPanel>
+
                 <!-- Sorting by Confidence -->
-                <TextBlock Text="Sort all by:" FontWeight="Bold" Margin="0,10,0,0"/>
+                <TextBlock Name="TextBlockSortAllByLabel" Text="Sort all by:" FontWeight="Bold" Margin="0,10,0,0"/>
 
                 <!-- Rank By Confidence Checkbox-->
                 <StackPanel Name="SPRadioButtonsRankBy" Orientation="Vertical">
@@ -185,7 +194,7 @@
                              Checked="RankByConfidence_CheckedChanged" 
                              ToolTip="Returns all selected files regardless of its confidence&#10;sorted by classification confidence and then by detection confidence"/>
 
-                    <RadioButton Name="RankByNone" 
+                    <RadioButton Name="RankByNoneCheckbox" 
                              GroupName="RankByRadioButtons" 
                              Tag="None"
                              Content="none" Margin="5,2,0,0" 
@@ -194,9 +203,10 @@
                              ToolTip="Returns all selected files within the chosen confidence range"/>
                 </StackPanel>
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files&#10;the recognizer did not&#10; process" 
-                          IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,135,0,0" 
+                          IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,15,0,0" 
+                          ToolTip="Shows only files that were not processed by the image recognizer&#10;i.e.,files that were not mentioned in the recognition file"
                           Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
-                
+
             </StackPanel>
         </Grid>
     </Grid>
