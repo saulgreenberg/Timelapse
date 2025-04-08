@@ -91,7 +91,7 @@ namespace Timelapse.Recognition
                     lowerBound = 0;
                     upperBound = DetectionConfidenceLowerForUI - justAboveZero < 0 
                         ? 0 
-                        : DetectionConfidenceLowerForUI; 
+                        : DetectionConfidenceLowerForUI - justAboveZero; 
                 }
                 else if (AllDetections)
                 {

@@ -1182,7 +1182,7 @@ namespace Timelapse.Controls
                         double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                         category = lowerValue == 0 && RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
-                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThanOrEqual} {lowerValue}";
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThan} {lowerValue}";
                     }
                     CategoryCount cc = new CategoryCount(category, count);
                     this.DetectionCountsCollection.Add(cc);
@@ -1232,7 +1232,7 @@ namespace Timelapse.Controls
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                 categoryCount.Category = lowerValue == 0 || (RecognitionSelections.RankByDetectionConfidence || RecognitionSelections.RankByClassificationConfidence)
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
-                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThanOrEqual} {lowerValue}";
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThan} {lowerValue}";
 
                 categoryCount.NotifyPropertyChanged("Category");
             });
