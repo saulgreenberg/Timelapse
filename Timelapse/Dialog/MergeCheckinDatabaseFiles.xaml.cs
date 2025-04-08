@@ -161,7 +161,7 @@ namespace Timelapse.Dialog
 
                     // Now check if the templates are compatable
                     // TODO: MAYBE return a more specific error message if the error is in the metadata?
-                    SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath); 
+                    SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
                     int levelsToIgnore = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath).Split(Path.DirectorySeparatorChar).Length;
                     sourceFileInfo.DatabaseFileError =
                         MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb, levelsToIgnore);
@@ -190,13 +190,25 @@ namespace Timelapse.Dialog
                         continue;
                     }
 
-                    // e. Do the merge
+                    // e. Update detection categories in source if needed
+                    MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
+                        Constant.DBTables.DetectionCategories, Constant.DetectionCategoriesColumns.Category, Constant.DetectionCategoriesColumns.Label);
+
+                    MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
+                        Constant.DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Category, Constant.ClassificationCategoriesColumns.Label);
+                    //MergeDatabases.UpdateDetectionCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb);
+                    //MergeDatabases.UpdateClassificationCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb);
+
+                    // f. Update classification categorys in source if needed
+                    // g. Do the merge
                     sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
                 }
                 return selectedSourceDdbFiles;
 
             }).ConfigureAwait(true);
         }
+
+
         #endregion
 
         #region CheckInButton Callback
@@ -231,6 +243,13 @@ namespace Timelapse.Dialog
                 destinationDdb, destinationDdbPath,
                 SelectedDdbFiles,
                 Progress, GlobalReferences.CancelTokenSource).ConfigureAwait(true);
+
+            // Update the detection and classification category tables
+            // The above may have altered the two category dictionaries, so lets update them
+            this.fileDatabase.detectionCategoriesDictionary = null;
+            this.fileDatabase.CreateDetectionCategoriesDictionaryIfNeeded();
+            this.fileDatabase.classificationCategoriesDictionary = null;
+            this.fileDatabase.CreateClassificationCategoriesDictionaryIfNeeded();
 
             // Turn off progress indicators
             BusyCancelIndicator.EnableForSelection(false);
@@ -364,8 +383,7 @@ namespace Timelapse.Dialog
             {
                 if (sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.Ok ||
                     sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.OkButOpenedWithAnOlderTimelapseVersion ||
-                    sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent) 
-                    //|| sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.IncompatibleVersion)
+                    sourceFileInfo.DatabaseFileError == DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent)
                 {
                     p1.Inlines.Add($"   \u2713 {sourceFileInfo.ShortPathDisplayName}{Environment.NewLine}");
                 }

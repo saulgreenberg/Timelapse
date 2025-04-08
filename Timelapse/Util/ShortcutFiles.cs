@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IWshRuntimeLibrary;
 using Shell32;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using File = System.IO.File;
 using FileAttributes = System.IO.FileAttributes;
 using Folder = Shell32.Folder;

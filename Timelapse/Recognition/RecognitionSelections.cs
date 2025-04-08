@@ -1,6 +1,5 @@
 ﻿using System;
 using Timelapse.Constant;
-using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
 

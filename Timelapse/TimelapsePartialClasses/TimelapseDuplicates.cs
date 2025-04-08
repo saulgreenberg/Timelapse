@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,7 +10,6 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
-using Timelapse.Recognition;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse

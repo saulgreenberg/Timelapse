@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -3812,6 +3811,10 @@ namespace Timelapse.Database
                 detectionCategoriesDictionary = new Dictionary<string, string>();
                 try
                 {
+                    if (this.DoesTableExist(Constant.DBTables.DetectionCategories) == false)
+                    {
+                        return;
+                    }
                     using (DataTable dataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.DetectionCategories))
                     {
                         int dataTableRowCount = dataTable.Rows.Count;
@@ -3866,6 +3869,10 @@ namespace Timelapse.Database
                 classificationCategoriesDictionary = new Dictionary<string, string>();
                 try
                 {
+                    if (this.DoesTableExist(Constant.DBTables.ClassificationCategories) == false)
+                    {
+                        return;
+                    }
                     using (DataTable dataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationCategories))
                     {
                         int dataTableRowCount = dataTable.Rows.Count;

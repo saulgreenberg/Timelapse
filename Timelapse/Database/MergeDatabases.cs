@@ -520,6 +520,68 @@ namespace Timelapse.Database
         }
         #endregion
 
+        #region Update Detection and Classification categories in the various tables in the srcDDB to match those in the destinationDdb
+        // When merging a srcDdb into a destinationDdb, category numbers for the DetectionCategory and ClassificationCategory tables may not match
+        // as they can change between different runs of a recognizer. However, the actual category labels (e.g., animal, bear) should be the same.
+        // This method will update the source database so that the category numbers will match those in the destination database when the actual merge is done.
+        // The various category numbers as stored the provided Cateogries table and in the detection table are updated as well.
+        public static bool UpdateCategoriesInSourceDdbIfNeeded(SQLiteWrapper sourceDdb, SQLiteWrapper destinationDdb, string CategoriesTable, string categoryColumn, string categoryLabelColumn)
+        {
+            List<KeyValuePair<string, string>> categoryMapList = new List<KeyValuePair<string, string>>();
+
+            if (sourceDdb.TableExists(CategoriesTable) == false || destinationDdb.TableExists(CategoriesTable) == false)
+            {
+                // Updates only needed if both tables have a category table
+                return false;
+            }
+            DataTable srcCategoriesDataTable = sourceDdb.GetDataTableFromSelect($"{Sql.SelectStarFrom} {CategoriesTable}");
+            DataTable destCategoriesDataTable = destinationDdb.GetDataTableFromSelect($"{Sql.SelectStarFrom} {CategoriesTable}");
+            if (destCategoriesDataTable.Rows.Count == 0 || srcCategoriesDataTable.Rows.Count == 0)
+            {
+                // No need to update the source database
+                return false;
+            }
+            foreach (DataRow srcRow in srcCategoriesDataTable.Rows)
+            {
+                string srcCategory = (string)srcRow[categoryColumn];
+                string srcCategoryLabel = (string)srcRow[categoryLabelColumn];
+                DataRow[] result = destCategoriesDataTable.Select($"{categoryLabelColumn} = {Sql.Quote(srcCategoryLabel)}");
+                if (result.Length > 0)
+                {
+                    if ((string)result[0][categoryColumn] != srcCategory)
+                    {
+                        categoryMapList.Add(new KeyValuePair<string, string>(srcCategory, (string)result[0][categoryColumn]));
+                    }
+                }
+            }
+
+            if (categoryMapList.Count == 0)
+            {
+                // No need to update the source database
+                return false;
+            }
+
+            // Update the Category table in the source
+            string query = $"{Sql.Update} {CategoriesTable} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
+            foreach (KeyValuePair<string, string> categoryMap in categoryMapList)
+            {
+                query += $"{Sql.When} {categoryColumn} {Sql.Equal} {Sql.Quote(categoryMap.Key)} {Sql.Then} {Sql.Quote(categoryMap.Value)}";
+            }
+            query += $"{Sql.Else} {categoryColumn} {Sql.End}";
+            sourceDdb.ExecuteNonQuery(query);
+
+            // Update the categories in the Detection table 
+            query = $"{Sql.Update} {DBTables.Detections} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
+            foreach (KeyValuePair<string, string> categoryMap in categoryMapList)
+            {
+                query += $"{Sql.When} {categoryColumn} {Sql.Equal} {Sql.Quote(categoryMap.Key)} {Sql.Then} {Sql.Quote(categoryMap.Value)}";
+            }
+            query += $"{Sql.Else} {categoryColumn} {Sql.End}";
+            sourceDdb.ExecuteNonQuery(query);
+            return true;
+        }
+        #endregion
+
         #region Merge a source database into the destinaton database
 
         // Before calling this, checks should have been done to:

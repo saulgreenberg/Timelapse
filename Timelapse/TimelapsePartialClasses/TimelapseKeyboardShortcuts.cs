@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Xml.Linq;
 using Timelapse.ControlsMetadata;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;

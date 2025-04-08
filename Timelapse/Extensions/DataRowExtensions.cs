@@ -1,5 +1,4 @@
-﻿using MS.WindowsAPICodePack.Internal;
-using System;
+﻿using System;
 using System.Data;
 using System.Diagnostics;
 using Timelapse.Constant;

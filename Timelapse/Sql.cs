@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 using Timelapse.Constant;
 using Timelapse.Enums;
 using Timelapse.Recognition;
-using Timelapse.SearchingAndSorting;
-using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 
 // ReSharper disable UnusedMember.Global
 namespace Timelapse
@@ -30,7 +27,8 @@ namespace Timelapse
         public const string BeginTransaction = " BEGIN TRANSACTION ";
         public const string BeginTransactionSemiColon = BeginTransaction + Semicolon;
         public const string Between = " BETWEEN ";
-        public const string CaseWhen = " CASE WHEN ";
+        public const string Case = " CASE ";
+        public const string CaseWhen = Case + " WHEN ";
         public const string Cast = " CAST ";
         public const string Count = " Count ";
         public const string CountStar = Count + OpenParenthesis + Star + CloseParenthesis;

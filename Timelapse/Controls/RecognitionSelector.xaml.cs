@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows;
 using Timelapse.DataStructures;
 using System.Linq;
@@ -20,11 +19,9 @@ using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Timelapse.EventArguments;
 using Timelapse.Constant;
-using Timelapse.State;
 using Cursors = System.Windows.Input.Cursors;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using static System.Windows.Forms.AxHost;
 
 namespace Timelapse.Controls
 {

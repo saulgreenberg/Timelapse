@@ -15,7 +15,6 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit;
 using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
 using Control = Timelapse.Constant.Control;
