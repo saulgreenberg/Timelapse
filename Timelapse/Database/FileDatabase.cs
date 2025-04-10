@@ -50,7 +50,7 @@ namespace Timelapse.Database
 
         // The current file selection (All, Custom, etc.)
         public FileSelectionEnum FileSelectionEnum { get; set; } = FileSelectionEnum.All;
-        public CustomSelection CustomSelection { get; private set; }
+        public CustomSelection CustomSelection { get; set; }
 
         /// <summary>Gets the file name of the database on disk.</summary>
         public string FileName { get; private set; }

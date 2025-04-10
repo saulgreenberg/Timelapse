@@ -8,6 +8,7 @@ namespace Timelapse.SearchingAndSorting
     /// <summary>
     /// A SearchTerm stores the search criteria for each column
     /// </summary>
+    [Serializable]
     public class SearchTerm
     {
         #region Public Properties

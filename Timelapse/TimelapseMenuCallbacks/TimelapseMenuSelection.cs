@@ -164,7 +164,7 @@ namespace Timelapse
                 }
                 folderList = newFolderList;
             }
-           
+
             this.tv.DontInvoke = true;
             this.tv.SetTreeViewContentsToRelativePathList(folderList);
             this.tv.DontInvoke = false;
@@ -251,7 +251,8 @@ namespace Timelapse
             }
 
             // show the dialog and process the results
-
+            // We save the custom selections, so we can restore them if the user cancels the dialog
+            CustomSelection savedCustomSelection = Util.ObjectUtillities.DeepClone(DataHandler.FileDatabase.CustomSelection);
             CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(this, DataHandler.FileDatabase, DataEntryControls, DataHandler.ImageCache.Current, DataHandler.FileDatabase.CustomSelection.RecognitionSelections, this.Arguments)
             {
                 Owner = this
@@ -278,6 +279,7 @@ namespace Timelapse
                     MenuItemSelectByRelativePath.IsChecked ||
                     MenuItemSelectFilesMarkedForDeletion.IsChecked;
                 MenuItemSelectCustomSelection.IsChecked = !otherMenuItemIsChecked;
+                this.DataHandler.FileDatabase.CustomSelection = savedCustomSelection;
             }
         }
         #endregion

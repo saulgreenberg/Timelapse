@@ -8,6 +8,7 @@ namespace Timelapse.Recognition
     /// <summary>
     /// A class used by Custom Selection (and the Custom Selection Dialog) to set the selection criteria on detections
     /// </summary>
+    [Serializable]
     public class RecognitionSelections
     {
         #region Public Properties
