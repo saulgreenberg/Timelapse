@@ -370,7 +370,7 @@ namespace Timelapse.Database
         // The column names and values to update or insert are provided in the column tuples. 
         // The primaryKeyTuple must be the primary key and its value (which are used to detect conflict, and the indicate Where, and to include as name/value in the insert portion)
         public void UpsertRow(string tableName, ColumnTuple primaryKeyTuple, List<ColumnTuple> columnTuples)
-        { 
+        {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnTuples, nameof(columnTuples));
             if (columnTuples.Count == 0) return;
@@ -1018,7 +1018,7 @@ namespace Timelapse.Database
             {
                 return;
             }
-           
+
             try
             {
                 using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
@@ -1473,7 +1473,7 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Drop Table
+        #region Drop Table / Vacuum
         /// <summary>
         /// Drop the database table 'tableName' from the connected database.
         /// </summary>
@@ -1487,7 +1487,7 @@ namespace Timelapse.Database
         }
         private static void DropTable(SQLiteConnection connection, string tableName)
         {
-            // Turn foreign keys oof, do the operaton, then turn it backon. 
+            // Turn foreign keys off, do the operaton, then turn it backon. 
             // This is because if we drop a table that has foreign keys in it, we need to make sure foreign keys are off
             // as otherwise it will delete the foreign key table contents.
             PragmaSetForeignKeys(connection, false);
@@ -1500,6 +1500,21 @@ namespace Timelapse.Database
             }
 
             PragmaSetForeignKeys(connection, true);
+        }
+
+        /// <summary>
+        /// Vacuum the connected database.
+        /// </summary>
+        public void Vacuum()
+        {
+            using (SQLiteConnection connection = GetNewSqliteConnection(ConnectionString))
+            {
+                connection.Open();
+                using (SQLiteCommand command = new SQLiteCommand(Sql.Vacuum, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
         }
         #endregion
 

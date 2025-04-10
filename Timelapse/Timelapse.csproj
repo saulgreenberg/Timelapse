@@ -532,6 +532,7 @@
     <Compile Include="Util\IsCondition.cs" />
     <Compile Include="Util\JsonConverters.cs" />
     <Compile Include="Util\Numbers.cs" />
+    <Compile Include="Util\ObjectUtillities.cs" />
     <Compile Include="Util\ShortcutFiles.cs" />
     <Compile Include="Util\ValidationCallbacks.cs" />
     <Compile Include="Util\ViewModelBase.cs" />
@@ -1140,6 +1141,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

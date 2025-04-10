@@ -159,6 +159,7 @@ namespace Timelapse
         public const string UnionAll = " UNION ALL";
         public const string Update = " UPDATE ";
         public const string Using = " USING ";
+        public const string Vacuum = " VACUUM ";
         public const string Values = " VALUES ";
         public const string When = " WHEN ";
         public const string Where = " WHERE ";

@@ -15,7 +15,9 @@ namespace Timelapse.SearchingAndSorting
 {
     /// <summary>
     /// Class CustomSelection holds a list search term particles, each reflecting criteria for a given field
+    /// Note: Serializable is necessary to allow the CustomSelection to be serialized
     /// </summary>
+    [Serializable]
     public class CustomSelection
     {
         #region Public Properties
@@ -33,15 +35,6 @@ namespace Timelapse.SearchingAndSorting
         // Episode-specific data
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
         public string EpisodeNoteField { get; set; } = string.Empty;
-
-        // Duplicates
-        // NO LONGER NEEDED
-        // This string will be set to a search term immediately after a duplicate record is created
-        // e.g. (RelativePath = '<duplicate.RelativePath>' AND File = 'duplicate.File') 
-        // Its purpose is to include the duplicate in the selected files immediately after a duplicate is created
-        // While this normally occurs when the selection is to (say) All files, the duplicate is excluded if the selection 
-        // was e.g., a Custom selection to a particular field value, as duplicates normally set the data fields back to their defaults.
-        //public Tuple<string, string> DuplicatesRelativePathAndFileTuple { get; set; } = null;
 
         #endregion
 

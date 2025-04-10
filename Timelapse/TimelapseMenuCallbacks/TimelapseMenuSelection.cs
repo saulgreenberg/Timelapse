@@ -250,7 +250,8 @@ namespace Timelapse
                 DataHandler.FileDatabase.CustomSelection.SetDateTimes(defaultDate);
             }
 
-            // show the dialog and process the resuls
+            // show the dialog and process the results
+
             CustomSelectionWithEpisodes customSelection = new CustomSelectionWithEpisodes(this, DataHandler.FileDatabase, DataEntryControls, DataHandler.ImageCache.Current, DataHandler.FileDatabase.CustomSelection.RecognitionSelections, this.Arguments)
             {
                 Owner = this

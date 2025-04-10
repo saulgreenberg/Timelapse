@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using DialogUpgradeFiles;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -1340,7 +1339,7 @@ namespace Timelapse.Database
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            // Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
             GlobalReferences.TimelapseState.IsNewSelection = true;
             DataTable filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
@@ -3403,13 +3402,6 @@ namespace Timelapse.Database
                         }
                         dbStartingDetectionID++;
 
-                        // As we may be inserting classification records as well, get the max ClassificationID, and add 1 to it. This will be the starting classificationID for insertions
-                        //if (Database.TableExistsAndNotEmpty(DBTables.Classifications))
-                        //{
-                        //    dbStartingClassificationID = Database.ScalarGetMaxValueAsLong(DBTables.Classifications, ClassificationColumns.ClassificationID);
-                        //    dbStartingClassificationID++;
-                        //}
-
                         // Foreach  detection, check if it exists in the database detection table.
                         // If it does, delete all references to that file (via the ID) in the database
                         progress.Report(new ProgressBarArguments(0, "Comparing recognitions. Please wait...", true, true));
@@ -4217,10 +4209,9 @@ namespace Timelapse.Database
 
         #region Update Old-style Classification table
         // Timelapse version 2.3.2.9 changed how recognition tables were managed. 
-        // Prior versions could include a separate detection and classification table.
+        // Prior versions includef a separate detection and classification table.
         // The new version merges the classification data into the detection table
-        // While we still need a classification table to be present for backwards compatability, we clear its data.
-        // This means that pre=2.3.2.9 versions will not be able to access the classification data
+        // As this breaks backwards compatability, pre2.3.2.9 versions will not be able to open these databases.
         public void UpdateOldStyleRecognitionTablesIfNeeded()
         {
             // First, update the Detection table to include the new columns
@@ -4284,12 +4275,11 @@ namespace Timelapse.Database
             }
             Database.Update(DBTables.Detections, columnsTuplesWithWhereList);
 
-            // For backwards compatability we need the classification table to be present.
-            // While we can't drop it (at least not for now), we can delete its data.
-            // Note that this means that version prior to 2.3.2.8 will not be able to access
-            // classification data on updated ddb files
-            this.Database.DeleteAllRowsInTables(new List<string>() { DBTables.Classifications });
-            //this.Database.DropTable(DBTables.Classifications);
+            // Versions prior to 2.3.2.8 will not be able to access the classification data as it is being dropped.
+            //  as it crashes if the custom select tries to use classifications.
+            // This is why we don't allow versions at or after 2.3.2.9 to open earlier databases.
+            this.Database.DropTable(DBTables.Classifications);
+            this.Database.Vacuum();
         }
         #endregion
 
