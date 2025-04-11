@@ -232,6 +232,9 @@ namespace TimelapseTemplateEditor.EditorCode
                         cell.Background = EditorConstant.NotEditableCellColor;
                         cell.Foreground = Brushes.Gray;
                         cell.SetValue(System.Windows.Controls.Control.IsTabStopProperty, false);  // Disallow tabbing in non-editable fields
+                        
+                        // This actually disallows editing 
+                        cell.IsEditing = false; 
 
                         // if cell has a checkbox, also disable it.
                         if (cellContent != null)
@@ -244,6 +247,7 @@ namespace TimelapseTemplateEditor.EditorCode
                     }
                     else
                     {
+                        // An editable cell
                         cell.ClearValue(System.Windows.Controls.Control.BackgroundProperty); // otherwise when scrolling cells offscreen get colored randomly
                         cell.SetValue(System.Windows.Controls.Control.IsTabStopProperty, true);
                         // if cell has a checkbox, enable it.
