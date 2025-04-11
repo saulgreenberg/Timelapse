@@ -902,9 +902,9 @@ namespace Timelapse.Constant
         // Recognizer defaults. Different versions of Megadetector produce different confidence values.
         // The values below reflect  Megadetector v4, which is the likely detector if no overrides 
         // were set  in the Detection json file
-        public const float DefaultTypicalDetectionThresholdIfUnknown = 0.8f;        // Appropriate for Megadetector v4
-        public const float DefaultConservativeDetectionThresholdIfUnknown = 0.3f;   // Appropriate for Megadetector v4
-        public const float DefaultTypicalClassificationThresholdIfUnknown = 0.75f;  // Appropriate for Megadetector v4
+        public const float DefaultTypicalDetectionThresholdIfUnknown = 0.2f;        // These values are recommend by Dan Morris
+        public const float DefaultConservativeDetectionThresholdIfUnknown = 0.05f;   
+        public const float DefaultTypicalClassificationThresholdIfUnknown = 0.5f; 
         public const float BoundingBoxDisplayThresholdDefault = Undefined;   // Appropriate for Megadetector v4
         public const string MDVersionUnknown = "vUnknown";
         public const float Undefined = -1F;

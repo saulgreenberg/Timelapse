@@ -75,7 +75,7 @@ namespace Timelapse.Recognition
         }
 
         public double ClassificationConfidenceHigherForUI { get; set; } = 1;
-        public double ClassificationConfidenceLowerForUI { get; set; } = 0.6;
+        public double ClassificationConfidenceLowerForUI { get; set; } = Constant.RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
 
         // Transforms the confidence threshold as needed, depending on the select operation
         public Tuple<double, double> ConfidenceDetectionThresholdForSelect
