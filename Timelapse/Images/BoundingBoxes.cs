@@ -346,14 +346,18 @@ namespace Timelapse.Images
             // Add information to each bounding box using a tooltip or a splitbutton
             if (GlobalReferences.TimelapseState.BoundingBoxAnnotate == false)
             {
-                // Use a tooltip
-                rect.ToolTip = (bbox.Classifications.Count == 0) ? bboxLabel : bboxTextBlock;
+                // Use a tooltip. Adjust its timing to be faster (in switching too) than the default
+                rect.ToolTip = bbox.Classifications.Count == 0 ? bboxLabel : bboxTextBlock;
+                rect.SetValue(ToolTipService.InitialShowDelayProperty, 50 );
+                rect.SetValue(ToolTipService.BetweenShowDelayProperty, 0);
             }
             else
             {
+                // DEFUNCT: As Timelapse has changed to ony have a single classification, there is no need for the split button and dropdown
+                // TODO: maybe repurpose to dropdown to show the detection and classification confidence? Likely not desired...
                 // Use a split button. The button contains the category label, while its dropdown contains a text list of all predicted categories
-                if (bbox.Classifications.Count <= 1)
-                {
+                //if (bbox.Classifications.Count <= 1)
+                //{
                     Label classificationUIObject = new Label
                     {
                         Opacity = 0.6,
@@ -379,42 +383,40 @@ namespace Timelapse.Images
                     Canvas.SetLeft(classificationUIObject, leftPosition);
                     Canvas.SetTop(classificationUIObject, topPosition);
                     canvas.Children.Add(classificationUIObject);
-                }
-                else
-                {
-                    SplitButton classificationUIObject = new SplitButton
-                    {
-                        Width = Double.NaN,
-                        Content = bboxLabel,
-                        Opacity = 0.6,
-                        FontSize = 12,
-                        Background = Brushes.White,
-                        Foreground = Brushes.Black,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        DropDownContent = new TextBlock
-                        {
-                            Opacity = 0.6,
-                            Background = Brushes.White,
-                            Foreground = Brushes.Black,
-                            FontSize = 12,
-                            Text = bboxTextBlock,
-                        },
-                    };
+                //}
+            //    else
+            //    {
+            //        SplitButton classificationUIObject = new SplitButton
+            //        {
+            //            Width = Double.NaN,
+            //            Content = bboxLabel,
+            //            Opacity = 0.6,
+            //            FontSize = 12,
+            //            Background = Brushes.White,
+            //            Foreground = Brushes.Black,
+            //            HorizontalAlignment = HorizontalAlignment.Left,
+            //            VerticalAlignment = VerticalAlignment.Center,
+            //            DropDownContent = new TextBlock
+            //            {
+            //                Opacity = 0.6,
+            //                Background = Brushes.White,
+            //                Foreground = Brushes.Black,
+            //                FontSize = 12,
+            //                Text = bboxTextBlock,
+            //            },
+            //        };
 
-                    // classificationUIObject.SelectionChanged += this.ClassificationUIObject_SelectionChanged;
-                    double leftPosition = (screenPositionTopLeft.X - stroke_thickness) < 0
-                        ? 0
-                        : screenPositionTopLeft.X - stroke_thickness;
-                    // Canvas.SetLeft(classificationUIObject, screenPositionTopLeft.X - stroke_thickness);
-                    double topPosition = (screenPositionTopLeft.Y - stroke_thickness - 20) < 0
-                        ? 0
-                        : screenPositionTopLeft.Y - stroke_thickness - 20;
-                    Canvas.SetLeft(classificationUIObject, leftPosition);
-                    Canvas.SetTop(classificationUIObject, topPosition);
-                    canvas.Children.Add(classificationUIObject);
-                    Panel.SetZIndex(classificationUIObject, 1);
-                }
+            //        double leftPosition = (screenPositionTopLeft.X - stroke_thickness) < 0
+            //            ? 0
+            //            : screenPositionTopLeft.X - stroke_thickness;
+            //        double topPosition = (screenPositionTopLeft.Y - stroke_thickness - 20) < 0
+            //            ? 0
+            //            : screenPositionTopLeft.Y - stroke_thickness - 20;
+            //        Canvas.SetLeft(classificationUIObject, leftPosition);
+            //        Canvas.SetTop(classificationUIObject, topPosition);
+            //        canvas.Children.Add(classificationUIObject);
+            //        Panel.SetZIndex(classificationUIObject, 1);
+            //    }
             }
         }
 
