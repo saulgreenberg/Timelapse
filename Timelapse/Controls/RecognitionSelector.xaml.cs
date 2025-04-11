@@ -997,7 +997,7 @@ namespace Timelapse.Controls
             {
                 Mouse.OverrideCursor = enableState ? null : Cursors.Wait;
             }
-            this.DataGridClassifications.IsEnabled = enableState;
+            this.DataGridClassifications.IsEnabled = enableState && this.ShowMissingDetectionsCheckbox.IsChecked == false;
         }
 
 
@@ -1135,7 +1135,6 @@ namespace Timelapse.Controls
             // Initialize by clearing the various lists
             // Note that the first method will also initialize the collection if needed
             this.ClearClassificationCounts();
-            //this.ClearEmptyClassificationCounts();
 
             // Enable the controls  as needed, and sort the classifications by the classifications column
             Application.Current.Dispatcher.Invoke((Action)delegate

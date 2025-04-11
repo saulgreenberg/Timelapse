@@ -46,7 +46,9 @@ namespace Timelapse
             MenuItemSelectFilesMarkedForDeletion.IsChecked = selection == FileSelectionEnum.MarkedForDeletion;
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
 
-            MenuItemSelectRandomSample.IsEnabled = DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
+            // Random sampling is active only if it isn't the currently active selection. It is also inactive if the EpisodeShowAll selection is true (as it is somewhat nonsensical to do that with a random selection)
+            MenuItemSelectRandomSample.IsEnabled = MenuItemSelectRandomSample.IsEnabled &&  false == DataHandler?.FileDatabase?.CustomSelection.EpisodeShowAllIfAnyMatch && DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
+
             this.MenuItemSetRelativePathSearchTerm();
         }
         #endregion
@@ -321,6 +323,9 @@ namespace Timelapse
                 DataHandler.FileDatabase.CustomSelection.RandomSample = 0;
                 MenuItemSelectAllFiles.IsChecked = true;
                 StatusBar.SetView("Random Sample of currently selected Files");
+
+                // Disable the random sample selection until the next active selection
+                this.MenuItemSelectRandomSample.IsEnabled = false;
             }
         }
         #endregion

@@ -72,6 +72,9 @@ namespace Timelapse
                     throw new NotSupportedException($"Unhandled file selection {selection}.");
             }
 
+            // Allow random sampling after a new selection
+            this.MenuItemSelectRandomSample.IsEnabled = true;
+
             // Select the files according to the given selection, where Missing files is treated as a special case.
             Mouse.OverrideCursor = Cursors.Wait;
             BusyCancelIndicator.Reset(true);
