@@ -1146,7 +1146,6 @@ namespace Timelapse.Database
                 // If its a pre-configured selection type, set the search terms to match that selection type
                 CustomSelection.SetSearchTermsFromSelection(selection, GetSelectedFolder);
 
-
                 if (GlobalReferences.DetectionsExists && CustomSelection.ShowMissingDetections)
                 {
                     // MISSING DETECTIONS 
@@ -1186,12 +1185,25 @@ namespace Timelapse.Database
                 }
             }
 
-            if (CustomSelection != null && (GlobalReferences.DetectionsExists == false || CustomSelection.ShowMissingDetections == false))
+            if (CustomSelection != null) // && (GlobalReferences.DetectionsExists == false || CustomSelection.ShowMissingDetections == false))
             {
-                string whereExpression = CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(selection);
-                if (string.IsNullOrEmpty(whereExpression) == false)
+                if (GlobalReferences.DetectionsExists == false || CustomSelection.ShowMissingDetections == false)
                 {
-                    query += whereExpression;
+                    // Standard where 
+                    string whereExpression = CustomSelection.GetFilesWhere();
+                    if (string.IsNullOrEmpty(whereExpression) == false)
+                    {
+                        query += whereExpression;
+                    }
+                }
+                else if (GlobalReferences.DetectionsExists || CustomSelection.ShowMissingDetections)
+                {
+                    // Show missing recognitions is selected: the where clause should only include the data fields (i.e., no recognition conditions), if any
+                    string where = CustomSelection.GetFilesWhere(true, true);
+                    if (!string.IsNullOrEmpty(where))
+                    {
+                        query += $"{Sql.And} {where}";
+                    }
                 }
             }
 
@@ -2102,7 +2114,6 @@ namespace Timelapse.Database
         public int CountAllFilesMatchingSelectionCondition(FileSelectionEnum fileSelection)
         {
             string query;
-            bool skipWhere = false;
 
             // PART 1 of Query
             if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.ShowMissingDetections)
@@ -2110,8 +2121,7 @@ namespace Timelapse.Database
                 // MISSING DETECTIONS
                 // Create a query that returns a count of missing detections
                 // Form: SELECT COUNT ( DataTable.Id ) FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL 
-                query = SqlPhrase.SelectMissingDetections(SelectTypesEnum.Count);
-                skipWhere = true;
+                query = SqlPhrase.SelectMissingDetections(SelectTypesEnum.Count); ;
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
             {
@@ -2143,17 +2153,31 @@ namespace Timelapse.Database
             // If the selection is All, there is no where clause needed.
             if (fileSelection != FileSelectionEnum.All)
             {
-                if ((GlobalReferences.DetectionsExists && CustomSelection.ShowMissingDetections == false) || skipWhere == false)
+                if (GlobalReferences.DetectionsExists)
                 {
-                    string where = CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(fileSelection);
-                    if (!string.IsNullOrEmpty(where))
+                    if (CustomSelection.ShowMissingDetections == false)
                     {
-                        query += where;
+                        string where = CustomSelection.GetFilesWhere(); //this.GetFilesConditionalExpression(fileSelection);
+                        if (!string.IsNullOrEmpty(where))
+                        {
+                            query += where;
+                        }
+
+                        if (fileSelection == FileSelectionEnum.Custom &&
+                            CustomSelection.RecognitionSelections.UseRecognition) // && CustomSelection.RecognitionSelections.RecognitionType != RecognitionType.Empty)
+                        {
+                            // Add a close parenthesis if we are querying for detections
+                            query += Sql.CloseParenthesis;
+                        }
                     }
-                    if (fileSelection == FileSelectionEnum.Custom && CustomSelection.RecognitionSelections.UseRecognition)// && CustomSelection.RecognitionSelections.RecognitionType != RecognitionType.Empty)
+                    else
                     {
-                        // Add a close parenthesis if we are querying for detections
-                        query += Sql.CloseParenthesis;
+                        // Show missing recognitions is selected: the where clause should only include the data fields (i.e., no recognition conditions), if any
+                        string where = CustomSelection.GetFilesWhere(true, true);
+                        if (!string.IsNullOrEmpty(where))
+                        {
+                            query += $"{Sql.And} {where}";
+                        }
                     }
                 }
             }
@@ -3295,7 +3319,7 @@ namespace Timelapse.Database
                         }
 
                         // Step 3. Merge the DB and Json classificaton categories if they are compatable
-                        
+
                         // Get a Dictionary that indicates if we need to remap the json classification category [key] to a dbClassificationCategory [value]
                         if (RemapCategoryNumbers(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> remappedClassificationCategoryDict))
                         {
@@ -3329,7 +3353,7 @@ namespace Timelapse.Database
 
 
                             // 2nd: remap the json classification numbers to the same updated numbers
-                            
+
                             foreach (KeyValuePair<string, string> kvp in remappedClassificationCategoryDict)
                             {
                                 foreach (image image in jsonRecognizer.images)
@@ -3340,7 +3364,7 @@ namespace Timelapse.Database
                                         {
                                             if ((string)classification[0] == kvp.Key)
                                             {
-                                                classification[0] =kvp.Value;
+                                                classification[0] = kvp.Value;
                                             }
                                         }
                                     }
@@ -4040,9 +4064,9 @@ namespace Timelapse.Database
                 if (customSelectionFromJson == null ||
                     customSelectionFromJson.SearchTerms == null ||
                     customSelectionFromJson.SearchTerms.Count == 0)
-                    //|||| customSelectionFromJson.RandomSample != 0 ||
-                    //customSelectionFromJson.ShowMissingDetections ||
-                    //customSelectionFromJson.EpisodeShowAllIfAnyMatch)
+                //|||| customSelectionFromJson.RandomSample != 0 ||
+                //customSelectionFromJson.ShowMissingDetections ||
+                //customSelectionFromJson.EpisodeShowAllIfAnyMatch)
                 {
                     // Didn't pass the test. Use the default
                     CustomSelection = new CustomSelection(Controls);
@@ -4054,7 +4078,7 @@ namespace Timelapse.Database
                 customSelectionFromJson.ShowMissingDetections = false;
 
                 // At this point, customSelectionFromJson should have a valid value
-                List < SearchTerm> stlFromJson = customSelectionFromJson.SearchTerms;
+                List<SearchTerm> stlFromJson = customSelectionFromJson.SearchTerms;
 
                 // Check various recognition settings.
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us

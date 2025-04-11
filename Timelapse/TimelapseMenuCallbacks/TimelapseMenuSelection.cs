@@ -267,7 +267,6 @@ namespace Timelapse
                     TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     return;
                 }
-                //FileSelectionEnum.Custom
                 await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, customSelection.FileSelection).ConfigureAwait(true);
             }
             else
@@ -323,7 +322,6 @@ namespace Timelapse
                 MenuItemSelectAllFiles.IsChecked = true;
                 StatusBar.SetView("Random Sample of currently selected Files");
             }
-
         }
         #endregion
     }

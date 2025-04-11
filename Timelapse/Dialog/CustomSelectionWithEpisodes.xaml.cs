@@ -818,7 +818,7 @@ namespace Timelapse.Dialog
         {
             this.RefreshRecognitionCountsRequired = e.RefreshRecognitionCountsRequired;
             this.RecognitonsGroupBoxFeedback.Text = ComposeRecognitionsSelectionFeedback(e.DetectionCategoryLabel, e.ClassificationCategoryLabel);
-            this.SelectionGroupBox.IsEnabled = false == this.Database.CustomSelection.ShowMissingDetections;
+            // this.SelectionGroupBox.IsEnabled = false == this.Database.CustomSelection.ShowMissingDetections;
             this.CountTimer.Start();
         }
 

@@ -957,8 +957,10 @@ namespace Timelapse.Controls
 
             // Enable/disable the classification controls
             this.ClassificationDataGridEnableState(enableAllControls, updateCursorToMatchState);
-            //this.SliderClassificationConf.IsEnabled = enableAllControls;
+
+            // Enable/disable confidence sliders
             this.SlidersEnableState(enableAllControls); 
+
             // Enable/disable the buttons and checkbox 
             this.BtnCountRecognitions.IsEnabled = enableAllControls;
             this.RankByDetectionConfidenceCheckbox.IsEnabled = enableAllControls;
