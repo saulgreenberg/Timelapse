@@ -90,6 +90,7 @@ namespace Timelapse.Recognition
         public string format_version { get; set; }
         public detector_metadata detector_metadata { get; set; }
         public classifier_metadata classifier_metadata { get; set; }
+        public string summary_report { get; set; }
         #endregion
 
         #region Public Set Defaults
@@ -103,6 +104,7 @@ namespace Timelapse.Recognition
             format_version = RecognizerValues.FormatVersionUnknown;
             detector_metadata = new detector_metadata();
             classifier_metadata = new classifier_metadata();
+            summary_report = string.Empty;
         }
         #endregion
     }

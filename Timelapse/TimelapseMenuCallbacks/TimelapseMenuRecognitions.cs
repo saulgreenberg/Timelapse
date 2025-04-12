@@ -185,6 +185,7 @@ namespace Timelapse
                 List<string> foldersInDBListButNotInJSon = new List<string>();
                 List<string> foldersInJsonButNotInDB = new List<string>();
                 List<string> foldersInBoth = new List<string>();
+                string summaryReport = jsonRecognitions.info.summary_report;
                 RecognizerImportResultEnum result = await DataHandler.FileDatabase.PopulateRecognitionTablesFromRecognizerAsync(jsonRecognitions, foldersInDBListButNotInJSon, foldersInJsonButNotInDB, foldersInBoth, true, progress, GlobalReferences.CancelTokenSource);
                 if (result == RecognizerImportResultEnum.Cancelled)
                 {
@@ -263,7 +264,7 @@ namespace Timelapse
                 else
                 {
                     // Detections successfully imported message
-                    Dialogs.MenuFileRecognitionsSuccessfulyImportedDialog(this, details);
+                    Dialogs.MenuFileRecognitionsSuccessfulyImportedDialog(this, details, jsonRecognitions.info.summary_report);
                 }
             }
         }

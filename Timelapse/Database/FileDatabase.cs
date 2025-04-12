@@ -3211,7 +3211,6 @@ namespace Timelapse.Database
                     // Fill in the jsonRecognizer info structure as needed to ensure it is filled in with reasonable values
                     PopulateRecognizerInfoWithDefaultValuesAsNeeded(jsonRecognizer.info);
 
-
                     // flag indicating if the detections database already exists
 
                     bool clearDBRecognitionData = true;

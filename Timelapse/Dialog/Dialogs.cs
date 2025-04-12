@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -15,13 +17,17 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
 using Control = Timelapse.Constant.Control;
 using Cursor = System.Windows.Input.Cursor;
 using File = Timelapse.Constant.File;
+using Orientation = System.Windows.Controls.Orientation;
 using Rectangle = System.Drawing.Rectangle;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
+using WebBrowser = System.Windows.Controls.WebBrowser;
 
 namespace Timelapse.Dialog
 {
@@ -3030,11 +3036,11 @@ namespace Timelapse.Dialog
         /// <summary>
         /// Recognitions: successfully imported message
         /// </summary>
-        public static void MenuFileRecognitionsSuccessfulyImportedDialog(Window owner, string details)
+        public static void MenuFileRecognitionsSuccessfulyImportedDialog(Window owner, string details, string summaryReport)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             const string title = "Recognitions imported.";
-            new MessageBox(title, owner)
+            MessageBox message = new MessageBox(title, owner)
             {
                 Message =
                 {
@@ -3046,7 +3052,64 @@ namespace Timelapse.Dialog
                            "• click 'Show all files with no recognition data' to list images missing recognition data.",
                     Details = details
                 }
-            }.ShowDialog();
+            };
+            // The Extra button is normally hidden. We reveal it and use it to invoke a dialog box to show the summary report (extracted from the recognizer file), if present
+            if (false == string.IsNullOrWhiteSpace(summaryReport))
+            {
+                message.ExtraButton.Visibility = Visibility.Visible;
+                message.ExtraButton.Content = "Show the recognizer's summary report";
+                message.ExtraButton.Tag = summaryReport;
+                message.ExtraButton.Click += ExtraButton_Click;
+            }
+            message.ShowDialog();
+        }
+
+        // Event handler: invoke a dialog box to show the summary report (held as a string in the tag), if present
+        private static void ExtraButton_Click(object sender, RoutedEventArgs e)
+        {
+            string content = string.Empty;
+            if (sender is Button extraButton == false) return;
+            if (extraButton.Tag is String contentString == false) return;
+            if (string.IsNullOrWhiteSpace(contentString)) return;
+                Window window = new Window
+                {
+                    Title = "Recognizer's summary report",
+                    ShowInTaskbar = false,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Width = 400,
+                    Height = 500,
+                    Owner = extraButton.FindParentOfType<Window>()
+                };
+
+                Dialogs.TryPositionAndFitDialogIntoWindow(window);
+                Grid grid = new Grid();
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) });
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(60) });
+
+                Button button = new Button()
+                {
+                    Content = "Okay",
+                    Margin = new Thickness(10)
+                };
+                button.Click += (s, args) =>
+                {
+                    window.Close();
+                };
+                Grid.SetRow(button, 1);
+
+                WebBrowser wb = new WebBrowser()
+                {
+                    Width = Double.NaN,
+                    Height = Double.NaN,
+                };
+
+                wb.NavigateToString(contentString);
+                Grid.SetRow(wb, 0);
+                window.Content = grid;
+                grid.Children.Add(wb);
+                grid.Children.Add(button);
+
+                window.ShowDialog();
         }
 
         /// <summary>
