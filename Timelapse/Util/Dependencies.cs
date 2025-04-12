@@ -21,7 +21,7 @@ namespace Timelapse.Util
             // ImageProcessor
             "ImageProcessor.dll",
             "System.ValueTuple.dll",
-            "System.ValueTuple.xml",
+           //"System.ValueTuple.xml",
 
             // MetadataExtractor
             "MetadataExtractor.dll",
