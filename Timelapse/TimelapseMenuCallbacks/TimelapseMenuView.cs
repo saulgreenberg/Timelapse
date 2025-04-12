@@ -28,6 +28,41 @@ namespace Timelapse
             MenuItemShowInExplorer.IsEnabled =
                 filesSelectedAndSingleImage &&
                 true == DataHandler?.ImageCache?.Current?.FileExists(DataHandler?.FileDatabase?.RootPathToImages);
+
+            // The dogear menu items are enabled (and their text) depends on a variety of conditions
+            MenuItemDogearSet.IsEnabled = filesSelectedAndSingleImage && this.ImageDogear != null;
+            if (this.ImageDogear != null)
+            {
+                if (false == this.ImageDogear.IsDogearTheCurrentImage())
+                {
+                    if (this.ImageDogear.DogearExists())
+                    {
+                        // We can only go to a dogeared image
+                        MenuItemDogearSwitch.Header = "Go to the dogeared image";
+                        MenuItemDogearSwitch.IsEnabled = filesSelectedAndSingleImage;
+                    }
+                    else
+                    {
+                        // but the dogear doesn't exist
+                        MenuItemDogearSwitch.IsEnabled = false;
+                    }
+                }
+                else
+                {
+                    if (this.ImageDogear.LastSeenImageExists())
+                    {
+                        // We can only go to the last seen image
+                        MenuItemDogearSwitch.Header = "Return to the last seen image";
+                        MenuItemDogearSwitch.IsEnabled = filesSelectedAndSingleImage;
+                    }
+                    else
+                    {
+                        // but the last seen image doesn't exist
+                        MenuItemDogearSwitch.Header = "Go to the dogeared image";
+                        MenuItemDogearSwitch.IsEnabled = false;
+                    }
+                }
+            }
         }
         #endregion
 
@@ -117,6 +152,29 @@ namespace Timelapse
         }
         #endregion
 
+        #region Dogears
+        private void MenuItem_DogearSet(object sender, RoutedEventArgs e)
+        {
+            if (this.MarkableCanvas.IsThumbnailGridVisible)
+            {
+                return;
+            }
+            this.ImageDogear?.TrySetDogearToCurrentImage();
+        }
+
+        private void MenuItem_DogearSwitch(object sender, RoutedEventArgs e)
+        {
+            if (this.ImageDogear != null)
+            {
+                int index = this.ImageDogear.TryGetDogearOrPreviouslySeenImageIndex();
+                if (index != Constant.DatabaseValues.InvalidRow)
+                {
+                    // Show the image at the bookmark index
+                    this.FileShow(index);
+                }
+            }
+        }
+        #endregion
         #region View Image differences
         // Cycle through the image differences
         private void MenuItemViewDifferencesCycleThrough_Click(object sender, RoutedEventArgs e)

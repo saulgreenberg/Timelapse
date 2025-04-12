@@ -1129,6 +1129,7 @@ namespace Timelapse.Database
         {
             string query = string.Empty;
             this.ResetAfterPossibleRelativePathChanges();
+            GlobalReferences.MainWindow.ImageDogear = new ImageDogear(GlobalReferences.MainWindow.DataHandler);
 
             if (CustomSelection == null)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Media;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
@@ -125,8 +126,9 @@ namespace Timelapse
                     }
                     break;
                 case Key.B:                 // Save a Bookmark of the current pan / zoom level of the image
-                    MarkableCanvas.SetBookmark();
+                        MarkableCanvas.SetBookmark();
                     break;
+
                 case Key.Escape:
                     TrySetKeyboardFocusToMarkableCanvas(false, currentKey);
                     break;
@@ -135,6 +137,31 @@ namespace Timelapse
                     break;
                 case Key.OemMinus:          // Restore the zoom level / pan coordinates of the bookmark
                     MarkableCanvas.ZoomOutAllTheWay();
+                    break;
+                case Key.K:                 // Dogear the current image or switch between the dogear and the last seen image
+                    if (this.MarkableCanvas.IsThumbnailGridVisible)
+                    {
+                        return;
+                    }
+                    
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                    {
+                        // ctl-K: Show the image at the bookmark index
+                        this.ImageDogear?.TrySetDogearToCurrentImage();
+                    }
+                    else
+                    {
+                        // K: Toggle to/from the bookmark
+                        if (this.ImageDogear != null)
+                        {
+                            int index = this.ImageDogear.TryGetDogearOrPreviouslySeenImageIndex();
+                            if (index != Constant.DatabaseValues.InvalidRow)
+                            {
+                                // Show the image at the bookmark index
+                                this.FileShow(index);
+                            }
+                        }
+                    }
                     break;
                 case Key.M:                 // Toggle the magnifying glass on and off
                     MenuItemDisplayMagnifyingGlass_Click(this, null);

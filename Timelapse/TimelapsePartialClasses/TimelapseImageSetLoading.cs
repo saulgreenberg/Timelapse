@@ -700,6 +700,8 @@ namespace Timelapse
             // Create  notification toasts UNLESS select or sort settings are the default ones.
             string sortMessage = ShowSortFeedback(true);
 
+            this.ImageDogear = new ImageDogear(this.DataHandler);
+
             string selectMessage = "Select menu: is now displaying " + Environment.NewLine;
             // ReSharper disable once PossibleNullReferenceException
             switch (DataHandler.FileDatabase.FileSelectionEnum)

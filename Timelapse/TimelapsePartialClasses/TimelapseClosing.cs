@@ -35,6 +35,7 @@ namespace Timelapse
                 DataHandler?.Dispose();
                 DataHandler = null;
                 templateDatabase = null;
+                this.ImageDogear = null;
 
                 // Reinitializing the MetadataUI  on an empty data handler will clear all existing metadata tabs, if any.
                 MetadataUI.InitalizeFolderMetadataTabs();

@@ -257,6 +257,7 @@
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
     <Compile Include="Database\MergeDatabases.cs" />
+    <Compile Include="DataStructures\ImageDogear.cs" />
     <Compile Include="DataTables\CommonControlRow.cs" />
     <Compile Include="DataTables\FileTableDateColumn.cs" />
     <Compile Include="DataTables\FileTableDecimalColumn.cs" />

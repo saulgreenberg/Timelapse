@@ -306,6 +306,9 @@
                     <MenuItem Name="MenuItemBookmarkSetPanZoom"  Header="Zoom to bookmarked _region" InputGestureText="+" Click="MenuItem_BookmarkSetPanZoom" ToolTip="Zoom to the region saved in the bookmark" />
                     <MenuItem Name="MenuItemBookmarkDefaultPanZoom" Header="Zoom out all the _way" InputGestureText="-" Click="MenuItem_BookmarkDefaultPanZoom" ToolTip="Zoom out to see the entire image" />
                     <Separator/>
+                    <MenuItem Name="MenuItemDogearSet"  Header="Dog-ear the current image" InputGestureText="Ctl-k" Click="MenuItem_DogearSet" ToolTip="Dogear the current image, so you can return to to it later" />
+                    <MenuItem Name="MenuItemDogearSwitch" Header="Navigate to the dog-eared or the last seen image" InputGestureText="k" Click="MenuItem_DogearSwitch" ToolTip="Navigate to the dogeared image, or back to the last seen image" />
+                    <Separator/>
                     <MenuItem Name="MenuItemViewDifferencesCycleThrough" Header="_Cycle through image differences" Click="MenuItemViewDifferencesCycleThrough_Click" InputGestureText="&#x2191;" ToolTip="View an enhancement that cycles through the differences between the current and the next file, and then the previous file"/>
                     <MenuItem Name="MenuItemViewDifferencesCombined" Header="_View combined image differences" Click="MenuItemViewDifferencesCombined_Click" InputGestureText="&#x2193;" ToolTip="View an enhancement that simultaneously shows the differences between the current image vs. the next and previous files."/>
                     <Separator/>

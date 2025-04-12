@@ -110,6 +110,9 @@ namespace Timelapse
 
         // Notifier: A toast that we can use anywher
         private Notifier ToastNotifier;
+
+        public ImageDogear ImageDogear; 
+
         // Record any command line arguments
         public Arguments Arguments { get; set; } = new Arguments(Environment.GetCommandLineArgs());
         #endregion
