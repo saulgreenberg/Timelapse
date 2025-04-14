@@ -358,8 +358,7 @@ namespace Timelapse.Constant
 
     public static class EcoAssist
     {
-        public const string EcoAssistDownload = @"https://addaxdatascience.com/ecoassist-windows/";
-        public const string EcoAssistUninstallDownload = @"https://addaxdatascience.com/windows-uninstall/";
+        // Legacy stuff, can remove in later versions
         public const string EcoAssistSubfolderExecutable = @"EcoAssist_files\EcoAssist\open.bat";
     }
 
@@ -420,7 +419,7 @@ namespace Timelapse.Constant
         public static string TimelapseVideosViewingVideos = $"{TimelapseVideosUploadLink}/Lesson-ViewingVideos.mp4";
         public static string TimelapseVideosQuickPaste = $"{TimelapseVideosUploadLink}/Lesson-QuickPaste.mp4";
         public static string TimelapseVideosDuplicatingRecords = $"{TimelapseVideosUploadLink}/Lesson-DuplicatingRecords.mp4";
-        public static string TimelapseVideosUsingEcoAssist = $"{TimelapseVideosUploadLink}/Lesson-UsingEcoAssist.mp4";
+        public static string TimelapseVideosUsingAddaxAI = $"{TimelapseVideosUploadLink}/Lesson-UsingEcoAssist.mp4";
         public static string TimelapseVideosImageRecognitionForVideos = $"{TimelapseVideosUploadLink}/Lesson-ImageRecognitionForVideos.mp4";
         public static string TimelapseVideosUsingTheOverview = $"{TimelapseVideosUploadLink}/Lesson-UsingTheOverview.mp4";
         public static string TimelapseVideosRandomSampling = $"{TimelapseVideosUploadLink}/Lesson-RandomSampling.mp4";

@@ -359,7 +359,7 @@
 
                     <Separator/>
                     <MenuItem Header="Image recognition" IsEnabled="False"/>
-                    <MenuItem Name="MenuItemVideoUsingEcoAssist" Header="Using EcoAssist for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses EcoAssist to do its image recognition. This video illustrates how to use EcoAssist.">
+                    <MenuItem Name="MenuItemVideoUsingAddaxAI" Header="Using AddaxAI for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses AddaxAI to do its image recognition. This video illustrates how to use AddaxAI.">
                         <MenuItem.Icon>
                             <Image Source="Icons/MediaControl-PlayButton.png" />
                         </MenuItem.Icon>

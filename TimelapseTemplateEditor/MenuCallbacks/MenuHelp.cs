@@ -109,8 +109,8 @@ namespace TimelapseTemplateEditor
                         ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosDuplicatingRecords));
                         break;
 
-                    case "MenuItemVideoUsingEcoAssist":
-                        ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosUsingEcoAssist));
+                    case "MenuItemVideoUsingAddaxAI":
+                        ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosUsingAddaxAI));
                         break;
 
                     case "MenuItemVideoUsingOverview":

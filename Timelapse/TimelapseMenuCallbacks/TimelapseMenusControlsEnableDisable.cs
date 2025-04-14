@@ -73,8 +73,8 @@ namespace Timelapse
 
             // Recognitions menu
             MenuItemRecognitions.IsEnabled = true;                 // Always visible
-            MenuItemEcoAssistDownload.IsEnabled = true;
-            MenuItemEcoAssistCheckForUpdates.IsEnabled = true;
+            MenuItemAddaxAIDownload.IsEnabled = true;
+            MenuItemAddaxAICheckForUpdates.IsEnabled = true;
             MenuBoundingBoxSetOptions.IsEnabled = filesSelected;  // Hidden when no image set
             MenuItemImportDetectionData.IsEnabled = filesSelected;
             MenuItemPopulateWithDetectionCounts.IsEnabled = filesSelected;

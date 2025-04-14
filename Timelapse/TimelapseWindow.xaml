@@ -408,12 +408,12 @@
 
                     <Separator />
                     <!-- EcoAsssist -->
-                    <MenuItem Header="AddaxAI (EcoAssist) Image Recognizer..." SubmenuOpened="MenuItem_OnEcoAssistSubmenuOpened" >
+                    <MenuItem Header="AddaxAI Image Recognizer..." SubmenuOpened="MenuItem_OnAddaxAISubmenuOpened" >
                         <MenuItem.Icon>
                             <Image Source="Icons/AddaxAI.png" />
                         </MenuItem.Icon>
 
-                        <MenuItem Name="MenuItemEcoAssistRun" Header="Run AddaxAI (EcoAssist) recognizer on a folder..." IsEnabled="True" Click="MenuItemEcoAssistRun_Click" ToolTip="Run the EcoAssist recognizer on a folder that you select">
+                        <MenuItem Name="MenuItemAddaxAIRun" Header="Run AddaxAI recognizer on a folder..." IsEnabled="True" Click="MenuItemAddaxAIRun_Click" ToolTip="Run the AddaxAI recognizer on a folder that you select">
                             <MenuItem.Icon>
                                 <Image Source="Icons/AddaxAI.png" />
                             </MenuItem.Icon>
@@ -421,13 +421,13 @@
 
                         <Separator />
 
-                        <MenuItem Name="MenuItemEcoAssistDownload" Header="Install AddaxAI (EcoAssist) image recognizer (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistDownload_Click" ToolTip="Go to the EcoAssist web page for installing the Timelapse-friendly version of the EcoAssist image recognizer">
+                        <MenuItem Name="MenuItemAddaxAIDownload" Header="Install AddaxAI image recognizer (via browser)..." IsEnabled="True" Click="MenuItemAddaxAIDownload_Click" ToolTip="Go to the AddaxAI web page for installing the Timelapse-friendly version of the AddaxAI image recognizer">
                             <MenuItem.Icon>
                                 <Image Source="Icons/AddaxAIUpload.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
-                        <MenuItem Name="MenuItemEcoAssistCheckForUpdates" Header="Uninstall AddaxAI (EcoAssist) (via browser)..." IsEnabled="True" Click="MenuItemEcoAssistUninstall_Click" ToolTip="Go to the Uninstall EcoAssist web page to download the EcoAssist Unninstall utility">
+                        <MenuItem Name="MenuItemAddaxAICheckForUpdates" Header="Uninstall AddaxAI (via browser)..." IsEnabled="True" Click="MenuItemAddaxAIUninstall_Click" ToolTip="Go to the Uninstall AddaxAI web page to download the AddaxAI Unninstall utility">
                             <MenuItem.Icon>
                                 <Image Source="Icons/AddaxAIUninstall.png" />
                             </MenuItem.Icon>
@@ -674,13 +674,13 @@
                         <Separator/>
                         <MenuItem Header="Image recognition" IsEnabled="False"/>
 
-                        <MenuItem Name="MenuItemVideoUsingEcoAssist" Header="Using AddaxAI (EcoAssist) for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses AddaxAI (EcoAssist) to do its image recognition. This video illustrates how to use AddaxAI.">
+                        <MenuItem Name="MenuItemVideoUsingEcoAssist" Header="Using AddaxAI for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses AddaxAI to do its image recognition. This video illustrates how to use AddaxAI.">
                             <MenuItem.Icon>
                                 <Image Source="Icons/MediaControl-PlayButton.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
-                        <MenuItem Name="MenuItemImageRecognitionForVideos" Header="Image recognition for Videos" Click="MenuVideoPlay_Click" ToolTip="This video illustrates how image recognition works in the Video Player and how to use AddaxAI (EcoAssist) to do video recognition">
+                        <MenuItem Name="MenuItemImageRecognitionForVideos" Header="Image recognition for Videos" Click="MenuVideoPlay_Click" ToolTip="This video illustrates how image recognition works in the Video Player and how to use AddaxAI to do video recognition">
                             <MenuItem.Icon>
                                 <Image Source="Icons/MediaControl-PlayButton.png" />
                             </MenuItem.Icon>

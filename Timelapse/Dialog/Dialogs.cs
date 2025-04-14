@@ -3237,34 +3237,34 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region EcoAssist-related dialogs
-        public static void EcoAssistCouldNotBeStarted(Window owner)
+        #region AddaxAI-related dialogs
+        public static void AddaxAICouldNotBeStarted(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "AddaxAI (EcoAssist) could not be started";
+            const string title = "AddaxAI could not be started";
 
             new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"AddaxAI (EcoAssist) could not be started, but we don't know why.{Environment.NewLine}" +
+                    What = $"AddaxAI could not be started, but we don't know why.{Environment.NewLine}" +
                            $"\u2022 You can try to re-download and install AddaxAI again, or{Environment.NewLine}" +
                            "\u2022 Check for the access and execution permissions for AddaxAI (perhaps your computer setup has restrictions?)."
                 }
             }.ShowDialog();
         }
-        public static bool? EcoAssistAlreadyDownloaded(Window owner)
+        public static bool? AddaxAIAlreadyDownloaded(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "A version of AddaxAI (EcoAssist) is already installed ";
+            const string title = "A version of AddaxAI is already installed ";
 
             return new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"A version of AddaxAI (EcoAssist) is already installed.{Environment.NewLine}" +
+                    What = $"A version of AddaxAI is already installed.{Environment.NewLine}" +
                            $"As installation takes about 10-15 minutes, you may want to avoid reinstalling AddaxAI unless:{Environment.NewLine}" +
                            $"\u2022 you know that a new version is available, or{Environment.NewLine}" +
                            $"\u2022 you are having issues with AddaxAI, and want to reinstall it,{Environment.NewLine}" +
@@ -3276,33 +3276,33 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
 
-        public static bool? EcoAssistNotInstalled(Window owner)
+        public static bool? AddaxAINotInstalled(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "AddaxAI (EcoAssist) doesn't appear to be installed.";
+            const string title = "AddaxAI doesn't appear to be installed.";
 
             return new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"The AddaxAI (EcoAssist) image recognizer does not appear to be installed.{Environment.NewLine}" +
+                    What = $"The AddaxAI image recognizer does not appear to be installed.{Environment.NewLine}" +
                            $"But if you want to try to run the uninstaller anyways, press Ok.{Environment.NewLine}",
                 }
             }.ShowDialog();
         }
 
-        public static bool? EcoAssistInstallationInformaton(Window owner)
+        public static bool? AddaxAIInstallationInformaton(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Install AddaxAI (EcoAssist) (from web site) - Overview ";
+            const string title = "Install AddaxAI (from web site) - Overview ";
 
             return new MessageBox(title, owner, MessageBoxButton.OKCancel)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"An overview of the AddaxAI (EcoAssist) installation process.{Environment.NewLine}" +
+                    What = $"An overview of the AddaxAI installation process.{Environment.NewLine}" +
                            $"\u2022 The AddaxAI Windows Installation web page will appear.{Environment.NewLine}" +
                            $"\u2022 Click its 'Download...' button, and then open the just-downloaded 'Install.bat' file in your Downloads folder.{Environment.NewLine}" +
                            $"\u2022 If a 'Windows protected your PC' dialog appears, select 'More Info' and 'Run anyway'.{Environment.NewLine}" +
@@ -3315,17 +3315,17 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
 
-        public static bool? EcoAssistApplicationInstructions(Window owner)
+        public static bool? AddaxAIApplicationInstructions(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "AddaxAI (EcoAssist) is starting up (about 5 - 20 seconds)...";
+            const string title = "AddaxAI is starting up (about 5 - 20 seconds)...";
 
             return new MessageBox(title, owner)
             {
                 Message =
                 {
                     Icon = MessageBoxImage.Information,
-                    What = $"The AddaxAI (EcoAssist) application should start up shortly. When it does:{Environment.NewLine}" +
+                    What = $"The AddaxAI application should start up shortly. When it does:{Environment.NewLine}" +
                            $" 1. Select the model you want to use{Environment.NewLine}" +
                            $"    (the default model shows detections with broad animal/person/vehicle classifications){Environment.NewLine}" +
                            $" 2. Click 'Start processing', which will start processing your images.{Environment.NewLine}" +

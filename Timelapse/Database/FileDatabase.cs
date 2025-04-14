@@ -2181,6 +2181,18 @@ namespace Timelapse.Database
                         }
                     }
                 }
+                else
+                {
+                    if (GlobalReferences.DetectionsExists == false || CustomSelection.ShowMissingDetections == false)
+                    {
+                        // Standard where 
+                        string whereExpression = CustomSelection.GetFilesWhere();
+                        if (string.IsNullOrEmpty(whereExpression) == false)
+                        {
+                            query += whereExpression;
+                        }
+                    }
+                }
             }
 
             // EPISODES-related addition to query.
