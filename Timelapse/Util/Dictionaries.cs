@@ -27,6 +27,7 @@ namespace Timelapse.Util
                 // If the count isn't the same, its unequal
                 return false;
             }
+
             foreach (var pair in dict1)
             {
                 if (dict2.TryGetValue(pair.Key, out string value))
@@ -78,7 +79,7 @@ namespace Timelapse.Util
                 return true;
             }
 
-            // Check if the dictionaries are compatable, i.e., that the common keys have the same values       
+            // Check if the dictionaries are compatable, i.e., that the common keys have the same values
             foreach (KeyValuePair<string, string> pair in dict1)
             {
                 if (dict2.TryGetValue(pair.Key, out string value))

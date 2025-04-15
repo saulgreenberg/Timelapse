@@ -31,7 +31,7 @@ namespace Timelapse.Recognition
                 // Case 1. Tables already exist, so clear their contents as indicated.
                 // Always clear info and category tables, but
                 // Only clear detections and recognitions as indicated by the clearDBRecognitionData argument
-                ClearDetectionTables(database, true, true, true, clearDBRecognitionData);
+                ClearRecognitionTables(database, true, true, true, clearDBRecognitionData);
             }
             else
             {
@@ -122,8 +122,8 @@ namespace Timelapse.Recognition
         }
         #endregion
 
-        #region Public: Clear Detection Tables
-        public static void ClearDetectionTables(SQLiteWrapper database, bool clearInfo, bool clearDetectionCategories, bool clearClassificationCategories, bool clearDetections)
+        #region Public: Clear Recognition Tables
+        public static void ClearRecognitionTables(SQLiteWrapper database, bool clearInfo, bool clearDetectionCategories, bool clearClassificationCategories, bool clearDetections)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));

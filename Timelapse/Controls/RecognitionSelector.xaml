@@ -84,6 +84,16 @@
                             </Style.Triggers>
                         </Style>
                     </DataGrid.Resources>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="{x:Type DataGridRow}">
+                            <!--<Style.Triggers>-->
+                                <EventSetter Event="MouseEnter" Handler="DataGridDetectionsRow_MouseEnter">
+                                    <!--<Setter Property="ToolTip" Value="Green" />-->
+                                </EventSetter>
+                            <!--</Style.Triggers>-->
+                        </Style>
+                    </DataGrid.RowStyle>
+
                 </DataGrid>
             </Grid>
 
@@ -170,7 +180,7 @@
                         <TextBlock Name="MatchingFilesCount" Text=""  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,0,0,0"/>
                         <TextBlock Name="MatchingFilesCountLabel" Text="" VerticalAlignment="Center" Margin="0,0,0,0"/>
                     </StackPanel>
-                    <Button Name="BtnCountRecognitions" Content ="Count recognitions" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
+                    <Button Name="BtnCountRecognitions" Content ="Update counts" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
                 </StackPanel>
 
                 <!-- Sorting by Confidence -->

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using Timelapse.DataStructures;
 using System.Linq;
@@ -63,7 +64,6 @@ namespace Timelapse.Controls
         // They serve as ItemsSource to the corresponding DataGrid and ListBox controls 
         public ObservableCollection<CategoryCount> DetectionCountsCollection { get; set; } = new ObservableCollection<CategoryCount>();
         public ObservableCollection<CategoryCount> ClassificationCountsCollection { get; set; } = new ObservableCollection<CategoryCount>();
-        public List<string> ClassificationEmptyCountsList { get; set; } = new List<string>();
 
         // Original selection parameters so we can restore them as needed on exit
         private RecognitionSelections SavedRecognitionSelections;
@@ -1030,11 +1030,13 @@ namespace Timelapse.Controls
             {
                 return;
             }
-            // Category column: Try to size to just fit the widest category content
-            dataGrid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-
             // Count column: Fill the remaining space, if any
+            dataGrid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            dataGrid.Columns[0].CanUserSort = true;
+
+            // Category column: Try to size to just fit the widest category content
             dataGrid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Star);
+            dataGrid.Columns[1].CanUserSort = true;
         }
 
         // Clear the datagrid selection and scroll it to its top.
@@ -1183,7 +1185,7 @@ namespace Timelapse.Controls
                         double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                         category = lowerValue == 0 && RecognitionSelections.AllDetections && RecognitionSelections.InterpretAllDetectionsAsEmpty
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
-                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThan} {lowerValue}";
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} (excludes detections {Constant.SearchTermOperator.GreaterThanOrEqual} {lowerValue})";
                     }
                     CategoryCount cc = new CategoryCount(category, count);
                     this.DetectionCountsCollection.Add(cc);
@@ -1233,7 +1235,7 @@ namespace Timelapse.Controls
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                 categoryCount.Category = lowerValue == 0 || (RecognitionSelections.RankByDetectionConfidence || RecognitionSelections.RankByClassificationConfidence)
                         ? $"{Constant.RecognizerValues.EmptyDetectionLabel}"
-                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} and False positives {Constant.SearchTermOperator.LessThan} {lowerValue}";
+                        : $"{Constant.RecognizerValues.EmptyDetectionLabel} (excludes detections {Constant.SearchTermOperator.GreaterThanOrEqual} {lowerValue})";
 
                 categoryCount.NotifyPropertyChanged("Category");
             });
@@ -1300,10 +1302,12 @@ namespace Timelapse.Controls
         {
             public int? Count { get; set; }
             public string Category { get; set; }
+            public string ToolTip;
             public CategoryCount(string category, int? count)
             {
                 this.Category = category;
                 this.Count = count;
+                this.ToolTip = category;
             }
 
             public event PropertyChangedEventHandler PropertyChanged;
@@ -1314,5 +1318,18 @@ namespace Timelapse.Controls
         }
         #endregion
 
+        private void DataGridDetectionsRow_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is DataGridRow row)
+            {
+                if (row.Item is CategoryCount cc)
+                {
+                    if (false == string.IsNullOrWhiteSpace(cc.Category))
+                    {
+                        row.ToolTip = cc.ToolTip;
+                    }
+                }
+            }
+        }
     }
 }

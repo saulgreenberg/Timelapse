@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.Configuration;
 using System.Windows;
 using System.Windows.Controls;
 using Newtonsoft.Json;
@@ -3126,7 +3127,7 @@ namespace Timelapse.Database
         // Sort the detections by frame number if its a video (which helps performance when displaying video bounding boxes)
         public Recognizer RecognizerTrimAndSortRecognitionsAsNeeded(Recognizer jsonRecognizer)
         {
-            if (jsonRecognizer?.images == null || jsonRecognizer.info?.detector_metadata == null)
+            if (jsonRecognizer?.images == null)
             {
                 // essentially a no-op
                 return jsonRecognizer;
@@ -3136,12 +3137,14 @@ namespace Timelapse.Database
             // We use the default MinimumDetectionValue, unless the conservative_detection_threshold suggests a higher value. 
             // Classifciations are somewhat similar, although they only report a typical_classification_threshold
             double? minimumDetectionConfidence =
-            null != jsonRecognizer.info.detector_metadata.conservative_detection_threshold && jsonRecognizer.info.detector_metadata.conservative_detection_threshold / 2.5 > Constant.RecognizerValues.MinimumDetectionValue
+               null != jsonRecognizer.info?.detector_metadata?.conservative_detection_threshold && 
+                       jsonRecognizer.info.detector_metadata.conservative_detection_threshold / 2.5 > Constant.RecognizerValues.MinimumDetectionValue
                 ? jsonRecognizer.info.detector_metadata.conservative_detection_threshold / 2.5
                 : Constant.RecognizerValues.MinimumDetectionValue;
 
             double? minimumClassificationConfidence =
-                null != jsonRecognizer.info.classifier_metadata?.typical_classification_threshold && jsonRecognizer.info.classifier_metadata.typical_classification_threshold / 2.5 > Constant.RecognizerValues.MinimumClassificationValue
+                null != jsonRecognizer.info?.classifier_metadata?.typical_classification_threshold && 
+                        jsonRecognizer.info.classifier_metadata.typical_classification_threshold / 2.5 > Constant.RecognizerValues.MinimumClassificationValue
                     ? jsonRecognizer.info.classifier_metadata.typical_classification_threshold / 2.5
                     : Constant.RecognizerValues.MinimumClassificationValue;
 
@@ -3153,6 +3156,17 @@ namespace Timelapse.Database
                 }
                 for (int i = image.detections.Count - 1; i >= 0; i--)
                 {
+                    // Round the bounding box values upwards three decimal places, as we really don't need massive precision.
+                    // Also, make the bounding box slightly larger so its edges don't overlap the detected item
+                    if (image.detections[i].bbox != null)
+                    {
+                        for (int j = 0; j < image.detections[i].bbox.Length; j++)
+                        {
+                            image.detections[i].bbox[j] += j <= 1 ? -0.002f : 0.004f; // the 2nd two terms are offset, so we need to double the amount
+                            image.detections[i].bbox[j] = image.detections[i].bbox[j] < 0 ? 0 : Math.Round(image.detections[i].bbox[j], Constant.RecognizerValues.ConfidenceDecimalPlaces);
+                        }
+                    }
+
                     // Round the confidence to three decimal places, as we really don't need massive precision. I suspect even that is excessive
                     image.detections[i].conf = (float)Math.Round(image.detections[i].conf, Constant.RecognizerValues.ConfidenceDecimalPlaces);
 
@@ -3344,8 +3358,9 @@ namespace Timelapse.Database
                                 string newCategoryNumber = "X" + kvp.Value;
                                 // We need to remap the json classification category number [key] of the just-read in json structure to the original category number
                                 // This means we have to do it twice, as we need to ensure that we are not duplicating things
+                                string categoryName = jsonRecognizer.classification_categories[oldCategoryNumber];
                                 jsonRecognizer.classification_categories.Remove(oldCategoryNumber);
-                                jsonRecognizer.classification_categories.Add(newCategoryNumber, dbClassificationCategories[kvp.Value]);
+                                jsonRecognizer.classification_categories.Add(newCategoryNumber, categoryName);
                             }
 
                             List<KeyValuePair<string, string>> changes = new List<KeyValuePair<string, string>>();
@@ -3386,6 +3401,7 @@ namespace Timelapse.Database
 
                         // Check if the new classfication categories are the same or at least a subset of the old ones.
                         // If they are, then we can just use the existing DB categories as they will apply to the new categories.
+                        // NOte that this check is jsut here for safety, as the classificaiton categories should always be mergable.
                         if (Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories))
                         {
                             // Debug.Print("merged succeeded for classification categories");
@@ -3393,7 +3409,7 @@ namespace Timelapse.Database
                         }
                         else
                         {
-                            // Debug.Print("merged failed for classification categories");
+                            // Should not happen
                             return RecognizerImportResultEnum.IncompatibleClassificationCategories;
                         }
                         clearDBRecognitionData = false; // just to make it more readable
@@ -3533,6 +3549,16 @@ namespace Timelapse.Database
                 return false;
             }
 
+            // Get the maximum category number in dict1, in case we have to remap an unseen category from dict2 
+            int maxCategoryNumber = -1;
+            foreach (KeyValuePair<string, string> kvp in dict1)
+            {
+                if (Int32.TryParse(kvp.Key, out int keyAsInt) & keyAsInt > maxCategoryNumber)
+                {
+                    maxCategoryNumber = keyAsInt;
+                }
+            }
+
             Dictionary<string, string> dict1Flipped;
             Dictionary<string, string> dict2Flipped;
             try
@@ -3547,6 +3573,7 @@ namespace Timelapse.Database
                 return false;
             }
 
+            // If a dict2 entry has a different number, replace it with the dict1 number i.e, remap it
             foreach (KeyValuePair<string, string> kvp in dict1Flipped)
             {
                 if (dict2Flipped.ContainsKey(kvp.Key) && dict2Flipped[kvp.Key] != kvp.Value)
@@ -3554,6 +3581,16 @@ namespace Timelapse.Database
                     remappedCategoryDict.Add(dict2Flipped[kvp.Key], kvp.Value);
                 }
             }
+
+            // If a dict2 entry is not in dict1, add it to the remappedCategoryDict with a new (highest) number
+            foreach (KeyValuePair<string, string> kvp in dict2Flipped)
+            {
+                if (dict1Flipped.ContainsKey(kvp.Key) == false)
+                {
+                    remappedCategoryDict.Add(kvp.Value, (++maxCategoryNumber).ToString());
+                }
+            }
+
             return remappedCategoryDict.Count != 0;
         }
         #endregion

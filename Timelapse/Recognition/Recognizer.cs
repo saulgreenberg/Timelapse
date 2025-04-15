@@ -24,13 +24,13 @@ namespace Timelapse.Recognition
         public info info { get; set; }
         public Dictionary<string, string> detection_categories { get; set; }
         public Dictionary<string, string> classification_categories { get; set; }
-
+        public Dictionary<string,string> classification_category_descriptions { get; set; }
         public List<image> images { get; set; } = new List<image>();
 
         #endregion
 
         #region Public Set Defaults
-        // Defaults are just used when reading in current csv files, as that file does not includese the category definitions
+        // Defaults are just used when reading in current csv files, as that file does not include the category definitions
         // ReSharper disable once UnusedMember.Global
         public void SetDetectionCategoryDefaults()
         {
