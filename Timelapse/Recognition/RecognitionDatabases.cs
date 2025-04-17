@@ -77,6 +77,15 @@ namespace Timelapse.Recognition
             };
             database.CreateTable(DBTables.ClassificationCategories, columnDefinitions);
 
+            // ClassificationCategoryDescriptions: create or clear table 
+            // The column names are identical to the ClassificationCategories table, but the table is used to store descriptions of the categories
+            columnDefinitions = new List<SchemaColumnDefinition>
+            {
+                new SchemaColumnDefinition(ClassificationCategoriesColumns.Category,  Sql.StringType + Sql.PrimaryKey), // Primary Key
+                new SchemaColumnDefinition(ClassificationCategoriesColumns.Label,  Sql.StringType),
+            };
+            database.CreateTable(DBTables.ClassificationDescriptions, columnDefinitions);
+
             // Detections 
             columnDefinitions = new List<SchemaColumnDefinition>
             {
@@ -129,27 +138,32 @@ namespace Timelapse.Recognition
             ThrowIf.IsNullArgument(database, nameof(database));
 
             // Create a list of tables to clear
-            List<string> detectionTables = new List<string>();
-            if (clearInfo) detectionTables.Add(DBTables.Info);
-            if (clearDetectionCategories) detectionTables.Add(DBTables.DetectionCategories);
-            if (clearClassificationCategories) detectionTables.Add(DBTables.ClassificationCategories);
+            List<string> recognitionTables = new List<string>();
+            if (clearInfo) recognitionTables.Add(DBTables.Info);
+            if (clearDetectionCategories) recognitionTables.Add(DBTables.DetectionCategories);
+            if (clearClassificationCategories)
+            {
+                recognitionTables.Add(DBTables.ClassificationCategories);
+                recognitionTables.Add(DBTables.ClassificationDescriptions);
+            }
+
             if (clearDetections)
             {
                 // When we clear Detections, DetectionsVideo should also be cleared.
                 // Even though it would be done anyways as it maintains a foreign key to the DetectionsID,I think this is more efficient.
-                detectionTables.Add(DBTables.DetectionsVideo);
-                detectionTables.Add(DBTables.Detections);
+                recognitionTables.Add(DBTables.DetectionsVideo);
+                recognitionTables.Add(DBTables.Detections);
 
             }
-            if (detectionTables.Count > 0)
+            if (recognitionTables.Count > 0)
             {
-                database.DeleteAllRowsInTables(detectionTables);
+                database.DeleteAllRowsInTables(recognitionTables);
             }
         }
         #endregion
 
-        #region Public: Populate Detection Tables
-        // Populate the various Detection Database Tables from the detection data structure.
+        #region Public: Populate Recognition Tables
+        // Populate the various Recognition Database Tables from the detection data structure.
         // The startDetectionID should be greater than any existing detection ID in the detection table. 
         // This is necessary to make sure we don't add duplicate keys if we are merging detections
         public static void PopulateTables(Recognizer recognizer, FileDatabase fileDatabase, SQLiteWrapper detectionDB, string pathPrefixForTruncation, long startDetectionID, IProgress<ProgressBarArguments> progress, int progressFrequency)
@@ -238,6 +252,23 @@ namespace Timelapse.Recognition
                     insertionStatements.Add(columnsToUpdate);
                 }
                 detectionDB.Insert(DBTables.ClassificationCategories, insertionStatements);
+            }
+
+            // ClassificationDescriptions:  Populate
+            if (recognizer.classification_category_descriptions != null && recognizer.classification_category_descriptions.Count > 0)
+            {
+                insertionStatements = new List<List<ColumnTuple>>();
+                foreach (KeyValuePair<string, string> description in recognizer.classification_category_descriptions)
+                {
+                    // Populate each classification category row
+                    columnsToUpdate = new List<ColumnTuple>
+                    {
+                        new ColumnTuple(ClassificationCategoriesColumns.Category, description.Key),
+                        new ColumnTuple(ClassificationCategoriesColumns.Label, description.Value)
+                    };
+                    insertionStatements.Add(columnsToUpdate);
+                }
+                detectionDB.Insert(DBTables.ClassificationDescriptions, insertionStatements);
             }
 
             // Images and Detections:  Populate

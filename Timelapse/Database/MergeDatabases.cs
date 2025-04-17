@@ -952,18 +952,20 @@ namespace Timelapse.Database
             }
 
             // A. Generate several dictionaries reflecting the contents of the info and category tables as held in the source and destination database
+            Dictionary<string, object> sourceInfoDictionary = new Dictionary<string, object>();
             Dictionary<string, string> sourceDetectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> sourceClassificationCategories = new Dictionary<string, string>();
-            Dictionary<string, object> sourceInfoDictionary = new Dictionary<string, object>();
+            Dictionary<string, string> sourceClassificationCategoryDescriptions = new Dictionary<string, string>();
             RecognitionUtilities.GenerateRecognitionDictionariesFromDB(sourceDdbPath, sourceInfoDictionary,
-                sourceDetectionCategories, sourceClassificationCategories);
+                sourceDetectionCategories, sourceClassificationCategories, sourceClassificationCategoryDescriptions);
 
             // B. Generate several dictionaries reflecting the contents of the info and category tables as held in the destination database
+            Dictionary<string, object> destinationInfoDictionary = new Dictionary<string, object>();
             Dictionary<string, string> destinationDetectionCategories = new Dictionary<string, string>();
             Dictionary<string, string> destinationClassificationCategories = new Dictionary<string, string>();
-            Dictionary<string, object> destinationInfoDictionary = new Dictionary<string, object>();
+            Dictionary<string, string> destinationClassificationCategoryDescription = new Dictionary<string, string>();
             RecognitionUtilities.GenerateRecognitionDictionariesFromDB(destinationDdb, destinationInfoDictionary,
-                destinationDetectionCategories, destinationClassificationCategories);
+                destinationDetectionCategories, destinationClassificationCategories, destinationClassificationCategoryDescription);
 
             // Condition 1. The destinationDdb doesn't have detections, but we now know that the sourceDdb does,
             // Thus we need to create and copy the detection tables in the destination database.

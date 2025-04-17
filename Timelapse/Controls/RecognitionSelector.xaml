@@ -84,15 +84,6 @@
                             </Style.Triggers>
                         </Style>
                     </DataGrid.Resources>
-                    <DataGrid.RowStyle>
-                        <Style TargetType="{x:Type DataGridRow}">
-                            <!--<Style.Triggers>-->
-                                <EventSetter Event="MouseEnter" Handler="DataGridDetectionsRow_MouseEnter">
-                                    <!--<Setter Property="ToolTip" Value="Green" />-->
-                                </EventSetter>
-                            <!--</Style.Triggers>-->
-                        </Style>
-                    </DataGrid.RowStyle>
 
                 </DataGrid>
             </Grid>
@@ -154,6 +145,7 @@
                                     <Setter Property="Foreground" Value="Gray"/>
                                 </DataTrigger>
                             </Style.Triggers>
+                            <EventSetter Event="MouseEnter" Handler="DataGridClassificationsRow_MouseEnter"/>
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Resources>

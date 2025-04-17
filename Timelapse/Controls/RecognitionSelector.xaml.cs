@@ -23,6 +23,8 @@ using Timelapse.Constant;
 using Cursors = System.Windows.Input.Cursors;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using static Timelapse.Controls.RecognitionSelector;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Timelapse.Controls
 {
@@ -59,6 +61,7 @@ namespace Timelapse.Controls
         // Dictionaries that will eventually hold the Detection and Classification categories  
         private Dictionary<string, string> DetectionCategories;
         private Dictionary<string, string> ClassificationCategories;
+        private Dictionary<string, string> ClassificationDescriptions;
 
         // These collections are used to store the various Count results as they are updated.
         // They serve as ItemsSource to the corresponding DataGrid and ListBox controls 
@@ -602,7 +605,29 @@ namespace Timelapse.Controls
                             // We then invoke the DataGridDetections_OnSelectionChanged to set the detection appropriately,
                             // and to trigger SendRecognitionSelectionEvent();
                             this.ignoreSelection = true;
-                            this.DataGridDetections.SelectedItem = animalCategoryCount;
+
+                            // Special case. It is likely that 'human' classification is tagged only when a 'human' detection is triggered,
+                            // 
+                            //if (categoryCount.Category == Constant.RecognizerValues.HumanClassificationLabel)
+                            //{
+                            //    // Defaults to animal if a human detection category doesn't exist
+                            //    foreach (CategoryCount cc in this.DetectionCountsCollection)
+                            //    {
+                            //        // Find the Human detection, if any
+                            //        if (cc.Category == Constant.RecognizerValues.HumanDetectionLabel)
+                            //        {
+                            //            this.DataGridDetections.SelectedItem = cc;
+                            //            KeyValuePair<string, string> humanCategory =
+                            //                this.DetectionCategories.FirstOrDefault(x => x.Value == Constant.RecognizerValues.HumanDetectionLabel);
+                            //            this.RecognitionSelections.DetectionCategoryNumber = humanCategory.Key;
+                            //            break;
+                            //        }
+                            //    }
+                            //}
+                            //else
+                            //{
+                                this.DataGridDetections.SelectedItem = animalCategoryCount;
+                            //}
                             this.ignoreSelection = false;
                         }
                         this.SendRecognitionSelectionEvent(false);
@@ -805,6 +830,7 @@ namespace Timelapse.Controls
             // Try to Populate the classification categories
             this.Database.CreateClassificationCategoriesDictionaryIfNeeded();
             this.ClassificationCategories = this.Database.classificationCategoriesDictionary;
+            this.ClassificationDescriptions = this.Database.classificationDescriptionsDictionary;
             if (this.ClassificationCategories == null || this.ClassificationCategories.Count == 0)
             {
                 // No classifications for this image set
@@ -844,7 +870,6 @@ namespace Timelapse.Controls
 
             // Set the show missing detections checkbox to its initial value
             this.ShowMissingDetectionsCheckbox.IsChecked = this.CustomSelection.ShowMissingDetections;
-
 
             this.TryHighlightCurrentSelection();
             this.SendRecognitionSelectionEvent(false);
@@ -946,6 +971,30 @@ namespace Timelapse.Controls
         }
         #endregion
 
+        #region Classification tooltip
+        // Show the classification tooltip (but only if a corresponding description exists) when the mouse enters a row
+        private void DataGridClassificationsRow_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is DataGridRow row && this.ClassificationDescriptions.Count > 0)
+            {
+                if (row.Item is CategoryCount cc)
+                {
+                    if (false == string.IsNullOrWhiteSpace(cc.Category))
+                    {
+                        string categoryNumber = GetCategoryNumberFromCategoryName(this.ClassificationCategories, cc.Category);
+                        if (this.ClassificationDescriptions.TryGetValue(categoryNumber, out string label))
+                        {
+                            string labelWithoutGuid = label.Substring(label.IndexOf(';') + 1);
+                            string labelWithoutEnding = labelWithoutGuid.Remove(labelWithoutGuid.LastIndexOf(';')).TrimEnd(';');
+
+                            row.ToolTip = string.IsNullOrEmpty(labelWithoutEnding) ? string.Empty : labelWithoutEnding;
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
         #region Enable/Disable controls
         // Disable all the recognition controls, usually because there is nothing to show
         // This is likely redundant, as the recognitions selector should NOT be created if there is nothing to show.
@@ -959,7 +1008,7 @@ namespace Timelapse.Controls
             this.ClassificationDataGridEnableState(enableAllControls, updateCursorToMatchState);
 
             // Enable/disable confidence sliders
-            this.SlidersEnableState(enableAllControls); 
+            this.SlidersEnableState(enableAllControls);
 
             // Enable/disable the buttons and checkbox 
             this.BtnCountRecognitions.IsEnabled = enableAllControls;
@@ -1015,7 +1064,7 @@ namespace Timelapse.Controls
             this.SliderDetectionConf.IsEnabled = enableState;
             this.TBDetectionsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
             this.SliderDetectionConf.RangeBackground = enableState ? SystemColors.HighlightBrush : Brushes.DarkGray;
-            
+
             this.SliderClassificationConf.IsEnabled = enableState;
             this.TBClassificationsCount.Foreground = enableState ? Brushes.Black : Brushes.Azure;
             this.SliderClassificationConf.RangeBackground = enableState ? Brushes.SaddleBrown : Brushes.DarkGray;
@@ -1302,12 +1351,10 @@ namespace Timelapse.Controls
         {
             public int? Count { get; set; }
             public string Category { get; set; }
-            public string ToolTip;
             public CategoryCount(string category, int? count)
             {
                 this.Category = category;
                 this.Count = count;
-                this.ToolTip = category;
             }
 
             public event PropertyChangedEventHandler PropertyChanged;
@@ -1318,18 +1365,6 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        private void DataGridDetectionsRow_MouseEnter(object sender, MouseEventArgs e)
-        {
-            if (sender is DataGridRow row)
-            {
-                if (row.Item is CategoryCount cc)
-                {
-                    if (false == string.IsNullOrWhiteSpace(cc.Category))
-                    {
-                        row.ToolTip = cc.ToolTip;
-                    }
-                }
-            }
-        }
+
     }
 }

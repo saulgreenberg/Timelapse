@@ -819,7 +819,7 @@ namespace Timelapse.Database
                             }
 
                             command.CommandText = statement;
-                            Debug.Print(command.CommandText);
+                            // Debug.Print(command.CommandText);
                             // Note: Its more efficient to do it this way than to send
                             // a bunch of semicolon-separated statements as a single query
                             rowsUpdated += command.ExecuteNonQuery();

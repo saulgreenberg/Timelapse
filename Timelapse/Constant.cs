@@ -339,6 +339,7 @@ namespace Timelapse.Constant
         public const string Info = "Info";
         public const string DetectionCategories = "DetectionCategories";
         public const string ClassificationCategories = "ClassificationCategories";
+        public const string ClassificationDescriptions = "ClassificationDescriptions";
         public const string Images = "Images";
         public const string Detections = "Detections";
         public const string DetectionsVideo = "DetectionsVideo";
@@ -865,6 +866,7 @@ namespace Timelapse.Constant
     {
         public const string Category = "classification";
         public const string Label = "label";
+        public const string Description = "description";
     }
 
     public static class DetectionColumns
@@ -889,6 +891,8 @@ namespace Timelapse.Constant
         public const string AllDetectionLabel = "All";
         public const string AnimalDetectionLabel = "animal";
         public const string AnimalDetectionCategoryNumber = "1"; // This should only be used as the last resort
+        public const string HumanDetectionLabel = "human";
+        public const string HumanClassificationLabel = "human";
 
         // Detection/classifications whose confidence values are below these are removed from an
         // imported recognition file, as these are typically of little use. The determination of the actual value

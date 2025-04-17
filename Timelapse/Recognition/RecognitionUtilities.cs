@@ -10,6 +10,7 @@ using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using File = System.IO.File;
 
 namespace Timelapse.Recognition
@@ -17,13 +18,13 @@ namespace Timelapse.Recognition
     public static class RecognitionUtilities
     {
         #region Get detection info and various category tables from DB as dictionaries
-        public static void GenerateRecognitionDictionariesFromDB(string ddbPath, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
+        public static void GenerateRecognitionDictionariesFromDB(string ddbPath, Dictionary<string, object> infoDict, Dictionary<string, string> detectionCategoriesDict, Dictionary<string, string> classificationCategoriesDict, Dictionary<string, string> classificationDescriptionDict)
         {
             SQLiteWrapper db = new SQLiteWrapper(ddbPath);
-            GenerateRecognitionDictionariesFromDB(db, infoDictionary, detectionCategoriesDictionary, classificationCategoriesDictionary);
+            GenerateRecognitionDictionariesFromDB(db, infoDict, detectionCategoriesDict, classificationCategoriesDict, classificationDescriptionDict);
         }
 
-        public static void GenerateRecognitionDictionariesFromDB(SQLiteWrapper db, Dictionary<string, object> infoDictionary, Dictionary<string, string> detectionCategoriesDictionary, Dictionary<string, string> classificationCategoriesDictionary)
+        public static void GenerateRecognitionDictionariesFromDB(SQLiteWrapper db, Dictionary<string, object> infoDict, Dictionary<string, string> detectionCategoriesDict, Dictionary<string, string> classificationCategoriesDict, Dictionary<string,string> classificationDescriptionDict)
         {
             if (false == db.TableExists(DBTables.Info))
             {
@@ -43,7 +44,7 @@ namespace Timelapse.Recognition
                 }
                 foreach (KeyValuePair<string, object> item in tmpDict)
                 {
-                    infoDictionary.Add(item.Key, item.Value);
+                    infoDict.Add(item.Key, item.Value);
                 }
             }
 
@@ -53,7 +54,7 @@ namespace Timelapse.Recognition
                 for (int i = 0; i < dataTableRowCount; i++)
                 {
                     DataRow row = dataTable.Rows[i];
-                    detectionCategoriesDictionary.Add((string)row[DetectionCategoriesColumns.Category], (string)row[DetectionCategoriesColumns.Label]);
+                    detectionCategoriesDict.Add((string)row[DetectionCategoriesColumns.Category], (string)row[DetectionCategoriesColumns.Label]);
                 }
             }
 
@@ -63,7 +64,20 @@ namespace Timelapse.Recognition
                 for (int i = 0; i < dataTableRowCount; i++)
                 {
                     DataRow row = dataTable.Rows[i];
-                    classificationCategoriesDictionary.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
+                    classificationCategoriesDict.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
+                }
+            }
+
+            if (db.TableExists(Constant.DBTables.ClassificationDescriptions))
+            {
+                using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationDescriptions))
+                {
+                    int dataTableRowCount = dataTable.Rows.Count;
+                    for (int i = 0; i < dataTableRowCount; i++)
+                    {
+                        DataRow row = dataTable.Rows[i];
+                        classificationDescriptionDict.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
+                    }
                 }
             }
         }

@@ -34,6 +34,7 @@ namespace Timelapse.Recognition
                 {
                     // If there is are no recognitions, default the DetectionCategory to 'All'
                     this.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
+                    this.AllDetections = true;
                     return RecognitionType.Detection;
                 }
 
@@ -145,9 +146,11 @@ namespace Timelapse.Recognition
             this.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
             this.InterpretAllDetectionsAsEmpty = false;
             this.DetectionConfidenceHigherForUI = 1;
+            this.AllDetections = true;
+            this.RankByDetectionConfidence = false;
 
             this.ClassificationCategoryNumber = string.Empty;
-            this.RankByDetectionConfidence = false;
+            this.RankByClassificationConfidence = false;
         }
         #endregion
 

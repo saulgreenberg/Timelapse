@@ -355,6 +355,11 @@ namespace Timelapse.SearchingAndSorting
                     detectionCategoryNumber = GlobalReferences.MainWindow.DataHandler.FileDatabase.detectionCategoriesDictionary.FirstOrDefault(
                         x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key
                         ?? Constant.RecognizerValues.AnimalDetectionCategoryNumber;
+                    //TODO: TEMPORARY FOR TEST
+                    // detectionCategoryNumber = this.RecognitionSelections.DetectionCategoryNumber;
+                    //detectionCategoryNumber = GlobalReferences.MainWindow.DataHandler.FileDatabase.detectionCategoriesDictionary.FirstOrDefault(
+                    //   x => String.Equals(x.Value, Constant.RecognizerValues.AllDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key
+                    //   ?? Constant.RecognizerValues.AllDetectionCategoryNumber;
                 }
                 where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(detectionCategoryNumber);
             }
