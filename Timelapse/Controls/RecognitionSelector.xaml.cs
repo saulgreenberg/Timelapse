@@ -594,13 +594,12 @@ namespace Timelapse.Controls
                         // Because we are selecting a classification, we should ensure that the Detections Category is set to All
                         this.RecognitionSelections.AllDetections = true;
                         this.RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
-                        string allCategoryNumber = GetCategoryNumberFromCategoryName(DetectionCategories, Constant.RecognizerValues.AllDetectionLabel);
-                        this.RecognitionSelections.DetectionCategoryNumber = allCategoryNumber;
+                        this.RecognitionSelections.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
 
                         CategoryCount allCategoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category.StartsWith(Constant.RecognizerValues.AllDetectionLabel));
                         if (allCategoryCount != null)
                         {
-                            // Set the selected item to Animal
+                            // Set the selected item to All
                             // We then invoke the DataGridDetections_OnSelectionChanged to set the detection appropriately,
                             // and to trigger SendRecognitionSelectionEvent();
                             this.ignoreSelection = true;

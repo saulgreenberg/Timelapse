@@ -1382,7 +1382,6 @@ namespace Timelapse.Dialog
                 RecognitionsGroupBox.Background = Brushes.White;
             }
             // Enable or disable the controls depending on the various checkbox states
-            // EnableRecognitionControls(EnableRecognitionsCheckbox.IsChecked == true);
 
             SetDetectionCriteria();
             InitiateShowCountsOfMatchingFiles();
@@ -1395,10 +1394,6 @@ namespace Timelapse.Dialog
                 return;
             }
             RecognitionSelections.UseRecognition = EnableRecognitionsCheckbox.IsChecked == true;
-            if (RecognitionSelections.UseRecognition)
-            {
-                //SetDetectionCriteriaForComboBox(resetSlidersIfNeeded);
-            }
 
             // The BoundingBoxDisplayThreshold is the user-defined default set in preferences, while the BoundingBoxThresholdOveride is the threshold
             // determined in this select dialog. For example, if (say) the preference setting is .6 but the selection is at .4 confidence, then we should 

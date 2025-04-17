@@ -342,7 +342,7 @@ namespace Timelapse.SearchingAndSorting
                 }
 
                 // Form example: Detections.Category = detectionCategory
-                // The line below ensures that the detection category number is always set to Animal when counting classifications.
+                // The line below ensures that the detection category number is always set to All when counting classifications.
                 string detectionCategoryNumber = this.RecognitionSelections.RecognitionType == RecognitionType.Detection 
                     ? RecognitionSelections.DetectionCategoryNumber 
                     : Constant.RecognizerValues.AllDetectionCategoryNumber;

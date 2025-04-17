@@ -3092,25 +3092,10 @@ namespace Timelapse.Database
                             using (JsonReader reader = new JsonTextReader(capturedSr))
                             {
                                 JsonSerializer serializer = new JsonSerializer();
-
-                                // Timelapse requires a detection category of animal to be present
                                 jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
-                                //if (false == jsonRecognizer.detection_categories.ContainsKey(Constant.RecognizerValues.AnimalDetectionCategoryNumber))
-                                //{
-                                //    // It should always have an 'animal' category, which should be mapped to 1
-                                //    // NOTE: This can be fragile if the animal category has a different number assigned to it. 
-                                //    jsonRecognizer.detection_categories.Add(Constant.RecognizerValues.AnimalDetectionCategoryNumber, Constant.RecognizerValues.AnimalDetectionLabel);
-                                //}
 
                                 // trim detections/ classifications below a certain confidence level and only keep the best classification
                                 jsonRecognizer = RecognizerTrimAndSortRecognitionsAsNeeded(jsonRecognizer);
-
-                                //// Add the animal detection category if it is not already present
-                                //if (null != jsonRecognizer.detection_categories &&
-                                //    false == jsonRecognizer.detection_categories.ContainsValue(Constant.RecognizerValues.AnimalDetectionLabel))
-                                //{
-                                //    jsonRecognizer.detection_categories.Add(Constant.RecognizerValues.AnimalDetectionCategoryNumber, Constant.RecognizerValues.AnimalDetectionLabel);
-                                //}
                             }
                         }
 
@@ -4171,17 +4156,22 @@ namespace Timelapse.Database
 
                 // Check various recognition settings.
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us
+                if (null != customSelectionFromJson?.RecognitionSelections && customSelectionFromJson.RecognitionSelections.AllDetections)
+                {
+                    // Just ensures that the All detection category number is correctly set if we are trying to use All detections
+                    // This arises as sometimes the detection category number isn't saved properly in the DB on close, but I couldn't figure out where that was. So a bit of a hack fix.
+                    customSelectionFromJson.RecognitionSelections.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
+                }
                 int detectionCategoryAsInt = Int32.MaxValue;
                 bool parseResultDetectionCategory = null != customSelectionFromJson.RecognitionSelections?.DetectionCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.DetectionCategoryNumber, out detectionCategoryAsInt);
+                
                 //bool parseResultClassificationCategory = null != customSelectionFromJson.RecognitionSelections?.ClassificationCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.ClassificationCategoryNumber, out classificationCategoryAsInt);
                 if (null == customSelectionFromJson.RecognitionSelections?.UseRecognition ||
                       customSelectionFromJson.RecognitionSelections.UseRecognition &&
                         customSelectionFromJson.RecognitionSelections.UseRecognition &&
                         false == DetectionsExists() ||
                         parseResultDetectionCategory == false ||
-                        detectionCategoryAsInt >= detectionCategoriesDictionary?.Count //||
-                                                                                       //parseResultClassificationCategory == false ||
-                                                                                       //classificationCategoryAsInt >= detectionCategoriesDictionary?.Count
+                        detectionCategoryAsInt >= detectionCategoriesDictionary?.Count 
                         )
                 {
                     // Didn't pass the test. Use the default
