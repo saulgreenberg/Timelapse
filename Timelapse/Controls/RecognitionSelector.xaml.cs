@@ -216,6 +216,7 @@ namespace Timelapse.Controls
 
             // Set search criteria to classifications
             RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
+            RecognitionSelections.AllDetections = true;
             this.RecognitionSelections.ClassificationConfidenceLowerForUI = lowerConfidenceValue;
             this.RecognitionSelections.ClassificationConfidenceHigherForUI = higherConfidenceValue;
 
@@ -518,15 +519,13 @@ namespace Timelapse.Controls
                         this.RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
 
                         // Update the datagrid
-                        if (categoryCount.Category != Constant.RecognizerValues.AnimalDetectionLabel)
-                        {
-                            // Unselect classifications when the Detection category is not Animal
-                            this.ignoreSelection = true;
-                            this.DataGridClassifications.SelectedItem = null;
-                            this.EnableDisableRankByClassificationCheckbox(false);
 
-                            this.ignoreSelection = false;
-                        }
+                        // Unselect classifications when the Detection category is not All
+                        this.ignoreSelection = true;
+                        this.DataGridClassifications.SelectedItem = null;
+                        this.EnableDisableRankByClassificationCheckbox(false);
+                        this.ignoreSelection = false;
+
                         this.SendRecognitionSelectionEvent(false);
                         return;
                     }
@@ -554,9 +553,9 @@ namespace Timelapse.Controls
                     {
                         // Set it to the selected category
                         this.RecognitionSelections.DetectionCategoryNumber = categoryNumber;
-                        if (selectedCategory != Constant.RecognizerValues.AnimalDetectionLabel)
+                        if (selectedCategory != Constant.RecognizerValues.AllDetectionLabel)
                         {
-                            // Unselect classifications when the Detection category is not Animal
+                            // Unselect classifications when the Detection category is not All
                             this.ignoreSelection = true;
                             this.DataGridClassifications.SelectedItem = null;
                             this.EnableDisableRankByClassificationCheckbox(false);
@@ -592,42 +591,20 @@ namespace Timelapse.Controls
                         this.RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
                         this.EnableDisableRankByClassificationCheckbox(true);
 
-                        // Because we are selecting a classification, we should ensure that the Detections Category is set to Animal
-                        this.RecognitionSelections.AllDetections = false;
+                        // Because we are selecting a classification, we should ensure that the Detections Category is set to All
+                        this.RecognitionSelections.AllDetections = true;
                         this.RecognitionSelections.InterpretAllDetectionsAsEmpty = false;
-                        string animalCategoryNumber = GetCategoryNumberFromCategoryName(DetectionCategories, Constant.RecognizerValues.AnimalDetectionLabel);
-                        this.RecognitionSelections.DetectionCategoryNumber = animalCategoryNumber;
+                        string allCategoryNumber = GetCategoryNumberFromCategoryName(DetectionCategories, Constant.RecognizerValues.AllDetectionLabel);
+                        this.RecognitionSelections.DetectionCategoryNumber = allCategoryNumber;
 
-                        CategoryCount animalCategoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category.StartsWith(Constant.RecognizerValues.AnimalDetectionLabel));
-                        if (animalCategoryCount != null)
+                        CategoryCount allCategoryCount = this.DetectionCountsCollection.FirstOrDefault(i => i.Category.StartsWith(Constant.RecognizerValues.AllDetectionLabel));
+                        if (allCategoryCount != null)
                         {
                             // Set the selected item to Animal
                             // We then invoke the DataGridDetections_OnSelectionChanged to set the detection appropriately,
                             // and to trigger SendRecognitionSelectionEvent();
                             this.ignoreSelection = true;
-
-                            // Special case. It is likely that 'human' classification is tagged only when a 'human' detection is triggered,
-                            // 
-                            //if (categoryCount.Category == Constant.RecognizerValues.HumanClassificationLabel)
-                            //{
-                            //    // Defaults to animal if a human detection category doesn't exist
-                            //    foreach (CategoryCount cc in this.DetectionCountsCollection)
-                            //    {
-                            //        // Find the Human detection, if any
-                            //        if (cc.Category == Constant.RecognizerValues.HumanDetectionLabel)
-                            //        {
-                            //            this.DataGridDetections.SelectedItem = cc;
-                            //            KeyValuePair<string, string> humanCategory =
-                            //                this.DetectionCategories.FirstOrDefault(x => x.Value == Constant.RecognizerValues.HumanDetectionLabel);
-                            //            this.RecognitionSelections.DetectionCategoryNumber = humanCategory.Key;
-                            //            break;
-                            //        }
-                            //    }
-                            //}
-                            //else
-                            //{
-                                this.DataGridDetections.SelectedItem = animalCategoryCount;
-                            //}
+                            this.DataGridDetections.SelectedItem = allCategoryCount;
                             this.ignoreSelection = false;
                         }
                         this.SendRecognitionSelectionEvent(false);
@@ -650,6 +627,12 @@ namespace Timelapse.Controls
                 this.DataGridClassifications.SelectedItem = null;
                 this.ignoreSelection = false;
                 return;
+            }
+
+            if (false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            {
+                // if we have a category, this ensures that the detection is set to All
+                this.RecognitionSelections.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
             }
 
             if (false == string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber))

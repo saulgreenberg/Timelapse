@@ -889,10 +889,10 @@ namespace Timelapse.Constant
         public const string EmptyDetectionLabel = "Empty";
         public const string EmptyDetectionCategoryNumber = "0";
         public const string AllDetectionLabel = "All";
-        public const string AnimalDetectionLabel = "animal";
-        public const string AnimalDetectionCategoryNumber = "1"; // This should only be used as the last resort
-        public const string HumanDetectionLabel = "human";
-        public const string HumanClassificationLabel = "human";
+        //public const string AnimalDetectionLabel = "animal";
+        //public const string AnimalDetectionCategoryNumber = "1"; // This should only be used as the last resort
+        //public const string HumanDetectionLabel = "human";
+        //public const string HumanClassificationLabel = "human";
 
         // Detection/classifications whose confidence values are below these are removed from an
         // imported recognition file, as these are typically of little use. The determination of the actual value

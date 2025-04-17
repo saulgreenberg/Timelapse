@@ -1173,13 +1173,6 @@ namespace Timelapse.Database
                         // Error
                         return;
                     }
-                    string animalDetectionCategoryNumber = this.detectionCategoriesDictionary.FirstOrDefault(x
-                        => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key;
-                    if (string.IsNullOrEmpty(animalDetectionCategoryNumber))
-                    {
-                        // This should only happen if the json was missing a detection animal category
-                        return;
-                    }
                     query += SqlPhrase.SelectDetections(SelectTypesEnum.Star);
                 }
                 else
@@ -3102,22 +3095,22 @@ namespace Timelapse.Database
 
                                 // Timelapse requires a detection category of animal to be present
                                 jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
-                                if (false == jsonRecognizer.detection_categories.ContainsKey(Constant.RecognizerValues.AnimalDetectionCategoryNumber))
-                                {
-                                    // It should always have an 'animal' category, which should be mapped to 1
-                                    // NOTE: This can be fragile if the animal category has a different number assigned to it. 
-                                    jsonRecognizer.detection_categories.Add(Constant.RecognizerValues.AnimalDetectionCategoryNumber, Constant.RecognizerValues.AnimalDetectionLabel);
-                                }
+                                //if (false == jsonRecognizer.detection_categories.ContainsKey(Constant.RecognizerValues.AnimalDetectionCategoryNumber))
+                                //{
+                                //    // It should always have an 'animal' category, which should be mapped to 1
+                                //    // NOTE: This can be fragile if the animal category has a different number assigned to it. 
+                                //    jsonRecognizer.detection_categories.Add(Constant.RecognizerValues.AnimalDetectionCategoryNumber, Constant.RecognizerValues.AnimalDetectionLabel);
+                                //}
 
                                 // trim detections/ classifications below a certain confidence level and only keep the best classification
                                 jsonRecognizer = RecognizerTrimAndSortRecognitionsAsNeeded(jsonRecognizer);
 
-                                // Add the animal detection category if it is not already present
-                                if (null != jsonRecognizer.detection_categories &&
-                                    false == jsonRecognizer.detection_categories.ContainsValue(Constant.RecognizerValues.AnimalDetectionLabel))
-                                {
-                                    jsonRecognizer.detection_categories.Add(Constant.RecognizerValues.AnimalDetectionCategoryNumber, Constant.RecognizerValues.AnimalDetectionLabel);
-                                }
+                                //// Add the animal detection category if it is not already present
+                                //if (null != jsonRecognizer.detection_categories &&
+                                //    false == jsonRecognizer.detection_categories.ContainsValue(Constant.RecognizerValues.AnimalDetectionLabel))
+                                //{
+                                //    jsonRecognizer.detection_categories.Add(Constant.RecognizerValues.AnimalDetectionCategoryNumber, Constant.RecognizerValues.AnimalDetectionLabel);
+                                //}
                             }
                         }
 

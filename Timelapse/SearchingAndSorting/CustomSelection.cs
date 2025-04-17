@@ -342,25 +342,10 @@ namespace Timelapse.SearchingAndSorting
                 }
 
                 // Form example: Detections.Category = detectionCategory
-                // The code below ensures that the detection category number is always set to Animal when counting classifications.
-                string detectionCategoryNumber;
-                if (this.RecognitionSelections.RecognitionType == RecognitionType.Detection)
-                {
-                    detectionCategoryNumber = RecognitionSelections.DetectionCategoryNumber;
-                }
-                else
-                {
-                    // TODO: SHOULD PROBABLY FLAG THIS AS AN ERROR OR  NOOP IF THERE IS NO CATEGORY ANIMAL
-                    // Look up the animal category number. If for some reason we can't find it (but we should), default to what we hope is correct.
-                    detectionCategoryNumber = GlobalReferences.MainWindow.DataHandler.FileDatabase.detectionCategoriesDictionary.FirstOrDefault(
-                        x => String.Equals(x.Value, Constant.RecognizerValues.AnimalDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key
-                        ?? Constant.RecognizerValues.AnimalDetectionCategoryNumber;
-                    //TODO: TEMPORARY FOR TEST
-                    // detectionCategoryNumber = this.RecognitionSelections.DetectionCategoryNumber;
-                    //detectionCategoryNumber = GlobalReferences.MainWindow.DataHandler.FileDatabase.detectionCategoriesDictionary.FirstOrDefault(
-                    //   x => String.Equals(x.Value, Constant.RecognizerValues.AllDetectionLabel, StringComparison.OrdinalIgnoreCase)).Key
-                    //   ?? Constant.RecognizerValues.AllDetectionCategoryNumber;
-                }
+                // The line below ensures that the detection category number is always set to Animal when counting classifications.
+                string detectionCategoryNumber = this.RecognitionSelections.RecognitionType == RecognitionType.Detection 
+                    ? RecognitionSelections.DetectionCategoryNumber 
+                    : Constant.RecognizerValues.AllDetectionCategoryNumber;
                 where += SqlPhrase.DetectionCategoryEqualsDetectionCategory(detectionCategoryNumber);
             }
 
