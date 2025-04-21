@@ -979,7 +979,7 @@ namespace Timelapse.Database
             // 5: If remapping is needed,
             // - Replace the detection categories table contents with the pairs found in the remappedDetectionCategoryDict
             //   which we generate by merging the updated source and destination dictionaries
-            
+
             // Remap the source dictionary's detection category number to match those in the destination dictionary
             // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
             if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationDetectionCategories, sourceDetectionCategories,
@@ -992,9 +992,9 @@ namespace Timelapse.Database
                 {
                     return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
                 }
-                
+
                 query += SqlQueryReplaceValuesInTwoColumnTable(DBTables.DetectionCategories, mergedDetectionDictionary, DetectionCategoriesColumns.Category, DetectionCategoriesColumns.Label);
-                
+
                 //4th: Update the temporaryDetections Category table in the source
                 string categoryColumn = DetectionCategoriesColumns.Category;
                 query += $"{Sql.Update} {tempDetectionsTable} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
@@ -1006,6 +1006,47 @@ namespace Timelapse.Database
 
                 // We no longer need the temporary data table, so drop it.
                 query += $"{Sql.DropTableIfExists} {tempDetectionCategoriesTable} {Sql.Semicolon} {Environment.NewLine}";
+            }
+
+            // Now do classification categories and descriptions
+            if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationCategories, sourceClassificationCategories,
+                    out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string, string> classificationCategoryLookupMappingDict))
+            {
+                string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
+                query += SqlLine.CreateTemporaryTableFromExistingTable(tempClassificationCategoriesTable, attachedSourceDB, DBTables.ClassificationCategories);
+                if (false == Util.Dictionaries.MergeDictionaries(destinationClassificationCategories, remappedClassificationCategoryDict,
+                        out Dictionary<string, string> mergedClassificationDictionary))
+                {
+                    return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
+                }
+                query += SqlQueryReplaceValuesInTwoColumnTable(DBTables.ClassificationCategories, mergedClassificationDictionary, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label);
+
+                //4th: Update the Classification column in the temporaryDetections table
+                string categoryColumn = ClassificationCategoriesColumns.Category;
+                query += $"{Sql.Update} {tempDetectionsTable} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
+                foreach (KeyValuePair<string, string> categoryMap in classificationCategoryLookupMappingDict)
+                {
+                    query += $"{Sql.When} {categoryColumn} {Sql.Equal} {Sql.Quote(categoryMap.Key)} {Sql.Then} {Sql.Quote(categoryMap.Value)}";
+                }
+                query += $"{Sql.Else} {categoryColumn} {Sql.End} {Sql.Semicolon} {Environment.NewLine}";
+
+                // We no longer need the temporary data table, so drop it.
+                query += $"{Sql.DropTableIfExists} {tempClassificationCategoriesTable} {Sql.Semicolon} {Environment.NewLine}";
+            }
+
+            if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationDescriptions, sourceClassificationDescriptions,
+                    out Dictionary<string, string> remappedClassificationDescriptionsDict, out Dictionary<string, string> classificationDescriptionsLookupMappingDict))
+            {
+                string tempClassificationDescriptionsTable = "tempClassificationDescriptionsTable";
+                query += SqlLine.CreateTemporaryTableFromExistingTable(tempClassificationDescriptionsTable, attachedSourceDB, DBTables.ClassificationDescriptions);
+                if (false == Util.Dictionaries.MergeDictionaries(destinationClassificationDescriptions, remappedClassificationDescriptionsDict,
+                        out Dictionary<string, string> mergedClassificationDescriptionsDictionary))
+                {
+                    return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
+                }
+
+                query += SqlQueryReplaceValuesInTwoColumnTable(DBTables.ClassificationDescriptions, mergedClassificationDescriptionsDictionary,
+                    Constant.ClassificationDetectionsColumns.Category, Constant.ClassificationDetectionsColumns.Label);
             }
 
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
@@ -1026,8 +1067,6 @@ namespace Timelapse.Database
             }
 
             return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, true);
-            //string tempClassificationCategoriesTable = "tempClassificationCategoriesTable";
-            //query += SqlLine.CreateTemporaryTableFromExistingTable(tempClassificationCategoriesTable, attachedSourceDB, DBTables.ClassificationCategories);
 
             //string tempClassificationDescriptionsTable = "tempClassificationCategoriesTable";
             //query += SqlLine.CreateTemporaryTableFromExistingTable(tempClassificationDescriptionsTable, attachedSourceDB, DBTables.ClassificationDescriptions);
