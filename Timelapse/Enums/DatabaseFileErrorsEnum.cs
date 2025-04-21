@@ -6,6 +6,7 @@
         OkButOpenedWithAnOlderTimelapseVersion,
         InvalidDatabase,
         PreVersion2300,
+        IncompatibleVersionForMerging,
         IncompatibleVersion,
         UTCOffsetTypeExistsInUpgradedVersion,
         FileInSystemOrHiddenFolder,
@@ -19,8 +20,8 @@
         // These results are used during merge testing for incompatabilities
         TemplateElementsDiffer,
         TemplateElementsSameButOrderDifferent,
-        DetectionCategoriesDiffer,
-        ClassificationCategoriesDiffer,
+        DetectionCategoriesIncompatible,
+        ClassificationCategoriesIncompatible,
         MetadataLevelsDiffer,
 
     }

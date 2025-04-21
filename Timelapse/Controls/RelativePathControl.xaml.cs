@@ -643,7 +643,7 @@ namespace Timelapse.Controls
             {
                 // We assume we can always update the database with no errors. 
                 // It would be good if we could get an error code back!
-                FileDatabase.RelativePathReplacePrefix(oldFolderPath, newFolderPath, isInteriorNode);
+                FileDatabase.UpdateRelativePathByReplacingPrefix(oldFolderPath, newFolderPath, isInteriorNode);
                 WereEditsMade = true;
             }
             return result;
@@ -951,7 +951,7 @@ namespace Timelapse.Controls
             {
                 // We assume we can always update the database with no errors. 
                 // It would be good if we could get an error code back!
-                FileDatabase.RelativePathReplacePrefix(sourceFolderPath, destinationFolderPath, isDatabaseInteriorNode);
+                FileDatabase.UpdateRelativePathByReplacingPrefix(sourceFolderPath, destinationFolderPath, isDatabaseInteriorNode);
                 WereEditsMade = true;
             }
             return result;
@@ -1153,7 +1153,7 @@ namespace Timelapse.Controls
                 // We assume we can always update the database with no errors. 
                 // It would be good if we could get an error code back!
                 // Note that this would not be an interior node as its a new folder without any children, and we know its not in the database
-                FileDatabase.RelativePathReplacePrefix(sourceNode.Path, destinationNode.Path, false);
+                FileDatabase.UpdateRelativePathByReplacingPrefix(sourceNode.Path, destinationNode.Path, false);
                 bool isRootFolder = string.IsNullOrWhiteSpace(sourceNode.Path);
 
                 // Reset the source parent so that it doesn't contain images )

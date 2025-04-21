@@ -8,14 +8,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Configuration;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Controls;
-using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -111,7 +108,8 @@ namespace Timelapse.Database
         #endregion
 
         #region Create or Open the Database
-        private FileDatabase(string filePath, bool useShortcuts)
+
+        public FileDatabase(string filePath, bool useShortcuts)
                     : base(filePath)
         {
             DataLabelFromStandardControlType = new Dictionary<string, string>();
@@ -191,7 +189,6 @@ namespace Timelapse.Database
             else
             {
                 // if it's an existing database check if it needs updating to current structure and load data tables
-                // await fileDatabase.LoadControlsFromTemplateDBSortedByControlOrderAsync();
                 await fileDatabase.OnExistingDatabaseOpenedAsync(templateDatabase, templateSyncResults).ConfigureAwait(true);
             }
 
@@ -772,16 +769,25 @@ namespace Timelapse.Database
                 AddExportToCSVColumnIfNeeded(Database);
 
                 // If there is no TemplateInfo table or a single row within it, create one
-                AddTemplateInfoTableOrRowIfNeeded(templateDatabase.Database);
+                if (null != templateDatabase)
+                {
+                    AddTemplateInfoTableOrRowIfNeeded(templateDatabase.Database);
+                }
 
                 // If the Standards column isn't in the ImageSet table or in the template's TemplateInfo table, add it
                 // Note: It should have been added previously to the template table
-                AddStandardToTemplateInfoColumnIfNeeded(templateDatabase.Database);
+                if (null != templateDatabase)
+                {
+                    AddStandardToTemplateInfoColumnIfNeeded(templateDatabase.Database);
+                }
                 AddStandardToImageSetColumnIfNeeded(Database);
 
                 // If the BackwardsCompatibility column isn't in the ImageSet table or in the template's TemplateInfo table, add it
                 // Note:  BackwardsCompatibility should have been added previously to the template table in DoCreateOrOpenAsync
-                AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded(templateDatabase.Database);
+                if (null != templateDatabase)
+                {
+                    AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded(templateDatabase.Database);
+                }
                 AddBackwardsCompatibilityToImageSetColumnIfNeeded(Database);
 
                 // If there are no metadata tables in the Ddb database, create them and their corresponding data structures
@@ -1610,258 +1616,6 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Update Files
-        /// <summary>
-        /// Update a column value (identified by its key) in an existing row (identified by its ID) 
-        /// By default, if the table parameter is not included, we use the TABLEDATA table
-        /// </summary>
-        public void UpdateFile(long fileID, string dataLabel, string value)
-        {
-            // update the data table
-            ImageRow image = FileTable.Find(fileID);
-            image.SetValueFromDatabaseString(dataLabel, value);
-
-            // update the row in the database
-            CreateBackupIfNeeded();
-
-            ColumnTuplesWithWhere columnToUpdate = new ColumnTuplesWithWhere();
-            columnToUpdate.Columns.Add(new ColumnTuple(dataLabel, value)); // Populate the data 
-            columnToUpdate.SetWhere(fileID);
-            Database.Update(DBTables.FileData, columnToUpdate);
-        }
-
-        // Set one property on all rows in the selected view to a given value
-        public void UpdateFiles(ImageRow valueSource, DataEntryControl control)
-        {
-            // We update the the files using the database format for dates (Time is the same across all of them)
-            if (control is DataEntryDateTimeCustom dateTimeCustom)
-            {
-                if (dateTimeCustom.ContentControl.Value != null)
-                {
-                    string dateTimeAsDatabaseString = DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimeCustom.ContentControl.Value);
-                    UpdateFiles(dateTimeAsDatabaseString, control.DataLabel, 0, CountAllCurrentlySelectedFiles - 1);
-                }
-            }
-            else if (control is DataEntryDate date)
-            {
-                if (date.ContentControl.Value != null)
-                {
-                    string dateAsDatabaseString = DateTimeHandler.ToStringDatabaseDate((DateTime)date.ContentControl.Value);
-                    UpdateFiles(dateAsDatabaseString, control.DataLabel, 0, CountAllCurrentlySelectedFiles - 1);
-                }
-            }
-            // No need to do DataEntryTime as the database and display format are the same.
-            else
-            {
-                UpdateFiles(valueSource, control.DataLabel);
-            }
-        }
-
-        public void UpdateFiles(ImageRow valueSource, DataEntryControl control, int from, int to)
-        {
-            // We update the the files using the database format for dates (Time is the same across all of them)
-            if (control is DataEntryDateTimeCustom dateTimeCustom)
-            {
-                if (dateTimeCustom.ContentControl.Value != null)
-                {
-                    string dateTimeAsDatabaseString = DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimeCustom.ContentControl.Value);
-                    UpdateFiles(dateTimeAsDatabaseString, control.DataLabel, from, to);
-                }
-            }
-            else if (control is DataEntryDate date)
-            {
-                if (date.ContentControl.Value != null)
-                {
-                    string dateAsDatabaseString = DateTimeHandler.ToStringDatabaseDate((DateTime)date.ContentControl.Value);
-                    UpdateFiles(dateAsDatabaseString, control.DataLabel, from, to);
-                }
-            }
-            else if (control is DataEntryTime time)
-            {
-                if (time.ContentControl.Value != null)
-                {
-                    string timeString = DateTimeHandler.ToStringTime((DateTime)time.ContentControl.Value);
-                    UpdateFiles(timeString, control.DataLabel, from, to);
-                }
-            }
-            else
-            {
-                UpdateFiles(valueSource, control.DataLabel, from, to);
-            }
-        }
-
-        public void UpdateFiles(ImageRow valueSource, string dataLabel)
-        {
-            UpdateFiles(valueSource, dataLabel, 0, CountAllCurrentlySelectedFiles - 1);
-        }
-
-
-
-        // Given a list of column/value pairs (the string,object) and the FILE name indicating a row, update it
-        public void UpdateFiles(List<ColumnTuplesWithWhere> filesToUpdate)
-        {
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, filesToUpdate);
-        }
-
-        public void UpdateFiles(ColumnTuplesWithWhere filesToUpdate)
-        {
-            List<ColumnTuplesWithWhere> imagesToUpdateList = new List<ColumnTuplesWithWhere>
-            {
-                filesToUpdate
-            };
-            Database.Update(DBTables.FileData, imagesToUpdateList);
-        }
-
-        public void UpdateFiles(ColumnTuple columnToUpdate)
-        {
-            Database.Update(DBTables.FileData, columnToUpdate);
-        }
-
-        // Given a range of selected files, update the field identifed by dataLabel with the value in valueSource
-        // Updates are applied to both the datatable (so the user sees the updates immediately) and the database
-        public void UpdateFiles(ImageRow valueSource, string dataLabel, int fromIndex, int toIndex)
-        {
-            // Check the arguments for null 
-            ThrowIf.IsNullArgument(valueSource, nameof(valueSource));
-
-            if (fromIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(fromIndex));
-            }
-            if (toIndex < fromIndex || toIndex > CountAllCurrentlySelectedFiles - 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(toIndex));
-            }
-
-            string value = valueSource.GetValueDatabaseString(dataLabel);
-            List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-            for (int index = fromIndex; index <= toIndex; index++)
-            {
-                // update data table
-                ImageRow image = FileTable[index];
-                if (null == image)
-                {
-                    Debug.Print(
-                        $"in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {index}");
-                    continue;
-                }
-                image.SetValueFromDatabaseString(dataLabel, value);
-
-                // update database
-                List<ColumnTuple> columnToUpdate = new List<ColumnTuple> { new ColumnTuple(dataLabel, value) };
-                ColumnTuplesWithWhere imageUpdate = new ColumnTuplesWithWhere(columnToUpdate, image.ID);
-                imagesToUpdate.Add(imageUpdate);
-            }
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, imagesToUpdate);
-        }
-
-        // Like above, but given a value update the field identified by the data label
-        public void UpdateFiles(string value, string dataLabel, int fromIndex, int toIndex)
-        {
-            if (fromIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(fromIndex));
-            }
-            if (toIndex < fromIndex || toIndex > CountAllCurrentlySelectedFiles - 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(toIndex));
-            }
-
-            List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-            for (int index = fromIndex; index <= toIndex; index++)
-            {
-                // update data table
-                ImageRow image = FileTable[index];
-                if (null == image)
-                {
-                    Debug.Print(
-                        $"in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {index}");
-                    continue;
-                }
-                image.SetValueFromDatabaseString(dataLabel, value);
-
-                // update database
-                List<ColumnTuple> columnToUpdate = new List<ColumnTuple> { new ColumnTuple(dataLabel, value) };
-                ColumnTuplesWithWhere imageUpdate = new ColumnTuplesWithWhere(columnToUpdate, image.ID);
-                imagesToUpdate.Add(imageUpdate);
-            }
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, imagesToUpdate);
-        }
-
-
-        // Similar to above
-        // Given a list of selected files, update the field identifed by dataLabel with the value in valueSource
-        // Updates are applied to both the datatable (so the user sees the updates immediately) and the database
-        public void UpdateFiles(List<int> fileIndexes, string dataLabel, string value)
-        {
-            // Check the arguments for null 
-            ThrowIf.IsNullArgument(fileIndexes, nameof(fileIndexes));
-
-            if (fileIndexes.Count == 0)
-            {
-                return;
-            }
-
-            // string value = valueSource.GetValueDatabaseString(dataLabel);
-            List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-            foreach (int fileIndex in fileIndexes)
-            {
-                // update data table
-                ImageRow image = FileTable[fileIndex];
-                if (null == image)
-                {
-                    Debug.Print(
-                        $"in FileDatabase.UpdateFiles v2: FileTable returned null as there is no index: {fileIndex}");
-                    continue;
-                }
-                image.SetValueFromDatabaseString(dataLabel, value);
-
-                // update database
-                List<ColumnTuple> columnToUpdate = new List<ColumnTuple> { new ColumnTuple(dataLabel, value) };
-                ColumnTuplesWithWhere imageUpdate = new ColumnTuplesWithWhere(columnToUpdate, image.ID);
-                imagesToUpdate.Add(imageUpdate);
-            }
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, imagesToUpdate);
-        }
-        #endregion
-
-        #region Update Syncing 
-        public void UpdateSyncImageSetToDatabase()
-        {
-            // don't trigger backups on image set updates as none of the properties in the image set table is particularly important
-            // For example, this avoids creating a backup when a custom selection is reverted to all when Timelapse exits.
-            Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
-        }
-
-        public void UpdateSyncMarkerToDatabase(MarkerRow marker)
-        {
-            // Check the arguments for null 
-            ThrowIf.IsNullArgument(marker, nameof(marker));
-
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.Markers, marker.CreateColumnTuplesWithWhereByID());
-        }
-        #endregion
-
-        #region Update Markers
-        // The id is the row to update, the datalabels are the labels of each control to updata, 
-        // and the markers are the respective point lists for each of those labels
-        // ReSharper disable once UnusedMember.Global
-        public void UpdateMarkers(List<ColumnTuplesWithWhere> markersToUpdate)
-        {
-            // update markers in database
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.Markers, markersToUpdate);
-
-            // Refresh the markers data table
-            RefreshMarkers();
-        }
-        #endregion
-
         #region Refresh various datatables (markers,detections, classifications)
         // Refresh the Markers DataTable
         public void RefreshMarkers()
@@ -1881,183 +1635,6 @@ namespace Timelapse.Database
             // This query joins all Detections and DetectionsVideo into a single table. If there is no corresponding DetectionsVideo entry, frame rate / number will be null
             string query = $"{Sql.SelectStarFrom} {DBTables.Detections} {Sql.LeftJoin} {DBTables.DetectionsVideo} {Sql.Using} {Sql.OpenParenthesis} {DetectionColumns.DetectionID} {Sql.CloseParenthesis}";
             detectionDataTable = await Database.GetDataTableFromSelectAsync(query);
-        }
-        #endregion
-
-        #region Update File Dates and Times
-        // Update all selected files with the given time adjustment
-        public void UpdateAdjustedFileTimes(TimeSpan adjustment)
-        {
-            UpdateAdjustedFileTimes(adjustment, 0, CountAllCurrentlySelectedFiles - 1);
-        }
-
-        // Update all selected files between the start and end row with the given time adjustment
-        public void UpdateAdjustedFileTimes(TimeSpan adjustment, int startRow, int endRow)
-        {
-            if (adjustment.Milliseconds != 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(adjustment), "The current format of the time column does not support milliseconds.");
-            }
-            UpdateAdjustedFileTimes((fileName, fileIndex, count, imageTime) => imageTime + adjustment, startRow, endRow, CancellationToken.None);
-        }
-
-        // Given a time difference in ticks, update all the date/time field in the database
-        // Note that it does NOT update the dataTable - this has to be done outside of this routine by regenerating the datatables with whatever selection is being used..
-        public void UpdateAdjustedFileTimes(Func<string, int, int, DateTime, DateTime> adjustment, int startRow, int endRow, CancellationToken token)
-        {
-            // Check the arguments for null 
-            ThrowIf.IsNullArgument(adjustment, nameof(adjustment));
-
-            if (IsFileRowInRange(startRow) == false)
-            {
-                throw new ArgumentOutOfRangeException(nameof(startRow));
-            }
-            if (IsFileRowInRange(endRow) == false)
-            {
-                throw new ArgumentOutOfRangeException(nameof(endRow));
-            }
-            if (endRow < startRow)
-            {
-                throw new ArgumentOutOfRangeException(nameof(endRow), "endRow must be greater than or equal to startRow.");
-            }
-            if (CountAllCurrentlySelectedFiles == 0)
-            {
-                return;
-            }
-
-            // We now have an unselected temporary data table
-            // Get the original value of each, and update each date by the corrected amount if possible
-            List<ImageRow> filesToAdjust = new List<ImageRow>();
-            int count = endRow - startRow + 1;
-            int fileIndex = 0;
-            for (int row = startRow; row <= endRow; ++row)
-            {
-                if (token.IsCancellationRequested)
-                {
-                    // A cancel was requested. Clear all pending changes and abort
-                    return;
-                }
-                ImageRow image = FileTable[row];
-                DateTime currentImageDateTime = image.DateTime;
-
-                // adjust the date/time
-                fileIndex++;
-                DateTime newImageDateTime = adjustment.Invoke(image.File, fileIndex, count, currentImageDateTime);
-                TimeSpan mostRecentAdjustment = newImageDateTime - currentImageDateTime;
-                if (mostRecentAdjustment.Duration() < TimeSpan.FromSeconds(1))
-                {
-                    // Ignore changes if it results in less than a 1 second change, 
-                    continue;
-                }
-                image.SetDateTime(newImageDateTime);
-                filesToAdjust.Add(image);
-            }
-
-            if (token.IsCancellationRequested)
-            {
-                // Don't update the database, as a cancellation was requested.
-                return;
-            }
-
-            // update the database with the new date/time values
-            List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-            foreach (ImageRow image in filesToAdjust)
-            {
-                imagesToUpdate.Add(image.GetDateTimeColumnTuples());
-            }
-
-            if (imagesToUpdate.Count > 0)
-            {
-                CreateBackupIfNeeded();
-                Database.Update(DBTables.FileData, imagesToUpdate);
-            }
-        }
-
-        // Update all the date fields between the start and end index by swapping the days and months.
-        public void UpdateExchangeDayAndMonthInFileDates(int startRow, int endRow)
-        {
-            if (IsFileRowInRange(startRow) == false)
-            {
-                throw new ArgumentOutOfRangeException(nameof(startRow));
-            }
-            if (IsFileRowInRange(endRow) == false)
-            {
-                throw new ArgumentOutOfRangeException(nameof(endRow));
-            }
-            if (endRow < startRow)
-            {
-                throw new ArgumentOutOfRangeException(nameof(endRow), "endRow must be greater than or equal to startRow.");
-            }
-            if (CountAllCurrentlySelectedFiles == 0)
-            {
-                return;
-            }
-
-            // Get the original date value of each. If we can swap the date order, do so. 
-            List<ColumnTuplesWithWhere> imagesToUpdate = new List<ColumnTuplesWithWhere>();
-            for (int row = startRow; row <= endRow; row++)
-            {
-                ImageRow image = FileTable[row];
-                DateTime originalDateTime = image.DateTime;
-
-                if (DateTimeHandler.TrySwapDayMonth(originalDateTime, out DateTime reversedDateTime) == false)
-                {
-                    continue;
-                }
-
-                // Now update the actual database with the new date/time values stored in the temporary table
-                image.SetDateTime(reversedDateTime);
-                imagesToUpdate.Add(image.GetDateTimeColumnTuples());
-            }
-
-            if (imagesToUpdate.Count > 0)
-            {
-                CreateBackupIfNeeded();
-                Database.Update(DBTables.FileData, imagesToUpdate);
-            }
-        }
-        #endregion
-
-        #region Update RelativePaths (used mostly by RelativePathEditor)
-        // This method will rename all relative paths matching a prefix. The Query is different depending upon
-        // whether its an interior node (i.e., a prefix matching any relative paths with a following path) or a leaf (i.e., no subfolders are under it) 
-        // Form:Update DataTable
-        // Interior nodes:
-        //      Update DataTable SET RelativePath =
-        //      'newPrefixPath' || Substr(RelativePath, Length(oldPrefixPath) + 1) where Instr (RelativePath, oldPrefixPath\) == 1
-        // Leaf nodes:
-        //      Update DataTable SET RelativePath = 'newPrefixPath' where RelativePath = 'oldPrefixPath'
-        public void RelativePathReplacePrefix(string oldPrefixPath, string newPrefixPath, bool isInteriorNode)
-        {
-            string query;
-            this.ResetAfterPossibleRelativePathChanges();
-            if (isInteriorNode)
-            {
-                query = Sql.Update + DBTables.FileData
-                                   + Sql.Set + DatabaseColumn.RelativePath + Sql.Equal
-                                   + Sql.Quote(newPrefixPath) + Sql.Concatenate
-                                   + Sql.Substr
-                                   + Sql.OpenParenthesis
-                                   + DatabaseColumn.RelativePath + Sql.Comma
-                                   + Sql.Length + Sql.OpenParenthesis + Sql.Quote(oldPrefixPath) +
-                                   Sql.CloseParenthesis + Sql.Plus + "1"
-                                   + Sql.CloseParenthesis
-                                   + Sql.Where
-                                   + Sql.Instr
-                                   + Sql.OpenParenthesis
-                                   + DatabaseColumn.RelativePath + Sql.Comma
-                                   + Sql.Quote(oldPrefixPath + '\\')
-                                   + Sql.CloseParenthesis
-                                   + Sql.BooleanEquals + "1";
-            }
-            else
-            {
-                query = Sql.Update + DBTables.FileData
-                                   + Sql.Set + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(newPrefixPath)
-                                   + Sql.Where
-                                   + DatabaseColumn.RelativePath + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
-            }
-            Database.ExecuteNonQuery(query);
         }
         #endregion
 
@@ -3290,7 +2867,7 @@ namespace Timelapse.Database
                         }
 
                         // Get a Dictionary that indicates if we need to remap the json detection category [key] to a dbDetectionCategory [value]
-                        if (RemapAndReplaceCategoryNumbersIfNeeded(dbDetectionCategories, jsonRecognizer.detection_categories, 
+                        if (RemapAndReplaceCategoryNumbersIfNeeded(dbDetectionCategories, jsonRecognizer.detection_categories,
                                 out Dictionary<string, string> remappedCategoryDict, out Dictionary<string, string> detectionCategoryLookupMappingDict))
                         {
                             // 1st: Replace the json detection category numbers with the new mapping
@@ -3325,10 +2902,11 @@ namespace Timelapse.Database
 
 
                         // Step 3. CLASSIFICATION categories: Merge the DB and Json classificaton categories if they are compatable
-                       
+
                         // Get a Dictionary that indicates if we need to remap the json classification category [key] to a dbClassificationCategory [value]
+                        // and another lookup dictionary containing old/new category number pairs
                         if (RemapAndReplaceCategoryNumbersIfNeeded(dbClassificationCategories, jsonRecognizer.classification_categories,
-                                out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string,string>classificationCategoryLookupMappingDict))
+                                out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string, string> classificationCategoryLookupMappingDict))
                         {
                             // 1st: Replace the classification_categories with the new mapping
                             jsonRecognizer.classification_categories = remappedClassificationCategoryDict;
@@ -3341,8 +2919,8 @@ namespace Timelapse.Database
                                 {
                                     // remapped: generate a new item with the new key
                                     newClassification_category_descriptions.Add(
-                                        classificationCategoryLookupMappingDict.TryGetValue(kvp.Key, out var newCategoryNumber) 
-                                            ? newCategoryNumber 
+                                        classificationCategoryLookupMappingDict.TryGetValue(kvp.Key, out var newCategoryNumber)
+                                            ? newCategoryNumber
                                             : kvp.Key, kvp.Value);
                                 }
 
@@ -3522,7 +3100,7 @@ namespace Timelapse.Database
         // - if they differ,
         //    return a dictionary (dict2) that remaps the category number of dict2  <Key> to the correct category number of dict1 <Value>
         //    also return a dictionary (dictNewMapping) that maps the old numbers to the new nubmers e.g., 2,6 means 2 is now remapped to 6
-        public static bool RemapAndReplaceCategoryNumbersIfNeeded(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string,string> dict1To2lookupMapping)
+        public static bool RemapAndReplaceCategoryNumbersIfNeeded(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string, string> dict1To2lookupMapping)
         {
             dict2Remapped = new Dictionary<string, string>();
             dict1To2lookupMapping = new Dictionary<string, string>();
@@ -4164,14 +3742,14 @@ namespace Timelapse.Database
                 }
                 int detectionCategoryAsInt = Int32.MaxValue;
                 bool parseResultDetectionCategory = null != customSelectionFromJson.RecognitionSelections?.DetectionCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.DetectionCategoryNumber, out detectionCategoryAsInt);
-                
+
                 //bool parseResultClassificationCategory = null != customSelectionFromJson.RecognitionSelections?.ClassificationCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.ClassificationCategoryNumber, out classificationCategoryAsInt);
                 if (null == customSelectionFromJson.RecognitionSelections?.UseRecognition ||
                       customSelectionFromJson.RecognitionSelections.UseRecognition &&
                         customSelectionFromJson.RecognitionSelections.UseRecognition &&
                         false == DetectionsExists() ||
                         parseResultDetectionCategory == false ||
-                        detectionCategoryAsInt >= detectionCategoriesDictionary?.Count 
+                        detectionCategoryAsInt >= detectionCategoriesDictionary?.Count
                         )
                 {
                     // Didn't pass the test. Use the default

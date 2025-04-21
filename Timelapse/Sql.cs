@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Forms;
 using Timelapse.Constant;
@@ -180,6 +181,114 @@ namespace Timelapse
                 : "'" + value.Replace("'", "''") + "'";
         }
     }
+
+    #region SqlLine 
+    // Generates short but complete generic SQL command lines ending with a semicolon and new line
+    public static class SqlLine
+    {
+        // Form: (usually used to add an offset to an Id column)
+        //   UPDATE tableName SET columnName = (offset + tableName.columnName);
+        public static string AddOffsetToColumnInTable(string tableName, string columnName, long offset)
+        {
+            if (offset == 0)
+            {
+                // A zero offset means that we don't need to update the column as it  would have no effect
+                return string.Empty;
+            }
+
+            return $"{Sql.Update} {tableName} {Sql.Set} {columnName} {Sql.Equal} {Sql.OpenParenthesis} {offset} {Sql.Plus} {tableName}{Sql.Dot}{columnName} {Sql.CloseParenthesis} {Sql.Semicolon} {Environment.NewLine}";
+        }
+
+        // Form:
+        //  ATTACH DATABASE 'databasepath' AS alias;
+        public static string AttachDatabaseAs(string databasePath, string alias)
+        {
+            return $"{Sql.AttachDatabase} {Sql.Quote(databasePath)} {Sql.As} {alias} {Sql.Semicolon} {Environment.NewLine}";
+        }
+
+        // Form: 
+        //  BEGIN TRANSACTION  ; 
+        public static string BeginTransaction()
+        {
+            return $"{Sql.BeginTransactionSemiColon} {Environment.NewLine}";
+        }
+
+        // Form:
+        //  DROP TABLE IF EXISTS tempTable;
+        //  CREATE TEMPORARY TABLE tempTable AS SELECT * FROM dataBaseName.tableName;
+        public static string CreateTemporaryTableFromExistingTable(string tempTable, string dataBaseName, string tableName)
+        {
+            string query = SqlLine.DropTableIfExists(tempTable);
+            query += $"{Sql.CreateTemporaryTable} {tempTable}  {Sql.As} {Sql.SelectStarFrom} {dataBaseName}{Sql.Dot}{tableName} {Sql.Semicolon} {Environment.NewLine}";
+            return query;
+        }
+
+        // Form:
+        //  DROP TABLE IF EXISTS tempTable;
+        //  CREATE TEMPORARY TABLE tempTable AS SELECT column1, column2 etc FROM dataBaseName.tableName;
+        public static string CreateTemporaryTableFromExistingTable(string tempTable, string dataBaseName, string tableName, string commaSeparatedcolumns)
+        {
+            string query = SqlLine.DropTableIfExists(tempTable);
+            query += $"{Sql.CreateTemporaryTable} {tempTable}  {Sql.As} {Sql.Select} {commaSeparatedcolumns} {Sql.From} {dataBaseName}{Sql.Dot}{tableName} {Sql.Semicolon} {Environment.NewLine}";
+            return query;
+        }
+
+        // Form:
+        //  DROP TABLE IF EXISTS tableName;
+        public static string DropTableIfExists(string tableName)
+        {
+            return $"{Sql.DropTableIfExists} {tableName} {Sql.Semicolon} {Environment.NewLine}";
+        }
+
+        // Form:
+        //   PRAGMA  foreign_keys  =  OFF; 
+        public static string ForeignKeyOff()
+        {
+            return $"{Sql.PragmaForeignKeysOff}{Sql.Semicolon}{Environment.NewLine}";
+        }
+
+        // Form:
+        //   PRAGMA  foreign_keys  =  On; 
+        public static string ForeignKeyOn()
+        {
+            return $"{Sql.PragmaForeignKeysOn}{Sql.Semicolon}{Environment.NewLine}";
+        }
+
+        // Create a query that returns the maximum value in the provided table. For example, it will get the maximum value in the column Id
+        // Form:
+        //  "Select Max(columnName) from tableName
+        public static string GetMaxColumnValue(string columnName, string tableName)
+        {
+            return $"{Sql.Select} {Sql.Max} {Sql.OpenParenthesis} {columnName} {Sql.CloseParenthesis} {Sql.From} {tableName} {Sql.Semicolon} {Environment.NewLine}"; 
+        }
+
+        //  INSERT INTO table1 SELECT * FROM table2;
+        public static string InsertTable2DataIntoTable1(string table1, string table2)
+        {
+            return $"{Sql.InsertInto} {table1} {Sql.SelectStarFrom} {table2} {Sql.Semicolon} {Environment.NewLine}";
+        }
+
+        //  INSERT INTO table1 SELECT column1, column2, ... FROM table2;
+        public static string InsertTable2DataIntoTable1(string table1, string table2, List<string> listColumns)
+        {
+            string columns = string.Empty;
+            foreach (string datalabels in listColumns)
+            {
+                columns += datalabels + ",";
+            }
+            columns = columns.TrimEnd(',');
+            return $"{Sql.InsertInto} {table1} {Sql.Select} {columns} {Sql.From} {table2} {Sql.Semicolon} {Environment.NewLine}";
+        }
+
+        //  Form: INSERT INTO table SELECT * FROM dataBase.table;
+        public static string InsertTableDataFromAnotherDatabase(string table, string fromDatabase)
+        {
+            return $"{Sql.InsertInto} {table} {Sql.SelectStarFrom} {fromDatabase}{Sql.Dot}{table} {Sql.Semicolon} {Environment.NewLine}"; 
+        }
+
+
+    }
+    #endregion
 
     /// <summary>
     /// Instead of having lots of long SQL phrase fragments constructed in various files, we construct and collect them here
@@ -507,14 +616,6 @@ namespace Timelapse
                 ? string.Empty
                 : Sql.OpenParenthesis;
             return frontwrapper;
-        }
-
-        // Create a query that returns the maximum value in the provided table
-        // For example, if the column is Id, it will get the maximum Id
-        // Form: "Select Max(columnName) from tableName"
-        public static string GetMaxColumnValue(string columnName, string tableName)
-        {
-            return Sql.Select + Sql.Max + Sql.OpenParenthesis + columnName + Sql.CloseParenthesis + Sql.From + tableName;
         }
 
         // A partial SQL phrase used as a prefix when selecting a Random sample

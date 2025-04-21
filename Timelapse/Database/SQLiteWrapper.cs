@@ -563,10 +563,11 @@ namespace Timelapse.Database
         #endregion
 
         #region Delete Rows from Table (Public)
+
         /// <summary>delete specific rows from the DB where...</summary>
         /// <param name="tableName">The table from which to delete.</param>
         /// <param name="where">The where clause for the delete.</param>
-        public void DeleteRows(string tableName, string where)
+        public void DeleteRows(string tableName, string where = "")
         {
             // DELETE FROM table_name WHERE where
             string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name

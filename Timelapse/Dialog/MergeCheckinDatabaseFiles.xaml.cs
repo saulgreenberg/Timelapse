@@ -162,6 +162,9 @@ namespace Timelapse.Dialog
                     // Now check if the templates are compatable
                     // TODO: MAYBE return a more specific error message if the error is in the metadata?
                     SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
+                    
+                    // TODO: Check if the sourceDdb needs upgrading!!!
+
                     int levelsToIgnore = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath).Split(Path.DirectorySeparatorChar).Length;
                     sourceFileInfo.DatabaseFileError =
                         MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb, levelsToIgnore);
@@ -190,16 +193,14 @@ namespace Timelapse.Dialog
                         continue;
                     }
 
-                    // e. Update detection categories in source if needed
-                    MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
-                        Constant.DBTables.DetectionCategories, Constant.DetectionCategoriesColumns.Category, Constant.DetectionCategoriesColumns.Label);
+                    //// e. Update detection categories in source if needed
+                    //MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
+                    //    Constant.DBTables.DetectionCategories, Constant.DetectionCategoriesColumns.Category, Constant.DetectionCategoriesColumns.Label);
 
-                    MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
-                        Constant.DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Category, Constant.ClassificationCategoriesColumns.Label);
-                    //MergeDatabases.UpdateDetectionCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb);
-                    //MergeDatabases.UpdateClassificationCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb);
+                    //// f. Update classification categorys in source if needed
+                    //MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
+                    //    Constant.DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Category, Constant.ClassificationCategoriesColumns.Label);
 
-                    // f. Update classification categorys in source if needed
                     // g. Do the merge
                     sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
                 }
@@ -467,9 +468,9 @@ namespace Timelapse.Dialog
 
 
                 // Recognizer categories differ
-                case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
-                case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
-                    b1.Tag = DatabaseFileErrorsEnum.DetectionCategoriesDiffer;
+                case DatabaseFileErrorsEnum.DetectionCategoriesIncompatible:
+                case DatabaseFileErrorsEnum.ClassificationCategoriesIncompatible:
+                    b1.Tag = DatabaseFileErrorsEnum.DetectionCategoriesIncompatible;
                     b1.Click += InvokeErrorExplanation_Click;
                     return new Tuple<string, Button>("The file's recognition data has different detection and/or classification categories.", b1);
                 // Problem with Metadata levels
@@ -483,6 +484,11 @@ namespace Timelapse.Dialog
                     b1.Tag = DatabaseFileErrorsEnum.IncompatibleVersion;
                     b1.Click += InvokeErrorExplanation_Click;
                     return new Tuple<string, Button>("The file's data is incompatible with the version of Timelapse you are using.", b1);
+
+                case DatabaseFileErrorsEnum.IncompatibleVersionForMerging:
+                    b1.Tag = DatabaseFileErrorsEnum.IncompatibleVersionForMerging;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new Tuple<string, Button>("The file you are trying to merge is incompatible with the version of the master database.", b1);
 
                 default:
                     return new Tuple<string, Button>("Unknown error", null);
@@ -512,6 +518,10 @@ namespace Timelapse.Dialog
                         Dialogs.DatabaseFileOpenedWithIncompatibleVersionOfTimelapse(this);
                         break;
 
+                    case DatabaseFileErrorsEnum.IncompatibleVersionForMerging:
+                        Dialogs.DatabaseFileBeingMergedIsIncompatibleWithParent(this);
+                        break;
+
                     // File in a non-permitted place
                     case DatabaseFileErrorsEnum.FileInSystemOrHiddenFolder:
                     case DatabaseFileErrorsEnum.FileInRootDriveFolder:
@@ -539,9 +549,9 @@ namespace Timelapse.Dialog
                         break;
 
                     // Recognizer categories differ
-                    case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
-                    case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
-                        Dialogs.MergeErrorRecognitionCategoriesDiffer(this);
+                    case DatabaseFileErrorsEnum.DetectionCategoriesIncompatible:
+                    case DatabaseFileErrorsEnum.ClassificationCategoriesIncompatible:
+                        Dialogs.MergeErrorRecognitionCategoriesIncompatible(this);
                         break;
                 }
             }

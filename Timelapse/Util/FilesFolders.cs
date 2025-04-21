@@ -229,7 +229,7 @@ namespace Timelapse.Util
                             return DatabaseFileErrorsEnum.PreVersion2300;
                         }
 
-                        // Get the 
+                        // Get the version number of the running timelapse application
                         string timelapseExecutableCurrentVersionNumber = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
 
                         // Test: Get the BackwardsCompatibility value and test if the current version is compatible with it
@@ -267,6 +267,66 @@ namespace Timelapse.Util
             }
 
             // It should never get here
+            return DatabaseFileErrorsEnum.Ok;
+        }
+
+        // Check if the sourceDb version is compatible (i.e., equal or greater than the destinationDb backwards compatibility version
+        public static DatabaseFileErrorsEnum IsDatabaseVersionMergeCompatabileWithTimelapseVersion(SQLiteWrapper sourceDb, SQLiteWrapper destinationDb)
+        {
+            // Test: Get the BackwardsCompatibility value from the destinationDb and test if the sourceDb version is compatible with it
+            string backwardsCompatibilityQuery = $"{Sql.Select} {DatabaseColumn.BackwardsCompatibility} {Sql.From} {DBTables.ImageSet} {Sql.Where} {DatabaseColumn.ID} {Sql.Equal} {Sql.Quote(DatabaseValues.ImageSetRowID.ToString())} ";
+            string versionCompatibilityQuery = $"{Sql.Select} {DatabaseColumn.VersionCompatibility} {Sql.From} {DBTables.ImageSet} {Sql.Where} {DatabaseColumn.ID} {Sql.Equal} {Sql.Quote(DatabaseValues.ImageSetRowID.ToString())} ";
+            string sourceDbVersion;
+            string destinationDbBackwardsCompatibilityVersion;
+            DataTable dataTable;
+
+            // Get the source DB version number
+            if (sourceDb.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.VersionCompatibility))
+            {
+                dataTable = sourceDb.GetDataTableFromSelect(versionCompatibilityQuery);
+                if (dataTable.Rows.Count > 0)
+                {
+                    // Get the backwards compatibility version from the sourceDb
+                    sourceDbVersion = (string)dataTable.Rows[0][DatabaseColumn.VersionCompatibility];
+                }
+                else
+                {
+                    // We should always be able to get an image set row.
+                    return DatabaseFileErrorsEnum.IncompatibleVersionForMerging;
+                }
+            }
+            else
+            {
+                // If we can't get this column, it must mean its an early version
+                return DatabaseFileErrorsEnum.IncompatibleVersionForMerging;
+            }
+
+            // Get the destinationDB Backwards compatibility version number
+            if (destinationDb.SchemaIsColumnInTable(Constant.DBTables.ImageSet, Constant.DatabaseColumn.BackwardsCompatibility))
+            {
+                dataTable = destinationDb.GetDataTableFromSelect(backwardsCompatibilityQuery);
+                if (dataTable.Rows.Count > 0)
+                {
+                    // Get the backwards compatibility version from the destinationDb
+                    destinationDbBackwardsCompatibilityVersion = (string)dataTable.Rows[0][DatabaseColumn.BackwardsCompatibility];
+                }
+                else
+                {
+                    // We should always be able to get an image set row.
+                    return DatabaseFileErrorsEnum.InvalidDatabase;
+                }
+            }
+            else
+            {
+                // If we can't get this column, it must mean its an early version
+                return DatabaseFileErrorsEnum.IncompatibleVersion;
+            }
+
+            // Check if the sourceDb version is at least as new as the destinationDb backwards compatibility version
+            if (false == VersionChecks.IsVersion1GreaterOrEqualToVersion2(sourceDbVersion, destinationDbBackwardsCompatibilityVersion))
+            {
+                return DatabaseFileErrorsEnum.IncompatibleVersionForMerging;
+            }
             return DatabaseFileErrorsEnum.Ok;
         }
         #endregion

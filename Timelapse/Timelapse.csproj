@@ -251,6 +251,8 @@
     <Compile Include="Controls\EpisodePopup.cs" />
     <Compile Include="Controls\TreeviewWithRelativePaths.cs" />
     <Compile Include="Database\FileDatabaseCompareTemplates.cs" />
+    <Compile Include="Database\FileDatabaseUpdate.cs" />
+    <Compile Include="Database\MergeDatabasesSqlPhrases.cs" />
     <Compile Include="DataStructures\Arguments.cs" />
     <Compile Include="DataStructures\Choices.cs" />
     <Compile Include="Database\MergeDatabases.cs" />

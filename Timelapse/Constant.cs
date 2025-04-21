@@ -869,6 +869,12 @@ namespace Timelapse.Constant
         public const string Description = "description";
     }
 
+    public static class ClassificationDetectionsColumns
+    {
+        public const string Category = "classification";
+        public const string Label = "label";
+    }
+
     public static class DetectionColumns
     {
         public const string DetectionID = "detectionID";

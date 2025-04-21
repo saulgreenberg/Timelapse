@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using DialogUpgradeFiles;
+using MetadataExtractor;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Timelapse.Constant;
 using Timelapse.Database;
@@ -2395,6 +2396,33 @@ namespace Timelapse.Dialog
             Mouse.OverrideCursor = cursor;
         }
 
+        public static void DatabaseFileBeingMergedIsIncompatibleWithParent(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "You are trying to merge an old incompatible database.";
+            Cursor cursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = null;
+            // notify the user the template couldn't be loaded rather than silently doing nothing
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OK)
+            {
+                Message =
+                {
+                    Title = title,
+                    What = $"You are trying to merge an incompatible database into the parent database.{Environment.NewLine}"
+                           + "To merge this database, you must open it within Timelapse, which will update it to the latest version.",
+                    Reason =  $"The database you are trying to merge was created with an earlier version of Timelapse.{Environment.NewLine}" +
+                              "Its internals are not compatible with the latest database structure.",
+
+                    Solution = $"Use Timelapse to open the template/database located in the folder you are trying to merge.{Environment.NewLine}"
+                               + "Timelapse will then update the database. Then try to merge again",
+                    Icon = MessageBoxImage.Error,
+                    Hint = "Its always best to use the latest Timelapse version on all databases to minimize any incompatabilities."
+                },
+            };
+            messageBox.ShowDialog();
+            Mouse.OverrideCursor = cursor;
+        }
+
         #endregion
 
 
@@ -2455,8 +2483,8 @@ namespace Timelapse.Dialog
                 case DatabaseFileErrorsEnum.DoesNotExist:
                 case DatabaseFileErrorsEnum.TemplateElementsDiffer:
                 case DatabaseFileErrorsEnum.TemplateElementsSameButOrderDifferent:
-                case DatabaseFileErrorsEnum.DetectionCategoriesDiffer:
-                case DatabaseFileErrorsEnum.ClassificationCategoriesDiffer:
+                case DatabaseFileErrorsEnum.DetectionCategoriesIncompatible:
+                case DatabaseFileErrorsEnum.ClassificationCategoriesIncompatible:
                 default:
                     return true;
             }
@@ -2708,21 +2736,21 @@ namespace Timelapse.Dialog
         }
 
         // Recognizer categories differ
-        public static void MergeErrorRecognitionCategoriesDiffer(Window owner)
+        public static void MergeErrorRecognitionCategoriesIncompatible(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "The recognition categories differ between your files";
+            const string title = "The recognition categories between your files are incompatible";
             new MessageBox(title, owner)
             {
                 Message =
                 {
                     Problem = $"The detection and/or classification categories used for image recognition{Environment.NewLine}"
-                              + "differ between the selected files and the destination file.",
-                    Reason = "The categories must be identical, as otherwise the recognitions will be wrong",
+                              + "are incompatible between the selected files and the destination file.",
+                    Reason = $"As Timelapse was unable to combine the categories, it stopped the merge as otherwise recognitions would be inconsistent in the merged files.",
                     Solution = $"Possibities include:{Environment.NewLine}"
-                               + $"\u2022 Recreate the recognition file imported by the selected file using the same categories as the destination.{Environment.NewLine}"
                                + $"\u2022 Revisit how the imported recognition json files were created.{Environment.NewLine}"
-                               + "\u2022 Delete the recognitions from the selected file."
+                               + $"\u2022 Redo image recognition for those files, being careful to use the same recognizer and (optional) classification model.{Environment.NewLine}"
+                               + "\u2022 If all else fails, delete the recognitions from the selected file."
                 }
             }.ShowDialog();
         }
