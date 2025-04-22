@@ -17,6 +17,7 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using Path = System.IO.Path;
 
 namespace Timelapse.Dialog
@@ -121,7 +122,7 @@ namespace Timelapse.Dialog
         // Actually do the merge of each of the selected files
         // Update whether it succeeded or failed in the sourceFileInfo.DatabaseFileError structure
         private static async Task<List<SourceFileInfo>> MergeDatabasesAsync(SQLiteWrapper destinationDdb,
-            string destinationDdbPath, List<SourceFileInfo> selectedSourceDdbFiles,
+            string destinationDdbPath, List<SourceFileInfo> selectedSourceDdbFiles, FileDatabase fileDatabase,
             IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             int sourceDdbCount = selectedSourceDdbFiles.Count;
@@ -162,7 +163,7 @@ namespace Timelapse.Dialog
                     // Now check if the templates are compatable
                     // TODO: MAYBE return a more specific error message if the error is in the metadata?
                     SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
-                    
+
                     // TODO: Check if the sourceDdb needs upgrading!!!
 
                     int levelsToIgnore = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath).Split(Path.DirectorySeparatorChar).Length;
@@ -173,6 +174,9 @@ namespace Timelapse.Dialog
                         // Skip the merge on this file if the templates are problematic
                         continue;
                     }
+
+                    // TODO: The next few steps can be problematic if the Merge fails, as we just deleted all these entries!!!
+                    // TODO: TEST THIS. Maybe we can do this AFTER the query has been generated in the MergeSourceIntoDestinationDdb?
 
                     string relativePathDifference =
                         FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
@@ -193,23 +197,25 @@ namespace Timelapse.Dialog
                         continue;
                     }
 
-                    //// e. Update detection categories in source if needed
-                    //MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
-                    //    Constant.DBTables.DetectionCategories, Constant.DetectionCategoriesColumns.Category, Constant.DetectionCategoriesColumns.Label);
-
-                    //// f. Update classification categorys in source if needed
-                    //MergeDatabases.UpdateCategoriesInSourceDdbIfNeeded(sourceDdb, destinationDdb,
-                    //    Constant.DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Category, Constant.ClassificationCategoriesColumns.Label);
-
                     // g. Do the merge
                     sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
+
+                    // h. Update the detection and classification category tables
+                    // The above may have altered the two category dictionaries, so lets update them
+                    if (fileDatabase != null)
+                    {
+                        fileDatabase.detectionCategoriesDictionary = null;
+                        fileDatabase.CreateDetectionCategoriesDictionaryIfNeeded();
+                        fileDatabase.classificationCategoriesDictionary = null;
+                        fileDatabase.CreateClassificationCategoriesDictionaryIfNeeded();
+                        fileDatabase.classificationDescriptionsDictionary = null;
+                        fileDatabase.CreateClassificationDescriptionsDictionaryIfNeeded();
+                    }
                 }
                 return selectedSourceDdbFiles;
 
             }).ConfigureAwait(true);
         }
-
-
         #endregion
 
         #region CheckInButton Callback
@@ -242,15 +248,15 @@ namespace Timelapse.Dialog
             // .ddb files found in a Backup folder are ignored
             List<SourceFileInfo> sourceFileInfos = await MergeDatabasesAsync(
                 destinationDdb, destinationDdbPath,
-                SelectedDdbFiles,
+                SelectedDdbFiles, fileDatabase,
                 Progress, GlobalReferences.CancelTokenSource).ConfigureAwait(true);
 
-            // Update the detection and classification category tables
-            // The above may have altered the two category dictionaries, so lets update them
-            this.fileDatabase.detectionCategoriesDictionary = null;
-            this.fileDatabase.CreateDetectionCategoriesDictionaryIfNeeded();
-            this.fileDatabase.classificationCategoriesDictionary = null;
-            this.fileDatabase.CreateClassificationCategoriesDictionaryIfNeeded();
+            //// Update the detection and classification category tables
+            //// The above may have altered the two category dictionaries, so lets update them
+            //this.fileDatabase.detectionCategoriesDictionary = null;
+            //this.fileDatabase.CreateDetectionCategoriesDictionaryIfNeeded();
+            //this.fileDatabase.classificationCategoriesDictionary = null;
+            //this.fileDatabase.CreateClassificationCategoriesDictionaryIfNeeded();
 
             // Turn off progress indicators
             BusyCancelIndicator.EnableForSelection(false);

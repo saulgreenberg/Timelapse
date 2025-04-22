@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows;
 using Timelapse.DataStructures;
 using System.Linq;
@@ -23,8 +22,6 @@ using Timelapse.Constant;
 using Cursors = System.Windows.Input.Cursors;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using static Timelapse.Controls.RecognitionSelector;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Timelapse.Controls
 {
@@ -969,7 +966,10 @@ namespace Timelapse.Controls
                             string labelWithoutGuid = label.Substring(label.IndexOf(';') + 1);
                             string labelWithoutEnding = labelWithoutGuid.Remove(labelWithoutGuid.LastIndexOf(';')).TrimEnd(';');
 
-                            row.ToolTip = string.IsNullOrEmpty(labelWithoutEnding) ? string.Empty : labelWithoutEnding;
+                            // Ignore empty tooltips
+                            row.ToolTip = string.IsNullOrEmpty(labelWithoutEnding)
+                                ? null
+                                : labelWithoutEnding;
                         }
                     }
                 }

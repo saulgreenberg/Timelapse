@@ -1,74 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using Timelapse.Constant;
+using Timelapse.Enums;
 
 namespace Timelapse.Database
 {
     public static partial class MergeDatabases
     {
+        // Generate various SQL phrases for merging as needed. Used by MergeDatabases only
 
-        // Generate various SQL phrases as needed. Used by MergeDatabases only
-
-        #region Simple phrases that updates tables
-
-        //Form:  UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) EMD
-        private static string SqlQueryAddPrefixToRelativePathInTable(string tableName, string pathPrefixToAdd, string columnName)
+        #region Update the column (normally relative path) to include the indicated prefix
+        // Form: columnName should be RelativePath)
+        //   UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("pathPrefixToAdd" || RelativePath) ELSE ("pathPrefixToAdd"\\ || RelativePath) END;
+        private static string SqlQueryUpdateTablesColumnByIncludingPathPrefix(string tableName, string pathPrefixToAdd, string columnName)
         {
             if (string.IsNullOrWhiteSpace(pathPrefixToAdd))
             {
                 // No need to construct a new relative path if there is nothing to add to it
                 return string.Empty;
             }
-            // A longer query, so split into three lines
             // Note that tableName must be a DataTable for this to work
-            string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal +
-                           Sql.CaseWhen + columnName + Sql.Equal + Sql.Quote(string.Empty);
-            query += Sql.Then + Sql.OpenParenthesis + Sql.Quote(pathPrefixToAdd) + Sql.Concatenate +
-                     columnName + Sql.CloseParenthesis;
-            query += Sql.Else + Sql.OpenParenthesis + Sql.Quote(pathPrefixToAdd + "\\") + Sql.Concatenate +
-                     columnName + Sql.CloseParenthesis + " END " + Sql.Semicolon;
-            return query;
+            return $"{Sql.Update} {tableName} {Sql.Set} {columnName} {Sql.Equal} " +
+                   $"{Sql.CaseWhen} {columnName} {Sql.Equal} {Sql.Quote(string.Empty)} {Sql.Then} " +
+                   $"{Sql.OpenParenthesis} {Sql.Quote(pathPrefixToAdd)} {Sql.Concatenate} {columnName} {Sql.CloseParenthesis} " +
+                   $"{Sql.Else} {Sql.OpenParenthesis} {Sql.Quote(pathPrefixToAdd + "\\")} {Sql.Concatenate} {columnName} {Sql.CloseParenthesis} {Sql.End} {Sql.Semicolon} {Environment.NewLine}";
         }
         #endregion
 
-        #region Update table with the new values
+        #region Update the Info table with the new values
+        // Form: UPDATE Info SET Detector = 'detector', DetectorVersion = 'megadetector_version', DetectionCompletionTime = 'detection_completion_time', etc
         private static string SqlQueryUpdateInfoTableWithValues(string detector, string megadetector_version,
             string detection_completion_time, string classifier, string classification_completion_time,
             double typical_detection_threshold, double conservative_detection_threshold,
             double typical_classification_threshold)
         {
-            return Sql.Update + DBTables.Info + Sql.Set
-                   + InfoColumns.Detector + Sql.Equal + Sql.Quote(detector) + Sql.Comma
-                   + InfoColumns.DetectorVersion + Sql.Equal + Sql.Quote(megadetector_version) + Sql.Comma
-                   + InfoColumns.DetectionCompletionTime + Sql.Equal + Sql.Quote(detection_completion_time) +
-                   Sql.Comma
-                   + InfoColumns.Classifier + Sql.Equal + Sql.Quote(classifier) + Sql.Comma
-                   + InfoColumns.ClassificationCompletionTime + Sql.Equal +
-                   Sql.Quote(classification_completion_time) + Sql.Comma
-                   + InfoColumns.TypicalDetectionThreshold + Sql.Equal +
-                   (Math.Round(typical_detection_threshold * 100) / 100) + Sql.Comma
-                   + InfoColumns.ConservativeDetectionThreshold + Sql.Equal +
-                   (Math.Round(conservative_detection_threshold * 100) / 100) + Sql.Comma
-                   + InfoColumns.TypicalClassificationThreshold + Sql.Equal +
-                   (Math.Round(typical_classification_threshold * 100) / 100)
-                   + Sql.Semicolon;
-        }
-
-        private static string SqlQueryUpdateImageSetTableWithUndefinedBoundingBox()
-        {
-            return Sql.Update + DBTables.ImageSet + Sql.Set
-                   + DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal +
-                   RecognizerValues.BoundingBoxDisplayThresholdDefault + Sql.Semicolon;
-        }
-
-        private static void DictionaryReplaceSecondDictWithFirstDictElements(Dictionary<string, string> first,
-            Dictionary<string, string> second)
-        {
-            second.Clear();
-            foreach (KeyValuePair<string, string> kvp in first)
-            {
-                second.Add(kvp.Key, kvp.Value);
-            }
+            return $"{Sql.Update} {DBTables.Info} {Sql.Set} " +
+                   $"{InfoColumns.Detector} {Sql.Equal} {Sql.Quote(detector)} {Sql.Comma} " +
+                   $"{InfoColumns.DetectorVersion} {Sql.Equal} {Sql.Quote(megadetector_version)} {Sql.Comma} " +
+                   $"{InfoColumns.DetectionCompletionTime} {Sql.Equal} {Sql.Quote(detection_completion_time)} {Sql.Comma} " +
+                   $"{InfoColumns.Classifier} {Sql.Equal} {Sql.Quote(classifier)} {Sql.Comma} " +
+                   $"{InfoColumns.ClassificationCompletionTime} {Sql.Equal} {Sql.Quote(classification_completion_time)} {Sql.Comma}" +
+                   $"{InfoColumns.TypicalDetectionThreshold} {Sql.Equal} {(Math.Round(typical_detection_threshold * 100) / 100)} {Sql.Comma} " +
+                   $"{InfoColumns.ConservativeDetectionThreshold} {Sql.Equal} {(Math.Round(conservative_detection_threshold * 100) / 100)} {Sql.Comma} " +
+                   $"{InfoColumns.TypicalClassificationThreshold} {Sql.Equal} {(Math.Round(typical_classification_threshold * 100) / 100)} {Sql.Semicolon} {Environment.NewLine}";
         }
         #endregion
 
@@ -104,6 +80,172 @@ namespace Timelapse.Database
         }
         #endregion
 
+        #region Merge DataTable
+        // DataTable create merge query
+        //  Create the first part of the query to:
+        //  - Attach the ddbFile
+        //  - Create a temporary DataTable mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
+        //  - Update the DataTable with the modified Ids
+        //  - Update the DataTable with the path prefix
+        //  - Insert the DataTable  into the main db's DataTable
+        // Form: ATTACH DATABASE 'sourceDdbPath' AS attachedSourceDB; 
+        //       CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM attachedSourceDB.DataTable;
+        //       UPDATE tempDataTable SET Id = (offsetID + tempDataTable.Id);  // This line only inserted if offset > 0
+        //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) END
+        //       INSERT INTO DataTable SELECT * FROM tempDataTable;
+        private static string QueryPhraseMergeDataTable(long offsetId, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePathDifference)
+        {
+            string query = string.Empty;
+            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(DBTables.FileData);
+
+
+            // Create a temporary table from the markers table, where we will update that table
+            query += SqlLine.CreateTemporaryTableFromExistingTable(tempDataTable, attachedSourceDB, DBTables.FileData);
+
+            // Add the offset to the IDs to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
+            query += SqlLine.AddOffsetToColumnInTable(tempDataTable, DatabaseColumn.ID, offsetId);
+
+            // Add the prefix to the relative path
+            query += SqlQueryUpdateTablesColumnByIncludingPathPrefix(tempDataTable, relativePathDifference, DatabaseColumn.RelativePath) + Environment.NewLine;
+
+            // Insert the modified DataTable into the current database's datatable
+            query += SqlLine.InsertTable2DataIntoTable1(DBTables.FileData, tempDataTable, currentDataLabels);
+
+            // We no longer need the temporary data table, so drop it.
+            query += $"{Sql.DropTableIfExists} {tempDataTable} {Sql.Semicolon} {Environment.NewLine}";
+            return query;
+        }
+        #endregion
+
+        #region Merge Markers table
+        // Markers Table create merge query
+        //  Create the second part of the query to:
+        //  - Create a temporary Markers Table mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
+        //  - Note that we have to ensure that the columns in both markers table are in the same order. Consequently, we
+        //    get the ordered column names from the main database, and then construct a query that creates the tempTable
+        //    by selecting on those column names (in order)
+        //  - Update the Markers Table with the modified Ids
+        //  - Insert the Markers Table  into the main db's Markers Table
+        //  Form: select name from pragma_table_info('MarkersTable')  as tblInfo  - return a list of columns
+        //  CREATE TEMPORARY TABLE tempMarkers AS SELECT <comma-spearated column list> FROM attachedSourceDB.Markers;
+        //       UPDATE tempMarkers SET Id = (offsetID + tempMarkers.Id); // This line only inserted if offset > 0
+        //       INSERT INTO Markers SELECT * FROM tempMarkers;
+        private static string QueryPhraseMergeMarkersTable(long offsetId, SQLiteWrapper destinationDdb,
+            string attachedSourceDB, string tempMarkersTable)
+        {
+            string query = string.Empty;
+            // Get the columns in order
+            // Form: select name from pragma_table_info('MarkersTable')  as tblInfo 
+            string queryGetColumnName = Sql.SelectNameFromPragmaTableInfo + Sql.OpenParenthesis +
+                                        Sql.Quote(DBTables.Markers) + Sql.CloseParenthesis + Sql.As +
+                                        Sql.TBLINFO;
+            DataTable dataTable = destinationDdb.GetDataTableFromSelect(queryGetColumnName);
+            string columns = string.Empty;
+            int i = 0;
+            foreach (DataRow row in dataTable.Rows)
+            {
+                if (i++ != 0)
+                {
+                    columns += $"{Sql.Comma} ";
+                }
+                columns += $"{row[0]} ";
+            }
+
+            // Create a temporary table from the markers table, where we will update that table
+            query += SqlLine.CreateTemporaryTableFromExistingTable(tempMarkersTable, attachedSourceDB, DBTables.Markers, columns);
+
+            // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
+            query += SqlLine.AddOffsetToColumnInTable(tempMarkersTable, DatabaseColumn.ID, offsetId);
+            query += SqlLine.InsertTable2DataIntoTable1(DBTables.Markers, tempMarkersTable);
+
+            // We no longer need the temporary data table, so drop it.
+            query += SqlLine.DropTableIfExists(tempMarkersTable);
+            return query;
+        }
+        #endregion
+
+        #region Remap categories in category table and detection table
+        // Remap the desired categories (which are either detection or classificaton categories) and corresponding values in the indicated category table
+        //     and the corresponding column values in the detection table.
+        // - Replace the categories table contents with the pairs found in the remappedCategoryDict
+        //   which we previously generated by merging the updated source and destination dictionaries
+        // - Replace the category values in the detection table as needed
+        // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
+        private static Tuple<DatabaseFileErrorsEnum, string, bool> SqlPhraseUpdateCategory(
+            string query, string tempDetectionsTable, string tableName, string categoryColumn, string labelColumn,
+            Dictionary<string, string> destinationCategories, Dictionary<string, string> remappedCategoryDict, Dictionary<string, string> categoryLookupMappingDict, bool updateTempDetectionsTable)
+        {
+            // Remap detection categories and corresponding values in the detection table is needed,
+            // - Replace the given categories table contents with the pairs found in the remappedDetectionCategoryDict
+            //   which we generate by merging the updated source and destination dictionaries
+            // - Remap the source dictionary's detection category number to match those in the destination dictionary
+            // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
+            if (false == Util.Dictionaries.MergeDictionaries(destinationCategories, remappedCategoryDict,
+            out Dictionary<string, string> mergedDetectionDictionary))
+            {
+                return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
+            }
+            query += SqlQueryReplaceValuesInTwoColumnTable(tableName, mergedDetectionDictionary, categoryColumn, labelColumn);
+
+            // 7b: Update the temporaryDetections Category table if asked to do so 
+            if (updateTempDetectionsTable)
+            {
+                query += $"{Sql.Update} {tempDetectionsTable} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
+                foreach (KeyValuePair<string, string> categoryMap in categoryLookupMappingDict)
+                {
+                    query += $"{Sql.When} {categoryColumn} {Sql.Equal} {Sql.Quote(categoryMap.Key)} {Sql.Then} {Sql.Quote(categoryMap.Value)}";
+                }
+                query += $"{Sql.Else} {categoryColumn} {Sql.End} {Sql.Semicolon} {Environment.NewLine}";
+            }
+            return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, false);
+        }
+        #endregion
+
+        #region Merge Detections table
+        private static string QueryPhraseMergeDetectionsTable(long offsetId, SQLiteWrapper destinationDdb,
+            string attachedSourceDB, string tempDetectionsTable)
+        {
+            string query = string.Empty;
+
+            // Just to make sure we are starting with a new temporary table
+            query += $"{Sql.DropTableIfExists} {tempDetectionsTable} {Sql.Semicolon} {Environment.NewLine}";
+
+            query += Sql.CreateTemporaryTable + tempDetectionsTable + Sql.As + Sql.SelectStarFrom +
+                     attachedSourceDB + Sql.Dot + DBTables.Detections + Sql.Semicolon + Environment.NewLine;
+
+            // Add the offset to the ID to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
+            query += SqlLine.AddOffsetToColumnInTable(tempDetectionsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
+            query += SqlLine.InsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable);
+
+            // We no longer need the temporary data table, so drop it.
+            query += $"{Sql.DropTableIfExists} {tempDetectionsTable} {Sql.Semicolon} {Environment.NewLine}";
+            return query;
+        }
+        #endregion 
+
+        #region Merge DetectionsVideo table
+        private static string QueryPhraseMergeDetectionsVideoTable(long offsetDetectionsId, SQLiteWrapper destinationDdb,
+            string attachedSourceDB, string tempDetectionsVideoTable)
+        {
+            string query = string.Empty;
+
+            // Just to make sure we are starting with a new temporary table
+            query += $"{Sql.DropTableIfExists} {tempDetectionsVideoTable} {Sql.Semicolon} {Environment.NewLine}";
+
+            query += Sql.CreateTemporaryTable + tempDetectionsVideoTable + Sql.As + Sql.SelectStarFrom +
+                     attachedSourceDB + Sql.Dot + DBTables.DetectionsVideo + Sql.Semicolon + Environment.NewLine;
+
+            // Add the offset to the detectionID to make sure  they match with existing detectionIDs. (A zero offset is a noop).
+            query += SqlLine.AddOffsetToColumnInTable(tempDetectionsVideoTable, Constant.DetectionColumns.DetectionID, offsetDetectionsId) + Environment.NewLine;
+            query += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable);
+
+            // We no longer need the temporary data table, so drop it.
+            query += $"{Sql.DropTableIfExists} {tempDetectionsVideoTable} {Sql.Semicolon} {Environment.NewLine}";
+            return query;
+        }
+
+        #endregion
+
         #region Merge levels
         private static string SqlQueryPhraseMergeLevelsTable(SQLiteWrapper destinationDdb,
             string attachedSourceDB, string srcTableName, string destTableName, string relativePathDifference)
@@ -115,72 +257,24 @@ namespace Timelapse.Database
             // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
             query += SqlLine.AddOffsetToColumnInTable(tmpLevelsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
 
-            query += SqlQueryAddPrefixToRelativePathInTable(tmpLevelsTable, relativePathDifference, DatabaseColumn.FolderDataPath) + Environment.NewLine;
+            query += SqlQueryUpdateTablesColumnByIncludingPathPrefix(tmpLevelsTable, relativePathDifference, DatabaseColumn.FolderDataPath) + Environment.NewLine;
             query += SqlLine.InsertTable2DataIntoTable1(destTableName, tmpLevelsTable);
+            query += SqlLine.DropTableIfExists(tmpLevelsTable) + Environment.NewLine;
             return query;
         }
         #endregion
 
-        #region Merge detections
-        // The database to merge in has recognitions. This SQL query should update the detections table and detectionsVideo table.
-        private static string SqlQueryPhraseMergeRecognitionTablesOLD(long offsetId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, bool destinationRecognitionsExist, bool sourceDetectionsVideoTableExists)
+        #region Merge detections - Should only be invoked if detections exist
+        private static string SqlQueryPhraseMergeDetectionTableUsingOffsets(long offsetId, long offsetDetectionId, string detectionsTable)
         {
-            string query = string.Empty;
-            string tempDetectionsTable = "tempDetectionsTable";
-            string tempDetectionsVideoTable = "tempDetectionsVideoTable";
+            // Add the offset to the ID to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
+            string query = SqlLine.AddOffsetToColumnInTable(detectionsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
 
-            // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
-            // The offeset should be 0 if there are no detections in the main DB, as we will be creating the detection table and then just adding to it.
-            long offsetDetectionId = destinationRecognitionsExist
-                ? destinationDdb.ScalarGetMaxValueAsLong(DBTables.Detections, DetectionColumns.DetectionID)
-                : 0;
+            // Add offset to the DetectionID to make sure DetectionIDs don't conflict with existing IDs. (A zero offset is a noop).
+            query += SqlLine.AddOffsetToColumnInTable(detectionsTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
 
-            // Update the Detections table, including adjusting the ID and DetectionID offset as needed
-            query += SqlLine.CreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, DBTables.Detections);
-            // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
-               query += SqlLine.AddOffsetToColumnInTable(tempDetectionsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
-            
-            if (offsetDetectionId > 0)
-            {
-                query += SqlLine.AddOffsetToColumnInTable(tempDetectionsTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
-            }
-            query += SqlLine.InsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable);
-
-            // Now update the DetectionsVideo table (but only if it exists), including adjusting the DetectionID offset as needed
-            if (sourceDetectionsVideoTableExists)
-            {
-                query += SqlLine.CreateTemporaryTableFromExistingTable(tempDetectionsVideoTable, attachedSourceDB, DBTables.DetectionsVideo);
-                // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
-                query += SqlLine.AddOffsetToColumnInTable(tempDetectionsVideoTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
-                
-                query += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable);
-            }
-
-            query += $"{Sql.DropTableIfExists} {tempDetectionsTable} {Sql.Semicolon} {Environment.NewLine}";
-            if (sourceDetectionsVideoTableExists)
-            {
-                query += SqlLine.DropTableIfExists(tempDetectionsVideoTable);
-            }
-            return query;
-        }
-
-        private static string SqlQueryPhraseMergeDetectionTable(long offsetId, long offsetDetectionId, SQLiteWrapper destinationDdb,
-                 string tempDetectionsTable)
-        {
-            // Should only be invoked if detections exist
-            string query = string.Empty;
-
-
-            // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
-            query += SqlLine.AddOffsetToColumnInTable(tempDetectionsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
-
-            if (offsetDetectionId > 0)
-            {
-                query += SqlLine.AddOffsetToColumnInTable(tempDetectionsTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
-            }
-            query += SqlLine.InsertTable2DataIntoTable1(DBTables.Detections, tempDetectionsTable);
-
+            // Do the merge
+            query += SqlLine.InsertTable2DataIntoTable1(DBTables.Detections, detectionsTable);
             return query;
         }
 

@@ -240,18 +240,11 @@ namespace Timelapse
             return $"{Sql.DropTableIfExists} {tableName} {Sql.Semicolon} {Environment.NewLine}";
         }
 
-        // Form:
-        //   PRAGMA  foreign_keys  =  OFF; 
-        public static string ForeignKeyOff()
+        // Form: 
+        //  End TRANSACTION  ; 
+        public static string EndTransaction()
         {
-            return $"{Sql.PragmaForeignKeysOff}{Sql.Semicolon}{Environment.NewLine}";
-        }
-
-        // Form:
-        //   PRAGMA  foreign_keys  =  On; 
-        public static string ForeignKeyOn()
-        {
-            return $"{Sql.PragmaForeignKeysOn}{Sql.Semicolon}{Environment.NewLine}";
+            return $"{Sql.EndTransactionSemiColon} {Environment.NewLine}";
         }
 
         // Create a query that returns the maximum value in the provided table. For example, it will get the maximum value in the column Id
@@ -283,10 +276,32 @@ namespace Timelapse
         //  Form: INSERT INTO table SELECT * FROM dataBase.table;
         public static string InsertTableDataFromAnotherDatabase(string table, string fromDatabase)
         {
-            return $"{Sql.InsertInto} {table} {Sql.SelectStarFrom} {fromDatabase}{Sql.Dot}{table} {Sql.Semicolon} {Environment.NewLine}"; 
+            return $"{Sql.InsertInto} {table} {Sql.SelectStarFrom} {fromDatabase}{Sql.Dot}{table} {Sql.Semicolon} {Environment.NewLine}";
         }
 
+        // Form:
+        //   PRAGMA  foreign_keys  =  OFF; 
+        public static string ForeignKeyOff()
+        {
+            return $"{Sql.PragmaForeignKeysOff}{Sql.Semicolon}{Environment.NewLine}";
+        }
 
+        // Form:
+        //   PRAGMA  foreign_keys  =  On; 
+        public static string ForeignKeyOn()
+        {
+            return $"{Sql.PragmaForeignKeysOn}{Sql.Semicolon}{Environment.NewLine}";
+        }
+        // Form: Update tableName SET columnName = newValue;
+        public static string UpdateColumnInTable(string tableName, string columnName, object newValue)
+        {
+            if (newValue is string _)
+            {
+                // If the new value is a string, its best to quote it
+                newValue = Sql.Quote(newValue.ToString());
+            }
+            return $"{Sql.Update} {tableName} {Sql.Set} {columnName} {Sql.Equal} {newValue} {Sql.Semicolon} {Environment.NewLine}";
+        }
     }
     #endregion
 
