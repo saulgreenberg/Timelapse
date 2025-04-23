@@ -655,7 +655,6 @@ namespace Timelapse.Database
             // Now we insert those tables into the current database
             query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.DetectionCategories, attachedSourceDB);
             query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.ClassificationCategories, attachedSourceDB);
-            query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.ClassificationDescriptions, attachedSourceDB);
             query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.Info, attachedSourceDB);
 
             // At this point,we have 
@@ -769,10 +768,12 @@ namespace Timelapse.Database
             }
 
             // 7b. Simlar to above but with classification categories
+            // TODO: Changed to difft method that includes Categore Descriptions. See Importing recognitions for difft way to do it.
             if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationCategories, sourceClassificationCategories,
                     out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string, string> classificationCategoryLookupMappingDict))
             {
-                Tuple<DatabaseFileErrorsEnum, string, bool> tuple = SqlPhraseUpdateCategory(
+                // TODO: I changed sqlPhraseUpdateCategory to sqlPhraseUpdateClassificationCategory  but didn't change contents
+                Tuple<DatabaseFileErrorsEnum, string, bool> tuple = SqlPhraseUpdateClassificationCategory(
                     query, tempDetectionsTable, DBTables.ClassificationCategories, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label,
                     destinationClassificationCategories, remappedClassificationCategoryDict, classificationCategoryLookupMappingDict, true);
                 if (tuple.Item1 != DatabaseFileErrorsEnum.Ok)
@@ -793,39 +794,39 @@ namespace Timelapse.Database
                 // So nothing needs to be done.
             }
 
-            // 7c.Simlar to above but with classification descriptions
-            if (sourceClassificationDescriptions.Count > 0 && classificationCategoryLookupMappingDict.Count > 0)
-            {
-                // Remap the description to match the remapped categories
-                Dictionary<string, string> remappedClassificationDescriptionsDict = new Dictionary<string, string>();
-                foreach (KeyValuePair<string, string> kvp in sourceClassificationDescriptions)
-                {
-                    string keyToAdd = classificationCategoryLookupMappingDict.TryGetValue(kvp.Key, out string remappedValue)
-                        ? remappedValue
-                        : kvp.Key;
-                    remappedClassificationDescriptionsDict.Add(keyToAdd, kvp.Value);
-                }
-                Tuple<DatabaseFileErrorsEnum, string, bool> tuple = SqlPhraseUpdateCategory(
-                    query, tempDetectionsTable, DBTables.ClassificationDescriptions, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label,
-                    destinationClassificationDescriptions, remappedClassificationDescriptionsDict, classificationCategoryLookupMappingDict, false);
-                if (tuple.Item1 != DatabaseFileErrorsEnum.Ok)
-                {
-                    return tuple;
-                }
+            //// 7c.Simlar to above but with classification descriptions
+            //if (sourceClassificationDescriptions.Count > 0 && classificationCategoryLookupMappingDict.Count > 0)
+            //{
+            //    // Remap the description to match the remapped categories
+            //    Dictionary<string, string> remappedClassificationDescriptionsDict = new Dictionary<string, string>();
+            //    foreach (KeyValuePair<string, string> kvp in sourceClassificationDescriptions)
+            //    {
+            //        string keyToAdd = classificationCategoryLookupMappingDict.TryGetValue(kvp.Key, out string remappedValue)
+            //            ? remappedValue
+            //            : kvp.Key;
+            //        remappedClassificationDescriptionsDict.Add(keyToAdd, kvp.Value);
+            //    }
+            //    Tuple<DatabaseFileErrorsEnum, string, bool> tuple = SqlPhraseUpdateCategory(
+            //        query, tempDetectionsTable, DBTables.ClassificationDescriptions, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label,
+            //        destinationClassificationDescriptions, remappedClassificationDescriptionsDict, classificationCategoryLookupMappingDict, false);
+            //    if (tuple.Item1 != DatabaseFileErrorsEnum.Ok)
+            //    {
+            //        return tuple;
+            //    }
 
-                query = tuple.Item2;
-            }
-            else if (sourceClassificationDescriptions.Count > 0 && destinationClassificationDescriptions.Count == 0)
-            {
-                // No description remapping is needed as there are no category descriptions in the Destination
-                // So just copy the table over.
-                query += SqlLine.InsertTable2DataIntoTable1(DBTables.ClassificationDescriptions, $"{attachedSourceDB}.{Constant.DBTables.ClassificationDescriptions}");
-            }
-            else
-            {
-                // The only way to get here is if the source and destination categories are the same, or if the source has no classification descriptions
-                // So nothing needs to be done.
-            }
+            //    query = tuple.Item2;
+            //}
+            //else if (sourceClassificationDescriptions.Count > 0 && destinationClassificationDescriptions.Count == 0)
+            //{
+            //    // No description remapping is needed as there are no category descriptions in the Destination
+            //    // So just copy the table over.
+            //    query += SqlLine.InsertTable2DataIntoTable1(DBTables.ClassificationDescriptions, $"{attachedSourceDB}.{Constant.DBTables.ClassificationDescriptions}");
+            //}
+            //else
+            //{
+            //    // The only way to get here is if the source and destination categories are the same, or if the source has no classification descriptions
+            //    // So nothing needs to be done.
+            //}
 
             // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
             long offsetDetectionId = destinationDdb.ScalarGetMaxValueAsLong(DBTables.Detections, DetectionColumns.DetectionID);

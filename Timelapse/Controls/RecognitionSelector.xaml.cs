@@ -958,18 +958,28 @@ namespace Timelapse.Controls
             {
                 if (row.Item is CategoryCount cc)
                 {
-                    if (false == string.IsNullOrWhiteSpace(cc.Category))
+                    if (false == string.IsNullOrWhiteSpace(cc.Category) ) 
                     {
                         string categoryNumber = GetCategoryNumberFromCategoryName(this.ClassificationCategories, cc.Category);
-                        if (this.ClassificationDescriptions.TryGetValue(categoryNumber, out string label))
+                        if (this.ClassificationDescriptions.TryGetValue(categoryNumber, out string description) && false == string.IsNullOrWhiteSpace(description))
                         {
-                            string labelWithoutGuid = label.Substring(label.IndexOf(';') + 1);
-                            string labelWithoutEnding = labelWithoutGuid.Remove(labelWithoutGuid.LastIndexOf(';')).TrimEnd(';');
+                            try
+                            {
+                                // The description is expected to be in the form of "GUID;term;term;term;term;term;commonName", where term can be empty (but ';' still present)
+                                string descriptionWithoutGuid = description.Substring(description.IndexOf(';') + 1);
+                                string descriptionWithoutCommonName = descriptionWithoutGuid.Remove(descriptionWithoutGuid.LastIndexOf(';')).TrimEnd(';');
 
-                            // Ignore empty tooltips
-                            row.ToolTip = string.IsNullOrEmpty(labelWithoutEnding)
-                                ? null
-                                : labelWithoutEnding;
+                                // Ignore empty tooltips
+                                row.ToolTip = string.IsNullOrEmpty(descriptionWithoutCommonName)
+                                    ? cc.Category
+                                    : descriptionWithoutCommonName;
+                                
+                            }
+                            catch
+                            {
+                                // The description doesn't conform to the expected format 
+                                return;
+                            }
                         }
                     }
                 }

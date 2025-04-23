@@ -136,6 +136,8 @@
                       HorizontalGridLinesBrush="LightGray"
                       VerticalGridLinesBrush="LightGray"
                       CanUserSortColumns="True"
+                      ToolTipService.InitialShowDelay="25"
+                      ToolTipService.BetweenShowDelay="25"
                       SelectionChanged="DataGridClassifications_OnSelectionChanged">
                     <!--Hide rows with a count of 0-->
                     <DataGrid.RowStyle>

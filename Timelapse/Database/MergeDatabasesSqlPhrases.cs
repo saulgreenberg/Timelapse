@@ -181,7 +181,7 @@ namespace Timelapse.Database
             // - Remap the source dictionary's detection category number to match those in the destination dictionary
             // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
             if (false == Util.Dictionaries.MergeDictionaries(destinationCategories, remappedCategoryDict,
-            out Dictionary<string, string> mergedDetectionDictionary))
+            out Dictionary<string, string> mergedDetectionDictionary, out bool differentKeysToSameValueDetected))
             {
                 return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
             }

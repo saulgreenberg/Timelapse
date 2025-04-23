@@ -64,20 +64,11 @@ namespace Timelapse.Recognition
                 for (int i = 0; i < dataTableRowCount; i++)
                 {
                     DataRow row = dataTable.Rows[i];
+                    string description = DBNull.Value == row[ClassificationCategoriesColumns.Description]
+                        ? string.Empty 
+                        : (string)row[ClassificationCategoriesColumns.Description];
                     classificationCategoriesDict.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
-                }
-            }
-
-            if (db.TableExists(Constant.DBTables.ClassificationDescriptions))
-            {
-                using (DataTable dataTable = db.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationDescriptions))
-                {
-                    int dataTableRowCount = dataTable.Rows.Count;
-                    for (int i = 0; i < dataTableRowCount; i++)
-                    {
-                        DataRow row = dataTable.Rows[i];
-                        classificationDescriptionDict.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
-                    }
+                    classificationDescriptionDict.Add((string)row[ClassificationCategoriesColumns.Category], description);
                 }
             }
         }

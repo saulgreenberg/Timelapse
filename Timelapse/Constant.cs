@@ -339,7 +339,7 @@ namespace Timelapse.Constant
         public const string Info = "Info";
         public const string DetectionCategories = "DetectionCategories";
         public const string ClassificationCategories = "ClassificationCategories";
-        public const string ClassificationDescriptions = "ClassificationDescriptions";
+        // public const string ClassificationDescriptions = "ClassificationDescriptions";
         public const string Images = "Images";
         public const string Detections = "Detections";
         public const string DetectionsVideo = "DetectionsVideo";

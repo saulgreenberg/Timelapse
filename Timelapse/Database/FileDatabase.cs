@@ -2803,6 +2803,7 @@ namespace Timelapse.Database
 
             RecognizerImportResultEnum result = await Task.Run(() =>
             {
+                bool differentKeysToSameValueDetected;
                 try
                 {
                     progress.Report(new ProgressBarArguments(0, "Examining database recognitions...", true, true));
@@ -2852,7 +2853,6 @@ namespace Timelapse.Database
                         jsonRecognizer.info.detector_metadata.conservative_detection_threshold = (float)newInfoDict[InfoColumns.ConservativeDetectionThreshold];
                         jsonRecognizer.info.classifier_metadata.typical_classification_threshold = (float)newInfoDict[InfoColumns.TypicalClassificationThreshold];
 
-
                         if (cancelTokenSource.Token.IsCancellationRequested)
                         {
                             return RecognizerImportResultEnum.Cancelled;
@@ -2873,23 +2873,25 @@ namespace Timelapse.Database
                             // 1st: Replace the json detection category numbers with the new mapping
                             jsonRecognizer.detection_categories = remappedCategoryDict;
 
-                            // 2nd: remap the json detections numbers to the same updated numbers
+                            // 2nd: for each image identified in the recognition file,
+                            //      remap (if needed) the json detection category numbers to the new mapping identified in the lookup table
                             foreach (KeyValuePair<string, string> kvp in detectionCategoryLookupMappingDict)
                             {
                                 jsonRecognizer.images.ForEach(image =>
                                 {
-                                    var matchedDetection = image.detections.FirstOrDefault(detection => detection.category == kvp.Key);
-                                    if (null != matchedDetection)
+                                    foreach (detection detection in image.detections)
                                     {
-                                        matchedDetection.category = kvp.Value;
+                                        if (detection.category == kvp.Key)
+                                        {
+                                            detection.category = kvp.Value;
+                                        }
                                     }
                                 });
                             }
                         }
 
-
                         // 3rd. Merge the DB and Json detection categories
-                        if (Dictionaries.MergeDictionaries(dbDetectionCategories, jsonRecognizer.detection_categories, out Dictionary<string, string> mergedDetectionCategories))
+                        if (Dictionaries.MergeDictionaries(dbDetectionCategories, jsonRecognizer.detection_categories, out Dictionary<string, string> mergedDetectionCategories, out differentKeysToSameValueDetected))
                         {
                             // Debug.Print("merged succeeded for detection categories");
                             jsonRecognizer.detection_categories = new Dictionary<string, string>(mergedDetectionCategories);
@@ -2947,7 +2949,7 @@ namespace Timelapse.Database
                         // Check if the new classfication categories are the same or at least a subset of the old ones.
                         // If they are, then we can just use the existing DB categories as they will apply to the new categories.
                         // Note that this check is jsut here for safety, as the classificaiton categories should always be mergable.
-                        if (Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories))
+                        if (Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories, out differentKeysToSameValueDetected))
                         {
                             // Debug.Print("merged succeeded for classification categories");
                             jsonRecognizer.classification_categories = new Dictionary<string, string>(mergedClassificationCategories);
@@ -2959,16 +2961,8 @@ namespace Timelapse.Database
                         }
 
                         // 5th. Merge the DB and Json classification_category_descriptions if they are compatible
-                        if (Dictionaries.MergeDictionaries(dbClassificationDescriptions, jsonRecognizer.classification_category_descriptions, out Dictionary<string, string> mergedClassificationCategoryDescriptions))
-                        {
-                            // Debug.Print("merged succeeded for classification categories");
-                            jsonRecognizer.classification_category_descriptions = new Dictionary<string, string>(mergedClassificationCategoryDescriptions);
-                        }
-                        else
-                        {
-                            // Should not happen
-                            return RecognizerImportResultEnum.IncompatibleClassificationCategories;
-                        }
+                        jsonRecognizer.classification_category_descriptions = Dictionaries.MergeDictionariesPreferringNonEmptyValues(
+                            dbClassificationDescriptions, jsonRecognizer.classification_category_descriptions);
 
                         clearDBRecognitionData = false; // just to make it more readable
 
@@ -3100,7 +3094,7 @@ namespace Timelapse.Database
         // - if they differ,
         //    return a dictionary (dict2) that remaps the category number of dict2  <Key> to the correct category number of dict1 <Value>
         //    also return a dictionary (dictNewMapping) that maps the old numbers to the new nubmers e.g., 2,6 means 2 is now remapped to 6
-        public static bool RemapAndReplaceCategoryNumbersIfNeeded(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string, string> dict1To2lookupMapping)
+        public static bool RemapAndReplaceCategoryNumbersIfNeededORIGINAL(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string, string> dict1To2lookupMapping)
         {
             dict2Remapped = new Dictionary<string, string>();
             dict1To2lookupMapping = new Dictionary<string, string>();
@@ -3164,6 +3158,82 @@ namespace Timelapse.Database
             }
             return dict1To2lookupMapping.Count != 0;
         }
+
+
+        public static bool RemapAndReplaceCategoryNumbersIfNeeded(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string, string> dict1To2lookupMapping)
+        {
+            dict2Remapped = new Dictionary<string, string>();
+            dict1To2lookupMapping = new Dictionary<string, string>();
+
+            if (dict1 == null || dict1.Count == 0 || dict2 == null || dict2.Count == 0)
+            {
+                // At least one of the dictionaries is null or empty
+                // so no mapping needed
+                return false;
+            }
+
+            // Get the maximum category number in dict1, and increment it to use in case we have to remap an unseen category from dict2 
+            int maxCategoryNumber = -1;
+            foreach (KeyValuePair<string, string> kvp in dict1)
+            {
+                if (Int32.TryParse(kvp.Key, out int keyAsInt) & keyAsInt > maxCategoryNumber)
+                {
+                    maxCategoryNumber = keyAsInt;
+                }
+            }
+            maxCategoryNumber++;
+
+            Dictionary<string, string> dict1Flipped = new Dictionary<string, string>();
+            Dictionary<string, string> dict2Flipped = new Dictionary<string, string>(); ;
+
+            // Flip the keys and values, as its just easier to work with
+            foreach (KeyValuePair<string, string> kvp in dict1)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Value))
+                {
+                    // Skip empty keys
+                    continue;
+                }
+                dict1Flipped.Add(kvp.Value, kvp.Key);
+            }
+
+            foreach (KeyValuePair<string, string> kvp in dict2)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Value))
+                {
+                    // Skip empty keys
+                    continue;
+                }
+                dict2Flipped.Add(kvp.Value, kvp.Key);
+            }
+
+            foreach (KeyValuePair<string, string> kvp in dict2Flipped)
+            {
+                // Check and remap if needed how dict2's category numbers maps to dict 1's category number
+                if (dict1Flipped.TryGetValue(kvp.Key, out var dict1CategoryNumber))
+                {
+                    // use dict1's category number which may be the same or different than dict2's category number
+                    dict2Remapped.Add(dict1CategoryNumber, kvp.Key);
+
+                    if (dict1CategoryNumber != kvp.Value)
+                    {
+                        // If it differs, then its a remapped number
+                        dict1To2lookupMapping.Add(kvp.Value, dict1CategoryNumber);
+                    }
+                }
+                else
+                {
+                    // The category label exists in dict1, so just use dict1's category number
+                    // This remaps the number if it is different
+                    // generate a new dict2 category number as it doesn't exist in dict1
+                    dict2Remapped.Add(maxCategoryNumber.ToString(), kvp.Key);
+                    dict1To2lookupMapping.Add(kvp.Value, maxCategoryNumber.ToString());
+                    maxCategoryNumber++;
+                }
+            }
+            return dict1To2lookupMapping.Count != 0;
+        }
+
         #endregion
 
         #region Update Json with default values as needed
@@ -3511,17 +3581,17 @@ namespace Timelapse.Database
                 classificationDescriptionsDictionary = new Dictionary<string, string>();
                 try
                 {
-                    if (this.DoesTableExist(Constant.DBTables.ClassificationDescriptions) == false)
+                    if (this.DoesTableExist(Constant.DBTables.ClassificationCategories) == false)
                     {
                         return;
                     }
-                    using (DataTable dataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationDescriptions))
+                    using (DataTable dataTable = Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.ClassificationCategories))
                     {
                         int dataTableRowCount = dataTable.Rows.Count;
                         for (int i = 0; i < dataTableRowCount; i++)
                         {
                             DataRow row = dataTable.Rows[i];
-                            classificationDescriptionsDictionary.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Label]);
+                            classificationDescriptionsDictionary.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Description]);
                         }
                     }
                 }
@@ -3908,6 +3978,12 @@ namespace Timelapse.Database
                 {
                     // add the ClassificationConf  column to the detection table
                     this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new SchemaColumnDefinition(DetectionColumns.ClassificationConf, Sql.Real));
+                }
+
+                if (false == this.Database.SchemaIsColumnInTable(DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Description))
+                {
+                    // add the ClassificationConf  column to the detection table
+                    this.Database.SchemaAddColumnToEndOfTable(DBTables.ClassificationCategories, new SchemaColumnDefinition(ClassificationCategoriesColumns.Description, Sql.Text, string.Empty));
                 }
             }
 

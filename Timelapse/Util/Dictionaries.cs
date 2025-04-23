@@ -48,15 +48,16 @@ namespace Timelapse.Util
             return true;
         }
 
-        //=Merge Dictionaries
+        // Merge Dictionaries
         // - The new dictionary will contain the union of keys present in both dictionaries
         // - If a key is present in both dictionaries, it must have the same value
         // - otherwise, the merge will fail and a false is returned
-        public static bool MergeDictionaries(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> mergedDictionary)
+        public static bool MergeDictionaries(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> mergedDictionary, out bool differentKeysToSameValueDetected)
         {
             mergedDictionary = new Dictionary<string, string>();
+            differentKeysToSameValueDetected = false;
 
-            if (( dict1 == null || dict1.Count == 0 ) && (dict2 == null || dict2.Count == 0))
+            if ((dict1 == null || dict1.Count == 0) && (dict2 == null || dict2.Count == 0))
             {
                 // both null or empty
                 // so mergedDictionary has 0 items
@@ -73,7 +74,7 @@ namespace Timelapse.Util
 
             if (dict2 == null || dict2.Count == 0)
             {
-                // Stuff in dict2 only (although count could be 0)
+                // Stuff in dict1 only (although count could be 0)
                 // mergedDictionary is dict1
                 mergedDictionary = dict1.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 return true;
@@ -118,6 +119,64 @@ namespace Timelapse.Util
                 }
             }
             return true;
+        }
+
+        public static Dictionary<string, string> MergeDictionariesPreferringNonEmptyValues(Dictionary<string, string> dict1, Dictionary<string, string> dict2)
+        {
+            Dictionary<string, string> mergedDictionary = new Dictionary<string, string>();
+
+            if ((dict1 == null || dict1.Count == 0) && (dict2 == null || dict2.Count == 0))
+            {
+                // both null or empty
+                // so mergedDictionary has 0 items
+                return mergedDictionary;
+            }
+
+            if (dict1 == null || dict1.Count == 0)
+            {
+                // Stuff in dict2 only (although count could be 0)
+                // mergedDictionary is dict2
+                return dict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            }
+
+            if (dict2 == null || dict2.Count == 0)
+            {
+                // Stuff in dict1 only (although count could be 0)
+                // mergedDictionary is dict1
+                return dict1.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            }
+
+            // Add all KVP in dict1 to the merged dictionary
+            // If one of the values is empty, use the non-empty one
+            // Otherwise use the dict1 value. 
+            //mergedDictionary = dict1.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            // Now add the KVP in dict2 that aren't present in dict1
+            foreach (KeyValuePair<string, string> dict1Kvp in dict1)
+            {
+                if (string.IsNullOrWhiteSpace(dict1Kvp.Value) && dict2.TryGetValue(dict1Kvp.Key, out string value))
+                {
+                    // If the dict1 value is empty, use the (possibly empty) value from dict2 otherwise empty
+                    mergedDictionary.Add(dict1Kvp.Key, value);
+                }
+                else
+                {
+                    // If the dict1 value is not empty, use the dict1 value
+                    // This means that if the dict2 value has a result, we still use dict1
+                    mergedDictionary.Add(dict1Kvp.Key, dict1Kvp.Value);
+                }
+            }
+            foreach (KeyValuePair<string, string> dict2Kvp in dict2)
+            {
+                if (dict1.ContainsKey(dict2Kvp.Key))
+                {
+                    // If the key is already in dict1, skip it as it would have been added in the above loop
+                    continue;
+                }
+                // this key only exists in dict2, so add it as it would not have been added previously
+                mergedDictionary.Add(dict2Kvp.Key, dict2Kvp.Value);
+            }
+            return mergedDictionary;
         }
     }
 }

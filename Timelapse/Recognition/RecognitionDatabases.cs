@@ -74,17 +74,18 @@ namespace Timelapse.Recognition
             {
                 new SchemaColumnDefinition(ClassificationCategoriesColumns.Category,  Sql.StringType + Sql.PrimaryKey), // Primary Key
                 new SchemaColumnDefinition(ClassificationCategoriesColumns.Label,  Sql.StringType),
+                new SchemaColumnDefinition(ClassificationCategoriesColumns.Description,  Sql.StringType, string.Empty),
             };
             database.CreateTable(DBTables.ClassificationCategories, columnDefinitions);
 
-            // ClassificationCategoryDescriptions: create or clear table 
-            // The column names are identical to the ClassificationCategories table, but the table is used to store descriptions of the categories
-            columnDefinitions = new List<SchemaColumnDefinition>
-            {
-                new SchemaColumnDefinition(ClassificationCategoriesColumns.Category,  Sql.StringType + Sql.PrimaryKey), // Primary Key
-                new SchemaColumnDefinition(ClassificationCategoriesColumns.Label,  Sql.StringType),
-            };
-            database.CreateTable(DBTables.ClassificationDescriptions, columnDefinitions);
+            //// ClassificationCategoryDescriptions: create or clear table 
+            //// The column names are identical to the ClassificationCategories table, but the table is used to store descriptions of the categories
+            //columnDefinitions = new List<SchemaColumnDefinition>
+            //{
+            //    new SchemaColumnDefinition(ClassificationCategoriesColumns.Category,  Sql.StringType + Sql.PrimaryKey), // Primary Key
+            //    new SchemaColumnDefinition(ClassificationCategoriesColumns.Label,  Sql.StringType),
+            //};
+            //database.CreateTable(DBTables.ClassificationDescriptions, columnDefinitions);
 
             // Detections 
             columnDefinitions = new List<SchemaColumnDefinition>
@@ -144,7 +145,7 @@ namespace Timelapse.Recognition
             if (clearClassificationCategories)
             {
                 recognitionTables.Add(DBTables.ClassificationCategories);
-                recognitionTables.Add(DBTables.ClassificationDescriptions);
+                // recognitionTables.Add(DBTables.ClassificationDescriptions);
             }
 
             if (clearDetections)
@@ -249,27 +250,37 @@ namespace Timelapse.Recognition
                         new ColumnTuple(ClassificationCategoriesColumns.Category, classification_category.Key),
                         new ColumnTuple(ClassificationCategoriesColumns.Label, classification_category.Value)
                     };
+                    // Check if there is a matching description. If so, add it to the Descriptions column
+                    if (recognizer.classification_category_descriptions != null && recognizer.classification_category_descriptions.Count > 0)
+                    {
+                        // Add the description if it exists
+                        if (recognizer.classification_category_descriptions.TryGetValue(classification_category.Key, out string description))
+                        {
+                            columnsToUpdate.Add(new ColumnTuple(ClassificationCategoriesColumns.Description, description));
+                        }
+                    }
+
                     insertionStatements.Add(columnsToUpdate);
                 }
                 detectionDB.Insert(DBTables.ClassificationCategories, insertionStatements);
             }
 
-            // ClassificationDescriptions:  Populate
-            if (recognizer.classification_category_descriptions != null && recognizer.classification_category_descriptions.Count > 0)
-            {
-                insertionStatements = new List<List<ColumnTuple>>();
-                foreach (KeyValuePair<string, string> description in recognizer.classification_category_descriptions)
-                {
-                    // Populate each classification category row
-                    columnsToUpdate = new List<ColumnTuple>
-                    {
-                        new ColumnTuple(ClassificationCategoriesColumns.Category, description.Key),
-                        new ColumnTuple(ClassificationCategoriesColumns.Label, description.Value)
-                    };
-                    insertionStatements.Add(columnsToUpdate);
-                }
-                detectionDB.Insert(DBTables.ClassificationDescriptions, insertionStatements);
-            }
+            //// ClassificationDescriptions:  Populate
+            //if (recognizer.classification_category_descriptions != null && recognizer.classification_category_descriptions.Count > 0)
+            //{
+            //    insertionStatements = new List<List<ColumnTuple>>();
+            //    foreach (KeyValuePair<string, string> description in recognizer.classification_category_descriptions)
+            //    {
+            //        // Populate each classification category row
+            //        columnsToUpdate = new List<ColumnTuple>
+            //        {
+            //            new ColumnTuple(ClassificationCategoriesColumns.Category, description.Key),
+            //            new ColumnTuple(ClassificationCategoriesColumns.Label, description.Value)
+            //        };
+            //        insertionStatements.Add(columnsToUpdate);
+            //    }
+            //    detectionDB.Insert(DBTables.ClassificationDescriptions, insertionStatements);
+            //}
 
             // Images and Detections:  Populate
             if (recognizer.images != null && recognizer.images.Count > 0)
