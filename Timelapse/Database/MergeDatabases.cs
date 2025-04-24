@@ -774,8 +774,8 @@ namespace Timelapse.Database
                     out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string, string> classificationCategoryLookupMappingDict))
             {
                 // TODO: SEE 15- THIS ONE DOESN"T WORK PROPERLY IF DESTINATONCLASSDESCR HAS EMPTY?
-                FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationDescriptions, sourceClassificationDescriptions,
-                    out Dictionary<string, string> remappedClassificationDescriptionsDict, out Dictionary<string, string> classificationDescriptionsLookupMappingDict);
+                FileDatabase.RemapAndReplaceDescriptonNumbersIfNeeded(sourceClassificationDescriptions, classificationCategoryLookupMappingDict,
+                    out Dictionary<string, string> remappedClassificationDescriptionsDict);
 
                 // The merged dictionary will be category number, category label, description
                 MergeSourceAndDestinationClassificationDictionaries(
@@ -962,6 +962,7 @@ namespace Timelapse.Database
                     }
                     else
                     {
+                        // This pair is in the source but not in the destination
                         MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, description);
                     }
                 }

@@ -3234,6 +3234,33 @@ namespace Timelapse.Database
             return dict1To2lookupMapping.Count != 0;
         }
 
+        public static void RemapAndReplaceDescriptonNumbersIfNeeded(
+            Dictionary<string, string> sourceDescriptions,
+            Dictionary<string, string> classificationLookupMapping,
+            out Dictionary<string, string> remappedClassificationDescriptionsDict)
+        {
+            remappedClassificationDescriptionsDict = new Dictionary<string, string>();
+            if (null == sourceDescriptions || sourceDescriptions.Count == 0 || null == classificationLookupMapping || classificationLookupMapping.Count ==  0)
+            {
+                // Nothing to do
+                return;
+            }
+            foreach (KeyValuePair<string, string> kvp in sourceDescriptions)
+            {
+                if (classificationLookupMapping.TryGetValue(kvp.Key, out string newCategoryNumber))
+                {
+                    // use the remapped
+                    remappedClassificationDescriptionsDict.Add(newCategoryNumber, kvp.Value);
+                }
+                else
+                {
+                    // The category label does not exist in sourceDescriptions, so just copy the unaltered pair
+                    remappedClassificationDescriptionsDict.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            return;
+        }
         #endregion
 
         #region Update Json with default values as needed
