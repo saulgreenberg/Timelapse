@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DialogUpgradeFiles.Database;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -772,15 +773,24 @@ namespace Timelapse.Database
             if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationCategories, sourceClassificationCategories,
                     out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string, string> classificationCategoryLookupMappingDict))
             {
-                // TODO: I changed sqlPhraseUpdateCategory to sqlPhraseUpdateClassificationCategory  but didn't change contents
+                // TODO: SEE 15- THIS ONE DOESN"T WORK PROPERLY IF DESTINATONCLASSDESCR HAS EMPTY?
+                FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationDescriptions, sourceClassificationDescriptions,
+                    out Dictionary<string, string> remappedClassificationDescriptionsDict, out Dictionary<string, string> classificationDescriptionsLookupMappingDict);
+
+                // The merged dictionary will be category number, category label, description
+                MergeSourceAndDestinationClassificationDictionaries(
+                    destinationClassificationCategories, remappedClassificationCategoryDict,
+                    destinationClassificationDescriptions, remappedClassificationDescriptionsDict,
+                    out Dictionary<string, Tuple<string, string>> mergedClassificationColumns);
+
                 Tuple<DatabaseFileErrorsEnum, string, bool> tuple = SqlPhraseUpdateClassificationCategory(
-                    query, tempDetectionsTable, DBTables.ClassificationCategories, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label,
-                    destinationClassificationCategories, remappedClassificationCategoryDict, classificationCategoryLookupMappingDict, true);
+                    query, tempDetectionsTable, DBTables.ClassificationCategories, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label, ClassificationCategoriesColumns.Description,
+                    mergedClassificationColumns, classificationCategoryLookupMappingDict);
+
                 if (tuple.Item1 != DatabaseFileErrorsEnum.Ok)
                 {
                     return tuple;
-                }
-                query = tuple.Item2;
+                }                query = tuple.Item2;
             }
             else if (sourceClassificationCategories.Count > 0 && destinationClassificationCategories.Count == 0)
             {
@@ -847,7 +857,147 @@ namespace Timelapse.Database
 
             return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, true);
         }
+        private static bool MergeSourceAndDestinationClassificationDictionaries(
+            Dictionary<string,string> destinationCategories, Dictionary<string,string> remappedCategories,
+            Dictionary<string, string> destinationDescriptions, Dictionary<string, string> remappedDescriptions,
+            out Dictionary<string, Tuple<string, string>> mergedClassificationColumns)
+        {
+             mergedClassificationColumns = new Dictionary<string, Tuple<string, string>>();
+
+
+            if ((destinationCategories == null || destinationCategories.Count == 0) && (remappedCategories == null || remappedCategories.Count == 0))
+            {
+                // No categories exist
+                // As no categories exist at all, definitions (even if present) aren't relevant
+                // so return an empty merged dictionary 
+                // so mergedDictionary has 0 items
+                return true;
+            }
+
+            if (destinationCategories == null || destinationCategories.Count == 0)
+            {
+                // As the destination categories don't exist, just return a merge of the (remapped) source categories and its corresponding descriptions
+                // even if there is a destination description
+                foreach (KeyValuePair<string, string> kvp in remappedCategories)
+                {
+                    if (remappedDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, description));
+                    }
+                    else
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, string.Empty));
+                    }
+                }
+                return true;
+            }
+
+            if (remappedCategories == null || remappedCategories.Count == 0)
+            {
+                foreach (KeyValuePair<string, string> kvp in destinationCategories)
+                {
+                    if (destinationDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, description));
+                    }
+                    else
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, string.Empty));
+                    }
+                }
+                return true;
+            }
+
+            // at this point, there is something in both destination and merged categories
+            // Check if the dictionaries are compatable, i.e., that the common keys have the same values.
+            foreach (KeyValuePair<string, string> pair in destinationCategories)
+            {
+                if (remappedCategories.TryGetValue(pair.Key, out string value))
+                {
+                    // If the key is in remappedCategories and it has a different value, we've failed for some unusual reason
+                    // This shouldn't happen, but just in case
+                    if (value != pair.Value)
+                    {
+                        return false;
+                    }
+                }
+            }
+            foreach (KeyValuePair<string, string> pair in remappedCategories)
+            {
+                if (destinationCategories.TryGetValue(pair.Key, out string value))
+                {
+                    // If the key is in destinationCategories and it has a different value, we've failed
+                    if (value != pair.Value)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // At this point we know that the dictionaries are compatable. 
+            // Start by adding all KVP in destinationCategories to the merged dictionary
+            // By default, this means that the destination descriptions are also populated
+            foreach (KeyValuePair<string, string> kvp in destinationCategories)
+            {
+                if (destinationDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                {
+                    mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, description));
+                }
+                else
+                {
+                    mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, string.Empty));
+                }
+            }
+
+            // Now add the KVP in remappedDescriptions that aren't present in destinationCategories
+            // At the same time, test if there are empty descriptions and if so use the non-empty description
+            foreach (KeyValuePair<string, string> kvp in remappedCategories)
+            {
+                if (remappedDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                {
+                    // We have remapped description. Use that if the destination's description is empty, otherwise stick with the destination's description
+                    if (destinationDescriptions.TryGetValue(kvp.Key, out string destinationDescription) && false == string.IsNullOrWhiteSpace(destinationDescription))
+                    {
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, destinationDescription);
+                    }
+                    else
+                    {
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, description);
+                    }
+                }
+                else
+                {
+                    // the remapped description is empty. Try to get it from the destination
+                    if (destinationDescriptions.TryGetValue(kvp.Key, out string destinationDescription) && false == string.IsNullOrWhiteSpace(destinationDescription))
+                    {
+                        // Use destination description. If the key already exists, just update the value
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, destinationDescription); 
+                    }
+                    else
+                    {
+                        // There are no descriptions in either, so use empty descriptions. If the key already exists, just update the value
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, string.Empty);
+                    }
+                }
+            }
+            return true;
+        }
+
+        private static void MergedClassificationUpsert(Dictionary<string, Tuple<string, string>> mergedClassificationColumns, string key, string value, string description)
+        {
+            if (mergedClassificationColumns.ContainsKey(key))
+            {
+                mergedClassificationColumns[key] = new Tuple<string, string>(value, description);
+            }
+            else
+            {
+                // Empty description
+                mergedClassificationColumns.Add(key, new Tuple<string, string>(value, description));
+            }
+        }
     }
+
+    
     #endregion
 
 }

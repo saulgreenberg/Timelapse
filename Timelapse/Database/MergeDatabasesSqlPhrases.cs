@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using Timelapse.Constant;
 using Timelapse.Enums;
@@ -71,6 +72,38 @@ namespace Timelapse.Database
             foreach (KeyValuePair<string, string> kvp in dictionaryOfNewValues)
             {
                 query += $"{Sql.OpenParenthesis} {Sql.Quote(kvp.Key)} {Sql.Comma} {Sql.Quote(kvp.Value)} {Sql.CloseParenthesis} {Sql.Comma}";
+            }
+
+            // Replace the last comma with a semicolon
+            query = query.Substring(0, query.LastIndexOf(Sql.Comma, StringComparison.Ordinal));
+            query += Sql.Semicolon + Environment.NewLine;
+            return query;
+        }
+        #endregion
+
+        #region Replace old table values (assuming only two columns are in the table) with new values
+        // Generate a query to clear the given table and to populate its columns as needed
+        // with the values in the dictionary. The dictionary pairs order must match the column1/2 order
+        // FORM example (using DetectionCategories and its category/label columns): 
+        // DELETE FROM DetectionCategories;
+        // INSERT INTO  DetectionCategories(category, label)   VALUES('0', 'Empty');
+        // ('1', 'animal', 'some description1'),
+        // ('5', 'train5', 'some description2'),
+        // ('6', 'car6',   'some description3'),
+        // ('7', 'newEntity7','some description4');
+        private static string SqlQueryReplaceValuesInTheeColumnTable(string tableName, Dictionary<string, Tuple<string, string>> dictionaryOfNewValues, string column1, string column2, string column3)
+        {
+            string query = string.Empty;
+
+            // Clear the table
+            query += $"{Sql.DeleteFrom}  {tableName} {Sql.Semicolon} {Environment.NewLine}";
+
+            // Update the three columns in the table with the dictionary values.
+            query += $"{Sql.InsertInto} {tableName} " +
+                     $"{Sql.OpenParenthesis} {column1} {Sql.Comma} {column2} {Sql.Comma} {column3} {Sql.CloseParenthesis} {Sql.Values}";
+            foreach (KeyValuePair<string, Tuple<string,string>> kvp in dictionaryOfNewValues)
+            {
+                query += $"{Sql.OpenParenthesis} {Sql.Quote(kvp.Key)} {Sql.Comma} {Sql.Quote(kvp.Value.Item1)} {Sql.Comma} {Sql.Quote(kvp.Value.Item2)} {Sql.CloseParenthesis} {Sql.Comma}";
             }
 
             // Replace the last comma with a semicolon
@@ -189,6 +222,31 @@ namespace Timelapse.Database
 
             // 7b: Update the temporaryDetections Category table if asked to do so 
             if (updateTempDetectionsTable)
+            {
+                query += $"{Sql.Update} {tempDetectionsTable} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
+                foreach (KeyValuePair<string, string> categoryMap in categoryLookupMappingDict)
+                {
+                    query += $"{Sql.When} {categoryColumn} {Sql.Equal} {Sql.Quote(categoryMap.Key)} {Sql.Then} {Sql.Quote(categoryMap.Value)}";
+                }
+                query += $"{Sql.Else} {categoryColumn} {Sql.End} {Sql.Semicolon} {Environment.NewLine}";
+            }
+            return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, false);
+        }
+
+        private static Tuple<DatabaseFileErrorsEnum, string, bool> SqlPhraseUpdateClassificationCategory(
+            string query, string tempDetectionsTable, string tableName, string categoryColumn, string labelColumn, string descriptionColumn,
+            Dictionary<string, Tuple<string,string>> mergedClassificationColumns, Dictionary<string, string> categoryLookupMappingDict)
+        {
+            // Remap detection categories and corresponding values in the detection table is needed,
+            // - Replace the given categories table contents with the pairs found in the remappedDetectionCategoryDict
+            //   which we generate by merging the updated source and destination dictionaries
+            // - Remap the source dictionary's detection category number to match those in the destination dictionary
+            // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
+           
+            query += SqlQueryReplaceValuesInTheeColumnTable(tableName, mergedClassificationColumns, categoryColumn, labelColumn, descriptionColumn);
+
+            // 7b: Update the temporaryDetections Category table if asked to do so 
+            if (categoryLookupMappingDict.Count > 0)
             {
                 query += $"{Sql.Update} {tempDetectionsTable} {Sql.Set} {categoryColumn} {Sql.Equal} {Sql.Case}";
                 foreach (KeyValuePair<string, string> categoryMap in categoryLookupMappingDict)
