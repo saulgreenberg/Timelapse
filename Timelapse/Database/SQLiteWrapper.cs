@@ -981,7 +981,7 @@ namespace Timelapse.Database
             string commaSeparatedColumns = GetSchemaColumnNamesAsString(connection, schemaFromTable);
             if (string.IsNullOrEmpty(commaSeparatedColumns))
             {
-                Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
+                //Debug.Print("In CopyAllValuesFromTable: comma separated columns is empty. Aborted");
                 return;
             }
             string sql = Sql.InsertInto + dataDestinationTable + Sql.OpenParenthesis + commaSeparatedColumns + Sql.CloseParenthesis + Sql.Select + commaSeparatedColumns + Sql.From + dataSourceTable;

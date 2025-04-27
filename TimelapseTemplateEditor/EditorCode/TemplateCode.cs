@@ -218,7 +218,7 @@ namespace TimelapseTemplateEditor
 
             string version = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
             // TODO: FIGURE OUT THIS ISSUE
-            return string.IsNullOrWhiteSpace(version) ? "2.3.2.7" : version;
+            return string.IsNullOrWhiteSpace(version) ? "2.3.3.0" : version;
         }
         #endregion
     }

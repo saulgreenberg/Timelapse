@@ -165,7 +165,6 @@ namespace Timelapse.Dialog
                     SQLiteWrapper sourceDdb = new SQLiteWrapper(sourceFileInfo.FullPath);
 
                     // TODO: Check if the sourceDdb needs upgrading!!!
-
                     int levelsToIgnore = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath).Split(Path.DirectorySeparatorChar).Length;
                     sourceFileInfo.DatabaseFileError =
                         MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb, levelsToIgnore);

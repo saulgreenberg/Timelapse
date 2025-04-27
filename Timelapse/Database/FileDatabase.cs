@@ -595,7 +595,7 @@ namespace Timelapse.Database
                 }
             }
 
-            // Version 2.3.2.9 changed how recognition tables are managed.
+            // Version 2.3.3.0 changed how recognition tables are managed.
             // Update those tables to their new format if needed
             this.UpdateOldStyleRecognitionTablesIfNeeded();
         }
@@ -1354,7 +1354,7 @@ namespace Timelapse.Database
 
             // PERFORMANCE  Running a query on a large database that returns a large datatable is very slow.
             // Async call allows busyindicator to run smoothly
-            Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
+            //Debug.Print($"SelectFilesAsync Query: {Environment.NewLine}{query}");
             GlobalReferences.TimelapseState.IsNewSelection = true;
             DataTable filesTable = await Database.GetDataTableFromSelectAsync(query);
             FileTable = new FileTable(filesTable);
@@ -1781,8 +1781,7 @@ namespace Timelapse.Database
                 query = frontWrapper + query + backWrapper;
             }
             //Uncommment this to see the actual complete query
-            Debug.Print("File Counts: " + query);
-            //Debug.Print(XXX2++ + ":DetectionCounts");
+            //Debug.Print("File Counts: " + query);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 
@@ -3989,7 +3988,7 @@ namespace Timelapse.Database
         // Timelapse version 2.3.2.9 changed how recognition tables were managed. 
         // Prior versions includef a separate detection and classification table.
         // The new version merges the classification data into the detection table
-        // As this breaks backwards compatability, pre2.3.2.9 versions will not be able to open these databases.
+        // As this breaks backwards compatability, pre2.3.3.0 versions will not be able to open these databases.
         public void UpdateOldStyleRecognitionTablesIfNeeded()
         {
             // First, update the Detection table to include the new columns
@@ -4047,7 +4046,6 @@ namespace Timelapse.Database
                 string category = (string)row[ClassificationColumns.Category];
                 float conf = (float)(double)row[newConfColumnName];
                 long detectionID = (long)row[Constant.DetectionColumns.DetectionID];
-                Debug.Print($"{category} {conf} {detectionID}");
                 List<ColumnTuple> columnTupleList = new List<ColumnTuple>
                 {
                     new ColumnTuple(DetectionColumns.Classification, category),
@@ -4059,9 +4057,9 @@ namespace Timelapse.Database
             }
             Database.Update(DBTables.Detections, columnsTuplesWithWhereList);
 
-            // Versions prior to 2.3.2.8 will not be able to access the classification data as it is being dropped.
+            // Versions prior to 2.3.3.0 will not be able to access the classification data as it is being dropped.
             //  as it crashes if the custom select tries to use classifications.
-            // This is why we don't allow versions at or after 2.3.2.9 to open earlier databases.
+            // This is why we don't allow versions at or after 2.3.3.0 to open earlier databases.
             this.Database.DropTable(DBTables.Classifications);
             this.Database.Vacuum();
         }

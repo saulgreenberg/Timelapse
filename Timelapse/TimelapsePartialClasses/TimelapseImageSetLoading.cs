@@ -317,10 +317,23 @@ namespace Timelapse
             // ---------------------
             // Record the version number of the currently executing version of Timelapse only if its greater than the one already stored in the ImageSet Table.
             // This will indicate the latest timelapse version that is compatable with the database structure. 
+            string lastRecordedBackwardsCompatabilityVersion = DataHandler.FileDatabase.ImageSet.BackwardsCompatability;
             string currentVersionNumberAsString = VersionChecks.GetTimelapseCurrentVersionNumber().ToString();
+            bool syncImageSetRequired = false;
             if (VersionChecks.IsVersion1GreaterThanVersion2(currentVersionNumberAsString, DataHandler.FileDatabase.ImageSet.VersionCompatability))
             {
                 DataHandler.FileDatabase.ImageSet.VersionCompatability = currentVersionNumberAsString;
+                syncImageSetRequired = true;
+            }
+
+            if (VersionChecks.IsVersion1GreaterThanVersion2(Constant.DatabaseValues.VersionNumberBackwardsCompatible, lastRecordedBackwardsCompatabilityVersion))
+            {
+                DataHandler.FileDatabase.ImageSet.BackwardsCompatability = Constant.DatabaseValues.VersionNumberBackwardsCompatible;
+                syncImageSetRequired = true;
+            }
+
+            if (syncImageSetRequired)
+            {
                 DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
             }
 
