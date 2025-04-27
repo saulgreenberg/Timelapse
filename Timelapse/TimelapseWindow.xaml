@@ -328,7 +328,7 @@
                             SelectedItemChanged="MenuItemSelectByFolderTreeView_SelectedItemChanged" >
                             <TreeView.ItemContainerStyle>
                                 <Style TargetType="{x:Type TreeViewItem}">
-                                    <Setter Property="TreeViewItem.IsExpanded" Value="True"/>
+                                    <Setter Property="IsExpanded" Value="True"/>
                                     <Setter Property="BorderThickness" Value="1.5"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsSelected" Value="True">

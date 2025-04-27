@@ -10,7 +10,6 @@ using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.Enums;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit.Core.Converters;
 using File = System.IO.File;
 
 namespace Timelapse.Recognition

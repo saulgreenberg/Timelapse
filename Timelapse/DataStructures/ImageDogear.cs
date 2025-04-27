@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Timelapse.ControlsDataEntry;
-using Xceed.Wpf.Toolkit.Core.Converters;
+﻿using Timelapse.ControlsDataEntry;
 
 namespace Timelapse.DataStructures
 {
@@ -38,7 +32,7 @@ namespace Timelapse.DataStructures
             if (this.DogearedImageIndex == Constant.DatabaseValues.InvalidRow || this.DataHandler?.ImageCache == null || this.DataHandler?.FileDatabase == null)
             {
                 // Can't go to the dogeared image as it doesn't exist, so nothing to do
-                return Constant.DatabaseValues.InvalidRow; ;
+                return Constant.DatabaseValues.InvalidRow;
             }
 
             if (this.DogearedImageIndex == this.DataHandler.ImageCache.CurrentRow)

@@ -387,7 +387,7 @@ namespace Timelapse
                 return;
             }
 
-            string cmd = $@"/k ";
+            string cmd = @"/k ";
                    cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
                    cmd += $@"(cd /d {homepath} && ""{homepath}\{AddaxAI.AddaxAISubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) || ";
                    cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";

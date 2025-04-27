@@ -23,7 +23,7 @@ namespace Timelapse.Recognition
         public bool AllDetections { get; set; }
 
         public bool RankByDetectionConfidence { get; set; }  // For Detections. Kept this way for backwards compatability
-        public bool RankByClassificationConfidence { get; set; } = false;
+        public bool RankByClassificationConfidence { get; set; }
 
         // Whether its a detection, classification, or none as determined by the contents of the various category fields
         public RecognitionType RecognitionType
@@ -114,7 +114,7 @@ namespace Timelapse.Recognition
         private static double TypicalDetectionThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
                 ? RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
-                : Math.Round((double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold(), 5);
+                : Math.Round(GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold(), 5);
 
         private static double TypicalClassificationThreshold =>
             GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null

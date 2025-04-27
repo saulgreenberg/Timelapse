@@ -77,7 +77,7 @@ namespace Timelapse.Controls
         private bool ignoreSliderUpdate;
         private bool sliderConfidenceInitialMovement;
         private bool onlyUpdateClassificationCount;
-        private CategoryCount savedSelectedCategoryCount = null;
+        private CategoryCount savedSelectedCategoryCount;
 
         // To hold passed in constructor arguments, used to set the busy state and to use the progress indicator
         private readonly BusyableDialogWindow Owner;
@@ -237,7 +237,7 @@ namespace Timelapse.Controls
                 // Sort the datagrid by its count
                 if (this.DataGridClassifications.Columns.Count > 0)
                 {
-                    Application.Current.Dispatcher.Invoke((Action)delegate
+                    Application.Current.Dispatcher.Invoke(delegate
                     {
                         SortDataGrid(this.DataGridClassifications, 0, ListSortDirection.Descending);
                         this.DataGridClassifications.ScrollIntoViewFirstRow();
@@ -259,7 +259,7 @@ namespace Timelapse.Controls
         #region Checkbox Callbacks - RankByConfidence, ShowMissingDetections
         private void RankByConfidence_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            if (sender is RadioButton radioBtn)
+            if (sender is RadioButton)
             {
                 this.RecognitionSelections.RankByDetectionConfidence = RankByDetectionConfidenceCheckbox.IsChecked == true;
                 this.RecognitionSelections.RankByClassificationConfidence = RankByClassificationConfidenceCheckbox.IsChecked == true;
@@ -307,7 +307,7 @@ namespace Timelapse.Controls
         // - disable the detection controls
         // - display the updated slider value
         private bool isDetectionSliderMouseDown;
-        private bool isDetectionValueChanged = false;
+        private bool isDetectionValueChanged;
 
         // We only want to update counts after a slider action is completed, while at the same time display 
         // the current slider range. To make this work,
@@ -410,7 +410,7 @@ namespace Timelapse.Controls
         // - disable the classification controls
         // - display the updated slider value
         private bool isClassificationSliderMouseDown;
-        private bool isClassificationValueChanged = false;
+        private bool isClassificationValueChanged;
         // We only want to update counts after a slider action is completed, while at the same time display 
         // the current slider range. To make this work,
         // - we update the slider values whenever there is a change from the previous values.
@@ -824,11 +824,11 @@ namespace Timelapse.Controls
             }
 
             // Set the rank by confidence checkboxes to their initial value
-            if (this.RecognitionSelections.RankByDetectionConfidence == true)
+            if (this.RecognitionSelections.RankByDetectionConfidence)
             {
                 this.RankByDetectionConfidenceCheckbox.IsChecked = true;
             }
-            else if (this.RecognitionSelections.RankByClassificationConfidence == true)
+            else if (this.RecognitionSelections.RankByClassificationConfidence)
             {
                 this.RankByClassificationConfidenceCheckbox.IsChecked = true;
             }
@@ -978,7 +978,6 @@ namespace Timelapse.Controls
                             catch
                             {
                                 // The description doesn't conform to the expected format 
-                                return;
                             }
                         }
                     }
@@ -1180,12 +1179,13 @@ namespace Timelapse.Controls
             this.ClearClassificationCounts();
 
             // Enable the controls  as needed, and sort the classifications by the classifications column
-            Application.Current.Dispatcher.Invoke((Action)delegate
+            Application.Current.Dispatcher.Invoke(delegate
             {
                 this.ClassificationDataGridEnableState(true, true);
                 if (this.DataGridClassifications.Columns.Count > 1)
                 {
-                    SortDataGrid(this.DataGridClassifications, 1, ListSortDirection.Ascending);
+                    // Defaults to ListSortDirection.Ascending
+                    SortDataGrid(this.DataGridClassifications, 1);
                 }
             });
         }
@@ -1219,7 +1219,7 @@ namespace Timelapse.Controls
             if (null == categoryCount)
 
             {   // We need to add it to the DetectionsCountCollection
-                Application.Current.Dispatcher.Invoke((Action)delegate
+                Application.Current.Dispatcher.Invoke(delegate
                 {
                     if (category.StartsWith(Constant.RecognizerValues.EmptyDetectionLabel))
                     {
@@ -1247,7 +1247,7 @@ namespace Timelapse.Controls
             var categoryCount = this.ClassificationCountsCollection.FirstOrDefault(i => i.Category == category);
             if (null == categoryCount)
             {
-                Application.Current.Dispatcher.Invoke((Action)delegate
+                Application.Current.Dispatcher.Invoke(delegate
                 {
                     CategoryCount cc = new CategoryCount(category, count);
                     this.ClassificationCountsCollection.Add(cc);
@@ -1271,7 +1271,7 @@ namespace Timelapse.Controls
             }
 
             // Modify the Empty label in the DetectionsCountCollection
-            Application.Current.Dispatcher.Invoke((Action)delegate
+            Application.Current.Dispatcher.Invoke(delegate
             {
                 double lowerValue = Math.Round(this.SliderDetectionConf.LowerValue, 2);
                 categoryCount.Category = lowerValue == 0 || (RecognitionSelections.RankByDetectionConfidence || RecognitionSelections.RankByClassificationConfidence)

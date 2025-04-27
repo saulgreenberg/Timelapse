@@ -133,7 +133,7 @@ namespace Timelapse.Database
                                             // Export both the separate Date and Time column data with or without a space as needed
                                             csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVDateString(csvInsertSpaceBeforeDates), includeComma));
                                             includeComma = true;
-                                            csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVTimeString(csvInsertSpaceBeforeDates), includeComma));
+                                            csvRow.Append(CSVHelpers.CSVToCommaSeparatedValue(image.GetValueCSVTimeString(csvInsertSpaceBeforeDates), true));
                                         }
                                         else
                                         {

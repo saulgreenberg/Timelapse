@@ -402,7 +402,7 @@ namespace Timelapse.Recognition
                                     if (detection.classifications?.Count > 0)
                                     {
                                         detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detection.classifications[0][0]));
-                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, String.Format(CultureInfo.InvariantCulture, "{0}", (double)Double.Parse((string)detection.classifications[0][1].ToString()))));
+                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, String.Format(CultureInfo.InvariantCulture, "{0}", Double.Parse(detection.classifications[0][1].ToString()))));
                                     }
                                     detectionInsertionStatements.Add(detectionColumnsToUpdate);
                                 }
@@ -424,7 +424,7 @@ namespace Timelapse.Recognition
                                     {
                                         // Add classification to the detection table as it exists
                                         detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detection.classifications[0][0]));
-                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, String.Format(CultureInfo.InvariantCulture, "{0}", (double)Double.Parse((string)detection.classifications[0][1].ToString()))));
+                                        detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, String.Format(CultureInfo.InvariantCulture, "{0}", Double.Parse(detection.classifications[0][1].ToString()))));
                                     }
                                     detectionInsertionStatements.Add(detectionColumnsToUpdate);
 

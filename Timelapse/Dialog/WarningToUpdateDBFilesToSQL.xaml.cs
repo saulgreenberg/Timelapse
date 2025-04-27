@@ -7,8 +7,6 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class WarningToUpdateDBFilesToSQL
     {
-        public bool DontShowAgain => CheckBoxDontShowAgain.IsChecked == true;
-
         public WarningToUpdateDBFilesToSQL(Window owner)
         {
             InitializeComponent();

@@ -81,7 +81,6 @@ namespace Timelapse
                 {
                     // Create a new detection for each detection row, but using the duplicate's ID
                     List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
-                    List<List<ColumnTuple>> classificationInsertionStatements = new List<List<ColumnTuple>>();
                     List<List<ColumnTuple>> detectionVideoInsertionStatements = new List<List<ColumnTuple>>();
                     foreach (DataRow detectionRow in detectionRows)
                     {

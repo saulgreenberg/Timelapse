@@ -89,7 +89,7 @@ namespace Timelapse
                     if (detectionRow[DetectionColumns.Classification] != System.DBNull.Value && detectionRow[DetectionColumns.ClassificationConf] != System.DBNull.Value)
                     {
                         string classification = (string)detectionRow[DetectionColumns.Classification];
-                        double classificationConf = (double)Double.Parse((string)detectionRow[DetectionColumns.ClassificationConf].ToString());
+                        double classificationConf = Double.Parse(detectionRow[DetectionColumns.ClassificationConf].ToString());
                         if (classificationConf > 0.00)
                         {
                             string classificationCategoryLabel = DataHandler.FileDatabase.GetClassificationLabelFromCategory(classification);
@@ -179,7 +179,7 @@ namespace Timelapse
                     if (detectionRow[DetectionColumns.Classification] != System.DBNull.Value && detectionRow[DetectionColumns.ClassificationConf] != System.DBNull.Value)
                     {
                         string classification = (string)detectionRow[DetectionColumns.Classification];
-                        double classificationConf = (double)Double.Parse((string)detectionRow[DetectionColumns.ClassificationConf].ToString());
+                        double classificationConf = Double.Parse(detectionRow[DetectionColumns.ClassificationConf].ToString());
                         if (classificationConf > 0.00)
                         {
                             string classificationCategoryLabel = DataHandler.FileDatabase.GetClassificationLabelFromCategory(classification);
