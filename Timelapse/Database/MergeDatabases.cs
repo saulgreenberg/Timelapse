@@ -527,7 +527,7 @@ namespace Timelapse.Database
             // - updating its IDs by adding the offsetID amount to each ID
             // - adjusting the relative path to add a prefix to it correctly identifying its sub-folder location
             string tempDataTable = "tempDataTable";
-            query += QueryPhraseMergeDataTable(offsetId, destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePathDifference) + Environment.NewLine;
+            query += QueryPhraseMergeDataTable(offsetId, destinationDdb, attachedSourceDB, tempDataTable, relativePathDifference) + Environment.NewLine;
 
             // Part 4. Handle the Markers Table portion
             string tempMarkersTable = "tempMarkersTable";
@@ -691,7 +691,7 @@ namespace Timelapse.Database
             if (false == destinationDetectionsExists)
             {
                 query = QueryPhraseInsertRecognitionTablesFromOneDBIntoAnother(query, destinationDdb, attachedSourceDB);
-                query += QueryPhraseMergeDetectionsTable(offsetId, destinationDdb, attachedSourceDB, tempDetectionsTable);
+                query += QueryPhraseMergeDetectionsTable(offsetId, attachedSourceDB, tempDetectionsTable);
                 query += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, $"{attachedSourceDB}.{Constant.DBTables.DetectionsVideo}");
                 return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, true);
             }
@@ -819,7 +819,9 @@ namespace Timelapse.Database
 
             return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.Ok, query, true);
         }
-        private static bool MergeSourceAndDestinationClassificationDictionaries(
+
+        // This should always work, as the source and destination databases should have the same values before this is invoked
+        private static void MergeSourceAndDestinationClassificationDictionaries(
             Dictionary<string, string> destinationCategories, Dictionary<string, string> remappedCategories,
             Dictionary<string, string> destinationDescriptions, Dictionary<string, string> remappedDescriptions,
             out Dictionary<string, Tuple<string, string>> mergedClassificationColumns)
@@ -833,7 +835,7 @@ namespace Timelapse.Database
                 // As no categories exist at all, definitions (even if present) aren't relevant
                 // so return an empty merged dictionary 
                 // so mergedDictionary has 0 items
-                return true;
+                return;
             }
 
             if (destinationCategories == null || destinationCategories.Count == 0)
@@ -851,7 +853,7 @@ namespace Timelapse.Database
                         mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, string.Empty));
                     }
                 }
-                return true;
+                return;
             }
 
             if (remappedCategories == null || remappedCategories.Count == 0)
@@ -867,34 +869,34 @@ namespace Timelapse.Database
                         mergedClassificationColumns.Add(kvp.Key, new Tuple<string, string>(kvp.Value, string.Empty));
                     }
                 }
-                return true;
+                return;
             }
 
-            // at this point, there is something in both destination and merged categories
-            // Check if the dictionaries are compatable, i.e., that the common keys have the same values.
-            foreach (KeyValuePair<string, string> pair in destinationCategories)
-            {
-                if (remappedCategories.TryGetValue(pair.Key, out string value))
-                {
-                    // If the key is in remappedCategories and it has a different value, we've failed for some unusual reason
-                    // This shouldn't happen, but just in case
-                    if (value != pair.Value)
-                    {
-                        return false;
-                    }
-                }
-            }
-            foreach (KeyValuePair<string, string> pair in remappedCategories)
-            {
-                if (destinationCategories.TryGetValue(pair.Key, out string value))
-                {
-                    // If the key is in destinationCategories and it has a different value, we've failed
-                    if (value != pair.Value)
-                    {
-                        return false;
-                    }
-                }
-            }
+            // At this point, there is something in both destination and merged categories
+            // His is a just in case bit of code for debuggingto check if the dictionaries are compatable, i.e., that the common keys have the same values.
+            //foreach (KeyValuePair<string, string> pair in destinationCategories)
+            //{
+            //    if (remappedCategories.TryGetValue(pair.Key, out string value))
+            //    {
+            //        // If the key is in remappedCategories and it has a different value, we've failed for some unusual reason
+            //        // This shouldn't happen, but just in case
+            //        if (value != pair.Value)
+            //        {
+            //            Debug.Print("In MergeSourceAndDestinationClassificationDictionaries: Problem as values don't match");
+            //        }
+            //    }
+            //}
+            //foreach (KeyValuePair<string, string> pair in remappedCategories)
+            //{
+            //    if (destinationCategories.TryGetValue(pair.Key, out string value))
+            //    {
+            //        // If the key is in destinationCategories and it has a different value, we've failed
+            //        if (value != pair.Value)
+            //        {
+            //           Debug.Print("In MergeSourceAndDestinationClassificationDictionaries: Problem as values don't match");
+            //        }
+            //    }
+            //}
 
             // At this point we know that the dictionaries are compatable. 
             // Start by adding all KVP in destinationCategories to the merged dictionary
@@ -943,9 +945,7 @@ namespace Timelapse.Database
                     }
                 }
             }
-            return true;
         }
-
         private static void MergedClassificationUpsert(Dictionary<string, Tuple<string, string>> mergedClassificationColumns, string key, string value, string description)
         {
             if (mergedClassificationColumns.ContainsKey(key))

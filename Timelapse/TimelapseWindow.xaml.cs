@@ -357,8 +357,6 @@ namespace Timelapse
             //        GlobalReferences.TimelapseState.SuppressWarningToUpdateDBFilesToSQLPrompt = warning.CheckBoxDontShowAgain.IsChecked == true;
             //    }
             //}
-
-
         }
 
         private void Window_LocationChanged(object sender, EventArgs e)

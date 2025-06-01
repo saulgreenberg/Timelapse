@@ -638,60 +638,6 @@ namespace Timelapse.Dialog
 
         #endregion
 
-        #region MessageBox: New FileName As Old FileName Exists
-
-        public static void NewFileNameGeneratedDialog(Window owner, string tdbFileName, string ddbFileName)
-        {
-            string what;
-            string fileList;
-            string pluralityText = "s are";
-            string fileTypeText;
-
-            if (false == string.IsNullOrWhiteSpace(tdbFileName) && false == string.IsNullOrWhiteSpace(ddbFileName))
-            {
-                // Both files were renamed
-                fileTypeText = "Timelapse";
-                what =
-                    $"Your folder has multiple Timelapse template ({File.TemplateDatabaseFileExtension}) and data ({File.FileDatabaseFileExtension}) files in it,";
-                fileList = $"\u2022 {tdbFileName}{Environment.NewLine}"
-                           + $"\u2022 {ddbFileName}";
-            }
-            else if (false == string.IsNullOrWhiteSpace(tdbFileName))
-            {
-                // The template file only was renamed
-                fileTypeText = $"Timelapse template {File.TemplateDatabaseFileExtension} ";
-                pluralityText = " is ";
-                what = $"Your folder has multiple {fileTypeText} files in it,";
-                fileList = $"\u2022 {tdbFileName}";
-            }
-            else
-            {
-                // The datafile only was renamed
-                fileTypeText = $"Timelapse data {File.FileDatabaseFileExtension} ";
-                pluralityText = " is";
-                what =
-                    $"Your folder has multiple {fileTypeText} files in it,";
-
-                fileList = $"\u2022 {ddbFileName}";
-            }
-
-            string title = $"The {fileTypeText} file{pluralityText} named as follows";
-            MessageBox messageBox = new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Information,
-                    Title = title,
-                    What = $"The name of the just-created file{pluralityText}:{Environment.NewLine}{fileList}",
-                    Reason = $"{what}{Environment.NewLine}so we thought we'd let you know which one was just created.",
-                    Hint = "You can rename files using Windows Explorer."
-                }
-            };
-            messageBox.ShowDialog();
-        }
-
-        #endregion
-
         #region MessagBox: Original file cannot be overwritten
 
         public static void FileCannotBeOverwrittenDialog(Window owner, string filePath)

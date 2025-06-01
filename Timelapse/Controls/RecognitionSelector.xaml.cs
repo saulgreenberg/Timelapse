@@ -283,7 +283,7 @@ namespace Timelapse.Controls
 
         private void ShowMissingDetectionsCheckbox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            this.EnableOrDisableAllControls(ShowMissingDetectionsCheckbox.IsChecked == false, true, false, true);
+            this.EnableOrDisableAllControls(ShowMissingDetectionsCheckbox.IsChecked == false, false, true);
             this.Database.CustomSelection.ShowMissingDetections = ShowMissingDetectionsCheckbox.IsChecked == true;
             // Send a recognition selection event to the parent
             this.SendRecognitionSelectionEvent(false);
@@ -490,10 +490,10 @@ namespace Timelapse.Controls
         #region DataGrid Callbacks - OnSelectionChanged 
         private void DataGridDetections_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            this.DoDataGridDetections_OnSelectionChanged(sender, RecognitionTypeEnum.Detections);
+            this.DoDataGridDetections_OnSelectionChanged(sender);
         }
 
-        private void DoDataGridDetections_OnSelectionChanged(object sender, RecognitionTypeEnum recognitionType)
+        private void DoDataGridDetections_OnSelectionChanged(object sender)
         {
             if (this.ignoreSelection)
             {
@@ -785,7 +785,7 @@ namespace Timelapse.Controls
             // Abort if there is nothing to show
             if (this.Database == null)
             {
-                this.EnableOrDisableAllControls(false, false, false);
+                this.EnableOrDisableAllControls(false, false);
                 return;
             }
 
@@ -797,7 +797,7 @@ namespace Timelapse.Controls
             if (null == this.DetectionCategories || this.DetectionCategories.Count == 0)
             {
                 // Shouldn't happen: there are no detection categories! (likely a problem with the json file?)
-                this.EnableOrDisableAllControls(false, false, false);
+                this.EnableOrDisableAllControls(false, false);
                 return;
             }
 
@@ -989,7 +989,7 @@ namespace Timelapse.Controls
         #region Enable/Disable controls
         // Disable all the recognition controls, usually because there is nothing to show
         // This is likely redundant, as the recognitions selector should NOT be created if there is nothing to show.
-        private void EnableOrDisableAllControls(bool enableAllControls, bool enableCancelButton, bool updateCursorToMatchState, bool enableShowMissingDetectionsCheckbox = false)
+        private void EnableOrDisableAllControls(bool enableAllControls, bool updateCursorToMatchState, bool enableShowMissingDetectionsCheckbox = false)
         {
             // Enable/disable the detection datagrid and detection slider
             this.DetectionDataGridEnableState(enableAllControls, updateCursorToMatchState);
@@ -1077,14 +1077,6 @@ namespace Timelapse.Controls
             // Category column: Try to size to just fit the widest category content
             dataGrid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Star);
             dataGrid.Columns[1].CanUserSort = true;
-        }
-
-        // Clear the datagrid selection and scroll it to its top.
-        private void ClearSelectionsAndScrollToTop(DataGrid dataGrid)
-        {
-            this.DataGridDetections.UnselectAllCells();
-            this.DataGridClassifications.UnselectAllCells();
-            dataGrid.ScrollIntoViewFirstRow();
         }
 
         // Sort the given data grid by the indicated column (Count is 0, Category name is 1) in the appropriate order
@@ -1329,15 +1321,6 @@ namespace Timelapse.Controls
         }
         #endregion
 
-        #region Enum RecognitionTypeEnum
-        public enum RecognitionTypeEnum
-        {
-            Detections,
-            Classifications,
-            None
-        }
-        #endregion
-
         #region Class CategoryCount defines an element containing a detection category and its current count
         public class CategoryCount : INotifyPropertyChanged
         {
@@ -1356,7 +1339,5 @@ namespace Timelapse.Controls
             }
         }
         #endregion
-
-
     }
 }

@@ -13,7 +13,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/ResourceDictionaries/TemplateDataGridResources.xaml"/>
+                <ResourceDictionary Source="../ResourceDictionaries/TemplateDataGridResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <editorCode:CellTextBlockConverter x:Key="CellTextBlockConverter" />
         </ResourceDictionary>

@@ -27,6 +27,7 @@ namespace Timelapse.Database
         // "Data Source=filepath" 
         public string ConnectionString { get; }
         public string FilePath { get; }
+
         #region Constructor
         /// <summary>
         /// Constructor: Create a database file if it does not exist, and then create a connection string to that file
@@ -70,13 +71,13 @@ namespace Timelapse.Database
                 DropTable(tableName);
             }
 
-            string query = Sql.CreateTable + tableName + Sql.OpenParenthesis + Environment.NewLine;               // CREATE TABLE <tablename> (
+            string query = $"{Sql.CreateTable} {tableName} {Sql.OpenParenthesis} {Environment.NewLine}"; // CREATE TABLE <tablename> (
             foreach (SchemaColumnDefinition column in columnDefinitions)
             {
-                query += column + Sql.Comma + Environment.NewLine;             // "columnname TEXT DEFAULT 'value',\n" or similar
+                query += $"{column} {Sql.Comma}{Environment.NewLine}" ;                                 // "columnname TEXT DEFAULT 'value',\n" or similar
             }
-            query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);         // remove last comma / new line and replace with );
-            query += Sql.CloseParenthesis + Sql.Semicolon;
+            query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);          // remove last comma / new line
+            query += $"{Sql.CloseParenthesis} {Sql.Semicolon}";                                          // );
             ExecuteNonQuery(query);
         }
         #endregion
@@ -694,24 +695,16 @@ namespace Timelapse.Database
 
         // Get the Maximum value of the field from the datatable  
         // Form: "SELECT MAX(field) From DataTable"
-        // The field should contain an int value
-        public int ScalarGetMaxValueAsInt(string dataTable, string intfield)
+        // The field should contain a long value
+        public long ScalarGetMaxValueAsLong(string tableName, string longField)
         {
-            return ScalarGetScalarFromSelectAsInt(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
-        }
-
-        // Get the Maximum value of the field from the datatable  
-        // Form: "SELECT MAX(field) From DataTable"
-        // The field should contain an int value
-        public long ScalarGetMaxValueAsLong(string dataTable, string intfield)
-        {
-            return ScalarGetScalarFromSelectAsLong(Sql.Select + Sql.Max + Sql.OpenParenthesis + intfield + Sql.CloseParenthesis + Sql.From + dataTable);
+            return ScalarGetScalarFromSelectAsLong($"{Sql.Select} {Sql.Max} {Sql.OpenParenthesis} {longField} {Sql.CloseParenthesis} {Sql.From} {tableName}");
         }
 
         // Return a scalar float value, or null if things go wrong.
         public float? ScalarGetFloatValue(string dataTable, string floatfield)
         {
-            object obj = GetScalarFromSelect(Sql.Select + floatfield + Sql.From + dataTable);
+            object obj = GetScalarFromSelect($"{Sql.Select} {floatfield} {Sql.From} {dataTable}");
             if (obj == DBNull.Value)
             {
                 return null;

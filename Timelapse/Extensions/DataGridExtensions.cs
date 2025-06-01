@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Windows;
 using System.Windows.Controls;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
@@ -60,32 +59,6 @@ namespace Timelapse.Extensions
             {
                 dataGrid.ScrollIntoView(dataGrid.Items[0]);
             }
-        }
-
-        /// <summary>
-        /// Scroll the item into the middle of the view
-        /// Note: not sure if this works properly
-        /// </summary>
-        public static void ScrollIntoMiddle(this DataGrid dataGrid, object item)
-        {
-            if (dataGrid == null || item == null)
-            {
-                return;
-            }
-
-            if (!(dataGrid.ItemContainerGenerator.ContainerFromItem(item) is DataGridRow row))
-            {
-                return;
-            }
-            ScrollViewer scrollViewer = Util.VisualChildren.GetVisualChild<ScrollViewer>(dataGrid);
-            if (scrollViewer == null)
-            {
-                return;
-            }
-            double rowHeight = row.ActualHeight;
-            double offset = row.TranslatePoint(new Point(0, 0), dataGrid).Y;
-            double targetOffset = offset - (scrollViewer.ViewportHeight / 2) + (rowHeight / 2);
-            scrollViewer.ScrollToVerticalOffset(targetOffset);
         }
 
         /// <summary>

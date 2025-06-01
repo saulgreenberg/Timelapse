@@ -84,6 +84,13 @@ namespace TimelapseTemplateEditor
                 userSettings.MostRecentCheckForUpdates = DateTime.Now;
             }
 
+            if (false == IsWindowOnDisplay(this))
+            {
+                this.Top = 10;
+                this.Left = 10;
+                this.Height = 825;
+                this.Width = 1200;
+            }
             //if (userSettings.SuppressWarningToUpdateDBFilesToSQLPrompt == false)
             //{
             //    WarningToUpdateDBFilesToSQL warning = new WarningToUpdateDBFilesToSQL(this);
@@ -94,6 +101,31 @@ namespace TimelapseTemplateEditor
             //    }
             //}
         }
+
+        // Check to make sure the window is at least partly visible on the display
+        // Unfortunately, this is not a perfect solution as the saved window doesn't take into account what display its on
+        public static bool IsWindowOnDisplay(Window window)
+        {
+            // Get the window's position and size
+            var windowRect = new System.Drawing.Rectangle(
+                (int)window.Left,
+                (int)window.Top,
+                (int)window.Width,
+                (int)window.Height
+            );
+
+            // Check if any screen contains the window's rectangle
+            foreach (var screen in System.Windows.Forms.Screen.AllScreens)
+            {
+                if (screen.WorkingArea.IntersectsWith(windowRect))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
