@@ -328,8 +328,8 @@ namespace Timelapse.Images
             string bboxLabel = (bbox.Classifications.Count == 0)
                 ? $"{bbox.DetectionLabel} {ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence)}"
                 : $"{bbox.Classifications[0].Key} " +
-                  $"{ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence)}" +
-                  $"({ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Classifications[0].Value)})";
+                  $"{ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Classifications[0].Value)}" +
+                  $"({ReformatFloatToTwoDecimalPlacesAndEpsilon(bbox.Confidence)})";
 
             string bboxTextBlock = string.Empty;
             if (bbox.Classifications.Count > 0)
