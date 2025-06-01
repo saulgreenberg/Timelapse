@@ -286,7 +286,6 @@ namespace Timelapse.Constant
         public const string IndexFile = "IndexFile";
         public const string IndexID = "IndexDetectionID";
         public const string IndexDetectionVideoID = "IndexDetectionVideoID";
-        public const string IndexClassificationID = "IndexClassificationID";
 
         // Marker values
         public const string DefaultMarkerValue = "[]";    // Default is the empty Json value 
@@ -339,11 +338,9 @@ namespace Timelapse.Constant
         public const string Info = "Info";
         public const string DetectionCategories = "DetectionCategories";
         public const string ClassificationCategories = "ClassificationCategories";
-        // public const string ClassificationDescriptions = "ClassificationDescriptions";
         public const string Images = "Images";
         public const string Detections = "Detections";
         public const string DetectionsVideo = "DetectionsVideo";
-        public const string TmpCombinedTable = "TmpCombinedTable";
         public const string Classifications = "Classifications"; // Kepty only for backwards compatability i.e., to update DB to merge old classification tables into the detection table
 
     }
@@ -390,8 +387,7 @@ namespace Timelapse.Constant
         public static string TimelapseHomePage = "https://timelapse.ucalgary.ca";
         public static string TimelapseGuidesPage = $"{TimelapseHomePage}/Guides";
         public static string TimelapseVideosPage = $"{TimelapseHomePage}/Videos";
-        public static string TimelapseDownloadPage = $"{TimelapseHomePage}/Download";
-
+        // public static string TimelapseDownloadPage = $"{TimelapseHomePage}/Download"; // unused
         public static string TimelapseUploadLink = $"{TimelapseHomePage}/wp-content/uploads/";
 
         // Guides
@@ -867,12 +863,6 @@ namespace Timelapse.Constant
         public const string Category = "classification";
         public const string Label = "label";
         public const string Description = "description";
-    }
-
-    public static class ClassificationDetectionsColumns
-    {
-        public const string Category = "classification";
-        public const string Label = "label";
     }
 
     public static class DetectionColumns

@@ -116,9 +116,6 @@
     <Compile Include="Controls\TemplateEditRowsControlNew.xaml.cs">
       <DependentUpon>TemplateEditRowsControlNew.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\TemplateHelpTextControl.xaml.cs">
-      <DependentUpon>TemplateHelpTextControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\TemplateDataGridControl.xaml.cs">
       <DependentUpon>TemplateDataGridControl.xaml</DependentUpon>
     </Compile>
@@ -187,10 +184,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\TemplateUIControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\TemplateHelpTextControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

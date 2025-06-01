@@ -8,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using Timelapse.DataStructures;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.Images
 {

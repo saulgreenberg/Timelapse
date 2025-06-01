@@ -30,7 +30,5 @@ namespace Timelapse.DataStructures
 
         // Whether or not we should hid detections
         public static bool HideBoundingBoxes { get; set; } = false;
-
-        public static bool UseClassifications { get; set; } = true;
     }
 }

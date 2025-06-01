@@ -406,7 +406,7 @@ namespace Timelapse.Database
                     dataLabelPrefix = Control.AlphaNumeric;
                     newControl.DefaultValue = ControlDefault.AlphaNumericDefaultValue;
                     newControl.Type = Control.AlphaNumeric;
-                    newControl.Width = ControlDefault.NoteDefaultWidth;
+                    newControl.Width = ControlDefault.AlphaNumericWidth;
                     newControl.Copyable = true;
                     newControl.Visible = true;
                     newControl.ExportToCSV = true;
@@ -431,7 +431,7 @@ namespace Timelapse.Database
                     dataLabelPrefix = Control.MultiChoice;
                     newControl.DefaultValue = ControlDefault.MultiChoiceDefaultValue;
                     newControl.Type = Control.MultiChoice;
-                    newControl.Width = ControlDefault.FixedChoiceDefaultWidth;
+                    newControl.Width = ControlDefault.MultiChoiceDefaultWidth;
                     newControl.Copyable = true;
                     newControl.Visible = true;
                     newControl.ExportToCSV = true;

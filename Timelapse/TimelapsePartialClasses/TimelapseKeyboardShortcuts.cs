@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Media;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;

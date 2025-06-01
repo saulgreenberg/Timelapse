@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Windows.Forms;
 using Timelapse.Constant;
 using Timelapse.Enums;
-using Timelapse.Recognition;
-using Timelapse.SearchingAndSorting;
 using Control = Timelapse.Constant.Control;
 
 // ReSharper disable UnusedMember.Global
@@ -295,7 +292,7 @@ namespace Timelapse
         // Form: Update tableName SET columnName = newValue;
         public static string UpdateColumnInTable(string tableName, string columnName, object newValue)
         {
-            if (newValue is string _)
+            if (newValue is string)
             {
                 // If the new value is a string, its best to quote it
                 newValue = Sql.Quote(newValue.ToString());
@@ -378,94 +375,6 @@ namespace Timelapse
             }
             return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
                     Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
-        }
-
-        public static string SelectCountClassificationsWithinDetectionsPlusSurroundingEpisodes(string where, RecognitionSelections detectionSelections, string detectionCategory, string episodeNoteField, bool asCountQuery)
-        {
-            // TODO FIX SO IT DOESNT USE CLASSNCONF Lower/Upper for UI
-            // Create a temporary table to hold intermediate results
-            string phrase = CreateTempTableForDetectionsAndClassifications(where, detectionSelections, detectionCategory, Constant.DBTables.TmpCombinedTable);
-            string columnsAsCommaSeparatedString = $" {Constant.DatabaseColumn.File}, {Constant.DatabaseColumn.RelativePath}, {episodeNoteField} ";
-            string tmp_EpisodeNoteField = $"{Constant.DBTables.TmpCombinedTable}.{episodeNoteField}";
-            string selectFromString = asCountQuery
-                ? Sql.SelectCountStarFrom
-                : Sql.SelectStarFrom;
-            return phrase +=
-                $"{selectFromString} " +
-                $"(" +
-                $"    Select Distinct {columnsAsCommaSeparatedString} from {Constant.DBTables.TmpCombinedTable} " +
-                $"    WHERE  SUBSTR({tmp_EpisodeNoteField}, 0, INSTR({tmp_EpisodeNoteField}, ':'))  In " +
-                $"    (" +
-                $"        SELECT  DISTINCT SUBSTR({episodeNoteField}, 0, INSTR({episodeNoteField}, ':'))  FROM " +
-                $"        (" +
-                $"              SELECT {columnsAsCommaSeparatedString} from " +
-                $"              (" +
-                $"                   Select Distinct * from {Constant.DBTables.TmpCombinedTable} where \"category:1\" = {detectionSelections.ClassificationCategoryNumber} " +
-                $"                      AND \"conf:1\" >= {detectionSelections.ClassificationConfidenceLowerForUI} " +
-                $"                      AND \"conf:1\" <= {detectionSelections.ClassificationConfidenceHigherForUI} " +
-                $"              )" +
-                $"         ) " +
-                $"    )" +
-                $")";
-        }
-
-        // Common method used by the above.
-        // Creates a temporary table that holds an initial query result that can be reuse for successive queries
-        // for example, to generate counts for each classification category.
-        // Form:
-        //  Drop Table If Exists TmpCombinedTable; 
-        //  Create Temporary Table TmpCombinedTable As
-        //     SELECT DataTable.*, Detections.*, Classifications.* FROM Classifications
-        //     INNER JOIN DataTable ON DataTable.Id = Detections.Id
-        //     INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID
-        //     WHERE Detections.category = 1 AND Detections.conf BETWEEN 0.2 AND 1
-        //     ORDER BY RelativePath, datetime(DateTime), File;
-        private static string CreateTempTableForDetectionsAndClassifications(string where, RecognitionSelections detectionSelections, string detectionCategory, string tmpTableName)
-        {
-            // Create a temporary table to hold intermediate results
-            string phrase = $"Drop Table If Exists {tmpTableName}; {Environment.NewLine}";
-            phrase += $" Create Temporary Table {tmpTableName} As SELECT DataTable.*, Detections.*, Classifications.* FROM Classifications  " +
-                      $" INNER JOIN DataTable ON DataTable.Id = Detections.Id" +
-                      $" INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID " +
-                      $" WHERE " +
-                      $" Detections.category = {detectionCategory} AND " +
-                      $" Detections.conf BETWEEN {detectionSelections.DetectionConfidenceLowerForUI} AND {detectionSelections.DetectionConfidenceHigherForUI}";
-            if (false == string.IsNullOrEmpty(where))
-            {
-                phrase += $"{Sql.And} {where} ";
-            }
-            // Not sure if this is needed
-            phrase += $" ORDER BY RelativePath, datetime(DateTime), File;{Environment.NewLine}";
-            return phrase;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="selectType"></param>
-        /// <returns>
-        /// Count Form:  Select COUNT  ( * )  FROM (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-        /// Star Form:   SELECT  DISTINCT                           DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-        /// One Form     SELECT ONE           FROM (SELECT DISTINCT DataTable.* FROM Classifications INNER JOIN DataTable ON DataTable.Id = Detections.Id INNER JOIN Detections ON Detections.detectionID = Classifications.detectionID 
-        /// 
-        /// </returns>
-        public static string SelectClassifications(SelectTypesEnum selectType)
-        {
-            string phrase = string.Empty;
-            if (selectType == SelectTypesEnum.Count)
-            {
-                phrase = Sql.SelectCountStarFrom + Sql.OpenParenthesis + Sql.SelectDistinct + DBTables.FileData + Sql.DotStar;
-            }
-            else if (selectType == SelectTypesEnum.Star)
-            {
-                phrase = Sql.Select + DBTables.FileData + Sql.DotStar;
-            }
-            else if (selectType == SelectTypesEnum.One)
-            {
-                phrase = Sql.SelectOne;
-            }
-            return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
-                   Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID + Sql.Where + DetectionColumns.Classification + Sql.IsNotNull;
         }
 
         /// <summary>

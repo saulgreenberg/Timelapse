@@ -17,7 +17,6 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
-using Xceed.Wpf.Toolkit.Core.Converters;
 using Path = System.IO.Path;
 
 namespace Timelapse.Dialog

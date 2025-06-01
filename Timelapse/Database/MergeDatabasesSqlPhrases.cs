@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Globalization;
 using Timelapse.Constant;
 using Timelapse.Enums;
 
@@ -126,7 +124,7 @@ namespace Timelapse.Database
         //       UPDATE tempDataTable SET Id = (offsetID + tempDataTable.Id);  // This line only inserted if offset > 0
         //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) END
         //       INSERT INTO DataTable SELECT * FROM tempDataTable;
-        private static string QueryPhraseMergeDataTable(long offsetId, SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePathDifference)
+        private static string QueryPhraseMergeDataTable(long offsetId, SQLiteWrapper destinationDdb, string attachedSourceDB, string tempDataTable, string relativePathDifference)
         {
             string query = string.Empty;
             List<string> currentDataLabels = destinationDdb.SchemaGetColumns(DBTables.FileData);
@@ -214,7 +212,7 @@ namespace Timelapse.Database
             // - Remap the source dictionary's detection category number to match those in the destination dictionary
             // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
             if (false == Util.Dictionaries.MergeDictionaries(destinationCategories, remappedCategoryDict,
-            out Dictionary<string, string> mergedDetectionDictionary, out bool differentKeysToSameValueDetected))
+            out Dictionary<string, string> mergedDetectionDictionary, out bool _))
             {
                 return new Tuple<DatabaseFileErrorsEnum, string, bool>(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
             }
@@ -260,8 +258,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Merge Detections table
-        private static string QueryPhraseMergeDetectionsTable(long offsetId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, string tempDetectionsTable)
+        private static string QueryPhraseMergeDetectionsTable(long offsetId, string attachedSourceDB, string tempDetectionsTable)
         {
             string query = string.Empty;
 
@@ -280,29 +277,6 @@ namespace Timelapse.Database
             return query;
         }
         #endregion 
-
-        #region Merge DetectionsVideo table
-        private static string QueryPhraseMergeDetectionsVideoTable(long offsetDetectionsId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, string tempDetectionsVideoTable)
-        {
-            string query = string.Empty;
-
-            // Just to make sure we are starting with a new temporary table
-            query += $"{Sql.DropTableIfExists} {tempDetectionsVideoTable} {Sql.Semicolon} {Environment.NewLine}";
-
-            query += Sql.CreateTemporaryTable + tempDetectionsVideoTable + Sql.As + Sql.SelectStarFrom +
-                     attachedSourceDB + Sql.Dot + DBTables.DetectionsVideo + Sql.Semicolon + Environment.NewLine;
-
-            // Add the offset to the detectionID to make sure  they match with existing detectionIDs. (A zero offset is a noop).
-            query += SqlLine.AddOffsetToColumnInTable(tempDetectionsVideoTable, Constant.DetectionColumns.DetectionID, offsetDetectionsId) + Environment.NewLine;
-            query += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable);
-
-            // We no longer need the temporary data table, so drop it.
-            query += $"{Sql.DropTableIfExists} {tempDetectionsVideoTable} {Sql.Semicolon} {Environment.NewLine}";
-            return query;
-        }
-
-        #endregion
 
         #region Merge levels
         private static string SqlQueryPhraseMergeLevelsTable(SQLiteWrapper destinationDdb,

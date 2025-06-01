@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
         Title="Test Some Code Dialog" Height="450" Width="800" Loaded="TestSomeCodeDialog_OnLoaded">
     <Window.Resources>
@@ -19,9 +18,5 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <controls:RecognitionSelector>
-
-        </controls:RecognitionSelector>
     </Grid>
 </Window>

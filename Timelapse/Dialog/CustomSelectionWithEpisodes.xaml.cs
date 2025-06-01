@@ -1387,7 +1387,7 @@ namespace Timelapse.Dialog
             InitiateShowCountsOfMatchingFiles();
         }
 
-        private void SetDetectionCriteria(bool resetSlidersIfNeeded = false)
+        private void SetDetectionCriteria()
         {
             if (IsLoaded == false || dontInvoke)
             {

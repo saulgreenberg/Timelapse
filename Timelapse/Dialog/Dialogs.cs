@@ -9,7 +9,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using DialogUpgradeFiles;
-using MetadataExtractor;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Timelapse.Constant;
 using Timelapse.Database;
@@ -23,7 +22,6 @@ using Clipboard = System.Windows.Clipboard;
 using Control = Timelapse.Constant.Control;
 using Cursor = System.Windows.Input.Cursor;
 using File = Timelapse.Constant.File;
-using Orientation = System.Windows.Controls.Orientation;
 using Rectangle = System.Drawing.Rectangle;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 using WebBrowser = System.Windows.Controls.WebBrowser;
@@ -633,60 +631,6 @@ namespace Timelapse.Dialog
                               + Environment.NewLine
                               + "\u2022 " + filePath,
                     Solution = "Use a different file name."
-                }
-            };
-            messageBox.ShowDialog();
-        }
-
-        #endregion
-
-        #region MessageBox: New FileName As Old FileName Exists
-
-        public static void NewFileNameGeneratedDialog(Window owner, string tdbFileName, string ddbFileName)
-        {
-            string what;
-            string fileList;
-            string pluralityText = "s are";
-            string fileTypeText;
-
-            if (false == string.IsNullOrWhiteSpace(tdbFileName) && false == string.IsNullOrWhiteSpace(ddbFileName))
-            {
-                // Both files were renamed
-                fileTypeText = "Timelapse";
-                what =
-                    $"Your folder has multiple Timelapse template ({File.TemplateDatabaseFileExtension}) and data ({File.FileDatabaseFileExtension}) files in it,";
-                fileList = $"\u2022 {tdbFileName}{Environment.NewLine}"
-                           + $"\u2022 {ddbFileName}";
-            }
-            else if (false == string.IsNullOrWhiteSpace(tdbFileName))
-            {
-                // The template file only was renamed
-                fileTypeText = $"Timelapse template {File.TemplateDatabaseFileExtension} ";
-                pluralityText = " is ";
-                what = $"Your folder has multiple {fileTypeText} files in it,";
-                fileList = $"\u2022 {tdbFileName}";
-            }
-            else
-            {
-                // The datafile only was renamed
-                fileTypeText = $"Timelapse data {File.FileDatabaseFileExtension} ";
-                pluralityText = " is";
-                what =
-                    $"Your folder has multiple {fileTypeText} files in it,";
-
-                fileList = $"\u2022 {ddbFileName}";
-            }
-
-            string title = $"The {fileTypeText} file{pluralityText} named as follows";
-            MessageBox messageBox = new MessageBox(title, owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Information,
-                    Title = title,
-                    What = $"The name of the just-created file{pluralityText}:{Environment.NewLine}{fileList}",
-                    Reason = $"{what}{Environment.NewLine}so we thought we'd let you know which one was just created.",
-                    Hint = "You can rename files using Windows Explorer."
                 }
             };
             messageBox.ShowDialog();
@@ -2746,7 +2690,7 @@ namespace Timelapse.Dialog
                 {
                     Problem = $"The detection and/or classification categories used for image recognition{Environment.NewLine}"
                               + "are incompatible between the selected files and the destination file.",
-                    Reason = $"As Timelapse was unable to combine the categories, it stopped the merge as otherwise recognitions would be inconsistent in the merged files.",
+                    Reason = "As Timelapse was unable to combine the categories, it stopped the merge as otherwise recognitions would be inconsistent in the merged files.",
                     Solution = $"Possibities include:{Environment.NewLine}"
                                + $"\u2022 Revisit how the imported recognition json files were created.{Environment.NewLine}"
                                + $"\u2022 Redo image recognition for those files, being careful to use the same recognizer and (optional) classification model.{Environment.NewLine}"
@@ -3093,7 +3037,6 @@ namespace Timelapse.Dialog
         // Event handler: invoke a dialog box to show the summary report (held as a string in the tag), if present
         private static void ExtraButton_Click(object sender, RoutedEventArgs e)
         {
-            string content = string.Empty;
             if (sender is Button extraButton == false) return;
             if (extraButton.Tag is String contentString == false) return;
             if (string.IsNullOrWhiteSpace(contentString)) return;
@@ -3199,7 +3142,7 @@ namespace Timelapse.Dialog
         public static void ShortcutDetectedDialog(Window owner, string path)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            string title = $"A shortcut to a folder containing your images was detected.";
+            string title = "A shortcut to a folder containing your images was detected.";
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
             MessageBox messageBox = new MessageBox(title, owner)
@@ -3208,7 +3151,7 @@ namespace Timelapse.Dialog
                 {
                     Icon = MessageBoxImage.Information,
                     What = $"Timelapse detected a shortcut in your root folder, where it points to:{Environment.NewLine} • {path}",
-                    Result = $"Timelapse will search for images in the shortcut's destination folder.",
+                    Result = "Timelapse will search for images in the shortcut's destination folder.",
                     Reason = $"Timelapse normally searches for images in your root folder.{Environment.NewLine}"
                              + $"By including a shortcut, you can locate your images outside of the root folder instead of within it, e.g.,{Environment.NewLine}"
                              + $" • elsewhere on the local disk,{Environment.NewLine} • on a network drive, or{Environment.NewLine} • in the cloud.{Environment.NewLine}"
@@ -3235,7 +3178,7 @@ namespace Timelapse.Dialog
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
 
-            string title = $"Multiple shortcuts to folders where detected.";
+            string title = "Multiple shortcuts to folders where detected.";
             string pathList = string.Empty;
 
             foreach (string path in paths)
@@ -3251,7 +3194,7 @@ namespace Timelapse.Dialog
                     Problem =
                         $"Timelapse detected multiple shortcuts in your root folder,{Environment.NewLine}each pointing to a folder that could contain your images:{pathList}" +
                         $"{Environment.NewLine}However, Timelapse does not know which shortcut to use.",
-                    Result = $"Timelapse will abort this operation.",
+                    Result = "Timelapse will abort this operation.",
                     Reason = $"A shortcut allows you to locate your images outside of the root folder instead of within it, e.g., {Environment.NewLine}"
                              + $" • elsewhere on the local disk,{Environment.NewLine} • on a network drive, or{Environment.NewLine} • in the cloud.{Environment.NewLine}"
                              + "Because several shortcuts were found, Timelapse does not know which shortcut's folder it should use.",

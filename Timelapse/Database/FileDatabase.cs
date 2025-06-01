@@ -70,7 +70,7 @@ namespace Timelapse.Database
         public ImageSetRow ImageSet { get; private set; }
 
         // A list of potential shortcuts found to the image folder. If there is only one, then its a valid shortcut
-        public List<string> ShortcutFoldersFound { get; private set; }
+        public List<string> ShortcutFoldersFound { get;}
 
         // Whether a shortcut to the image folder is being
         public bool IsShortcutToImageFolder { get; private set; }
@@ -1695,7 +1695,7 @@ namespace Timelapse.Database
                 // MISSING DETECTIONS
                 // Create a query that returns a count of missing detections
                 // Form: SELECT COUNT ( DataTable.Id ) FROM DataTable LEFT JOIN Detections ON DataTable.ID = Detections.Id WHERE Detections.Id IS NULL 
-                query = SqlPhrase.SelectMissingDetections(SelectTypesEnum.Count); ;
+                query = SqlPhrase.SelectMissingDetections(SelectTypesEnum.Count);
             }
             else if (fileSelection == FileSelectionEnum.Custom && GlobalReferences.DetectionsExists && CustomSelection.RecognitionSelections.UseRecognition && CustomSelection.RecognitionSelections.RecognitionType == RecognitionType.Detection)
             {
@@ -2802,7 +2802,6 @@ namespace Timelapse.Database
 
             RecognizerImportResultEnum result = await Task.Run(() =>
             {
-                bool differentKeysToSameValueDetected;
                 try
                 {
                     progress.Report(new ProgressBarArguments(0, "Examining database recognitions...", true, true));
@@ -2890,7 +2889,7 @@ namespace Timelapse.Database
                         }
 
                         // 3rd. Merge the DB and Json detection categories
-                        if (Dictionaries.MergeDictionaries(dbDetectionCategories, jsonRecognizer.detection_categories, out Dictionary<string, string> mergedDetectionCategories, out differentKeysToSameValueDetected))
+                        if (Dictionaries.MergeDictionaries(dbDetectionCategories, jsonRecognizer.detection_categories, out Dictionary<string, string> mergedDetectionCategories, out _))
                         {
                             // Debug.Print("merged succeeded for detection categories");
                             jsonRecognizer.detection_categories = new Dictionary<string, string>(mergedDetectionCategories);
@@ -2948,7 +2947,7 @@ namespace Timelapse.Database
                         // Check if the new classfication categories are the same or at least a subset of the old ones.
                         // If they are, then we can just use the existing DB categories as they will apply to the new categories.
                         // Note that this check is jsut here for safety, as the classificaiton categories should always be mergable.
-                        if (Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories, out differentKeysToSameValueDetected))
+                        if (Dictionaries.MergeDictionaries(dbClassificationCategories, jsonRecognizer.classification_categories, out Dictionary<string, string> mergedClassificationCategories, out _))
                         {
                             // Debug.Print("merged succeeded for classification categories");
                             jsonRecognizer.classification_categories = new Dictionary<string, string>(mergedClassificationCategories);
@@ -3093,72 +3092,6 @@ namespace Timelapse.Database
         // - if they differ,
         //    return a dictionary (dict2) that remaps the category number of dict2  <Key> to the correct category number of dict1 <Value>
         //    also return a dictionary (dictNewMapping) that maps the old numbers to the new nubmers e.g., 2,6 means 2 is now remapped to 6
-        public static bool RemapAndReplaceCategoryNumbersIfNeededORIGINAL(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string, string> dict1To2lookupMapping)
-        {
-            dict2Remapped = new Dictionary<string, string>();
-            dict1To2lookupMapping = new Dictionary<string, string>();
-
-            if (dict1 == null || dict1.Count == 0 || dict2 == null || dict2.Count == 0)
-            {
-                // At least one of the dictionaries is null or empty
-                // so no mapping needed
-                return false;
-            }
-
-            // Get the maximum category number in dict1, in case we have to remap an unseen category from dict2 
-            int maxCategoryNumber = -1;
-            foreach (KeyValuePair<string, string> kvp in dict1)
-            {
-                if (Int32.TryParse(kvp.Key, out int keyAsInt) & keyAsInt > maxCategoryNumber)
-                {
-                    maxCategoryNumber = keyAsInt;
-                }
-            }
-
-            maxCategoryNumber++;
-
-            Dictionary<string, string> dict1Flipped;
-            Dictionary<string, string> dict2Flipped;
-            try
-            {
-                // Flip the keys and values, as its just easier to work with
-                dict1Flipped = dict1.ToDictionary(x => x.Value, x => x.Key);
-                dict2Flipped = dict2.ToDictionary(x => x.Value, x => x.Key);
-            }
-            catch (Exception)
-            {
-                // Just in case there is a duplicate value in the dictionary
-                return false;
-            }
-
-            foreach (KeyValuePair<string, string> kvp in dict2Flipped)
-            {
-                // Check and remap if needed how dict2's category numbers maps to dict 1's category number
-                if (dict1Flipped.TryGetValue(kvp.Key, out var dict1CategoryNumber))
-                {
-                    // use dict1's category number which may be the same or different than dict2's category number
-                    dict2Remapped.Add(dict1CategoryNumber, kvp.Key);
-
-                    if (dict1CategoryNumber != kvp.Value)
-                    {
-                        // If it differs, then its a remapped number
-                        dict1To2lookupMapping.Add(kvp.Value, dict1CategoryNumber);
-                    }
-                }
-                else
-                {
-                    // The category label exists in dict1, so just use dict1's category number
-                    // This remaps the number if it is different
-                    // generate a new dict2 category number as it doesn't exist in dict1
-                    dict2Remapped.Add(maxCategoryNumber.ToString(), kvp.Key);
-                    dict1To2lookupMapping.Add(kvp.Value, maxCategoryNumber.ToString());
-                    maxCategoryNumber++;
-                }
-            }
-            return dict1To2lookupMapping.Count != 0;
-        }
-
-
         public static bool RemapAndReplaceCategoryNumbersIfNeeded(Dictionary<string, string> dict1, Dictionary<string, string> dict2, out Dictionary<string, string> dict2Remapped, out Dictionary<string, string> dict1To2lookupMapping)
         {
             dict2Remapped = new Dictionary<string, string>();
@@ -3183,7 +3116,7 @@ namespace Timelapse.Database
             maxCategoryNumber++;
 
             Dictionary<string, string> dict1Flipped = new Dictionary<string, string>();
-            Dictionary<string, string> dict2Flipped = new Dictionary<string, string>(); ;
+            Dictionary<string, string> dict2Flipped = new Dictionary<string, string>();
 
             // Flip the keys and values, as its just easier to work with
             foreach (KeyValuePair<string, string> kvp in dict1)
@@ -3241,24 +3174,17 @@ namespace Timelapse.Database
             remappedClassificationDescriptionsDict = new Dictionary<string, string>();
             if (null == sourceDescriptions || sourceDescriptions.Count == 0 || null == classificationLookupMapping || classificationLookupMapping.Count ==  0)
             {
-                // Nothing to do
                 return;
             }
             foreach (KeyValuePair<string, string> kvp in sourceDescriptions)
             {
-                if (classificationLookupMapping.TryGetValue(kvp.Key, out string newCategoryNumber))
-                {
-                    // use the remapped
-                    remappedClassificationDescriptionsDict.Add(newCategoryNumber, kvp.Value);
-                }
-                else
-                {
-                    // The category label does not exist in sourceDescriptions, so just copy the unaltered pair
-                    remappedClassificationDescriptionsDict.Add(kvp.Key, kvp.Value);
-                }
+                // The category label does not exist in sourceDescriptions, so just copy the unaltered pair
+                // use the remapped
+                remappedClassificationDescriptionsDict.Add(
+                    classificationLookupMapping.TryGetValue(kvp.Key, out string newCategoryNumber) 
+                        ? newCategoryNumber 
+                        : kvp.Key, kvp.Value);
             }
-
-            return;
         }
         #endregion
 
@@ -3830,7 +3756,7 @@ namespace Timelapse.Database
 
                 // Check various recognition settings.
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us
-                if (null != customSelectionFromJson?.RecognitionSelections && customSelectionFromJson.RecognitionSelections.AllDetections)
+                if (null != customSelectionFromJson.RecognitionSelections && customSelectionFromJson.RecognitionSelections.AllDetections)
                 {
                     // Just ensures that the All detection category number is correctly set if we are trying to use All detections
                     // This arises as sometimes the detection category number isn't saved properly in the DB on close, but I couldn't figure out where that was. So a bit of a hack fix.

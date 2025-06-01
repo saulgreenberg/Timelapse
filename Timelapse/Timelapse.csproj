@@ -217,7 +217,6 @@
       <DependentUpon>BusyCancelIndicator.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\BusyCancelIndicatorExtensions.cs" />
-    <Compile Include="ControlsMetadata\MetadataCreateControl.cs" />
     <Compile Include="ControlsMetadata\MetadataDataEntryHandler.cs" />
     <Compile Include="ControlsMetadata\MetadataDataEntryPanel.xaml.cs">
       <DependentUpon>MetadataDataEntryPanel.xaml</DependentUpon>
@@ -315,9 +314,6 @@
     <Compile Include="Recognition\RecognitionUtilities.cs" />
     <Compile Include="Dialog\CustomSelectionWithEpisodes.xaml.cs">
       <DependentUpon>CustomSelectionWithEpisodes.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml.cs">
-      <DependentUpon>RecognitionsAddSubfolderToJsonFilePaths.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialog\RecognitionsDeleteOldData.xaml.cs">
       <DependentUpon>RecognitionsDeleteOldData.xaml</DependentUpon>
@@ -453,9 +449,6 @@
     <Compile Include="QuickPaste\QuickPasteItem.cs" />
     <Compile Include="QuickPaste\QuickPasteWindow.xaml.cs">
       <DependentUpon>QuickPasteWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Dialog\UpdateRootFolder.xaml.cs">
-      <DependentUpon>UpdateRootFolder.xaml</DependentUpon>
     </Compile>
     <Compile Include="Enums\DirectionEnum.cs" />
     <Compile Include="Enums\FilePlayerSelectionEnum.cs" />
@@ -664,10 +657,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialog\RecognitionsAddSubfolderToJsonFilePaths.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Dialog\RecognitionsDeleteOldData.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -849,10 +838,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialog\RenameFileDatabaseFile.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Dialog\UpdateRootFolder.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

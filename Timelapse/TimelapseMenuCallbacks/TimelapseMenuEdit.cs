@@ -291,7 +291,7 @@ namespace Timelapse
 
         #region Dupicate the record
 
-        private static bool IsDuplicating = false;
+        private static bool IsDuplicating;
         private async void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
         {
             if (IsDisplayingSingleImage() == false)

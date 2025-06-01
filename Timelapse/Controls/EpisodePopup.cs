@@ -158,7 +158,7 @@ namespace Timelapse.Controls
                                 height = Math.Max(height, image.Source.Height);
                                
                                 // Create a canvas containing the image and bounding boxes (if detections are on)
-                                Canvas canvas = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, margin, fileTable[0].ID, fileTable[0].IsVideo);
+                                Canvas canvas = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, fileTable[0].IsVideo);
                                 canvas.MouseLeftButtonUp += Canvas_MouseLeftButtonUp;
                                 canvas.Tag = fileTable[0];
                                 sp.Width = Double.NaN;
@@ -196,7 +196,7 @@ namespace Timelapse.Controls
                                 height = Math.Max(height, image.Source.Height);
 
                                 // Create a canvas containing the image and bounding box
-                                Canvas canvas = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, margin, fileTable[0].ID, fileTable[0].IsVideo);
+                                Canvas canvas = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, fileTable[0].IsVideo);
                                 canvas.MouseLeftButtonUp += Canvas_MouseLeftButtonUp;
                                 canvas.Tag = fileTable[0];
                                 sp.Children.Add(canvas);
@@ -273,7 +273,7 @@ namespace Timelapse.Controls
 
         #region Internal methods
         // Create a canvas containing the image as well as the  bounding boxes defined by the filetable id 
-        private static Canvas CreateCanvasWithBoundingBoxesAndImage(BoundingBoxes boundingBoxes, Image image, double height, int margin, long fileTableID, bool isVideo)
+        private static Canvas CreateCanvasWithBoundingBoxesAndImage(BoundingBoxes boundingBoxes, Image image, double height, bool isVideo)
         {
             Canvas canvas = new Canvas
             {
@@ -347,7 +347,7 @@ namespace Timelapse.Controls
                 Tuple<Image, BoundingBoxes> tuple = GetBoundingBoxesAndImage(imageRow, 0, height, imageRow.IsVideo);
                 BoundingBoxes boundingBoxes = tuple.Item2;
                 Image image = tuple.Item1;
-                Canvas clone = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, 0, imageRow.ID, imageRow.IsVideo);
+                Canvas clone = CreateCanvasWithBoundingBoxesAndImage(boundingBoxes, image, height, imageRow.IsVideo);
 
                 Zoombox zoombox = CreateZoombox();
                 zoombox.Content = clone;
