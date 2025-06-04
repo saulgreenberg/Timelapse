@@ -146,7 +146,6 @@
                 public const string Path = "project_path";
                 public const string CaptureMethod = "captureMethod";
                 public const string IndividualAnimals = "individualAnimals";
-                public const string ObservationLevelAsString = "observationLevel";
                 public const string ObservationLevel = "observationLevel";
             }
 

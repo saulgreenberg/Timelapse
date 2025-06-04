@@ -2886,7 +2886,7 @@ namespace Timelapse.Dialog
                 {
                     Title = title,
                     What = what,
-                    Reason = $"The contents of this data field must {expectedInput}{example}",
+                    Reason = $"The contents of this data field must be {expectedInput}{example}",
                     Result = "Your data field's contents may be reset.",
                     Hint = "Check your data field's contents, then enter text that matches what the data field expects.",
                     Icon = MessageBoxImage.Error

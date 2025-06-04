@@ -1029,7 +1029,6 @@ namespace Timelapse.Database
             }
         }
 
-
         public void SchemaAlterTableWithNewColumnDefinitions(string sourceTable, List<SchemaColumnDefinition> columnDefinitions)
         {
             string destTable = "TempTable";

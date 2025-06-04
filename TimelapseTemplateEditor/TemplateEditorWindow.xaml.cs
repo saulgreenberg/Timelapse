@@ -42,7 +42,7 @@ namespace TimelapseTemplateEditor
 
             InitializeComponent();
             Title = EditorConstant.MainWindowBaseTitle;
-            //Dialogs.TryFitDialogInWorkingArea(this);
+
 
             // Abort if some of the required dependencies are missing
             if (Dependencies.AreRequiredBinariesPresent(EditorConstant.ApplicationName, Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
@@ -70,6 +70,7 @@ namespace TimelapseTemplateEditor
             this.Left = userSettings.EditorWindowPosition.Left; 
             this.Height = userSettings.EditorWindowPosition.Height;
             this.Width = userSettings.EditorWindowPosition.Width;
+            AdjustWindowPositionIfNeeded(this);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -84,13 +85,6 @@ namespace TimelapseTemplateEditor
                 userSettings.MostRecentCheckForUpdates = DateTime.Now;
             }
 
-            if (false == IsWindowOnDisplay(this))
-            {
-                this.Top = 10;
-                this.Left = 10;
-                this.Height = 825;
-                this.Width = 1200;
-            }
             //if (userSettings.SuppressWarningToUpdateDBFilesToSQLPrompt == false)
             //{
             //    WarningToUpdateDBFilesToSQL warning = new WarningToUpdateDBFilesToSQL(this);
@@ -102,11 +96,12 @@ namespace TimelapseTemplateEditor
             //}
         }
 
+
         // Check to make sure the window is at least partly visible on the display
-        // Unfortunately, this is not a perfect solution as the saved window doesn't take into account what display its on
-        public static bool IsWindowOnDisplay(Window window)
+        public static void AdjustWindowPositionIfNeeded(Window window)
         {
-            // Get the window's position and size
+            int offset = 10;
+            // Get the stored window position and size
             var windowRect = new System.Drawing.Rectangle(
                 (int)window.Left,
                 (int)window.Top,
@@ -114,18 +109,35 @@ namespace TimelapseTemplateEditor
                 (int)window.Height
             );
 
-            // Check if any screen contains the window's rectangle
+            // Check if any screen completely contains the window's rectangle
+            // If so, then we don't have to adjust anything
             foreach (var screen in System.Windows.Forms.Screen.AllScreens)
             {
-                if (screen.WorkingArea.IntersectsWith(windowRect))
+                if (screen.WorkingArea.Contains(windowRect))
                 {
-                    return true;
+                    return;
                 }
             }
 
-            return false;
-        }
+            // If we get here, the window is not fully visible on any screen, so we need to adjust it
+            // Position the window near the top-left corner of the primary screen
+            window.Left = offset;
+            window.Top = offset;
 
+            // If the window's width/height makes it go off screen, then resize it to its default MinWidth/Height
+            var primaryScreen = System.Windows.Forms.Screen.AllScreens[0];
+            if (window.Width > primaryScreen.WorkingArea.Width - offset)
+            {
+                window.Width = window.MinWidth;
+            }
+            if (window.Height > primaryScreen.WorkingArea.Height - offset)
+            {
+                window.Height = window.MinHeight;
+            }
+
+            //window.Width = Math.Min((double) primaryScreen.WorkingArea.Width - 100, (double) window.Width);
+            //window.Height = Math.Min((double) primaryScreen.WorkingArea.Height - 100, (double) window.Height);
+        }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
@@ -134,10 +146,7 @@ namespace TimelapseTemplateEditor
             DataGridCommonCode.ApplyPendingEdits(dataGrid);
 
             // persist user specific state to the registry
-            if (this.Top > -10 && this.Left > -10)
-            {
-                this.userSettings.EditorWindowPosition = new Rect(new Point(this.Left, this.Top), new Size(this.Width, this.Height));
-            }
+            this.userSettings.EditorWindowPosition = new Rect(new Point(this.Left, this.Top), new Size(this.Width, this.Height));
 
             // persist state to registry
             userSettings.WriteToRegistry();

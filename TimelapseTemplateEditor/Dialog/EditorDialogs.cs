@@ -242,64 +242,6 @@ namespace TimelapseTemplateEditor.Dialog
             messageBox.ShowDialog();
         }
 
-        public static void EditorDefaultMultiChoiceValuesMustMatchChoiceListsDialog(Window owner, string invalidDefaultValue)
-        {
-            MessageBox messageBox = new MessageBox("MultiChoice default values must match an item in the Choice menu", owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Warning,
-                    Problem =
-                        $"'{invalidDefaultValue}' is not allowed as a default value, as it is not a combination of one or more of your 'Define List' items.{Environment.NewLine}" +
-                        "Choice default values must be either empty or a comma-separated list matching one or more of those items.",
-                    Result = "The default value will be cleared.",
-                    Hint = "Example: If your DefineList contains Aa Bb Cc, a default value specifying Aa and Cc would be Aa,Cc."
-                }
-            };
-            messageBox.ShowDialog();
-        }
-
-        public static void EditorDefaultDateTimeCustomValuesIncorrectDialog(Window owner, string invalidDefaultValue)
-        {
-            MessageBox messageBox = new MessageBox("The entered Date and/or Time value did not match the expected format", owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Warning,
-                    Problem =
-                        $"The value you entered was not allowed as a default value, as it was not in the expected date format.{Environment.NewLine}" +
-                        $"Depending on which date/time control you are using, default formats are:{Environment.NewLine}" +
-                        $"• Date: YYYY-MM-DD{Environment.NewLine}" +
-                        $"• Time: HH:MM:SS in 24 hour time{Environment.NewLine}" +
-                        "• Date and Time: YYYY-MM-DD HH:MM:SS in 24 hour time",
-                    Result = "A standard default value was substituted  instead.",
-                    Hint = $"Example: for Dec 24, 2024 at 3:25 am, you would enter:{Environment.NewLine}" +
-                           $"• Date: 2024-12-24{Environment.NewLine}" +
-                           $"• Time: 15:25:00{Environment.NewLine}" +
-                           "• Date and Time: 2024-12-24 15:25:00"
-                }
-            };
-            messageBox.ShowDialog();
-        }
-
-        public static void EditorDefaultTimeCustomValuesIncorrectDialog(Window owner, string invalidDefaultValue)
-        {
-            MessageBox messageBox = new MessageBox("The entered Time value did not match the expected format", owner)
-            {
-                Message =
-                {
-                    Icon = MessageBoxImage.Warning,
-                    Problem =
-                        $"The value you entered was not allowed as a default value, as it was not in the expected time format.{Environment.NewLine}" +
-                        $"Default format is:{Environment.NewLine}" +
-                        "• Time: HH:MM:SS in 24 hour time",
-                    Result = "A standard default value was substituted  instead.",
-                    Hint = "Example: you would enter 3:25 am as 15:25:00"
-                }
-            };
-            messageBox.ShowDialog();
-        }
-
         /// <summary>
         /// EditorDefaultChoiceValuesMustMatchNonEmptyChoiceLists
         /// </summary>
