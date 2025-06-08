@@ -19,38 +19,41 @@ namespace Timelapse.ControlsDataCommon
         // - a ControlRow
         // - a MetadataControlRow
 
-        #region Create AlphaNumeric
-        public static TextBox CreateAlphaNumberic(ControlRow control, string defaultValue)
-        {
-            return CreateAlphaNumeric(control.Tooltip, defaultValue);
-        }
+        #region Create AlphaNumeric - UNUSED
+        // These are unused, but not deleted yet, as I am not quite sure why I wrote these and why they aren't used.
+        // I think its because the actual creation code creates the specific handlers
 
-        public static TextBox CreateAlphaNumberic(MetadataControlRow control, string defaultValue)
-        {
-            return CreateAlphaNumeric(control.Tooltip, defaultValue);
-        }
+        //public static TextBox CreateAlphaNumberic(ControlRow control, string defaultValue)
+        //{
+        //    return CreateAlphaNumeric(control.Tooltip, defaultValue);
+        //}
 
-        public static TextBox CreateAlphaNumeric(string tooltip, string defaultValue)
-        {
-            TextBox alphaNumeric = new TextBox
-            {
-                ToolTip = tooltip,
-                Height = 26,
-                Width = ControlDefault.NoteDefaultWidth,
-            };
+        //public static TextBox CreateAlphaNumberic(MetadataControlRow control, string defaultValue)
+        //{
+        //    return CreateAlphaNumeric(control.Tooltip, defaultValue);
+        //}
 
-            Configure(alphaNumeric,  defaultValue);
-            alphaNumeric.GotFocus += Control_GotFocus;
-            alphaNumeric.LostFocus += Control_LostFocus;
-            return alphaNumeric;
-        }
+        //public static TextBox CreateAlphaNumeric(string tooltip, string defaultValue)
+        //{
+        //    TextBox alphaNumeric = new TextBox
+        //    {
+        //        ToolTip = tooltip,
+        //        Height = 26,
+        //        Width = ControlDefault.NoteDefaultWidth,
+        //    };
 
-        public static void Configure(TextBox alphaNumeric, string defaultValue)
-        {
-            // Check the arguments for null 
-            ThrowIf.IsNullArgument(alphaNumeric, nameof(alphaNumeric));
-            alphaNumeric.Text = defaultValue ?? ControlDefault.NoteDefaultValue;
-        }
+        //    Configure(alphaNumeric,  defaultValue);
+        //    alphaNumeric.GotFocus += Control_GotFocus;
+        //    alphaNumeric.LostFocus += Control_LostFocus;
+        //    return alphaNumeric;
+        //}
+
+        //public static void Configure(TextBox alphaNumeric, string defaultValue)
+        //{
+        //    // Check the arguments for null 
+        //    ThrowIf.IsNullArgument(alphaNumeric, nameof(alphaNumeric));
+        //    alphaNumeric.Text = defaultValue ?? ControlDefault.NoteDefaultValue;
+        //}
         #endregion
 
         #region Create DateTimePicker

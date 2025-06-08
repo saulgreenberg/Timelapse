@@ -131,6 +131,8 @@ namespace Timelapse.Dialog
             state.SuppressShortcutDetectedPrompt = cb.IsChecked == true;
         }
 
+        // Unused for now, but keep around in case we need something like this in the future
+        // ReSharper disable once UnusedMember.Local
         private void SuppressWarningToUpdateDBFilesToSQL_Click(object sender, RoutedEventArgs _)
         {
             CheckBox cb = (CheckBox)sender;

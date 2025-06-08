@@ -13,7 +13,6 @@ using Timelapse.Util;
 using Xceed.Wpf.Toolkit;
 using Xceed.Wpf.Toolkit.Primitives;
 using Control = Timelapse.Constant.Control;
-using ThumbnailGrid = Timelapse.Controls.ThumbnailGrid;
 
 namespace Timelapse.ControlsMetadata
 {
@@ -22,10 +21,6 @@ namespace Timelapse.ControlsMetadata
         #region Public Properties and Private variables
         public FileDatabase FileDatabase { get; }
         public bool IsProgrammaticControlUpdate { get; set; }
-
-        // We need to get selected files from the ThumbnailGrid, so we need this reference
-        public ThumbnailGrid ThumbnailGrid { get; set; }
-        //public MarkableCanvas MarkableCanvas { get; set; }
 
         // Index location of these menu items in the context menu
         private const int CopyToClipboardIndex = 0;

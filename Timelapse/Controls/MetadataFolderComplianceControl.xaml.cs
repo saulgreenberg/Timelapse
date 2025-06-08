@@ -504,18 +504,6 @@ namespace Timelapse.Controls
             }
             return null;
         }
-
-        // Walk up the element tree to the nearest tree view item.
-        private TreeViewItem GetNearestContainer(UIElement element)
-        {
-            TreeViewItem container = element as TreeViewItem;
-            while (container == null && element != null)
-            {
-                element = VisualTreeHelper.GetParent(element) as UIElement;
-                container = element as TreeViewItem;
-            }
-            return container;
-        }
         #endregion
 
         #region Path manipulations

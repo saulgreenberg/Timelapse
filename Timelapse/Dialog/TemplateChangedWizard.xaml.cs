@@ -576,10 +576,6 @@ namespace Timelapse.Dialog
 
         #region CreateRow: various forms to create a single grid row.
         // A single textblock spanning the first 2 columns
-        private void CreateRow(Grid grid, TextBlock tb, int row)
-        {
-            CreateRow(grid, tb, row, 0, 6);
-        }
 
 
         // two textblocks atop the first and second column respectively
@@ -591,7 +587,7 @@ namespace Timelapse.Dialog
 
 
         // General form for above: a textblock in a given row, column, and columnspan
-        private void CreateRow(Grid grid, TextBlock tb, int row, int column, int columnspan)
+        private void CreateRow(Grid grid, TextBlock tb, int row, int column = 0, int columnspan = 6)
         {
             // Create a new row definition
             RowDefinition rd = new RowDefinition
@@ -607,26 +603,6 @@ namespace Timelapse.Dialog
             Grid.SetColumnSpan(tb, columnspan);
             Grid.SetRow(tb, row);
             grid.Children.Add(tb);
-        }
-
-        // Create a line separator - currently unused, and doesn't work when last tried
-        private void CreateRow(Grid grid, Separator separator, int row)
-        {
-            // Create a new row definition
-            RowDefinition rd = new RowDefinition
-            {
-                Height = GridLength.Auto
-            };
-            grid.RowDefinitions.Add(rd);
-
-            // Add the textblock to that row
-            int columnMargin = 10;
-            separator.Margin = new Thickness(columnMargin, 40, 0, 5);
-
-            Grid.SetColumn(separator, 0);
-            Grid.SetColumnSpan(separator, 2);
-            Grid.SetRow(separator, row);
-            grid.Children.Add(separator);
         }
 
         // Specialized CreateRow:

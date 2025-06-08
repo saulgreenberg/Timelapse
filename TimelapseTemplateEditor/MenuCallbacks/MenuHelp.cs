@@ -120,6 +120,9 @@ namespace TimelapseTemplateEditor
                         ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosRandomSampling));
                         break;
 
+                    case "MenuItemVideoImageRecnWebinar":
+                        ProcessExecution.TryProcessStart(new Uri(Constant.ExternalLinks.TimelapseVideosImageRecognitionTalk));
+                        break;
 
                     // OLDER
                     case "MenuItemVideoClassifyingDarkImages":

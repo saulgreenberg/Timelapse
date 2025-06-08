@@ -2498,11 +2498,12 @@ namespace Timelapse.Database
             return MetadataTablesByLevel.ContainsKey(level);
         }
 
+        // Unused but keep for now in case it becomes useful at some point
         // Return whether a metadata level both exists and is populated in the MetadataTables data structure
-        public bool MetadataTablesIsLevelPopulated(int level)
-        {
-            return MetadataTablesIsLevelPresent(level) && MetadataTablesByLevel[level].RowCount > 0;
-        }
+        //public bool MetadataTablesIsLevelPopulated(int level)
+        //{
+        //    return MetadataTablesIsLevelPresent(level) && MetadataTablesByLevel[level].RowCount > 0;
+        //}
 
         public bool MetadataTablesIsLevelAndRelativePathPresent(int level, string relativePathPart)
         {
@@ -3397,24 +3398,25 @@ namespace Timelapse.Database
             }
         }
 
+        // Unused but keep for now in case it becomes useful at some point
         // Get the GetTypicalClassificationThreshold from the Detection Info table. 
         // If we cannot, return the default value
-        public float GetTypicalClassificationThreshold()
-        {
-            float? x = null;
-            try
-            {
-                if (Database.TableExists(DBTables.Info) && Database.SchemaIsColumnInTable(DBTables.Info, InfoColumns.TypicalClassificationThreshold))
-                {
-                    x = Database.ScalarGetFloatValue(DBTables.Info, InfoColumns.TypicalClassificationThreshold);
-                }
-                return x ?? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
-            }
-            catch
-            {
-                return RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
-            }
-        }
+        //public float GetTypicalClassificationThreshold()
+        //{
+        //    float? x = null;
+        //    try
+        //    {
+        //        if (Database.TableExists(DBTables.Info) && Database.SchemaIsColumnInTable(DBTables.Info, InfoColumns.TypicalClassificationThreshold))
+        //        {
+        //            x = Database.ScalarGetFloatValue(DBTables.Info, InfoColumns.TypicalClassificationThreshold);
+        //        }
+        //        return x ?? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+        //    }
+        //    catch
+        //    {
+        //        return RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown;
+        //    }
+        //}
 
         // Get the ConservativeDetectionThreshold from the Detection Info table. 
         // If we cannot, return the default value
@@ -3464,33 +3466,35 @@ namespace Timelapse.Database
             }
         }
 
+        // Unused but keep for now in case it becomes useful at some point
         // Create the detection category dictionary to mirror the detection table
-        public string GetDetectionCategoryFromLabel(string label)
-        {
-            try
-            {
-                CreateDetectionCategoriesDictionaryIfNeeded();
-                // A lookup dictionary should now exists, so just return the category value.
-                string myKey = detectionCategoriesDictionary.FirstOrDefault(x => x.Value == label).Key;
-                return myKey ?? string.Empty;
-            }
-            catch
-            {
-                // Should never really get here, but just in case.
-                return string.Empty;
-            }
-        }
+        //public string GetDetectionCategoryFromLabel(string label)
+        //{
+        //    try
+        //    {
+        //        CreateDetectionCategoriesDictionaryIfNeeded();
+        //        // A lookup dictionary should now exists, so just return the category value.
+        //        string myKey = detectionCategoriesDictionary.FirstOrDefault(x => x.Value == label).Key;
+        //        return myKey ?? string.Empty;
+        //    }
+        //    catch
+        //    {
+        //        // Should never really get here, but just in case.
+        //        return string.Empty;
+        //    }
+        //}
 
-        public List<string> GetDetectionLabels()
-        {
-            List<string> labels = new List<string>();
-            CreateDetectionCategoriesDictionaryIfNeeded();
-            foreach (KeyValuePair<string, string> entry in detectionCategoriesDictionary)
-            {
-                labels.Add(entry.Value);
-            }
-            return labels;
-        }
+        // Unused but keep for now in case it becomes useful at some point
+        //public List<string> GetDetectionLabels()
+        //{
+        //    List<string> labels = new List<string>();
+        //    CreateDetectionCategoriesDictionaryIfNeeded();
+        //    foreach (KeyValuePair<string, string> entry in detectionCategoriesDictionary)
+        //    {
+        //        labels.Add(entry.Value);
+        //    }
+        //    return labels;
+        //}
 
         // Create the classification category dictionary to mirror the detection table
         public void CreateClassificationCategoriesDictionaryIfNeeded()
@@ -3554,17 +3558,18 @@ namespace Timelapse.Database
             }
         }
 
-        public List<string> GetClassificationLabels()
-        {
-            List<string> labels = new List<string>();
-            CreateClassificationCategoriesDictionaryIfNeeded();
-            foreach (KeyValuePair<string, string> entry in classificationCategoriesDictionary)
-            {
-                labels.Add(entry.Value);
-            }
-            labels = labels.OrderBy(q => q).ToList();
-            return labels;
-        }
+        // Unused but keep for now in case it becomes useful at some point
+        //public List<string> GetClassificationLabels()
+        //{
+        //    List<string> labels = new List<string>();
+        //    CreateClassificationCategoriesDictionaryIfNeeded();
+        //    foreach (KeyValuePair<string, string> entry in classificationCategoriesDictionary)
+        //    {
+        //        labels.Add(entry.Value);
+        //    }
+        //    labels = labels.OrderBy(q => q).ToList();
+        //    return labels;
+        //}
 
         // return the label that matches the detection category 
         public string GetClassificationLabelFromCategory(string category)
@@ -3582,21 +3587,23 @@ namespace Timelapse.Database
             }
         }
 
-        public string GetClassificationCategoryFromLabel(string label)
-        {
-            try
-            {
-                CreateClassificationCategoriesDictionaryIfNeeded();
-                // At this point, a lookup dictionary already exists, so just return the category number.
-                string myKey = classificationCategoriesDictionary.FirstOrDefault(x => x.Value == label).Key;
-                return myKey ?? string.Empty;
-            }
-            catch
-            {
-                // Should never really get here, but just in case.
-                return string.Empty;
-            }
-        }
+        // Unused but keep for now in case it becomes useful at some point
+        //public string GetClassificationCategoryFromLabel(string label)
+        //{
+        //    try
+        //    {
+        //        CreateClassificationCategoriesDictionaryIfNeeded();
+        //        // At this point, a lookup dictionary already exists, so just return the category number.
+        //        string myKey = classificationCategoriesDictionary.FirstOrDefault(x => x.Value == label).Key;
+        //        return myKey ?? string.Empty;
+        //    }
+        //    catch
+        //    {
+        //        // Should never really get here, but just in case.
+        //        return string.Empty;
+        //    }
+        //}
+
         // See if detections exist in this instance. We test once, and then save the state (unless forceQuery is true)
         private bool? detectionExists;
         /// <summary>

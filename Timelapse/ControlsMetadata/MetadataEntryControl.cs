@@ -34,6 +34,8 @@ namespace Timelapse.ControlsMetadata
         /// <summary>Gets the position of the content control</summary>
         public abstract UIElement GetContentControl { get; }
 
+        // This is always overridden, but unsure how to code it to remove it from here
+        // ReSharper disable once UnusedMember.Global
         public abstract bool IsContentControlEnabled { get; }
 
         /// <summary>Gets the value of the control</summary>

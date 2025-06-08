@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -138,29 +137,32 @@ namespace Timelapse.Standards
 
         // 
         // Generates a truncated string used for feedback
-        [JsonIgnore]
-        public string vernacularCount => vernacularNames == null ? "0" : $"{vernacularNames.Count.ToString()} - {TruncatedVernacularNames()}";
 
+        // Unused but keep for now in case it becomes useful at some point
+        //[JsonIgnore]
+        //public string vernacularCount => vernacularNames == null ? "0" : $"{vernacularNames.Count.ToString()} - {TruncatedVernacularNames()}";
+
+        // Unused but keep for now in case it becomes useful at some point
         // Generate a possibly truncated string representation of the vernacular name list for display in the data grid.
-        private string TruncatedVernacularNames()
-        {
-            const int max = 30;
-            bool isStringTruncated = false;
-            string truncatedString = string.Empty;
-            foreach (KeyValuePair<string, string> vName in vernacularNames)
-            {
-                truncatedString += $"{vName.Key}:{vName.Value},";
-                if (truncatedString.Length > max)
-                {
-                    isStringTruncated = true;
-                    break;
-                }
-            }
-            truncatedString = isStringTruncated
-                ? $"{truncatedString.Substring(0, Math.Min(truncatedString.Length, max)).TrimEnd(',')}\u2026"
-                : truncatedString.TrimEnd(',', ' ');
-            return truncatedString;
-        }
+        //private string TruncatedVernacularNames()
+        //{
+        //    const int max = 30;
+        //    bool isStringTruncated = false;
+        //    string truncatedString = string.Empty;
+        //    foreach (KeyValuePair<string, string> vName in vernacularNames)
+        //    {
+        //        truncatedString += $"{vName.Key}:{vName.Value},";
+        //        if (truncatedString.Length > max)
+        //        {
+        //            isStringTruncated = true;
+        //            break;
+        //        }
+        //    }
+        //    truncatedString = isStringTruncated
+        //        ? $"{truncatedString.Substring(0, Math.Min(truncatedString.Length, max)).TrimEnd(',')}\u2026"
+        //        : truncatedString.TrimEnd(',', ' ');
+        //    return truncatedString;
+        //}
     }
 
     public class relatedIdentifiers

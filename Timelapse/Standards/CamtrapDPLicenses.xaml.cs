@@ -50,6 +50,7 @@ namespace Timelapse.Standards
                 $"- media: applies to the media files referenced in media.{Environment.NewLine}" +
                 "• e.g., \"data\"");
        
+        // ReSharper disable once UnusedMember.Global
         public List<string> ScopeItems { get; set; } = new List<string> {"data", "media"};
         
         #endregion

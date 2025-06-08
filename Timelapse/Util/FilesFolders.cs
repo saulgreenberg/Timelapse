@@ -678,6 +678,7 @@ namespace Timelapse.Util
         #endregion
 
         #region Public Static Methods - Split Relative Path
+        // ReSharper disable once UnusedMember.Global
         public static List<string> SplitRelativePath(string relativePath)
         {
             return relativePath.Split('\\').ToList();
@@ -854,11 +855,12 @@ namespace Timelapse.Util
             return false;
         }
 
+        // Unused but keep for now in case it becomes useful at some point
         // Return true if a file with the given extension exists in the provided folder path
-        public static int CountFilesInFolderWithExtension(string folderPath, string extension)
-        {
-            return Directory.GetFiles(folderPath, "*" + extension).Length;
-        }
+        //public static int CountFilesInFolderWithExtension(string folderPath, string extension)
+        //{
+        //    return Directory.GetFiles(folderPath, "*" + extension).Length;
+        //}
         #endregion
 
         #region Public Static Methods - Video files

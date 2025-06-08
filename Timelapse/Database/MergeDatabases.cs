@@ -585,48 +585,52 @@ namespace Timelapse.Database
 
         #region Helpers: GetRootFolder, GetDistinctRootsFromRelativePath
 
+
+
+        // Unused but keep for now in case it becomes useful at some point
+
         // Given a path, get the first folder in it (or Empty if there isn't one)
-        private static string GetRootFolder(string path)
-        {
-            while (true)
-            {
-                string temp = Path.GetDirectoryName(path);
-                if (string.IsNullOrEmpty(temp))
-                {
-                    break;
-                }
+        //private static string GetRootFolder(string path)
+        //{
+        //    while (true)
+        //    {
+        //        string temp = Path.GetDirectoryName(path);
+        //        if (string.IsNullOrEmpty(temp))
+        //        {
+        //            break;
+        //        }
 
-                path = temp;
-            }
+        //        path = temp;
+        //    }
 
-            return path;
-        }
+        //    return path;
+        //}
 
         // Get a list of all unique relative paths in the source DDB
         // Form: SELECT DISTINCT RelativePath FROM DataTable
-        private static List<string> GetDistinctRootsFromRelativePath(SQLiteWrapper ddb, string pathPrefix)
-        {
-            // Get the relative paths
-            DataTable dtRelativePathsInDdb =
-                ddb.GetDataTableFromSelect(Sql.SelectDistinct + DatabaseColumn.RelativePath + Sql.From +
-                                           DBTables.FileData
-                                           + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal +
-                                           Sql.Quote(pathPrefix)
-                                           + Sql.Or + DatabaseColumn.RelativePath + Sql.Like +
-                                           Sql.Quote(pathPrefix + "\\%"));
+        //private static List<string> GetDistinctRootsFromRelativePath(SQLiteWrapper ddb, string pathPrefix)
+        //{
+        //    // Get the relative paths
+        //    DataTable dtRelativePathsInDdb =
+        //        ddb.GetDataTableFromSelect(Sql.SelectDistinct + DatabaseColumn.RelativePath + Sql.From +
+        //                                   DBTables.FileData
+        //                                   + Sql.Where + DatabaseColumn.RelativePath + Sql.Equal +
+        //                                   Sql.Quote(pathPrefix)
+        //                                   + Sql.Or + DatabaseColumn.RelativePath + Sql.Like +
+        //                                   Sql.Quote(pathPrefix + "\\%"));
 
-            List<string> relativePathRoots = new List<string>();
-            foreach (DataRow row in dtRelativePathsInDdb.Rows)
-            {
-                string rootFolder = GetRootFolder((string)row[0]);
-                if (false == relativePathRoots.Contains(rootFolder))
-                {
-                    relativePathRoots.Add(rootFolder);
-                }
-            }
+        //    List<string> relativePathRoots = new List<string>();
+        //    foreach (DataRow row in dtRelativePathsInDdb.Rows)
+        //    {
+        //        string rootFolder = GetRootFolder((string)row[0]);
+        //        if (false == relativePathRoots.Contains(rootFolder))
+        //        {
+        //            relativePathRoots.Add(rootFolder);
+        //        }
+        //    }
 
-            return relativePathRoots;
-        }
+        //    return relativePathRoots;
+        //}
         #endregion
 
         #region QueryPhrases used to merge various datatables

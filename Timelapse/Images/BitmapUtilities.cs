@@ -460,35 +460,36 @@ namespace Timelapse.Images
             return frame;
         }
 
-        public static int RotateBitmapGetAngle(BitmapFrame frame)
-        {
-            string _orientationQuery = "System.Photo.Orientation";
-            int angle = 0;
-            if (frame.Metadata is BitmapMetadata bitmapMetadata && bitmapMetadata.ContainsQuery(_orientationQuery))
-            {
-                object o = bitmapMetadata.GetQuery(_orientationQuery);
+        // Unused but keep for now in case it becomes useful at some point
+        //public static int RotateBitmapGetAngle(BitmapFrame frame)
+        //{
+        //    string _orientationQuery = "System.Photo.Orientation";
+        //    int angle = 0;
+        //    if (frame.Metadata is BitmapMetadata bitmapMetadata && bitmapMetadata.ContainsQuery(_orientationQuery))
+        //    {
+        //        object o = bitmapMetadata.GetQuery(_orientationQuery);
 
-                if (o != null)
-                {
-                    switch ((ushort)o)
-                    {
-                        case 6:
-                            angle = 90;
-                            break;
-                        case 3:
-                            angle = 180;
-                            break;
-                        case 8:
-                            angle = 270;
-                            break;
-                        default:
-                            angle = 0;
-                            break;
-                    }
-                }
-            }
-            return angle;
-        }
+        //        if (o != null)
+        //        {
+        //            switch ((ushort)o)
+        //            {
+        //                case 6:
+        //                    angle = 90;
+        //                    break;
+        //                case 3:
+        //                    angle = 180;
+        //                    break;
+        //                case 8:
+        //                    angle = 270;
+        //                    break;
+        //                default:
+        //                    angle = 0;
+        //                    break;
+        //            }
+        //        }
+        //    }
+        //    return angle;
+        //}
 
         // Given a file, return the orientation angle via the arguments in various formats, with 0 as the default (and false) if problems happen.
         public static bool MetadataExtractorGetOrientation(string filePath, out int angle, out Rotation rotation, out RotateFlipType rotateFlip)

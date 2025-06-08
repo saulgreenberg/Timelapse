@@ -340,10 +340,11 @@ namespace Timelapse.ControlsDataEntry
             };
         }
 
-        protected ColorAnimation GetColorAnimationSlowGreen()
-        {
-            return GetColorAnimation(Colors.LightGreen, new Duration(TimeSpan.FromSeconds(.6)));
-        }
+        // Unused, but keep around for now
+        //protected ColorAnimation GetColorAnimationSlowGreen()
+        //{
+        //    return GetColorAnimation(Colors.LightGreen, new Duration(TimeSpan.FromSeconds(.6)));
+        //}
 
         protected ColorAnimation GetColorAnimationFastRed()
         {

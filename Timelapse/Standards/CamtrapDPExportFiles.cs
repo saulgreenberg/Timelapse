@@ -601,7 +601,7 @@ namespace Timelapse.Standards
                                     mediaHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(dataLabel, includeMediaComma));
 
                                 }
-                                else
+                                else // if IsCondtion.IsObservationField(dataLabel))
                                 {
                                     observationsHeader.Append(CSVHelpers.CSVToCommaSeparatedValue(dataLabel, includeObservationComma));
                                     if (dataLabel == CamtrapDPConstants.Observations.ObservationID)

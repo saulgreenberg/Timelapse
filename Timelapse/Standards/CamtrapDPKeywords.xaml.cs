@@ -12,6 +12,8 @@ namespace Timelapse.Standards
     /// <summary>
     /// Interaction logic for CamtrapDPKeywords.xaml
     /// </summary>
+    /// This may be indicated by Resharper as unused, but I think thats because its actually referenced in CamtrapDPKeywords.xaml file which isn't noticed by Resharper (?)
+    // ReSharper disable once UnusedMember.Global
     public partial class CamtrapDPKeywords 
     {
         #region Properties and Variables: JsonKeywordsList, KeywordsList, and Fields

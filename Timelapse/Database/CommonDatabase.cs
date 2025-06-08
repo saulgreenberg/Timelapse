@@ -240,12 +240,16 @@ namespace Timelapse.Database
             return Database.TableExists(dataTable);
         }
 
-        public bool IsControlCopyable(string dataLabel)
-        {
-            long id = GetControlIDFromControls(dataLabel);
-            ControlRow control = Controls.Find(id);
-            return control.Copyable;
-        }
+
+        // Check if the control with the given data label is copyable
+        // Not sure why this is unused, but keep around for now
+        // ReSharper disable once UnusedMember.Global
+        //public bool IsControlCopyable(string dataLabel)
+        //{
+        //    long id = GetControlIDFromControls(dataLabel);
+        //    ControlRow control = Controls.Find(id);
+        //    return control.Copyable;
+        //}
 
         // Return string.Empty only if each control is of a known type,
         // otherwise return the unknown type
@@ -1631,25 +1635,6 @@ namespace Timelapse.Database
         public void SetTemplateVersionCompatibility(string versionNumber)
         {
             Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.VersionCompatibility, versionNumber);
-        }
-
-        public string GetTemplateBackwardsCompatibility()
-        {
-            if (Database.TableExists(DBTables.TemplateInfo))
-            {
-                DataTable table = Database.GetDataTableFromSelect(Sql.Select + DatabaseColumn.BackwardsCompatibility + Sql.From + DBTables.TemplateInfo);
-                if (table.Rows.Count > 0)
-                {
-                    return (string)table.Rows[0][DatabaseColumn.BackwardsCompatibility];
-                }
-            }
-
-            return string.Empty;
-        }
-
-        public void SetTemplateBackwardsCompatibility(string versionNumber)
-        {
-            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.BackwardsCompatibility, versionNumber);
         }
 
         // Return the current standard (if any) stored in the TemplateInfo table 

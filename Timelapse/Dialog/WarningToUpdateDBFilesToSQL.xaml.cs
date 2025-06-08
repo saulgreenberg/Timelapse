@@ -3,8 +3,12 @@
 namespace Timelapse.Dialog
 {
     /// <summary>
-    /// Interaction logic for WarningToUpdateDBFilesToSQL.xaml
+    /// This dialog is shown when the user has an old version of the database files
+    /// We don't use it anymore (as we are now many timelapse versions later), but
+    /// its worth keeping in case we need to show it again (perhaps in modified format) in the future.
     /// </summary>
+    
+    // ReSharper disable once UnusedMember.Global
     public partial class WarningToUpdateDBFilesToSQL
     {
         public WarningToUpdateDBFilesToSQL(Window owner)

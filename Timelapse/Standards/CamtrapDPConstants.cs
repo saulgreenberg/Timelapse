@@ -5,9 +5,13 @@
         // The names of the camtrapDP levels used by Timelapse
         public class ResourceLevels
         {
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public const string DataPackage = "DataPackage";
             public const string Deployments = "Deployments";
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public const string Media = "Media";
+            // ReSharper disable once UnusedMember.Global
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public const string Observations = "Observations";
         }
 
@@ -139,8 +143,10 @@
             public static class Project
             {
                 public const string Id = "project_id";
+                // ReSharper disable once MemberHidesStaticFromOuterClass
                 public const string Title = "project_title";
                 public const string Acronym = "project_acronym";
+                // ReSharper disable once MemberHidesStaticFromOuterClass
                 public const string Description = "project_description";
                 public const string SamplingDesign = "project_samplingDesign";
                 public const string Path = "project_path";

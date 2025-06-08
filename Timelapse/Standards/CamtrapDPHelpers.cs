@@ -27,42 +27,44 @@ namespace Timelapse.Standards
             return false;
         }
 
-        public static bool IsObservationsField(string fieldName)
-        {
-            switch (fieldName)
-            {
-                case CamtrapDPConstants.Observations.ObservationID:
-                case CamtrapDPConstants.Observations.DeploymentID:
-                case CamtrapDPConstants.Observations.MediaID:
-                case CamtrapDPConstants.Observations.EventID:
-                case CamtrapDPConstants.Observations.EventStart:
-                case CamtrapDPConstants.Observations.EventEnd:
-                case CamtrapDPConstants.Observations.ObservationLevel:
-                case CamtrapDPConstants.Observations.ObservationType:
-                case CamtrapDPConstants.Observations.CameraSetupType:
-                case CamtrapDPConstants.Observations.ScientificName:
-                case CamtrapDPConstants.Observations.Count:
-                case CamtrapDPConstants.Observations.LifeStage:
-                case CamtrapDPConstants.Observations.Sex:
-                case CamtrapDPConstants.Observations.Behavior:
-                case CamtrapDPConstants.Observations.IndividualID:
-                case CamtrapDPConstants.Observations.IndividualPositionRadius:
-                case CamtrapDPConstants.Observations.IndividualPositionAngle:
-                case CamtrapDPConstants.Observations.IndividualSpeed:
-                case CamtrapDPConstants.Observations.BboxX:
-                case CamtrapDPConstants.Observations.BboxY:
-                case CamtrapDPConstants.Observations.BboxWidth:
-                case CamtrapDPConstants.Observations.BboxHeight:
-                case CamtrapDPConstants.Observations.ClassificationMethod:
-                case CamtrapDPConstants.Observations.ClassificationTimestamp:
-                case CamtrapDPConstants.Observations.ClassificationProbability:
-                case CamtrapDPConstants.Observations.ObservationTags:
-                case CamtrapDPConstants.Observations.ObservationComments:
-                    return true;
-            }
+        // Unusued, as not actually needed: the inverse of IsMediaField should give the same result
+        // However, keep it for now in case we want a more explicit check (e.g., if a field name is not in either)
+        //public static bool IsObservationsField(string fieldName)
+        //{
+        //    switch (fieldName)
+        //    {
+        //        case CamtrapDPConstants.Observations.ObservationID:
+        //        case CamtrapDPConstants.Observations.DeploymentID:
+        //        case CamtrapDPConstants.Observations.MediaID:
+        //        case CamtrapDPConstants.Observations.EventID:
+        //        case CamtrapDPConstants.Observations.EventStart:
+        //        case CamtrapDPConstants.Observations.EventEnd:
+        //        case CamtrapDPConstants.Observations.ObservationLevel:
+        //        case CamtrapDPConstants.Observations.ObservationType:
+        //        case CamtrapDPConstants.Observations.CameraSetupType:
+        //        case CamtrapDPConstants.Observations.ScientificName:
+        //        case CamtrapDPConstants.Observations.Count:
+        //        case CamtrapDPConstants.Observations.LifeStage:
+        //        case CamtrapDPConstants.Observations.Sex:
+        //        case CamtrapDPConstants.Observations.Behavior:
+        //        case CamtrapDPConstants.Observations.IndividualID:
+        //        case CamtrapDPConstants.Observations.IndividualPositionRadius:
+        //        case CamtrapDPConstants.Observations.IndividualPositionAngle:
+        //        case CamtrapDPConstants.Observations.IndividualSpeed:
+        //        case CamtrapDPConstants.Observations.BboxX:
+        //        case CamtrapDPConstants.Observations.BboxY:
+        //        case CamtrapDPConstants.Observations.BboxWidth:
+        //        case CamtrapDPConstants.Observations.BboxHeight:
+        //        case CamtrapDPConstants.Observations.ClassificationMethod:
+        //        case CamtrapDPConstants.Observations.ClassificationTimestamp:
+        //        case CamtrapDPConstants.Observations.ClassificationProbability:
+        //        case CamtrapDPConstants.Observations.ObservationTags:
+        //        case CamtrapDPConstants.Observations.ObservationComments:
+        //            return true;
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         // true if the data package's datalabel should not be editable in the template
         public static bool IsDataPackageFieldNonEditable(string dataLabel)

@@ -99,6 +99,7 @@ namespace Timelapse.Util
         }
 
         // Copy or move file to backup version with full path to source file
+        // ReSharper disable once UnusedMember.Global
         public static bool TryCreateBackup(string sourceFilePath, bool moveInsteadOfCopy)
         {
             return TryCreateBackup(Path.GetDirectoryName(sourceFilePath), Path.GetFileName(sourceFilePath), moveInsteadOfCopy);

@@ -717,7 +717,6 @@ namespace Timelapse.Constant
     {
         public const string AlbertaMetadataStandard = "AlbertaMetadataStandard";
         public const string CamtrapDPStandard = "CamtrapDP";
-        public const string CamtrapDPStandardExportFolder = "ExportedCamtrapDP";
     }
     public static class ThrottleValues
     {

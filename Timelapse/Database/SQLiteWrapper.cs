@@ -1002,9 +1002,11 @@ namespace Timelapse.Database
 
         #region Schema and Column Changes: Replace Schema, IsColumnInTable / Add / Delete / Rename / 
 
-        // Alter the column schema
+        // Unused, but may as well keep it
+        // // Alter the column schema
         // New attributes are given in the attributes dictionary, where the key indicates the schema field (e.g., Column name, type, NotNull, and Default) and the value is the new value for that field
         // If a field is not specified, jsut keep the old value.  
+        // ReSharper disable once UnusedMember.Global
         public void SchemaRenameTable(string originalTableName, string newTableName)
         {
             // Some basic error checking to make sure we can do the operation
@@ -1546,24 +1548,6 @@ namespace Timelapse.Database
 
                 return TableHasContent(tableName);
             }
-        }
-
-        // Return true iff the table exists, but is empty
-        public bool TableExistsAndEmpty(string tableName)
-        {
-            //string query = Sql.SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals + Sql.Quote(tableName) + Sql.Semicolon;
-            //using (DataTable datatable = GetDataTableFromSelect(query))
-            //{
-            //    if (datatable.Rows.Count == 0)
-            //    {
-            //        // Table does not exist
-            //        return false;
-            //    }
-            //    query = $"{Sql.SelectCountStarFrom} {tableName} {Sql.LimitOne}";
-            //    // If 0 elements, then its empty so return true otherwise false
-            //    return ScalarGetScalarFromSelectAsInt(query) == 0;
-            //}
-            return !TableExistsAndNotEmpty(tableName);
         }
         #endregion
 

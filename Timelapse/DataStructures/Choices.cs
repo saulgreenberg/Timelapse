@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using Newtonsoft.Json;
-using Xceed.Wpf.Toolkit;
 
 namespace Timelapse.DataStructures
 {
@@ -114,7 +113,7 @@ namespace Timelapse.DataStructures
         #endregion
 
         #region Public Utilities
-        // Given a combobox, set the contents of ites items
+        // Given a combobox, set the contents of its items
         public void SetComboBoxItems(ComboBox comboBox)
         {
             if (comboBox == null)
@@ -138,28 +137,29 @@ namespace Timelapse.DataStructures
 
         }
 
-        // Given a combobox, set the contents of ites items
-        public void SetComboBoxItems(CheckComboBox checkComboBox)
-        {
-            if (checkComboBox == null)
-            {
-                // Just in case
-                return;
-            }
+        // Given a combobox, set the contents of its items
+        // Unused, but keep for now in case we want it in the future
+        //public void SetComboBoxItems(CheckComboBox checkComboBox)
+        //{
+        //    if (checkComboBox == null)
+        //    {
+        //        // Just in case
+        //        return;
+        //    }
 
-            checkComboBox.Items.Clear();
-            if (IncludeEmptyChoice)
-            {
-                // Add an empty choice followed by a separator 
-                checkComboBox.Items.Add(string.Empty);
-                checkComboBox.Items.Add(new Separator());
-            }
-            foreach (string choice in ChoiceList)
-            {
-                // Add each non-empty string
-                checkComboBox.Items.Add(choice);
-            }
-        }
+        //    checkComboBox.Items.Clear();
+        //    if (IncludeEmptyChoice)
+        //    {
+        //        // Add an empty choice followed by a separator 
+        //        checkComboBox.Items.Add(string.Empty);
+        //        checkComboBox.Items.Add(new Separator());
+        //    }
+        //    foreach (string choice in ChoiceList)
+        //    {
+        //        // Add each non-empty string
+        //        checkComboBox.Items.Add(choice);
+        //    }
+        //}
 
         public bool Contains(string itemToCheck)
         {

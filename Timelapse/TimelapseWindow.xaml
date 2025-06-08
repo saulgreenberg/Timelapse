@@ -711,6 +711,13 @@
                             </MenuItem.Icon>
                         </MenuItem>
 
+                        <Separator/>
+                        <MenuItem Header="Webinars" IsEnabled="False"/>
+                        <MenuItem Name="MenuItemVideoImageRecnWebinar" Header="Image recogntion: Making it work for you" Click="MenuVideoPlay_Click" ToolTip="Webinar: prospects, workflows, and limitations of image recognition for camera traps">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
 
                     </MenuItem>
 

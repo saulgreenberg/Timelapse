@@ -116,25 +116,28 @@ namespace Timelapse.Recognition
                 ? RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown
                 : Math.Round(GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalDetectionThreshold(), 5);
 
-        private static double TypicalClassificationThreshold =>
-            GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                ? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
-                : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalClassificationThreshold();
+        // Unused but keep around in case it becomes useful at some point
+        //private static double TypicalClassificationThreshold =>
+        //    GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
+        //        ? RecognizerValues.DefaultTypicalClassificationThresholdIfUnknown
+        //        : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetTypicalClassificationThreshold();
 
-        private double _currentClassificationThreshold = -1;
-        public double CurrentClassificationThreshold
-        {
-            set => _currentClassificationThreshold = value;
-            get =>
-                _currentClassificationThreshold < 0
-                    ? TypicalClassificationThreshold
-                    : _currentClassificationThreshold;
-        }
+        // Unused but keep for now in case it becomes useful at some point
+        //private double _currentClassificationThreshold = -1;
+        //public double CurrentClassificationThreshold
+        //{
+        //    set => _currentClassificationThreshold = value;
+        //    get =>
+        //        _currentClassificationThreshold < 0
+        //            ? TypicalClassificationThreshold
+        //            : _currentClassificationThreshold;
+        //}
 
-        public static double ConservativeDetectionThreshold =>
-            GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
-                ? RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
-                : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
+        // Unused but keep for now in case it becomes useful at some point
+        //public static double ConservativeDetectionThreshold =>
+        //    GlobalReferences.MainWindow?.DataHandler?.FileDatabase == null
+        //        ? RecognizerValues.DefaultConservativeDetectionThresholdIfUnknown
+        //        : (double)GlobalReferences.MainWindow.DataHandler.FileDatabase.GetConservativeDetectionThreshold();
 
         #endregion
 
