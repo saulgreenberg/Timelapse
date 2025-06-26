@@ -226,6 +226,9 @@
     </Compile>
     <Compile Include="ControlsMetadata\MetadataDataEntryFlag.cs" />
     <Compile Include="ControlsMetadata\MetadataEntryControl.cs" />
+    <Compile Include="Controls\ClassificationCategoryDescriptionsControl.xaml.cs">
+      <DependentUpon>ClassificationCategoryDescriptionsControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\FileMetadataGrid.xaml.cs">
       <DependentUpon>FileMetadataGrid.xaml</DependentUpon>
     </Compile>
@@ -248,6 +251,7 @@
     <Compile Include="Controls\OffsetLens.cs" />
     <Compile Include="Controls\ProgressBarArguments.cs" />
     <Compile Include="Controls\EpisodePopup.cs" />
+    <Compile Include="Controls\TreeViewWithClassificationDescriptions.cs" />
     <Compile Include="Controls\TreeviewWithRelativePaths.cs" />
     <Compile Include="Database\FileDatabaseCompareTemplates.cs" />
     <Compile Include="Database\FileDatabaseUpdate.cs" />
@@ -585,6 +589,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ControlsMetadata\MetadataUI.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ClassificationCategoryDescriptionsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

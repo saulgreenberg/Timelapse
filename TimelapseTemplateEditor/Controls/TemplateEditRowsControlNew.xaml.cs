@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 
 namespace TimelapseTemplateEditor.Controls
@@ -23,7 +24,15 @@ namespace TimelapseTemplateEditor.Controls
             if (sender is MenuItem button)
             {
                 string controlType = button.Tag.ToString();
-                DoAddNewRow(controlType);
+                bool result = true;
+                if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+                {
+                    result = true == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Adding controls", EditorConstant.templateEditorWindow.standardType);
+                }
+                if (result)
+                {
+                    Globals.Root.TemplateDoAddNewRow(controlType);
+                }
             }
         }
 

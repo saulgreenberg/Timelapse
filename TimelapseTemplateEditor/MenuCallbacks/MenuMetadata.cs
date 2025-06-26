@@ -6,6 +6,11 @@ namespace TimelapseTemplateEditor
 {
     public partial class TemplateEditorWindow
     {
+        private void Metadata_SubmenuOpening(object sender, RoutedEventArgs e)
+        {
+            this.MenuItemAddLevel.IsEnabled = this.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+        }
+
         // Create and select a new empty tab that represents a new level
         private void MenuItemAddLevel_Click(object sender, RoutedEventArgs e)
         {

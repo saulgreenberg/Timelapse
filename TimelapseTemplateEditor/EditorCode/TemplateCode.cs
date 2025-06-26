@@ -91,9 +91,6 @@ namespace TimelapseTemplateEditor
 
             // Handle Metadata: Sync the metadata by creating metadata tabs that reflect each level (if any) in the Metadata table
             await MetadataUI.SyncMetadataTabsFromMetadataTableAsync();
-            this.TemplateUI.RowControls.IsEnabled = this.standardType != CamtrapDPStandard.Standard;
-
-
         }
 
         // Close the current template and clear the UI as needed

@@ -136,7 +136,7 @@
             <!--#endregion-->
 
             <!-- #region Metadata Menu -->
-            <MenuItem Name="MenuMetadata" Header="_Edit" IsEnabled="False">
+            <MenuItem Name="MenuMetadata" Header="_Edit" IsEnabled="False" SubmenuOpened="Metadata_SubmenuOpening">
 
                 <!-- Add a new metadata level.. -->
                 <MenuItem Name="MenuItemAddLevel" Header="New folder level..." ToolTip="Add a folder level to your folder data definitions" 

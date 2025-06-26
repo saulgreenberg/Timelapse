@@ -15,6 +15,7 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Standards;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
@@ -98,6 +99,17 @@ namespace TimelapseTemplateEditor.Controls
         /// </summary>
         private void TemplateDataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
+            // Generate a warning if the user tries to edit a data label when using a standard (except CamtrapDP, as the dataLabel fields will be disabled)
+            bool isStandardButNotCamtrapDP = EditorConstant.templateEditorWindow.standardType != string.Empty &&
+                                             EditorConstant.templateEditorWindow.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+            if ((string)e.Column.Header == EditorConstant.ColumnHeader.DataLabel
+                && isStandardButNotCamtrapDP
+                && false == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Editing controls", EditorConstant.templateEditorWindow.standardType))
+            {
+                e.Cancel = true;
+                return;
+            }
+
             DataGridCommonCode.BeginningEdit(DataGrid);
         }
 
@@ -303,7 +315,13 @@ namespace TimelapseTemplateEditor.Controls
             if (DataGrid.SelectedItem is DataRowView selectedRowView)
             {
                 ControlRow control = new ControlRow(selectedRowView.Row);
-                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled =
+                    // Disable the remove control for standard controls
+                    !Control.StandardTypes.Contains(control.Type) &&
+
+                    // Disable the remove control for known CamtrapDP fields
+                    !(Globals.Root.standardType == Timelapse.Constant.Standards.CamtrapDPStandard && 
+                      CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel));
             }
             else
             {
@@ -325,7 +343,14 @@ namespace TimelapseTemplateEditor.Controls
             {
                 // Something selected, but we enable the remove button only if its not a standard control 
                 ControlRow control = new ControlRow(selectedRowView.Row);
-                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled =
+
+                    // Disable the remove control for standard controls
+                    !Control.StandardTypes.Contains(control.Type) &&
+
+                    // Disable the remove control for known CamtrapDP fields
+                    !(Globals.Root.standardType == Timelapse.Constant.Standards.CamtrapDPStandard && 
+                      CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel));
             }
         }
         private void DataGrid_OnLostFocus(object sender, RoutedEventArgs e)
@@ -347,7 +372,14 @@ namespace TimelapseTemplateEditor.Controls
             {
                 // Something selected, but we enable the remove button only if its not a standard control 
                 ControlRow control = new ControlRow(selectedRowView.Row);
-                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+                Globals.TemplateUI.RowControls.RemoveControlButton.IsEnabled =
+
+                    // Disable the remove control for standard controls
+                    !Control.StandardTypes.Contains(control.Type) &&
+
+                    // Disable the remove control for known CamtrapDP fields
+                    !(Globals.Root.standardType == Timelapse.Constant.Standards.CamtrapDPStandard && 
+                      CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel));
             }
         }
         #endregion

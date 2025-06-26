@@ -86,7 +86,6 @@ namespace TimelapseTemplateEditor.EditorCode
                 if (row == null)
                 {
                     continue;
-                    //return;
                 }
 
                 // grid cells are editable by default
@@ -101,12 +100,22 @@ namespace TimelapseTemplateEditor.EditorCode
                         continue;
                     }
 
+
                     MetadataControlRow control = new MetadataControlRow(((DataRowView)dataGrid.Items[rowIndex]).Row);
                     string controlType = control.Type;
 
                     // These columns should always be editable
                     // Note that Width is normally editable unless it is a Flag (as the checkbox is set to the optimal width)
                     string columnHeader = (string)dataGrid.Columns[column].Header;
+
+                    // If we are using the camtrapDP standard and are checking the Data Label column,
+                    // get the data label and check to see if it is defined in that standard
+                    //bool isStandardDatalabel = false;
+                    //if (isCamtrapDP && columnHeader == EditorConstant.ColumnHeader.DataLabel && cell.Content is TextBlock tb)
+                    //{
+                    //    isStandardDatalabel = CamtrapDPStandard.MediaAndObservationValues.Contains(tb.Text);
+                    //}
+
                     if (columnHeader == Control.Label ||
                         columnHeader == Control.Tooltip ||
                         columnHeader == Control.Visible
@@ -155,8 +164,6 @@ namespace TimelapseTemplateEditor.EditorCode
                              columnHeader == Control.Copyable ||
                              columnHeader == EditorConstant.ColumnHeader.Width)) ||
 
-
-
                         // These default values are editable but if we want to change that, uncomment this
                         //(controlType == Control.DateTime_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
                         //(controlType == Control.Date_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue) ||
@@ -169,18 +176,32 @@ namespace TimelapseTemplateEditor.EditorCode
                         // Any control's List except for FixedChoice and MultiChoice are never editable
                         ((controlType != Control.FixedChoice && controlType != Control.MultiChoice) && columnHeader == Control.List) ||
 
-                        // If its a camtrapDP file, certain fields should not be editable
+                        // If its a camtrapDP file...
                         (isCamtrapDP &&
-                         (columnHeader == Control.Type ||
-                          columnHeader == EditorConstant.ColumnHeader.DataLabel ||
-                          columnHeader == Control.List ||
-                          (columnHeader == "Export") ||
-                          // Check deployment levels
-                          (level == 1 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDataPackageFieldNonEditable(control.DataLabel)) ||
-                          (level == 2 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDeploymentFieldNonEditable(control.DataLabel)) ||
-                          (level == -1 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsMediaObservationsFieldNonEditable(control.DataLabel))
+
+                            // camtrapDP type, lists, export should not be editable at any level, unless its an added custom field
+                            ((columnHeader == Control.Type ||
+                               columnHeader == Control.List ||
+                               columnHeader == "Export" ) &&
+                              (level == -1 && CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel)) ||
+                              (level == 1 && CamtrapDPHelpers.IsDataPackageField(control.DataLabel)) ||
+                              (level == 2 && CamtrapDPHelpers.IsDeploymentField(control.DataLabel))) ||
+
+                             // camtrapDP data labels should not be editable at any level, unless its an added custom field
+                             (columnHeader == EditorConstant.ColumnHeader.DataLabel &&
+                                (level == -1 && CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel)) ||
+                                (level == 1 && CamtrapDPHelpers.IsDataPackageField(control.DataLabel)) ||
+                                (level == 2 && CamtrapDPHelpers.IsDeploymentField(control.DataLabel))) ||
+
+                             // camtrapDP lists should not be editable 
+
+                             // a subset of camtrapDP default fields should not be editable at any level, but added custom fields are always editable
+                             (columnHeader == EditorConstant.ColumnHeader.DefaultValue &&
+                              (level == -1 && CamtrapDPHelpers.IsMediaObservationsFieldNonEditableDefault(control.DataLabel)) ||
+                              (level == 1 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDataPackageFieldNonEditableDefault(control.DataLabel)) ||
+                              (level == 2 && columnHeader == EditorConstant.ColumnHeader.DefaultValue && CamtrapDPHelpers.IsDeploymentFieldNonEditableDefault(control.DataLabel)))
                          )
-                         ))
+                       )
 
                     {
                         // Disable the Type ComboBox for the standard (required) controls

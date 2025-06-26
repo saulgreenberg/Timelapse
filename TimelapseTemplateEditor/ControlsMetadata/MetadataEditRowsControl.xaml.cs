@@ -1,8 +1,10 @@
-﻿using System.Windows;
+﻿using MS.WindowsAPICodePack.Internal;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
+using TimelapseTemplateEditor.Standards;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
@@ -38,19 +40,39 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             // Note that we have to make the level names 0-based...
             TextBlockLevel.Text = (ParentTab.Level - 1).ToString();
             updating = false;
-            this.IsEnabled = Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+
+            // Enable editing of levels except when using camtrapDPstandard 
+            bool isLevelsEditable = Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+            this.EditLevelButton.IsEnabled = isLevelsEditable;
+            this.TextBoxLevelLabel.IsEnabled = isLevelsEditable;
+            this.TextBlockLevel.IsEnabled = isLevelsEditable;
         }
 
         #endregion
 
         #region Callbacks: Alias Text Changed and KeyDown
 
+        private void TextBoxLevelLabel_GotFocus(object sender, RoutedEventArgs e)
+        {
+            // If we are using a standard, generate a warning dialog and clear the focus if the user does not want to edit
+            if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+            {
+                if (false == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Editing level name", EditorConstant.templateEditorWindow.standardType))
+                {
+                    Keyboard.ClearFocus();
+                }
+            }
+        }
+
         private void TextBoxLevelLabel_TextChanged(object sender, TextChangedEventArgs e)
         {
+
             if (null == ParentTab || updating)
             {
                 return;
             }
+
+
 
             ParentTab.LevelAlias = TextBoxLevelLabel.Text;
             Globals.TemplateDatabase.UpsertMetadataInfoTableRow(ParentTab.Level, alias: ParentTab.LevelAlias);
@@ -82,8 +104,16 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             if (sender is MenuItem mi)
             {
                 // Retrieve the button's tag, which specifies the control type
-                string controlType = (string)mi.Tag;
-                DoAddNewRow(ParentTab.Level, controlType);
+                bool result = true;
+                if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+                {
+                    result = true == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Adding controls", EditorConstant.templateEditorWindow.standardType);
+                }
+                if (result)
+                {
+                    string controlType = (string)mi.Tag;
+                    DoAddNewRow(ParentTab.Level, controlType);
+                }
             }
         }
 
@@ -91,8 +121,16 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         // - the control and spreadsheet order are adjusted to fill in the gap, if any, on the remaining rows.
         private async void ButtonRemoveDataRow_Click(object sender, RoutedEventArgs e)
         {
-            await Globals.Root.DoRemoveSelectedMetadataRow(ParentTab.Level);
-            RemoveControlButton.IsEnabled = false;
+            bool result = true;
+            if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+            {
+                result = true == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Removing controls", EditorConstant.templateEditorWindow.standardType);
+            }
+            if (result)
+            {
+                await Globals.Root.DoRemoveSelectedMetadataRow(ParentTab.Level);
+                RemoveControlButton.IsEnabled = false;
+            }
         }
 
         // Add a data row (and thus define a new control) to the table
@@ -108,6 +146,15 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         // Delete the current level, but ask first
         private async void MenuItemDeleteLevel_Click(object sender, RoutedEventArgs e)
         {
+            // If we are using a standard, generate a warning dialog
+            if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+            {
+                if (false == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Deleting a level", EditorConstant.templateEditorWindow.standardType))
+                {
+                    return;
+                }
+            }
+
             string aliasToUse = string.IsNullOrEmpty(this.ParentTab.LevelAlias)
                 ? $"{MetadataUIControl.CreateTemporaryAliasIfNeeded(this.ParentTab.Level, this.ParentTab.LevelAlias)}"
                 : $"{this.ParentTab.LevelAlias} ({this.ParentTab.Level})";
@@ -116,8 +163,10 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                 return;
             }
 
+
             Globals.Root.templateDatabase.MetadataDeleteLevelFromDatabase(ParentTab.Level);
             await Globals.Root.MetadataUI.SyncMetadataTabsFromMetadataTableAsync();
+            
         }
 
         // Enable or disable the Backwards/Forwards buttons depending on whether the current level is at the beginning or the end
@@ -134,6 +183,15 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         {
             if (sender is MenuItem mi)
             {
+                // If we are using a standard, generate a warning dialog
+                if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+                {
+                    if (false == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Moving a level", EditorConstant.templateEditorWindow.standardType))
+                    {
+                        return;
+                    }
+                }
+
                 bool backwards = mi.Name == "MenuItemMoveLevelBackwards";
                 int correction = backwards ? -1 : 1;
                 int level = this.ParentTab.Level;
