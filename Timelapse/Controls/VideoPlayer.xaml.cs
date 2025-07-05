@@ -12,6 +12,7 @@ using Timelapse.DataStructures;
 using Timelapse.Images;
 using RadioButton = System.Windows.Controls.RadioButton;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 
 namespace Timelapse.Controls
 {
@@ -314,6 +315,55 @@ namespace Timelapse.Controls
         }
         #endregion
 
+        #region Frame by frame navigation
+        private void BtnNavigateFrame_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is RepeatButton btn && btn.Tag is string tag && tag == "Next")
+            {
+                // Navigate to the next frame
+                this.NavigateFrame(true);
+            }
+            else if (sender is RepeatButton btnPrev && btnPrev.Tag is string tagPrev && tagPrev == "Previous")
+            {
+                // Navigate to the previous frame
+                this.NavigateFrame(false);
+            }
+        }
+
+        // Navigate the next or previous frame in the video.
+        private void NavigateFrame(bool forward)
+        {
+            if (this.Visibility != Visibility.Visible || null == this.MediaElement.Source || this.VideoDurationSeconds <= 0)
+            {
+                // No video to navigate
+                return;
+            }
+
+            this.isProgrammaticUpdate = true;
+            this.Pause();
+            this.isProgrammaticUpdate = false;
+
+            // We should almost always have a valid frame rate.
+            // But if we don't, we can't navigate by frames
+            // So lets just set it for 15, which may be too fast or too slow for some videos
+            float? frameRate = this.FrameRate == null || this.FrameRate == 0
+                ? 15.0f
+                : this.FrameRate;
+            
+            TimeSpan newPosition = forward
+            ? TimeSpan.FromMilliseconds(this.MediaElement.Position.TotalMilliseconds + 1000.0 / frameRate.Value)
+            : TimeSpan.FromMilliseconds(this.MediaElement.Position.TotalMilliseconds - 1000.0 / frameRate.Value);
+
+            if (newPosition.TotalMilliseconds < 0)
+            {
+                // We are at the beginning of the video, so don't go back any further
+                return;
+            }
+            this.MediaElement.Position = newPosition;
+            TimerUpdatePosition.Start();
+        }
+        #endregion
+
         #region ShowPosition : Update everything depending upon the current video position
         private void MediaElementUpdatePosition(TimeSpan videoTime)
         {
@@ -348,7 +398,7 @@ namespace Timelapse.Controls
 
                 // Update the bounding boxes
                 this.ClearBoundingBoxes();
-                this.FrameRate = this.BoxesForFile?.FrameRate;
+                //this.FrameRate = this.BoxesForFile?.FrameRate; // Already set in DoSetFrameRateAndFrameToShowValues
                 if (this.FrameToShow < 0 || null == this.FrameRate || this.FrameRate <= 0)
                 {
                     // Can't process any bounding boxes
@@ -993,5 +1043,7 @@ namespace Timelapse.Controls
             this.UpdateBoundingBoxes();
         }
         #endregion
+
+     
     }
 }

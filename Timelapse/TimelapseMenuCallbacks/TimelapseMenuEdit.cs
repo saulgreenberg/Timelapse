@@ -687,7 +687,9 @@ namespace Timelapse
             {
                 // true is returned if any edits were actually made by the user that led to changes
                 // So reselect/display the files to show those changes
+                // We also clear the items in the select menu folder tree view, which means it will be rebuilt with the new folder structure
                 await FilesSelectAndShowAsync().ConfigureAwait(true);
+                this.MenuItemSelectByFolder_ResetFolderList();
             }
         }
         #endregion

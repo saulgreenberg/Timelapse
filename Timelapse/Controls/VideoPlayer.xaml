@@ -105,7 +105,48 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <TextBox Name="TimeFromStart" Grid.Column="0" Grid.Row="0" Style="{StaticResource TimeTextBoxStyle}">00:00</TextBox>
-                            <ToggleButton Name="PlayOrPause"  Style="{StaticResource PlayPauseButtonStyle}" Background="Transparent" BorderThickness="0" Width="35" Height="35"  Grid.Column="1" Grid.Row="0" />
+                            <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+
+                                <RepeatButton Name="BtnPreviousFrame"  Content="&#8701;" Tag="Previous" ToolTip ="Previous frame&#10;(hold to repeat)" 
+                                        Margin="0,0,5,0" FontSize="24" Foreground="White" Background="Black"
+                                        VerticalContentAlignment="Center"
+                                        Click="BtnNavigateFrame_OnClick">
+                                    <RepeatButton.Style>
+                                        <Style TargetType="{x:Type RepeatButton}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type RepeatButton}">
+                                                        <Border Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </RepeatButton.Style>
+                                </RepeatButton>
+                                <ToggleButton Name="PlayOrPause"  ToolTip="Play video" Style="{StaticResource PlayPauseButtonStyle}" Background="Transparent" BorderThickness="0" Width="35" Height="35"  Grid.Column="1" Grid.Row="0" />
+
+                                <RepeatButton Name="BtnNextFrame" Content="&#8702;" Tag="Next" ToolTip="Next frame&#10;(hold to repeat)" 
+                                        Margin="5,0,0,0" FontSize="24"  Foreground="White" Background="Black"
+                                        VerticalAlignment="Center"
+                                        Interval="100" Delay="500"
+                                        Click="BtnNavigateFrame_OnClick">
+                                    <RepeatButton.Style>
+                                        <Style TargetType="{x:Type RepeatButton}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type RepeatButton}">
+                                                        <Border Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </RepeatButton.Style>
+                                </RepeatButton>
+                            </StackPanel>
                             <TextBox Name="TimeDuration" Grid.Column="2" Grid.Row="0" Style="{StaticResource TimeTextBoxStyle}">00:00</TextBox>
                         </Grid>
 
