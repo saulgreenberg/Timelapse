@@ -224,6 +224,7 @@ namespace Timelapse.ControlsDataEntry
                         break;
                     default:
                         TracePrint.PrintMessage($"Unhandled control type {control.Type} in CreateControls.");
+                        TracePrint.StackTraceToFile($"|| Unhandled control type {control.Type} in CreateControls.");
                         continue;
                 }
                 if (control.Visible)
