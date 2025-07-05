@@ -624,7 +624,7 @@ namespace TimelapseTemplateEditor.Standards
                 null),
 
             new StandardsRow(Control.FixedChoice, 0, "", "Observation level*", CamtrapDPConstants.Observations.ObservationLevel,
-                "Level at which the observation was classified. " +
+                $"Level at which the observation was classified.{Environment.NewLine}" +
                 $"• media for media-based observations that are directly associated with a media file (mediaID).{Environment.NewLine}" +
                 $"  These are especially useful for machine learning and don’t need to be mutually exclusive (e.g. multiple classifications are allowed).{Environment.NewLine}" +
                 $"• event for event-based observations that consider an event (comprising a collection of media files).{Environment.NewLine}" +
@@ -786,5 +786,38 @@ namespace TimelapseTemplateEditor.Standards
         #endregion
 
         #endregion
+
+        //Not needed, as we have this done explicitly in  CamtrapDPHelpers
+        //#region Generate all static member values of CamtrapDPConstants.Observations and CamtrapDPConstants.Media
+        //// Property holding all static member values of CamtrapDPConstants.Observations and CamtrapDPConstants.Media (but only does this once)
+        //// Used by the template editor to identify and disable data label fields that match the CamtrapDP Observations and Media data labels
+        //private static List<string> observationValues = null;
+        //public static List<string> MediaAndObservationValues => observationValues ?? (observationValues = GetMediaAndObservationValues());
+
+        //// Actually gets all static member values of CamtrapDPConstants.Observations and CamtrapDPConstants.Media
+        //private static List<string> GetMediaAndObservationValues()
+        //{
+        //    List<string> values = new List<string>();
+        //    Type myType = typeof(CamtrapDPConstants.Observations);
+
+        //    // Add all static member values of CamtrapDPConstants.Observations
+        //    FieldInfo[] staticFields = myType.GetFields(BindingFlags.Static | BindingFlags.Public);
+        //    foreach (FieldInfo field in staticFields)
+        //    {
+        //        object value = field.GetValue(null);
+        //        values.Add(value.ToString());
+        //    }
+
+        //    // Add all static member values of CamtrapDPConstants.Media
+        //    myType = typeof(CamtrapDPConstants.Media);
+        //    staticFields = myType.GetFields(BindingFlags.Static | BindingFlags.Public);
+        //    foreach (FieldInfo field in staticFields)
+        //    {
+        //        object value = field.GetValue(null);
+        //        values.Add(value.ToString());
+        //    }
+        //    return values;
+        //}
+        //#endregion
     }
 }

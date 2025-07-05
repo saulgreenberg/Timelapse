@@ -2369,7 +2369,6 @@ namespace Timelapse.Dialog
 
         #endregion
 
-
         #region DialogIsFileValid checks for valid database file and displays appropriate dialog if it isn't
 
         public static bool DialogIsFileValid(Window owner, string filePath)
@@ -2781,7 +2780,6 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Invalid data field input
-
         public static void InvalidDataFieldInput(Window owner, string dataFieldType, string invalidContent)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

@@ -262,6 +262,47 @@ namespace TimelapseTemplateEditor.Dialog
             messageBox.ShowDialog();
         }
 
+        #region MessageBox: Template: Changing controls can violate the current standard
+
+        // Confirm closing this template and creating a new one
+        private static bool dontShowChangesToStandardWarningDialog = false;
+        public static bool? ChangesToStandardWarning(Window owner, string changeType, string standardType)
+        {
+            if (dontShowChangesToStandardWarningDialog)
+            {
+                return true;
+            }
+            string title = $"{changeType} may compromise the {standardType} standard";
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    What = $"{title}.{Environment.NewLine}"
+                           + $"This may cause problems if other software you use expects a strict {standardType} standard.",
+                    Result = $"Select:{Environment.NewLine}"
+                             + $"\u2022 Okay to keep {changeType.ToLower()} anyways,{Environment.NewLine}"
+                             + $"\u2022 Cancel to abort.",
+                    Reason = $"The {standardType} defines what levels and fields are needed and how they are named.{Environment.NewLine}" +
+                             $"Changes to levels or fields can (perhaps) affect how other software uses your data.",
+                    Hint = $"This is just a warning, as it really depends upon what you plan to do with your data.{Environment.NewLine}"
+                          + $"Ignore this if you know what you are doing."
+                },
+                DontShowAgain =
+                {
+                    Visibility = Visibility.Visible
+                }
+            };
+            bool? result = messageBox.ShowDialog();
+            if (messageBox.DontShowAgain.IsChecked.HasValue)
+            {
+                dontShowChangesToStandardWarningDialog = messageBox.DontShowAgain.IsChecked.Value;
+            }
+
+            return result;
+        }
+
+        #endregion
         #region MessageBox: ddb file opened with an older version of Timelapse than recorded in it
         public static bool? EditorDatabaseFileOpenedWithOlderVersionOfTimelapse(Window owner, EditorUserRegistrySettings userSettings)
         {

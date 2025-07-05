@@ -15,6 +15,7 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Standards;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
@@ -96,6 +97,17 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         /// </summary>
         private void MetadataDataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
+            bool isStandardButNotCamtrapDP = EditorConstant.templateEditorWindow.standardType != string.Empty &&
+                                             EditorConstant.templateEditorWindow.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+            // Generate a warning if the user tries to edit a data label when using a standard (except CamtrapDP, as the dataLabel fields will be disabled)
+            if ((string)e.Column.Header == EditorConstant.ColumnHeader.DataLabel
+                && isStandardButNotCamtrapDP
+                && false == EditorDialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Editing controls", EditorConstant.templateEditorWindow.standardType))
+            {
+                e.Cancel = true;
+                return;
+            }
+
             DataGridCommonCode.BeginningEdit(DataGrid);
         }
 
@@ -301,7 +313,15 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             if (DataGrid.SelectedItem is DataRowView selectedRowView)
             {
                 MetadataControlRow control = new MetadataControlRow(selectedRowView.Row);
-                ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = !Control.StandardTypes.Contains(control.Type) && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+                ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled =
+
+                    // Disable the remove control for standard controls
+                    !Control.StandardTypes.Contains(control.Type) &&
+
+                    // Disable the remove control for known CamtrapDP fields
+                    !(Globals.Root.standardType == Timelapse.Constant.Standards.CamtrapDPStandard && 
+                         CamtrapDPHelpers.IsDataPackageDeploymentField(control.DataLabel));
+
                 // Now find the corresponding entry in the MetadataPreviewPanel and scroll it into view
                 ParentTab.MetadataDataEntryPreviewPanel.ScrollLabelIntoView(control.Label);
             }
@@ -370,7 +390,19 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                 return;
             }
 
-            ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = DataGrid.IsKeyboardFocusWithin && Globals.Root.standardType != Timelapse.Constant.Standards.CamtrapDPStandard;
+            if (DataGrid.SelectedItem is DataRowView selectedRowView)
+            {
+                MetadataControlRow control = new MetadataControlRow(selectedRowView.Row);
+                ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled =
+                    DataGrid.IsKeyboardFocusWithin &&
+
+                    // Disable the remove control for standard controls
+                    !Control.StandardTypes.Contains(control.Type) &&
+
+                    // Disable the remove control for known CamtrapDP fields
+                    !(Globals.Root.standardType == Timelapse.Constant.Standards.CamtrapDPStandard &&
+                         CamtrapDPHelpers.IsDataPackageDeploymentField(control.DataLabel));
+            }
         }
 
         #endregion
@@ -454,6 +486,11 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             if (!(e.EditingElement is TextBox textBox))
             {
                 TracePrint.NullException();
+                return;
+            }
+
+            if (Globals.TemplateDatabase.MetadataControlsByLevel == null)
+            {
                 return;
             }
 

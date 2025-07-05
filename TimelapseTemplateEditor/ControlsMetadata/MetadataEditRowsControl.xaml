@@ -24,6 +24,7 @@
                                            Watermark="name this level"
                                            Text="" FontSize="14" HorizontalContentAlignment="Right" 
                                            TextChanged="TextBoxLevelLabel_TextChanged" 
+                                           GotFocus="TextBoxLevelLabel_GotFocus"
                                            ToolTip="Create a meaningful name for this level. It should indicate what folders level is about.&#10;For example, 'Projects', 'Stations' or 'Deployments'"
                                            KeyDown="TextBoxLevelLabel_OnKeyDown"
                     />
@@ -155,6 +156,7 @@
                     <!--#region This level... button-->
                     <Menu BorderThickness="1" BorderBrush="LightGray"  Margin="0,20,0,0" >
                         <MenuItem Header="Edit level ... " 
+                                  Name="EditLevelButton"
                                   FontSize="14" Width="126" Padding ="5,5"
                                   ToolTip="Move or delete this level"
                                   SubmenuOpened="MenuEditLevel_Click">

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -81,39 +82,48 @@ namespace Timelapse
         // Set the glow highlight on the copyable fields if various conditions are met
         private void CopyPreviousValuesSetGlowAsNeeded(int previousRow)
         {
-            if (IsDisplayingSingleImage() &&
-                CopyPreviousValuesButton != null &&
-                CopyPreviousValuesButton.IsFocused &&
-                CopyPreviousValuesButton.IsEnabled &&
-                CopyPreviousValuesButton.IsMouseOver == false &&
-                previousRow >= 0)
+            try // A user reported a crash here, so we catch it to prevent the application from crashing
             {
-                // Add the glow around the copyable controls
-                DropShadowEffect effect = new DropShadowEffect
+
+
+                if (IsDisplayingSingleImage() &&
+                    CopyPreviousValuesButton != null &&
+                    CopyPreviousValuesButton.IsFocused &&
+                    CopyPreviousValuesButton.IsEnabled &&
+                    CopyPreviousValuesButton.IsMouseOver == false &&
+                    previousRow >= 0)
                 {
-                    Color = Colors.LightGreen,
-                    Direction = 0,
-                    ShadowDepth = 0,
-                    BlurRadius = 5,
-                    Opacity = 1
-                };
-                foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
-                {
-                    DataEntryControl control = pair.Value;
-                    if (control.Copyable)
+                    // Add the glow around the copyable controls
+                    DropShadowEffect effect = new DropShadowEffect
                     {
-                        control.Container.Effect = effect;
+                        Color = Colors.LightGreen,
+                        Direction = 0,
+                        ShadowDepth = 0,
+                        BlurRadius = 5,
+                        Opacity = 1
+                    };
+                    foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
+                    {
+                        DataEntryControl control = pair.Value;
+                        if (control.Copyable)
+                        {
+                            control.Container.Effect = effect;
+                        }
+                    }
+                }
+                else
+                {
+                    // Remove the glow around the copyable controls
+                    foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
+                    {
+                        DataEntryControl control = pair.Value;
+                        control.Container.ClearValue(EffectProperty);
                     }
                 }
             }
-            else
+            catch
             {
-                // Remove the glow around the copyable controls
-                foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
-                {
-                    DataEntryControl control = pair.Value;
-                    control.Container.ClearValue(EffectProperty);
-                }
+                // ignored
             }
         }
 
@@ -121,51 +131,58 @@ namespace Timelapse
         // e.g., if the mouse is over the CopyPrevious button and we are not on the first row
         private void CopyPreviousValueSetPreviewsAsNeeded(int previousRow)
         {
-            if (IsDisplayingSingleImage() &&
-                CopyPreviousValuesButton != null &&
-                CopyPreviousValuesButton.IsEnabled &&
-                CopyPreviousValuesButton.IsMouseOver &&
-                previousRow >= 0)
+            try // A user reported a crash here, so we catch it to prevent the application from crashing
             {
-                // Show the previews on the copyable controls
-                foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
+                if (IsDisplayingSingleImage() &&
+                    CopyPreviousValuesButton != null &&
+                    CopyPreviousValuesButton.IsEnabled &&
+                    CopyPreviousValuesButton.IsMouseOver &&
+                    previousRow >= 0)
                 {
-                    DataEntryControl control = pair.Value;
-                    if (control.Copyable)
+                    // Show the previews on the copyable controls
+                    foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
                     {
-                        string previewValue;
-                        if (control is DataEntryDateTimeCustom)
+                        DataEntryControl control = pair.Value;
+                        if (control.Copyable)
                         {
-                            previewValue = DateTimeHandler.DateTimeDatabaseStringToDisplayString(DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
+                            string previewValue;
+                            if (control is DataEntryDateTimeCustom)
+                            {
+                                previewValue = DateTimeHandler.DateTimeDatabaseStringToDisplayString(DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
+                            }
+                            else if (control is DataEntryDate)
+                            {
+                                previewValue = DateTimeHandler.DateDatabaseStringToDisplayString(DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
+                            }
+                            else if (control is DataEntryTime)
+                            {
+                                previewValue = DateTimeHandler.TimeDatabaseStringToDisplayString(DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
+                            }
+                            else
+                            {
+                                previewValue = DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel);
+                            }
+                            //string previewValue = this.DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel);
+                            control.ShowPreviewControlValue(previewValue);
                         }
-                        else if (control is DataEntryDate)
+                    }
+                }
+                else
+                {
+                    // Remove the preview from each control
+                    foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
+                    {
+                        DataEntryControl control = pair.Value;
+                        if (control.Copyable)
                         {
-                            previewValue = DateTimeHandler.DateDatabaseStringToDisplayString(DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
+                            control.HidePreviewControlValue();
                         }
-                        else if (control is DataEntryTime)
-                        {
-                            previewValue = DateTimeHandler.TimeDatabaseStringToDisplayString(DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel));
-                        }
-                        else
-                        {
-                            previewValue = DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel);
-                        }
-                        //string previewValue = this.DataHandler.FileDatabase.FileTable[previousRow].GetValueDisplayString(control.DataLabel);
-                        control.ShowPreviewControlValue(previewValue);
                     }
                 }
             }
-            else
+            catch
             {
-                // Remove the preview from each control
-                foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
-                {
-                    DataEntryControl control = pair.Value;
-                    if (control.Copyable)
-                    {
-                        control.HidePreviewControlValue();
-                    }
-                }
+                // ignored
             }
         }
 
