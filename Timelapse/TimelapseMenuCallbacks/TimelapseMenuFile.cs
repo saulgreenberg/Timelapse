@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DialogUpgradeFiles;
+using Microsoft.VisualBasic.ApplicationServices;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,7 +9,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using DialogUpgradeFiles;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsMetadata;
@@ -17,8 +20,10 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Images;
 using Timelapse.Standards;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using DialogResult = System.Windows.Forms.DialogResult;
 using File = Timelapse.Constant.File;
 using FilePathTypeEnum = Timelapse.Enums.FilePathTypeEnum;
@@ -45,11 +50,90 @@ namespace Timelapse
         #endregion
 
         #region Menu stub to test some code
+
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
-            if (dialog.ShowDialog() == true)
+            if (null == this.DataHandler?.ImageCache?.Current)
             {
+                // TODO Insert various dialog error messages here
+                Console.Beep();
+                return;
+            }
+
+            if (false == this.DataHandler.ImageCache.Current.IsVideo || false == this.DataHandler.ImageCache.Current is VideoRow videoRow)
+            {
+                Console.Beep();
+                return;
+            }
+
+            if (null == this.MarkableCanvas?.VideoPlayer?.MediaElement)
+            {
+                Console.Beep();
+                return;
+            }
+
+            try
+            {
+                string rootPathToImages = GlobalReferences.MainWindow.RootPathToImages;
+                // If this fails, it will throw an exception
+                TimeSpan timeSpanVideoPosition = this.MarkableCanvas.VideoPlayer.MediaElement.Position;
+
+                // TODO: Get the actual image  height
+                Image frame = TryFrameGrab(rootPathToImages, videoRow, (float)timeSpanVideoPosition.TotalSeconds);
+                if (null == frame)
+                {
+                    Console.Beep();
+                    return;
+                }
+                if (frame.Source is BitmapImage bitmapImage)
+                {
+                    // Generate a file name frome filename.extension to filename[_frametime].jpg
+                    string basename = string.IsNullOrWhiteSpace(videoRow.RelativePath)
+                        ? Path.Combine(rootPathToImages, Path.GetFileNameWithoutExtension(videoRow.File))
+                        : Path.Combine(rootPathToImages, videoRow.RelativePath, Path.GetFileNameWithoutExtension(videoRow.File));
+                    string fileName = $"{basename}_{timeSpanVideoPosition.TotalSeconds:0.00}.jpg";
+
+                    if (System.IO.File.Exists(fileName))
+                    {
+                        // TODO: Insert Dialog here to ask the user if they want to overwrite the file
+                    }
+                    SaveBitmapImageToFile(bitmapImage, fileName);
+                }
+            }
+            catch
+            {
+                return;
+            }
+
+            //TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
+            //if (dialog.ShowDialog() == true)
+            //{
+            //}
+
+        }
+
+        // Should only be invoked with a valid imageRow that is a video, and a valid frametime
+        private static Image TryFrameGrab(string rootPathToImages, VideoRow videoRow, float? time)
+        {
+            float frameTime = time ?? 0;
+            Image frame = new Image
+            {
+                Source = videoRow.LoadVideoBitmap(rootPathToImages, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, frameTime, out bool isCorruptOrMissing)
+            };
+
+            return isCorruptOrMissing
+                ? null
+                : frame;
+        }
+
+        public static void SaveBitmapImageToFile(BitmapImage image, string filePath)
+        {
+            BitmapEncoder encoder = new JpegBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(image));
+
+            using (var fileStream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+            {
+                encoder.Save(fileStream);
             }
         }
         #endregion
@@ -242,7 +326,7 @@ namespace Timelapse
             }
 
             // Generate the candidate file name/path 
-            string csvFileName = Path.Combine(DataHandler.FileDatabase.RootPathToDatabase,File.CSVImageDataFileName);
+            string csvFileName = Path.Combine(DataHandler.FileDatabase.RootPathToDatabase, File.CSVImageDataFileName);
 
             // Get the selected filepath from the user
             if (false == Dialogs.TryGetFileFromUserUsingSaveFileDialog(
@@ -428,7 +512,7 @@ namespace Timelapse
             }
 
             //Compose the folder level data files
-            List<string> filesToBeWritten = new List<string> {File.CSVImageDataFileName};
+            List<string> filesToBeWritten = new List<string> { File.CSVImageDataFileName };
             foreach (MetadataInfoRow infoRow in DataHandler.FileDatabase.MetadataInfo)
             {
                 string tentativeFileName = Path.Combine(csvExportFolder, infoRow.Alias + ".csv");
