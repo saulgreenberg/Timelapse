@@ -137,6 +137,7 @@ namespace Timelapse.Images
                     if (null != actualDuration && actualDuration != 0 && frameTime <= actualDuration)
                     {
                        ffMpeg.GetVideoThumbnail(filePath, outputBitmapAsStream, frameTime);
+                       Debug.Print($"b:{frameTime}");
                     }
                     else
                     {

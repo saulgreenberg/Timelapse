@@ -1870,6 +1870,21 @@ namespace Timelapse.Dialog
             }.ShowDialog();
         }
 
+        public static void MenuEditExtractVideoFrameProblem(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Could not extract a video frame";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Problem = "Timelapse can't extract a video frame from the currently displayed video.",
+                    Reason = "Its not clear why it couldn't do it. Perhaps try again?",
+                    Icon = MessageBoxImage.Error
+                }
+            }.ShowDialog();
+        }
         public static void MenuEditCouldNotImportQuickPasteEntriesDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

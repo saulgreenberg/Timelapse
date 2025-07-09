@@ -218,6 +218,7 @@
                     <Separator Name="MenuS3" />
                     <MenuItem Name="MenuItemDuplicateRecordUsingCurrentValues" Header="_Duplicate this record (use current values)" Click="MenuItemEditDuplicateRecord_Click" Tag="true" InputGestureText="Ctl-d" IsEnabled="True" ToolTip="Create a duplicate of this record, filled in with its current values. Change or fill in fields as needed"/>
                     <MenuItem Name="MenuItemDuplicateRecordUsingDefaultValues" Header="_Duplicate this record (use default values)" Click="MenuItemEditDuplicateRecord_Click"  Tag="false" InputGestureText="Ctl-Shift-D" IsEnabled="True" ToolTip="Create a duplicate of this record, filled in with default values. Change or fill in fields as needed"/>
+                    <MenuItem Name="MenuItemExtractVideoFrameUsingCurrentValues" Header="_Extract video frame and create record (use current values)" Click="MenuItemExtractVideoFrameUsingCurrentValues_Click"  IsEnabled="True" ToolTip="Extracts the current video frame as a jpg file (same name + video timestamp),&#10;and creates a record to it filled in with the current data values"/>
                     <Separator Name="MenuS4" />
 
                     <!-- Delete submenu-->

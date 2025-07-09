@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -10,6 +12,9 @@ using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
+using Timelapse.Images;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using Task = System.Threading.Tasks.Task;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse
@@ -33,13 +38,19 @@ namespace Timelapse
         // where those duplicates may or may not then appear depending on the select and sort criteria
         public async Task DuplicateCurrentRecord(bool useCurrentValues)
         {
+            await DuplicateCurrentRecord(useCurrentValues, string.Empty);
+        }
+
+        public async Task DuplicateCurrentRecord(bool useCurrentValues, string extractedFrameFileName)
+        {
             // TODO DetectionsVideo
             // Get the current image (or the selected image in the thumbnail grid) and duplicate it.
             // Note that this method shouldn't be called as the menueditDuplicate item will be disabled 
             // if the above conditions aren't met, but we check anyways.
-            if (IsDisplayingSingleImage() == false)
+            if (IsDisplayingSingleImage() == false && string.IsNullOrEmpty(extractedFrameFileName))
             {
                 // We only allow duplication if we are displaying a single image in the main view
+                // or if we are duplicating an extracted frame from a video
                 return;
             }
 
@@ -55,7 +66,11 @@ namespace Timelapse
 
             // Create a duplicate of it
             ImageRow duplicate = row.DuplicateRowWithValues(DataHandler.FileDatabase.FileTable.NewRow(fileInfo), useCurrentValues);
-
+            if (string.IsNullOrEmpty(extractedFrameFileName) == false)
+            {
+                // If we are duplicating an extracted frame, set the file name to that
+                duplicate.File = extractedFrameFileName;
+            }
             // Add the row to the database
             List<ImageRow> imagesToInsert = new List<ImageRow> { duplicate };
             DataHandler.FileDatabase.AddFiles(imagesToInsert, null);
@@ -69,87 +84,226 @@ namespace Timelapse
                 DataHandler.FileDatabase.FileTable.InsertRow(fileIndexForInsert, table.Rows[0]);
                 this.FileNavigatorSliderReset();
             }
-            
+
             if (GlobalReferences.DetectionsExists)
             {
                 // Get the ID of the duplicate file that was just inserted into the filedata table
                 long duplicateFileID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.FileData, DatabaseColumn.ID);
 
                 // Get the detections associated with the current row, if any
-                DataRow[] detectionRows = await DataHandler.FileDatabase.GetDetectionsFromFileIDAsync(row.ID);
-                if (detectionRows.Length > 0)
+                DataRow[] detectionRowsUnsorted = await DataHandler.FileDatabase.GetDetectionsFromFileIDAsync(row.ID);
+                if (detectionRowsUnsorted.Length > 0)
                 {
                     // Create a new detection for each detection row, but using the duplicate's ID
                     List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
                     List<List<ColumnTuple>> detectionVideoInsertionStatements = new List<List<ColumnTuple>>();
-                    foreach (DataRow detectionRow in detectionRows)
+                    if (row.IsVideo && false == string.IsNullOrEmpty(extractedFrameFileName))
                     {
-                        detectionInsertionStatements.Clear();
-                        detectionVideoInsertionStatements.Clear();
-
-                        // Fill it in with the current file's detection values
-                        List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
+                        BoundingBoxes bBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(this.DataHandler.ImageCache.Current.ID, false);
+                        double correction = 0.005;
+                        if (bBoxes.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+                            bBoxes.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
                         {
-                            new ColumnTuple(DetectionColumns.ImageID, duplicateFileID),
-                            new ColumnTuple(DetectionColumns.Category, (string) detectionRow[DetectionColumns.Category]),
-                            new ColumnTuple(DetectionColumns.Conf, (float) Convert.ToDouble(detectionRow[DetectionColumns.Conf])),
-                            new ColumnTuple(DetectionColumns.BBox, (string) detectionRow[DetectionColumns.BBox]),
-
-                        };
-                        // Add classification values to the detection row if they exist, otherwise they will be null
-                        if (detectionRow[DetectionColumns.Classification] != DBNull.Value)
-                        {
-                            detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detectionRow[DetectionColumns.Classification]));
-                            detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf, (float)Convert.ToDouble(detectionRow[DetectionColumns.ClassificationConf])));
+                            return;
                         }
-                        detectionInsertionStatements.Add(detectionColumnsToUpdate);
+                        int displayedVideoFrame = this.MarkableCanvas.VideoPlayer.FrameToShow;
+                        int frameWindow = bBoxes.FrameRate == null
+                            ? 0
+                            : (int)Math.Floor((decimal)(bBoxes.FrameRate / 2.0));
 
-                        // Insert the detections into the Detections table
-                        DataHandler.FileDatabase.InsertDetection(detectionInsertionStatements);
-                        
-                        // Get the ID of the duplicate file that was just inserted into the filedata table
-                        long detectionID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.Detections, DetectionColumns.DetectionID);
+                        // The frame / to frame creates the bounding box search window based on the frame window 
+                        int fromFrame = displayedVideoFrame - frameWindow;
+                        int toFrame = displayedVideoFrame + frameWindow;
 
-                        // Now get the DetectionsVideo value, if they are present
-                        if (row.IsVideo && null != detectionRow[DetectionColumns.FrameRate] && null != detectionRow[DetectionColumns.FrameNumber])
+                        // Sort the boxes. Note that its likely that the Boxes are already sorted, so this should be fast.
+                        List<BoundingBox> sortedBoxes = bBoxes.Boxes.OrderBy(s => s.FrameNumber).ToList();
+
+                        // Find the index of the frame containing bounding boxes that is closest to the displayedVideoFrame
+                        // As we do something different if its a frame before vs. after the displayed video Frame, we 
+                        // colloect that as prevFrameIndex or nextFrameIndex
+                        int prevFrameIndex = -1;
+                        int nextFrameIndex = -1;
+                        int currentIndex = 0;
+                        int difference = 10000;
+                        foreach (BoundingBox box in sortedBoxes)
                         {
-                            List<ColumnTuple> detectionsVideoColumnsToUpdate = new List<ColumnTuple>
+                            if (currentIndex >= sortedBoxes.Count - 1)
                             {
-                                new ColumnTuple(DetectionColumns.FrameNumber, Convert.ToInt32(detectionRow[DetectionColumns.FrameNumber])),
-                                new ColumnTuple(DetectionColumns.FrameRate, (float?)Convert.ToDouble(detectionRow[DetectionColumns.FrameRate])),
-                                new ColumnTuple(DetectionColumns.DetectionID, detectionID), 
+                                // If we are on the last bounding box, enlarge the frame window so that the bounding box lingers
+                                // for a bit longer. That is instead of the bounding box disappearing after
+                                // a 1/2 second, it will linger for a full second. This seems to be a better heuristic
+                                // for visually indicating an entity that is in the process of moving off the video.The only do
+                                fromFrame -= frameWindow;
+                                toFrame += frameWindow;
+                            }
+                            if (box.FrameNumber < fromFrame)
+                            {
+                                // Skip this bounding box, as its below the frame window
+                                currentIndex++;
+                                continue;
+                            }
+
+                            if (box.FrameNumber > toFrame)
+                            {
+                                // Skip this bounding box and break, as its above the frame window
+                                break;
+                            }
+                            // as we cycle through, we find the prev/next frames with boxes closest to the frame window
+                            if (box.FrameNumber <= displayedVideoFrame)
+                            {
+                                // Incrementally get closer to the displayedVideoFrame
+                                // Also, calculate how far the current bbox frame is from displayedVideoFrame 
+                                prevFrameIndex = currentIndex;
+                                difference = displayedVideoFrame - sortedBoxes[prevFrameIndex].FrameNumber;
+                            }
+                            else
+                            if (box.FrameNumber - displayedVideoFrame < difference)
+                            {
+                                // We are above the displayedVideoFrame, where the difference is less than the difference found for the previous video frame.
+                                // As we have now found the closest bbox frame above the displayedVideoFrame, we can stop searching.
+                                nextFrameIndex = currentIndex;
+                                prevFrameIndex = -1;
+                                break;
+                            }
+                            currentIndex++;
+                        }
+
+                        // Collect the bounding boxes for the desired frame
+                        List<BoundingBox> bboxes = new List<BoundingBox>();
+                        if (prevFrameIndex != -1)
+                        {
+                            // THe desired bounding box frame is below or equal to the displayedVideoFrame
+                            int boxFrameNumber = sortedBoxes[prevFrameIndex].FrameNumber;
+                            int i = prevFrameIndex;
+                            while (true)
+                            {
+                                if (i < 0 || sortedBoxes[i].FrameNumber != boxFrameNumber)
+                                {
+                                    // We reached the beginning or a box with a frame number that differs
+                                    break;
+                                }
+                                // Record the box, but only if its within the desired confidence limits
+                                if (sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+                                    sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+                                {
+                                    i--;
+                                    continue;
+                                }
+                                bboxes.Add(sortedBoxes[i]);
+                                i--;
+                            }
+                        }
+                        else if (nextFrameIndex != -1)
+                        {
+                            // The desired bounding box frame is above the displayedVideoFrame
+                            int boxFrameNumber = sortedBoxes[nextFrameIndex].FrameNumber;
+                            int i = nextFrameIndex;
+                            int count = sortedBoxes.Count;
+                            while (true)
+                            {
+                                if (i > count - 1 || sortedBoxes[i].FrameNumber != boxFrameNumber)
+                                {
+                                    // We reached the end or a box with a frame number that differs
+                                    break;
+                                }
+                                // Record the box, but only if its within the desired confidence limits
+                                if (sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
+                                    sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
+                                {
+                                    i++;
+                                    continue;
+                                }
+                                bboxes.Add(sortedBoxes[i]);
+                                i++;
+                            }
+                        }
+
+                        // Now draw the bounding boxes
+                        foreach (BoundingBox bbox in bboxes)
+                        {
+                            Debug.Print($"{bbox.FrameNumber}");
+                            // We have found a detection that is before the extracted frame position, so we can use it
+                            detectionInsertionStatements.Clear();
+                            List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
+                            {
+                                new ColumnTuple(DetectionColumns.ImageID, duplicateFileID),
+                                new ColumnTuple(DetectionColumns.Category, bbox.DetectionCategory),
+                                new ColumnTuple(DetectionColumns.Conf, bbox.Confidence),
+                                new ColumnTuple(DetectionColumns.BBox, $"{Math.Round(bbox.Rectangle.Left, 3)}, {Math.Round(bbox.Rectangle.Top,3)}, {Math.Round(bbox.Rectangle.Width,3)}, {Math.Round(bbox.Rectangle.Height,3)}")
+                            };
+                            // Add classification values to the detection row if they exist, otherwise they will be null
+                            if (bbox.Classifications.Count != 0)
+                            {
+                                // We only use the first classification, as we no longer support multiple classifications per bounding box
+                                // The bbox.Classifications is a list of KeyValuePairs, where the Key is the classification category (the species name) and the Value is the confidence
+                                // So we have to look up the classification category ID
+                                string category = this.DataHandler.FileDatabase.classificationCategoriesDictionary.FirstOrDefault(x=> x.Value == bbox.Classifications[0].Key).Key;
+                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, category));
+                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf,
+                                    (float)Convert.ToDouble(bbox.Classifications[0].Value)));
+                            }
+                            detectionInsertionStatements.Add(detectionColumnsToUpdate);
+
+                            // Insert the detections into the Detections table
+                            DataHandler.FileDatabase.InsertDetection(detectionInsertionStatements);
+                        }
+                    }
+
+                    else
+                    {
+                        // We are duplicating a regular image or video, so we need to use all the current detection values
+                        foreach (DataRow detectionRow in detectionRowsUnsorted)
+                        {
+                            detectionInsertionStatements.Clear();
+                            detectionVideoInsertionStatements.Clear();
+
+                            // Fill it in with the current file's detection values
+                            List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
+                            {
+                                new ColumnTuple(DetectionColumns.ImageID, duplicateFileID),
+                                new ColumnTuple(DetectionColumns.Category, (string)detectionRow[DetectionColumns.Category]),
+                                new ColumnTuple(DetectionColumns.Conf, (float)Convert.ToDouble(detectionRow[DetectionColumns.Conf])),
+                                new ColumnTuple(DetectionColumns.BBox, (string)detectionRow[DetectionColumns.BBox]),
 
                             };
-                            detectionVideoInsertionStatements.Add(detectionsVideoColumnsToUpdate);
-                        }
-                        // Insert the DetectionsVideo into the DetectionsVideo table
-                        if (detectionVideoInsertionStatements.Count > 0)
-                        {
-                            DataHandler.FileDatabase.InsertDetectionsVideo(detectionVideoInsertionStatements);
-                        }
+                            // Add classification values to the detection row if they exist, otherwise they will be null
+                            if (detectionRow[DetectionColumns.Classification] != DBNull.Value)
+                            {
+                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.Classification, (string)detectionRow[DetectionColumns.Classification]));
+                                detectionColumnsToUpdate.Add(new ColumnTuple(DetectionColumns.ClassificationConf,
+                                    (float)Convert.ToDouble(detectionRow[DetectionColumns.ClassificationConf])));
+                            }
 
+                            detectionInsertionStatements.Add(detectionColumnsToUpdate);
 
-                        //// Now get the classifications associated with each detection, if any
-                        //DataRow[] classificationDataTableRows = await DataHandler.FileDatabase.GetClassificationsFromDetectionIDAsync((long)detectionRow[Constant.DetectionColumns.DetectionID]);
-                        //if (classificationDataTableRows.Length > 0)
-                        //{
-                        //    // Fill it in with the current file's classification values
-                        //    classificationInsertionStatements.Clear();
-                        //    foreach (DataRow classificationRow in classificationDataTableRows)
-                        //    {
-                        //        List<ColumnTuple> classificationColumnsToUpdate = new List<ColumnTuple>
-                        //        {
-                        //            new ColumnTuple(ClassificationColumns.DetectionID, detectionID),
-                        //            new ColumnTuple(ClassificationColumns.Category, (string)classificationRow[ClassificationColumns.Category]),
-                        //            new ColumnTuple(ClassificationColumns.Conf, (float)Convert.ToDouble(classificationRow[ClassificationColumns.Conf]))
-                        //        };
-                        //        classificationInsertionStatements.Add(classificationColumnsToUpdate);
-                        //    }
-                        //    // Insert the classifications into the Classifications table
-                        //    DataHandler.FileDatabase.InsertClassifications(classificationInsertionStatements);
-                        //}
+                            // Insert the detections into the Detections table
+                            DataHandler.FileDatabase.InsertDetection(detectionInsertionStatements);
+
+                            // Get the ID of the duplicate file that was just inserted into the filedata table
+                            long detectionID = DataHandler.FileDatabase.GetLastInsertedRow(DBTables.Detections, DetectionColumns.DetectionID);
+
+                            // Now get the DetectionsVideo value, if they are present
+                            if (row.IsVideo && null != detectionRow[DetectionColumns.FrameRate] && null != detectionRow[DetectionColumns.FrameNumber])
+                            {
+                                List<ColumnTuple> detectionsVideoColumnsToUpdate = new List<ColumnTuple>
+                                {
+                                    new ColumnTuple(DetectionColumns.FrameNumber, Convert.ToInt32(detectionRow[DetectionColumns.FrameNumber])),
+                                    new ColumnTuple(DetectionColumns.FrameRate, (float?)Convert.ToDouble(detectionRow[DetectionColumns.FrameRate])),
+                                    new ColumnTuple(DetectionColumns.DetectionID, detectionID),
+
+                                };
+                                detectionVideoInsertionStatements.Add(detectionsVideoColumnsToUpdate);
+                            }
+
+                            // Insert the DetectionsVideo into the DetectionsVideo table
+                            if (detectionVideoInsertionStatements.Count > 0)
+                            {
+                                DataHandler.FileDatabase.InsertDetectionsVideo(detectionVideoInsertionStatements);
+                            }
+                        }
                     }
                 }
+
 
                 // Regenerate the internal detections and classifications table to include the new detections (which will include the DetectionVideos) and classifications
                 await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();

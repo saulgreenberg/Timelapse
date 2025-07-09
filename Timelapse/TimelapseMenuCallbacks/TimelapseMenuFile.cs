@@ -51,7 +51,7 @@ namespace Timelapse
 
         #region Menu stub to test some code
 
-        private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
             if (null == this.DataHandler?.ImageCache?.Current)
             {
@@ -87,17 +87,21 @@ namespace Timelapse
                 }
                 if (frame.Source is BitmapImage bitmapImage)
                 {
+                    // Create a new file name from the video file name comprising the fileName_<frameTimeInSeconds>.jpg 
+                    // e.g. Video.avi becomes Video_1.34.jpg where the 1.34 indicates the frame's time position in the video in seconds
+                    string newFileName = $"{Path.GetFileNameWithoutExtension(videoRow.File)}_{timeSpanVideoPosition.TotalSeconds:0.00}.jpg";
                     // Generate a file name frome filename.extension to filename[_frametime].jpg
-                    string basename = string.IsNullOrWhiteSpace(videoRow.RelativePath)
-                        ? Path.Combine(rootPathToImages, Path.GetFileNameWithoutExtension(videoRow.File))
-                        : Path.Combine(rootPathToImages, videoRow.RelativePath, Path.GetFileNameWithoutExtension(videoRow.File));
-                    string fileName = $"{basename}_{timeSpanVideoPosition.TotalSeconds:0.00}.jpg";
+                    string newFilePath = string.IsNullOrWhiteSpace(videoRow.RelativePath)
+                        ? Path.Combine(rootPathToImages, newFileName)
+                        : Path.Combine(rootPathToImages, videoRow.RelativePath, newFileName);
+                    //string fileName = $"{basename}_{timeSpanVideoPosition.TotalSeconds:0.00}.jpg";
 
-                    if (System.IO.File.Exists(fileName))
+                    if (System.IO.File.Exists(newFilePath))
                     {
                         // TODO: Insert Dialog here to ask the user if they want to overwrite the file
                     }
-                    SaveBitmapImageToFile(bitmapImage, fileName);
+                    SaveBitmapImageToFile(bitmapImage, newFilePath);
+                    await DuplicateCurrentRecord(true, newFileName);
                 }
             }
             catch
