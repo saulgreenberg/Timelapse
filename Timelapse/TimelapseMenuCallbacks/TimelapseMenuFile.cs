@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DialogUpgradeFiles;
+using Microsoft.VisualBasic.ApplicationServices;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,7 +9,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using DialogUpgradeFiles;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsMetadata;
@@ -17,8 +20,10 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Images;
 using Timelapse.Standards;
 using Timelapse.Util;
+using Xceed.Wpf.Toolkit.Core.Converters;
 using DialogResult = System.Windows.Forms.DialogResult;
 using File = Timelapse.Constant.File;
 using FilePathTypeEnum = Timelapse.Enums.FilePathTypeEnum;
@@ -45,12 +50,14 @@ namespace Timelapse
         #endregion
 
         #region Menu stub to test some code
+
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
-            if (dialog.ShowDialog() == true)
-            {
-            }
+            //TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
+            //if (dialog.ShowDialog() == true)
+            //{
+            //}
+
         }
         #endregion
 
@@ -242,7 +249,7 @@ namespace Timelapse
             }
 
             // Generate the candidate file name/path 
-            string csvFileName = Path.Combine(DataHandler.FileDatabase.RootPathToDatabase,File.CSVImageDataFileName);
+            string csvFileName = Path.Combine(DataHandler.FileDatabase.RootPathToDatabase, File.CSVImageDataFileName);
 
             // Get the selected filepath from the user
             if (false == Dialogs.TryGetFileFromUserUsingSaveFileDialog(
@@ -428,7 +435,7 @@ namespace Timelapse
             }
 
             //Compose the folder level data files
-            List<string> filesToBeWritten = new List<string> {File.CSVImageDataFileName};
+            List<string> filesToBeWritten = new List<string> { File.CSVImageDataFileName };
             foreach (MetadataInfoRow infoRow in DataHandler.FileDatabase.MetadataInfo)
             {
                 string tentativeFileName = Path.Combine(csvExportFolder, infoRow.Alias + ".csv");

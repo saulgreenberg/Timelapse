@@ -638,6 +638,29 @@ namespace Timelapse.Dialog
 
         #endregion
 
+        #region MessageBox: File could not be written
+        public static void FileCannotBeWrittenDialog(Window owner, string filePath)
+        {
+            const string title = "The file could not be written";
+            MessageBox messageBox = new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Icon = MessageBoxImage.Error,
+                    Title = title,
+                    Problem = "This file cannot be written, so nothing was done."
+                              + Environment.NewLine
+                              + "\u2022 " + filePath,
+                    Reason = "There could be multiple reasons. A possibility is:"
+                             + "\u2022 permissions don't allow it."
+
+                }
+            };
+            messageBox.ShowDialog();
+        }
+        #endregion
+
+
         #region MessagBox: Original file cannot be overwritten
 
         public static void FileCannotBeOverwrittenDialog(Window owner, string filePath)
@@ -1836,11 +1859,9 @@ namespace Timelapse.Dialog
                     + "If you export your data to a CSV file, each duplicates will appear in its own row ";
 
                 messageBox.Message.Hint = "Duplicates come with several caveats." + Environment.NewLine
-                                                                                  + "\u2022 Use 'Sort | Relative Path + Date Time (default)' to ensure that duplicates appear in sequence." +
-                                                                                  Environment.NewLine
-                                                                                  + "\u2022 Duplicates can only be created in the main view when displaying a single image, not in the overview." +
-                                                                                  Environment.NewLine
-                                                                                  + "\u2022 Duplicates in the exported CSV file are identifiable as rows with the same relative path and file name.";
+                    + "\u2022 Use 'Sort | Relative Path + Date Time (default)' to ensure that duplicates appear in sequence." + Environment.NewLine
+                    + "\u2022 Duplicates can only be created in the main view when displaying a single image, not in the overview." + Environment.NewLine
+                    + "\u2022 Duplicates in the exported CSV file are identifiable as rows with the same relative path and file name.";
             }
 
             bool? result = messageBox.ShowDialog();
@@ -1866,6 +1887,42 @@ namespace Timelapse.Dialog
                         + "Wait until the previous duplication finishes  before duplicating again.",
                     Hint = "The cursor will change to a normal cursor when the previous duplication is done.",
                     Icon = MessageBoxImage.Information
+                }
+            }.ShowDialog();
+        }
+
+        public static bool? MenuEditExtractVideoFrameSortOrderWarning(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Extract video frame - the sort order is not ideal";
+            MessageBox messageBox = new MessageBox(title, owner, MessageBoxButton.OKCancel)
+            {
+                Title = title,
+                Message =
+                {
+                    Icon = MessageBoxImage.Information,
+                    Problem =
+                        "'Extract video frame and create record' works best with Sorting set to either: " + Environment.NewLine +
+                        " 'Sort | By relative Path + DateTime (default)', or 'Sort |by DateTime'.",
+                    Result = "If you continue, the video record and the extracted frame record may not appear in sequence.",
+                    Hint = "This is not an error. Still, consider changing your sort order before proceeding."
+                }
+            };
+            return messageBox.ShowDialog();
+        }
+
+        public static void MenuEditExtractVideoFrameProblem(Window owner, string reason)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Could not extract the video frame";
+            new MessageBox(title, owner)
+            {
+                Message =
+                {
+                    Title = title,
+                    Problem = "Timelapse can't extract a video frame from the currently displayed video.",
+                    Reason = reason,
+                    Icon = MessageBoxImage.Error
                 }
             }.ShowDialog();
         }
@@ -3038,45 +3095,45 @@ namespace Timelapse.Dialog
             if (sender is Button extraButton == false) return;
             if (extraButton.Tag is String contentString == false) return;
             if (string.IsNullOrWhiteSpace(contentString)) return;
-                Window window = new Window
-                {
-                    Title = "Recognizer's summary report",
-                    ShowInTaskbar = false,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Width = 400,
-                    Height = 500,
-                    Owner = extraButton.FindParentOfType<Window>()
-                };
+            Window window = new Window
+            {
+                Title = "Recognizer's summary report",
+                ShowInTaskbar = false,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Width = 400,
+                Height = 500,
+                Owner = extraButton.FindParentOfType<Window>()
+            };
 
-                Dialogs.TryPositionAndFitDialogIntoWindow(window);
-                Grid grid = new Grid();
-                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) });
-                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(60) });
+            Dialogs.TryPositionAndFitDialogIntoWindow(window);
+            Grid grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) });
+            grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(60) });
 
-                Button button = new Button()
-                {
-                    Content = "Okay",
-                    Margin = new Thickness(10)
-                };
-                button.Click += (s, args) =>
-                {
-                    window.Close();
-                };
-                Grid.SetRow(button, 1);
+            Button button = new Button()
+            {
+                Content = "Okay",
+                Margin = new Thickness(10)
+            };
+            button.Click += (s, args) =>
+            {
+                window.Close();
+            };
+            Grid.SetRow(button, 1);
 
-                WebBrowser wb = new WebBrowser()
-                {
-                    Width = Double.NaN,
-                    Height = Double.NaN,
-                };
+            WebBrowser wb = new WebBrowser()
+            {
+                Width = Double.NaN,
+                Height = Double.NaN,
+            };
 
-                wb.NavigateToString(contentString);
-                Grid.SetRow(wb, 0);
-                window.Content = grid;
-                grid.Children.Add(wb);
-                grid.Children.Add(button);
+            wb.NavigateToString(contentString);
+            Grid.SetRow(wb, 0);
+            window.Content = grid;
+            grid.Children.Add(wb);
+            grid.Children.Add(button);
 
-                window.ShowDialog();
+            window.ShowDialog();
         }
 
         /// <summary>

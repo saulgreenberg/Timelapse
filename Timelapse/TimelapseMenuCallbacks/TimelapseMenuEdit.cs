@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
@@ -12,6 +13,7 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.QuickPaste;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
@@ -53,6 +55,15 @@ namespace Timelapse
             // We don't allow duplications in the overview as the attempts to do so were somewhat buggy. It could be done, but I don't think its critical.
             MenuItemDuplicateRecordUsingDefaultValues.IsEnabled = state;
             MenuItemDuplicateRecordUsingCurrentValues.IsEnabled = state;
+
+            // Enable Frame extraction only if we  have a displayable paused single video in the main view within a media player
+            MenuItemExtractVideoFrameUsingCurrentValues.IsEnabled =
+                state &&
+                DataHandler?.ImageCache?.Current is VideoRow &&
+                DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages) &&
+                DataHandler.ImageCache.Current.IsVideo &&
+                null != this.MarkableCanvas?.VideoPlayer?.MediaElement &&
+                this.MarkableCanvas.VideoPlayer.PlayOrPause.IsChecked == false;
         }
         #endregion
 
@@ -336,6 +347,93 @@ namespace Timelapse
         }
         #endregion
 
+        #region Extract video frame as a record
+        // Extracts the current video frame, creates a jpeg image file from it, and creates a record to it using the current data in the video frame
+        // The file location is in the same folder as the video frame.
+        // The file name is the same as the video frame but with the video position's timestamp appended to it e.g. bear.avi => bear_1.5.jpg 
+        // The invoking menu is enabled only if Timelapse is displaying a video and the video player is paused, so those tests are not repeated here.
+        private async void MenuItemExtractVideoFrameUsingCurrentValues_Click(object sender, RoutedEventArgs e)
+        {
+            if (false == this.DataHandler.ImageCache.Current is VideoRow videoRow)
+            {
+                // Shouldn't happen, as the menu is only enabled if we are displaying a video
+                return;
+            }
+
+            try
+            {
+                // Get the time of the current video frame, then correct it by subtracting half the time of a frame
+                // This seems that the best way to get the correct frame. Not sure why, but it seems to work
+                TimeSpan timeSpanVideoPosition = this.MarkableCanvas.VideoPlayer.MediaElement.Position;
+                float videoPositionInSeconds = (float)timeSpanVideoPosition.TotalSeconds;
+                float? frameRate = this.MarkableCanvas.VideoPlayer.FrameRate;
+                if (frameRate == null || frameRate <= 0)
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "The recognition for this video does not include a valid frame rate");
+                    return;
+                }
+
+                // Check: ideally the sort terms will be RelativePath x DateTime, as otherwise the duplicates may not be in sorted order.
+                // The various flags determine whether we show only a problem message, a duplicate info message, or both.
+                SortTerm sortTermDB1 = DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
+                SortTerm sortTermDB2 = DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
+                bool sortTermsOKForDuplicateOrdering =
+                    (sortTermDB1.DataLabel == DatabaseColumn.RelativePath && sortTermDB2.DataLabel == DatabaseColumn.DateTime)
+                    || (sortTermDB1.DataLabel == DatabaseColumn.DateTime && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+
+                if (sortTermsOKForDuplicateOrdering == false)
+                {
+                    if (Dialogs.MenuEditExtractVideoFrameSortOrderWarning(this) == false)
+                    {
+                        return;
+                    }
+                }
+
+                videoPositionInSeconds -= (float) (1.0 / frameRate * .5f);
+                if (videoPositionInSeconds < 0) videoPositionInSeconds = 0; // In case its at the beginning of the video
+
+                // Do the frame grab, where its source will be the frame as a BitmapImage
+                // Should only be invoked with a valid imageRow that is a video, and a valid frametime
+                Image frame = new Image
+                {
+                    Source = videoRow.LoadVideoBitmap(this.RootPathToImages, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, videoPositionInSeconds, out bool isCorruptOrMissing)
+                };
+                if (isCorruptOrMissing || !(frame.Source is BitmapImage bitmapImage))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "Timelapse was unable to get it from the video file.");
+                    return;
+                }
+
+                // Create a new file name from the video file name comprising the fileName_<frameTimeInSeconds>.jpg 
+                // e.g. Video.avi becomes Video_1.34.jpg where the 1.34 indicates the frame's time position in the video in seconds
+                // Also compose the full file path to the new image file, which will be in the same folder as the video file
+                string newFileName = $"{Path.GetFileNameWithoutExtension(videoRow.File)}_{videoPositionInSeconds:0.000}.jpg";
+                string newFilePath = string.IsNullOrWhiteSpace(videoRow.RelativePath)
+                    ? Path.Combine(this.RootPathToImages, newFileName)
+                    : Path.Combine(this.RootPathToImages, videoRow.RelativePath, newFileName);
+
+                if (File.Exists(newFilePath))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, $"A file and data record already exists for the current frame:{Environment.NewLine} • {newFilePath}");
+                    return;
+                }
+
+                if (false == bitmapImage.SaveToFile(newFilePath))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse could extract the frame, it couldn't write it to a file");
+                }
+                ;
+                if (false == await DuplicateCurrentRecord(true, newFileName))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse created the frame as a file, it couldn't create the data record for it");
+                }
+            }
+            catch
+            {
+                Dialogs.MenuEditExtractVideoFrameProblem(this, "Its not clear what went wrong. However, your data should be unchanged.");
+            }
+        }
+        #endregion
         #region Delete (including sub-menu opening)
         // Delete sub-menu opening
         private void MenuItemDelete_SubmenuOpening(object sender, RoutedEventArgs e)

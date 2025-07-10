@@ -33,14 +33,14 @@
                 {
                     case Constant.Arguments.TemplateArgument:
                         // Make sure there is an argument there
-                        if ((index + 1) < arguments.Length)
+                        if (index + 1 < arguments.Length)
                         {
                             Template = arguments[index + 1];
                         }
                         break;
                     case Constant.Arguments.RelativePathArgument:
                         // Make sure there is an argument there
-                        if ((index + 1) < arguments.Length)
+                        if (index + 1 < arguments.Length)
                         {
                             RelativePath = arguments[index + 1];
                         }

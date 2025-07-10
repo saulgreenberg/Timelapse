@@ -42,8 +42,8 @@ namespace Timelapse.Controls
         private Uri SourceUri;  // The currently loaded video
 
         // Bounding boxes and variables, so we can track where we are and what we need to show
-        private float? FrameRate = -1;
-        private int FrameToShow;
+        public float? FrameRate { get; set; }= -1;
+        public int FrameToShow { get; set; }
         private double VideoDurationSeconds = -1;
         private TimeSpan VideoDurationTimeSpan;
         private BoundingBoxes BoxesForFile; // The bounding boxes for the current video
@@ -330,13 +330,13 @@ namespace Timelapse.Controls
             }
         }
 
-        // Navigate the next or previous frame in the video.
-        private void NavigateFrame(bool forward)
+        // Navigate the next or previous frame in the video. Return true if the navigation did anything (i.e., not at beginning or end of video)
+        public bool NavigateFrame(bool forward)
         {
             if (this.Visibility != Visibility.Visible || null == this.MediaElement.Source || this.VideoDurationSeconds <= 0)
             {
                 // No video to navigate
-                return;
+                return false;
             }
 
             this.isProgrammaticUpdate = true;
@@ -357,10 +357,11 @@ namespace Timelapse.Controls
             if (newPosition.TotalMilliseconds < 0)
             {
                 // We are at the beginning of the video, so don't go back any further
-                return;
+                return false;
             }
             this.MediaElement.Position = newPosition;
             TimerUpdatePosition.Start();
+            return true;
         }
         #endregion
 
@@ -555,7 +556,7 @@ namespace Timelapse.Controls
             {
                 this.FrameToShow = Convert.ToInt32(System.Math.Floor((double)(SliderScrubbing.Value * this.FrameRate)));
             }
-            // Pause allso updates the position
+            // Pause also updates the position
             this.Pause(); // If a user scrubs, force the video to pause if its playing
         }
 
