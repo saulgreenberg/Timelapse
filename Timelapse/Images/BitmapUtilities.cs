@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -137,7 +136,6 @@ namespace Timelapse.Images
                     if (null != actualDuration && actualDuration != 0 && frameTime <= actualDuration)
                     {
                        ffMpeg.GetVideoThumbnail(filePath, outputBitmapAsStream, frameTime);
-                       Debug.Print($"b:{frameTime}");
                     }
                     else
                     {
@@ -173,7 +171,6 @@ namespace Timelapse.Images
                 // Couldn't get the thumbnail using FFMPEG. Fallback to try getting it using the MediaEncoder
                 // Note. One of the reasons for this failure can occur if we call ffMpeg.GetVideoThumbnail(filePath, outputBitmapAsStream, frameTime);
                 // with a frame time longer than the video.
-                Debug.Print($"{filePath} {frameTime}");
                 return GetVideoBitmapFromFileUsingMediaEncoder(filePath, desiredWidthOrHeight, displayIntent, imageDimension, out isCorruptOrMissing);
                 // We don't print the exception // (Exception exception)
                 // TraceDebug.PrintMessage(String.Format("VideoRow/LoadBitmap: Loading of {0} failed in Video - LoadBitmap. {0}", imageFolderPath));

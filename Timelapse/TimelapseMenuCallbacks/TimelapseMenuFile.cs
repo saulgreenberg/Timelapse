@@ -51,94 +51,13 @@ namespace Timelapse
 
         #region Menu stub to test some code
 
-        private async void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
+        private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            if (null == this.DataHandler?.ImageCache?.Current)
-            {
-                // TODO Insert various dialog error messages here
-                Console.Beep();
-                return;
-            }
-
-            if (false == this.DataHandler.ImageCache.Current.IsVideo || false == this.DataHandler.ImageCache.Current is VideoRow videoRow)
-            {
-                Console.Beep();
-                return;
-            }
-
-            if (null == this.MarkableCanvas?.VideoPlayer?.MediaElement)
-            {
-                Console.Beep();
-                return;
-            }
-
-            try
-            {
-                string rootPathToImages = GlobalReferences.MainWindow.RootPathToImages;
-                // If this fails, it will throw an exception
-                TimeSpan timeSpanVideoPosition = this.MarkableCanvas.VideoPlayer.MediaElement.Position;
-
-                // TODO: Get the actual image  height
-                Image frame = TryFrameGrab(rootPathToImages, videoRow, (float)timeSpanVideoPosition.TotalSeconds);
-                if (null == frame)
-                {
-                    Console.Beep();
-                    return;
-                }
-                if (frame.Source is BitmapImage bitmapImage)
-                {
-                    // Create a new file name from the video file name comprising the fileName_<frameTimeInSeconds>.jpg 
-                    // e.g. Video.avi becomes Video_1.34.jpg where the 1.34 indicates the frame's time position in the video in seconds
-                    string newFileName = $"{Path.GetFileNameWithoutExtension(videoRow.File)}_{timeSpanVideoPosition.TotalSeconds:0.00}.jpg";
-                    // Generate a file name frome filename.extension to filename[_frametime].jpg
-                    string newFilePath = string.IsNullOrWhiteSpace(videoRow.RelativePath)
-                        ? Path.Combine(rootPathToImages, newFileName)
-                        : Path.Combine(rootPathToImages, videoRow.RelativePath, newFileName);
-                    //string fileName = $"{basename}_{timeSpanVideoPosition.TotalSeconds:0.00}.jpg";
-
-                    if (System.IO.File.Exists(newFilePath))
-                    {
-                        // TODO: Insert Dialog here to ask the user if they want to overwrite the file
-                    }
-                    SaveBitmapImageToFile(bitmapImage, newFilePath);
-                    await DuplicateCurrentRecord(true, newFileName);
-                }
-            }
-            catch
-            {
-                return;
-            }
-
             //TestSomeCodeDialog dialog = new TestSomeCodeDialog(this);
             //if (dialog.ShowDialog() == true)
             //{
             //}
 
-        }
-
-        // Should only be invoked with a valid imageRow that is a video, and a valid frametime
-        private static Image TryFrameGrab(string rootPathToImages, VideoRow videoRow, float? time)
-        {
-            float frameTime = time ?? 0;
-            Image frame = new Image
-            {
-                Source = videoRow.LoadVideoBitmap(rootPathToImages, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, frameTime, out bool isCorruptOrMissing)
-            };
-
-            return isCorruptOrMissing
-                ? null
-                : frame;
-        }
-
-        public static void SaveBitmapImageToFile(BitmapImage image, string filePath)
-        {
-            BitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(image));
-
-            using (var fileStream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
-            {
-                encoder.Save(fileStream);
-            }
         }
         #endregion
 

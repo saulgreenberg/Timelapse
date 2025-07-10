@@ -26,7 +26,7 @@ namespace Timelapse
             MenuItemBookmarkSavePanZoom.IsEnabled = filesSelectedAndSingleImage;
             MenuItemBookmarkSetPanZoom.IsEnabled = filesSelectedAndSingleImage;
             MenuItemShowInExplorer.IsEnabled =
-                filesSelectedAndSingleImage &&
+                filesSelected &&
                 true == DataHandler?.ImageCache?.Current?.FileExists(DataHandler?.FileDatabase?.RootPathToImages);
 
             // The dogear menu items are enabled (and their text) depends on a variety of conditions
@@ -175,6 +175,7 @@ namespace Timelapse
             }
         }
         #endregion
+
         #region View Image differences
         // Cycle through the image differences
         private void MenuItemViewDifferencesCycleThrough_Click(object sender, RoutedEventArgs e)

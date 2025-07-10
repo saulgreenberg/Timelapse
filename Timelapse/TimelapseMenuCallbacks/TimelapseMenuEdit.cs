@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -9,13 +7,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Timelapse.Constant;
-using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.Extensions;
 using Timelapse.QuickPaste;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
@@ -358,29 +356,51 @@ namespace Timelapse
         {
             if (false == this.DataHandler.ImageCache.Current is VideoRow videoRow)
             {
+                // Shouldn't happen, as the menu is only enabled if we are displaying a video
                 return;
             }
 
             try
             {
-                // We get the time, but it has to be corrected by subtracting half the time of a frame
-                // as it seems that the best way to get the frame is to go back a bit. Not sure why, but it seems to work
+                // Get the time of the current video frame, then correct it by subtracting half the time of a frame
+                // This seems that the best way to get the correct frame. Not sure why, but it seems to work
                 TimeSpan timeSpanVideoPosition = this.MarkableCanvas.VideoPlayer.MediaElement.Position;
                 float videoPositionInSeconds = (float)timeSpanVideoPosition.TotalSeconds;
                 float? frameRate = this.MarkableCanvas.VideoPlayer.FrameRate;
                 if (frameRate == null || frameRate <= 0)
                 {
-                    Dialogs.MenuEditExtractVideoFrameProblem(this);
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "The recognition for this video does not include a valid frame rate");
                     return;
                 }
+
+                // Check: ideally the sort terms will be RelativePath x DateTime, as otherwise the duplicates may not be in sorted order.
+                // The various flags determine whether we show only a problem message, a duplicate info message, or both.
+                SortTerm sortTermDB1 = DataHandler.FileDatabase.ImageSet.GetSortTerm(0); // Get the 1st sort term from the database
+                SortTerm sortTermDB2 = DataHandler.FileDatabase.ImageSet.GetSortTerm(1); // Get the 2nd sort term from the database
+                bool sortTermsOKForDuplicateOrdering =
+                    (sortTermDB1.DataLabel == DatabaseColumn.RelativePath && sortTermDB2.DataLabel == DatabaseColumn.DateTime)
+                    || (sortTermDB1.DataLabel == DatabaseColumn.DateTime && string.IsNullOrWhiteSpace(sortTermDB2.DataLabel));
+
+                if (sortTermsOKForDuplicateOrdering == false)
+                {
+                    if (Dialogs.MenuEditExtractVideoFrameSortOrderWarning(this) == false)
+                    {
+                        return;
+                    }
+                }
+
                 videoPositionInSeconds -= (float) (1.0 / frameRate * .5f);
                 if (videoPositionInSeconds < 0) videoPositionInSeconds = 0; // In case its at the beginning of the video
 
                 // Do the frame grab, where its source will be the frame as a BitmapImage
-                Image frame = TryFrameGrab(this.RootPathToImages, videoRow, videoPositionInSeconds);
-                if (!(frame?.Source is BitmapImage bitmapImage))
+                // Should only be invoked with a valid imageRow that is a video, and a valid frametime
+                Image frame = new Image
                 {
-                    Dialogs.MenuEditExtractVideoFrameProblem(this);
+                    Source = videoRow.LoadVideoBitmap(this.RootPathToImages, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, videoPositionInSeconds, out bool isCorruptOrMissing)
+                };
+                if (isCorruptOrMissing || !(frame.Source is BitmapImage bitmapImage))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "Timelapse was unable to get it from the video file.");
                     return;
                 }
 
@@ -394,18 +414,25 @@ namespace Timelapse
 
                 if (File.Exists(newFilePath))
                 {
-                    Dialogs.FileExistsDialog(this, newFilePath);
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, $"A file and data record already exists for the current frame:{Environment.NewLine} • {newFilePath}");
                     return;
                 }
-                SaveBitmapImageToFile(bitmapImage, newFilePath);
-                await DuplicateCurrentRecord(true, newFileName);
+
+                if (false == bitmapImage.SaveToFile(newFilePath))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse could extract the frame, it couldn't write it to a file");
+                }
+                ;
+                if (false == await DuplicateCurrentRecord(true, newFileName))
+                {
+                    Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse created the frame as a file, it couldn't create the data record for it");
+                }
             }
             catch
             {
-                Dialogs.MenuEditExtractVideoFrameProblem(this);
+                Dialogs.MenuEditExtractVideoFrameProblem(this, "Its not clear what went wrong. However, your data should be unchanged.");
             }
         }
-
         #endregion
         #region Delete (including sub-menu opening)
         // Delete sub-menu opening

@@ -309,6 +309,7 @@
     <Compile Include="Enums\MoveFolderResultEnum.cs" />
     <Compile Include="Enums\SelectMissingFilesResultEnum.cs" />
     <Compile Include="EventArguments\RecognitionSelectionChangedEventArgs.cs" />
+    <Compile Include="Extensions\BitmapImageExtensions.cs" />
     <Compile Include="Extensions\StringExtension.cs" />
     <Compile Include="Extensions\TextBlockExtension.cs" />
     <Compile Include="Recognition\RecognitionDatabases.cs" />

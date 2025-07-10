@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Images;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using Task = System.Threading.Tasks.Task;
 
 // ReSharper disable once CheckNamespace
@@ -41,9 +39,12 @@ namespace Timelapse
             await DuplicateCurrentRecord(useCurrentValues, string.Empty);
         }
 
-        public async Task DuplicateCurrentRecord(bool useCurrentValues, string extractedFrameFileName)
+        // Duplicate image serves dual purposes.
+        // - If we are displaying a single image, it duplicates that image record in the database, and adds it to the file table
+        // - If we are displaying an extracted frame from a video, it duplicates that frame, and adds it to the file table.
+        //   However, it is not tagged as a duplicate as it has a different file name.
+        public async Task<bool> DuplicateCurrentRecord(bool useCurrentValues, string extractedFrameFileName)
         {
-            // TODO DetectionsVideo
             // Get the current image (or the selected image in the thumbnail grid) and duplicate it.
             // Note that this method shouldn't be called as the menueditDuplicate item will be disabled 
             // if the above conditions aren't met, but we check anyways.
@@ -51,7 +52,7 @@ namespace Timelapse
             {
                 // We only allow duplication if we are displaying a single image in the main view
                 // or if we are duplicating an extracted frame from a video
-                return;
+                return false;
             }
 
             // Get the current image
@@ -60,17 +61,18 @@ namespace Timelapse
             {
                 //Shouldn't happen
                 TracePrint.NullException(nameof(row));
-                return;
+                return false ;
             }
             FileInfo fileInfo = new FileInfo(row.File);
 
-            // Create a duplicate of it
+            // Create a duplicate of the image row
             ImageRow duplicate = row.DuplicateRowWithValues(DataHandler.FileDatabase.FileTable.NewRow(fileInfo), useCurrentValues);
             if (string.IsNullOrEmpty(extractedFrameFileName) == false)
             {
-                // If we are duplicating an extracted frame, set the file name to that
+                // If we are duplicating an extracted frame, set the file name to that instead of the original file name
                 duplicate.File = extractedFrameFileName;
             }
+
             // Add the row to the database
             List<ImageRow> imagesToInsert = new List<ImageRow> { duplicate };
             DataHandler.FileDatabase.AddFiles(imagesToInsert, null);
@@ -85,6 +87,8 @@ namespace Timelapse
                 this.FileNavigatorSliderReset();
             }
 
+
+            // This next section duplicates the detections, if any.
             if (GlobalReferences.DetectionsExists)
             {
                 // Get the ID of the duplicate file that was just inserted into the filedata table
@@ -94,24 +98,25 @@ namespace Timelapse
                 DataRow[] detectionRowsUnsorted = await DataHandler.FileDatabase.GetDetectionsFromFileIDAsync(row.ID);
                 if (detectionRowsUnsorted.Length > 0)
                 {
-                    // Create a new detection for each detection row, but using the duplicate's ID
+                    // Create new detections and (if relevant) new detection videos for each detection row,
+                    // but using the duplicate's ID
                     List<List<ColumnTuple>> detectionInsertionStatements = new List<List<ColumnTuple>>();
                     List<List<ColumnTuple>> detectionVideoInsertionStatements = new List<List<ColumnTuple>>();
-                    if (row.IsVideo && false == string.IsNullOrEmpty(extractedFrameFileName))
+
+                    //
+                    // Case 1. We are duplicating an extracted frame from a video, so we need to get the bounding boxes for the current video frame
+                    //
+                    if (row.IsVideo && false == string.IsNullOrEmpty(extractedFrameFileName) && null != this.DataHandler.ImageCache.Current)
                     {
+                        // Note that we use bounding boxes instead of the detection rows, but that simply because I had code for finding the desired frames elsewhere
+                        // It also repeats (sort of) a bunch of the code found in DrawBoundingBoxesInCanvas (the video version). They could likely be merged, but its not worth the effort.
                         BoundingBoxes bBoxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(this.DataHandler.ImageCache.Current.ID, false);
-                        double correction = 0.005;
-                        if (bBoxes.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
-                            bBoxes.MaxConfidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
-                        {
-                            return;
-                        }
                         int displayedVideoFrame = this.MarkableCanvas.VideoPlayer.FrameToShow;
                         int frameWindow = bBoxes.FrameRate == null
                             ? 0
                             : (int)Math.Floor((decimal)(bBoxes.FrameRate / 2.0));
 
-                        // The frame / to frame creates the bounding box search window based on the frame window 
+                        // The from frame / to frame creates the bounding box search window based on the frame window 
                         int fromFrame = displayedVideoFrame - frameWindow;
                         int toFrame = displayedVideoFrame + frameWindow;
 
@@ -119,7 +124,7 @@ namespace Timelapse
                         List<BoundingBox> sortedBoxes = bBoxes.Boxes.OrderBy(s => s.FrameNumber).ToList();
 
                         // Find the index of the frame containing bounding boxes that is closest to the displayedVideoFrame
-                        // As we do something different if its a frame before vs. after the displayed video Frame, we 
+                        // As we do something different if its a frame before vs. after the displayed video frame, we 
                         // colloect that as prevFrameIndex or nextFrameIndex
                         int prevFrameIndex = -1;
                         int nextFrameIndex = -1;
@@ -172,7 +177,7 @@ namespace Timelapse
                         List<BoundingBox> bboxes = new List<BoundingBox>();
                         if (prevFrameIndex != -1)
                         {
-                            // THe desired bounding box frame is below or equal to the displayedVideoFrame
+                            // The desired bounding box frame is below or equal to the displayedVideoFrame
                             int boxFrameNumber = sortedBoxes[prevFrameIndex].FrameNumber;
                             int i = prevFrameIndex;
                             while (true)
@@ -182,13 +187,7 @@ namespace Timelapse
                                     // We reached the beginning or a box with a frame number that differs
                                     break;
                                 }
-                                // Record the box, but only if its within the desired confidence limits
-                                if (sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
-                                    sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
-                                {
-                                    i--;
-                                    continue;
-                                }
+                                // Record the box
                                 bboxes.Add(sortedBoxes[i]);
                                 i--;
                             }
@@ -206,23 +205,15 @@ namespace Timelapse
                                     // We reached the end or a box with a frame number that differs
                                     break;
                                 }
-                                // Record the box, but only if its within the desired confidence limits
-                                if (sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold &&
-                                    sortedBoxes[i].Confidence + correction < GlobalReferences.TimelapseState.BoundingBoxThresholdOveride)
-                                {
-                                    i++;
-                                    continue;
-                                }
+                                // Record the box
                                 bboxes.Add(sortedBoxes[i]);
                                 i++;
                             }
                         }
 
-                        // Now draw the bounding boxes
+                        // Now update the database with the relevant bounding box values
                         foreach (BoundingBox bbox in bboxes)
                         {
-                            Debug.Print($"{bbox.FrameNumber}");
-                            // We have found a detection that is before the extracted frame position, so we can use it
                             detectionInsertionStatements.Clear();
                             List<ColumnTuple> detectionColumnsToUpdate = new List<ColumnTuple>
                             {
@@ -231,6 +222,7 @@ namespace Timelapse
                                 new ColumnTuple(DetectionColumns.Conf, bbox.Confidence),
                                 new ColumnTuple(DetectionColumns.BBox, $"{Math.Round(bbox.Rectangle.Left, 3)}, {Math.Round(bbox.Rectangle.Top,3)}, {Math.Round(bbox.Rectangle.Width,3)}, {Math.Round(bbox.Rectangle.Height,3)}")
                             };
+
                             // Add classification values to the detection row if they exist, otherwise they will be null
                             if (bbox.Classifications.Count != 0)
                             {
@@ -249,9 +241,12 @@ namespace Timelapse
                         }
                     }
 
+                    //
+                    // Case 2. We are duplicating a regular image or video, so we need to use all the current detection values
+                    //
                     else
                     {
-                        // We are duplicating a regular image or video, so we need to use all the current detection values
+                       
                         foreach (DataRow detectionRow in detectionRowsUnsorted)
                         {
                             detectionInsertionStatements.Clear();
@@ -310,8 +305,10 @@ namespace Timelapse
 
                 // Check if we need this...
                 DataHandler.FileDatabase.IndexCreateForDetectionsIfNotExists();
+                Episodes.Episodes.Reset();
             }
             TryFileShowWithoutSliderCallback(DirectionEnum.Next);
+            return true;
         }
         #endregion
 
