@@ -1,18 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Windows.Controls;
-using Timelapse.DataStructures;
-using Timelapse.Extensions;
-
-
-namespace Timelapse.Controls
+﻿namespace Timelapse.Controls
 {
     /// <summary>
     /// Interaction logic for ClassificationCategoryDescriptionsControl.xaml
     /// </summary>
-    public partial class ClassificationCategoryDescriptionsControl : UserControl
+    public partial class ClassificationCategoryDescriptionsControl 
     {
         #region Private properties
         //private TaxaItemProvider TaxaItemProvider { get; set; }

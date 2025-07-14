@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;
-using static Timelapse.Controls.TaxaItemProvider;
 
 namespace Timelapse.Controls
 {

@@ -14,7 +14,6 @@ using Timelapse.Enums;
 using Timelapse.Extensions;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
-using TimelapseTemplateEditor.Standards;
 using Control = Timelapse.Constant.Control;
 // For debugging
 

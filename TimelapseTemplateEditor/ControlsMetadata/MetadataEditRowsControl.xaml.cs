@@ -1,10 +1,8 @@
-﻿using MS.WindowsAPICodePack.Internal;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
-using TimelapseTemplateEditor.Standards;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;

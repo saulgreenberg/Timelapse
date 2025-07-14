@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -407,7 +408,8 @@ namespace Timelapse
                 // Create a new file name from the video file name comprising the fileName_<frameTimeInSeconds>.jpg 
                 // e.g. Video.avi becomes Video_1.34.jpg where the 1.34 indicates the frame's time position in the video in seconds
                 // Also compose the full file path to the new image file, which will be in the same folder as the video file
-                string newFileName = $"{Path.GetFileNameWithoutExtension(videoRow.File)}_{videoPositionInSeconds:0.000}.jpg";
+                string timestamp = videoPositionInSeconds.ToString("0.000", CultureInfo.InvariantCulture);
+                string newFileName = $"{Path.GetFileNameWithoutExtension(videoRow.File)}_{timestamp}.jpg";
                 string newFilePath = string.IsNullOrWhiteSpace(videoRow.RelativePath)
                     ? Path.Combine(this.RootPathToImages, newFileName)
                     : Path.Combine(this.RootPathToImages, videoRow.RelativePath, newFileName);
@@ -422,7 +424,7 @@ namespace Timelapse
                 {
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse could extract the frame, it couldn't write it to a file");
                 }
-                ;
+                
                 if (false == await DuplicateCurrentRecord(true, newFileName))
                 {
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse created the frame as a file, it couldn't create the data record for it");

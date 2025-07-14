@@ -265,7 +265,7 @@ namespace TimelapseTemplateEditor.Dialog
         #region MessageBox: Template: Changing controls can violate the current standard
 
         // Confirm closing this template and creating a new one
-        private static bool dontShowChangesToStandardWarningDialog = false;
+        private static bool dontShowChangesToStandardWarningDialog;
         public static bool? ChangesToStandardWarning(Window owner, string changeType, string standardType)
         {
             if (dontShowChangesToStandardWarningDialog)
@@ -282,11 +282,11 @@ namespace TimelapseTemplateEditor.Dialog
                            + $"This may cause problems if other software you use expects a strict {standardType} standard.",
                     Result = $"Select:{Environment.NewLine}"
                              + $"\u2022 Okay to keep {changeType.ToLower()} anyways,{Environment.NewLine}"
-                             + $"\u2022 Cancel to abort.",
+                             + "\u2022 Cancel to abort.",
                     Reason = $"The {standardType} defines what levels and fields are needed and how they are named.{Environment.NewLine}" +
-                             $"Changes to levels or fields can (perhaps) affect how other software uses your data.",
+                             "Changes to levels or fields can (perhaps) affect how other software uses your data.",
                     Hint = $"This is just a warning, as it really depends upon what you plan to do with your data.{Environment.NewLine}"
-                          + $"Ignore this if you know what you are doing."
+                          + "Ignore this if you know what you are doing."
                 },
                 DontShowAgain =
                 {
