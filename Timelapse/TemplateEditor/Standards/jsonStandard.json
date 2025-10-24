@@ -1,0 +1,92 @@
+{
+  "name": "Alberta Metadata Standard",
+  "levels": [
+    {
+      "level": 1,
+      "alias": "Project",
+      "rows": [
+        {
+          "name": "Project Name",
+          "dataType": "Alphanumeric",
+          "defaultValue": "",
+          "fieldCode": "proj_name",
+          "explanation": "A unique alphanumeric identifier for each project.",
+          "example": "UofA_WildEdmonton-Urban-Wildlife-Monitoring_2018",
+          "choices": ""
+        },
+
+        {
+          "name": "Project Coordinator",
+          "dataType": "ShortText",
+          "defaultValue": "",
+          "fieldCode": "proj_coord",
+          "explanation": "The first and last name of the primary contact for the project.",
+          "example": "John Smith",
+          "choices": ""
+        }
+      ]
+    },
+
+    {
+      "level": 2,
+      "alias": "Study Area",
+      "rows": [
+        {
+          "name": "Study Area Name",
+          "dataType": "Alphanumeric",
+          "defaultValue": "",
+          "fieldCode": "study_area_name",
+          "explanation": "A description for each unique research or monitoring area including its location, habitat type(s), land use(s) and habitat disturbances (where applicable)\"",
+          "example": "OILSANDS-REF001"
+        },
+        {
+          "name": "Study Area Description",
+          "dataType": "LongText",
+          "defaultValue": "",
+          "fieldCode": "study_area_name",
+          "explanation": "The first and last name of the primary contact for the project.",
+          "example": "This study area was located in the south-east corner of the Birch Mountains Wildland Provincial Park in the Boreal Highlands subregion. The area consisted primarily of bogs, patches of pine, aspen and birch forest as well as riparian meadow habitats. There was no land use disturbance in the study area",
+          "choices": ""
+        }
+      ]
+    },
+
+    {
+      "level": 3,
+      "alias": "Survey",
+      "rows": [
+        {
+          "name": "Survey Name",
+          "dataType": "Alphanumeric",
+          "defaultValue": "",
+          "fieldCode": "surv_name",
+          "explanation": "Describe the specific objectives of each survey within a project",
+          "example": "FORTMC_001"
+        },
+        {
+          "name": "Survey Design",
+          "dataType": "SingleChoice",
+          "defaultValue": "",
+          "fieldCode": "survey_design",
+          "explanation": "The spatial arrangement of remote cameras within the study area for an individual survey.",
+          "example": "Simple Random",
+          "choices": {
+            "allowBlanks": true,
+            "choiceList": [
+              "Simple Random",
+              "Systematic",
+              "Stratified",
+              "Clustered",
+              "Paired",
+              "Targeted",
+              "Convenience",
+              "Hierarchical (Multiple)",
+              "Other",
+              "Unknown"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

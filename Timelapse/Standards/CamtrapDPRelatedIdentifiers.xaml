@@ -1,0 +1,279 @@
+﻿<Window x:Class="Timelapse.Standards.CamtrapDPRelatedIdentifiers"
+        x:Name ="Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="CamptrapDP: Edit the Related Identifiers List" Height="650" Width="800" Loaded="CamptrapDP_OnLoaded">
+
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Margin="10,10,5,5">
+            <Run Text="Related Identifiers" FontWeight ="Bold" FontStyle="Italic"/> 
+            is an optional list of identifiers of resources related to the package (e.g. papers, project pages, derived datasets, APIs, etc.).
+            <LineBreak/>
+            <Run Text="Relation type*, Related identifier*, and Related identifier type" FontWeight ="Bold" FontStyle="Italic"/> are required for each related identifier you create. Other fields are optional.
+        </TextBlock>
+
+        <TextBlock Grid.Row="1" Margin="10,10,5,5">
+            <Run Text="Related identifiers list" FontWeight ="Bold" FontSize="18"/>
+            <LineBreak/>
+            Select a row in the list to edit a particular related identifier, or use the buttons to delete the selected identifier or to add a new identifier.
+        </TextBlock>
+
+        <DataGrid Grid.Row="2" Name="dataGrid"
+                  Margin="10,0"
+                  DataContext="{Binding Source=RelatedIdentifierList}" AutoGenerateColumns="False" 
+                  IsReadOnly ="True"
+                  CanUserSortColumns="false"
+                  CanUserReorderColumns="false"
+                  SelectionMode="Extended"  
+                  SelectionUnit="FullRow" 
+                  SelectionChanged="DataGrid_OnSelectionChanged">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="FontWeight"
+                            Value="Bold" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                                 Color="LightBlue"/>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                                 Color="Black"/>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                                 Color="LightBlue"/>
+            </DataGrid.Resources>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Relation type" Binding="{Binding relationType}"/>
+                <DataGridTextColumn Header="Related identifier" Binding="{Binding relatedIdentifier}"/>
+                <DataGridTextColumn Header="Resource type" Binding="{Binding resourceTypeGeneral}"/>
+                <DataGridTextColumn Header="Related identifier type" Binding="{Binding relatedIdentifierType}"/>
+            </DataGrid.Columns>
+            <GridViewHeaderRowPresenter AllowsColumnReorder="False"/>
+            />
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="NewRow"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0"
+                    Content="New related identifier" 
+                    Click="NewRow_OnClick"/>
+            <Button Name="DeleteRow"  
+                    IsEnabled="False" 
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0" 
+                    Content ="Delete related identifier"
+                    Click="DeleteRow_OnClick"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="4" Margin="10,0,5,0">
+            <Run Text="Related identifier editor" FontWeight ="Bold" FontSize="18"/>
+            <LineBreak/>
+            Type to change a field's contents. Tooltips describe what the field is for, including an example.
+        </TextBlock>
+
+        <Grid Grid.Row="5" Name="EditGrid" Margin="10">
+            <Grid.Resources >
+                <Style TargetType="Border" >
+                    <Setter Property="Margin" Value="5,0,5,5" />
+                </Style>
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" 
+                       Name ="TBRelationType" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=RelationTypeField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=RelationTypeField.Tooltip}"
+                       />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" 
+                       Name ="TBRelatedIdentifier" 
+                       HorizontalAlignment="Right"  Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=RelatedIdentifierField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=RelatedIdentifierField.Tooltip}"
+                       />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Name ="TBResourceTypeGeneral" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=ResourceTypeGeneralField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=ResourceTypeGeneralField.Tooltip}"
+                       />
+            <TextBlock Grid.Row="3" Grid.Column="0" 
+                       Name ="TBRelatedIdentifierType" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=RelatedIdentifierTypeField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=RelatedIdentifierTypeField.Tooltip}"
+                       />
+
+            <ComboBox Grid.Row="0" Grid.Column="1" 
+                      Name ="DataFieldRelationType" 
+                      Margin="5,5,0,5"
+                      HorizontalAlignment="Left" 
+                      Width ="200"
+                      Text =""
+                      SelectedValue =""
+                      ToolTip ="{Binding ElementName=Window1, Path=RelationTypeField.Tooltip}"
+                      SelectionChanged="DataField_OnSelectionChanged"
+            >
+                <ComboBoxItem>IsCitedBy</ComboBoxItem>
+                <ComboBoxItem>Cites</ComboBoxItem>
+                <ComboBoxItem>IsSupplementTo</ComboBoxItem>
+                <ComboBoxItem>IsSupplementedBy</ComboBoxItem>
+                <ComboBoxItem>IsContinuedBy</ComboBoxItem>
+                <ComboBoxItem>Continues</ComboBoxItem>
+                <ComboBoxItem>IsNewVersionOf</ComboBoxItem>
+                <ComboBoxItem>IsPreviousVersionOf</ComboBoxItem>
+                <ComboBoxItem>IsPartOf</ComboBoxItem>
+                <ComboBoxItem>HasPart</ComboBoxItem>
+                <ComboBoxItem>IsPublishedIn</ComboBoxItem>
+                <ComboBoxItem>IsReferencedBy</ComboBoxItem>
+                <ComboBoxItem>References</ComboBoxItem>
+                <ComboBoxItem>IsDocumentedBy</ComboBoxItem>
+                <ComboBoxItem>Documents</ComboBoxItem>
+=                <ComboBoxItem>IsCompiledBy</ComboBoxItem>
+                <ComboBoxItem>Compiles</ComboBoxItem>
+                <ComboBoxItem>IsVariantFormOf</ComboBoxItem>
+                <ComboBoxItem>IsOriginalFormOf</ComboBoxItem>
+                <ComboBoxItem>IsIdenticalTo</ComboBoxItem>
+                <ComboBoxItem>HasMetadata</ComboBoxItem>
+                <ComboBoxItem>IsMetadataFor</ComboBoxItem>
+                <ComboBoxItem>Reviews</ComboBoxItem>
+                <ComboBoxItem>IsReviewedBy</ComboBoxItem>
+                <ComboBoxItem>IsDerivedFrom</ComboBoxItem>
+                <ComboBoxItem>IsSourceOf</ComboBoxItem>
+                <ComboBoxItem>Describes</ComboBoxItem>
+                <ComboBoxItem>IsDescribedBy</ComboBoxItem>
+                <ComboBoxItem>HasVersion</ComboBoxItem>
+                <ComboBoxItem>IsVersionOf</ComboBoxItem>
+                <ComboBoxItem>Requires</ComboBoxItem>
+                <ComboBoxItem>IsRequiredBy</ComboBoxItem>
+                <ComboBoxItem>Obsoletes</ComboBoxItem>
+                <ComboBoxItem>tedBy</ComboBoxItem>
+            </ComboBox>
+
+            <TextBox Grid.Row="1" Grid.Column="1" 
+                     Name ="DataFieldRelatedIdentifier" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=RelatedIdentifierField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+
+            <ComboBox Grid.Row="2" Grid.Column="1" 
+                       Name ="DataFieldResourceTypeGeneral" 
+                       Margin="5,5,0,5"
+                       HorizontalAlignment="Left" 
+                       Width ="200"
+                       Text =""
+                       SelectedValue =""
+                       ToolTip ="{Binding ElementName=Window1, Path=ResourceTypeGeneralField.Tooltip}"
+                       SelectionChanged="DataField_OnSelectionChanged"
+                       >
+                <ComboBoxItem>Audiovisual</ComboBoxItem>
+                <ComboBoxItem>Book</ComboBoxItem>
+                <ComboBoxItem>BookChapter</ComboBoxItem>
+                <ComboBoxItem>Collection</ComboBoxItem>
+                <ComboBoxItem>ComputationalNotebook</ComboBoxItem>
+                <ComboBoxItem>ConferencePaper</ComboBoxItem>
+                <ComboBoxItem>ConferenceProceeding</ComboBoxItem>
+                <ComboBoxItem>DataPaper</ComboBoxItem>
+                <ComboBoxItem>Dataset</ComboBoxItem>
+                <ComboBoxItem>Dissertation</ComboBoxItem>
+                <ComboBoxItem>Event</ComboBoxItem>
+                <ComboBoxItem>Image</ComboBoxItem>
+                <ComboBoxItem>InteractiveResource</ComboBoxItem>
+                <ComboBoxItem>Journal</ComboBoxItem>
+                <ComboBoxItem>JournalArticle</ComboBoxItem>
+                <ComboBoxItem>Model</ComboBoxItem>
+                <ComboBoxItem>OutputManagementPlan</ComboBoxItem>
+                <ComboBoxItem>PeerReview</ComboBoxItem>
+                <ComboBoxItem>PhysicalObject</ComboBoxItem>
+                <ComboBoxItem>Preprint</ComboBoxItem>
+                <ComboBoxItem>Report</ComboBoxItem>
+                <ComboBoxItem>Service</ComboBoxItem>
+                <ComboBoxItem>Software</ComboBoxItem>
+                <ComboBoxItem>Sound</ComboBoxItem>
+                <ComboBoxItem>Standard</ComboBoxItem>
+                <ComboBoxItem>Text</ComboBoxItem>
+                <ComboBoxItem>Workflow</ComboBoxItem>
+                <ComboBoxItem>Other</ComboBoxItem>
+            </ComboBox>
+
+
+            <ComboBox Grid.Row="3" Grid.Column="1" 
+                       Name ="DataFieldRelatedIdentifierType" 
+                       Margin="5,5,0,5"
+                       HorizontalAlignment="Left" 
+                       Width ="200"
+                       Text =""
+                       SelectedValue =""
+                       ToolTip ="{Binding ElementName=Window1, Path=RelatedIdentifierTypeField.Tooltip}"
+                       SelectionChanged="DataField_OnSelectionChanged"
+                       >
+                <ComboBoxItem>ARK</ComboBoxItem>
+                <ComboBoxItem>arXiv</ComboBoxItem>
+                <ComboBoxItem>bibcode</ComboBoxItem>
+                <ComboBoxItem>DOI</ComboBoxItem>
+                <ComboBoxItem>EAN13</ComboBoxItem>
+                <ComboBoxItem>EISSN</ComboBoxItem>
+                <ComboBoxItem>Handle</ComboBoxItem>
+                <ComboBoxItem>IGSN</ComboBoxItem>
+                <ComboBoxItem>ISBN</ComboBoxItem>
+                <ComboBoxItem>ISSN</ComboBoxItem>
+                <ComboBoxItem>ISTC</ComboBoxItem>
+                <ComboBoxItem>LISSN</ComboBoxItem>
+                <ComboBoxItem>LSID</ComboBoxItem>
+                <ComboBoxItem>PMID</ComboBoxItem>
+                <ComboBoxItem>PURL</ComboBoxItem>
+                <ComboBoxItem>UPC</ComboBoxItem>
+                <ComboBoxItem>URL</ComboBoxItem>
+                <ComboBoxItem>URN</ComboBoxItem>
+                <ComboBoxItem>w3id</ComboBoxItem>
+            </ComboBox>
+
+        </Grid>
+
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,10,5,10">
+            <Button Name="DoneButton"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0"
+                    Content="Done" 
+                    Click="Done_OnClick"/>
+            <Button Name="Cancel"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0" 
+                    Content ="Cancel"
+                    Click="Cancel_OnClick"/>
+        </StackPanel>
+
+
+    </Grid>
+</Window>

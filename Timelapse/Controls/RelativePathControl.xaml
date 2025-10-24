@@ -1,0 +1,52 @@
+﻿<UserControl x:Class="Timelapse.Controls.RelativePathControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width ="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <!--SelectedItemChanged="TreeView_SelectedItemChanged"-->
+        <Canvas Grid.Row="1" Name="Canvas" DragOver="Canvas_DragOver"  MouseDown = "TreeViewItem_Cancel" Background="Aqua">
+            <TreeView x:Name="TreeView" HorizontalAlignment="Left"
+                      AllowDrop="True" 
+                      Width="{Binding ActualWidth, ElementName=Canvas}"
+                      Height="{Binding ActualHeight, ElementName=Canvas}">
+
+                <TreeView.Resources>
+                    <!--Set the selected item color-->
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="LightSkyBlue"/>
+                </TreeView.Resources>
+
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <!-- We have to select the item which is right-clicked on -->
+                        <Setter Property="Focusable" Value="False"/>
+                        <EventSetter Event="DragEnter" Handler="TreeViewItem_DragEnter"/>
+                        <EventSetter Event="DragLeave" Handler="TreeViewItem_DragLeave"/>
+                        <EventSetter Event="Selected" Handler="TreeViewItem_Cancel"/>
+                        <EventSetter Event="Collapsed" Handler="TreeViewItem_Cancel"/>
+                        <EventSetter Event="Expanded" Handler="TreeViewItem_Cancel"/>
+                        <EventSetter Event="DragOver" Handler="TreeViewItem_DragOver"/>
+                        <EventSetter Event="Drop" Handler="TreeViewItem_Drop"/>
+                        <EventSetter Event="MouseMove" Handler="TreeViewItem_MouseMove"/>
+                        <EventSetter Event="MouseUp" Handler="TreeViewItem_MouseUp"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
+            <TextBox Name="TextBoxEditNode" Text="Stuff" Height="22"  
+                     VerticalAlignment="Top" VerticalContentAlignment="Top" Visibility="Collapsed" 
+                     KeyDown="TextBoxEditNode_OnKeyDown"  
+                     TextChanged="TextBoxEditNode_OnTextChanged"
+                     LostFocus="TextBoxEditNode_OnLostFocus"
+                     PreviewTextInput="TextBoxEditNode_OnPreviewTextInput"/>
+        </Canvas>
+    </Grid>
+</UserControl>

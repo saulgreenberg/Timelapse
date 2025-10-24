@@ -1,0 +1,55 @@
+# Omit Visual Studio unneeded folders/files
+*.suo
+*.vsp
+*.vspx
+.vs/
+*.tmp
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+debug.log
+Timelapse-Executables.zip
+
+# User-specific project files
+*.csproj.user
+*.vcxproj.user
+*.pubxml.user
+
+# Omit Build results 
+bin/
+obj/
+
+**/StyleCop.Cache
+
+# Omit these folders
+UtilityPrograms/
+
+# Keep: these required dll dependencies
+Dependencies-Dlls/**
+!Dependencies-Dlls/DialogUpgradeFiles.dll
+!Dependencies-Dlls/DialogUpgradeFiles.dll.config
+
+# NOTE: We don't keep exiftoo(-k).exe and ffmpeg.exe, as they are just too large and can be easily downloaded
+# Remove the above from the Timelapse subfolder
+Timelapse/exiftool(-k).exe
+Timelapse/ffmpeg.exe
+
+# Timelapse output
+Backups/
+*.pdb
+
+# Omit other extraneous files that don't need to be in the build
+ToDo.docx
+~$ToDo.docx
+
+
+Checklist.docx
+nul
+Installers/TimelapseInstaller-PerMachine/Files.wxs
+Installers/TimelapseInstaller-PerUser/Files.wxs
+CLAUDE.md
+.claude/settings.local.json
+Timelapse/Settings.StyleCop
+Timelapse/.claude/settings.local.json
+Timelapse/exiftool_files/*
+Timelapse.sln.DotSettings.user
+Timelapse/build.log

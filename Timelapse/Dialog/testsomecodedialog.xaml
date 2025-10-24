@@ -1,0 +1,55 @@
+﻿<Window x:Class="Timelapse.Dialog.TestSomeCodeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        mc:Ignorable="d"
+        Title="Test Some Code Dialog" Height="450" Width="800" Loaded="TestSomeCodeDialog_OnLoaded">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ResourceDictionaries/TreeViewHierarchicalDataTemplate.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <controls:MultiLineText Grid.Row="0" Grid.Column="0" x:Name="Ml1" 
+                                Text="Hello1\nAnd a 2nd line" 
+                                GotKeyboardFocus="UIElement_OnGotKeyboardFocus"
+                                LostKeyboardFocus="UIElement_OnLostKeyboardFocus"
+                                GotFocus="Ml_OnGotFocus"
+                                LostFocus="Ml_OnLostFocus"
+                                TextChanged="Ml_OnTextChanged"></controls:MultiLineText>
+        <TextBox Grid.Row="0" Grid.Column="1" 
+                 Text="Just a box"
+                 GotKeyboardFocus="UIElement_OnGotKeyboardFocus"
+                 LostKeyboardFocus="UIElement_OnLostKeyboardFocus"
+                 GotFocus="TB_OnGotFocus"
+                 LostFocus="TB_OnLostFocus"
+                 ></TextBox>
+        <controls:MultiLineText  Grid.Row="0" Grid.Column="2" x:Name="Ml2" 
+                                 Text="Hello2\na\nb\nc" 
+                                 GotKeyboardFocus="UIElement_OnGotKeyboardFocus"
+                                 LostKeyboardFocus="UIElement_OnLostKeyboardFocus"
+                                 GotFocus="Ml_OnGotFocus"
+                                 LostFocus="Ml_OnLostFocus"
+                                 TextChanged="Ml_OnTextChanged"></controls:MultiLineText>
+       <TextBox Grid.Row="0" Grid.Column="3" Grid.RowSpan="2" 
+                GotKeyboardFocus="UIElement_OnGotKeyboardFocus"
+                LostKeyboardFocus="UIElement_OnLostKeyboardFocus"
+                Name="TextBox"></TextBox>
+    </Grid>
+</Window>
