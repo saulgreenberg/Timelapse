@@ -3,12 +3,12 @@
 ## Primary License
 
 **Timelapse Image Analyzer**
-Copyright © 2011+ Greenberg Consulting Inc. & University of Calgary
+ Copyright © 2011+ Greenberg Consulting Inc. & University of Calgary
 
 Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
-https://creativecommons.org/licenses/by-nc-sa/4.0/
+ https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-SPDX-License-Identifier: CC-BY-NC-SA-4.0
+ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 ---
 
@@ -48,71 +48,71 @@ While a brief summary is include, it is your responsibility to visit each web si
 ### Included Executables
 
 **ExifTool** by Phil Harvey
-License: Perl Artistic License / GPL
-Free to redistribute & modify
-https://exiftool.org/#license
+- License: Perl Artistic License / GPL
+- Free to redistribute & modify
+- https://exiftool.org/#license
 
 **FFmpeg**
-License: GNU LGPL v2.1
-Free software to share and modify
-https://ffmpeg.org/legal.html
+- License: GNU LGPL v2.1
+- Free software to share and modify
+- https://ffmpeg.org/legal.html
 
 ---
 
 ### NuGet Packages (DLLs)
 
 **CsvHelper** by Josh Close
-License: Microsoft Public License MS-PL and/or Apache 2.0
-Free for commercial use
-https://joshclose.github.io/CsvHelper/
+- License: Microsoft Public License MS-PL and/or Apache 2.0
+- Free for commercial use
+- https://joshclose.github.io/CsvHelper/
 
 **Dirkster.AvalonDock**
-License: Microsoft Public License (Ms-PL)
-Free for commercial use
-https://github.com/Dirkster99/AvalonDock
+- License: Microsoft Public License (Ms-PL)
+- Free for commercial use
+- https://github.com/Dirkster99/AvalonDock
 
 **Extended WPF Toolkit** (XCEED)
-License: Community License (Non-commercial only).
-⚠️ Please review their license if you wish to use it for commercial purposes.
-https://github.com/xceedsoftware/wpftoolkit/blob/master/license.md
+- License: Community License (Non-commercial only).
+- ⚠️ Please review their license if you wish to use it for commercial purposes.
+- https://github.com/xceedsoftware/wpftoolkit/blob/master/license.md
 
 **MetadataExtractor + XmpCore** by Drew Noakes
-License: Apache 2.0
-Free to commercial use
-https://www.nuget.org/packages/MetadataExtractor/
+- License: Apache 2.0
+- Free to commercial use
+- https://www.nuget.org/packages/MetadataExtractor/
 
 **Microsoft EntityFrameworkCore**
-License: MIT
-Free for commercial use
-https://github.com/dotnet/efcore
+- License: MIT
+- Free for commercial use
+- https://github.com/dotnet/efcore
 
 **Newtonsoft.Json**
-License: MIT licemse
-Free for commercial use
-https://www.newtonsoft.com/json
+- License: MIT licemse
+- Free for commercial use
+- https://www.newtonsoft.com/json
 
 **NReco Video Converter**
-License: Non-commercial use only (free version)
-⚠️ **Commercial license may be required in some cases - review their terms**
-https://www.nrecosite.com/video_converter_net.aspx
+- License: Non-commercial use only (free version)
+- ⚠️ **Commercial license may be required in some cases - review their terms**
+- https://www.nrecosite.com/video_converter_net.aspx
 
 **SixLabors.ImageSharp**
-License: Six Labors community free developer license granted for Timelapse
-⚠️ **Review their terms to understand restrictions, if any**
-https://sixlabors.com/pricing/
+- License: Six Labors community free developer license granted for Timelapse
+- ⚠️ **Review their terms to understand restrictions, if any**
+- https://sixlabors.com/pricing/
 
 **System.Data.SQLite**
-License: Public Domain
-No license required
-https://system.data.sqlite.org/
+- License: Public Domain
+- No license required
+- https://system.data.sqlite.org/
 
 ---
 
 ### Modified Sources Included in Timelapse
 
 **ExifToolWrapper**
-License: Public Domain
-https://github.com/FileMeta/ExifToolWrapper/blob/master/license.md
+- License: Public Domain
+- https://github.com/FileMeta/ExifToolWrapper/blob/master/license.md
 
 ---
 
@@ -123,12 +123,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 ## Contact
+- Saul Greenberg saul@ucalgary.ca
+  (Greenberg Consulting Inc. / University of Calgary)
 
-For any questions, including licensing questions or to discuss commercial use:
-
-**Saul Greenberg**
-saul@ucalgary.ca
-Greenberg Consulting Inc. / University of Calgary 
 ---
 
 **Last Updated:** 2025-01-24
