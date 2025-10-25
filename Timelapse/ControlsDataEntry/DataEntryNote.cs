@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.Controls;
-using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 

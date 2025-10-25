@@ -2,7 +2,6 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Dialog;
-using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;

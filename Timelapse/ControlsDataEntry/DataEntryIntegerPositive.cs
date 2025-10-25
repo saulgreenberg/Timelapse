@@ -2,14 +2,12 @@
 
 namespace Timelapse.ControlsDataEntry
 {
-    public class DataEntryIntegerPositive : DataEntryIntegerBase
+    public class DataEntryIntegerPositive(ControlRow control, DataEntryControls styleProvider) : DataEntryIntegerBase(control, styleProvider, true)
     {
         #region Constructor
-        public DataEntryIntegerPositive(ControlRow control, DataEntryControls styleProvider) :
-            base(control, styleProvider, true)
-        {
-            // Base class handles all validation callback configuration
-        }
+
+        // Base class handles all validation callback configuration
+
         #endregion
     }
 }

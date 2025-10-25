@@ -5,14 +5,12 @@
 // - an IntegerControl containing the content
 namespace Timelapse.ControlsDataEntry
 {
-    public class DataEntryIntegerAny : DataEntryIntegerBase
+    public class DataEntryIntegerAny(ControlRow control, DataEntryControls styleProvider) : DataEntryIntegerBase(control, styleProvider, false)
     {
         #region Constructor
-        public DataEntryIntegerAny(ControlRow control, DataEntryControls styleProvider) :
-            base(control, styleProvider, false)
-        {
-            // Base class handles all validation callback configuration
-        }
+
+        // Base class handles all validation callback configuration
+
         #endregion
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Dialog;
-using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 
 namespace TimelapseTemplateEditor.Controls

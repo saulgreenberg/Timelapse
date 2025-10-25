@@ -6,7 +6,6 @@ namespace TimelapseTemplateEditor
 {
     internal static class EditorConstant
     {
-        public const string ApplicationName = "Timelapse.Editor";
         public const string MainWindowBaseTitle = "Timelapse Template Editor";  // The initial title shown in the window title bar
         public static TemplateEditorWindow templateEditorWindow;
 

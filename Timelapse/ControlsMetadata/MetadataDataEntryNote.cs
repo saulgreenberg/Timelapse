@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
-using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 

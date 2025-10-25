@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Timelapse.Constant;
 using File = System.IO.File;
 
 namespace Timelapse.Util
