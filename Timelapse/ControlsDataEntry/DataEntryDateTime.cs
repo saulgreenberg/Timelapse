@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Constant;
 using Timelapse.ControlsDataCommon;
-using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;

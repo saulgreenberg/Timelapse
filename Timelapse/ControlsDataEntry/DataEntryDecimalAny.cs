@@ -5,14 +5,12 @@
 // - a DoubleUpDown control containing the content
 namespace Timelapse.ControlsDataEntry
 {
-    public class DataEntryDecimalAny : DataEntryDecimalBase
+    public class DataEntryDecimalAny(ControlRow control, DataEntryControls styleProvider) : DataEntryDecimalBase(control, styleProvider, false)
     {
         #region Constructor
-        public DataEntryDecimalAny(ControlRow control, DataEntryControls styleProvider) :
-            base(control, styleProvider, false)
-        {
-            // Base class handles all validation callback configuration
-        }
+
+        // Base class handles all validation callback configuration
+
         #endregion
     }
 }

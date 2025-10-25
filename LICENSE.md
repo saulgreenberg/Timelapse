@@ -66,11 +66,6 @@ While a brief summary is include, it is your responsibility to visit each web si
 - Free for commercial use
 - https://joshclose.github.io/CsvHelper/
 
-**Dirkster.AvalonDock**
-- License: Microsoft Public License (Ms-PL)
-- Free for commercial use
-- https://github.com/Dirkster99/AvalonDock
-
 **Extended WPF Toolkit** (XCEED)
 - License: Community License (Non-commercial only).
 - ⚠️ Please review their license if you wish to use it for commercial purposes.

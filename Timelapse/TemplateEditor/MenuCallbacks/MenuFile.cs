@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Dialog;
 using Timelapse.Util;
-using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 using TimelapseTemplateEditor.Standards;
 using File = Timelapse.Constant.File;

@@ -6,14 +6,13 @@ namespace Timelapse.ControlsMetadata
     // IntegerPositive: An integer control allowing only positive integers or 0 as input. Comprises:
     // - a label containing the descriptive label)
     // - an IntegerControl containing the content
-    public class MetadataDataEntryIntegerPositive : MetadataDataEntryIntegerBase
+    public class MetadataDataEntryIntegerPositive(MetadataControlRow control, DataEntryControls styleProvider, string tooltip)
+        : MetadataDataEntryIntegerBase(control, styleProvider, tooltip, true)
     {
         #region Constructor
-        public MetadataDataEntryIntegerPositive(MetadataControlRow control, DataEntryControls styleProvider, string tooltip) :
-            base(control, styleProvider, tooltip, true)
-        {
-            // Base class handles all validation callback configuration
-        }
+
+        // Base class handles all validation callback configuration
+
         #endregion
     }
 }

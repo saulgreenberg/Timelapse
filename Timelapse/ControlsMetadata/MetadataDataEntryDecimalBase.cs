@@ -5,7 +5,6 @@ using System.Windows.Input;
 using Timelapse.Constant;
 using Timelapse.ControlsDataCommon;
 using Timelapse.ControlsDataEntry;
-using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Xceed.Wpf.Toolkit;
