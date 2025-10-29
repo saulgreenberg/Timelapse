@@ -694,7 +694,7 @@ namespace Timelapse.Dialog
                         }
 
                     case Control.DateTime_:
-                        DateTimePicker dateTimePicker = DateTimeHandler.TryParseDisplayDateTime(searchTerm.DatabaseValue, out DateTime dateTimeCustom)
+                        DateTimePicker dateTimePicker = DateTimeHandler.TryParseDatabaseOrDisplayDateTime(searchTerm.DatabaseValue, out DateTime dateTimeCustom)
                             ? CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, dateTimeCustom)
                             : CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, ControlDefault.DateTimeCustomDefaultValue);
                         dateTimePicker.FontWeight = FontWeights.Normal;
@@ -706,7 +706,7 @@ namespace Timelapse.Dialog
                         break;
 
                     case Control.Date_:
-                        DateTimePicker datePicker = DateTimeHandler.TryParseDisplayDate(searchTerm.DatabaseValue, out DateTime date)
+                        DateTimePicker datePicker = DateTimeHandler.TryParseDatabaseOrDisplayDate(searchTerm.DatabaseValue, out DateTime date)
                             ? CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, date)
                             : CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, ControlDefault.Date_DefaultValue);
                         datePicker.FontWeight = FontWeights.Normal;

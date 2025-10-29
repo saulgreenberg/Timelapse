@@ -13,7 +13,12 @@ namespace Timelapse.SearchingAndSorting
     {
         #region Public Properties
         public string ControlType { get; set; }
-        public string DatabaseValue { get; set; }
+
+        public string DatabaseValue
+        {
+            get; 
+            set;
+        }
         public string DataLabel { get; set; }
         public string Label { get; set; }
         public List<string> List { get; set; }
@@ -50,7 +55,7 @@ namespace Timelapse.SearchingAndSorting
         }
         #endregion
 
-        #region Public Methods - Get values to Convert DateTime / UTCOffset
+        #region Public Methods - Get values to Convert DateTime
         public DateTime GetDateTime()
         {
             if (DataLabel != DatabaseColumn.DateTime)
@@ -58,13 +63,13 @@ namespace Timelapse.SearchingAndSorting
                 throw new NotSupportedException(
                     $"Attempt to retrieve date/time from a SearchTerm with data label {DataLabel}.");
             }
-            return DateTimeHandler.TryParseDatabaseDateTime(DatabaseValue, out DateTime dateTime)
+            return DateTimeHandler.TryParseDatabaseOrDisplayDateTime(DatabaseValue, out DateTime dateTime)
                 ? dateTime
                 : DateTime.MinValue;
         }
         #endregion
 
-        #region Public Methods - Set Values - to Convert DateTime / UTCOffset
+        #region Public Methods - Set Values - to Convert DateTime
         public void SetDatabaseValue(DateTime dateTime)
         {
             if (DataLabel != DatabaseColumn.DateTime)

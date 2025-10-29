@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,27 @@ namespace Timelapse.Util
         #region Static TryParse from string to get DateTime
         // TODO: Replace these with a single call, where we create an ENUM as an argument (e.g. DateTimeFormat.DatabaseDateTime)
         // All these forms returm a valid dateTime, even if the try's fail (just in case)
+        public static bool TryParseDatabaseOrDisplayDateTime(string dateTimeAsString, out DateTime dateTime)
+        {
+            // Try the Database format
+            if (false == TryParseDatabaseDateTime(dateTimeAsString, out DateTime dateTimeDatabase))
+            {
+                // Try the Display format
+                if (false == TryParseDisplayDateTime(dateTimeAsString, out DateTime dateTimeDisplay))
+                {
+                    // Can't parse the DateTime, so return a minimum value
+                    dateTime = DateTime.MinValue;
+                    return false;
+                }
+                // We parsed it as a Display format, so return that date
+                dateTime = dateTimeDisplay;
+                return true;
+            }
+            // We parsed it as a Database format, so return that date
+            dateTime = dateTimeDatabase;
+            return true;
+        }
+
         public static bool TryParseDatabaseDateTime(string dateTimeAsString, out DateTime dateTime)
         {
             // Parse from yyyy-MM-dd HH:mm:ss | 2021-04-05 18:05:01
@@ -30,6 +52,28 @@ namespace Timelapse.Util
             }
             return true;
         }
+
+        public static bool TryParseDatabaseOrDisplayDate(string dateTimeAsString, out DateTime dateTime)
+        {
+            // Try the Database format
+            if (false == TryParseDatabaseDate(dateTimeAsString, out DateTime dateTimeDatabase))
+            {
+                // Try the Display format
+                if (false == TryParseDisplayDate(dateTimeAsString, out DateTime dateTimeDisplay))
+                {
+                    // Can't parse the DateTime, so return a minimum value
+                    dateTime = DateTime.MinValue;
+                    return false;
+                }
+                // We parsed it as a Display format, so return that date
+                dateTime = dateTimeDisplay;
+                return true;
+            }
+            // We parsed it as a Database format, so return that date
+            dateTime = dateTimeDatabase;
+            return true;
+        }
+
 
         public static bool TryParseDatabaseDate(string dateAsString, out DateTime dateTime)
         {
@@ -198,7 +242,7 @@ namespace Timelapse.Util
         public static string ToStringCSVDateTimeWithoutTSeparator(DateTime dateTime, bool insertSpaceBefore = false)
         {
             //  yyyy-MM-dd' 'HH:mm:ss' | 2021-04-05' '18:05:01
-            string prefix = insertSpaceBefore ? " " : string.Empty; 
+            string prefix = insertSpaceBefore ? " " : string.Empty;
             return $"{prefix}{dateTime.ToString(Time.DateTimeCSVWithoutTSeparator, CultureInfo.CreateSpecificCulture("en-US"))}";
         }
         #endregion
