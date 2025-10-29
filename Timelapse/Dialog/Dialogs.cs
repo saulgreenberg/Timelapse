@@ -234,7 +234,11 @@ namespace Timelapse.Dialog
                 DefaultExt = defaultExtension,
                 Filter = filter
             };
-            if (string.IsNullOrWhiteSpace(defaultFilePath))
+            // If (say) you had previously opened a file in a drive (say F:) and that drive was later removed,
+            // Windows would crash when trying to open the dialog. So we check that the drive exists.
+            // If it doesn't, we default to My Documents.Oddly, windows doesn't do this drive check itself, while
+            // it does the check for folders
+            if (string.IsNullOrWhiteSpace(defaultFilePath) || false == Path.Exists(Path.GetPathRoot(defaultFilePath)))
             {
                 openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             }
