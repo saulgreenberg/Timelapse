@@ -558,7 +558,7 @@ namespace Timelapse.QuickPaste
             else if (quickPasteItem.ControlType == Control.DateTime_)
             {
                 // DateTime_ present DateTimePickers
-                DateTimePicker dateTimePicker = DateTimeHandler.TryParseDisplayDateTime(quickPasteItem.Value, out DateTime dateTime)
+                DateTimePicker dateTimePicker = DateTimeHandler.TryParseDatabaseDateTime(quickPasteItem.Value, out DateTime dateTime)
                     ? CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, dateTime)
                     : CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateAndTime, ControlDefault.DateTimeCustomDefaultValue);
                 dateTimePicker.Tag = quickPasteItem;
@@ -575,7 +575,7 @@ namespace Timelapse.QuickPaste
             {
                 // Date_ present DateTimePickers
 
-                DateTimePicker dateTimePicker = DateTimeHandler.TryParseDisplayDate(quickPasteItem.Value, out DateTime date)
+                DateTimePicker dateTimePicker = DateTimeHandler.TryParseDatabaseDate(quickPasteItem.Value, out DateTime date)
                     ? CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, date)
                     : CreateControls.CreateDateTimePicker(String.Empty, DateTimeFormatEnum.DateOnly, ControlDefault.Time_DefaultValue);
 
