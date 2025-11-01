@@ -34,10 +34,13 @@ Clone the repository locally using Visual Studio's Team Explorer, or by using a 
 Development is against .NET 8 (net8.0-windows for WPF applications).
 
 ### Prerequisites
-  * Visual Studio 2022 (or .NET 8 SDK for CLI builds)
-  * [FFMPEG](https://www.ffmpeg.org/)
-  * [ExifTool](https://exiftool.org/)
-  * 
+  * Build environment
+  ** Visual Studio 2022 (or .NET 8 SDK for CLI builds)
+  **.[Net 8 SDK](https:https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (the .Net 8 desktop runtime works, but generates non-critical build errors as it dpes not contain System.Private.CoreLib.dll) 
+  * These exe's must be downloaded and located in the Timelapse folder (not the root folder)
+  ** [FFMPEG](https://www.ffmpeg.org/) - only ffmpeg.exe is required (the built release included other executables)
+  ** [Exiftool] (https://exiftool.org/) - Download and unzip the Windows 64-bit build, then move the exiftool(-k).exe and the exiftool_files folder into the Timelapse folder.
+  
 ### Building Timelapse
 To successfully build Timelapse, do the following.
 0. Timelapse uses two executables that are not included in this repository: [FFMPEG](https://www.ffmpeg.org/) and [ExifTool](https://exiftool.org/). These exes and their dependencies should be downloaded and copied into the Timelapse folder.
