@@ -3,7 +3,7 @@
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
   <Package Name="Timelapse Image Analyzer"
-           Manufacturer="SaulGreenberg"
+           Manufacturer="Greenberg Consulting Inc. and University of Calgary"
            Version="2.4.0.1"
            UpgradeCode="F8A1B2C3-D4E5-6F78-9ABC-DEF012345678"
            Compressed="yes"
@@ -44,9 +44,7 @@
 
     <!-- Directory structure -->
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="ProgramsFolder" Name="Programs">
-        <Directory Id="INSTALLFOLDER" Name="Timelapse">
-        </Directory>
+      <Directory Id="INSTALLFOLDER" Name="Timelapse">
       </Directory>
     </StandardDirectory>
 

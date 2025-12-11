@@ -138,6 +138,7 @@ namespace Timelapse
                 MenuItemFindMissingFolder.Visibility = Visibility.Collapsed;
 
                 MenuItemPopulateWithDetectionCounts.Visibility = Visibility.Collapsed;
+                MenuItemPopulateWithRecognitinoData.Visibility = Visibility.Collapsed;
 
                 MenuS1.Visibility = Visibility.Collapsed;
                 MenuS2.Visibility = Visibility.Collapsed;
