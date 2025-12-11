@@ -1,0 +1,192 @@
+﻿<Window x:Class="Timelapse.Standards.CamtrapDPLicenses"
+        x:Name ="Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="CamtrapDP: Edit the Licenses List" Height="650" Width="800" Loaded="CamptrapDP_OnLoaded">
+
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Margin="10,10,5,5">
+            <Run Text="Licenses" FontWeight ="Bold" FontStyle="Italic"/> 
+            is an optional list of licenses under which this data is provided.
+            <LineBreak/>
+            <Run Text="Scope*" FontWeight ="Bold" FontStyle="Italic"/> and one of <Run Text="Name*" FontWeight ="Bold" FontStyle="Italic"/> or <Run Text="Path*" FontWeight ="Bold" FontStyle="Italic"/> is required for each license definition you create. Other fields are optional.
+</TextBlock>
+
+        <TextBlock Grid.Row="1" Margin="10,10,5,5">
+            <Run Text="License list" FontWeight ="Bold" FontSize="18"/>
+            <LineBreak/>
+            Select a row in the list to edit a particular license, or use the buttons to delete the selected license or to add a new license.
+        </TextBlock>
+
+        <DataGrid Grid.Row="2" Name="dataGrid"
+                  Margin="10,0"
+                  DataContext="{Binding Source=LicensesList}" AutoGenerateColumns="False" 
+                  IsReadOnly ="True"
+                  CanUserSortColumns="false"
+                  CanUserReorderColumns="false"
+                  SelectionMode="Extended"  
+                  SelectionUnit="FullRow" 
+                  SelectionChanged="DataGrid_OnSelectionChanged">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="FontWeight"
+                            Value="Bold" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                                 Color="LightBlue"/>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                                 Color="Black"/>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                                 Color="LightBlue"/>
+            </DataGrid.Resources>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding name}"/>
+                <DataGridTextColumn Header="Path" Binding="{Binding path}"/>
+                <DataGridTextColumn Header="Title" Binding="{Binding title}"/>
+                <DataGridTextColumn Header="Scope" Binding="{Binding scope}"/>
+            </DataGrid.Columns>
+            <GridViewHeaderRowPresenter AllowsColumnReorder="False"/>
+            />
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="NewRow"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0"
+                    Content="New license" 
+                    Click="NewRow_OnClick"/>
+            <Button Name="DeleteRow"  
+                    IsEnabled="False" 
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0" 
+                    Content ="Delete license"
+                    Click="DeleteRow_OnClick"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="4" Margin="10,0,5,0">
+            <Run Text="License editor" FontWeight ="Bold" FontSize="18"/>
+            <LineBreak/>
+            Type to change a field's contents. Tooltips describe what the field is for, including an example.
+        </TextBlock>
+
+        <Grid Grid.Row="5" Name="EditGrid" Margin="10">
+            <Grid.Resources >
+                <Style TargetType="Border" >
+                    <Setter Property="Margin" Value="5,0,5,5" />
+                </Style>
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" 
+                       Name ="TBName" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=NameField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=NameField.Tooltip}"
+                       />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" 
+                       Name ="TBPath" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=PathField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=PathField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Name ="TBTitle" 
+                       HorizontalAlignment="Right"  Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=TitleField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=TitleField.Tooltip}"
+            />
+ 
+
+            <TextBlock Grid.Row="3" Grid.Column="0" 
+                       Name ="TBScope" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=ScopeField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=ScopeField.Tooltip}"
+                       />
+
+
+            <TextBox Grid.Row="0" Grid.Column="1" 
+                       Name ="DataFieldName" 
+                       Margin="5,5,5,5"
+                       Text=""
+                       ToolTip ="{Binding ElementName=Window1, Path=TitleField.Tooltip}"
+                       TextChanged = "DataField_OnTextChanged" 
+                       />
+            <TextBox Grid.Row="1" Grid.Column="1" 
+                       Name ="DataFieldPath" 
+                       Margin="5,5,5,5"
+                       Text=""
+                       ToolTip ="{Binding ElementName=Window1, Path=PathField.Tooltip}"
+                       TextChanged = "DataField_OnTextChanged" 
+                       />
+            <TextBox Grid.Row="2" Grid.Column="1" 
+                     Name ="DataFieldTitle" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=TitleField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+
+            <ComboBox Grid.Row="3" Grid.Column="1" 
+                     Name ="DataFieldScope" 
+                     Margin="5,5,5,5"
+                     Width="150"
+                     HorizontalAlignment="Left"
+                     Background="#E5E8EF"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=ScopeField.Tooltip}"
+                     SelectedValue =""
+                     SelectionChanged="DataFieldScope_SelectionChanged"
+                     ItemsSource ="{Binding ScopeItems}"
+            />
+
+
+        </Grid>
+
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,10,5,10">
+            <Button Name="DoneButton"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0"
+                    Content="Done" 
+                    Click="Done_OnClick"/>
+            <Button Name="Cancel"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0" 
+                    Content ="Cancel"
+                    Click="Cancel_OnClick"/>
+        </StackPanel>
+
+
+    </Grid>
+</Window>

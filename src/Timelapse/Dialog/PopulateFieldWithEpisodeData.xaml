@@ -1,0 +1,84 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.PopulateFieldWithEpisodeData"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Populate a data field with episode information" 
+        MinHeight="690" MinWidth="760"
+        Height="690" Width="760"
+        ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <DockPanel Grid.Row="0">
+            <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top"
+                            Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Populate a Data Field with Episode data"
+                            What="Associate [e]Episode[/e] dat with the files in your current selection. See [b]Details[/b] for example data formats."                                                              
+                            Solution="Select a field to populate with [e]Episode[/e] data.
+  
+[ni] Check the [e]time between images[/e] value. Use [e]Options | Adjust episode time threshold...[/e] menu to change it. 
+[ni] Select a field from the menu below. Only [e]Note[/e] and [e]Multiline[/e] fields are listed, as only those can accept text.
+[ni] Set the radio buttons to include or omit the identifying Episode or Sequence numbers.   
+[ni] Click [e]Populate[/e] to poplulate all your currently selected files with episode data."
+                            Result="For each file in your current selection, the chosen data field will be filled in with the episode data for that file.
+                                          [br] Existing data in that field will be over-written."
+                            Hint="There are limitations in recording and using episode data. Consider reading about [b]Episodes[/b] in the [link:{x:Static constant:ExternalLinks.TimelapseGuideReference}|Timelapse Reference Guide]"
+                            Details="[b]Episode[/b] data can be recorded in several formats, as illustrated in the examples below. 
+                                              [br 6]
+                                    [li] [e]Episode ID and Sequence number[/e]:
+                                              [li 2][b]23:1|7[/b] identifies the first of seven files located in the 23rd episode seen in the current selection.
+                                              [li 2] [b]37:1|1[/b] as above, but the file is a singleton, where it is the only one in the 37th episode
+                                     [br 6][li] [e]Sequence number only[/e]:
+                                              [li 2][b]1|7[/b] and [b]1|1[/b] As above, but the episode number is omitted for both episodes and singletons.
+                                     [br 6][li] [e]Episode ID only[/e]:
+                                              [li 2][b]23[/b] and [b]37[/b]: As above, but the sequence numbers are omitted for both episodes and singletons"
+                            ShowExplanationVisibility="True" />
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
+                <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
+                <StackPanel Name="PrimaryPanel" Orientation="Vertical">
+                    <TextBlock VerticalAlignment="Center" Margin="0,5,15,5">
+                        <Run Text="Time between images to be considered an episode: " FontWeight="Bold"/>
+                        <Run Name="RunCurrentSettings"/>
+                    </TextBlock>
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock Text="Select a field to contain the Episode data:" VerticalAlignment="Top" FontWeight="Bold" Margin="0,5,15,5"/>
+                        <ComboBox Name="ComboBoxSelectNoteField" Width="200" Height="30" VerticalAlignment="Top" SelectionChanged="ComboBoxSelectNoteField_SelectionChanged" />
+                        <GroupBox Header="Include the following episode data:" FontWeight="Bold" Margin="10,0,0,0">
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Top" >
+                                <RadioButton Name="RadioButtonIncludeBoth" GroupName="EpisodeOptions" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,10,10,0"  IsEnabled="True"  FontWeight="Normal" IsChecked="True"
+                                          Content="Episode ID and Sequence number"
+                                 />
+                                <RadioButton Name="RadioButtonIncludeSequenceNumberOnly" GroupName="EpisodeOptions" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,5,10,0"  IsEnabled="True"  FontWeight="Normal" IsChecked="True"
+                                             Content="Sequence number only"
+                                />
+                                <RadioButton Name="RadioButtonIncludeEpisodeNumberOnly" GroupName="EpisodeOptions" VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="5,5,10,10"  IsEnabled="True"  FontWeight="Normal" IsChecked="True"
+                                             Content="Episode ID only"
+                                />
+                                <TextBlock Text="Examples of current format settings:"  Margin="5,0,0,0" FontWeight="DemiBold" />
+                                <TextBlock Name="TBEpisode" Text="Episode:    23:1|7"  FontWeight="Normal" Margin="15,5,0,0" />
+                                <TextBlock Name="TBSingleton" Text="Singleton: 37:1|1"  FontWeight="Normal" Margin="15,5,0,0" />
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+
+                </StackPanel>
+                <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
+                    <TextBlock Name="TextBlockFeedbackLine1" Text="Done." VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine2" Text="Done." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
+                </StackPanel>
+            </StackPanel>
+
+            <DockPanel LastChildFill="True" >
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="False" Click="Start_Click">_Populate</Button>
+                </StackPanel>
+            </DockPanel>
+        </DockPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+    </Grid>
+</controls:BusyableDialogWindow>

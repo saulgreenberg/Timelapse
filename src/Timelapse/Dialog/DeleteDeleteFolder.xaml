@@ -1,0 +1,34 @@
+﻿<Window x:Class="Timelapse.Dialog.DeleteDeleteFolder"
+         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        Loaded="Window_Loaded"
+        Title="Delete the Delete Folder?" Height="380" Width="680" >
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <toolkit:FormattedMessageContent x:Name="Message" Grid.Row="0" Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Empty the DeletedFiles Folder?"
+                            What="Your [i]DeletedFiles[/i] sub-folder contains backups of several deleted image or video files."
+                            Solution="Select:
+                                      [li] [e]Empty the Folder[/e] to permanently delete those files if you don't need them.
+                                      [li] [e]Leave it as is[/e] to leave those files there."
+                            Hint=" [li] Restore 'deleted' backups by manually copying files from the [i]DeletedFiles[/i] folder to your image set folder.
+                                      [li] Change how Timelapse manages the [i]DeletedFiles[/i] folder via the [i]Options | Preferences[/i] menu" />
+        <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+            <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Leave it as is</Button>
+            <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Empty the Folder</Button>
+        </StackPanel>
+
+    </Grid>
+</Window>

@@ -1,0 +1,497 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Timelapse</RootNamespace>
+    <AssemblyName>Timelapse</AssemblyName>
+    <ApplicationIcon>Icons\Timelapse.ico</ApplicationIcon>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>CA1416;CS8981;SYSLIB1045;IDE0130</NoWarn>
+
+    <!-- Platform target for all builds -->
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+    <!-- Assembly version - increment for each release -->
+    <AssemblyVersion>2.4.0.1</AssemblyVersion>
+    <FileVersion>2.4.0.1</FileVersion>
+
+    <!-- NOTE: Additional assembly attributes (ThemeInfo, InternalsVisibleTo) are defined in Properties/AssemblyAttributes.cs -->
+
+    <!-- Assembly metadata -->
+    <Company>Greenberg Consulting Inc. &amp; University of Calgary</Company>
+    <Product>Timelapse</Product>
+    <Description>A tool to simplify analysis of images and videos captured from remote cameras.</Description>
+    <Copyright>Copyright © 2011 +</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants></DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPublishable>True</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DefineConstants></DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPublishable>True</IsPublishable>
+  </PropertyGroup>
+
+  <!-- Exclude design-time assemblies from Release builds -->
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <RuntimeHostConfigurationOption Include="Microsoft.NETCore.App.ExcludeFromPublish.System.Windows.Forms.Design" Value="true" />
+    <RuntimeHostConfigurationOption Include="Microsoft.NETCore.App.ExcludeFromPublish.System.Windows.Forms.Design.Editors" Value="true" />
+    <RuntimeHostConfigurationOption Include="Microsoft.NETCore.App.ExcludeFromPublish.System.Drawing.Design" Value="true" />
+    <RuntimeHostConfigurationOption Include="Microsoft.NETCore.App.ExcludeFromPublish.System.Design" Value="true" />
+  </ItemGroup>
+
+  <!-- Remove design-time and unused DLLs after build -->
+  <Target Name="RemoveUnusedDlls" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+    <ItemGroup>
+      <!-- Design-time DLLs -->
+      <UnusedDlls Include="$(OutputPath)**\System.Windows.Forms.Design.dll" />
+      <UnusedDlls Include="$(OutputPath)**\xSystem.Windows.Forms.Design.dll" />
+      <UnusedDlls Include="$(OutputPath)**\System.Windows.Forms.Design.Editors.dll" />
+      <UnusedDlls Include="$(OutputPath)**\xSystem.Windows.Forms.Design.Editors.dll" />
+      <UnusedDlls Include="$(OutputPath)**\System.Drawing.Design.dll" />
+      <UnusedDlls Include="$(OutputPath)**\System.Design.dll" />
+      <!-- Microsoft.VisualBasic DLLs (no longer needed after CsvHelper migration) -->
+      <UnusedDlls Include="$(OutputPath)**\Microsoft.VisualBasic.Core.dll" />
+      <UnusedDlls Include="$(OutputPath)**\Microsoft.VisualBasic.Forms.dll" />
+      <UnusedDlls Include="$(OutputPath)**\Microsoft.VisualBasic.dll" />
+      <!-- Legacy WPF theme DLLs (only Aero2 is needed for Windows 10/11) -->
+      <UnusedDlls Include="$(OutputPath)**\PresentationFramework.Luna.dll" />
+      <UnusedDlls Include="$(OutputPath)**\PresentationFramework.Aero.dll" />
+      <UnusedDlls Include="$(OutputPath)**\PresentationFramework.Royale.dll" />
+      <UnusedDlls Include="$(OutputPath)**\PresentationFramework.Classic.dll" />
+      <UnusedDlls Include="$(OutputPath)**\PresentationFramework.AeroLite.dll" />
+      <!-- Debug/Diagnostic DLLs (not needed for normal runtime execution)
+           CAUTION: Removing these means:
+           - Users cannot attach debuggers to diagnose crashes
+           - Crash dumps will have limited debugging information
+           - Production issue diagnosis will be harder
+           RECOMMENDATION: Keep good error logging/telemetry in your application -->
+      <UnusedDlls Include="$(OutputPath)**\mscordaccore.dll" />
+      <UnusedDlls Include="$(OutputPath)**\mscordaccore_amd64_amd64*.dll" />
+      <UnusedDlls Include="$(OutputPath)**\mscordbi.dll" />
+      <UnusedDlls Include="$(OutputPath)**\Microsoft.DiaSymReader.Native.amd64.dll" />
+      <!-- Additional unused DLLs (included by .NET runtime but not referenced in code) -->
+      <UnusedDlls Include="$(OutputPath)**\System.DirectoryServices.dll" />
+      <!-- Remove old Xceed AvalonDock DLLs (replaced by Dirkster.AvalonDock) -->
+      <UnusedDlls Include="$(OutputPath)**\Xceed.Wpf.AvalonDock.dll" />
+      <UnusedDlls Include="$(OutputPath)**\Xceed.Wpf.AvalonDock.Themes.*.dll" />
+    </ItemGroup>
+    <Delete Files="@(UnusedDlls)" />
+    <Message Text="Removed design-time, unused, legacy theme, debug, and old Xceed AvalonDock DLLs from Release build" Importance="high" />
+  </Target>
+
+
+  <ItemGroup>
+    <!-- Essential .NET 8 compatible packages -->
+    <!-- Using modified TimelapseWpf.Toolkit instead of NuGet package -->
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
+    <PackageReference Include="Dirkster.AvalonDock" Version="4.72.1" />
+
+    <!-- Database access via ADO.NET (System.Data.SQLite) -->
+    <!-- Updated compatible packages -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NReco.VideoConverter" Version="1.2.1" />
+    <PackageReference Include="MetadataExtractor" Version="2.9.0" />
+    <PackageReference Include="Microsoft-WindowsAPICodePack-Core" Version="1.1.5" />
+    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119.0" />
+    <PackageReference Include="XmpCore" Version="6.1.10.1" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+  </ItemGroup>
+
+<!-- Reference to ExifTool required files by Phil Harvey  PERL and required dlls -->
+<ItemGroup>
+	<Content Include="exiftool_files\**\*">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+</ItemGroup>
+
+  <!-- Reference to DialogUpgradeFiles - .NET 8 version -->
+  <ItemGroup>
+    <Reference Include="DialogUpgradeFiles">
+      <HintPath>..\..\Dependencies-Dlls\DialogUpgradeFiles.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Project reference to TimelapseWpf.Toolkit -->
+  <!-- This ensures Timelapse always builds with and uses the latest version of the toolkit -->
+  <ItemGroup>
+    <ProjectReference Include="..\TimelapseWpf.Toolkit\TimelapseWpf.Toolkit.csproj">
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Timelapse.ico" />
+    <None Include="Timelapse.ruleset" />
+  </ItemGroup>
+
+  <!-- Include additional resources (SDK handles .cs, .xaml, .resx, .settings automatically) -->
+  <ItemGroup>
+    <None Include="**/*.rtf" />
+    <None Include="**/*.tdb" />
+    <None Include="**/*.json" />
+  </ItemGroup>
+
+  <!-- Include TemplateEditor resources (integrated from former standalone project) -->
+  <ItemGroup>
+    <Resource Include="TemplateEditor/Icons/*.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="TemplateEditor/Icons/*.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="TemplateEditor/Resources/*.rtf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="TemplateEditor/Resources/*.tdb">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Remove="Icons\About_32x.png" />
+    <None Remove="Icons\AddaxAI.png" />
+    <None Remove="Icons\AddaxAIUninstall.png" />
+    <None Remove="Icons\AddaxAIUpload.png" />
+    <None Remove="Icons\CloseFile_40x.png" />
+    <None Remove="Icons\ConvertFile_32x.png" />
+    <None Remove="Icons\CSVExport_32x.png" />
+    <None Remove="Icons\CSVImport_32x.png" />
+    <None Remove="Icons\Download_32x.png" />
+    <None Remove="Icons\EcoAssist.png" />
+    <None Remove="Icons\EcoAssistUninstall.png" />
+    <None Remove="Icons\EcoAssistUpload.png" />
+    <None Remove="Icons\EmailSend_32x.png" />
+    <None Remove="Icons\Exit_22x.png" />
+    <None Remove="Icons\ExternalVideoPlayer.png" />
+    <None Remove="Icons\FolderEmpty.png" />
+    <None Remove="Icons\FolderEmpty_Missing.png" />
+    <None Remove="Icons\FolderPhotos.png" />
+    <None Remove="Icons\FolderPhotos_Missing.png" />
+    <None Remove="Icons\FolderPhotos_OutsideTimelapse.png" />
+    <None Remove="Icons\Home_32x.png" />
+    <None Remove="Icons\ImageExport_32x.png" />
+    <None Remove="Icons\ImageFolder_32.png" />
+    <None Remove="Icons\ImageFolder_50.png" />
+    <None Remove="Icons\InspectMetadata_32x.png" />
+    <None Remove="Icons\JoinMailingList_32x.png" />
+    <None Remove="Icons\JSONImport_32x.png" />
+    <None Remove="Icons\LayoutCustomLoad_32x.png" />
+    <None Remove="Icons\LayoutCustomSave_32x.png" />
+    <None Remove="Icons\LayoutDataEntryFloating_32x.png" />
+    <None Remove="Icons\LayoutDataEntryOnSide_32x.png" />
+    <None Remove="Icons\LayoutDataEntryOnTop_32x.png" />
+    <None Remove="Icons\LayoutDefault_32x.png" />
+    <None Remove="Icons\MediaControl-First.png" />
+    <None Remove="Icons\MediaControl-Last.png" />
+    <None Remove="Icons\MediaControl-PageDown.png" />
+    <None Remove="Icons\MediaControl-PageUp.png" />
+    <None Remove="Icons\MediaControl-Pause.png" />
+    <None Remove="Icons\MediaControl-PlayButton.png" />
+    <None Remove="Icons\MediaControl-PlaySpeed1.png" />
+    <None Remove="Icons\MediaControl-PlaySpeed2.png" />
+    <None Remove="Icons\MediaControl-PlaySpeed3.png" />
+    <None Remove="Icons\MediaControl-Rewind-Speed1.png" />
+    <None Remove="Icons\MediaControl-Rewind-Speed2.png" />
+    <None Remove="Icons\MediaControl-Rewind-Speed3.png" />
+    <None Remove="Icons\MediaControl-RowDown.png" />
+    <None Remove="Icons\MediaControl-RowUp.png" />
+    <None Remove="Icons\MediaControl-Stop.png" />
+    <None Remove="Icons\NewFile_40x.png" />
+    <None Remove="Icons\OpenFile_32x.png" />
+    <None Remove="Icons\ShowColumns_32x.png" />
+    <None Remove="Icons\ShowUTCTime_32x.png" />
+    <None Remove="Icons\Timelapse.ico" />
+    <None Remove="Icons\Timelapse16.ico" />
+    <None Remove="Icons\Timelapse32.ico" />
+    <None Remove="Icons\Timelapse64.ico" />
+    <None Remove="Icons\UserManual_32x.png" />
+    <None Remove="Resources\AvalonLayout_DataEntryFloating.config" />
+    <None Remove="Resources\AvalonLayout_DataEntryOnSide.config" />
+    <None Remove="Resources\AvalonLayout_DataEntryOnTop.config" />
+    <None Remove="Resources\BlankVideo.jpg" />
+    <None Remove="Resources\corrupted.jpg" />
+    <None Remove="Resources\FileNoLongerAvailable.jpg" />
+    <None Remove="Resources\FilePathTooLong.jpg" />
+    <None Remove="Resources\LoadAnImageSet.jpg" />
+    <None Remove="Resources\NoFilesAvailable.jpg" />
+    <None Remove="Resources\TimelapseHelp.rtf" />
+    <None Remove="Resources\TimelapseMetadataInstructionsHelp.rtf" />
+    <None Remove="Resources\VideoPauseIcon.png" />
+    <None Remove="Resources\VideoPlayIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="exiftool%28-k%29.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ffmpeg.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Include C++ wrapper executables in publish -->
+  <Target Name="IncludeWrapperExecutables" AfterTargets="Publish">
+    <ItemGroup>
+      <WrapperExes Include="$(OutputPath)TimelapseTemplateEditor.exe" />
+      <WrapperExes Include="$(OutputPath)Timelapse-ViewOnly.exe" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WrapperExes)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Message Text="Copied wrapper executables to publish directory" Importance="high" />
+  </Target>
+  <ItemGroup>
+    <Resource Include="Icons\About_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\AddaxAI.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\AddaxAIUninstall.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\AddaxAIUpload.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\CloseFile_40x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ConvertFile_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\CSVExport_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\CSVImport_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Download_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\EcoAssist.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\EcoAssistUninstall.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\EcoAssistUpload.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\EmailSend_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Exit_22x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ExternalVideoPlayer.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\FolderEmpty.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\FolderEmpty_Missing.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\FolderPhotos.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\FolderPhotos_Missing.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\FolderPhotos_OutsideTimelapse.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Home_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ImageExport_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ImageFolder_32.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ImageFolder_50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\InspectMetadata_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\JoinMailingList_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\JSONImport_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\LayoutCustomLoad_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\LayoutCustomSave_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\LayoutDataEntryFloating_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\LayoutDataEntryOnSide_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\LayoutDataEntryOnTop_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\LayoutDefault_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-First.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-Last.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-PageDown.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-PageUp.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-Pause.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-PlayButton.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-PlaySpeed1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-PlaySpeed2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-PlaySpeed3.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-Rewind-Speed1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-Rewind-Speed2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-Rewind-Speed3.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-RowDown.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-RowUp.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\MediaControl-Stop.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\NewFile_40x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\OpenFile_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ShowColumns_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ShowUTCTime_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Timelapse.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Timelapse16.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Timelapse32.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\Timelapse64.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\UserManual_32x.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\AvalonLayout_DataEntryFloating.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\AvalonLayout_DataEntryOnSide.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\AvalonLayout_DataEntryOnTop.config">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\BlankVideo.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\corrupted.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\FileNoLongerAvailable.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\FilePathTooLong.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\LoadAnImageSet.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\NoFilesAvailable.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\TimelapseHelp.rtf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\TimelapseMetadataInstructionsHelp.rtf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\VideoPauseIcon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\VideoPlayIcon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="exiftool(-k).exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <!-- SDK automatically includes .resx files as EmbeddedResource and .settings as None -->
+
+</Project>

@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="Timelapse.Controls.BusyCancelIndicator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+             x:Name="MyBusyIndicator"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->
+        <toolkit:BusyIndicator Name="Busy" Grid.Row="0" Grid.Column="0" 
+                             IsBusy="{Binding Path=IsBusy,ElementName=MyBusyIndicator}"
+                             >
+
+            <!-- Construct the new content: A text message, a progress bar and a cancel button -->
+            <toolkit:BusyIndicator.BusyContentTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="4,0,4,0" Orientation="Vertical" MinWidth="350">
+                        <Label x:Name="MyLabel" Content="{Binding Path=Message,ElementName=MyBusyIndicator}" />
+
+                        <ProgressBar x:Name="MyProgressBar" Height="15" 
+                                     Value="{Binding Path=Percent,ElementName=MyBusyIndicator}"
+                                     IsIndeterminate="{Binding Path=IsIndeterminate,ElementName=MyBusyIndicator}"
+                                     />
+                        <Button Margin="10" x:Name="MyButton" 
+                                IsEnabled="{Binding Path=CancelButtonIsEnabled,ElementName=MyBusyIndicator}"
+                                Visibility="{Binding Path=CancelButtonIsVisible,ElementName=MyBusyIndicator}"
+                                Content="{Binding Path=CancelButtonText,ElementName=MyBusyIndicator}"
+                                Click="CancelButton_Click"
+                                />
+                        <!--Click="CancelAsyncOperationButton_Click" />-->
+                    </StackPanel>
+                </DataTemplate>
+            </toolkit:BusyIndicator.BusyContentTemplate>
+
+            <!-- Collapse the default ProgressBar as we don't use it  -->
+            <toolkit:BusyIndicator.ProgressBarStyle >
+                <Style TargetType="ProgressBar">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </Style>
+            </toolkit:BusyIndicator.ProgressBarStyle>
+
+        </toolkit:BusyIndicator >
+    </Grid>
+</UserControl>

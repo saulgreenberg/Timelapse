@@ -1,0 +1,38 @@
+﻿<Window x:Class="Timelapse.Dialog.SkipHiddenFiles"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+       Title="Skip bogus image or video files?" Height="460" Width="650" MinHeight="460" MinWidth="650" Loaded="Window_Loaded">
+    <Grid Margin="0,0,-6.667,-5.333" Height="406" VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <toolkit:FormattedMessageContent x:Name="Message" Grid.Row="0" Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Skip bogus image or video files?"
+                            Problem="Some of your file names begin with a [b]._[/b] prefix.
+                                    [br]These may be system-created bogus image or video files, and should be skipped over."
+                            Reason="Under some cases, copying files (e.g., from MacOSX to Windows) may create extra files. They:
+                                    [li] have the same name as the original file, but include a [b]._[/b] prefix,
+                                    [li] are not valid image or video files, even though they may have a [i].jpg[/i], [i].mp4[/i] or [i].avi[/i] suffix,
+                                    [li] are normally hidden from view,
+                                    [li] if loaded into Timelapse, they may appear as either corrupted or missing files."
+                            Result="Selecting:
+                                      [li][e]Skip bogus files[/e]: Timelapse ignores these files;
+                                      [li][e]Don't skip[/e]: Timelapse includes these files."
+                            Hint="If you are unsure if these are valid or bogus files, try to open one of them outside of Timelapse.
+                                 [br]If you can't, then you should probably skip them."/>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1" Margin="0,0,10,0">
+            <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Don't skip</Button>
+            <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Skip bogus files</Button>
+        </StackPanel>
+
+    </Grid>
+</Window>

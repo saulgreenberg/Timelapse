@@ -1,0 +1,42 @@
+﻿<Window x:Class="TimelapseTemplateEditor.Dialog.InspectMetadata"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="See what metadata is available in a file of your choosing" 
+		MinHeight="600" MinWidth="768"
+		Height="856" Width="840"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded">
+    <Grid>
+        <DockPanel Grid.Row="0">
+            <toolkit:FormattedMessageContent x:Name="Dialog" DockPanel.Dock="Top"
+                            DialogTitle="See what metadata is available in a file of your choosing"
+                            Icon="Question"
+                            What="Cameras typically embed metadata into image files, some of which may be useful to capture as data. [br 2]
+[li] You can inspect an image or video of your choice to see what metadata is typically recorded. 
+[li] You can then create a [e]Note[/e] field that will hold that metadata, where you can ask Timelapse populate it with a file's metadata value."
+                            Solution="[ni]. Click [e]Open File[/e] below to navigate to a typical image you will be analyzing. 
+[ni] Inspect the metadata to see if there are any fields of interest to you.
+[ni]  If so, create a meaningfully-labelled [e]Note[/e] for each metadata field you want. 
+[ni]  Later, use Timelapse to populate that field across your image set by selecting 
+[li 2] [e]Populate a field with metadata...[/e] from the Timelapse [e]Edit[/e] menu"
+                            Hint="As metadata can be camera-specific, inspect files produced by each camera model you have to see what metadata is available."
+                            ShowExplanationVisibility="True"
+                            />
+            <DockPanel LastChildFill="True"> 
+                <DockPanel DockPanel.Dock="Bottom"  HorizontalAlignment="Stretch" >
+                    <Button x:Name="OkayButton" IsDefault="True"  DockPanel.Dock="Right" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10" Margin="10,10,10,10" Click="OkayButton_Click">_Okay</Button>
+                    <Button Name="OpenFile" VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="10" Margin="10,10,5,10"  Click="OpenFile_Click">Open _File</Button>
+                </DockPanel>
+
+                <controls:FileMetadataGrid x:Name="MetadataGrid"  DockPanel.Dock="Top" VerticalAlignment="Stretch"/>
+                
+            </DockPanel>
+        </DockPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,57 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateCorrectAmbiguous"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Check and correct ambiguous dates" 
+		MinHeight="600" MinWidth="768"
+		Height="856" Width="768"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded">
+    <Grid>
+        <Grid  Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <toolkit:FormattedMessageContent Grid.Row="0" x:Name="Message"
+                            DialogTitle="Check and Correct Ambiguous Dates"
+                            Icon="{x:Static toolkit:DialogIconType.Question}"
+                            Problem="As date formats are sometimes ambiguous, Timelapse may sometimes interpret the date."
+                            Reason="An ambiguous date example is [i]01-03-2015[/i], as that could be  interpreted as either [i]03-Jan-2015 or [i]01-Mar-2015[/i].
+[br]Timelapse tries various strategies to interpret the date correctly. Even so, incorrect interpretations are sometimes possible, where the day/month are swapped."           
+Solution="Ambiguous dates and the # of files with that date are listed below. If they look ok, select [e]Cancel[/e]. Otherwise: 
+[li] Check the current vs. the new dates (where day/month is re-interpretted as month/day). 
+[li] Hovering over a row displays a sample image,which often includes a timestamp.
+[li] Select the rows where the day/month should be swapped, or [e]Select all[/e] to select and swap all of them.          
+[li] Click [e]Start[/e] to update the selected current dates with the new dates."
+                            Result="Date corrections will be applied to all images and videos taken on those days."
+                            Hint="Check if the short date format in your Windows Control Panel is set to yyyy-MM-dd, which is what Timelapse prefers."
+                            ShowExplanationVisibility="True"/>
+            <Rectangle Grid.Row="1" Fill="#FF868686" Height="2" DockPanel.Dock="Top"/>
+
+            <DockPanel Name="FeedbackPanel" Visibility="Visible" Grid.Row="2" >
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Height="Auto" HorizontalAlignment="Left">
+                    <CheckBox Name="ButtonSelectAll" Content="_Select all" HorizontalAlignment="Left" VerticalContentAlignment ="Center" Padding="5" Margin="20,5,5,5" Click="SelectAll_Click" />
+                </StackPanel>
+                <controls:DateChangesFeedbackControl x:Name="DateChangeFeedback"  DockPanel.Dock="Bottom" ShowDifferenceColumn="False" MouseLeftButtonUp="DateChangeFeedback_MouseLeftButtonUp" />
+            </DockPanel>
+
+            <Label Name="DoneMessagePanel" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" FontSize="24" FontWeight="Bold" Content="None of your files have ambiguous dates." DockPanel.Dock="Top"/>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Height="80">
+                <Button Name="CancelButton" IsDefault="True" HorizontalAlignment="Right" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="StartDoneButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" HorizontalAlignment="Right" Padding="10" Margin="10,10,10,10" Click="Start_Click">Start</Button>
+            </StackPanel>
+
+        </Grid>
+
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0"/>
+    </Grid>
+</controls:BusyableDialogWindow>

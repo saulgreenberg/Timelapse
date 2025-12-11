@@ -1,0 +1,173 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.PopulateFieldWithRecognitionData"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        mc:Ignorable="d"
+        Title="Populate a Field With RecognitionData" Height="690" Width="800" Loaded="Window_Loaded">
+    <Grid>
+        <DockPanel Grid.Row="0">
+            <ScrollViewer Height ="350" VerticalAlignment="Top"  DockPanel.Dock="Top">
+                <toolkit:FormattedMessageContent 
+                x:Name="Message"
+                 Icon="{x:Static toolkit:DialogIconType.Question}"
+                 DialogTitle="Populate a data field with recognition data?"
+                 What="Record recognition criteria from the highest confidence bounding box in a data field."
+                 Solution="[ni] Select a [e]Note[/e] or [e]MultiLine[/e] data field to populate.
+                    [ni] Select desired recognition data: [e]classification category[/e] only (e.g., [i]deer[/i]), or a mix of [e]selectable recognition data[/e] and its output format
+                    [ni] Click [e]Populate[/e] to begin populating the Note field for your selected files."
+                 Result="The files in your current selection will have that field updated with the chosen recognition information."
+                 Hint="Review the recorded recognition data, and correct it as needed. See [link:{x:Static constant:ExternalLinks.TimelapseGuideReference}|Timelapse Reference Guide] for nuances."
+                 Details="Timelapse identifies the bounding box with the highest confidence, and only uses that box's recognition data.
+                    [br]This means that the recognition data may not always match what you need, because:
+                    [li] an image can contain multiple entities of interest, but recognition data from only one entity is used;
+                    [li] an image can contain many relevant and irrelevant bounding boxes, each with its own confidence value;
+                    [li] a single entity may be represented by multiple bounding boxes;
+                    [li] some entities may not be detected at all, or non-entities may be erroneously detected (false positives/false negatives).
+                     [br 12][b]Algorithm[/b]: For each file in the current selection, Timelapse: 
+                    [ni] Retrieves the recognition data for the image
+                    [ni] Determines the bounding box (if any) with the highest confidence value (if a tie, the first one is chosen),  
+                    [ni] Records the selected criteria in the chosen [e]Note[/e] or [e]MultiLine[/e] data field,
+                    [ni] If there is no bounding box, the data field contents for that file is unchanged"
+                 ShowExplanationVisibility="False" 
+                />
+            </ScrollViewer>
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
+                <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
+
+                <!--The primary panel containing the options, and the feedback panel that is shown if there are no Note or MultiLine fields-->
+                <StackPanel Name="PrimaryPanel" Orientation="Vertical" Margin="10,0,0,10" Visibility="Visible">
+
+                    <!--The data field selection combobox-->
+                    <StackPanel  Orientation="Horizontal"  Margin="0, 5,15,10">
+                        <TextBlock Text="Select a data field to contain the recognition data:" VerticalAlignment="Top" FontWeight="Bold" Margin="0, 5,15,5"
+                                   ToolTip="Only Notes and MultiLineText fields are listed,&#x000A;as only these can reliably hold the recognition contents"/>
+                        <ComboBox Name="ComboBoxSelectNoteField" Width="250" Height="30" VerticalAlignment="Top"  VerticalContentAlignment="Center" 
+                                  SelectionChanged="ComboBoxSelectNoteField_SelectionChanged" 
+                                  ToolTip="Only Notes and MultiLineText fields are listed,&#x000A;as only these can reliably hold the recognition contents"/>
+                    </StackPanel>
+
+                    <!-- The main options panel-->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!--Radio button options for selecting either classification only or enabling the groupbox allowing the user to select the fields and output format-->
+                        <StackPanel  Grid.Row="0" Grid.Column="0" Margin="0,15,0,0"  Orientation ="Horizontal">
+                            <TextBox FontWeight="Bold" VerticalAlignment="Top" VerticalContentAlignment="Top" Height="20"
+                                     Text="Populate using:" />
+                            <RadioButton Name="RBClassificationOny"  IsChecked="True" VerticalAlignment="Top" GroupName="SelectionGroup" 
+                                     Margin="10,2,0,0"
+                                     Content ="the Classification category only" 
+                                     ToolTip="Inserts the classification category only (e.g., Deer).&#x000A;If there is no classification, it will fall back to the detection category (e.g., Animal)"/>
+
+                            <RadioButton  Name="RBChooseFields" IsChecked="False" VerticalAlignment="Top" GroupName="SelectionGroup"
+                                      Margin="10,2,0,0"
+                                      Content ="a mix of recognition data and its output format"
+                                     ToolTip="Inserts the chosen recognition data (selected via checkboxes below)&#x000A;in the desired output format"/>
+                        </StackPanel>
+
+                        <!--The main GroupBox containing the desired data field checkboxes-->
+                        <GroupBox Name="GroupBox" Grid.Row="1" Grid.Column="0"  Grid.ColumnSpan="4" 
+                                  Margin="0,3,0,0" Padding="5,0,5,0" BorderThickness="1" BorderBrush="LightGray"
+                                  Header= "Choose data to output" >
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30" />
+                                    <RowDefinition Height="30"  />
+                                    <RowDefinition Height="30" />
+
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"  FontWeight="DemiBold"  Margin="0,0,10,0"
+                                       Text="Bounding box:"/>
+                                <CheckBox Name="CBBoundingBoxCoordinates"  Grid.Row="0" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
+                                      Content ="Coordinates" />
+                                <TextBlock Grid.Row="0" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
+                                       Text="(x,y,width,height)"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" FontWeight="DemiBold" VerticalAlignment="Center" 
+                                       Text="Detection:"/>
+                                <CheckBox Name="CBDetectionCategory" Grid.Row="1" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"  
+                                       Content="Category" />
+                                <CheckBox Name="CBDetectionConfidence" Grid.Row="1" Grid.Column="2" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                                       Content="Confidence" />
+                                <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
+                                       Text="e.g., animal, detection confidence 0.999"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" FontWeight="DemiBold" VerticalAlignment="Center" 
+                                       Text="Classification:"/>
+                                <CheckBox Name="CBClassificationCategory" Grid.Row="2" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
+                                      Content="Category" />
+                                <CheckBox Name="CBClassificationConfidence" Grid.Row="2" Grid.Column="2" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                                      Content="Confidence" />
+                                <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
+                                       Text="e.g., deer, classification confidence 0.987 "/>
+                            </Grid>
+                        </GroupBox>
+
+                        <!--The GroupBox containing the output format radio buttons-->
+                        <GroupBox Grid.Row="1" Grid.Column="4"  Name="GroupBoxOutputFormat" Header="Output format"
+                                  Margin="15,3,0,0" Padding="5,0,5,0" BorderThickness="1" BorderBrush="LightGray">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30" />
+                                    <RowDefinition Height="30"  />
+                                    <RowDefinition Height="30" />
+                                </Grid.RowDefinitions>
+
+                                <RadioButton Grid.Row="0" Grid.Column="0" Name="RBAsFormattedJson" Content="As formatted Json" GroupName="OutputFormat" VerticalAlignment="Center" IsChecked ="true" Margin="10, 0,0,0"
+                                             ToolTip="Outputs the recognition data as a pretty-printed json structure (with line breaks)"/>
+                                <RadioButton Grid.Row="1" Grid.Column="0" Name="RBAsUnformattedJson" Content="As unformatted Json" GroupName="OutputFormat" VerticalAlignment="Center" IsChecked ="false" Margin="10, 0,0,0"
+                                             ToolTip="Outputs the recognition data as a compact json structure, all on a single line"/>
+                                <RadioButton Grid.Row="2" Grid.Column="0" Name="RBAsPlainText" Content="As plain text" GroupName="OutputFormat" VerticalAlignment="Center" Margin="10, 0,0,0"
+                                             ToolTip="Outputs the recognition data as rows of plain text, each comprising a descriptive label and the recognition value"/>
+                            </Grid>
+
+                        </GroupBox>
+
+                    </Grid>
+                </StackPanel>
+
+                <!--The secondary feedback panel, shown when there are no Note or MultiLine fields-->
+                <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
+                    <TextBlock Name="TextBlockFeedbackLine1" Text="No Note or MultiLine fields are available" VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine2" Text="You need to add at least one Note or MultiLine field in your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
+                </StackPanel>
+            </StackPanel>
+
+            <!--The button panel at the bottom-->
+            <DockPanel LastChildFill="True" >
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="False" Click="Start_Click">_Populate</Button>
+                </StackPanel>
+            </DockPanel>
+        </DockPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+    </Grid>
+</controls:BusyableDialogWindow>

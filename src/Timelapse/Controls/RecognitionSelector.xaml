@@ -1,0 +1,215 @@
+﻿<UserControl x:Class="Timelapse.Controls.RecognitionSelector"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+             mc:Ignorable="d" 
+             DataContext="{Binding RelativeSource={RelativeSource Self}}"
+             d:DesignHeight="350" d:DesignWidth="600" Loaded="RecognitionsSelector_OnLoaded">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="200"/>
+
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions >
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Name="ClassificationColumnWidth" Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!--Detections-->
+            <Grid Name="DetectionsGrid" Grid.Row="2" Grid.Column="0" Margin="10,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!--Detections label-->
+
+                <TextBlock Name="TBDetectionsLabel" 
+                       Grid.Row="0" Grid.Column="0" 
+                       HorizontalAlignment="Center">
+                    <Run Text="Detections" FontWeight="Bold" />
+                    <Run Name="TBDetectionsCount" Text="" FontWeight="Normal" />
+                </TextBlock>
+
+                <!--Detections slider-->
+                <toolkit:RangeSlider Grid.Row="1" 
+                              Name="SliderDetectionConf" 
+                              Margin="0,0,0,5"
+                              Minimum="0" Maximum="1" 
+                              LowerValue=".2" HigherValue="1" 
+                              RangeBackground="{x:Static SystemColors.HighlightBrush}" 
+                              HigherRangeBackground="Transparent"
+                              LowerRangeBackground="Transparent"
+                              TickFrequency="0.1" TickPlacement="None"
+                              Step="0.1"
+                              IsSnapToTickEnabled="False"
+                              PreviewMouseLeftButtonDown="SliderDetectionConf_OnPreviewMouseLeftButtonDown"
+                              PreviewMouseLeftButtonUp="SliderDetectionConf_OnPreviewMouseLeftButtonUp"
+                              LowerValueChanged="SliderDetectionConf_ValueChanged" 
+                              HigherValueChanged="SliderDetectionConf_ValueChanged"
+                />
+
+                <!--Detections Datagrid-->
+                <DataGrid Grid.Row="2" Grid.Column="0" 
+                      Name="DataGridDetections" 
+                      BorderBrush="{x:Static SystemColors.HighlightBrush}"
+                      ItemsSource ="{Binding DetectionCountsCollection}"
+                      IsReadOnly ="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      HorizontalGridLinesBrush="LightGray"
+                      VerticalGridLinesBrush="LightGray"
+                      CanUserSortColumns="True"
+                      SelectionChanged="DataGridDetections_OnSelectionChanged">
+                    <DataGrid.Resources>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Style.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="DataGridCell.IsSelected" Value="True" />
+                                        <Condition Property="IsEnabled" Value="True" />
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}" />
+                                    <Setter Property="Foreground" Value="White" />
+                                </MultiTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Resources>
+
+                </DataGrid>
+            </Grid>
+
+            <!--Classifications-->
+            <Grid Name="GridClassifications" Grid.Row="2" Grid.Column="1" Margin="10,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!--Classifications label-->
+
+                <TextBlock Name="TBClassificationsLabel" 
+                           Grid.Row="0" Grid.Column="0"  
+                           HorizontalAlignment="Center" Margin="0,0,0,0" >
+                           <Run Text="Classifications " FontWeight="Bold" />
+                           <Run Name="TBClassificationsCount" Text="" FontWeight="Normal" />
+                </TextBlock>
+
+                <!--Classifications slider -->
+                <toolkit:RangeSlider Grid.Row="1" Name="SliderClassificationConf"  
+                                    Margin="0,0,0,5"
+                                    Minimum="0" Maximum="1" 
+                                    LowerValue=".75" HigherValue="1" 
+                                    RangeBackground="SaddleBrown" 
+                                    HigherRangeBackground="Transparent"
+                                    LowerRangeBackground="Transparent"
+                                    TickFrequency="0.1" TickPlacement="None"
+                                    Step="0.1"
+                                    IsSnapToTickEnabled="False"
+                                    PreviewMouseLeftButtonDown="SliderClassificationConf_OnPreviewMouseLeftButtonDown"
+                                    PreviewMouseLeftButtonUp="SliderClassificationConf_OnPreviewMouseLeftButtonUp"
+                                    PreviewKeyDown="SliderClassificationConf_OnPreviewKeyDown"
+                                    LowerValueChanged="SliderClassificationConf_ValueChanged" 
+                                    HigherValueChanged="SliderClassificationConf_ValueChanged" />
+
+                <!--Classifications DataGrid-->
+                <DataGrid Grid.Row="2" Grid.Column="0" 
+                      Name="DataGridClassifications" 
+                      BorderBrush="RosyBrown"
+                      ItemsSource ="{Binding ClassificationCountsCollection}"
+                      IsReadOnly ="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      HorizontalGridLinesBrush="LightGray"
+                      VerticalGridLinesBrush="LightGray"
+                      CanUserSortColumns="True"
+                      ToolTipService.InitialShowDelay="25"
+                      ToolTipService.BetweenShowDelay="25"
+                      SelectionChanged="DataGridClassifications_OnSelectionChanged">
+                    <!--Hide rows with a count of 0-->
+                    <DataGrid.RowStyle>
+                        <Style TargetType="{x:Type DataGridRow}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Count}" Value="0">
+                                    <Setter Property="Foreground" Value="Gray"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                            <EventSetter Event="MouseEnter" Handler="DataGridClassificationsRow_MouseEnter"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Resources>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <Style.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="DataGridCell.IsSelected" Value="True" />
+                                        <Condition Property="IsEnabled" Value="True" />
+                                    </MultiTrigger.Conditions>
+                                    <Setter Property="Background" Value="SaddleBrown" />
+                                    <Setter Property="Foreground" Value="White" />
+                                </MultiTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Resources>
+                </DataGrid>
+            </Grid>
+
+            <!--Other Recognition-related controls-->
+            <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" Name="Recognitions2Panel" Orientation="Vertical" Margin="10,15,0,0" >
+                <StackPanel  Orientation="Vertical" >
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock Name="MatchingFilesCount" Text=""  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                        <TextBlock Name="MatchingFilesCountLabel" Text="" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                    </StackPanel>
+                    <Button Name="BtnCountRecognitions" Content ="Update counts" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
+                </StackPanel>
+
+                <!-- Sorting by Confidence -->
+                <TextBlock Name="TextBlockSortAllByLabel" Text="Sort all by:" FontWeight="Bold" Margin="0,10,0,0"/>
+
+                <!-- Rank By Confidence Checkbox-->
+                <StackPanel Name="SPRadioButtonsRankBy" Orientation="Vertical">
+                    <RadioButton Name="RankByDetectionConfidenceCheckbox"
+                             Tag="Detections"
+                             GroupName="RankByRadioButtons" 
+                             Content="detection confidence" Margin="5,2,0,0" 
+                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                             Checked="RankByConfidence_CheckedChanged" 
+                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by detection confidence and then by classification confidence"/>
+
+                    <RadioButton Name="RankByClassificationConfidenceCheckbox" 
+                             Tag="Classifications"
+                             GroupName="RankByRadioButtons" 
+                             Content="classification confidence" Margin="5,2,0,0" 
+                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                             Checked="RankByConfidence_CheckedChanged" 
+                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by classification confidence and then by detection confidence"/>
+
+                    <RadioButton Name="RankByNoneCheckbox" 
+                             GroupName="RankByRadioButtons" 
+                             Tag="None"
+                             Content="none" Margin="5,2,0,0" 
+                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
+                             Checked="RankByConfidence_CheckedChanged" 
+                             ToolTip="Returns all selected files within the chosen confidence range"/>
+                </StackPanel>
+                <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files&#10;the recognizer did not&#10; process" 
+                          IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,15,0,0" 
+                          ToolTip="Shows only files that were not processed by the image recognizer&#10;i.e.,files that were not mentioned in the recognition file"
+                          Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
+
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

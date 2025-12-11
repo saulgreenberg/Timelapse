@@ -1,0 +1,50 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.RelativePathEditor"
+                               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                               xmlns:controls="clr-namespace:Timelapse.Controls"
+                               xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+                               Title="Relative Path Editor" 
+                               MinHeight="200" MinWidth="768"
+                               Height="700" Width="768"
+                               ResizeMode="CanResizeWithGrip"
+                               ShowInTaskbar="False"
+                               WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded"
+>
+    <Grid>
+    <DockPanel>
+        <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top" Icon="{x:Static toolkit:DialogIconType.Information}"
+                                      DialogTitle="Timelapse Folder Editor"
+                                      What="Rename, move, and delete sub-folders already loaded into Timelapse, and create new subfolders as desired.
+                                        [li] Timelapse will update both its [i]RelativePath[/i] data and the Windows subfolder structure as needed.
+                                        [li] The interface will not let you to do certain operations if they could lead to problems or errors."
+                                       
+                                      Solution="Using the Folder Editor is somewhat similar to how you edit folders in Windows Explorer: 
+                                        [li] move a folder to another folder by dragging and dropping;
+                                        [li] right click to raise a context menu for all other operations"
+                                      
+                                      Hint="Folder icons indicate whether Timelapse:
+                                        [li] currently records data associated with the images or videos found in that folder ,
+                                        [li] whether the folder is actually present or missing in your sub-folder structure.
+                                          [br] Other factors to consider:
+                                        [li] If a folder is shown as missing, use  [i]Edit | Try to find any missing folders...[/i] to locate it.
+                                        [li][i]Merge[/i] and [i]Import Recognitions[/i] operations may fail if folder paths are changed.
+                                        [li] You may want to read the [e]Folder Editor[/e] section in the [link:{x:Static constant:ExternalLinks.TimelapseGuideReference}|Timelapse Reference Guide]."
+                                      />
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Bottom">
+                <Button DockPanel.Dock="Left" Name="ExpandAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ExpandAll_Click">_Expand all</Button>
+                <Button DockPanel.Dock="Left" Name="ContractAll" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="ContractAll_Click">_Collapse all</Button>
+                <!--This button is for testing, where we can check if changes are reflected in a completely rebuilt tree-->
+                <!--<Button Name="RefreshCompletely" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="RefreshCompletelyButton_Click">_Refresh completely</Button>-->
+                <Button DockPanel.Dock="Left" Name="SortButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,30,10" Click="SortButton_Click">_Sort the folders</Button>
+                <Button DockPanel.Dock="Right" Name="DoneButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Padding="10" Margin="10,10,10,10" Click="DoneButton_Click">_Done</Button>
+            </DockPanel>
+            <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Top"/>
+            <Grid DockPanel.Dock="Top" >
+                <controls:RelativePathControl x:Name="RelativePathControl"/>
+            </Grid>
+        </DockPanel>
+    </DockPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" CancelClick="CancelAsyncOperationButton_Click" Grid.Row="0"/>
+    </Grid>
+</controls:BusyableDialogWindow>

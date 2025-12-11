@@ -1,0 +1,1333 @@
+﻿<Window x:Class="Timelapse.TimelapseWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:controls="clr-namespace:Timelapse.Controls"
+    xmlns:images="clr-namespace:Timelapse.Images"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
+    xmlns:xcad="clr-namespace:AvalonDock;assembly=AvalonDock"
+    xmlns:xcadLayout="clr-namespace:AvalonDock.Layout;assembly=AvalonDock"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controlsMetadata="clr-namespace:Timelapse.ControlsMetadata"
+    xmlns:controlsDataEntry="clr-namespace:Timelapse.ControlsDataEntry"
+    mc:Ignorable="d"
+    AutomationProperties.AutomationId="Timelapse" Name="Timelapse"
+    Loaded="Window_Loaded" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown" PreviewKeyUp="Window_PreviewKeyUp"
+    Height="800" Width="1200"
+    WindowState="Normal" LocationChanged="Window_LocationChanged">
+    <!--TODO IT CANT FIND THIS BUT NOT SURE WHY Icon="Icons\Timelapse32.ico"-->
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ResourceDictionaries/CommonStyles.xaml"/>
+                <ResourceDictionary Source="ResourceDictionaries/CopyPreviousButtonStyle.xaml"/>
+                <ResourceDictionary Source="ResourceDictionaries/QuickPasteButtonStyle.xaml"/>
+                <ResourceDictionary Source="ResourceDictionaries/TreeViewHierarchicalDataTemplate.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- #region Menu Bar -->
+            <Menu Grid.Row="0">
+
+                <!-- File Menu -->
+                <MenuItem Header="_File" IsTabStop="false" SubmenuOpened="File_SubmenuOpening">
+
+                    <!-- Test some code here - should only be enabled when developing code -->
+                    <MenuItem Name="MenuItemTestSomeCode" 
+                              Header="_Test some code" 
+                              Visibility="Collapsed" 
+                              Click="MenuItemTestSomeCode_Click" 
+                              ToolTip="Used internally to test some could. Should not be visible." />
+
+                    <!-- Load template, images, and video files... -->
+                    <MenuItem Name="MenuItemLoadFiles" 
+                              Header="_Load template, images, and video files..." 
+                              Click="MenuItemLoadImages_Click" 
+                              ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <!-- Load a recently used image set -->
+                    <MenuItem Name="MenuItemRecentImageSets" IsEnabled="false" 
+                              Header="Load a _recently used image set" 
+                              ToolTip="Load a recently used image set from the chosen location">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemAddFilesToImageSet" IsEnabled="false" 
+                              Header="_Add image and video files to this image set..." 
+                              Click="MenuItemAddImagesToImageSet_Click" 
+                              ToolTip="Add more images or videos to the currently opened image set">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/NewFile_40x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator />
+
+                    <!-- Upgrade Timelapse Files -->
+                    <MenuItem Name="MenuItemUpgradeTimelapseFiles"  IsEnabled="true" 
+                              Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version..." 
+                              Click="MenuItemUpgradeTimelapseFiles_Click"
+                              ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/ConvertFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+
+                    <Separator />
+                    <!--Export or Import data to csv-->
+                    <MenuItem Name="MenuItemExportData" IsEnabled="false"
+                              Header="Export or import data to/from a csv file..." >
+
+                        <!-- Export data for selected images as a .csv file... -->
+                        <MenuItem Name="MenuItemExportAsCsv" IsEnabled="false" 
+                                  Header="Export image/video data in the current selection to a .csv file..." 
+                                  Click="MenuItemExportCsv_Click" ToolTip="Exports data for the selected files into a .csv (comma separated value) file">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/CSVExport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <!-- Export data for this image set as a .csv file and preview in _Excel.. -->
+                        <MenuItem Name="MenuItemExportAsCsvAndPreview" IsEnabled="false" 
+                                  Header="Export image/video data in the current selection to a .csv file and preview in _Excel..." 
+                                  Click="MenuItemExportCsv_Click" 
+                                  ToolTip="Exports data for the selected files in the image set into a .csv (comma separated value) file and previews it in Excel">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/CSVExport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <!-- Import data from a .csv file...-->
+                        <MenuItem Name="MenuItemImportFromCsv" IsEnabled="false" 
+                                  Header="I_mport image/video data from a .csv file ..." 
+                                  Click="MenuItemImportFromCsv_Click" 
+                                  ToolTip="Import data in this image set from a CSV (comma separated value) file">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/CSVImport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator />
+
+                        <!-- Export folder data to a .csv file...-->
+                        <MenuItem Name="MenuItemExportAllDataAsCSV" IsEnabled="false" 
+                                  Header="Export all data (folder data, image/video data) to .csv files ..." 
+                                  Click="MenuItem_ExportAllDataToCSV_Click" 
+                                  ToolTip="Exports all data in this image set to CSV (comma separated value) files as:
+                                  &#10; image/video data in a file you can name,
+                                  &#10; folder data in a separates files, each named after the folder level.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/CSVExport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                    </MenuItem>
+
+                    <Separator />
+
+                    <MenuItem Name="MenuItemCopyFiles" IsEnabled="false"
+                              Header="Copy image/video file(s) to another folder...">
+                        <!-- Export the current image or video file...-->
+                        <MenuItem Name="MenuItemExportThisImage" IsEnabled="false" 
+                                  Header="Copy the current image or video _file to..." 
+                                  Click="MenuItemExportThisImage_Click" 
+                                  ToolTip="Copy the displayed image or video file into a location of your choosing">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/ImageExport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <!-- Export all images or videos files in the current selection...-->
+                        <MenuItem Name="MenuItemExportSelectedImages" IsEnabled="false" 
+                                  Header="Copy all images and video files in the current selection to..." 
+                                  Click="MenuItemExportAllSelectedImages_Click" 
+                                  ToolTip="Copy all images and video files in the current selection into a folder of your choosing">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/ImageExport_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+                    <Separator />
+
+                    <!-- Merge -->
+                    <MenuItem Name="MenuItemMerging" Header="_Merging Databases..." 
+                              ToolTip="Merge a sub-folder's databases in /out of a master database">
+
+                        <MenuItem Name="MenuItemCreateEmptyDatabase" 
+                                  Header="Create and load an empty master database (for merging databases in sub-folders)..." 
+                                  Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
+                                  ToolTip="Asks for the template location, and then creates an empty image set database.
+                              &#10;Usually used as a master database, where we can check in / out sub-folder specific databases that only contains that sub-folder's data."/>
+
+                        <MenuItem Name="MenuItemCheckOutDatabase" IsEnabled="false" 
+                                  Header="Check out (copy) a sub-folder database from the master database..." 
+                                  Click="MenuItemCheckOutDatabase_Click" 
+                                  ToolTip="Creates a database in a subfolder that contains only the entries for that subfolder"/>
+
+                        <MenuItem Name="MenuItemCheckInDatabases" IsEnabled="false" 
+                                  Header="Check in (merge) a sub-folder's database into the master database..." 
+                                  Click="MenuItemCheckInDatabases_Click" 
+                                  ToolTip="Merge one or more databases into an existing master database"/>
+                    </MenuItem>
+
+                    <Separator />
+
+                    <!-- Rename the _data file...-->
+                    <MenuItem Name="MenuItemRenameFileDatabaseFile" IsEnabled="false" 
+                              Header="Rename the _data (.ddb) file for this image set..." 
+                              Click="MenuItemRenameFileDatabaseFile_Click" 
+                              ToolTip="Renames the database (.ddb) file  for this image set to a name of your choosing"/>
+                    <Separator />
+
+                    <!-- Switch to Template Editor -->
+                    <MenuItem Name="MenuItemTemplateEditor" IsEnabled="true" 
+                              Header="Switch to the Template _Editor" 
+                              Click="MenuItemSwitchToTheTemplateEditor_Click" 
+                              ToolTip="Switch to the Template Editor to create or modify data templates.">
+                        <MenuItem.Icon>
+                            <Image Source="TemplateEditor/Icons/TemplateEditor32.ico" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator />
+
+                    <!-- Close Image Set-->
+                    <MenuItem Name="MenuFileCloseImageSet" IsEnabled="False" 
+                              Header="C_lose image set" 
+                              Click="MenuFileCloseImageSet_Click" 
+                              ToolTip="Close the currently opened image set. You can then open another image set if you wish" >
+                        <MenuItem.Icon>
+                            <Image Source="Icons/CloseFile_40x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <!-- Exit -->
+                    <MenuItem Name="MenuItemExit" Header="E_xit" 
+                              Click="MenuItemExit_Click" 
+                              ToolTip="Exit Timelapse">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/Exit_22x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                </MenuItem>
+
+                <!-- Edit Menu -->
+                <MenuItem Name="MenuItemEdit" Header="_Edit" IsEnabled="false" IsTabStop="false" SubmenuOpened="Edit_SubmenuOpening" >
+
+                    <!-- Find image -->
+                    <MenuItem Name="MenuItemFindImage" Header="_Find file" Click="MenuItemFindByFileName_Click" ToolTip="Find an image or video file whose filename contains your case-insensitive search term" 
+                              InputGestureText="control-F"/>
+
+                    <Separator Name="MenuS1"/>
+
+                    <!-- QuickPaste Window-->
+                    <MenuItem Name="MenuItemShowQuickPasteWindow" IsEnabled="True" Header="Show QuickPaste Window" Click="MenuItemQuickPasteWindowShow_Click" InputGestureText="Q" ToolTip="Display the Quickpaste window, which lets you create, selected, edit and delete QuickPaste items"/>
+                    <MenuItem Name="MenuItemImportQuickPasteFromDB" IsEnabled="True" Header="Import QuickPaste Items from .ddb file..." Click="MenuItemQuickPasteImportFromDB_Click" ToolTip="Import Quickpaste items that were created in another timelapse database (.ddb) file"/>
+                    <Separator />
+
+                    <!-- Copy previous values / Restore Defaults-->
+                    <MenuItem Name="MenuItemCopyPreviousValues" 
+                              Header="_Copy previous values" 
+                              Click="MenuItemCopyPreviousValues_Click" 
+                              InputGestureText="C" 
+                              ToolTip="Copy selected data as recorded on the previous file. Applies only to data marked 'Copyable' in the code template."/>
+                    <MenuItem Name="MenuItemRestoreDefaults" Header="_Restore default values for this file" 
+                              Click=" MenuItemRestoreDefaultValues_Click" 
+                              ToolTip="For the currently displayed file, revert all fields to its default values (excepting file paths and dates/times)."/>
+
+                    <Separator Name="MenuS2"/>
+
+                    <!-- Populate fields ... -->
+                    <MenuItem Name="MenuItemPopulateFieldFromMetadata" Header="Populate one or more fields with any metadata..." ToolTip="Match text-based data fields with the desired metadata. Then populate those fields across all selected files with the corresponding metadata values." Click="MenuItemPopulateFieldFromMetadata_Click"/>
+                    <MenuItem Name="MenuItemPopulateDateTimeFieldFromMetadata" Header="Populate one or more Date/Time fields with Date/Time metadata..." Click="MenuItemPopulateDateTimesfromMetadata_Click" ToolTip="Match Date/Time data fields with the desired Date/Time metadata. Then populate those fields across all selected files with the corresponding Date/Time metadata values" />
+                    <MenuItem Name="MenuItemPopulateEpisodeField" Header="Populate a field with episode data..." Click="MenuItemEditPopulateFieldWithEpisodeData_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
+                    <MenuItem Name="MenuItemPopulateFieldWithGUID" Header="Populate a field with globally unique identifiers..." Click="MenuItemEditPopulateFieldWithGUID_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
+                    <MenuItem Name="MenuItemPopulateWithDarkImages" Header="Populate a field with Dark classifications..." IsEnabled="True" Click="MenuItemEditClassifyDarkImages_Click" ToolTip="Populate a flag field with classification data that determines (for each selected image) whether it is a dark (usualy night-time ) shot."  />
+
+
+                    <Separator Name="MenuS3" />
+                    <MenuItem Name="MenuItemDuplicateRecordUsingCurrentValues" Header="_Duplicate this record (use current values)" Click="MenuItemEditDuplicateRecord_Click" Tag="true" InputGestureText="Ctl-d" IsEnabled="True" ToolTip="Create a duplicate of this record, filled in with its current values. Change or fill in fields as needed"/>
+                    <MenuItem Name="MenuItemDuplicateRecordUsingDefaultValues" Header="_Duplicate this record (use default values)" Click="MenuItemEditDuplicateRecord_Click"  Tag="false" InputGestureText="Ctl-Shift-D" IsEnabled="True" ToolTip="Create a duplicate of this record, filled in with default values. Change or fill in fields as needed"/>
+                    <MenuItem Name="MenuItemExtractVideoFrameUsingCurrentValues" Header="_Extract video frame and create record (use current values)" Click="MenuItemExtractVideoFrameUsingCurrentValues_Click"  IsEnabled="True" ToolTip="Extracts the current video frame as a jpg file (same name + video timestamp),&#10;and creates a record to it filled in with the current data values"/>
+                    <Separator Name="MenuS4" />
+
+                    <!-- Delete submenu-->
+                    <MenuItem Name="MenuItemDelete" Header="D_elete"  SubmenuOpened="MenuItemDelete_SubmenuOpening"  >
+                        <MenuItem Name="MenuItemDeleteCurrentFile" Header="The current image or video _file..." Click="MenuItemDeleteFiles_Click"  ToolTip="Deletes the current image or video file, but leaves entered data intact"/>
+                        <MenuItem Name="MenuItemDeleteCurrentFileAndData" Header="The current image or video file and its _data..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the current image or video file, as well as the data entered for that file"/>
+                        <MenuItem Name="MenuItemDeleteCurrentData" Header="Only the data associated with the current file..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the data  entered for the current image or video file, but leaves the file in place"/>
+                        <Separator/>
+                        <MenuItem Name="MenuItemDeleteFiles" Header="_All selected image or video files marked for deletion ..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes  images and videos in the current selection that are marked for deletion, but leaves entered data intact"/>
+                        <MenuItem Name="MenuItemDeleteFilesAndData" Header="All selected image or video files marked for deletion and their data..." Click="MenuItemDeleteFiles_Click"  ToolTip="Deletes images and videos in the current selection that are marked for deletion, as well as the data entered for those files"/>
+                        <MenuItem Name="MenuItemDeleteFilesData" Header="Only the data associated with all selected image or video files marked for deletion..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the data  associated with images and videos in the current selection, but leaves the image and video files in place"/>
+                    </MenuItem>
+
+                    <!-- Date correction submenu-->
+                    <MenuItem Name="MenuItemDateCorrection" Header="_Date correction" SubmenuOpened="MenuItemDateCorrection_SubmenuOpened" >
+                        <MenuItem Name="MenuItemRereadDatesfromImages" Header="_Re-read dates and times from files..." Click="MenuItemRereadDateTimesfromFiles_Click"  ToolTip="Re-read the dates and times from files" IsEnabled="True" />
+                        <MenuItem Name="MenuItemDaylightSavingsTimeCorrection" Header="Correct for standard and _daylight savings time changes..." Click="MenuItemDaylightSavingsTimeCorrection_Click"  ToolTip="Correct daylight saving time issues" IsEnabled="True" />
+                        <MenuItem Name="MenuItemDateTimeFixedCorrection" Header="Correct for cameras not set to the right date and time..." Click="MenuItemDateTimeFixedCorrection_Click"  ToolTip="Correct for cameras  not initially set to the right date and/or time." IsEnabled="True" />
+                        <MenuItem Name="MenuItemDateTimeLinearCorrection" Header="Correct for cameras whose cloc_k runs fast or slow..." Click="MenuItemDateTimeLinearCorrection_Click"  ToolTip="Correct for a camera's clock running fast or slow" IsEnabled="True" />
+                        <MenuItem Name="MenuItemModifyAmbiguousDates" Header="Check and correct _ambiguous dates..." Click="MenuItemCorrectAmbiguousDates_Click"  ToolTip="Check and optionally correct ambiguous dates, where day-month could have been read as month-day" IsEnabled="True" />
+                        <MenuItem Name="MenuItemDateTimeRereadDatesFromSelectedMetadata" Header="Populate one or more Date/Time fields with metadata..." Click="MenuItemPopulateDateTimesfromMetadata_Click" ToolTip="Read and update the dates and times from a metadata field of your choosing" IsEnabled="True" />
+                    </MenuItem>
+
+                    <Separator Name="MenuS5"/>
+                    <!-- Folder editor, missing folders, missingfiles -->
+                    <!-- Test some code here - should only be enabled when developing code -->
+                    <MenuItem Name="MenuItemFolderEditor" Header="_Folder editor (move, rename etc)..." IsEnabled="True" Click="MenuItemFolderEditor_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <!-- Test some code here - should only be enabled when developing code -->
+                    <MenuItem Name="MenuItemAnalyzeFolderStructure" Header="Analyze folder structure" Visibility="Visible" Click="MenuItemAnalyzeFolderStructure_Click" 
+                              ToolTip="Analyze and compare your image set folder structure to the expected folder structure as defined in your template" />
+                    <Separator Name="MenuS6"/>
+
+                    <MenuItem Name="MenuItemFindMissingImage" Header="Try to find this (and other) missing files ..." IsEnabled="True" Click="MenuItemEditFindMissingImage_Click" ToolTip="Try to find the currently displayed missing file, as well as other missing images in the same folder as this one "  />
+                    <MenuItem Name="MenuItemFindMissingFolder" Header="Try to find any missing folders ..." IsEnabled="True" Click="MenuItemEditFindMissingFolder_Click" ToolTip="Check to see if any folders are missing. If so, try to find them."  />
+                    <Separator Name="MenuS7"/>
+
+                    <!-- Edit notes for this image set... -->
+                    <MenuItem Name="MenuItemLog" Header="Edit _notes for this image set..." Click="MenuItemLog_Click"  ToolTip="View and edit any notes (e.g., a log of activites or to-do items) particular to this Image Set" IsEnabled="True" />
+                </MenuItem>
+
+                <!-- Options Menu -->
+                <MenuItem Name="MenuItemOptions" Header="_Options" IsEnabled="True" IsTabStop="false" SubmenuOpened="Options_SubmenuOpening" >
+
+                    <MenuItem Name="MenuItemMagnifyingGlass" Header="_Magnifying Glass" IsEnabled="False">
+                        <MenuItem Name="MenuItemDisplayMagnifyingGlass" IsCheckable="True" IsChecked="False" InputGestureText="M" Header="Display _magnifier" Click="MenuItemDisplayMagnifyingGlass_Click" ToolTip="Toggles the presence of the magnifying glass"/>
+                        <MenuItem Name="MenuItemMagnifyingGlassIncrease" InputGestureText="U" Header="_Increase magnification" Click="MenuItemMagnifyingGlassIncrease_Click" ToolTip="Increase the magnification of the magnifying glass"/>
+                        <MenuItem Name="MenuItemMagnifyingGlassDecrease" InputGestureText="D" Header="_Decrease magnification" Click="MenuItemMagnifyingGlassDecrease_Click" ToolTip="Decrease the magnification of the magnifying glass"/>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemImageAdjuster" Header="_Adjust image appearance..." Click="MenuItemImageAdjuster_Click" IsEnabled="False" ToolTip="Temporarily adjust the brightness, contrast, gamma, sharpness or edging of the displayed image"/>
+                    <MenuItem Name="MenuItemFilePlayerOptions" Header="_Adjust FilePlayer playback speeds..." Click="MenuItemFilePlayerOptions_Click" IsEnabled="True" ToolTip="File Player options to adjust the image display speed"/>
+                    <MenuItem Name="MenuItemEpisodeOptions" 
+                              Header="_Adjust episode time threshold..." 
+                              Click="MenuItemEpisodeOptions_Click" 
+                              IsEnabled="False" 
+                              ToolTip="Adjust the time threshold for determining how files are grouped into episodes"/>
+ 
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemDialogsOnOrOff" Header="_Show or hide various informational dialogs" IsEnabled="True" Click="MenuItemDialogsOnOrOff_Click"/>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemPreferences" Header="Preferences..." Click="MenuItemPreferences_Click" IsEnabled="True" ToolTip="Other Timelapse configuration options you can set"/>
+
+
+
+                </MenuItem>
+
+                <!-- View Menu -->
+                <MenuItem Name="MenuItemView" IsEnabled="false" IsTabStop="false"  
+                          Header="_View" 
+                          SubmenuOpened="View_SubmenuOpening" 
+                          ToolTip="Zooming, navigating, and image differencing" 
+                          >
+                    <MenuItem Name="MenuItemViewNextImage" Header="View _next file" 
+                              Click="MenuItemShowNextFile_Click" 
+                              InputGestureText="&#x2192; or ▼" 
+                              ToolTip="View the next file (right arrow or page down)"/>
+                    <MenuItem Name="MenuItemViewPreviousImage" 
+                              Header="View _previous file" 
+                              Click="MenuItemShowPreviousFile_Click" 
+                              InputGestureText="&#x2190; or ▲" 
+                              ToolTip="View the previous file (left arrow or page up)" />
+                    <Separator/>
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemEpisodeShowHide" IsCheckable="True" IsEnabled="False" 
+                              Header="_View episode information" 
+                              InputGestureText="E" 
+                              Click="MenuItemEpisodeShowHide_Click" 
+                              ToolTip="Show or hide information that groups files separated by brief time periods into episodes"/>
+                   
+                    <MenuItem Name="MenuItemViewNextEpisode" Header="View _next episode" 
+                              Click="MenuItemShowNextEpisode_Click" 
+                              InputGestureText="&#60;Shift&#62;&#x2192;" 
+                              ToolTip="View the 1st file of the next episode"/>
+                    <MenuItem Name="MenuItemViewPreviousEpisode" Header="View _previous episode" 
+                              Click="MenuItemShowPreviousEpisode_Click" 
+                              InputGestureText="&#60;Shift&#62;&#x2190;" 
+                              ToolTip="View the 1st file of the previous episode"/>
+
+                    <Separator/>
+
+                    <!--<MenuItem Name="MenuItemViewInOverview"
+                              Header="Thumbnail overview navigation">-->
+                        <MenuItem Name="MenuItemViewNextRowInOverview" 
+                              Header="View next thumbnail row" 
+                              Click="MenuItemShowInOverview_Click" 
+                              InputGestureText="&#x2193;" 
+                              Tag="RowDown"
+                              ToolTip="View next row of thumbnails seen in the overview"/>
+                        <MenuItem Name="MenuItemViewPreviousRowInOverview" 
+                              Header="View previous thumbnail row" 
+                              Tag="RowUp"
+                              Click="MenuItemShowInOverview_Click" 
+                              InputGestureText="&#x2191;" 
+                              ToolTip="View previous row of thumbnails seen in the overview" />
+
+                        <MenuItem Name="MenuItemViewNextPageInOverview" 
+                              Header="View next thumbnail page" 
+                              Tag="PageDown"
+                              Click="MenuItemShowInOverview_Click" 
+                              InputGestureText="&#60;Shift&#62;&#x2193;" 
+                              ToolTip="View next page of thumbnails seen in the overview"/>
+
+                        <MenuItem Name="MenuItemViewPreviousPageInOverview" 
+                              Header="View previous thumbnail page" 
+                              Tag="PageUp"
+                              Click="MenuItemShowInOverview_Click" 
+                              InputGestureText="&#60;Shift&#62;&#x2191;" 
+                              ToolTip="View previous page of thumbnails seen in the overview" />
+                        
+                    <!--</MenuItem>-->
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemZoomIn" 
+                              Header="Zoom in" 
+                              Click="MenuItemZoomIn_Click" 
+                              InputGestureText="&#x2039;" 
+                              ToolTip="Zoom into this image, video or thumbnail overview to see greater details"/>
+
+                    <MenuItem Name="MenuItemZoomOut" 
+                              Header="Zoom out" 
+                              Click="MenuItemZoomOut_Click" 
+                              InputGestureText="&#x203A;" 
+                              ToolTip="Zoom out from this image, video or thumbnail overview to see fewer details"/>
+
+                    <MenuItem Name="MenuItemBookmarkDefaultPanZoom" 
+                              Header="Zoom out all the _way" 
+                              InputGestureText="-" Click="MenuItem_BookmarkDefaultPanZoom" 
+                              ToolTip="Zoom out put to see the entire image or video" />
+
+                    <MenuItem Name="MenuItemBookmarkSetPanZoom"  
+                              Header="Zoom to saved bookmarked setting" 
+                              InputGestureText="+" Click="MenuItem_BookmarkSetPanZoom" 
+                              ToolTip="Zoom to the currently saved bookmarked zoom setting " />
+
+                    <MenuItem Name="MenuItemBookmarkSavePanZoom" 
+                              Header="Bookmark current zoom setting" 
+                              InputGestureText="B" 
+                              Click="MenuItem_BookmarkSavePanZoom" 
+                              ToolTip="Save the current zoom setting as a bookmark" />
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemDogearSet"  
+                              Header="Dog-ear the current image" 
+                              InputGestureText="Shift-k" 
+                              Click="MenuItem_DogearSet" 
+                              ToolTip="Dogear the current image, so you can return to to it later" />
+                    <MenuItem Name="MenuItemDogearSwitch" 
+                              Header="Switch to/from dog-ear" 
+                              InputGestureText="k" 
+                              Click="MenuItem_DogearSwitch" 
+                              ToolTip="Navigate to the dogeared image, or back to the last seen image" />
+                    <Separator/>
+ 
+                    <MenuItem Name="MenuItemViewDifferencesCycleThrough" 
+                              Header="Cycle through image differences" 
+                              Click="MenuItemViewDifferencesCycleThrough_Click" 
+                              InputGestureText="&#x2191;" 
+                              ToolTip="View an enhancement that cycles through the differences between the current and the next file, and then the previous file"/>
+       
+                    <MenuItem Name="MenuItemViewDifferencesCombined" 
+                              Header="View combined image differences" 
+                              Click="MenuItemViewDifferencesCombined_Click" 
+                              InputGestureText="&#x2193;" 
+                              ToolTip="View an enhancement that simultaneously shows the differences between the current image vs. the next and previous files."/>
+                    <Separator/>
+                    <MenuItem Name="MenuItemShowInExplorer" 
+                              Header="Show in Explorer" 
+                              Click="MenuItemShowInExplorer_Click" 
+                              ToolTip="Show this file in a Windows Explorer window"/>
+                </MenuItem>
+
+                <!-- Selection Menu -->
+                <MenuItem Name="MenuItemSelect" 
+                          Header="_Select" IsEnabled="false" IsTabStop="false" SubmenuOpened="MenuItemSelect_SubmenuOpening" 
+                          ToolTip="Select a subset of files">
+                    <MenuItem Name="MenuItemSelectAllFiles" IsCheckable="True" IsChecked="True" 
+                              Header="_All files" 
+                              Click="MenuItemSelectFiles_Click" 
+                              ToolTip="Shows all files in the root folder and its subfolders"/>
+                    <MenuItem Name="MenuItemSelectByRelativePath" IsEnabled="True"
+                              Header="All files in a folder and its subfolders..." 
+                              SubmenuOpened="MenuItemSelectByFolder_SubmenuOpening">
+                        <controls:TreeViewWithRelativePaths  
+                            x:Name="tv"
+                            ItemsSource="{Binding}"
+                            Margin="-35,0,-50,0" Padding="5" HorizontalAlignment="Stretch"
+                            MaxHeight ="400"
+                            SelectedItemChanged="MenuItemSelectByFolderTreeView_SelectedItemChanged" >
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="{x:Type TreeViewItem}">
+                                    <Setter Property="IsExpanded" Value="True"/>
+                                    <Setter Property="BorderThickness" Value="1.5"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="BorderBrush" Value="#adc6e5"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="BorderBrush" Value="LightBlue" />
+                                            <!--<Setter Property="Foreground" Value="Black" />
+                                            <Setter Property="Background" Value="LightBlue" />-->
+                                        </Trigger>
+                                        <MultiTrigger>
+                                            <MultiTrigger.Conditions>
+                                                <Condition Property="IsSelected" Value="True"/>
+                                                <Condition Property="IsSelectionActive" Value="False"/>
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="BorderBrush" Value="LightGray"/>
+                                        </MultiTrigger>
+                                    </Style.Triggers>
+                                    <Style.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2"/>
+                                        </Style>
+                                    </Style.Resources>
+                                </Style>
+                            </TreeView.ItemContainerStyle>
+                        </controls:TreeViewWithRelativePaths>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemSelectFilesMarkedForDeletion" IsCheckable="True" IsChecked="False" 
+                              Header="All files marked for d_eletion" 
+                              Click="MenuItemSelectFiles_Click" 
+                              ToolTip="Shows all files marked for deletion"/>
+                    <Separator/>
+                    <MenuItem Name="MenuItemSelectCustomSelection" IsCheckable="True" IsChecked="False" 
+                              Header="_Custom selection..."  
+                              ToolTip="Create a custom selection using filters to display a subset of files.&#10;Filters include your choice of data fields and values and/or particular recognitions.&#10;The custom selection only displays files that match those filters." 
+                              Click="MenuItemSelectCustomSelection_Click"/>
+                    <Separator/>
+                    <MenuItem Name="MenuItemSelectMissingFiles" IsCheckable="True" IsChecked="False" 
+                              Header="_Missing files in the current selection" 
+                              Click="MenuItemSelectFiles_Click" 
+                              ToolTip="Show the subset of files in the current selection that are missing (likely because they were moved, renamed or deleted)"/>
+                    <MenuItem Name="MenuItemSelectRandomSample" 
+                              Header="Create a random sample from the current selection..." 
+                              Click="MenuItemSelectRandomSample_Click" 
+                              ToolTip="Randomly sample and select a subset of files from the current selection"/>
+                    <MenuItem Name="MenuItemSelectReselect" 
+                              Header="Refresh the current selection" 
+                              InputGestureText="F5" 
+                              Click="MenuItemSelectReselect_Click" 
+                              ToolTip="Refresh the display based on the current  selection and sorting criteria."/>
+                </MenuItem>
+
+                <!-- Sort Menu -->
+                <MenuItem Name="MenuItemSort" Header="_Sort" IsEnabled="False" IsTabStop="false" SubmenuOpened="Sort_SubmenuOpening">
+                    <MenuItem Name="MenuItemSortByRelativPathDateTime" IsCheckable="True" IsChecked="False" Header="By Relative Path &#8593; + DateTime &#8593; (default)" Click="MenuItemSort_Click" 
+                              ToolTip="Sort files by their RelativePath (i.e., by folder location), and then by their date/time. The recommended default" />
+                    <MenuItem Name="MenuItemSortById" IsCheckable="True" IsChecked="False" Header="By Id &#8593; (the order files were added to Timelapse)" Click="MenuItemSort_Click" 
+                              ToolTip="Sort files by the order they were added into Timelapse."/>
+                    <MenuItem Name="MenuItemSortByDateTime" IsCheckable="True" IsChecked="False" Header="By Date/Time only &#8593;" Click="MenuItemSort_Click" 
+                              ToolTip="Sort all files by their date/time, regardless of what folder they are in." />
+                    <MenuItem Name="MenuItemSortByFileName" IsCheckable="True" IsChecked="False" Header="By File Path only &#8593; (relative path + file name)" Click="MenuItemSort_Click" 
+                              ToolTip="Sort files by their relative path and file name, regardless of their date/time."  />
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemSortCustom" IsCheckable="True" IsChecked="False" Header="_Custom sort..." Click="MenuItemSortCustom_Click" ToolTip="Customize the sorting order by particular fields."/>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemSortResort" Header="Refresh the sort" Click="MenuItemSortResort_Click" ToolTip="Refresh the display based on the current  selection and sorting criteria." />
+                </MenuItem>
+
+                <!-- Recognition Menu -->
+                <MenuItem Name="MenuItemRecognitions" Header="_Recognitions" IsEnabled="False" IsTabStop="false" SubmenuOpened="MenuItemRecognitions_SubmenuOpening">
+
+                    <MenuItem Name="MenuBoundingBoxSetOptions" Header="Set bounding box options..." Visibility="Visible"
+                              Click="MenuBoundingBoxSetOptions_Click" ToolTip="Set various options for displaying image recognition bounding boxes" />
+
+                    <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="Populate a data field with detection counts..." Visibility="Visible"
+                              Click="MenuItemPopulateDataFieldWithDetectionCounts_Click" ToolTip="Populates a data field in your currently selected files with detection counts over a given confidence values" />
+
+                    <MenuItem Name="MenuItemPopulateWithRecognitinoData" Header="Populate a data field with recognition data..." Visibility="Visible"
+                              Click="MenuItemPopulateDataFieldWithRecognitionData_Click" ToolTip="Populates a data field in your currently selected files with recognition data of your choice" />
+
+                    <Separator />
+
+                    <!-- Import Detections -->
+                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set..." IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/JSONImport_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator />
+                    <!-- EcoAsssist -->
+                    <MenuItem Header="AddaxAI Image Recognizer..." SubmenuOpened="MenuItem_OnAddaxAISubmenuOpened" >
+                        <MenuItem.Icon>
+                            <Image Source="Icons/AddaxAI.png" />
+                        </MenuItem.Icon>
+
+                        <MenuItem Name="MenuItemAddaxAIRun" Header="Run AddaxAI recognizer on a folder..." IsEnabled="True" Click="MenuItemAddaxAIRun_Click" ToolTip="Run the AddaxAI recognizer on a folder that you select">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/AddaxAI.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator />
+
+                        <MenuItem Name="MenuItemAddaxAIDownload" Header="Install AddaxAI image recognizer (via browser)..." IsEnabled="True" Click="MenuItemAddaxAIDownload_Click" ToolTip="Go to the AddaxAI web page for installing the Timelapse-friendly version of the AddaxAI image recognizer">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/AddaxAIUpload.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemAddaxAICheckForUpdates" Header="Uninstall AddaxAI (via browser)..." IsEnabled="True" Click="MenuItemAddaxAIUninstall_Click" ToolTip="Go to the Uninstall AddaxAI web page to download the AddaxAI Unninstall utility">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/AddaxAIUninstall.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                    </MenuItem>
+                </MenuItem>
+
+                <!-- CamtrapDP Menu -->
+                <MenuItem Name="MenuItemCamtrapDP" Header="_CamtrapDP" IsEnabled="false" IsTabStop="false" SubmenuOpened="CamtrapDP_SubmenuOpening">
+                    <MenuItem Name="MenuItemCamtrapDPPopulateFields" Header="_Populate CamtrapDP fields..." Click="MenuItem_CamtrapDPPopulateFields_Click" ToolTip="Populate various CamtrapDP fields"/>
+                    <!-- Export CamtrapDP files...-->
+
+                    <MenuItem Name="MenuItem_ExportCamtrapDP" Header="Export all data as CamtrapDP files..." IsEnabled="true" Click="MenuItem_ExportCamtrapDP_Click" 
+                              ToolTip="Exports all data in this image set as set of CamtrapDP files (for CamtrapDP-compatible templates only)">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/CSVExport_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <!-- Window Menu -->
+                <MenuItem Name="MenuItemWindow" Header="_Window" IsTabStop="false" ToolTip="Save or Apply various window layouts" IsEnabled="True">
+
+                    <!--Standard configurations-->
+                    <MenuItem Name="MenuItemWindowDataEntryOnTop" Header="Fit all into a single window (default)" Click="MenuItemWindowRestore_Click" ToolTip="Data entry panel appears at the window's top (Default layout)" Tag="AvalonLayout_DataEntryOnTop">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/LayoutDataEntryOnTop_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemWindowDataEntryOnSide" Header="_Data Entry Panel in its own vertical window" Click="MenuItemWindowRestore_Click" ToolTip="Data entry panel appears at the window's side" Tag="AvalonLayout_DataEntryOnSide">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/LayoutDataEntryOnSide_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemWindowDataEntryFloating" Header="_Data Entry Panel in its own horizontal window" Click="MenuItemWindowRestore_Click" ToolTip="Data entry panel appears as a floating window" Tag="AvalonLayout_DataEntryFloating">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/LayoutDataEntryFloating_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <!--Custom congiurations: Restore -->
+                    <Separator/>
+                    <MenuItem Name="MenuItemWindowLoadCustom" Header="Restore a Saved Window Layout" SubmenuOpened="MenuItemWindowLoadCustom_SubmenuOpening">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/LayoutCustomLoad_32x.png" />
+                        </MenuItem.Icon>
+                        <MenuItem Name="MenuItemWindowCustom1Load" Header="Layout _1" Click="MenuItemWindowRestore_Click" ToolTip="Restore the saved window layout" Tag="AvalonLayout_Custom01"/>
+                        <MenuItem Name="MenuItemWindowCustom2Load" Header="Layout _2" Click="MenuItemWindowRestore_Click" ToolTip="Restore the saved window layout" Tag="AvalonLayout_Custom02"/>
+                        <MenuItem Name="MenuItemWindowCustom3Load" Header="Layout _3" Click="MenuItemWindowRestore_Click" ToolTip="Restore the saved window layout" Tag="AvalonLayout_Custom03"/>
+                    </MenuItem>
+
+                    <!--Custom congfiurations: Save -->
+                    <MenuItem Name="MenuItemWindowSaveCustom" Header="Save the Current Window Layout">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/LayoutCustomSave_32x.png" />
+                        </MenuItem.Icon>
+                        <MenuItem Name="MenuItemWindowCustom1Save" Header="Layout _1" Click="MenuItemWindowSave_Click" ToolTip="Save the current window layout" Tag="AvalonLayout_Custom01"/>
+                        <MenuItem Name="MenuItemWindowCustom2Save" Header="Layout _2" Click="MenuItemWindowSave_Click" ToolTip="Save the current window layout" Tag="AvalonLayout_Custom02"/>
+                        <MenuItem Name="MenuItemWindowCustom3Save" Header="Layout _3" Click="MenuItemWindowSave_Click" ToolTip="Save the current window layout" Tag="AvalonLayout_Custom03"/>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <!--Restore to default and initial configurations -->
+                    <MenuItem Name="MenuItemWindowReset" Header="_Reset to default" Click="MenuItemWindowRestore_Click" ToolTip="Reset the layout to the default " Tag="AvalonLayout_DataEntryOnTop">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/LayoutDefault_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemWindowLastUsed" Header="_Reset to Initial Layout" Click="MenuItemWindowRestore_Click" ToolTip="Reset to the initial layout" Tag="AvalonLayout_LastUsed4"/>
+                </MenuItem>
+
+                <!-- Help Menu -->
+                <MenuItem Name="MenuItemHelp" Header="_Help" IsEnabled="true" IsTabStop="false" SubmenuOpened="Help_SubmenuOpening" >
+                    <MenuItem Name="MenuKeyboardShortcuts" Header="_Keyboard shortcuts..." Click="MenuItem_KeyboardShortcuts_Click" ToolTip="A list of various keyboard shortcuts available within Timelapse" />
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemTimelapseHomePage" Header="Timelapse web site (via your web browser)..." Click="MenuTimelapseWebPage_Click" ToolTip="Displays the Timelapse web site's home page in your browser">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/Home_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemGuidesAndManuals" Header="Timelapse instructional guides" ToolTip="Tutorial guides on using Timelapse.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                        <MenuItem Name="MenuItemGuidesPage" Header="All instructional guides (via your web browser) " Click="MenuItemGuidesAndManuals_Click" ToolTip="The essential starter guide on how to download and use the most basic features of Timelapse. [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+
+                        <MenuItem Name="MenuItemQuickStartGuide" Header="Part 1: Timelapse Quickstart Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="The essential starter guide on how to download and use the most basic features of Timelapse. [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Name="MenuItemVideoCompanionQuickStart" Header="Video Companion - Timelapse Quick Start Guide" Click="MenuVideoPlay_Click" ToolTip="A video companion to the Timelapse Quick Start Guide, where it mirrors what is described there.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+
+                        <MenuItem Name="MenuItemReferenceGuide" Header="Part 2: Timelapse Reference Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A reference guide to all Timelapse features plus tips on how to use them. [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+
+                        <MenuItem Name="MenuItemTemplateGuide" Header="Part 3: Timelapse Template Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to creating Timelapse templates. [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Name="MenuItemVideoCompanionTemplateEditor" Header="Video Companion - Timelapse Template Guide" Click="MenuVideoPlay_Click" ToolTip="A video companion to the Timelapse Template Guide, where it explains how to create templates of custom data fields.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+
+                        <MenuItem Name="MenuItemImageRecognitionGuide" Header="Part 4: Timelapse Image Recognition Guide(pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="How to incorporate and use image recognition in Timelapse. [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Name="MenuItemVideoCompanionImageRecognition" Header="Video Companion - Timelapse Image Recognition" Click="MenuVideoPlay_Click" ToolTip="A video companion to the Timelapse Image Recognition Guide, where it mirrors the workflow described there.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+
+                        <MenuItem Name="MenuItemMetadataGuide" Header="Part 5: Timelapse Metadata Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to associating folder-level metadata with your image set [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Name="MenuItemDatabaseGuide" Header="Part 6: Timelapse Database Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to the internal structure of Timelapse Database tables [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <!--<MenuItem Name="MenuItemConvertingOldTimelapseGuide" Header="Part 7: Timelapse Template Conversion Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to the internal structure of Timelapse Database tables [PDF]">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>-->
+                    </MenuItem>
+
+                    <!--<MenuItem Name="MenuItemDownloadSampleImages" Header="_Timelapse practice image sets (via your web browser)..." Click="MenuDownloadSampleImages_Click" ToolTip="Open the Timelapse web page where you can download various practice image sets as used in various Timelapse guides." >
+                        <MenuItem.Icon>
+                            <Image Source="Icons/Download_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>-->
+
+
+                    <!-- Video Lessons -->
+                    <MenuItem Name="MenuItemVideoFeatures" Header="Timelapse instructional videos..." Click="MenuVideoPlay_Click" ToolTip="Video lessons on using Timelapse.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+
+
+                        <MenuItem Name="MenuItemVideosPage" Header="All videos (via your browser)" Click="MenuVideoPlay_Click" ToolTip="A page collectin video lessons illustration Timelapse functionality and concepts">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/OpenFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+                        <MenuItem Header="Introductory overviews (you should watch these!)" IsEnabled="False"/>
+
+                        <MenuItem Name="MenuItemVideoWhirlwindTour" Header="A whirlwind tour of Timelapse" Click="MenuVideoPlay_Click" ToolTip="A video overview showing off most Timelapse features that plays in your browser.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemVideoImageRecognitionForCameraTraps" Header="Image recognition for camera traps" Click="MenuVideoPlay_Click" ToolTip="A video explaining image recognition as used by wildlife ecologists.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+
+
+                        <Separator/>
+                        <MenuItem Header="Getting going" IsEnabled="False"/>
+
+                        <!-- InstallingTimelapse -->
+                        <MenuItem Name="MenuItemVideoInstallingTimelapse" Header="Installing Timelapse" Click="MenuVideoPlay_Click" ToolTip="How to install Timelapse, and open it on the Practice image set">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <!-- IncrementallyAddingImage -->
+                        <MenuItem Name="MenuItemVideoAddingImagesOverTime" Header="Incrementally adding images and videos over time" Click="MenuVideoPlay_Click" ToolTip="Timelapse works on images, video files, and a mix of the two. This tutorial illustrates features of the Timelapse video player.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+                        <MenuItem Header="Inspecting Images" IsEnabled="False"/>
+
+                        <MenuItem Name="MenuItemVideoViewingVideos" Header="Viewing Videos" Click="MenuVideoPlay_Click" ToolTip="Timelapse works with video files as well as images, where you play videos with the Timelapse Video Player.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+
+                        <!-- Using the Timelapse video player -->
+                        <MenuItem Name="MenuItemVideoPlayer" Header="Using the Timelapse video player" Click="MenuVideoPlay_Click" ToolTip="Timelapse works on images, video files, and a mix of the two. This tutorial illustrates features of the Timelapse video player.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemVideoRandomSampling" Header="Randomly sampling images" Click="MenuVideoPlay_Click" ToolTip="View a randomly chosen subset of images from your current selection.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+                        <MenuItem Header="Entering data" IsEnabled="False"/>
+                        <MenuItem Name="MenuItemVideoUsingOverview" Header="Using the Overview: viewing and entering data for multiple files" Click="MenuVideoPlay_Click" ToolTip="Selecting multiple thumbnails and entering data that describes them.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemVideoQuickPaste" Header="QuickPaste" Click="MenuVideoPlay_Click" ToolTip="Create QuickPaste buttons to represent common data entry patterns. A single click replaces entering data into multiple fields.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemVideoDuplicatingRecords" Header="Duplicating a data record" Click="MenuVideoPlay_Click" ToolTip="Duplicate a record to reuse the fields on your image multiple times.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+                        <MenuItem Header="Image recognition" IsEnabled="False"/>
+
+                        <MenuItem Name="MenuItemVideoUsingEcoAssist" Header="Using AddaxAI for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses AddaxAI to do its image recognition. This video illustrates how to use AddaxAI.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemImageRecognitionForVideos" Header="Image recognition for Videos" Click="MenuVideoPlay_Click" ToolTip="This video illustrates how image recognition works in the Video Player and how to use AddaxAI to do video recognition">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+                        <MenuItem Header="Other lessons" IsEnabled="False"/>
+
+                        <MenuItem Name="MenuItemVideoClassifyingDarkImages" Header="Classifying your dark images" Click="MenuVideoPlay_Click" ToolTip="Iimelapse can automatically classify your dark images, where you can exclude them from further analysis or even delete them.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Name="MenuItemVideoRepositionDataEntryPanel" Header="Repositioning your Tabs and the Data Entry Panel" Click="MenuVideoPlay_Click" ToolTip="How you can re-arrange your tabs and window layout.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <MenuItem Name="MenuItemVideoPopulateEpisodeData" Header="How to populate a field with Episode data" Click="MenuVideoPlay_Click" ToolTip="Marking episodes of successive images taken within a short time interval.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Name="MenuItemVideoViewingPopups" Header="Viewing Episode images in a popup" Click="MenuVideoPlay_Click" ToolTip="How to quickly view surrounding Episode images in a popup.">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                        <Separator/>
+                        <MenuItem Header="Webinars" IsEnabled="False"/>
+                        <MenuItem Name="MenuItemVideoImageRecnWebinar" Header="Image recogntion: Making it work for you" Click="MenuVideoPlay_Click" ToolTip="Webinar: prospects, workflows, and limitations of image recognition for camera traps">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/MediaControl-PlayButton.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemFAQ" Header="Timelapse FAQ (Frequently asked questions)..." Click="MenuItemFAQ_Click" ToolTip="Displays the Timelapse Frequently Asked Questions page in a web browser">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemJoinMailingList" Header="Timelapse mailing list - _Join it (via your web browser)..." Click="MenuJoinTimelapseMailingList_Click" ToolTip="Using your browser, go to the page that lets you join the timelapse mailing list. You will be informed about updates, and you can post requests to it.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/JoinMailingList_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemMailToMailingList" Header="Timelapse mailing list - Send _email..." Click="MenuMailToTimelapseMailingList_Click" ToolTip="Post an email to the Timelapse mailing list. You should join the mailing list before doing this.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/EmailSend_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer..." Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/EmailSend_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemAbout" Header="_About..." Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/About_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+            <!-- #endregion -->
+
+            <!--#region DockingManager1-->
+            <xcad:DockingManager x:Name="DockingManager1" Grid.Row="1" AllowMixedOrientation="True" BorderBrush="Black" BorderThickness="1" LayoutUpdated="DockingManager_LayoutUpdated">
+                <xcad:DockingManager.DocumentHeaderTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <!--<Image Source="{Binding IconSource}" Margin="0,0,4,0">
+                                <d:Image.DataContext>
+                                    <d:DesignInstance />
+                                </d:Image.DataContext>
+                            </Image>-->
+
+                            <TextBlock Name="TitleBlock" Text="{Binding  Title}" Margin="2" ToolTip="Test">
+                                <d:TextBlock.DataContext>
+                                    <d:DesignInstance />
+                                </d:TextBlock.DataContext>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </xcad:DockingManager.DocumentHeaderTemplate>
+
+                <xcad:DockingManager.AnchorableTitleTemplate>
+                    <DataTemplate>
+                        <!--This is a hack to get the DataEntryControlPanel tooltip to work, as setting it within the DataEntryControlPanel doesn't seem to work-->
+
+                        <StackPanel Orientation="Horizontal">
+                            <!--<Image Source="{Binding IconSource}" Margin="0,0,4,0">
+                                <d:Image.DataContext>
+                                    <d:DesignInstance />
+                                </d:Image.DataContext>
+                            </Image>-->
+
+                            <TextBlock Text="{Binding Title}"  
+                                       ToolTip="Contains data fields you can fill in to describe your image files.&#10;Drag this title bar to reposition this panel to side, top or bottom of this window, or to pull it out." >
+                                <d:TextBlock.DataContext>
+                                    <d:DesignInstance />
+                                </d:TextBlock.DataContext>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </xcad:DockingManager.AnchorableTitleTemplate>
+
+                <xcadLayout:LayoutRoot x:Name="LayoutRoot1" >
+                    <xcadLayout:LayoutPanel Orientation="Vertical" >
+
+                        <!-- #region Data Entry Controls Pane -->
+                        <xcadLayout:LayoutAnchorablePane x:Name="LayoutAnchorablePaneForDataEntryControlPanel" DockHeight="Auto">
+                            <xcadLayout:LayoutAnchorable x:Name="DataEntryControlPanel" ContentId="ContentIDDataEntryControlPanel"
+                                               Title="Image data"
+                                               IsVisible="False" 
+                                               CanClose="False"  CanAutoHide="False" CanHide="False" 
+                                               PropertyChanging="LayoutAnchorable_PropertyChanging">
+                                <ScrollViewer  Name="DataEntryScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" VerticalAlignment ="Top" HorizontalAlignment="Left" VerticalContentAlignment="Stretch" MaxHeight="{Binding ElementName=ControlGrid, Path=ActualHeight}">
+                                    <Grid Name="ControlGrid" SizeChanged="ControlGrid_SizeChanged">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- #region Popup Find Box Control -->
+                                        <Popup Name="FindBox" 
+                                               StaysOpen="False"
+                                               Placement="Left" 
+                                               AllowsTransparency="True"  PopupAnimation="Fade"  
+                                               HorizontalOffset="278"
+                                               VerticalOffset="-22"
+                                               PlacementTarget="{Binding ElementName=ControlsPanel}" >
+                                            <StackPanel Orientation="Horizontal" MinHeight="20"  Background="PaleGoldenrod" >
+                                                <TextBlock Text="Find:" FontSize="14" FontWeight="Bold" Background="PaleGoldenrod" Foreground="Black" VerticalAlignment="Center" Padding="5,0,5,0"
+                                                           ToolTip="Find the next or previous image whose filename contains this case-insensitive text"/>
+                                                <TextBox Name="FindBoxTextBox" 
+                                                         FontSize="12"  Background="PaleGoldenrod"  Foreground="Black" Width="160" VerticalContentAlignment="Center" 
+                                                         ToolTip="Find the next image whose filename contains this case-insensitive text" 
+                                                         KeyDown="FindBoxTextBox_KeyDown"/>
+                                                <Button Name="FindBackwardsButton" FontSize="12"  FontWeight="Bold" Content=" &lt; " Background="PaleGoldenrod" Padding="5,0,5,0"
+                                                        ToolTip="Find the previous image whose filename contains this case-insensitive text"
+                                                         Click="FindBoxButton_Click"/>
+                                                <Button Name="FindForwardButton" FontSize="12"  FontWeight="Bold"  Content=" &gt;" Background="PaleGoldenrod" Padding="5,0,5,0"
+                                                        ToolTip="Find the next image whose filename contains this case-insensitive text" 
+                                                        Click="FindBoxButton_Click"/>
+                                                <Button Name="FindCloseButton" FontSize="12"  FontWeight="Bold" Content=" x " Padding="5,0,5,0" Background="PaleGoldenrod" Click="FindBoxClose_Click" />
+                                            </StackPanel>
+                                        </Popup>
+                                        <!--#endregion-->
+
+                                        <!-- #region Controls Tray panel (to hold controls) -->
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Name="ControlsPanel">
+                                            <controlsDataEntry:DataEntryControls x:Name="DataEntryControls" />
+                                        </StackPanel>
+                                        <!--#endregion-->
+
+                                        <!-- #region Copy Previous Button -->
+                                        <Button Name="CopyPreviousValuesButton" Visibility="Collapsed"  Margin="0" Padding="5,0,5,0"
+                                            Grid.Row="0" Grid.Column="1" 
+                                            Style="{DynamicResource CopyPreviousButtonStyle}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                                            Width="Auto" Height="Auto" MinHeight="60" MinWidth="60" 
+                                            ToolTip="Copy selected data as recorded on the previous image. Applies only to data marked 'Copyable' in the code template."
+                                            IsTabStop="True" 
+                                            IsDefault="False"
+                                            Click="MenuItemCopyPreviousValues_Click"  
+                                            MouseEnter="CopyPreviousValues_MouseEnterOrLeave" 
+                                            MouseLeave="CopyPreviousValues_MouseEnterOrLeave" 
+                                            LostFocus="CopyPreviousValues_LostFocus"
+                                            PreviewKeyDown="CopyPreviousValues_PreviewKeyDown">
+                                            <StackPanel Orientation="Vertical">
+                                                <TextBlock 
+                                                TextWrapping="Wrap" 
+                                                FontWeight="Bold">Copy<LineBreak/>previous<LineBreak/>values
+                                                </TextBlock>
+                                                <DockPanel Margin="0,-6,0,-6" Width="Auto">
+                                                    <TextBlock 
+                                                FontWeight="Bold" Foreground="SlateGray" FontSize="16" DockPanel.Dock="Left" TextAlignment="Left">&#8592;
+                                                    </TextBlock>
+                                                    <TextBlock 
+                                                FontWeight="Normal" Foreground="SlateGray" FontSize="16" DockPanel.Dock="Left" TextAlignment="Center" HorizontalAlignment="Center" Padding="6,0,0,0">c
+                                                    </TextBlock>
+                                                    <TextBlock 
+                                                FontWeight="Bold" Foreground="SlateGray" FontSize="16" DockPanel.Dock="Right" TextAlignment="Right">&#8594;
+                                                    </TextBlock>
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </Button>
+                                        <!--#endregion-->
+
+                                    </Grid>
+                                </ScrollViewer>
+                            </xcadLayout:LayoutAnchorable>
+                        </xcadLayout:LayoutAnchorablePane>
+                        <!-- #endregion -->
+                    </xcadLayout:LayoutPanel>
+                    <!--#endregion-->
+
+                </xcadLayout:LayoutRoot>
+            </xcad:DockingManager>
+            <!--#endregion-->
+
+            <!--#region FileNavigator-->
+            <Grid Grid.Row="2" Name="GridFileNavigator">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Name="AutoToolTipSliderBorder" BorderThickness="2"  Margin="0,0,0,0" />
+
+                <controls:AutoToolTipSlider x:Name="FileNavigatorSlider"
+                                            Grid.Column="0"
+                                            Minimum ="1" Maximum="1" LargeChange="1"
+                                            ToolTip="Scroll through all files" Foreground="Gray" Margin="2"
+                                            AutoToolTipPlacement="TopLeft" AutoToolTipPrecision="0"
+                                            TickPlacement="BottomRight"
+                                            PreviewMouseDown="FileNavigatorSlider_PreviewMouseDown"
+                                            Thumb.DragStarted="FileNavigatorSlider_DragStarted"
+                                            Thumb.DragCompleted="FileNavigatorSlider_DragCompleted"
+                                            GotFocus="FileNavigatorSlider_GotFocus"
+                                            LostFocus="FileNavigatorSlider_LostFocus"/>
+                <controls:FilePlayer x:Name="FilePlayer" Grid.Row="0" Grid.Column="1" FilePlayerChange="FilePlayer_FilePlayerChange" Visibility="Collapsed"/>
+            </Grid>
+            <!--#endregion-->
+
+            <!--#region DockingManager2-->
+            <xcad:DockingManager x:Name="DockingManager2" AllowMixedOrientation="True" BorderBrush="Black" BorderThickness="1" Grid.Row="3" LayoutUpdated="DockingManager_LayoutUpdated">
+                <xcad:DockingManager.DocumentHeaderTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <!--<Image Source="{Binding IconSource}" Margin="0,0,4,0">
+                                <d:Image.DataContext>
+                                    <d:DesignInstance />
+                                </d:Image.DataContext>
+                            </Image>-->
+
+                            <TextBlock Name="TitleBlock" Text="{Binding  Title}" Margin="2" ToolTip="Test">
+                                <d:TextBlock.DataContext>
+                                    <d:DesignInstance />
+                                </d:TextBlock.DataContext>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </xcad:DockingManager.DocumentHeaderTemplate>
+
+                <xcad:DockingManager.AnchorableTitleTemplate>
+                    <DataTemplate>
+                        <!--This is a hack to get the DataEntryControlPanel tooltip to work, as setting it within the DataEntryControlPanel doesn't seem to work-->
+
+                        <StackPanel Orientation="Horizontal">
+                            <!--<Image Source="{Binding IconSource}" Margin="0,0,4,0">
+                                <d:Image.DataContext>
+                                    <d:DesignInstance />
+                                </d:Image.DataContext>
+                            </Image>-->
+
+                            <TextBlock Text="{Binding Title}"  
+                                       ToolTip="Contains data fields you can fill in to describe your image files.&#10;Drag this title bar to reposition this panel to side, top or bottom of this window, or to pull it out." >
+                                <d:TextBlock.DataContext>
+                                    <d:DesignInstance />
+                                </d:TextBlock.DataContext>
+                            </TextBlock>
+                        </StackPanel>
+                    </DataTemplate>
+                </xcad:DockingManager.AnchorableTitleTemplate>
+
+                <xcadLayout:LayoutRoot x:Name="LayoutRoot2" >
+                    <xcadLayout:LayoutPanel Orientation="Vertical" >
+                        <!-- #region Tab panes -->
+                        <xcadLayout:LayoutDocumentPaneGroup>
+                            <xcadLayout:LayoutDocumentPane  >
+
+                                <!-- #region Instructions Pane -->
+                                <xcadLayout:LayoutDocument x:Name="InstructionPane" ContentId="ContentIDInstructionPane"
+                                                 Title="Instructions  " CanClose="False" CanFloat="True" ToolTip="Instructions. Pull it out as a separate window by dragging its title bar">
+                                    <controls:HelpUserControl 
+                                        x:Name="HelpDocument" HelpFile="pack://application:,,/Resources/TimelapseHelp.rtf" Background="AliceBlue"
+                                        AllowDrop="True" Drop="HelpDocument_Drop" PreviewDragEnter="HelpDocument_PreviewDrag" PreviewDragOver="HelpDocument_PreviewDrag" Visibility="Visible" Height="Auto" />
+                                </xcadLayout:LayoutDocument>
+                                <!--#endregion-->
+
+                                <!-- #region Image Set Pane -->
+                                <xcadLayout:LayoutDocument x:Name="ImageSetPane" ContentId="ContentIDImageSetPane"
+                                                 Title="View images  " CanClose="False" CanFloat="False" ToolTip="Displays your image and video files" >
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+
+
+
+                                        <images:MarkableCanvas x:Name="MarkableCanvas" Grid.Row="0" HorizontalAlignment="Stretch" />
+
+                                        <TextBlock Name="EpisodeText" Grid.Row="0"  IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="Black" FontSize="40" Margin="5,20,0,0">
+                                            <TextBlock.Background>
+                                                <SolidColorBrush Color="AliceBlue" Opacity="0.6" />
+                                            </TextBlock.Background>
+                                        </TextBlock>
+
+                                        <TextBlock Name="DuplicateIndicatorInMainWindow" Text="Duplicate" Grid.Row="0" Visibility="Collapsed" IsHitTestVisible="False" HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="Red" FontSize="16" FontWeight="DemiBold" FontStyle="Italic" Margin="5,0,0,0">
+                                            <TextBlock.Background>
+                                                <SolidColorBrush Color="AliceBlue" Opacity="0.8" />
+                                            </TextBlock.Background>
+                                        </TextBlock>
+                                    </Grid>
+                                </xcadLayout:LayoutDocument>
+                                <!--#endregion-->
+
+                                <!-- #region Folder Data Pane  -->
+                                <xcadLayout:LayoutDocument x:Name="FolderMetadataPane" ContentId="ContentIDFolderMetadataPane"
+                                                     Title="Folder data  " CanClose="False" 
+                                                     CanFloat="True" 
+                                                     IsEnabled="True"
+                                                     ToolTip="Folder-level data, if defined in the template, includes tabs allowing you to edit data describing your folders. Pull it out as a separate window by dragging its title bar">
+                                    <Grid Name="MetadataPaneGrid">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <controlsMetadata:MetadataUI x:Name="MetadataUI"/>
+
+                                    </Grid>
+                                </xcadLayout:LayoutDocument>
+                                <!--#endregion-->
+
+                                <!-- #region Data Pane -->
+                                <xcadLayout:LayoutDocument x:Name="DataGridPane" ContentId="ContentIDDataGridPane"
+                                                 Title="Data table  " CanClose="False" IsActiveChanged="DataGridPane_IsActiveChanged" CanFloat="True" 
+                                                 ToolTip="Data Table shows all your data. Pull it out as a separate window by dragging its title bar" 
+                                                 >
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Margin="5">
+                                        <Run>Displays the contents of the database, including changes as they occur.</Run>
+                                        <LineBreak/>
+                                        <Run>The highlit row indicates the currently viewed file</Run>
+                                        </TextBlock>
+                                        <DataGrid Name="DataGrid" Grid.Row="1" MinHeight="100" MinWidth="100"  DockPanel.Dock="Top" HorizontalAlignment="Stretch" FontSize="12" 
+                                              VerticalScrollBarVisibility="Auto" IsReadOnly="True" SelectionMode="Extended" SelectionUnit="FullRow" 
+                                              ScrollViewer.ScrollChanged="DataGridScrollBar_Scroll" AutoGeneratingColumn="OnAutoGeneratingColumn">
+                                            <DataGrid.ColumnHeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}" >
+                                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <TextBlock TextAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           Text="{TemplateBinding Content}" />
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </DataGrid.ColumnHeaderStyle>
+                                            <DataGrid.ItemContainerStyle >
+                                                <Style TargetType="DataGridRow">
+                                                    <EventSetter Event="MouseLeftButtonUp" Handler="DataGrid_RowSelected"/>
+                                                </Style>
+                                            </DataGrid.ItemContainerStyle>
+
+                                        </DataGrid>
+                                    </Grid>
+                                </xcadLayout:LayoutDocument >
+                                <!--#endregion-->
+
+                            </xcadLayout:LayoutDocumentPane>
+                        </xcadLayout:LayoutDocumentPaneGroup>
+
+
+                    </xcadLayout:LayoutPanel>
+                    <!--#endregion-->
+
+                </xcadLayout:LayoutRoot>
+            </xcad:DockingManager>
+            <!--#endregion-->
+
+            <!--#region Status bar -->
+            <StatusBar Grid.Row="4" VerticalAlignment="Bottom" Name="StatusBar" ItemsSource="{Binding}">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <!-- File:-->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- # -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- of -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- # -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- | -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- Select: -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- selection type -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- | -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- Sort: -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- sort type -->
+                                <ColumnDefinition Width="Auto" />
+                                <!-- | -->
+                                <ColumnDefinition Width="*" />
+                                <!-- Message: -->
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+                <StatusBarItem  Grid.Column="0" Content="File:" FontWeight="Bold" />
+                <StatusBarItem  Grid.Column="1" Content="0" />
+                <StatusBarItem  Grid.Column="2" Content="of" />
+                <StatusBarItem  Grid.Column="3" Content="none" />
+
+                <Separator Grid.Column="4" Margin="5,0,5,0"/>
+
+                <StatusBarItem  Grid.Column="5" Content="Select:" FontWeight="Bold" />
+                <StatusBarItem  Grid.Column="6" Content="---" />
+
+                <Separator Grid.Column="7" Margin="5,0,5,0" />
+
+                <StatusBarItem  Grid.Column="8" Content="Sorted by:" FontWeight="Bold" />
+                <StatusBarItem  Grid.Column="9" Content="---" />
+
+                <Separator Grid.Column="10" Margin="5,0,5,0" />
+
+                <StatusBarItem  Grid.Column="11" Content="---" HorizontalAlignment="Right" HorizontalContentAlignment="Stretch"/>
+            </StatusBar>
+        </Grid>
+        <!--#endregion-->
+
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0"/>
+    </Grid>
+</Window>

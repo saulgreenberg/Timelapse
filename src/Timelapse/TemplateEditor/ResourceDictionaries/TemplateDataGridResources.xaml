@@ -1,0 +1,75 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        <!-- Define the default tooltip associated with the various controls -->
+        <ToolTip x:Key="DefaultValueToolTip">
+            <TextBlock>The initial default data value when images are initially loaded into Timelapse</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="LabelToolTip">
+            <TextBlock>The data field's label displayed in the Timelapse user interface</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="DataLabelToolTip">
+            <TextBlock>The data field's column name as written in the timelapse database (.ddb) file and exported .csv files.</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TooltipToolTip">
+            <TextBlock>The data field's tooltip displayed in the Timelapse user interface</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="ListFixedChoiceToolTip">
+            <TextBlock>Define a list of items to display in this data field's drop-down menu. Each edited line is an item.</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="WidthToolTip">
+            <TextBlock>The width of the data entry field displayed in the Timelapse user interfac</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="CopyableToolTip">
+            <TextBlock>Whether the data value from the previous will be copied to the current file if the user selects the ‘Copy’ button in Timelapse</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="VisibleToolTip">
+            <TextBlock>Whether this item will appear in the Timelapse user interface</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="ExportToCSVToolTip">
+            <TextBlock>Whether this item and its value will be exported to a CSV file</TextBlock>
+        </ToolTip>
+
+        <!--These tooltips are shown on particular file types. Note that standard tooltips are added in code behind because the cell's control is disabled.-->
+        <ToolTip x:Key="TypeNoteToolTip">
+            <TextBlock>Note types accept free-form text</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeMultilineToolTip">
+            <TextBlock>MultiLine types accept free-form text in a drop-down textbox</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeAlphaNumericToolTip">
+            <TextBlock>AlphaNumeric types accept letters A:z, numbers 0:9, dashes - and underscores _ only</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeCounterToolTip">
+            <TextBlock>Count types provide a point and click interface for counting entities in an image or video</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeIntegerAnyToolTip">
+            <TextBlock>IntegerAny types accept a negative or positive integer number</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeIntegerPositiveToolTip">
+            <TextBlock>IntegerPositive types accept a positive integer number</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeDecimalAnyToolTip">
+            <TextBlock>DecimalAny types accept a negative or positive integer number</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeDecimalPositiveToolTip">
+            <TextBlock>DecimalPositive types accept a positive integer number</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeFixedChoiceToolTip">
+            <TextBlock>Fixed Choice types provide a drop down menu where a single item can be selected. Edit the list to create these choices</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeMultiChoiceToolTip">
+            <TextBlock>MultiChoice types provide a drop down menu where multiple items can be selected. Edit the list to create these choices</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeDateTime_ToolTip">
+            <TextBlock>DateTime_ types accept only valid Dates and Times</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeDate_ToolTip">
+            <TextBlock>Date_ types accept only valid Dates</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeTime_ToolTip">
+            <TextBlock>Time_ types accept only valid Times (HH:MM:SS)</TextBlock>
+        </ToolTip>
+        <ToolTip x:Key="TypeFlagToolTip">
+            <TextBlock>Flag types can be toggled between true and false</TextBlock>
+        </ToolTip>
+</ResourceDictionary>

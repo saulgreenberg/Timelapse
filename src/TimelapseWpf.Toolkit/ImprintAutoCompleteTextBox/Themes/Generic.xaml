@@ -1,0 +1,127 @@
+<!--***********************************************************************************
+
+   Toolkit for WPF
+
+   Copyright (C) 2007-2019 Xceed Software Inc.
+
+   This program is provided to you under the terms of the Microsoft Public
+   License (Ms-PL) as published at https://opensource.org/license/ms-pl-html
+
+   Fork origin: https://github.com/dotnetprojects/WpfExtendedToolkit
+   - based on: https://github.com/xceedsoftware/wpftoolkit, Version 3
+   This fork: modified for use in Timelapse project
+    by Saul Greenberg, 2025 onwards
+
+
+
+
+  **********************************************************************************-->
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:TimelapseWpf.Toolkit">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="/TimelapseWpf.Toolkit;component/ImprintTextBox/Themes/Generic.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!-- ImprintAutoCompleteTextBox with dropdown -->
+  <!-- Inherits Timelapse standard colors and thicknesses from ImprintTextBox/Themes/Generic.xaml -->
+
+  <Style x:Key="ImprintAutoCompleteTextBox"
+         TargetType="{x:Type local:ImprintAutoCompleteTextBox}"
+         BasedOn="{StaticResource ImprintTextBox}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type local:ImprintAutoCompleteTextBox}">
+          <Grid>
+            <!-- TextBox Border -->
+            <Border x:Name="Border"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    CornerRadius="1"
+                    Background="{TemplateBinding Background}">
+              <Grid Background="Transparent">
+                <!-- Imprint on bottom layer (visually behind, hit-tested last) -->
+                <ContentPresenter x:Name="PART_ImprintHost"
+                                  Content="{TemplateBinding Imprint}"
+                                  ContentTemplate="{Binding ImprintTemplate, RelativeSource={RelativeSource TemplatedParent}, TargetNullValue={StaticResource DefaultImprintTemplate}}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  Margin="{TemplateBinding Padding}"
+                                  Visibility="Collapsed"
+                                  Panel.ZIndex="0" />
+                <!-- ScrollViewer on top layer (visually on top, hit-tested first) - MUST be last child for proper hit-testing -->
+                <ScrollViewer x:Name="PART_ContentHost"
+                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                              Panel.ZIndex="1" />
+              </Grid>
+            </Border>
+
+            <!-- Dropdown Popup -->
+            <Popup x:Name="PART_Popup"
+                   PlacementTarget="{Binding ElementName=Border}"
+                   Placement="Bottom"
+                   IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                   AllowsTransparency="True"
+                   Focusable="False"
+                   PopupAnimation="Slide"
+                   StaysOpen="False">
+              <Border Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                      BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}"
+                      BorderThickness="1"
+                      MinWidth="{Binding ActualWidth, ElementName=Border}"
+                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                <ListBox x:Name="PART_Selector"
+                         ItemsSource="{TemplateBinding FilteredSuggestions}"
+                         BorderThickness="0"
+                         Focusable="False"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                  <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                      <Setter Property="Padding" Value="5,2" />
+                    </Style>
+                  </ListBox.ItemContainerStyle>
+                </ListBox>
+              </Border>
+            </Popup>
+
+          </Grid>
+
+          <ControlTemplate.Triggers>
+            <!-- Imprint visibility is fully controlled by code-behind (ShowImprint + HideOnFocus logic) -->
+            <Trigger Property="IsFocused" Value="True">
+              <Setter TargetName="Border" Property="BorderThickness" Value="{StaticResource BorderThickness_Highlight}" />
+              <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource TextBox_Focused}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="false">
+              <Setter Property="Foreground"
+                      Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+            </Trigger>
+
+            <!--Readonly visual feedback for textbox portion, currently unique to this control-->
+            <!-- light grey background to distinguish that is in a readonly state-->
+            <!-- when readonly and focused, keep normal border thickness instead of highlight border thickness -->
+            <!-- border highlight coloring changes as normal to show that it has focus (e.g., for raising the context menu) -->
+            <Trigger Property="IsReadOnly" Value="True">
+              <Setter TargetName="Border" Property="Background" Value="WhiteSmoke" />
+            </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsReadOnly" Value="True" />
+                <Condition Property="IsFocused" Value="True" />
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Border" Property="BorderThickness" Value="{StaticResource BorderThickness_Normal}" />
+            </MultiTrigger>
+
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="{x:Type local:ImprintAutoCompleteTextBox}"
+         BasedOn="{StaticResource ImprintAutoCompleteTextBox}" />
+
+</ResourceDictionary>

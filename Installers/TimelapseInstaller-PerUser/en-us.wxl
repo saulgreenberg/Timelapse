@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+  <!-- Override Welcome Dialog Title -->
+  <String Id="WelcomeDlgTitle" Value="{\WixUI_Font_Bigger}Install Timelapse Image Analyzer&#13;&#10;only for the current user." />
+
+  <!-- Override Welcome Dialog Description -->
+  <String Id="WelcomeDlgDescription" Value="Timelapse Image Analyzer: Software that helps turn camera trap images and videos into data.&#13;&#10;&#13;&#10;• Next: installs Timelapse only in your account.&#13;&#10;• Cancel: exits this installation.&#13;&#10;• Re-installing Timelapse? You may be asked to remove it first." />
+
+<!-- Override Ready to install title -->
+  <String Id="VerifyReadyDlgInstallTitle" Value="{\WixUI_Font_Title}Ready to install [ProductName] for the current user"/>
+  
+  <!-- Override Ready to install message -->
+  <String Id="VerifyReadyDlgInstallText" Value="Note: Timelapse is self-contained, where it includes .Net8 (Desktop Runtime)&#13;&#10;&#13;&#10;This installation will install Timelapse so that it is accessible only to the current user.&#13;&#10;• Install to begin the installation.&#13;&#10;• Back to review or change settings&#13;&#10;• Cancel to exit" />
+
+</WixLocalization>

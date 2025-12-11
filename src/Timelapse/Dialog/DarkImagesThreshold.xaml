@@ -1,0 +1,185 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DarkImagesThreshold"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Classify dark images"
+        Loaded="Window_Loaded"
+        MinHeight="768" MinWidth="700"
+		Height="800" Width="768"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
+    <Grid>
+        <Grid PreviewKeyDown="Window_PreviewKeyDown" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!--Instructions-->
+            <toolkit:FormattedMessageContent x:Name="Message" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Populate a field with Dark classification data..."
+                            What="Automatically classify Dark (usually night-time) images, where one of your Flag fields will be set to [i]true[/i] for Dark images."
+                            Solution="[ni] Select a [e]Flag[/e] field for the classifier to use.
+                                      [ni] Navigate through various images below to preview its classification. 
+                                      [ni] If the classification looks accurate, click [e]Start[/e]. 
+                                      [br] The [e]Details[/e] section describes how to fine-tune darkness classification."  
+                            Hint="It helps to understand how Timelapse determines darkness.
+                                      [li] Videos and images with color in it are classified as Not Dark
+                                      [li] Otherwise, it counts the number of pixels darker than the [i]grey color threshold[/i].
+                                      [li] If the percentage of dark pixels is greater than the dark percentage threshold, classify it as Dark."
+                            Details = "To tune how darkness is determined, navigate to a borderline dark image and adjust the thresholds.
+                                      [ni] The horizontal bar's color reflects the current [i]dark pixel threshold[/i] (adjusted with the left slider)
+                                      [ni] The bar's length shows how many pixels in the current image are below that threshold. 
+                                      [ni] The red line shows the [i]dark percentage threshold[/i needed. 
+                                      [ni] Drag the red line and the slider to adjust both thresholds, until satisfied with the classification.
+                                      [ni] Check other borderline images to see if it improves classification. If not, repeat the above steps.
+                                      [ni] At any time, you can reset thresholds to their initial values or to the Timelapse defaults."
+                            ShowExplanationVisibility="True" />
+
+            <!--Separator-->
+            <!--<Rectangle Fill="#FF868686" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,0,10,0" Height="2" />-->
+
+            <!--Final message -->
+            <TextBlock Name="FinalMessage" FontWeight="Bold" FontSize="18" Text="Hello there"  HorizontalAlignment="Stretch" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="20" Visibility="Collapsed"/>
+
+            <!--Select a flag field-->
+            <StackPanel Name="Primary2" Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,10,0,0" HorizontalAlignment="Left" >
+                <Label Name="SelectAFlagField" Content="Select a flag field to contain the dark classification data:"  HorizontalContentAlignment="Left" FontSize="14" FontWeight="Bold" />
+                <ComboBox Name="CBPopulateFlagField" MinWidth="200" SelectionChanged="CBPopulateFlagField_SelectionChanged" FontSize="14"/>
+            </StackPanel>
+
+            <!-- Image and feedback -->
+            <Image Name="Image" Grid.Row="3" Grid.Column="0" Stretch="Uniform" MinHeight="100" MinWidth="100" Margin="10,10,0,0" StretchDirection="Both" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <StackPanel Name="Primary3" Orientation="Vertical" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="350" Width="350">
+                <StackPanel Orientation="Horizontal" >
+                    <Label Content="File:" HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Label Name="FileName" Content="[ --- file name --- ]" HorizontalContentAlignment="Left" VerticalAlignment="Center" FontSize="12" FontWeight="Normal" MinWidth="150"/>
+                </StackPanel>
+
+                <GroupBox Header="Classification" HorizontalContentAlignment="Left" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <StackPanel Orientation="Vertical" Margin="10,0,0,0">
+                        <StackPanel Orientation="Horizontal"  >
+                            <Label Content="original: " Width="Auto" Margin="0,-4,0,-4" FontSize="12" FontWeight="DemiBold" FontStyle="Italic" HorizontalAlignment="Left"/>
+                            <Label Name="OriginalClassification"  Width="Auto" Margin="0,-4,0,-4"  Content="----" FontWeight="Normal" FontSize="12" HorizontalContentAlignment="Right"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="new: " Width="Auto" FontSize="12" FontWeight="DemiBold" FontStyle="Italic" HorizontalAlignment="Left"/>
+                            <Label Name="NewClassification"  Width="Auto" Margin="20,0,0,0" Content="----" FontWeight="Normal" FontSize="12" Height="Auto" HorizontalContentAlignment="Left" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Width="Auto" HorizontalAlignment="Left" >
+                            <Label Name="RatioFound" Content="--" Width="30"  FontSize="12" FontWeight="Normal"  HorizontalContentAlignment="Left"/>
+                            <TextBlock Name="Percent" Text="% " Width="Auto" FontSize="12" FontWeight="Normal" Padding="0,5,0,0" HorizontalAlignment="Left"/>
+                            <TextBlock Name="ThresholdMessage" Width="250" Text="of the pixels are darker than the threshold" Padding="0,5,0,0" FontSize="12" FontWeight="Normal" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <!--Scroller-->
+                <Label Content="Navigate to different images" Width="Auto" FontSize="12" FontWeight="Bold"  HorizontalContentAlignment="Left" Margin="0,20,0,0"/>
+                <Grid Width="Auto" Height="Auto" DockPanel.Dock="Bottom" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Name="PreviousFile" ToolTip="Previous file" Width="Auto" Grid.Column="0" VerticalAlignment="Center" Height="26" Padding="4,0,4,0" Margin="10,5,0,5" HorizontalAlignment="Left" FontFamily="Marlett" FontSize="20" Click="PreviousButton_Click">3</Button>
+                    <Slider Name="ScrollImages" Grid.Column="1"  VerticalAlignment="Center" HorizontalAlignment="Stretch" Padding="0" Margin="0,0,0,0" AutoToolTipPlacement="BottomRight"/>
+                    <Button Name="NextFile" ToolTip="Next file" Width="Auto" Height="26" Grid.Column="2" VerticalAlignment="Center"  Padding="4,0,4,0" Margin="0,5,5,5" HorizontalAlignment="Right" FontFamily="Marlett" FontSize="20" Click="NextButton_Click">4</Button>
+                    <Button Name="PlayFile" ToolTip="Play files automatically" Width="Auto" Grid.Column="3" VerticalAlignment="Center"  Padding="4,0,4,1" Margin="0,5,10,5" HorizontalAlignment="Right" FontFamily="Arial" FontSize="20" Click="PlayButton_Click" Content="&#9193;"/>
+                </Grid>
+            </StackPanel>
+
+            <!--Threshold adjustments -->
+            <Grid Name="Primary4" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,10,10,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="100" />
+                </Grid.ColumnDefinitions>
+
+                <Slider Name="DarkThreshold" DockPanel.Dock="Left" Width="Auto" Margin="0,3,0,0" Padding="0,-8,0,0"  Maximum="255" Minimum="1" SmallChange="1" TickFrequency="5" Value="60" VerticalContentAlignment="Bottom"/>
+                <Label Content="Dark pixel threshold" FontWeight="Bold" Grid.Column="0" Padding="0,4,0,0" Margin="4,13,3,0"/>
+
+                <Canvas Name="FeedbackCanvas" Background="Beige" Width="Auto" Height="30" Grid.Column="1">
+                    <Rectangle Name="RectDarkPixelRatioFound" Stroke="Black" StrokeThickness="2" Fill="DarkGray" Canvas.Left="0" Canvas.Top="0" />
+                    <Thumb Name="DarkPixelRatioThumb" Canvas.Left="50" Canvas.Top="0" Canvas.ZIndex="99" DragDelta="Thumb_DragDelta" Cursor="Hand">
+                        <Thumb.Template>
+                            <ControlTemplate>
+                                <Grid>
+                                    <Rectangle Stroke="Red" StrokeThickness="2" Fill="Red" Height="Auto" Width="Auto"/>
+                                    <Line Stroke="Black"  StrokeThickness="1" X1="0" X2="12" Y1="15" Y2="15" />
+                                    <Line Stroke="Black"  StrokeThickness="1" X1="0" X2="4" Y1="15" Y2="18" />
+                                    <Line Stroke="Black"  StrokeThickness="1" X1="0" X2="4" Y1="15" Y2="12" />
+                                    <Line Stroke="Black"  StrokeThickness="1" X1="8" X2="12" Y1="18" Y2="15" />
+                                    <Line Stroke="Black"  StrokeThickness="1" X1="8" X2="12" Y1="12" Y2="15" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Thumb.Template>
+                    </Thumb>
+                </Canvas>
+                <Label Name="lblGreyColorThreshold" IsHitTestVisible = "False" Content="---" Grid.Column="1" HorizontalAlignment="Left" Margin="0,5,0,0" Padding="0,-8,0,0" Height="15" FontSize="12">
+                    <Label.Background>
+                        <SolidColorBrush Color="Beige" Opacity="0.7" />
+                    </Label.Background>
+                </Label>
+
+                <Label  Name="DarkPixelRatio" IsHitTestVisible = "False" Content ="--" Grid.Column="1" HorizontalAlignment="Center" Margin="0,5,0,0"  Padding="0,-8,0,0" Height="15"  FontSize="12">
+                    <Label.Background>
+                        <SolidColorBrush Color="Beige" Opacity="0.7" />
+                    </Label.Background>
+                </Label>
+
+                <Button Name="ResetButton" Content="_Reset..." Click="ResetButton_Click" ContextMenuService.IsEnabled="False" Grid.Column="2" Margin="5,5,0,5" >
+                    <Button.ContextMenu>
+                        <ContextMenu >
+                            <MenuItem Header="Initial threshold settings" ToolTip="Reset the thresholds to those at the start of this dialog" Click="MenuItemResetCurrent_Click"/>
+                            <MenuItem Header="System default threshold settings" ToolTip="Reset the thresholds to the recommended Defaults" Click="MenuItemResetDefault_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </Grid>
+
+            <!--Separator-->
+            <Rectangle Fill="#FF868686" Height="2" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,5,10,5" />
+
+            <!--Cancel/Start buttons-->
+            <Grid Width="Auto" Height="Auto" Grid.Row="6" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
+                    <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button Name="StartDoneButton" IsDefault="True" IsEnabled="False" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="StartButton_Click">_Start</Button>
+                </StackPanel>
+            </Grid>
+            <StackPanel Orientation="Vertical" Grid.Row="6" Grid.Column="0">
+                <Label Name="LabelWarning1" VerticalAlignment="Center" HorizontalAlignment="Left" Content="No flag fields are available for populating dark classifications. " Margin="10,5,0,0"/>
+                <Label Name="LabelWarning2" VerticalAlignment="Center" HorizontalAlignment="Left" Content="Create one in the template." Margin="10,-10,0,0"/>
+            </StackPanel>
+        </Grid>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+    </Grid>
+</controls:BusyableDialogWindow>

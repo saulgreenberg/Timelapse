@@ -1,0 +1,135 @@
+##########################################
+# Visual Studio / .NET Solution Files
+##########################################
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj.user
+*.vcxproj.user
+*.pubxml.user
+*.DotSettings.user
+
+# Visual Studio cache/options directories and files
+.vs/
+*.vsidx
+*.vspscc
+*.vssscc
+
+# ReSharper / Rider
+_ReSharper*/
+.idea/
+
+# VS Code
+.vscode/
+
+##########################################
+# Build Results
+##########################################
+
+# Build output directories
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Tt]est[Rr]esult*/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+
+# Build logs
+[Bb]uild[Ll]og.*
+*.binlog
+debug.log
+build.log
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+##########################################
+# Test Results
+##########################################
+
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+##########################################
+# NuGet Packages
+##########################################
+
+# Exclude all NuGet packages directories
+# Packages should be restored via NuGet Package Restore
+**/packages/*
+
+##########################################
+# StyleCop
+##########################################
+
+**/StyleCop.Cache
+Settings.StyleCop
+
+##########################################
+# Project-Specific Exclusions
+##########################################
+
+# Utility programs directory (excluded for now)
+UtilityPrograms/
+
+# Project-specific output files
+*.pdb
+Backups/
+
+# Large external executables (can be downloaded separately)
+# Download exiftool from: https://exiftool.org/
+# Download ffmpeg from: https://ffmpeg.org/download.html
+**/exiftool.exe
+**/exiftool-k.exe
+**/exiftool_files/
+**/ffmpeg.exe
+
+# Installer auto-generated files
+Installers/TimelapseInstaller-PerMachine/Files.wxs
+Installers/TimelapseInstaller-PerUser/Files.wxs
+
+# Development/workflow files
+CLAUDE.md
+**/.claude/settings.local.json
+CleanBinAndObj.bat
+RemoveNulFiles.bat
+REORGANIZATION_SUMMARY.md
+
+# Temporary and backup files
+*.tmp
+*.bak
+*~
+*.swp
+nul
+~$*.docx
+ToDo.docx
+Checklist.docx
+
+##########################################
+# Windows System Files
+##########################################
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+##########################################
+# Miscellaneous
+##########################################
+
+# Ignore SQLite database files (if temporary)
+*.db-shm
+*.db-wal
+
+# Terraform/Infrastructure (if applicable)
+$tf/

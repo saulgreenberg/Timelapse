@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="Timelapse.ControlsDataEntry.DataEntryControls"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+
+    <!--#region Control Resources (definitions for the various controls)-->
+    <Control.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../ControlsCore/Styles/CommonResources.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/NumericStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/DateTimeStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/TextBoxStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/LabelStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/ContainerStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/ChoiceStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/CounterStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/FlagStyles.xaml"/>
+                <ResourceDictionary Source="../ControlsCore/Styles/MultiChoiceStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </Control.Resources>
+    <!--#endregion-->
+
+    <!--#region the ControlGrid definition that appears in the DataPanel.  -->
+    <!-- The controls will be inserted dynamically through Code Behind -->
+    <RichTextBox IsEnabled="True" IsDocumentEnabled="True" IsReadOnly="True" IsUndoEnabled="False" >
+        <FlowDocument  >
+            <Paragraph  Name="ControlGrid" TextAlignment="Left" >
+                <Floater  HorizontalAlignment="Right" Width="75" Margin="0" Padding="0" >
+                    <BlockUIContainer Name="ButtonLocation" Margin="0" Padding="0">
+                        <!-- The actual controls are inserted -->
+                    </BlockUIContainer>
+                </Floater>
+            </Paragraph>
+        </FlowDocument>
+    </RichTextBox>
+    <!--#endregion-->
+
+</UserControl>

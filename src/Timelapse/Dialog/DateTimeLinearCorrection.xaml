@@ -1,0 +1,109 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateTimeLinearCorrection"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+		Title="Correct for cameras whose clock runs fast or slow"
+		MinHeight="650" MinWidth="768"
+		Height="670" Width="768"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <DockPanel Grid.Row="0" Grid.Column="0">
+            <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top" Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Correct for Cameras whose clock runs fast or slow"
+                            Problem="If a camera does not have an accurate clock, the time recorded on successive images or videos will drift fast or slow, and become increasingly inaccurate."
+                            Solution="The file with the earliest and latest timestamps are shown below. We assume that the earliest file has the correct time, and that the latest shows the worst time drift.
+[ni] Set the date/time for the latest file shown below to its correct date/time
+[ni] click [e]Start[/e] (which becomes active after you enter an adjusted date/time) to correct the dates"
+                            Result="The date / time of each file will be adjusted proportionaly (using linear interpolation) to correct for clock drift."
+                            Hint="[li] This operation will only work properly if the files are sorted by Date/Time. If you are unsure, select [e]Sort|by DateTime&#8593;[/e]
+                                  [li] If the earliest date is wrong, correct it using: [e]Edit|Date Correction|Correct for cameras not set to the right date and time[/e]
+                                  [li] You can restore the original file dates by using: [e]Edit|Date Correction|Re-read dates and times from files[/e]"
+                            ShowExplanationVisibility="True" />
+
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
+                <Rectangle Fill="#FF868686" Height="2" />
+            </StackPanel>
+
+            <DockPanel >
+                <!-- Ok/Cancel buttons-->
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">Cancel</Button>
+                    <Button Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="Start_Click" IsEnabled="False">Start</Button>
+                </StackPanel>
+
+                <!-- Content area Either this or the Feedback area is visible-->
+                <Grid Name="PrimaryPanel" DockPanel.Dock="Top" Margin="10,0,10,0" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Content Left column-->
+                    <Grid  Grid.Row="0" Grid.Column="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="Earliest:"       HorizontalAlignment="Left" HorizontalContentAlignment="Right" FontWeight="Bold"   Grid.Row="0" Grid.Column="0"/>
+                        <Label Content="earliest.jpg"    HorizontalAlignment="Left" HorizontalContentAlignment="Left"  FontWeight="Normal" Grid.Row="0" Grid.Column="1" Name="earliestImageName"   />
+                        <Label Content="dd-MMM-yyyy HH:mm:ss"  HorizontalAlignment="Left"  HorizontalContentAlignment="Left"  FontWeight="Normal" Grid.Row="0" Grid.Column="2" Name="earliestImageDate"/>
+                    </Grid>
+                    <Image Name="imageEarliest" Stretch="Uniform" MinHeight="100" MinWidth="100" StretchDirection="Both"  VerticalAlignment="Top" HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="0"/>
+
+                    <!-- Content Right column-->
+                    <Grid  Grid.Row="0" Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="Latest:"               HorizontalAlignment="Left"  HorizontalContentAlignment="Right" FontWeight="Bold"   Grid.Row="0" Grid.Column="0"  Margin="10,0,0,0"/>
+                        <Label Content="latest.jpg"            HorizontalAlignment="Left"  HorizontalContentAlignment="Left"  FontWeight="Normal" Grid.Row="0" Grid.Column="1" Name="latestImageName"/>
+                        <toolkit:WatermarkDateTimePicker HorizontalAlignment="Right"  HorizontalContentAlignment="Left"  Grid.Row="0" Grid.Column="2" x:Name="dateTimePickerLatestDateTime" Margin="10,0,0,0" CultureInfo="en-US" MouseLeave="WatermarkDateTimePickerLatestDateTime_MouseLeave" ValueChanged="WatermarkDateTimePicker_ValueChanged"  />
+
+                        <!-- <Label Content="dd-MMM-yyyy HH:mm:ss"       HorizontalAlignment="Left"  HorizontalContentAlignment="Left"  FontWeight="Normal" Grid.Row="1" Grid.Column="1" Margin="0,-8,0,0" Name="imageLatestDate"    />-->
+                    </Grid>
+                    <Image Name="imageLatest" Stretch="Uniform" MinHeight="100" MinWidth="100" StretchDirection="Both"  VerticalAlignment="Top" HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1" Margin="10,0,0,0"/>
+
+                </Grid>
+
+                <!-- Feedback area. Either this or the Content area is visible-->
+                <DockPanel Name="FeedbackPanel" Visibility="Collapsed" DockPanel.Dock="Bottom" Margin="10,0,10,0">
+                    <DataGrid Name="FeedbackGrid" Margin="5,10,5,0" ColumnWidth="*" SelectionMode="Single" SelectionUnit="FullRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    AutoGenerateColumns="True" 
+                    AutoGeneratedColumns="DatagridFeedback_AutoGeneratedColumns" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
+                    Visibility="Visible" Background="White"
+                    HeadersVisibility="Column">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style  TargetType="DataGridColumnHeader" >
+                                <Setter Property="FontWeight" Value="Bold" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="Padding" Value="4" />
+                                <Setter Property="Background" Value="Gainsboro" />
+                                <Setter Property="BorderBrush" Value="Black" />
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                    </DataGrid>
+                </DockPanel>
+            </DockPanel>
+        </DockPanel>
+
+        <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" CancelClick="CancelAsyncOperationButton_Click" Grid.Row="0"/>
+    </Grid>
+</controls:BusyableDialogWindow>
+

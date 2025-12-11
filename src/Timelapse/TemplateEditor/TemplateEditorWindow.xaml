@@ -1,0 +1,486 @@
+﻿<Window x:Class="TimelapseTemplateEditor.TemplateEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:xcad="clr-namespace:AvalonDock;assembly=AvalonDock"
+        xmlns:xcadLayout="clr-namespace:AvalonDock.Layout;assembly=AvalonDock"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:controlsEditor="clr-namespace:TimelapseTemplateEditor.Controls"
+        xmlns:controlsMetadata="clr-namespace:TimelapseTemplateEditor.ControlsMetadata"
+        Height="825" Width="1200" MinHeight="600" MinWidth="800" Icon="pack://application:,,,/TemplateEditor/Icons/TemplateEditor32.ico" 
+        Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="0,0,0,5" />
+            </Style>
+        </Grid.Resources>
+
+        <!-- #region Main Menu Bar -->
+        <Menu Grid.Row="0">
+
+            <!-- #region File Menu -->
+            <MenuItem Name="FileMenu" Header="_File" SubmenuOpened="FileMenu_OnSubmenuOpened">
+
+                <MenuItem Name="MenuText" Header="_Test some code..." Click="MenuTestSomeCode_Click" ToolTip="Test some code out" Visibility ="Collapsed" />
+
+                <!-- New -->
+                <MenuItem Name="MenuFileNewTemplate" Header="_New template..." Click="MenuFileNewTemplate_Click" ToolTip="Create a new data template file">
+                    <MenuItem.Icon>
+                        <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- New based on as standard-->
+                <MenuItem Name="MenuFileNewTemplateFromStandard" Header="_New template based on a standard..." ToolTip="Create a new data template file based on a particular standard">
+                    <MenuItem Name="MenuFileNewAlbertaMetadataStandard" Header="_Alberta Metadata Standard..." 
+                              Click="MenuFileNewFromStandardResourceFile_Click" 
+                              Tag ="AlbertaMetadataStandards"
+                              ToolTip="Create a new data template file based on the Alberta Metadata Standard. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuFileNewAlbertaMetadataStandardProgramatically" Header="_Alberta Metadata Standard (programatically)..." 
+                              Visibility ="Collapsed"
+                              Click="MenuFileNewAlbertaMetadataStandardProgramatically_Click" 
+                              ToolTip="Create a new data template file based on the Alberta Metadata Standard. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuFileNewCameratrapDP" Header="_CamtrapDP..." 
+                              Visibility ="Visible"
+                              Click="MenuFileNewFromStandardResourceFile_Click" 
+                              Tag ="CamtrapDP"
+                              ToolTip="Create a new data template file based on the CamtrapDP standard. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuFileNewCameratrapDPProgrammaticaly" Header="_CamtrapDP (programatically)..." 
+                              Visibility ="Collapsed"
+                              Click="MenuFileNewCameratrapDPProgramatically_Click" 
+                              ToolTip="Create a new data template file based on the CamtrapDP standard. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    
+                    <MenuItem Name="MenuFileNewPracticeImageSetStandard" Header="_Practice Image Set metadata example..." 
+                              Visibility ="Collapsed"
+                              Click="MenuFileNewPracticeImageSetStandard_Click" 
+                              ToolTip="Create a new data template file based on an example simple standard that matches the practice image set. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuFileNewAllControlsStandard" Header="_All controls metadata example..."
+                              Visibility ="Collapsed"
+                              Click="MenuFileNewAllControlsStandard_Click" 
+                              ToolTip="Create a new data template file based on an example standard that lists all controls. You can edit it afterwards if desired.">
+                        <MenuItem.Icon>
+                            <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+                <Separator/>
+                <!-- Open -->
+                <MenuItem Name="MenuFileOpenTemplate" Header="_Open template..." Click="MenuFileOpenTemplate_Click" ToolTip="Open an existing data template file">
+                    <MenuItem.Icon>
+                        <Image Height="16" Width="16" Source="Icons/OpenFile_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Recent -->
+                <MenuItem Name="MenuFileRecentTemplates" Header="_Recent templates" IsEnabled="false" ToolTip="Recently used templates"/>
+
+                <Separator />
+
+                <!-- Upgrade Timelapse Files -->
+                <MenuItem Name="MenuItemUpgradeTimelapseFiles" Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version (.tdb/.ddb)..." Click="MenuItemUpgradeTimelapseFiles_Click" IsEnabled="true" ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/ConvertFile_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <Separator />
+
+                <!-- Switch to Timelapse -->
+                <MenuItem Name="MenuSwitchToTimelapse" Header="Switch to Timelapse" Click="MenuSwitchToTimelapse_Click" 
+                          ToolTip="Switch to Timelapse to load and tag image sets.">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/Timelapse32.ico" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <Separator />
+
+                <!-- Close -->
+                <MenuItem Name="MenuFileClose" Header="C_lose" Click="MenuFileClose_Click" IsEnabled="False">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/CloseFile_40x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <!-- Exit -->
+                <MenuItem Name="MenuFileExit" Header="E_xit" Click="MenuFileExit_Click">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/Exit_22x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+            </MenuItem>
+            <!--#endregion-->
+
+            <!-- #region Metadata Menu -->
+            <MenuItem Name="MenuMetadata" Header="_Edit" IsEnabled="False" SubmenuOpened="Metadata_SubmenuOpening">
+
+                <!-- Add a new metadata level.. -->
+                <MenuItem Name="MenuItemAddLevel" Header="New folder level..." ToolTip="Add a folder level to your folder data definitions" 
+                          Click="MenuItemAddLevel_Click" />
+            </MenuItem>
+            <!-- #endregion -->
+
+            <!-- #region View Menu -->
+            <MenuItem Name="MenuView" Header="_View" IsEnabled="False">
+
+                <!-- Inspect metadata -->
+                <MenuItem Name="MenuItemInspectImageMetadata" Header="Inspect file _metadata..." ToolTip="See what metadata is available in an image or video of your choosing" Click="MenuItemInspectImageMetadata_Click">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/InspectMetadata_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <Separator/>
+
+                <!-- Show All Columns -->
+                <MenuItem Name="MenuViewShowAllColumns"  IsCheckable="True" IsChecked="False" Header="_Show all columns" Click="MenuViewShowAllColumns_Click">
+                    <MenuItem.ToolTip>
+                        <TextBlock>
+                            For advanced users who need to inspect or debug the internal numbers used to 
+                            <LineBreak />
+                            order the display of controls and spreadsheet columns.
+                        </TextBlock>
+                    </MenuItem.ToolTip>
+                    <MenuItem.Icon>
+                        <Image Source="Icons/ShowColumns_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            <!--#endregion-->
+
+            <!-- #region Help Menu -->
+            <!--COPY EVERYTHING BETWEEEN BRACKETS FROM  TimelapseWindow | MenuItemHelp}-->
+            <MenuItem Name="MenuItemHelp" Header="_Help" IsEnabled="true" IsTabStop="false" SubmenuOpened="Help_SubmenuOpening" >
+
+                <MenuItem Name="MenuItemTimelapseHomePage" Header="Timelapse web site (via your web browser)..." Click="MenuTimelapseWebPage_Click" ToolTip="Displays the Timelapse web site's home page in your browser">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/Home_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <Separator/>
+
+                <MenuItem Name="MenuItemGuidesAndManuals" Header="Timelapse instructional guides" ToolTip="Tutorial guides on using Timelapse.">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/OpenFile_32x.png" />
+                    </MenuItem.Icon>
+                    <MenuItem Name="MenuItemGuidesPage" Header="All instructional guides (via your web browser) " Click="MenuItemGuidesAndManuals_Click" ToolTip="The essential starter guide on how to download and use the most basic features of Timelapse. [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemQuickStartGuide" Header="Part 1: Timelapse Quickstart Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="The essential starter guide on how to download and use the most basic features of Timelapse. [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemVideoCompanionQuickStart" Header="Video Companion - Timelapse Quick Start Guide" Click="MenuVideoPlay_Click" ToolTip="A video companion to the Timelapse Quick Start Guide, where it mirrors what is described there.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemReferenceGuide" Header="Part 2: Timelapse Reference Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A reference guide to all Timelapse features plus tips on how to use them. [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemTemplateGuide" Header="Part 3: Timelapse Template Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to creating Timelapse templates. [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemVideoCompanionTemplateEditor" Header="Video Companion - Timelapse Template Guide" Click="MenuVideoPlay_Click" ToolTip="A video companion to the Timelapse Template Guide, where it explains how to create templates of custom data fields.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemImageRecognitionGuide" Header="Part 4: Timelapse Image Recognition Guide(pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="How to incorporate and use image recognition in Timelapse. [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemVideoCompanionImageRecognition" Header="Video Companion - Timelapse Image Recognition" Click="MenuVideoPlay_Click" ToolTip="A video companion to the Timelapse Image Recognition Guide, where it mirrors the workflow described there.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+
+                    <MenuItem Name="MenuItemMetadataGuide" Header="Part 5: Timelapse Metadata Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to associating folder-level metadata with your image set [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemDatabaseGuide" Header="Part 6: Timelapse Database Guide (pdf)" Click="MenuItemGuidesAndManuals_Click" ToolTip="A guide to the internal structure of Timelapse Database tables [PDF]">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <!-- Video Lessons -->
+                <MenuItem Name="MenuItemVideoFeatures" Header="Timelapse instructional videos..." Click="MenuVideoPlay_Click" ToolTip="Video lessons on using Timelapse.">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/MediaControl-PlayButton.png" />
+                    </MenuItem.Icon>
+
+
+                    <MenuItem Name="MenuItemVideosPage" Header="All videos (via your browser)" Click="MenuVideoPlay_Click" ToolTip="A page collectin video lessons illustration Timelapse functionality and concepts">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/OpenFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+                    <MenuItem Header="Introductory overviews (you should watch these!)" IsEnabled="False"/>
+
+                    <MenuItem Name="MenuItemVideoWhirlwindTour" Header="A whirlwind tour of Timelapse" Click="MenuVideoPlay_Click" ToolTip="A video overview showing off most Timelapse features that plays in your browser.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemVideoImageRecognitionForCameraTraps" Header="Image recognition for camera traps" Click="MenuVideoPlay_Click" ToolTip="A video explaining image recognition as used by wildlife ecologists.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+
+
+                    <Separator/>
+                    <MenuItem Header="Getting going" IsEnabled="False"/>
+
+                    <!-- InstallingTimelapse -->
+                    <MenuItem Name="MenuItemVideoInstallingTimelapse" Header="Installing Timelapse" Click="MenuVideoPlay_Click" ToolTip="How to install Timelapse, and open it on the Practice image set">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <!-- IncrementallyAddingImage -->
+                    <MenuItem Name="MenuItemVideoAddingImagesOverTime" Header="Incrementally adding images and videos over time" Click="MenuVideoPlay_Click" ToolTip="Timelapse works on images, video files, and a mix of the two. This tutorial illustrates features of the Timelapse video player.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+                    <MenuItem Header="Inspecting Images" IsEnabled="False"/>
+
+                    <MenuItem Name="MenuItemVideoViewingVideos" Header="Viewing Videos" Click="MenuVideoPlay_Click" ToolTip="Timelapse works with video files as well as images, where you play videos with the Timelapse Video Player.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+
+                    <!-- Using the Timelapse video player -->
+                    <MenuItem Name="MenuItemVideoPlayer" Header="Using the Timelapse video player" Click="MenuVideoPlay_Click" ToolTip="Timelapse works on images, video files, and a mix of the two. This tutorial illustrates features of the Timelapse video player.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemVideoRandomSampling" Header="Randomly sampling images" Click="MenuVideoPlay_Click" ToolTip="View a randomly chosen subset of images from your current selection.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+                    <MenuItem Header="Entering data" IsEnabled="False"/>
+                    <MenuItem Name="MenuItemVideoUsingOverview" Header="Using the Overview: viewing and entering data for multiple files" Click="MenuVideoPlay_Click" ToolTip="Selecting multiple thumbnails and entering data that describes them.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemVideoQuickPaste" Header="QuickPaste" Click="MenuVideoPlay_Click" ToolTip="Create QuickPaste buttons to represent common data entry patterns. A single click replaces entering data into multiple fields.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemVideoDuplicatingRecords" Header="Duplicating a data record" Click="MenuVideoPlay_Click" ToolTip="Duplicate a record to reuse the fields on your image multiple times.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+                    <MenuItem Header="Image recognition" IsEnabled="False"/>
+                    <MenuItem Name="MenuItemVideoUsingAddaxAI" Header="Using AddaxAI for image recognition" Click="MenuVideoPlay_Click" ToolTip="Timelapse uses AddaxAI to do its image recognition. This video illustrates how to use AddaxAI.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <Separator/>
+                    <MenuItem Header="Other lessons" IsEnabled="False"/>
+
+                    <MenuItem Name="MenuItemVideoClassifyingDarkImages" Header="Classifying your dark images" Click="MenuVideoPlay_Click" ToolTip="Iimelapse can automatically classify your dark images, where you can exclude them from further analysis or even delete them.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemVideoRepositionDataEntryPanel" Header="Repositioning your Tabs and the Data Entry Panel" Click="MenuVideoPlay_Click" ToolTip="How you can re-arrange your tabs and window layout.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+                    <MenuItem Name="MenuItemVideoPopulateEpisodeData" Header="How to populate a field with Episode data" Click="MenuVideoPlay_Click" ToolTip="Marking episodes of successive images taken within a short time interval.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Name="MenuItemVideoViewingPopups" Header="Viewing Episode images in a popup" Click="MenuVideoPlay_Click" ToolTip="How to quickly view surrounding Episode images in a popup.">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+
+
+                    <Separator/>
+                    <MenuItem Header="Webinars" IsEnabled="False"/>
+                    <MenuItem Name="MenuItemVideoImageRecnWebinar" Header="Image recogntion: Making it work for you" Click="MenuVideoPlay_Click" ToolTip="Webinar: prospects, workflows, and limitations of image recognition for camera traps">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/MediaControl-PlayButton.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <MenuItem Name="MenuItemFAQ" Header="Timelapse FAQ (Frequently asked questions)..." Click="MenuItemFAQ_Click" ToolTip="Displays the Timelapse Frequently Asked Questions page in a web browser">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/EmailSend_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <Separator/>
+
+                <MenuItem Name="MenuItemJoinMailingList" Header="Timelapse mailing list - _Join it (via your web browser)..." Click="MenuJoinTimelapseMailingList_Click" ToolTip="Using your browser, go to the page that lets you join the timelapse mailing list. You will be informed about updates, and you can post requests to it.">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/JoinMailingList_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Name="MenuItemMailToMailingList" Header="Timelapse mailing list - Send _email..." Click="MenuMailToTimelapseMailingList_Click" ToolTip="Post an email to the Timelapse mailing list. You should join the mailing list before doing this.">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/EmailSend_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+
+                <Separator/>
+
+                <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer..." Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/EmailSend_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+
+                <MenuItem Name="MenuItemAbout" Header="_About..." Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
+                    <MenuItem.Icon>
+                        <Image Source="Icons/About_32x.png" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+        <!--#endregion-->
+        <!--#endregion-->
+
+        <!--#region Docking Manager-->
+        <xcad:DockingManager AllowMixedOrientation="True" BorderBrush="Black" BorderThickness="1" Grid.Row="1">
+            <!-- Bind the tab title to the tab header -->
+            <xcad:DockingManager.DocumentHeaderTemplate>
+                <DataTemplate DataType="xcadLayout:LayoutContent">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding IconSource}" Margin="0,0,4,0"/>
+                        <TextBlock Text="{Binding Title}" />
+                    </StackPanel>
+                </DataTemplate>
+            </xcad:DockingManager.DocumentHeaderTemplate>
+
+            <xcadLayout:LayoutRoot x:Name="LayoutRoot">
+                <xcadLayout:LayoutPanel Orientation="Horizontal">
+                    <xcadLayout:LayoutDocumentPaneGroup>
+                        <xcadLayout:LayoutDocumentPane >
+
+                            <!-- #region Brief Instructions Pane -->
+                            <xcadLayout:LayoutDocument x:Name="InstructionPane" Title="Brief Instructions  "  CanFloat="False" CanClose="False" >
+                                <controls:HelpUserControl x:Name="HelpDocument" Margin="-5" Background="FloralWhite"
+                                                          AllowDrop="True" Drop="HelpDocument_Drop" PreviewDragEnter="HelpDocument_PreviewDrag" PreviewDragOver="HelpDocument_PreviewDrag" Visibility="Visible" Height="Auto" />
+                            </xcadLayout:LayoutDocument>
+                            <!--#endregion-->
+
+                            <!-- #region Template Pane -->
+                            <xcadLayout:LayoutDocument x:Name="TemplatePane" Title="Image data fields" IsEnabled="False" CanFloat="False" CanClose="False" AutomationProperties.AutomationId="TemplatePane" 
+                                                 ToolTip="Create data fields used to annotate (tag) images and / or video files">
+                                <controlsEditor:TemplateUIControl x:Name="TemplateUI"/>
+                            </xcadLayout:LayoutDocument>
+                            <!--#endregion-->
+
+                            <!-- #region Metadata Pane -->
+                            <xcadLayout:LayoutDocument x:Name="MetadataPane" Title="Folder data fields"  IsEnabled="False"
+                                                 CanFloat="False" CanClose="False"
+                                                 AutomationProperties.AutomationId="MetadataPane"
+                                                 ToolTip="Create data fields used to annotate (tag) folder metadata for each sub-folder level" IsSelectedChanged="MetadataPane_IsSelectedChanged">
+                                <controlsMetadata:MetadataUIControl x:Name="MetadataUI" Visibility="Visible" Height="Auto"/>
+                            </xcadLayout:LayoutDocument>
+                            <!--#endregion-->
+
+                        </xcadLayout:LayoutDocumentPane>
+                    </xcadLayout:LayoutDocumentPaneGroup>
+                </xcadLayout:LayoutPanel>
+            </xcadLayout:LayoutRoot>
+        </xcad:DockingManager>
+        <!--#endregion-->
+
+    </Grid>
+</Window>

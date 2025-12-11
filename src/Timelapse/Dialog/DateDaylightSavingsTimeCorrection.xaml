@@ -1,0 +1,111 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateDaylightSavingsTimeCorrection"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        Title="Correct for standard and daylight savings time changes" 
+		MinHeight="728" MinWidth="768"
+		Height="856" Width="768"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top"
+                                          Grid.Row="0"
+                            Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Correct for Standard and Daylight Savings Time Changes"
+                            Problem="The camera may not have accounted for daylight savings or standard time change. If so, some images or videos dates will be off by an hour."
+                            Solution="[ni] [b]Important[/b]: Make sure that the currently selected image or video (below), is where the time change should occur. 
+                                      [li 2]If it isn't, click [e]Cancel[/e], navigate to that file in the main window, then come back here.
+                                      [ni] Correct the time + / - one hour in the [e]Time Correction[/e] checkbox.
+                                      [ni] Use the [e]Propagate Correction[/e] checkbox to propagate changes forwards or backwards from this point.
+                                      [ni] Select [e]Okay[/e] once you've done the above, or [e]Cancel[/e] to abort."
+                            Result="The dates and times will be adjusted forwards or backwards from this file by +/- one hour (except corrupted ones)."
+                            ShowExplanationVisibility="True"/>
+
+            <!--Rectangular line-->
+            <StackPanel Orientation="Vertical" VerticalAlignment="Stretch" Grid.Row="1">
+                <Rectangle Fill="#FF868686" Height="2"/>
+            </StackPanel>
+
+            <!--PrimaryPanel-->
+            <Grid Grid.Row="2" Name="PrimaryPanel"  >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0">
+                    <Label Content="File:" Height="28" Margin="5,0,0,0" HorizontalContentAlignment="Left" DockPanel.Dock="Left" FontSize="12" FontWeight="Bold" VerticalAlignment="Top" />
+                    <Label Content="[ --- file name --- ]" Height="28" Width="140" Margin="0,0,0,0" HorizontalContentAlignment="Left" DockPanel.Dock="Left" FontSize="12" FontWeight="Normal" Name="FileName" VerticalAlignment="Top" />
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Current date/time:" Height="28" Name="label2" Margin="10,0,0,0" HorizontalContentAlignment="Right" FontSize="12" FontWeight="Bold" VerticalAlignment="Top" Grid.Row="0" Grid.Column="0"/>
+                        <Label Name="OriginalDate" MinWidth="140" Content="yyyy-MMM-dd HH:mm.ss" FontWeight="Normal" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="0" Grid.Column="1" Margin="0,2,0,0" />
+                        <Label Content="New date/time:" Height="28"  Margin="10,0,0,0" HorizontalContentAlignment="Right"  FontSize="12" FontWeight="Bold" VerticalAlignment="Top" Grid.Row="1" Grid.Column="0"/>
+                        <Label Name="NewDate" MinWidth="140" Content="yyyy-MMM-dd HH:mm.ss" FontWeight="Normal" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" />
+                    </Grid>
+                    <GroupBox Header="Time Correction" FontWeight="Bold" Margin="10,0,10,0">
+                        <StackPanel>
+                            <RadioButton Name="rbAddHour" Content="_Add an hour" FontWeight="Normal" Checked="RadioButton_Checked" />
+                            <RadioButton Name="rbSubtractHour" Content="_Subtract an hour" FontWeight="Normal" Checked="RadioButton_Checked"/>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Header="Propagate Correction" FontWeight="Bold" Margin="0,0,20,0">
+                        <StackPanel>
+                            <RadioButton Name="rbForward" Content="_Forward" FontWeight="Normal" Checked="RadioButton_Checked" />
+                            <RadioButton Name="rbBackwards" Content="_Backwards" FontWeight="Normal" Checked="RadioButton_Checked" />
+                        </StackPanel>
+                    </GroupBox>
+                </DockPanel>
+                
+                <Image Name="Image" Stretch="Uniform" MinHeight="100" MinWidth="100" StretchDirection="Both" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Grid.Row="1"/>
+            </Grid>
+
+            <!--FeedbackPanel-->
+            <DockPanel Name="FeedbackPanel" Visibility="Collapsed" Margin="10,0,10,0" Grid.Row="2">
+                <DataGrid Name="FeedbackGrid" Margin="5,10,5,0" ColumnWidth="*" SelectionMode="Single" SelectionUnit="FullRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    AutoGenerateColumns="True" 
+                    AutoGeneratedColumns="DatagridFeedback_AutoGeneratedColumns" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
+                    Visibility="Visible" Background="White"
+                    HeadersVisibility="Column">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style  TargetType="DataGridColumnHeader" >
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="Padding" Value="4" />
+                            <Setter Property="Background" Value="Gainsboro" />
+                            <Setter Property="BorderBrush" Value="Black" />
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                </DataGrid>
+            </DockPanel>
+
+
+            <!--Buttons at bottom-->
+            <DockPanel Grid.Row="3">
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button Name="StartDoneButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="StartButton_Click" IsEnabled="False">_Okay</Button>
+                </StackPanel>
+
+            </DockPanel>
+        </Grid>
+
+        <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" CancelClick="CancelAsyncOperationButton_Click" Grid.Row="0"/>
+    </Grid>
+</controls:BusyableDialogWindow>

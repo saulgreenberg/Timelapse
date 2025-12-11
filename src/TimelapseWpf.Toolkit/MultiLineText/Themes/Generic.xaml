@@ -1,0 +1,192 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:TimelapseWpf.Toolkit">
+
+    <!-- Common resources for MultiLineText control -->
+    <SolidColorBrush x:Key="MultiLineText.BorderBrushNormal" Color="LightBlue" />
+    <SolidColorBrush x:Key="MultiLineText.BorderBrushHighlight" Color="Blue" />
+    <Thickness x:Key="MultiLineText.BorderThicknessNormal">1</Thickness>
+    <Thickness x:Key="MultiLineText.BorderThicknessHighlight">3</Thickness>
+
+    <!-- Default style for MultiLineText control -->
+    <Style TargetType="{x:Type local:MultiLineText}">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="5,3,5,0"/>
+        <Setter Property="BorderThickness" Value="{StaticResource MultiLineText.BorderThicknessNormal}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource MultiLineText.BorderBrushNormal}"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="PopupMinHeight" Value="80"/>
+        <Setter Property="PopupMinWidth" Value="200"/>
+        <Setter Property="PopupMaxHeight" Value="480"/>
+        <Setter Property="PopupMaxWidth" Value="640"/>
+        <Setter Property="PopupAutoSize" Value="True"/>
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="IsReadOnly" Value="False" />
+        <Setter Property="IsTabStop" Value="True"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:MultiLineText}">
+                    <Grid>
+                        <!-- Outer border that responds to BorderThickness property -->
+                        <Border x:Name="PART_OuterBorder"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          Background="{TemplateBinding Background}">
+                            <Grid x:Name="PART_MainGrid" Height="{TemplateBinding Height}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox x:Name="PART_MainTextBox"
+                                   Grid.Column="0"
+                                   IsReadOnly="True"
+                                   IsTabStop="False"
+                                   TextWrapping="Wrap"
+                                   AcceptsReturn="True"
+                                   VerticalScrollBarVisibility="Hidden"
+                                   Background="Transparent"
+                                   BorderThickness="0,0,1,0"
+                                   BorderBrush="{TemplateBinding BorderBrush}"
+                                   Padding="{TemplateBinding Padding}"
+                                   Cursor="Hand"
+                                   VerticalAlignment="Stretch"/>
+
+                                <!-- Document icon -->
+                                <Border x:Name="PART_IconBorder"
+                                  Grid.Column="1"
+                                  Background="LightGray"
+                                  BorderThickness="0"
+                                  Width="18"
+                                  Height="{TemplateBinding Height}"
+                                  Cursor="Hand"
+                                  VerticalAlignment="Top">
+                                    <Canvas Width="16" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <!-- Document page rectangle (golden ratio: width/height ≈ 0.618) -->
+                                        <Rectangle Fill="Beige"
+                                             Stroke="Black"
+                                             StrokeThickness="0.4"
+                                             Width="11"
+                                             Height="16"
+                                             Canvas.Left="2.5"
+                                             Canvas.Top="3.5"/>
+
+                                        <!-- Horizontal lines representing text -->
+                                        <Line Stroke="Gray"
+                                        StrokeThickness="0.5"
+                                        X1="4" Y1="6.5"
+                                        X2="12" Y2="6.5"/>
+
+                                        <Line Stroke="Gray"
+                                        StrokeThickness="0.5"
+                                        X1="4" Y1="8.5"
+                                        X2="12" Y2="8.5"/>
+
+                                        <Line Stroke="Gray"
+                                        StrokeThickness="0.5"
+                                        X1="4" Y1="10.5"
+                                        X2="12" Y2="10.5"/>
+
+                                        <Line Stroke="Gray"
+                                        StrokeThickness="0.5"
+                                        X1="4" Y1="12.5"
+                                        X2="12" Y2="12.5"/>
+
+                                        <Line Stroke="Gray"
+                                        StrokeThickness="0.5"
+                                        X1="4" Y1="14.5"
+                                        X2="12" Y2="14.5"/>
+                                    </Canvas>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Popup that renders above all other controls -->
+                        <Popup x:Name="PART_EditorPopup"
+                         Placement="Custom"
+                         PlacementTarget="{Binding ElementName=PART_MainGrid}"
+                         AllowsTransparency="True"
+                         PopupAnimation="Slide"
+                         StaysOpen="True">
+                            <Border Background="{TemplateBinding Background}"
+                              BorderBrush="Gray"
+                              BorderThickness="1,1,1,1"
+                              CornerRadius="0,0,3,3"
+                              Height="150"
+                              MinWidth="300"
+                              Width="300">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Gray" Direction="315" ShadowDepth="5" Opacity="0.3"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <TextBox x:Name="PART_PopupTextBox"
+                                       TextWrapping="Wrap"
+                                       AcceptsReturn="True"
+                                       VerticalScrollBarVisibility="Auto"
+                                       HorizontalScrollBarVisibility="Auto"
+                                       BorderThickness="0"
+                                       Padding="5"
+                                       Background="Transparent"
+                                       IsReadOnly="False"/>
+
+                                    <!-- Resize grip in bottom-right corner -->
+                                    <Thumb x:Name="PART_ResizeThumb"
+                                     Width="16" Height="16"
+                                     HorizontalAlignment="Right"
+                                     VerticalAlignment="Bottom"
+                                     Cursor="SizeNWSE">
+                                        <Thumb.Template>
+                                            <ControlTemplate>
+                                                <Canvas Background="Transparent">
+                                                    <Line X1="6" Y1="16" X2="16" Y2="6" Stroke="Gray" StrokeThickness="1"/>
+                                                    <Line X1="10" Y1="16" X2="16" Y2="10" Stroke="Gray" StrokeThickness="1"/>
+                                                    <Line X1="14" Y1="16" X2="16" Y2="14" Stroke="Gray" StrokeThickness="1"/>
+                                                </Canvas>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Grid>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Trigger when control has focus -->
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="PART_OuterBorder" Property="BorderThickness"
+                                    Value="{StaticResource MultiLineText.BorderThicknessHighlight}" />
+                            <Setter TargetName="PART_OuterBorder" Property="BorderBrush"
+                                    Value="{StaticResource MultiLineText.BorderBrushHighlight}" />
+                        </Trigger>
+
+                        <!-- Trigger when popup is open -->
+                        <Trigger SourceName="PART_EditorPopup" Property="IsOpen" Value="True">
+                            <Setter TargetName="PART_OuterBorder" Property="BorderThickness"
+                                    Value="{StaticResource MultiLineText.BorderThicknessHighlight}" />
+                            <Setter TargetName="PART_OuterBorder" Property="BorderBrush"
+                                    Value="{StaticResource MultiLineText.BorderBrushHighlight}" />
+                        </Trigger>
+
+                        <!-- Override trigger: only reset to normal when BOTH focus is lost AND popup is closed -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsFocused" Value="False"/>
+                                <Condition SourceName="PART_EditorPopup" Property="IsOpen" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="PART_OuterBorder" Property="BorderThickness"
+                                    Value="{StaticResource MultiLineText.BorderThicknessNormal}" />
+                            <Setter TargetName="PART_OuterBorder" Property="BorderBrush"
+                                    Value="{StaticResource MultiLineText.BorderBrushNormal}" />
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

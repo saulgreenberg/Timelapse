@@ -1,0 +1,26 @@
+﻿<Window x:Class="TimelapseTemplateEditor.Dialog.EditChoiceList"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Create a choice list" 
+        Topmost="False"  Height="300" MaxHeight="600" Width="175" MaxWidth="250" ShowInTaskbar="False" WindowStyle="None" SizeToContent="Manual"  
+        Loaded="Window_Loaded">
+    <DockPanel >
+
+        <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
+            <TextBlock  Text="Define choice menu," FontWeight="Bold" Padding="0,0,0,0"  FontSize="14" VerticalAlignment="Center"/>
+            <TextBlock  Text="with 1 item per line" FontWeight="Bold" Padding="0,0,0,0"  FontSize="14" VerticalAlignment="Center"/>
+            <Rectangle Fill="#FF868686" Height="2" />
+        </StackPanel>
+
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="5,5,5,5" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,5,5,5" Click="OkButton_Click" IsEnabled="True">_Okay</Button>
+            </StackPanel>
+
+            <CheckBox Name="IncludeEmptyChoiceCheckBox" DockPanel.Dock="Bottom" Content="Include an 'empty' item" IsChecked="True" ToolTip="Includes an 'empty' item, which lets the user clear the entry."/>
+            <TextBox Name="TextBoxChoiceList" FontSize="12" DockPanel.Dock="Top" MinHeight="100" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" PreviewKeyDown="TextBoxChoiceList_OnPreviewKeyDown"
+                     TextWrapping="NoWrap"  AcceptsTab="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" ToolTip="Define the choice menu by editing 1 choice item per line" />
+        </DockPanel>
+    </DockPanel>
+</Window>

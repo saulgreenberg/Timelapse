@@ -1,0 +1,58 @@
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.PopulateFieldWithGUID"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Populate a data field with globally unique identifiers (GUIDs)?" 
+        MinHeight="540" MinWidth="700"
+        Height="540" Width="700"
+        ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid>
+        <DockPanel Grid.Row="0">
+            <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top"
+                            Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Populate a data field with a globally unique identifier (GUIDs)?"
+                            What="A [i]Globally Unique Identifier[/i], or [i]GUID[/i], is a unique text string comprising 128 randomly generated characters.
+                                   &#10;Timelapse itself does not rely on GUIDs. However, some agencies may use GUIDs during post-processing 
+                                   &#10;to uniquely identify each image data record."
+                            Solution="1. Select a field to populate from the menu below.
+                                 &#10;2. Click [e]Populate[/e] to begin populating the selected field."
+                            Result="[li] Only files in your current selection will be considered, and only if its chosen data field contents are empty.
+                                    [li]Existing content, including previously created GUIDs, will not be over-written.
+                                    [li] Updated data will contain a 128 character GUID."
+                            Hint="As GUIDs are not particularly meaningful for the end-user, we recommend hiding the data field expected to contain the GUID from view. This will still work as hidden fields are included in the menu below.
+                                  [br]To hide a data field, open the template [i].tdb[/i] file and uncheck that field's [e]Visibility[/e] box."
+                            ShowExplanationVisibility="False" />
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
+                <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
+                <StackPanel Name="PrimaryPanel" Orientation="Vertical" Margin="70,0,0,10">
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock Text="Select a field to contain the GUID:" VerticalAlignment="Top" FontWeight="Bold" Margin="0, 5,15,5"/>
+                        <StackPanel Orientation="Vertical">
+                            <ComboBox Name="ComboBoxSelectNoteField" Width="250" Height="30" VerticalAlignment="Top" SelectionChanged="ComboBoxSelectDataField_SelectionChanged" />
+                            <TextBlock Text="Only text-compatible fields are listed" VerticalAlignment="Top" FontWeight="Normal" FontStyle="Italic" Margin="0, 0,15,5"  Width="Auto" />
+                        </StackPanel>
+                    </StackPanel>
+
+                </StackPanel>
+                <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
+                    <TextBlock Name="TextBlockFeedbackLine1" Text="No text-compatable fields are available to populate" VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine2" Text="You need to add at least one Note, Multiline or Alphanumeric field in your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
+                </StackPanel>
+            </StackPanel>
+
+            <DockPanel LastChildFill="True" >
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="False" Click="Start_Click">_Populate</Button>
+                </StackPanel>
+            </DockPanel>
+        </DockPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+    </Grid>
+</controls:BusyableDialogWindow>

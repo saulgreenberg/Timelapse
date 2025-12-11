@@ -1,0 +1,59 @@
+﻿<Window x:Class="Timelapse.Dialog.CustomSort"
+         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Sort Images"
+        MinHeight="500" MinWidth="620"
+		Height="500" Width="620"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner"  Loaded="Window_Loaded" >
+
+    <DockPanel>
+        <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top" Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Sort and View your Files"
+                            What="Sort your images by one or more fields, and view them in that order"
+                            Solution="Specify your sorting criteria.
+                                      [ni] Each row below reflects your data fields.
+                                      [ni] Select one or two data fields to use as your primary and secondary sort."
+                            Result="Your images and videos will be displayed according to your sort criteria"
+                            Hint="[li]The default [e]RelativePath&#8593;[/e] then [e]DateTime&#8593;[/e] sort is best for many Timelapse operations. 
+                                  [li][e]Sorting by Id[/e] sorts files by the order the files were added to Timelapse"
+                            ShowExplanationVisibility="False"/>
+
+        <DockPanel DockPanel.Dock="Bottom">
+            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+            </StackPanel>
+        </DockPanel>
+
+        <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top" Margin="0,0,0,10"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Label Padding="10,0,5,0" FontWeight="Bold" Content="Sort by:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
+            <ComboBox Name="PrimaryComboBox" Padding ="10,0,5,0" MinWidth="150" Height="25" VerticalAlignment="Center" VerticalContentAlignment="Center" SelectionChanged="PrimaryComboBox_SelectionChanged" Grid.Row="0" Grid.Column="1"/>
+            <Label Padding ="10,0,5,0" FontWeight="Bold" Content="and then by:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2"/>
+            <ComboBox Name="SecondaryComboBox" Padding ="10,0,5,0" MinWidth="150" Height="25" VerticalAlignment="Center" VerticalContentAlignment="Center" Grid.Row="0" Grid.Column="3"/>
+            <RadioButton Name="PrimaryAscending" Content="Ascending &#8593;" GroupName="RB1" MinWidth="150"  Margin="0,10,0,0" Grid.Row="1" Grid.Column="1" IsChecked="True"/>
+            <RadioButton Name="SecondaryAscending" Content="Ascending &#8593;" GroupName="RB2" MinWidth="150"  Margin="0,10,0,0" Grid.Row="1" Grid.Column="3" IsChecked="True"/>
+            <RadioButton Name="PrimaryDescending" Content="Decending &#8595;" GroupName="RB1" MinWidth="150" Margin="0,5,0,0" Grid.Row="2" Grid.Column="1"/>
+            <RadioButton Name="SecondaryDescending" Content="Decending &#8595;" GroupName="RB2" MinWidth="150" Margin="0,5,0,0"  Grid.Row="2" Grid.Column="3"/>
+        </Grid>
+    </DockPanel>
+</Window>
+

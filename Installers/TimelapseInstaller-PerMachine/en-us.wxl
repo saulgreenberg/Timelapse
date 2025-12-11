@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+  <!-- Override Welcome Dialog Title -->
+  <String Id="WelcomeDlgTitle" Value="{\WixUI_Font_Bigger}Install Timelapse Image Analyzer&#13;&#10;for all users of this computer" />
+
+  <!-- Override Welcome Dialog Description -->
+  <String Id="WelcomeDlgDescription" Value="Timelapse Image Analyzer: Software that helps turn camera trap images and videos into data.&#13;&#10;&#13;&#10;• Next: installs Timelapse for all users of this computer.&#13;&#10;• Cancel: exits this installation.&#13;&#10;• Re-installing Timelapse? You may be asked to remove it first." />
+  
+  <!-- Override Ready to install title -->
+  <String Id="VerifyReadyDlgInstallTitle" Value="{\WixUI_Font_Title}Ready to install [ProductName] for all users
+  here" />
+  
+  <!-- Override Ready to install message -->
+  <String Id="VerifyReadyDlgInstallText" Value="Note: Timelapse requires .Net8 (Desktop Runtime), which must be installed separately.&#13;&#10;See https://dotnet.microsoft.com/en-us/download/dotnet/8.0 &#13;&#10;&#13;&#10;This installation will install Timelapse so that it is accessible to all users of this computer.&#13;&#10;• Install to begin the installation.&#13;&#10;• Back to review or change settings&#13;&#10;• Cancel to exit" />
+
+</WixLocalization>

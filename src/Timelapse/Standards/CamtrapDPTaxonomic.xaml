@@ -1,0 +1,344 @@
+﻿<Window x:Class="Timelapse.Standards.CamtrapDPTaxonomic"
+        x:Name ="Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+        mc:Ignorable="d"
+        Title="CamtrapDP: Edit the Taxonomic Definitions List" Height="750" Width="800" Loaded="CamptrapDP_OnLoaded">
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Margin="10,10,5,5">
+            <Run Text="Taxonomic" FontWeight ="Bold" FontStyle="Italic"/> 
+            is an optional list of taxonomic definitions for this data.
+            <LineBreak/>
+            <Run Text="Scientific name*" FontWeight ="Bold" FontStyle="Italic"/> is required for each taxonomic definition you create. Other fields are optional.
+        </TextBlock>
+
+        <TextBlock Grid.Row="1" Margin="10,10,5,5">
+            <Run Text="Taxonomic definition list" FontWeight ="Bold" FontSize="18"/>
+            <LineBreak/>
+            Select a row in the list to edit a particular taxonomic definition, or use the buttons to delete the selected definition or to add a new definition.
+        </TextBlock>
+
+        <DataGrid Grid.Row="2" Name="dataGrid"
+                  Margin="10,0"
+                  DataContext="{Binding Source=TaxonomicList}" 
+                  AutoGenerateColumns="False" 
+                  IsReadOnly ="True"
+                  CanUserSortColumns="false"
+                  CanUserReorderColumns="false"
+                  SelectionMode="Extended"  
+                  SelectionUnit="FullRow" 
+                  SelectionChanged="DataGrid_OnSelectionChanged">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="FontWeight"
+                            Value="Bold" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                                 Color="LightBlue"/>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                                 Color="Black"/>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                                 Color="LightBlue"/>
+            </DataGrid.Resources>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Scientific name*" Binding="{Binding scientificName }"/>
+                <DataGridTextColumn Header="Taxon id" Binding="{Binding taxonID}"/>
+                <DataGridTextColumn Header="Taxon rank" Binding="{Binding taxonRank}"/>
+                <DataGridTextColumn Header="Kingdom" Binding="{Binding kingdom}"/>
+                <DataGridTextColumn Header="Phylum" Binding="{Binding phylum}"/>
+                <DataGridTextColumn Header="Class" Binding="{Binding class_}"/>
+                <DataGridTextColumn Header="Order" Binding="{Binding order}"/>
+                <DataGridTextColumn Header="Family" Binding="{Binding family}"/>
+                <DataGridTextColumn Header="Genus" Binding="{Binding genus}"/>
+                <DataGridTextColumn Header="Vernacular names" Binding="{Binding vernacularCount}"/>
+            </DataGrid.Columns>
+            <GridViewHeaderRowPresenter AllowsColumnReorder="False"/>
+            />
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="NewRow"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0"
+                    Content="New taxonomic definition" 
+                    Click="NewRow_OnClick"/>
+            <Button Name="DeleteRow"  
+                    IsEnabled="False" 
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0" 
+                    Content ="Delete taxonomic definition"
+                    Click="DeleteRow_OnClick"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="4" Margin="10,0,5,0">
+            <Run Text="Taxonomic definition editor" FontWeight ="Bold" FontSize="18"/>
+            <LineBreak/>
+            Type to change a field's contents. Tooltips describe what the field is for, including an example.
+        </TextBlock>
+
+        <Grid Grid.Row="5" Name="EditGrid" Margin="10">
+            <Grid.Resources >
+                <Style TargetType="Border" >
+                    <Setter Property="Margin" Value="5,0,5,5" />
+                </Style>
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" 
+                       Name ="TBScientificName" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=ScientificNameField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=ScientificNameField.Tooltip}"
+                       />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" 
+                       Name ="TBTaxonID" 
+                       HorizontalAlignment="Right"  Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=TaxonIDField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=TaxonIDField.Tooltip}"
+                       />
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Name ="TBTaxonRank" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=TaxonRankField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=TaxonRankField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="3" Grid.Column="0" 
+                       Name ="TBKingdom" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=KingdomField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=KingdomField.Tooltip}"
+                       />
+
+            <TextBlock Grid.Row="4" Grid.Column="0" 
+                       Name ="TBPhylum" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=PhylumField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=PhylumField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="5" Grid.Column="0" 
+                       Name ="TBClass" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=ClassField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=ClassField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="6" Grid.Column="0" 
+                       Name ="TBOrder" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=OrderField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=OrderField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="7" Grid.Column="0" 
+                       Name ="TBFamily" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=FamilyField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=FamilyField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="8" Grid.Column="0" 
+                       Name ="TBGenus" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=GenusField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=GenusField.Tooltip}"
+            />
+
+            <TextBlock Grid.Row="9" Grid.Column="0" 
+                       Name ="TBVernacularNames" 
+                       HorizontalAlignment="Right" Margin="5,5,0,5"
+                       FontWeight="Bold"
+                       Text = "{Binding ElementName=Window1, Path=VernacularNamesField.Label}"
+                       ToolTip ="{Binding ElementName=Window1, Path=VernacularNamesField.Tooltip}"
+            />
+
+            <TextBox Grid.Row="0" Grid.Column="1" 
+                       Name ="DataFieldScientificName" 
+                       Margin="5,5,5,5"
+                       Text=""
+                       ToolTip ="{Binding ElementName=Window1, Path=ScientificNameField.Tooltip}"
+                       TextChanged = "DataField_OnTextChanged" 
+                       />
+            <TextBox Grid.Row="1" Grid.Column="1" 
+                       Name ="DataFieldTaxonID" 
+                       Margin="5,5,5,5"
+                       Text=""
+                       ToolTip ="{Binding ElementName=Window1, Path=TaxonIDField.Tooltip}"
+                       TextChanged = "DataField_OnTextChanged" 
+                       />
+
+            <ComboBox Grid.Row="2" Grid.Column="1" 
+                      Name ="DataFieldTaxonRank" 
+                      Margin="5,5,0,5"
+                      HorizontalAlignment="Left" 
+                      Width ="200"
+                      Text =""
+                      SelectedValue =""
+                      ToolTip ="{Binding ElementName=Window1, Path=TaxonRankField.Tooltip}"
+                      SelectionChanged="DataFieldTaxonRank_OnSelectionChanged"
+            >
+                <ComboBoxItem>kingdom</ComboBoxItem>
+                <ComboBoxItem>phylum</ComboBoxItem>
+                <ComboBoxItem>class</ComboBoxItem>
+                <ComboBoxItem>order</ComboBoxItem>
+                <ComboBoxItem>family</ComboBoxItem>
+                <ComboBoxItem>genus</ComboBoxItem>
+                <ComboBoxItem>species</ComboBoxItem>
+                <ComboBoxItem>subspecies</ComboBoxItem>
+            </ComboBox>
+
+
+            <TextBox Grid.Row="3" Grid.Column="1" 
+                     Name ="DataFieldKingdom" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=KingdomField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+
+            <TextBox Grid.Row="4" Grid.Column="1" 
+                     Name ="DataFieldPhylum" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=PhylumField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+            <TextBox Grid.Row="5" Grid.Column="1" 
+                     Name ="DataFieldClass" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=ClassField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+            <TextBox Grid.Row="6" Grid.Column="1" 
+                     Name ="DataFieldOrder" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=OrderField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+            <TextBox Grid.Row="7" Grid.Column="1" 
+                     Name ="DataFieldFamily" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=FamilyField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+            <TextBox Grid.Row="8" Grid.Column="1" 
+                     Name ="DataFieldGenus" 
+                     Margin="5,5,5,5"
+                     Text=""
+                     ToolTip ="{Binding ElementName=Window1, Path=GenusField.Tooltip}"
+                     TextChanged = "DataField_OnTextChanged" 
+            />
+            <toolkit:DropDownButton Grid.Row="9" Grid.Column="1" 
+                                 x:Name="DataFieldVernacularNames"
+                                 IsEnabled="True"
+                                 Margin="5"
+                                 Padding="5,5,10,5"
+                                 HorizontalAlignment="Left"
+                                 Content="Click to edit a language-dependent list of vernacular (common) names for this taxon"
+                                 ToolTip ="{Binding ElementName=Window1, Path=VernacularNamesField.Tooltip}"
+                                 DropDownPosition="Bottom"
+                                 Closed="VernacularButton_Closed"
+                                 Opened="VernacularButton_OnOpened"
+                                >
+                <toolkit:DropDownButton.DropDownContent>
+                    <StackPanel Orientation="Vertical">
+                       <TextBlock FontWeight="Bold">
+                           Enter common (vernacular) names of the taxon, one per line, as:
+                           <LineBreak/>
+                           <Run FontWeight="Normal" FontStyle="Italic" Text="  languageCode: vernacular name  "/> 
+                           <LineBreak/> 
+                           Language codes should follow ISO 693-3. e.g.,
+                           <LineBreak/> 
+                           <Run FontWeight="Normal" FontStyle="Italic" Text="  eng:wolf"/> 
+                           <LineBreak/> 
+                           <Run FontWeight="Normal" FontStyle="Italic" Text="  fra:loup gris"/>
+                       </TextBlock>
+                        <Separator/>
+                        <TextBox Name="TBVernacularItemsEditor" Height="200" 
+                                 TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible"/>
+                        <Separator/>
+                        <Button Click="VernacularButton_Click" Margin="10">OK</Button>
+                    </StackPanel>
+                </toolkit:DropDownButton.DropDownContent>
+            </toolkit:DropDownButton>
+
+            <!--<DockPanel Grid.Row="9" Grid.Column="1" HorizontalAlignment="Stretch" Margin="5,5,5,5" >
+                <Button DockPanel.Dock="Left" Grid.Row="9" Grid.Column="1" 
+                        Name ="VernacularEditor" 
+                        Margin="0,0,0,0"
+                        Content="Edit vernacular definitions"
+                        ToolTip ="{Binding ElementName=Window1, Path=VernacularNamesField.Tooltip}"
+                        Click="VernacularEditor_OnClick"
+                        HorizontalAlignment="Right"
+                />
+                <TextBox DockPanel.Dock="Right"
+                         Name ="DataFieldVernacularNames" 
+                         Margin="0, 0,0,0"
+                         Text=""
+                         ToolTip ="{Binding ElementName=Window1, Path=VernacularNamesField.Tooltip}"
+                         TextChanged = "DataField_OnTextChanged" 
+                         HorizontalAlignment="Stretch"
+                         HorizontalContentAlignment="Stretch"
+                />
+            </DockPanel>-->
+
+        </Grid>
+
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,10,5,10" >
+            <Button Name="DoneButton"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0"
+                    Content="Done" 
+                    Click="Done_OnClick"/>
+            <Button Name="Cancel"  
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+                    Padding="10" Margin="10,10,10,0" 
+                    Content ="Cancel"
+                    Click="Cancel_OnClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

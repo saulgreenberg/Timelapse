@@ -1,0 +1,212 @@
+﻿<UserControl x:Class="Timelapse.Controls.FilePlayer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             >
+    <UserControl.Resources>
+        <Style x:Key="RadioButtonAsToggleButtonStyle" TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type ToggleButton}}" />
+    </UserControl.Resources>
+    <Grid Width="Auto" Height="Auto">
+        <StackPanel Orientation="Horizontal">
+            <RadioButton Name="FirstFile" BorderThickness="0" Background="White" Width="24" Height="24" GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Go to the first file"
+                                                         Tag="First" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image Source="pack://application:,,/Icons/MediaControl-First.png" >
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+
+            <RadioButton Name="PageUp" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Previous page of images"
+                                                         Tag="PageUp" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown">
+                <Image Source="pack://application:,,/Icons/MediaControl-PageUp.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+
+            <RadioButton Name="RowUp" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Previous row of images"
+                                                         Tag="RowUp" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown">
+                <Image Source="pack://application:,,/Icons/MediaControl-RowUp.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            
+            <RadioButton Name="PlayBackwardsFast" BorderThickness="0" Background="White" Width="24" Height="24" GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Play backwards quickly until the first file"
+                                                         Tag="PlayBackwardsFast" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image Source="pack://application:,,/Icons/MediaControl-Rewind-Speed3.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            <RadioButton Name="PlayBackwardsSlow" BorderThickness="0" Background="White" Width="24" Height="24" GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Play backwards slowly until the first file"
+                                                         Tag="PlayBackwardsSlow" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image Source="pack://application:,,/Icons/MediaControl-Rewind-Speed2.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            
+            <RadioButton Name="StepBackwards" BorderThickness="0" Background="White" Width="24" Height="24" GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Step backwards one file"
+                                                         Tag="StepBackwards" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image Source="pack://application:,,/Icons/MediaControl-Rewind-Speed1.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            
+            <RadioButton Name="StopButton" BorderThickness="0"  Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Stop playing the images"
+                                                         Tag="Stop" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image Source="pack://application:,,/Icons/MediaControl-Stop.png"  />
+            </RadioButton>
+            
+            <RadioButton Name="StepForward" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Step forward one file"
+                                                         Tag="StepForward" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown">
+                <Image Source="pack://application:,,/Icons/MediaControl-PlaySpeed1.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+
+
+            <RadioButton Name="PlayForwardSlow" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Play forwards slowly until the last file"
+                                                         Tag="PlayForwardSlow" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image  Source="pack://application:,,/Icons/MediaControl-PlaySpeed2.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            
+            <RadioButton Name="PlayForwardFast" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                          ToolTip="Play forwards quickly until the last image"
+                                                          Tag="PlayForwardFast" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image  Source="pack://application:,,/Icons/MediaControl-PlaySpeed3.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+
+            <RadioButton Name="RowDown" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Next row of images"
+                                                         Tag="RowDown" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown">
+                <Image Source="pack://application:,,/Icons/MediaControl-RowDown.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            
+            <RadioButton Name="PageDown" BorderThickness="0" Background="White" Width="24" Height="24"  GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Next page of images"
+                                                         Tag="PageDown" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown">
+                <Image Source="pack://application:,,/Icons/MediaControl-PageDown.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+            
+            <RadioButton Name="LastFile" BorderThickness="0" Background="White" Width="24" Height="24" GroupName="MediaControlGroup" Style="{StaticResource RadioButtonAsToggleButtonStyle}"
+                                                         ToolTip="Go to the last image in this image set"
+                                                         Tag="Last" Click="FilePlayer_Click" PreviewKeyDown="FilePlayer_PreviewKeyDown" >
+                <Image Source="pack://application:,,/Icons/MediaControl-Last.png">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </RadioButton>
+        </StackPanel>
+    </Grid>
+</UserControl>

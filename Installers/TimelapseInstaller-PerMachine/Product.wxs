@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+
+  <Package Name="Timelapse Image Analyzer"
+           Manufacturer="Greenberg Consulting Inc. and University of Calgary"
+           Version="2.4.0.1"
+           UpgradeCode="F8A1B2C3-D4E5-6F78-9ABC-DEF012345678"
+           Compressed="yes"
+           InstallerVersion="500"
+           Scope="perMachine">
+
+    <SummaryInformation Description="A tool to simplify analysis of images and videos captured from remote cameras."
+                        Manufacturer="Greenberg Consulting Inc. and University of Calgary"
+                        Keywords="Timelapse,Image Analysis,Camera Trap" />
+
+    <!-- Major upgrade configuration - always uninstall previous version first -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  Schedule="afterInstallInitialize"
+                  AllowSameVersionUpgrades="yes" />
+
+    <!-- Check for .NET 8 Desktop Runtime -->
+    <netfx:DotNetCompatibilityCheck
+      Id="Dotnet8DesktopCheck"
+      Property="DOTNET8DESKTOPSTATUS"
+      RollForward="latestMajor"
+      RuntimeType="desktop"
+      Version="8.0.0"
+      Platform="x64" />
+
+    <!-- Ensure we're on x64 system -->
+    <Launch Condition="VersionNT64"
+            Message="This application requires a 64-bit operating system." />
+
+    <!-- Ensure .NET 8 Desktop Runtime is installed -->
+    <Launch Condition="Installed OR DOTNET8DESKTOPSTATUS=&quot;0&quot;"
+            Message="This application requires Microsoft .NET 8:&#13;&#10;(The Desktop Runtime x64 suffices).&#13;&#10;&#13;&#10;Download and install it from:&#13;&#10;https://dotnet.microsoft.com/download/dotnet/8.0. " />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Properties for customization -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!-- Property for file association executable path -->
+    <SetProperty Id="TIMELAPSEEXEPATH" Value="[INSTALLFOLDER]Timelapse.exe" Before="CostFinalize" Sequence="execute" />
+
+    <!-- Icons for shortcuts and Add/Remove Programs -->
+    <Icon Id="TimelapseIcon.ico" SourceFile="..\..\src\Timelapse\Icons\Timelapse.ico" />
+    <Icon Id="TimelapseViewOnlyIcon.ico" SourceFile="..\..\CommonImages\TimelapseReadOnly64.ico" />
+    <Icon Id="TemplateEditorIcon.ico" SourceFile="..\..\CommonImages\TemplateEditor64.ico" />
+    <Property Id="ARPPRODUCTICON" Value="TimelapseIcon.ico" />
+
+    <!-- Add/Remove Programs information -->
+    <Property Id="ARPHELPLINK" Value="https://saul.cpsc.ucalgary.ca/timelapse/" />
+    <Property Id="ARPURLINFOABOUT" Value="https://saul.cpsc.ucalgary.ca/timelapse/" />
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+
+    <!-- Directory structure -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Timelapse">
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Timelapse" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder">
+    </StandardDirectory>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="Timelapse Application" Level="1"
+             Description="Main application files" ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="MainExecutables" />
+
+      <!-- Start Menu shortcuts -->
+      <ComponentRef Id="ApplicationShortcutTimelapse" />
+      <ComponentRef Id="ApplicationShortcutViewOnly" />
+      <ComponentRef Id="ApplicationShortcutTemplateEditor" />
+
+      <!-- Desktop shortcuts -->
+      <ComponentRef Id="DesktopShortcutTimelapse" />
+      <ComponentRef Id="DesktopShortcutViewOnly" />
+      <ComponentRef Id="DesktopShortcutTemplateEditor" />
+
+      <!-- File associations -->
+      <ComponentRef Id="FileAssociations" />
+    </Feature>
+
+    <!-- UI Configuration -->
+    <ui:WixUI Id="WixUI_InstallDir" />
+
+    <!-- UI Customization -->
+    <WixVariable Id="WixUILicenseRtf" Value="..\..\LICENSES-EXTRAS\LICENSE.rtf" />
+    <WixVariable Id="WixUIDialogBmp" Value="WelcomeDialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
+  </Package>
+
+  <!-- Start Menu shortcuts components -->
+  <Fragment>
+    <Component Id="ApplicationShortcutTimelapse" Guid="A1B2C3D4-E5F6-7890-ABCD-EF0123456789"
+               Directory="ApplicationProgramsFolder">
+      <Shortcut Id="TimelapseStartMenuShortcut"
+                Name="Timelapse"
+                Description="Timelapse Image Analyzer"
+                Target="[INSTALLFOLDER]Timelapse.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="TimelapseIcon.ico" />
+      <RemoveFolder Id="RemoveApplicationProgramsFolder1" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Timelapse\Shortcuts" Name="MainShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="ApplicationShortcutViewOnly" Guid="B2C3D4E5-F678-90AB-CDEF-012345678901"
+               Directory="ApplicationProgramsFolder">
+      <Shortcut Id="ViewOnlyStartMenuShortcut"
+                Name="Timelapse View Only"
+                Description="Timelapse View Only Mode"
+                Target="[INSTALLFOLDER]Timelapse-ViewOnly.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="TimelapseViewOnlyIcon.ico" />
+      <RemoveFolder Id="RemoveApplicationProgramsFolder2" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Timelapse\Shortcuts" Name="ViewOnlyShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="ApplicationShortcutTemplateEditor" Guid="C3D4E5F6-7890-ABCD-EF01-23456789ABCD"
+               Directory="ApplicationProgramsFolder">
+      <Shortcut Id="TemplateEditorStartMenuShortcut"
+                Name="Timelapse Template Editor"
+                Description="Timelapse Template Editor"
+                Target="[INSTALLFOLDER]TimelapseTemplateEditor.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="TemplateEditorIcon.ico" />
+      <RemoveFolder Id="RemoveApplicationProgramsFolder3" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Timelapse\Shortcuts" Name="TemplateEditorShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <!-- Desktop shortcuts components -->
+  <Fragment>
+    <Component Id="DesktopShortcutTimelapse" Guid="D4E5F678-90AB-CDEF-0123-456789ABCDEF"
+               Directory="DesktopFolder">
+      <Shortcut Id="TimelapseDesktopShortcut"
+                Name="Timelapse"
+                Description="Timelapse Image Analyzer"
+                Target="[INSTALLFOLDER]Timelapse.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="TimelapseIcon.ico" />
+      <RegistryValue Root="HKCU" Key="Software\Timelapse\Shortcuts" Name="MainDesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcutViewOnly" Guid="E5F67890-ABCD-EF01-2345-6789ABCDEF01"
+               Directory="DesktopFolder">
+      <Shortcut Id="ViewOnlyDesktopShortcut"
+                Name="Timelapse View Only"
+                Description="Timelapse View Only Mode"
+                Target="[INSTALLFOLDER]Timelapse-ViewOnly.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="TimelapseViewOnlyIcon.ico" />
+      <RegistryValue Root="HKCU" Key="Software\Timelapse\Shortcuts" Name="ViewOnlyDesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcutTemplateEditor" Guid="F6789ABC-DEF0-1234-5678-9ABCDEF01234"
+               Directory="DesktopFolder">
+      <Shortcut Id="TemplateEditorDesktopShortcut"
+                Name="Timelapse Template Editor"
+                Description="Timelapse Template Editor"
+                Target="[INSTALLFOLDER]TimelapseTemplateEditor.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="TemplateEditorIcon.ico" />
+      <RegistryValue Root="HKCU" Key="Software\Timelapse\Shortcuts" Name="TemplateEditorDesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <!-- File Associations for .tdb and .ddb files -->
+  <Fragment>
+    <Component Id="FileAssociations" Guid="A1B2C3D4-E5F6-7890-1234-567890ABCDEF" Directory="INSTALLFOLDER">
+      <!-- .tdb file extension -->
+      <RegistryValue Root="HKCR" Key=".tdb" Type="string" Value="Timelapse.tdb" KeyPath="yes" />
+      <RegistryValue Root="HKCR" Key=".tdb\OpenWithProgids" Name="Timelapse.tdb" Type="string" Value="" />
+      <RegistryValue Root="HKCR" Key="Timelapse.tdb" Type="string" Value="Timelapse Database File" />
+      <RegistryValue Root="HKCR" Key="Timelapse.tdb\DefaultIcon" Type="string" Value="[INSTALLFOLDER]Timelapse.exe,0" />
+      <RegistryValue Root="HKCR" Key="Timelapse.tdb\shell" Type="string" Value="open" />
+      <RegistryValue Root="HKCR" Key="Timelapse.tdb\shell\open" Type="string" Value="&amp;Open" />
+      <RegistryValue Root="HKCR" Key="Timelapse.tdb\shell\open\command" Type="string" Value="&quot;[INSTALLFOLDER]Timelapse.exe&quot; &quot;%1&quot;" />
+
+      <!-- .ddb file extension -->
+      <RegistryValue Root="HKCR" Key=".ddb" Type="string" Value="Timelapse.ddb" />
+      <RegistryValue Root="HKCR" Key=".ddb\OpenWithProgids" Name="Timelapse.ddb" Type="string" Value="" />
+      <RegistryValue Root="HKCR" Key="Timelapse.ddb" Type="string" Value="Timelapse Template File" />
+      <RegistryValue Root="HKCR" Key="Timelapse.ddb\DefaultIcon" Type="string" Value="[INSTALLFOLDER]Timelapse.exe,0" />
+      <RegistryValue Root="HKCR" Key="Timelapse.ddb\shell" Type="string" Value="open" />
+      <RegistryValue Root="HKCR" Key="Timelapse.ddb\shell\open" Type="string" Value="&amp;Open" />
+      <RegistryValue Root="HKCR" Key="Timelapse.ddb\shell\open\command" Type="string" Value="&quot;[INSTALLFOLDER]Timelapse.exe&quot; &quot;%1&quot;" />
+    </Component>
+  </Fragment>
+
+  <!-- Files Component Group will be defined in Files.wxs (generated by GenerateFileList.ps1) -->
+
+</Wix>

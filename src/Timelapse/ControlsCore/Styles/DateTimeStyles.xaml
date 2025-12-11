@@ -1,0 +1,35 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:toolkit="http://timelapsewpf.toolkit/xaml">
+
+    <!-- Merged common resources that datetime styles depend on -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="CommonResources.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- #region Base DateTime Style - Common properties for all datetime controls -->
+    <Style x:Key="BaseDateTimeStyle" TargetType="Control">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="BorderThickness" Value="{StaticResource BorderThicknessCommonNormal}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushCommonNormal}"/>
+        <Setter Property="Height" Value="25" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Focusable" Value="True" />
+    </Style>
+    <!--#endregion-->
+
+    <!-- IsReadOnly is not a property of the base System.Windows.Controls.Control class.
+         so it must be set in each specific style.
+         If both controls inherit from a common base class that has IsReadOnly, we could target that instead. 
+         But we'd need to know the toolkit's inheritance hierarchy to do that safely.-->
+    <Style x:Key="DateTimeBox" TargetType="toolkit:WatermarkDateTimePicker" BasedOn="{StaticResource BaseDateTimeStyle}">
+        <Setter Property="IsReadOnly" Value="False" />
+    </Style>
+
+    <Style x:Key="TimeBox" TargetType="toolkit:TimePicker" BasedOn="{StaticResource BaseDateTimeStyle}">
+        <Setter Property="IsReadOnly" Value="False" />
+    </Style>
+
+</ResourceDictionary>

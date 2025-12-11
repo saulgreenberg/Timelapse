@@ -1,0 +1,186 @@
+﻿<UserControl x:Class="TimelapseTemplateEditor.ControlsMetadata.MetadataEditRowsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+             mc:Ignorable="d" 
+             Loaded="MetadataEditRowsControl_OnLoaded"
+             d:DesignHeight="350" d:DesignWidth="160">
+    <!-- Controls for creating and removing new rows -->
+    <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <Border DockPanel.Dock="Top" BorderBrush="LightGray" BorderThickness="1" Margin="0" >
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,-1" >
+                <Grid DockPanel.Dock ="Top" Margin="0,0,0,10" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Title:" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"/>
+                    <toolkit:WatermarkTextBox Grid.Column="1" 
+                                           Name="TextBoxLevelLabel" 
+                                           Watermark="name this level"
+                                           Text="" FontSize="14" HorizontalContentAlignment="Right" 
+                                           TextChanged="TextBoxLevelLabel_TextChanged" 
+                                           GotFocus="TextBoxLevelLabel_GotFocus"
+                                           ToolTip="Create a meaningful name for this level. It should indicate what folders level is about.&#10;For example, 'Projects', 'Stations' or 'Deployments'"
+                                           KeyDown="TextBoxLevelLabel_OnKeyDown"
+                    />
+                    <TextBlock Grid.Column="2" Name="TextBlockLevel" Text=" ?" FontSize="14" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!--Add label-->
+                <TextBlock  Margin="0,0,0,5" DockPanel.Dock="Top" FontSize="14"  HorizontalAlignment="Left"><Run FontWeight="Medium" Text="Add a data field"/></TextBlock>
+
+                <!-- Controls menu)-->
+                <StackPanel Orientation="Vertical" Name="EditRowDockPanel"  Margin="0,0,0,0"  HorizontalAlignment="Stretch" DockPanel.Dock="Top">
+
+                    <!--#region Text types-->
+                    <Menu BorderThickness="1" BorderBrush="LightGray" >
+                        <MenuItem Header="Text ..." 
+                                              FontSize="14" Width="126" Padding ="5,5"
+                                              ToolTip="Create one of several types of text controls">
+                            <MenuItem Header="Note" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="Note" 
+                                      ToolTip="Note: allows entry of a short single line of text" 
+                                      Click="MenuItemAddDataRow_Click"/>
+                            <MenuItem Header="AlphaNumeric" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="AlphaNumeric" 
+                                      ToolTip="AlphaNumeric: allows entry of only alphabetic letters, numbers and _ in a short single line of text" 
+                                      Click="MenuItemAddDataRow_Click"/>
+                            <MenuItem Header="MultiLine" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="MultiLine" 
+                                      ToolTip="MultiLine: allows entry of longer text, including multiple lines" 
+                                      Click="MenuItemAddDataRow_Click"/>
+                        </MenuItem>
+                    </Menu>
+                    <!--#endregion-->
+
+                    <!--#region Number types-->
+                    <Menu BorderThickness="1" BorderBrush="LightGray">
+                        <MenuItem Header="Number ... " 
+                                  FontSize="14" Width="126" Padding ="5,5"
+                                  ToolTip="Create one of several types of number controls">
+                            <MenuItem Header="Integer" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="IntegerAny" 
+                                      ToolTip="IntegerAll: allows entry of a positive or negative integer, zero, or blank" 
+                                      Click="MenuItemAddDataRow_Click"/>
+                            <MenuItem Header="Integer - Positive only" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="IntegerPositive" 
+                                      ToolTip="Integer Positive: allows entry of a positive integer, zero, or blank" 
+                                      Click="MenuItemAddDataRow_Click"/>
+
+                            <MenuItem Header="Decimal" 
+                                      FontSize="14" Padding ="0,5"            
+                                      Tag="DecimalAny" 
+                                      ToolTip="Decimals: allows entry of a positive or negative decimal, zero, or blank" 
+                                      Click="MenuItemAddDataRow_Click"/>
+
+                            <MenuItem Header="Decimal - Positive only"
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="DecimalPositive" 
+                                      ToolTip="Decimal Positive only: allows entry of a positive decimal, zero, or blank" 
+                                      Click="MenuItemAddDataRow_Click"/>
+  
+                        </MenuItem>
+                    </Menu>
+                    <!--#endregion-->
+
+                    <!--#region Choice Types-->
+                    <Menu BorderThickness="1" BorderBrush="LightGray">
+                        <MenuItem Header="Choices ... " 
+                                  FontSize="14" Width="126" Padding ="5,5"
+                                  ToolTip="Create one of several types of choice controls">
+                            <MenuItem Header="Fixed Choice - Choose one item from a list" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="FixedChoice"  
+                                      ToolTip="Fixed Choice: allows one to choose from a pulldown menu "
+                                      Click="MenuItemAddDataRow_Click"/>
+                            <MenuItem Header="MultiChoice - Choose multiple items from a list" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="MultiChoice"  
+                                      ToolTip="MultiChoice: allows one to choose multiple items from a pulldown menu"
+                                      Click="MenuItemAddDataRow_Click"/>
+                        </MenuItem>
+                    </Menu>
+                    <!--#endregion-->
+
+                    <!--#region Date Types-->
+                    <Menu BorderThickness="1" BorderBrush="LightGray">
+                        <MenuItem Header="Dates/Times ... " 
+                                  FontSize="14" Width="126" Padding ="5,5"
+                                  ToolTip="Create one of several types of date controls">
+                            <MenuItem Header="Date_ + Time_" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="DateTime_"  
+                                      ToolTip="DateTime: allows entry of both date and time"
+                                      Click="MenuItemAddDataRow_Click"/>
+                            <MenuItem Header="Date_ only" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="Date_"  
+                                      ToolTip="Date_: allows entry of a date"
+                                      Click="MenuItemAddDataRow_Click"/>
+                            <MenuItem Header="Time_ only" 
+                                      FontSize="14" Padding ="0,5"
+                                      Tag="Time_"  
+                                      ToolTip="Time: allows entry of a time"
+                                      Click="MenuItemAddDataRow_Click"/>
+                        </MenuItem>
+                    </Menu>
+                    <!--#endregion-->
+
+                    <!--#region Flag Type-->
+                    <Menu BorderThickness="1" BorderBrush="LightGray">
+                        <MenuItem Header="Flag" 
+                                  FontSize="14" Width="126" Padding ="5,5"
+                                  Tag="Flag"  
+                                  ToolTip="Flag: allows on to choose true or false using a checkbox "
+                                  Click="MenuItemAddDataRow_Click"/>
+                    </Menu>
+
+                    <!--#region Remove Control button-->
+                    <Button Content="Remove data field" FontSize="14" 
+                            HorizontalContentAlignment="Left"  Padding ="5,5" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" 
+                            Name="RemoveControlButton" IsEnabled="False" Height="40" MinHeight="30" VerticalAlignment="Top"  
+                            ToolTip="Select a row representing a control to remove it"
+                            Click="ButtonRemoveDataRow_Click" Margin="0,10,0,0"/>
+
+
+                    <!--#region This level... button-->
+                    <Menu BorderThickness="1" BorderBrush="LightGray"  Margin="0,20,0,0" >
+                        <MenuItem Header="Edit level ... " 
+                                  Name="EditLevelButton"
+                                  FontSize="14" Width="126" Padding ="5,5"
+                                  ToolTip="Move or delete this level"
+                                  SubmenuOpened="MenuEditLevel_Click">
+                            <MenuItem Header="Move level backwards..." 
+                                      Name="MenuItemMoveLevelBackwards"
+                                      FontSize="14" Padding ="0,5"
+                                      ToolTip="Move this level backwards, i.e., switch it with the level before it in the folder hierarchy"
+                                      Click="MenuItemMoveLevelForwardsOrBackwards_Click"/>
+                            <MenuItem Header="Move level forwards..." 
+                                      Name="MenuItemMoveLevelForwards"
+                                      FontSize="14" Padding ="0,5"
+                                      ToolTip="Move this level forwards, i.e., switch it with the level after it in the folder hierarchy"
+                                      Click="MenuItemMoveLevelForwardsOrBackwards_Click"/>
+                            <MenuItem Header="Delete this level..." 
+                                      FontSize="14" Padding ="0,5"
+                                      ToolTip="Delete this level and the controls within it"
+                                      Click="MenuItemDeleteLevel_Click"/>
+                        </MenuItem>
+                    </Menu>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+        <!--#endregion-->
+ 
+    </DockPanel>
+</UserControl>
+

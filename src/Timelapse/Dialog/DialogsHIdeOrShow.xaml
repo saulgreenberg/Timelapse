@@ -1,0 +1,46 @@
+﻿<Window x:Class="Timelapse.Dialog.DialogsHideOrShow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Hide or Show Various Informational Dialogs" Height="515" Width="680" Loaded="Window_Loaded">
+    <Grid Margin="10,0,10,10">
+        <Grid.RowDefinitions >
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <toolkit:FormattedMessageContent x:Name="Message" Icon="{x:Static toolkit:DialogIconType.Question}" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                            DialogTitle="Hide or Show Various Informational Dialogs"
+                            What="A handful of dialog boxes provide instructions for doing a particular task. You may not want to see that dialog if you already know how to do that task.   
+                                      [li] You can hide a dialog here, or through that dialog's [e]Don't show this message again[/e] checkbox 
+                                      [li] You can show a previously hidden dialog box by unchecking it here." />
+        <GroupBox Header="A checkmarks hides these dialogs:" Grid.Row="1" Grid.Column="0" Padding="10,10,10,10" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold" FontSize="12" >
+            <StackPanel Orientation="Vertical" >
+                <CheckBox FontWeight="Normal" Content="_Ambiguous dates imported" Name="SuppressAmbiguousDatesDialog"  Click="SuppressAmbiguousDatesDialog_Click" ToolTip="Turn on or off the informational dialog displayed when files with ambiguous dates are added to an image set" />
+                <CheckBox FontWeight="Normal" Content="_Ambiguous dates selection" Name="SuppressSelectedAmbiguousDatesPrompt" Click="SuppressSelectedAmbiguousDatesPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when ambiguous date clarification is performed with a over selected files" />
+                <CheckBox FontWeight="Normal" Content="Clock drift selection" Name="SuppressSelectedDateTimeLinearCorrectionPrompt" Click="SuppressSelectedDateTimeLinearCorrectionPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when clock drift correction is performed with a over selected files" />
+                <CheckBox FontWeight="Normal" Content=".csv export dialog" Name="SuppressCsvExportDialog" Click="SuppressCsvExportDialog_Click" ToolTip="Turn on or off the informational dialog displayed when CSV files are exported" />
+                <CheckBox FontWeight="Normal" Content=".csv export selection" Name="SuppressSelectedCsvExportPrompt" Click="SuppressSelectedCsvExportPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when CSV export is performed over selected files" />
+                <CheckBox FontWeight="Normal" Content=".csv import" Name="SuppressCsvImportPrompt" Click="SuppressCsvImportPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when a CSV file is imported" />
+                <CheckBox FontWeight="Normal" Content="Dark threshold selection" Name="SuppressSelectedDarkThresholdPrompt" Click="SuppressSelectedDarkThresholdPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when adjusting the dark threshold over selected files" />
+                <CheckBox FontWeight="Normal" Content="Daylight savings correction selection" Name="SuppressSelectedDaylightSavingsCorrectionPrompt" Click="SuppressSelectedDaylightSavingsCorrectionPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when corrections for daylight savings time is performed with over selected files" />
+                <CheckBox FontWeight="Normal" Content="Fixed date/time correction selection" Name="SuppressSelectedDateTimeFixedCorrectionPrompt" Click="SuppressSelectedDateTimeFixedCorrectionPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when fixed date/time correction is performed with over selected files" />
+                <CheckBox FontWeight="Normal" Content="How duplicates work" Name="SuppressHowDuplicatesWorkPrompt" Click="SuppressHowDuplicatesWorkPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when you select the 'Duplicate this record' menu option" />
+                <CheckBox FontWeight="Normal" Content="Important message about this update" Name="SuppressImportantMessagePrompt" Click="SuppressImportantMessagePrompt_Click" ToolTip="Turn on or off the informational dialog about updates that may be displayed when you start Timelapse" Visibility="Collapsed"/>
+                <CheckBox FontWeight="Normal" Content="Metadata selection" Name="SuppressSelectedPopulateFieldFromMetadataPrompt" Click="SuppressSelectedPopulateFieldFromMetadataPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when metadata is read from over selected files" />
+                <CheckBox FontWeight="Normal" Content="Reread dates selection" Name="SuppressSelectedRereadDatesFromFilesPrompt" Click="SuppressSelectedRereadDatesFromFilesPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when dates are reloaded from files over selected files" />
+                <CheckBox FontWeight="Normal" Content="Shortcut to image folder detected" Name="SuppressShortcutDetectedPrompt" Click="SuppressShortcutDetectedPrompt_Click" ToolTip="Turn on or off the informational dialog displayed when dates are reloaded from files over selected files" />
+                <!--<CheckBox FontWeight="Normal" Content="Very important message concerning this update" Name="SuppressWarningToUpdateDBFilesToSQL" Click="SuppressWarningToUpdateDBFilesToSQL_Click" ToolTip="Turn on or off the informational dialog displayed about this update" />-->
+                <CheckBox FontWeight="Normal" Content="Warning about opening database with an older version of Timelapse" Name="SuppressOpeningWithOlderTimelapseVersionDialog" Click="SuppressOpeningWithOlderTimelapseVersionDialog_Click" ToolTip="Turn on or off the warning dialog that appears when you try to open a database .ddb file with an older Timelapse version" />
+                <CheckBox FontWeight="Normal" Content="Propagate from last non-empty value to here" Name="SuppressPropagateFromLastNonEmptyValuePrompt" Click="SuppressPropagateFromLastNonEmptyValuePrompt_Click" ToolTip="Turn on or off the warning dialog that appears when you select a data field's context menu for 'Propagate from last non-empty value...'" />
+            </StackPanel >
+        </GroupBox>
+        <Button x:Name="OkButton" Content="_Okay" Grid.Row="1" Grid.Column="1" IsDefault="True" Width="100" Height="Auto" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="10" Click="OkButton_Click"/>
+    </Grid>
+</Window>

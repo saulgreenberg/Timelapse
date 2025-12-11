@@ -1,0 +1,64 @@
+﻿<Window x:Class="Timelapse.QuickPaste.QuickPasteEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+          Title="Quick Paste Editor"
+        MinHeight="600" MinWidth="300"
+		Height="700" Width="550"
+		ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner"  Loaded="Window_Loaded" >
+    <DockPanel>
+        <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top" Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="QuickPaste Editor"
+                            What="The checked items below form a quickpaste entry.
+                                      [br]You will be able to paste these values into the corresponding data controls with a single button click."
+                             Hint="[ni]Create a meaningful title
+                                   [ni]Check [e]Use[/e] to select items to be quick-pasted into data controls
+                                   [ni]If desired, use the buttons to select or clear all [e]Use[/e] checkboxes"
+                            Result="A new quick paste button will be added to the QuickPaste window"
+                            ShowExplanationVisibility="False"/>
+
+        <DockPanel DockPanel.Dock="Bottom">
+            <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
+                <TextBlock Name="Note" TextWrapping="Wrap"  HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed" Margin="0,0,10,0">QuickPaste will do nothing: no items are selected as 'Use'.</TextBlock>
+                <Button Name="CancelButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button Name="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+            </StackPanel>
+        </DockPanel>
+
+        <Rectangle Fill="#FF868686" Height="2" DockPanel.Dock="Top" Margin="0,0,0,10"/>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid Name="QuickPasteGridRows" DockPanel.Dock="Top" Margin="5,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Label Content="Title:" FontWeight="Bold" Grid.Row="0" Grid.Column="0"/>
+                <TextBox Name="QuickPasteTitle"  Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="Give this a meaningful title" VerticalContentAlignment="Center" HorizontalAlignment="Left" Width="150" />
+                <Label Content="Use"   FontWeight="Bold" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="1"/>
+                <Label Content="Label" FontWeight="Bold" Grid.Row="1" Grid.Column="2"/>
+                <Label Content="Value" FontWeight="Bold" Grid.Row="1" Grid.Column="3"/>
+                <StackPanel Orientation="Horizontal" Grid.Row= "1" Grid.Column="4" Margin="10,0,0,0">
+                    <Button Name="UseAll" Content="Select" Margin="0,0,5,0" Click="SetUses_Click" FontStyle="Italic"/>
+                    <Button Name="UseClear" Content="Clear" Click="SetUses_Click" FontStyle="Italic"/>
+                    <TextBlock Text="all Use checkboxes " VerticalAlignment="Center" Margin="5,0,0,0" FontStyle="Italic"/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
+

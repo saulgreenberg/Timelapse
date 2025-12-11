@@ -1,0 +1,29 @@
+<!--***********************************************************************************
+
+   Toolkit for WPF
+
+   Copyright (C) 2007-2019 Xceed Software Inc.
+
+   This program is provided to you under the terms of the Microsoft Public
+   License (Ms-PL) as published at https://opensource.org/license/ms-pl-html
+
+   Fork origin: https://github.com/dotnetprojects/WpfExtendedToolkit
+   - based on: https://github.com/xceedsoftware/wpftoolkit, Version 3
+   This fork: modified for use in Timelapse project
+    by Saul Greenberg, 2025 onwards
+
+
+
+
+  **********************************************************************************-->
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:core="clr-namespace:TimelapseWpf.Toolkit.Core">
+
+   <ResourceDictionary.MergedDictionaries>
+    <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Themes/Aero/Brushes_NormalColor.xaml"/>
+    <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Themes/Aero/Buttons_NormalColor.xaml"/>
+   </ResourceDictionary.MergedDictionaries>
+
+</ResourceDictionary>

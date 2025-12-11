@@ -1,0 +1,17 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--#region Container Style Properties -->
+    <Style x:Key="StackPanelContainerStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="Margin" Value="0,0,10,0" />
+        <Setter Property="Height" Value="35"/>
+    </Style>
+
+    <Style x:Key="GridContainerStyle" TargetType="Grid">
+        <Setter Property="Height" Value="35"/>
+        <Setter Property="Margin" Value="0,0,10,0" />
+    </Style>
+    <!--#endregion -->
+
+</ResourceDictionary>

@@ -1,0 +1,47 @@
+﻿<Window x:Class="Timelapse.Dialog.WarningToUpdateDBFilesToSQL"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Warning: You may need to update your Timelapse.ddb and .tdb files" 
+        MinHeight="480" MinWidth="768"
+		Height="550" Width="768" Loaded="Window_Loaded" 
+        >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <toolkit:FormattedMessageContent x:Name="Message" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Icon="{x:Static toolkit:DialogIconType.Warning}"
+                            DialogTitle="Very Important Message Concerning this Update..."
+
+                            What="Version 2.3.0.0 onwards includes fixes to long-standing internal issues in Timelapse. Fixes are NOT backwards compatable.
+                            [br]An upgrade dialog is available that searches for and asks you to upgrade pre-version 2.3.0.0 template [i].tdb[/i] and data [i].ddb[/i] files.
+                            [br 10]Raise this dialog in one of two ways.
+                            [ni]As you use Timelapse: the upgrade dialog appears whenever you try to open these older files.
+                            [ni]By the Timelapse menu: [e]File | Upgrade Timelapse files (.tdb/.ddb) to latest version...[/e] raises the dialog, where you can choose the folder to search."
+                            Result="The folder and sub-folders are searched for all older [i].tdb/.ddb files[/i], and each found file is upgraded.
+                            [li]Your original [i].tdb[/i] and [i].ddb[/i] files are moved to its corresponding [i]Backups folder[/i], and are renamed to include a [i]Pre23[/i] suffix."
+                            Details="The following changes may affect you.
+                                      [li][e]ImageQuality[/e] field (which is rarely used) is renamed to a [e]Dark[/e] flag field with true/false values, or optionally deleted;
+                                      [li][e]Exported CSV files[/e] will no longer have an 'ImageQuality' column, but may include a Dark column.
+                                      [li][e]Dark[/e] classification is now done by populating a flag field of your choice (via Edit|Populate a field with Dark... );
+                                      [li][e]DateTimes[/e] no longer use timezone offsets, and can be exported in different CSV formats (via Options|Preferences);
+                                      [li][e]Folder[/e] field is optionally included in CSV exports as the renamed 'RootFolder' column (via Options|Preferences);
+                                      [li][e]Importing data from previously generated CSV files[/e] may produce (easily repaired) warnings;
+                                      [li][e]Redesigned internal database tables[/e]. If details are needed, see the Timelapse Database Guide on the web site."
+                            Hint="Don't open upgraded files with old Timelapse versions, as Timelapse will crash and you will have to upgrade the files again."
+                                      />
+        <CheckBox Name="CheckBoxDontShowAgain" Grid.Row="1" Grid.Column="0" Content="_Don't show this message again." Margin="10,20,0,0"  />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Name="OkButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Okay</Button>
+        </StackPanel>
+    </Grid>
+
+</Window>

@@ -1,0 +1,42 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:toolkit="http://timelapsewpf.toolkit/xaml">
+
+    <!-- Merged common resources that numeric styles depend on -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="CommonResources.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- #region Base Numeric Style - Common properties for all numeric controls -->
+    <Style x:Key="BaseNumericStyle" TargetType="Control">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="1,0,1,0"/>
+        <Setter Property="BorderThickness" Value="{StaticResource BorderThicknessCommonNormal}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushCommonNormal}"/>
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Height" Value="25" />
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <!--#endregion-->
+
+    <!-- #region CounterTextBox Style - Inherits from base and adds counter-specific properties -->
+    <Style x:Key="CounterTextBox" TargetType="toolkit:IntegerUpDown" BasedOn="{StaticResource BaseNumericStyle}">
+        <!-- Override default margin with counter-specific value -->
+        <Setter Property="Margin" Value="-5,0,0,0" />
+        
+        <!-- Counter-specific properties -->
+        <Setter Property="IsReadOnly" Value="False" />
+        <Setter Property="Minimum" Value="0" />
+        <Setter Property="DisplayDefaultValueOnEmptyText" Value="true" />
+        <Setter Property="DefaultValue" Value="{x:Null}" />
+        <Setter Property="AllowTextInput" Value="true" />
+    </Style>
+    <!--#endregion-->
+
+    <Style x:Key="IntegerTextBox" TargetType="toolkit:IntegerUpDown" BasedOn="{StaticResource BaseNumericStyle}"/>
+    <Style x:Key="DoubleTextBox" TargetType="toolkit:DoubleUpDown" BasedOn="{StaticResource BaseNumericStyle}"/>
+
+</ResourceDictionary>

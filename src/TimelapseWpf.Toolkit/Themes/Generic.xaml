@@ -1,0 +1,60 @@
+<!--***********************************************************************************
+
+   Toolkit for WPF
+
+   Copyright (C) 2007-2019 Xceed Software Inc.
+
+   This program is provided to you under the terms of the Microsoft Public
+   License (Ms-PL) as published at https://opensource.org/license/ms-pl-html
+
+   Fork origin: https://github.com/dotnetprojects/WpfExtendedToolkit
+   - based on: https://github.com/xceedsoftware/wpftoolkit, Version 3
+   This fork: modified for use in Timelapse project
+    by Saul Greenberg, 2025 onwards
+
+
+
+
+  **********************************************************************************-->
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:core="clr-namespace:TimelapseWpf.Toolkit.Core">
+   <ResourceDictionary.MergedDictionaries>
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Themes/Generic/Brushes.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Themes/Generic/Buttons.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Themes/Generic/Common.xaml" />
+
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Chromes/Themes/Generic.xaml" />
+
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="BusyIndicator/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="ButtonSpinner/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Primitives/Themes/Generic/WindowControl.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Primitives/Themes/Generic/SelectorItem.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="CheckComboBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="CheckListBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="ChildWindow/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="DropDownButton/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="IconButton/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="ImprintTextBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="ImprintAutoCompleteTextBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Magnifier/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="MessageBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="MultiLineText/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="DateTimeUpDown/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="DateTimePicker/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="NumericUpDown/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="RangeSlider/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="SplitButton/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="TokenizedTextBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="TimePicker/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="TimeSpanUpDown/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="WatermarkComboBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="WatermarkCheckComboBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="WatermarkDateTimePicker/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="WatermarkTimePicker/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="WatermarkTextBox/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Wizard/Themes/Generic.xaml" />
+      <core:VersionResourceDictionary AssemblyName="TimelapseWpf.Toolkit" SourcePath="Zoombox/Themes/Generic.xaml" />
+   </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

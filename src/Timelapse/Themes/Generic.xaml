@@ -1,0 +1,16 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Common resources -->
+    <SolidColorBrush x:Key="BorderBrushCommonNormal" Color="LightBlue" />
+    <SolidColorBrush x:Key="BorderBrushCommonHighlight" Color="Blue" />
+
+    <!--Normal  Border Thickness  1 "{StaticResource BorderThicknessCommonNormal}" -->
+    <!--Highlit Border Thickness  2 "{StaticResource BorderThicknessCommonHighlight}" -->
+    <Thickness x:Key="BorderThicknessCommonNormal">1</Thickness>
+    <Thickness x:Key="BorderThicknessCommonHighlight">3</Thickness>
+
+    <!-- MultiLineText control is now provided by TimelapseWpf.Toolkit -->
+
+</ResourceDictionary>
