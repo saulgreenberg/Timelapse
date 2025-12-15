@@ -5,7 +5,7 @@
 
   <Package Name="Timelapse Image Analyzer"
            Manufacturer="Greenberg Consulting Inc. and University of Calgary"
-           Version="2.4.0.1"
+           Version="2.5.0.0"
            UpgradeCode="F8A1B2C3-D4E5-6F78-9ABC-DEF012345678"
            Compressed="yes"
            InstallerVersion="500"
@@ -20,22 +20,22 @@
                   Schedule="afterInstallInitialize"
                   AllowSameVersionUpgrades="yes" />
 
-    <!-- Check for .NET 8 Desktop Runtime -->
+    <!-- Check for .NET 10 Desktop Runtime -->
     <netfx:DotNetCompatibilityCheck
-      Id="Dotnet8DesktopCheck"
-      Property="DOTNET8DESKTOPSTATUS"
+      Id="Dotnet10DesktopCheck"
+      Property="DOTNET10DESKTOPSTATUS"
       RollForward="latestMajor"
       RuntimeType="desktop"
-      Version="8.0.0"
+      Version="10.0.0"
       Platform="x64" />
 
     <!-- Ensure we're on x64 system -->
     <Launch Condition="VersionNT64"
             Message="This application requires a 64-bit operating system." />
 
-    <!-- Ensure .NET 8 Desktop Runtime is installed -->
-    <Launch Condition="Installed OR DOTNET8DESKTOPSTATUS=&quot;0&quot;"
-            Message="This application requires Microsoft .NET 8:&#13;&#10;(The Desktop Runtime x64 suffices).&#13;&#10;&#13;&#10;Download and install it from:&#13;&#10;https://dotnet.microsoft.com/download/dotnet/8.0. " />
+    <!-- Ensure .NET 10 Desktop Runtime is installed -->
+    <Launch Condition="Installed OR DOTNET10DESKTOPSTATUS=&quot;0&quot;"
+            Message="This application requires Microsoft .NET 10:&#13;&#10;(The Desktop Runtime x64 suffices).&#13;&#10;&#13;&#10;Download and install it from:&#13;&#10;https://dotnet.microsoft.com/download/dotnet/10.0. " />
 
     <MediaTemplate EmbedCab="yes" />
 

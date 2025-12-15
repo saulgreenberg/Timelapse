@@ -8,6 +8,7 @@ using System.Windows;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using File = System.IO.File;
 
@@ -67,6 +68,18 @@ namespace Timelapse.Dialog
         }
 
         private async void Export_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Export_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Export_ClickAsync()
         {
             if (GetPathAndCreateItIfNeeded(out string path) == false)
             {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
@@ -6,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Timelapse.Database;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 using Control = Timelapse.Constant.Control;
@@ -123,6 +125,18 @@ namespace Timelapse.Dialog
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
         {
             RememberButtonState(); // So we remember this button state, as the dialog may be reused
             bool isCompleted = await PopulateAsync().ConfigureAwait(true);

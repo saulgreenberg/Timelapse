@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -93,6 +94,18 @@ namespace Timelapse
 
         #region Import recognition data
         private async void MenuItemImportRecognitionData_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemImportRecognitionData_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemImportRecognitionData_ClickAsync()
         {
             //
             // 1. Get the Json file from the user

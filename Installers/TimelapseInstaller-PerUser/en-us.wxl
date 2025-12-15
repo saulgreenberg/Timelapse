@@ -10,6 +10,6 @@
   <String Id="VerifyReadyDlgInstallTitle" Value="{\WixUI_Font_Title}Ready to install [ProductName] for the current user"/>
   
   <!-- Override Ready to install message -->
-  <String Id="VerifyReadyDlgInstallText" Value="Note: Timelapse is self-contained, where it includes .Net8 (Desktop Runtime)&#13;&#10;&#13;&#10;This installation will install Timelapse so that it is accessible only to the current user.&#13;&#10;• Install to begin the installation.&#13;&#10;• Back to review or change settings&#13;&#10;• Cancel to exit" />
+  <String Id="VerifyReadyDlgInstallText" Value="Note: Timelapse is self-contained, where it includes .Net10 (Desktop Runtime)&#13;&#10;&#13;&#10;This installation will install Timelapse so that it is accessible only to the current user.&#13;&#10;• Install to begin the installation.&#13;&#10;• Back to review or change settings&#13;&#10;• Cancel to exit" />
 
 </WixLocalization>

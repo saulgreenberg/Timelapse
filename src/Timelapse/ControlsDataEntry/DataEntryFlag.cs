@@ -93,7 +93,7 @@ namespace Timelapse.ControlsDataEntry
 
         protected override Popup CreatePopupPreview(Control control, Thickness padding, double width, double horizontalOffset)
         {
-            Style style = (Style)ContentControl.FindResource(ControlContentStyleEnum.FlagCheckBox.ToString());
+            Style style = (Style)ContentControl.FindResource(nameof(ControlContentStyleEnum.FlagCheckBox));
 
             // Creatre a textblock and align it so the text is exactly at the same position as the control's text
             // Note that if control is null (which shouldn't happen) we use an autoheight

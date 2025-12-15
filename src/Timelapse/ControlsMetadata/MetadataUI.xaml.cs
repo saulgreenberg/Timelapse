@@ -15,15 +15,15 @@ namespace Timelapse.ControlsMetadata
     public partial class MetadataUI
     {
         #region Public properties
-        private string relativePathToCurrentImage;
+
         public string RelativePathToCurrentImage
         {
-            get => relativePathToCurrentImage;
+            get;
             set
             {
-                if (null == relativePathToCurrentImage || relativePathToCurrentImage != value)
+                if (null == field || field != value)
                 {
-                    relativePathToCurrentImage = value;
+                    field = value;
                     SetPanelsRelativePathToCurrentFolder(TabControl.Items, value);
                 }
             }

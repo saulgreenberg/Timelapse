@@ -1,4 +1,4 @@
-﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateCorrectAmbiguous"
+﻿<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.DateTimeCorrectAmbiguous"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"

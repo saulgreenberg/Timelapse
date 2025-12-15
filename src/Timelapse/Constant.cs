@@ -840,6 +840,10 @@ namespace Timelapse.Constant
         public const string Version = "version";
     }
 
+    public static class XMP
+    {
+        public const string Namespace = "XMP-TimelapseData";
+    }
     // DETECTION Columns and values  
     #region Detection Constants.
     public static class InfoColumns

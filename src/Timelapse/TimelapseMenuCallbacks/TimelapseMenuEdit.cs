@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -122,7 +123,21 @@ namespace Timelapse
 
         #region Populate metadata text field
         // Populate a data field from metadata (example metadata displayed from the currently selected image)
+
+
         private async void MenuItemPopulateFieldFromMetadata_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemPopulateFieldFromMetadata_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemPopulateFieldFromMetadata_ClickAsync()
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
@@ -148,13 +163,13 @@ namespace Timelapse
                                                                    State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut;
                                                                }))
             {
-                PopulateFieldsWithMetadata populateField = new(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages), false);
+                FileMetadataPopulateAll populateField = new(this, DataHandler.FileDatabase, DataHandler, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages));
                 if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
 
                 }
-                // If the Populate dialog started the ExifToolManager, this will kill the no longer needed ExifTool processes. 
+                // If the Populate dialog started the ExifToolManager, this will kill the no longer needed ExifTool processes.
                 State.ExifToolManager.Stop();
             }
         }
@@ -162,6 +177,18 @@ namespace Timelapse
 
         #region Populate metadata date time field
         private async void MenuItemPopulateDateTimesfromMetadata_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemPopulateDateTimesfromMetadata_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemPopulateDateTimesfromMetadata_ClickAsync()
         {
             // If we are not in the selection All view, or if its a corrupt image or deleted image, or if its a video that no longer exists, tell the person. Selecting ok will shift the selection.
             // We want to be on a valid image as otherwise the metadata of interest won't appear
@@ -186,7 +213,7 @@ namespace Timelapse
                     TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     return;
                 }
-                PopulateFieldsWithMetadata populateField = new(this, DataHandler.FileDatabase, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages), true);
+                FileMetadataPopulateDatesOnly populateField = new(this, DataHandler.FileDatabase, DataHandler, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages));
                 if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
@@ -197,6 +224,18 @@ namespace Timelapse
 
         #region Poplulate Field with Episode Data
         private async void MenuItemEditPopulateFieldWithEpisodeData_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemEditPopulateFieldWithEpisodeData_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemEditPopulateFieldWithEpisodeData_ClickAsync()
         {
             // Check: needs at least one file in the current selection,
             if (DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles == 0 || DataHandler?.FileDatabase?.ImageSet == null)
@@ -275,6 +314,18 @@ namespace Timelapse
         #region Populate Field with GUID
         private async void MenuItemEditPopulateFieldWithGUID_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemEditPopulateFieldWithGUID_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemEditPopulateFieldWithGUID_ClickAsync()
+        {
             if (DataHandler.ImageCache.Current == null)
             {
                 // Shouldn't happen
@@ -295,7 +346,7 @@ namespace Timelapse
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
                 }
-                // If the Populate dialog started the ExifToolManager, this will kill the no longer needed ExifTool processes. 
+                // If the Populate dialog started the ExifToolManager, this will kill the no longer needed ExifTool processes.
                 State.ExifToolManager.Stop();
             }
         }
@@ -305,6 +356,18 @@ namespace Timelapse
 
         private static bool IsDuplicating;
         private async void MenuItemEditDuplicateRecord_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemEditDuplicateRecord_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemEditDuplicateRecord_ClickAsync(object sender)
         {
             if (IsDisplayingSingleImage() == false)
             {
@@ -355,9 +418,21 @@ namespace Timelapse
         #region Extract video frame as a record
         // Extracts the current video frame, creates a jpeg image file from it, and creates a record to it using the current data in the video frame
         // The file location is in the same folder as the video frame.
-        // The file name is the same as the video frame but with the video position's timestamp appended to it e.g. bear.avi => bear_1.5.jpg 
+        // The file name is the same as the video frame but with the video position's timestamp appended to it e.g. bear.avi => bear_1.5.jpg
         // The invoking menu is enabled only if Timelapse is displaying a video and the video player is paused, so those tests are not repeated here.
         private async void MenuItemExtractVideoFrameUsingCurrentValues_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemExtractVideoFrameUsingCurrentValues_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemExtractVideoFrameUsingCurrentValues_ClickAsync()
         {
             if (false == this.DataHandler.ImageCache.Current is VideoRow videoRow)
             {
@@ -486,11 +561,23 @@ namespace Timelapse
             }
         }
 
-        // Delete callback manages all deletion menu choices where: 
+        // Delete callback manages all deletion menu choices where:
         // - the current image or all images marked for deletion are deleted
         // - the data associated with those images may be delted.
         // - deleted images are moved to a backup folder.
         private async void MenuItemDeleteFiles_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemDeleteFiles_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemDeleteFiles_ClickAsync(object sender)
         {
             if (sender is MenuItem menuItem == false)
             {
@@ -673,6 +760,18 @@ namespace Timelapse
         // Re-read dates and times from files
         private async void MenuItemRereadDateTimesfromFiles_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemRereadDateTimesfromFiles_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemRereadDateTimesfromFiles_ClickAsync()
+        {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this,
@@ -693,6 +792,18 @@ namespace Timelapse
         // Correct for daylight savings time
         private async void MenuItemDaylightSavingsTimeCorrection_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemDaylightSavingsTimeCorrection_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemDaylightSavingsTimeCorrection_ClickAsync()
+        {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this,
@@ -702,7 +813,7 @@ namespace Timelapse
                 optOut => { State.SuppressSelectedDaylightSavingsCorrectionPrompt = optOut; }
                 ))
             {
-                DateDaylightSavingsTimeCorrection dateTimeChange = new(this, DataHandler.FileDatabase, DataHandler.ImageCache);
+                DateTimeDaylightSavingsCorrection dateTimeChange = new(this, DataHandler.FileDatabase, DataHandler.ImageCache);
                 if (ShowDialogAndCheckIfChangesWereMade(dateTimeChange))
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
@@ -712,6 +823,18 @@ namespace Timelapse
 
         // Correct for cameras not set to the right date and time by specifying an offset
         private async void MenuItemDateTimeFixedCorrection_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemDateTimeFixedCorrection_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemDateTimeFixedCorrection_ClickAsync()
         {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedDateTimeFixedCorrectionPrompt,
@@ -729,9 +852,21 @@ namespace Timelapse
             }
         }
 
-        // Correct for cameras whose clock runs fast or slow (clock drift). 
+        // Correct for cameras whose clock runs fast or slow (clock drift).
         // Note that the correction is applied only to images in the selected view.
         private async void MenuItemDateTimeLinearCorrection_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemDateTimeLinearCorrection_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemDateTimeLinearCorrection_ClickAsync()
         {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
@@ -753,6 +888,18 @@ namespace Timelapse
         // Correct ambiguous dates dialog i.e. dates that could be read as either month/day or day/month
         private async void MenuItemCorrectAmbiguousDates_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemCorrectAmbiguousDates_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemCorrectAmbiguousDates_ClickAsync()
+        {
             // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
             if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(
                 this, DataHandler.FileDatabase, State.SuppressSelectedAmbiguousDatesPrompt,
@@ -762,7 +909,7 @@ namespace Timelapse
                      State.SuppressSelectedAmbiguousDatesPrompt = optOut;
                  }))
             {
-                DateCorrectAmbiguous dateCorrection = new(this, DataHandler.FileDatabase);
+                DateTimeCorrectAmbiguous dateCorrection = new(this, DataHandler.FileDatabase);
                 if (ShowDialogAndCheckIfChangesWereMade(dateCorrection))
                 {
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
@@ -776,6 +923,18 @@ namespace Timelapse
 
         // Raise the folder editor
         private async void MenuItemFolderEditor_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemFolderEditor_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemFolderEditor_ClickAsync()
         {
             // Warn the user about using the folder editor if metadata is in use
             if (DataHandler?.FileDatabase?.MetadataInfo is { RowCount: > 0 })
@@ -812,7 +971,19 @@ namespace Timelapse
         //Try to find a missing image
         private async void MenuItemEditFindMissingImage_Click(object sender, RoutedEventArgs e)
         {
-            // Don't do anything if the image actually exists. This should not fire, as this menu item is only enabled 
+            try
+            {
+                await MenuItemEditFindMissingImage_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemEditFindMissingImage_ClickAsync()
+        {
+            // Don't do anything if the image actually exists. This should not fire, as this menu item is only enabled
             // if there is a current image that doesn't exist. But just in case...
 
             if (null == DataHandler?.ImageCache?.Current || File.Exists(FilesFolders.GetFullPath(DataHandler.FileDatabase.RootPathToImages, DataHandler?.ImageCache?.Current)))
@@ -822,7 +993,7 @@ namespace Timelapse
             // Note:  there are redundant null checks due to Resharper indicating possible nullreference exceptions
             if (null == DataHandler)
             {
-                // Shouldn't happen. 
+                // Shouldn't happen.
                 TracePrint.NullException(nameof(DataHandler));
                 return;
             }
@@ -843,7 +1014,7 @@ namespace Timelapse
             {
                 if (null == DataHandler)
                 {
-                    // Shouldn't happen. 
+                    // Shouldn't happen.
                     TracePrint.NullException(nameof(DataHandler));
                     return;
                 }
@@ -854,7 +1025,7 @@ namespace Timelapse
                 }
             }
 
-            // If there are no remaining tuples, it means no potential matches were found. 
+            // If there are no remaining tuples, it means no potential matches were found.
             // Display a message saying so and abort.
             if (matchingRelativePathFileNameList.Count == 0)
             {
@@ -865,7 +1036,7 @@ namespace Timelapse
             // Now retrieve a list of all filenames located in the same folder (i.e., that have the same relative path) as the missing file.
             if (null == DataHandler)
             {
-                // Shouldn't happen. 
+                // Shouldn't happen.
                 TracePrint.NullException(nameof(DataHandler));
                 return;
             }
@@ -880,7 +1051,7 @@ namespace Timelapse
                 }
             }
 
-            // For those that are left (if any), see if other files in the returned locations are in each path. Get their count, save them, and pass the count as a parameter e.g., a Dict with matching files, etc. 
+            // For those that are left (if any), see if other files in the returned locations are in each path. Get their count, save them, and pass the count as a parameter e.g., a Dict with matching files, etc.
             // Or perhapse even better, a list of file names for each path Dict<string, List<string>>
             // As we did above, go through the other missing files and remove those that are spoken for i.e., that are already associated with a row in the database.
             // What remains will be a list of  root paths, each with a list of  missing (unassociated) files that could be candidates for locating
@@ -935,6 +1106,18 @@ namespace Timelapse
 
         // Find missing folders
         private async void MenuItemEditFindMissingFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemEditFindMissingFolder_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemEditFindMissingFolder_ClickAsync()
         {
             bool? result = GetAndCorrectForMissingFolders(this, DataHandler.FileDatabase);
             if (true == result)

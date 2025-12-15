@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.State;
 using Timelapse.Util;
@@ -186,8 +188,20 @@ namespace TimelapseTemplateEditor
         #endregion
 
         #region Drag and Drop tdb files to open them
-        // Dragging and dropping a .tdb file on the help window will open that file 
+        // Dragging and dropping a .tdb file on the help window will open that file
         private async void HelpDocument_Drop(object sender, DragEventArgs dropEvent)
+        {
+            try
+            {
+                await HelpDocument_DropAsync(dropEvent);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task HelpDocument_DropAsync(DragEventArgs dropEvent)
         {
             if (DragDropFile.IsTemplateFileDragging(dropEvent, out string templateDatabaseFilePath))
             {

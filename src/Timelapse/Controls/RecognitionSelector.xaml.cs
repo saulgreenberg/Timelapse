@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Recognition;
@@ -252,6 +253,18 @@ namespace Timelapse.Controls
 
         #region Button Callbacks - BtnCountRecognitions - OnClick
         private async void BtnCountRecognitions_OnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await BtnCountRecognitionsAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task BtnCountRecognitionsAsync()
         {
             await this.RecognitionsRefreshCounts();
         }

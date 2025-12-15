@@ -598,6 +598,18 @@ namespace Timelapse.Dialog
         // Update the database if the OK button is clicked
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await StartButton_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task StartButton_ClickAsync()
+        {
             // Update state variables to the current settings
             state.DarkPixelThreshold = darkPixelThreshold;
             state.DarkPixelRatioThreshold = darkPixelRatio;

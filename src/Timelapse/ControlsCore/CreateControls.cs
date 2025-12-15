@@ -177,7 +177,7 @@ namespace Timelapse.ControlsCore
             {
                 Visibility = Visibility.Visible,
                 ToolTip = tooltip,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.FlagCheckBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.FlagCheckBox)) as Style
             };
             checkBox.GotFocus += Control_GotFocus;
             checkBox.LostFocus += Control_LostFocus;

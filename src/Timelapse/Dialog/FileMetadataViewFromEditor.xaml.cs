@@ -1,24 +1,23 @@
-﻿using System;
+using System;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Constant;
-using Timelapse.Dialog;
 using Timelapse.Util;
 
-namespace TimelapseTemplateEditor.Dialog
+namespace Timelapse.Dialog
 {
     /// <summary>
-    /// This dialog displays a list of metadata found in a selected file. 
+    /// This dialog displays a list of metadata found in a selected file.
     /// </summary>
     // Note: There are lots of commonalities between this dialog and DialogPopulate, but its not clear if it's worth the effort of factoring the two.
-    public partial class InspectMetadata
+    public partial class FileMetadataViewFromEditor
     {
         #region Private variables
         private string FilePath;
         #endregion
 
-        public InspectMetadata(Window owner)
+        public FileMetadataViewFromEditor(Window owner)
         {
             InitializeComponent();
             // Set up static reference resolver for FormattedMessageContent
@@ -32,6 +31,8 @@ namespace TimelapseTemplateEditor.Dialog
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             MetadataGrid.HideDataLabelColumn = true;
+            MetadataGrid.HideTypeColumn = true;
+            MetadataGrid.AssignXmpTimelapseDataButton.Visibility = Visibility.Collapsed;
             MetadataGrid.SelectedMetadata.CollectionChanged += SelectedMetadata_CollectionChanged;
             this.Dialog.BuildContentFromProperties();
         }
@@ -45,6 +46,7 @@ namespace TimelapseTemplateEditor.Dialog
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 GetMetadataFromFile();
+                MetadataGrid.viewModel.RootPath = string.Empty;
                 MetadataGrid.viewModel.FilePath = FilePath;
                 MetadataGrid.Refresh();
                 Mouse.OverrideCursor = null;
@@ -53,6 +55,7 @@ namespace TimelapseTemplateEditor.Dialog
 
         private void GetMetadataFromFile()
         {
+            MetadataGrid.viewModel.RootPath = string.Empty;
             MetadataGrid.viewModel.FilePath = FilePath;
             MetadataGrid.Refresh();
         }

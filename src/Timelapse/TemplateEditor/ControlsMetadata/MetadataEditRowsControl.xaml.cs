@@ -1,6 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -119,6 +122,18 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         // - the control and spreadsheet order are adjusted to fill in the gap, if any, on the remaining rows.
         private async void ButtonRemoveDataRow_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await ButtonRemoveDataRow_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task ButtonRemoveDataRow_ClickAsync()
+        {
             bool result = true;
             if (EditorConstant.templateEditorWindow.standardType != string.Empty)
             {
@@ -144,6 +159,18 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         // Delete the current level, but ask first
         private async void MenuItemDeleteLevel_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemDeleteLevel_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemDeleteLevel_ClickAsync()
+        {
             // If we are using a standard, generate a warning dialog
             if (EditorConstant.templateEditorWindow.standardType != string.Empty)
             {
@@ -164,7 +191,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
 
             Globals.Root.templateDatabase.MetadataDeleteLevelFromDatabase(ParentTab.Level);
             await Globals.Root.MetadataUI.SyncMetadataTabsFromMetadataTableAsync();
-            
+
         }
 
         // Enable or disable the Backwards/Forwards buttons depending on whether the current level is at the beginning or the end
@@ -178,6 +205,18 @@ namespace TimelapseTemplateEditor.ControlsMetadata
 
         // Move the level forwards or backwards. Assumes it will only be invoked if it can move in that direction (see above, which disables the forward / backwards button as needed)
         private async void MenuItemMoveLevelForwardsOrBackwards_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemMoveLevelForwardsOrBackwards_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemMoveLevelForwardsOrBackwards_ClickAsync(object sender)
         {
             if (sender is MenuItem mi)
             {

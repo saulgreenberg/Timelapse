@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.ControlsDataEntry;
 using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using File = Timelapse.Constant.File;
 
@@ -100,6 +102,18 @@ namespace Timelapse.Dialog
 
         #region Do Checkout
         private async void DoCheckout()
+        {
+            try
+            {
+                await DoCheckoutAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task DoCheckoutAsync()
         {
             // Copy the template to that folder, generating a unique name if needed
             string tdbFileName = File.DefaultTemplateDatabaseFileName;

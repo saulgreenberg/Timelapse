@@ -9,6 +9,7 @@ using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -86,7 +87,19 @@ namespace Timelapse.Dialog
         #region Button callbacks
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
-            // Update the UI before starting the operation, 
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
+        {
+            // Update the UI before starting the operation,
             CancelButton.IsEnabled = false;
             CancelButton.IsEnabled = false;
             StartDoneButton.Content = "_Processing";

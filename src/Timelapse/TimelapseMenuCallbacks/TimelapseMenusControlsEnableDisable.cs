@@ -9,11 +9,14 @@ namespace Timelapse
     public partial class TimelapseWindow
     {
         #region Enable Or disable menus and controls
+
         private void EnableOrDisableMenusAndControls()
         {
             bool imageSetAvailable = IsFileDatabaseAvailable(); // A possible empty image set is loaded
             bool filesSelected = imageSetAvailable && DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0; // A non-empty image set is loaded
             bool metadataLevelsExists = imageSetAvailable && DataHandler.FileDatabase.MetadataInfo is { RowCount: > 0 };
+            bool singleImageView = this.MarkableCanvas?.IsThumbnailGridVisible == false;
+
             // Depending upon whether images exist in the data set,
             // enable / disable menus and menu items as needed
 
@@ -29,8 +32,9 @@ namespace Timelapse
             MenuItemCreateEmptyDatabase.IsEnabled = !imageSetAvailable;
             MenuItemCheckInDatabases.IsEnabled = imageSetAvailable;
             MenuItemCheckOutDatabase.IsEnabled = imageSetAvailable;
-            MenuItemImportFromCsv.IsEnabled = filesSelected; 
+            MenuItemImportFromCsv.IsEnabled = filesSelected;
             MenuItemExportAllDataAsCSV.IsEnabled = filesSelected && metadataLevelsExists;
+            MenuItemExportDataIntoImageFile.IsEnabled = filesSelected && singleImageView;
 
             MenuItemRenameFileDatabaseFile.IsEnabled = filesSelected;
             MenuItemTemplateEditor.IsEnabled = true;
@@ -40,7 +44,7 @@ namespace Timelapse
             MenuItemAnalyzeFolderStructure.IsEnabled = imageSetAvailable && metadataLevelsExists;
 
             // Edit menu
-            MenuItemEdit.IsEnabled = filesSelected; 
+            MenuItemEdit.IsEnabled = filesSelected;
             MenuItemDeleteCurrentFile.IsEnabled = filesSelected;
             MenuItemRestoreDefaults.IsEnabled = filesSelected;
             MenuItemPopulateFieldFromMetadata.IsEnabled = filesSelected;
@@ -71,28 +75,31 @@ namespace Timelapse
             MenuItemSort.IsEnabled = filesSelected;
 
             // Recognitions menu
-            MenuItemRecognitions.IsEnabled = true;                 // Always visible
+            MenuItemRecognitions.IsEnabled = true; // Always visible
             MenuItemAddaxAIDownload.IsEnabled = true;
             MenuItemAddaxAICheckForUpdates.IsEnabled = true;
-            MenuBoundingBoxSetOptions.IsEnabled = filesSelected;  // Hidden when no image set
+            MenuBoundingBoxSetOptions.IsEnabled = filesSelected; // Hidden when no image set
             MenuItemImportDetectionData.IsEnabled = filesSelected;
             MenuItemPopulateWithDetectionCounts.IsEnabled = filesSelected;
- 
+
             // CamtrapDP menu
             MenuItemCamtrapDP.IsEnabled = filesSelected;
             MenuItemCamtrapDP.Visibility = filesSelected && metadataLevelsExists && DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()
                 ? Visibility.Visible
                 : Visibility.Collapsed; // Only show the CamtrapDP menu if the database is CamtrapDP compliant
             MenuItem_ExportCamtrapDP.IsEnabled = filesSelected && metadataLevelsExists && DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard();
-            
+
             // Windows and Help menu are always enabled
 
             // Enablement state of the various othesr UI components.
-            ControlsPanel.IsEnabled = filesSelected;  // If images don't exist, the user shouldn't be allowed to interact with the control tray
+            ControlsPanel.IsEnabled = filesSelected; // If images don't exist, the user shouldn't be allowed to interact with the control tray
             FileNavigatorSlider.IsEnabled = filesSelected;
             GridFileNavigator.Visibility = imageSetAvailable ? Visibility.Visible : Visibility.Collapsed;
-            MarkableCanvas.IsEnabled = filesSelected;
-            MarkableCanvas.MagnifiersEnabled = filesSelected && State.MagnifyingGlassOffsetLensEnabled;
+            if (MarkableCanvas != null)
+            {
+                MarkableCanvas.IsEnabled = filesSelected;
+                MarkableCanvas.MagnifiersEnabled = filesSelected && State.MagnifyingGlassOffsetLensEnabled;
+            }
 
             if (filesSelected == false)
             {
@@ -117,6 +124,7 @@ namespace Timelapse
                 MenuItemDeleteCurrentFile.Visibility = Visibility.Collapsed;
                 MenuItemRestoreDefaults.Visibility = Visibility.Collapsed;
                 MenuItemCheckInDatabases.IsEnabled = false;
+                MenuItemExportDataIntoImageFile.Visibility = Visibility.Collapsed;
 
                 MenuItemShowQuickPasteWindow.Visibility = Visibility.Collapsed;
                 MenuItemImportQuickPasteFromDB.Visibility = Visibility.Collapsed;

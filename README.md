@@ -2,7 +2,7 @@
 
 [![Download](https://img.shields.io/badge/Download-Timelapse-blue?style=flat-square)](https://timelapse.ucalgary.ca/download/) [![Documentation](https://img.shields.io/badge/Documentation-Website-blue?style=flat-square)](https://timelapse.ucalgary.ca/) [![Tutorial Guides](https://img.shields.io/badge/Guides-Tutorials-orange?style=flat-square)](https://timelapse.ucalgary.ca/guides/) [![Video Lessons](https://img.shields.io/badge/Videos-Lessons-red?style=flat-square&logo=youtube)](https://timelapse.ucalgary.ca/guides/) [![Version](https://img.shields.io/badge/version-2.4.0.1-green?style=flat-square)](https://timelapse.ucalgary.ca/versions/)
 
-[![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=flat-square)](LICENSE.md) [![Platform](https://img.shields.io/badge/platform-Windows%20x64-lightgrey?style=flat-square)](https://timelapse.ucalgary.ca/) [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/) [![GitHub Issues](https://img.shields.io/github/issues/saulgreenberg/Timelapse?style=flat-square)](https://github.com/saulgreenberg/Timelapse/issues) [![GitHub Stars](https://img.shields.io/github/stars/saulgreenberg/Timelapse?style=flat-square)](https://github.com/saulgreenberg/Timelapse/stargazers)
+[![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=flat-square)](LICENSE.md) [![Platform](https://img.shields.io/badge/platform-Windows%20x64-lightgrey?style=flat-square)](https://timelapse.ucalgary.ca/) [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/) [![GitHub Issues](https://img.shields.io/github/issues/saulgreenberg/Timelapse?style=flat-square)](https://github.com/saulgreenberg/Timelapse/issues) [![GitHub Stars](https://img.shields.io/github/stars/saulgreenberg/Timelapse?style=flat-square)](https://github.com/saulgreenberg/Timelapse/stargazers)
 
 This repository, beginning with v2.4.0.1, contains the source code for [Timelapse](https://timelapse.ucalgary.ca). Timelapse is created and maintained by Saul Greenberg of Greenberg Consulting Inc. and the University of Calgary. 
 
@@ -36,12 +36,12 @@ My build was created using [Visual Studio 2022](https://www.visualstudio.com/vs/
 
 Clone the repository locally using Visual Studio's Team Explorer, or by using a GIT interface such as SourceTree, or through GitHub's clone or download options
 
-Development is against .NET 8 (net8.0-windows for WPF applications).
+Development is against .NET 10 (net10.0-windows for WPF applications).
 
 ### Prerequisites
   * Build environment
     * Visual Studio 2022
-    * .[Net 8 SDK](https:https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (the .Net 8 desktop runtime works, but generates non-critical build errors as it does not contain System.Private.CoreLib.dll)
+    * .[Net 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) (the .Net 10 desktop runtime works, but generates non-critical build errors as it does not contain System.Private.CoreLib.dll)
     * [C++ Redistributables](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)   (used by TimelapseTemplateEditor and TimelapseViewOnly)
     * [WiX Toolset v6.0+](https://wixtoolset.org/) (only required if you are building MSI installers)
   * These exe's must be downloaded and located in the Timelapse folder (not the root folder)
@@ -82,7 +82,7 @@ powershell -ExecutionPolicy Bypass -File "src\Timelapse\Properties\PublishProfil
 
 **What the two options do:**
 Both automated workflows executes all 5 publishing steps in sequence:
-1. Publishes RequiresDotNet8-win-x64 build
+1. Publishes RequiresDotNet10-win-x64 build
 2. Publishes SelfContained-win-x64 build
 3. Builds the zip distribution package
 4. Builds the PerMachine MSI installer
@@ -100,7 +100,7 @@ For more details, see `Installers\Readme.txt` and the README files in each insta
 *  [Nuget Package Manager](https://docs.nuget.org/ndocs/guides/install-nuget#nuget-package-manager-in-visual-studio) for accessing and including 3rd party packages used by Timelapse.
 
 ### Dependencies
-* Timelapse software requires .NET 8.  It is included in both the per-user MSI and zip installation, but not included in the per-machine MSI installation.
+* Timelapse software requires .NET 10.  It is included in both the per-user MSI and zip installation, but not included in the per-machine MSI installation.
 * TimelapseTemplateEditor and TimelapseViewOnly require the C++ Redistributables. Necessary dlls from that are included in both the per-user MSI and zip installation, but not included in the per-machine MSI installation.
 * Timelapse requires FFMPEG and ExifTool, that must be downloaded separately (see Building section)."
 * Timelapse uses various Nuget packages to automatically retrieve other required dlls. 
@@ -110,7 +110,7 @@ For more details, see `Installers\Readme.txt` and the README files in each insta
 * Timelapse is currently tested  on Windows 11 and - as far as we know - should run without issue on prior versions of Windows. 
 
 ### Installing and Running Timelapse
-* Timelapse has three different installers: per user (self contained), per machine (requires .Net 8 install) and as a zip file (self-contained). All install the same software (excepting the separate .Net 8 install for per machine).
+* Timelapse has three different installers: per user (self contained), per machine (requires .Net 10 install) and as a zip file (self-contained). All install the same software (excepting the separate .Net 10 install for per machine).
 * Timelapse runs as a normal windows desktop application.
 * If using the AddaxAI image recognizer, that runs best on a computer with a graphics processor as otherwise it's slow.
 * Screen size of 1600 x 900 or larger is preferred, although it is usable on smaller displays.

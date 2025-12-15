@@ -439,7 +439,7 @@ namespace Timelapse
             if (State.ImageMetadataAskOnLoad)
             {
                 Cursor cursor = Mouse.OverrideCursor;
-                PopulateFieldsWithImageMetadataOnLoad populateField = new(this, DataHandler.FileDatabase, filesToAdd[0].FullName);
+                FileMetadataPopulateAllOnLoad populateField = new(this, DataHandler.FileDatabase, filesToAdd[0].FullName);
                 if (ShowDialogAndCheckIfChangesWereMade(populateField))
                 {
                     State.MetadataOnLoad = populateField.ImageMetadataOnLoad;
@@ -474,7 +474,7 @@ namespace Timelapse
                 // Instead of an async DoWork and an await here, wait for the loading to finish.
                 loader.LoadAsync(backgroundWorker.ReportProgress, folderLoadProgress, 500).Wait();
                 filesSkipped = loader.ImagesSkippedAsFilePathTooLong;
-                backgroundWorker.ReportProgress(0, folderLoadProgress);
+                backgroundWorker.ReportProgress(0, folderLoadProgress); 
             };
 
             //

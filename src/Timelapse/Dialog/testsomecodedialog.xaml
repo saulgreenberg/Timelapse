@@ -1,12 +1,29 @@
-﻿<Window x:Class="Timelapse.Dialog.TestSomeCodeDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        Title="Test Some Code Dialog" Height="450" Width="800" Loaded="TestSomeCodeDialog_OnLoaded">
-
+﻿<controls:BusyableDialogWindow  x:Class="Timelapse.Dialog.TestSomeCodeDialog"
+                                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                                xmlns:controls="clr-namespace:Timelapse.Controls"
+                                xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+                                mc:Ignorable="d"
+                                Title="Export data into image files as XMP/IPTC metadata" Height="900" Width="740" Loaded="TestSomeCodeDialog_OnLoaded">
     <Grid>
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
+            <!-- Header/Instructions -->
+            <toolkit:FormattedMessageContent x:Name="TestMessage"  Grid.Row="0"
+                            Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Test"
+                            What="Test dialog."
+
+                            ShowExplanationVisibility="True" />
+
+        </Grid>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
     </Grid>
-</Window>
+</controls:BusyableDialogWindow>

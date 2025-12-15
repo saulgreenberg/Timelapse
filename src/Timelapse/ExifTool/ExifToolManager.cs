@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Timelapse.DataStructures;
 
 namespace Timelapse.ExifTool
 {
@@ -105,22 +106,42 @@ namespace Timelapse.ExifTool
         #region Fetch ExifData
         // Fetch the particular Exif data associated with the file identified in filepath
         // A dictionary is returned, where
-        // Key: the Exif tag (without the directory)
-        // Value: the value associated with that Exif tag
+        // Key: the Exif tag name (without the group/directory prefix)
+        // Value: ImageMetadata object containing Directory (group), Name (tag), and Value
         // If the file does not exist or is not accessible, the dictionary will have a count of 0
 
         // Version 1: Return all Exif tag/value data associated with the file identified in filepath
-        public Dictionary<string, string> FetchExifFrom(string filepath)
+        public Dictionary<string, ImageMetadata> FetchExifFrom(string filepath)
         {
             StartIfNotAlreadyStarted();
             return ExifTool.FetchExifFrom(filepath);
         }
         // Version 2: specifies the tags of interest, where only those tag/values are returned.
         // If the tag does not exist, the returned data structure will not contain that tag
-        public Dictionary<string, string> FetchExifFrom(string filepath, string[] tags)
+        public Dictionary<string, ImageMetadata> FetchExifFrom(string filepath, string[] tags)
         {
             StartIfNotAlreadyStarted();
             return ExifTool.FetchExifFrom(filepath, tags);
+        }
+
+        /// <summary>
+        /// Write metadata to a file using a custom ExifTool config file
+        /// </summary>
+        public async System.Threading.Tasks.Task<ExifToolResponse> WriteMetadataWithConfigAsync(string filepath, List<KeyValuePair<string, string>> metadata,
+            string configFilePath, bool overwriteOriginal = true)
+        {
+            // Call static method directly - no wrapper instance needed
+            return await ExifToolWrapper.SetExifIntoWithConfigAsync(filepath, metadata, configFilePath, overwriteOriginal);
+        }
+
+        /// <summary>
+        /// Create a batch writer for efficiently writing metadata to many files with custom config
+        /// </summary>
+        public ExifToolConfigBatchWriter CreateBatchWriter(string configFilePath)
+        {
+            var writer = new ExifToolConfigBatchWriter(configFilePath);
+            writer.Start();
+            return writer;
         }
         #endregion
 

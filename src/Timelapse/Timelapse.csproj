@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <OutputType>WinExe</OutputType>
@@ -16,8 +16,8 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
     <!-- Assembly version - increment for each release -->
-    <AssemblyVersion>2.4.0.1</AssemblyVersion>
-    <FileVersion>2.4.0.1</FileVersion>
+    <AssemblyVersion>2.5.0.0</AssemblyVersion>
+    <FileVersion>2.5.0.0</FileVersion>
 
     <!-- NOTE: Additional assembly attributes (ThemeInfo, InternalsVisibleTo) are defined in Properties/AssemblyAttributes.cs -->
 
@@ -98,7 +98,24 @@
       <UnusedDlls Include="$(OutputPath)**\Xceed.Wpf.AvalonDock.Themes.*.dll" />
     </ItemGroup>
     <Delete Files="@(UnusedDlls)" />
-    <Message Text="Removed design-time, unused, legacy theme, debug, and old Xceed AvalonDock DLLs from Release build" Importance="high" />
+  </Target>
+
+  <!-- Build C++ wrapper executables before main build (Debug and Release) -->
+  <Target Name="BuildCppWrappers" BeforeTargets="BeforeBuild">
+    <Message Text="Building C++ wrapper executables for $(Configuration)..." Importance="high" />
+
+    <!-- Ensure output directory exists before C++ build -->
+    <MakeDir Directories="$(ProjectDir)bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
+
+    <!-- Build TimelapseTemplateEditor wrapper -->
+    <Exec Command="$(ProjectDir)..\TimelapseTemplateEditor\Build.bat $(Configuration)"
+          WorkingDirectory="$(ProjectDir)..\TimelapseTemplateEditor" />
+
+    <!-- Build Timelapse-ViewOnly wrapper -->
+    <Exec Command="$(ProjectDir)..\TimelapseViewOnly\Build.bat $(Configuration)"
+          WorkingDirectory="$(ProjectDir)..\TimelapseViewOnly" />
+
+    <Message Text="C++ wrapper executables built successfully for $(Configuration)" Importance="high" />
   </Target>
 
 
@@ -114,9 +131,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NReco.VideoConverter" Version="1.2.1" />
     <PackageReference Include="MetadataExtractor" Version="2.9.0" />
-    <PackageReference Include="Microsoft-WindowsAPICodePack-Core" Version="1.1.5" />
-    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119.0" />
+    <PackageReference Include="WindowsAPICodePack" Version="8.0.14" />
+    <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
+    <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.1" />
     <PackageReference Include="XmpCore" Version="6.1.10.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
   </ItemGroup>

@@ -9,6 +9,7 @@ using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -68,6 +69,18 @@ namespace Timelapse.Dialog
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
         {
             if ((string)StartDoneButton.Content == "Done")
             {

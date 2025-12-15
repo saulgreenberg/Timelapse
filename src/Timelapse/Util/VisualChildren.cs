@@ -11,7 +11,7 @@ namespace Timelapse.Util
         // Code from: http://techiethings.blogspot.com/2010/05/get-wpf-datagrid-row-and-cell.html
         public static T GetVisualChild<T>(Visual parent) where T : Visual
         {
-            T child = default;
+            T child = null;
             int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
             for (int i = 0; i < numVisuals; i++)
             {

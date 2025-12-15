@@ -1,7 +1,7 @@
 # PowerShell script to generate WiX file components from release folder
 # Simplified version - all files in single component group
 param(
-    [string]$SourceDir = "..\..\src\Timelapse\bin\Publish\RequiresDotNet8-win-x64",
+    [string]$SourceDir = "..\..\src\Timelapse\bin\Publish\RequiresDotNet10-win-x64",
     [string]$OutputFile = "Files.wxs"
 )
 

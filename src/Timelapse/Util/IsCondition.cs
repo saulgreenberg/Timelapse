@@ -151,7 +151,7 @@ namespace Timelapse.Util
 
         public static bool IsKeyReturnOrEnter(Key key)
         {
-            return key is Key.Return or Key.Enter;
+            return key is Key.Return;
         }
 
         public static bool IsKeyLeftRightArrow(Key key)

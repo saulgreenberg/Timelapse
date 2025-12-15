@@ -30,26 +30,26 @@ namespace Timelapse.ImageSetLoadingPipeline
             private set;
         }
 
-        private BitmapSource bitmapSource;
         public BitmapSource BitmapSource
         {
             get
             {
-                if (bitmapSource == null)
+                if (field == null)
                 {
                     // Lazy load
                     var task = File.LoadBitmapAsync(this.RootPathToImages, ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth);
                     task.Wait();
 
                     var loadResult = task.Result;
-                    bitmapSource = loadResult.Item1;
+                    field = loadResult.Item1;
                 }
 
-                return bitmapSource;
+                return field;
             }
             // ReSharper disable once UnusedMember.Local
-            private set => bitmapSource = value;
+            private set;
         }
+
         #endregion
 
         #region LoadImageAsync

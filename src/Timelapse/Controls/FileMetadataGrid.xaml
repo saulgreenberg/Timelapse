@@ -18,33 +18,60 @@
         <!--Row 0: Select from the available Metadata tools (via Radio buttons)-->
         <StackPanel Name="ToolSelectionPanel" Grid.Row="0" Orientation="Horizontal" >
             <Label Content="Choose a metadata inspection tool:" FontWeight="Bold" Margin="5,0,20,0"/>
-            <RadioButton Name="MetadataExtractorRB" Content="MetadataExtractor (faster)" IsChecked="True" VerticalAlignment="Center" GroupName="MetadataToolType"/>
-            <RadioButton Name="ExifToolRB" Content="ExifTool (slower, more comprehensive)" VerticalAlignment="Center" Margin="15,0,0,0" GroupName="MetadataToolType"/>
-            <CheckBox Name="ShowMetadataDirectory" Content="Details" VerticalAlignment="Center" Margin="15,0,0,0" ToolTip="Show full metadata details, such as the metadata directory (if any)" Click="ShowMetadataDirectory_Click"/>
+            <RadioButton Name="ExifToolRB" Content="ExifTool (slower, more comprehensive)" IsChecked="True" VerticalAlignment="Center"  GroupName="MetadataToolType"/>
+            <RadioButton Name="MetadataExtractorRB" Content="MetadataExtractor (faster)" VerticalAlignment="Center" GroupName="MetadataToolType" Margin="15,0,0,0"/>
         </StackPanel>
 
-        <!--Row 1: Display the example file name-->
-        <StackPanel Grid.Row="1" Orientation="Horizontal">
-            <Label Content="Example file:" Height="28" Margin="5,0,0,0" HorizontalContentAlignment="Left" FontSize="12" FontWeight="DemiBold" />
-            <Label Name="lblFileName" 
-                   Height="28" Margin="0,0,0,0" 
-                   HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"  
-                   FontSize="12" FontWeight="Normal" 
-                   Content="{Binding Path=FileName}"
-                   ToolTip="{Binding Path=FilePath}"
-                   />
-        </StackPanel>
+        <!--Row 1: Display the example file name with buttons on the right-->
+        <DockPanel Grid.Row="1" LastChildFill="True">
+            <Button Name="AssignXmpTimelapseDataButton"
+                    Content="Select matching data fields"
+                    DockPanel.Dock="Right"
+                    VerticalAlignment="Center"
+                    Margin="0,0,10,2"
+                    Padding="10,5"
+                    Click="AssignXmpTimelapseDataButton_Click"
+                    IsEnabled="False"
+                    ToolTip="Automatically select the Data Field for XMP-TimelapseData &#x0a;if its Metatdata name corresponds to a dropdown menu item's data label"/>
+            <Button Name="SortByXmpTimelapseDataButton"
+                    Content="Sort by metadata group"
+                    DockPanel.Dock="Right"
+                    VerticalAlignment="Center"
+                    Margin="0,0,10,2"
+                    Padding="10,5"
+                    Click="SortByXmpTimelapseDataButton_Click"
+                    IsEnabled="False"
+                    ToolTip="Sort metadata by directory and scroll to the first XMP-TimelapseData entry"/>
+            <Label Name="XmpTimelapseDataLabel"
+                   Content="XMP-TimelapseData:"
+                   DockPanel.Dock="Right"
+                   VerticalAlignment="Center"
+                   FontWeight="SemiBold"
+                   Margin="0,0,5,2"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Example file:" Height="28" Margin="5,0,0,0" HorizontalContentAlignment="Left" FontSize="12" FontWeight="DemiBold" />
+                <Label Name="lblFileName"
+                       Height="28" 
+                       Margin="0,0,0,0"
+                       HorizontalAlignment="Stretch" HorizontalContentAlignment="Right"
+                       FontSize="12" FontWeight="Normal"
+                       Content="{Binding Path=FileNameDisplayable}"
+                       ToolTip="{Binding Path=FilePath}"
+                       />
+            </StackPanel>
+        </DockPanel>
 
         <!--Row 2: The data grid holds all the metadata, example values, and possible data labels-->
-        <DataGrid Name="AvailableMetadataDataGrid"  
-                  Grid.Row="2"  
-                  
+        <DataGrid Name="AvailableMetadataDataGrid"
+                  Grid.Row="2"
+
                   ColumnWidth="*" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   Margin="10,0,10,0"
-                  SelectionUnit="FullRow" SelectionMode="Single"  
+                  SelectionUnit="FullRow" SelectionMode="Single"
                   EnableRowVirtualization="False"
-                  AutoGenerateColumns="False" 
-                  CanUserSortColumns="False"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  Sorting="AvailableMetadataDataGrid_Sorting"
                   ItemsSource="{Binding Path=MetadataList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
             <!--Column Header Style-->
@@ -58,18 +85,27 @@
             
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Key" IsReadOnly="True" Visibility="Collapsed" Binding="{Binding MetadataKey}" Width="0"/>
-                <DataGridTextColumn Header="Metadata directory" IsReadOnly="True" Visibility="Collapsed" Binding="{Binding MetadataKind}"/>
-                <DataGridTextColumn Header="Metadata name" IsReadOnly="True" Binding="{Binding MetadataName}" Width="1*"/>
-                <DataGridTextColumn Header="Example value from current file" IsReadOnly="True" Binding="{Binding MetadataValue}" Width="1*"/>
-                <DataGridTemplateColumn Header="Data field" Width=".5*" >
+                <DataGridTextColumn Header="Metadata group" IsReadOnly="True" Visibility="Visible" Binding="{Binding MetadataKind}" SortMemberPath="MetadataKind"/>
+                <DataGridTextColumn Header="Metadata name" IsReadOnly="True" Binding="{Binding MetadataName}" SortMemberPath="MetadataName" Width="1*"/>
+                <DataGridTextColumn Header="Example value from current file" IsReadOnly="True" Binding="{Binding MetadataValue}" CanUserSort="False" Width="1*"/>
+                <DataGridTemplateColumn Header="Data field" CanUserSort="False" Width=".5*" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <!-- It complained about the notes label, but it seems to work and I couldn't figure out how to resolve it -->
-                            <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
-                            <ComboBox 
-                                ItemsSource="{Binding ElementName=MainWindow, Path=DataContext.NoteLabels}"
-                                SelectedItem="{Binding AssignedLabel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                            <!-- ComboBox now uses per-row AvailableLabels filtered by metadata value type -->
+                            <ComboBox
+                                ItemsSource="{Binding AvailableLabels}"
+                                SelectedItem="{Binding AssignedLabel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 SelectionChanged="ComboBox_SelectionChanged">
+                                <ComboBox.ItemContainerStyle>
+                                    <Style TargetType="ComboBoxItem">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding}" Value="No compatible data fields available">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                                <Setter Property="Foreground" Value="Gray"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ComboBox.ItemContainerStyle>
                                 <d:ComboBox.DataContext>
                                     <d:DesignInstance />
                                 </d:ComboBox.DataContext>
@@ -77,6 +113,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Type" IsReadOnly="True" Binding="{Binding AssignedType}" CanUserSort="False" Width=".4*"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

@@ -10,6 +10,7 @@ using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Images;
 using Timelapse.Util;
 using File = Timelapse.Constant.File;
@@ -466,6 +467,18 @@ namespace Timelapse.Dialog
         // Ok button selected
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await StartButton_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task StartButton_ClickAsync()
+        {
             // ConfigureFormatForDateTimeCustom the UI's initial state
             CancelButton.IsEnabled = false;
             CancelButton.Visibility = Visibility.Hidden;
@@ -486,7 +499,7 @@ namespace Timelapse.Dialog
             if (deleteData && deleteImage == false)
             {
                 DoneMessagePanel.Content =
-                    $"Data deleted for {filesToDelete.Count} files.[{Environment.NewLine}]Otherwise, those files were left intact in their folders";
+                    $"Only the data was deleted for {filesToDelete.Count} files.{Environment.NewLine}The actual files are left intact in their folders";
             }
             else if (isCancelledAndDeletedImagesCount.Item1 == false)
             {

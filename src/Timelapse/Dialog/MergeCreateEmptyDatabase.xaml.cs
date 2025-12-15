@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using File = Timelapse.Constant.File;
 using Path = System.IO.Path;
@@ -39,6 +41,18 @@ namespace Timelapse.Dialog
 
         #region Do Create Empty Database
         private async void DoCreateEmptyDatabase()
+        {
+            try
+            {
+                await DoCreateEmptyDatabaseAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task DoCreateEmptyDatabaseAsync()
         {
             string message;
             string hint;

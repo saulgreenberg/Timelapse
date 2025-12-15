@@ -401,7 +401,9 @@ namespace Timelapse.Controls
             // ReSharper disable All
             // While Resharper says this is heuristically unreachable, I'm unsure so I am leaving it in...
             #pragma warning disable CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
+            #pragma warning disable IDE0074
             if (this.cellChosenOnMouseDown == null)
+            #pragma warning restore IDE0074
             #pragma warning restore CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
             {
                 this.cellChosenOnMouseDown = currentCell;

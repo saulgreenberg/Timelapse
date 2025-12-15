@@ -1,4 +1,5 @@
-﻿using System.Windows;
+using System.Windows;
+using Timelapse.Util;
 
 namespace Timelapse.Dialog
 {
@@ -8,21 +9,24 @@ namespace Timelapse.Dialog
     // ReSharper disable once UnusedMember.Global
     public partial class TestSomeCodeDialog
     {
-        public TestSomeCodeDialog(Window owner)
+
+        #region Constructor and Initialization
+
+        public TestSomeCodeDialog(Window owner) : base(owner)
         {
             InitializeComponent();
             Owner = owner;
+            FormattedDialogHelper.SetupStaticReferenceResolver(TestMessage);
         }
 
         private void TestSomeCodeDialog_OnLoaded(object sender, RoutedEventArgs e)
         {
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            TimelapseWindow timelapseWindow = this.Owner as TimelapseWindow;
+            this.TestMessage.BuildContentFromProperties();
 
-
-            if (timelapseWindow?.DataHandler?.FileDatabase?.Database != null && timelapseWindow.DataHandler.FileDatabase.DetectionsExists())
-            {
-            }
+            // Set up a progress handler that will update the progress bar
+            InitalizeProgressHandler(BusyCancelIndicator);
         }
+        #endregion
     }
 }

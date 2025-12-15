@@ -95,14 +95,10 @@ namespace Timelapse.Database
         }
 
         // Get all the relative paths in the current selection from the FileTable
-        private IEnumerable<string> relativePathsInCurrentSelection;
         public IEnumerable<string> GetRelativePathsInCurrentSelection
         {
-            get
-            {
-                return relativePathsInCurrentSelection ??= this.FileTable.Select(o => o.RelativePath).Distinct();
-            }
-            private set => relativePathsInCurrentSelection = value;
+            get { return field ??= this.FileTable.Select(o => o.RelativePath).Distinct(); }
+            private set;
         }
 
         #endregion
@@ -3857,8 +3853,8 @@ namespace Timelapse.Database
 
                 //bool parseResultClassificationCategory = null != customSelectionFromJson.RecognitionSelections?.ClassificationCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.ClassificationCategoryNumber, out classificationCategoryAsInt);
                 if (null == customSelectionFromJson.RecognitionSelections?.UseRecognition ||
-                      customSelectionFromJson.RecognitionSelections.UseRecognition is true and true &&
-                      false == DetectionsExists() ||
+                      (customSelectionFromJson.RecognitionSelections.UseRecognition  &&
+                       false == DetectionsExists()) ||
                         parseResultDetectionCategory == false ||
                         detectionCategoryAsInt >= detectionCategoriesDictionary?.Count
                         )

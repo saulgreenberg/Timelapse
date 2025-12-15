@@ -1,18 +1,18 @@
 This workflow produces three installation files
 -----------------------------------------------
 1. TimelapseBuildZip
-   produces a zip file containing everything, including .Net 8
+   produces a zip file containing everything, including .Net 10
 
 2. TimelapseInstaller-PerMachine
-   An msi that creates a per machine version of Timelapse (excluding .Net 8)
+   An msi that creates a per machine version of Timelapse (excluding .Net 10)
 
 3. TimelapseInstaller-PerUser
-   An msi that creates a per user version of Timelapse (includes .Net 8):
+   An msi that creates a per user version of Timelapse (includes .Net 10):
 
 Publishing workflow
 ---------------------
 The process is fully automated without any manual pauses. Watch the progress in Visual Studio's Output window. You can also       
-still run the individual publish profiles (RequiresDotNet8-win-x64 or SelfContained-win-x64) separately if you need to.
+still run the individual publish profiles (RequiresDotNet10-win-x64 or SelfContained-win-x64) separately if you need to.
 
 1. Select Release mode, x64
 2. Select Top-level Solution 'Timelapse' | Rebuild (perhaps cleaning it first). 
@@ -22,7 +22,7 @@ still run the individual publish profiles (RequiresDotNet8-win-x64 or SelfContai
 
   This will execute all 5 steps in sequence:
 
-  [1/5] Publish RequiresDotNet8-win-x64...
+  [1/5] Publish RequiresDotNet10-win-x64...
   [2/5] Publish SelfContained-win-x64...
   [3/5] Build Timelapse Zip Distribution package
 	  - Copies files from release and from zip installer folder
@@ -31,7 +31,7 @@ still run the individual publish profiles (RequiresDotNet8-win-x64 or SelfContai
  	 Step 1: Updating version from executable..., 
                   where it is used to update the msi Product.wxs file to the right version number
 	  Step 2: Generating file list from release folder, where list of required files are saved in Files.wxs...
-                  Source: ..\..\Timelapse\bin\Publish\RequiresDotNet8-win-x64
+                  Source: ..\..\Timelapse\bin\Publish\RequiresDotNet10-win-x64
 	  Step 3: Build MSI installer using WiX...
   [5/5] Building PerUser MSI Installer...
 	same as 4/5
@@ -39,7 +39,7 @@ still run the individual publish profiles (RequiresDotNet8-win-x64 or SelfContai
 
 
 Output locations:
-  - RequiresDotNet8 files: 	Timelapse\bin\Publish\RequiresDotNet8-win-x64\
+  - RequiresDotNet10 files: 	Timelapse\bin\Publish\RequiresDotNet10-win-x64\
   - SelfContained files:   	Timelapse\bin\Publish\SelfContained-win-x64\
   - Zip Package:     		Installers\bin\Release\Timelapse-Executables.zip
   - PerMachine MSI:  		Installers\bin\Release\TimelapseInstaller-PerMachine.msi
@@ -53,7 +53,7 @@ Optional: to create a particular .msi,
 - in the TimelapseInstaller-PerMachine or PerUser, select BuildInstaller.bat to generate the particular .msi.
 
 Optional: to create the zip only, 
-- run VS022: Solution|Build Solution, to build a release version of all three executables
+- run VS026: Solution|Build Solution, to build a release version of all three executables
 - run TimelapseBuildZip|BuildTimelapseZipFile.bat   Packages the following in a zip file:
    - files in the Timelapse bin/release folder (excludes unused language folders)
    - two .bat files for creating and removing shortcuts

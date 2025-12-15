@@ -12,6 +12,7 @@ using Timelapse.ControlsCore;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -78,7 +79,7 @@ namespace Timelapse.Dialog
         {
             FeedbackGrid.Columns[0].Header = "File name (only for files whose date was changed)";
             FeedbackGrid.Columns[0].Width = new(1, DataGridLengthUnitType.Auto);
-            FeedbackGrid.Columns[1].Header = "Old date  \x2192  New date \x2192 Delta";
+            FeedbackGrid.Columns[1].Header = "Old date → New date → Delta";
             FeedbackGrid.Columns[1].Width = new(2, DataGridLengthUnitType.Star);
         }
         #endregion
@@ -106,7 +107,6 @@ namespace Timelapse.Dialog
                 {
                     feedbackRows.Clear();
                     feedbackRows.Add(new("Cancelled", "No changes were made"));
-                    return feedbackRows;
                 }
                 return feedbackRows;
             }, Token).ConfigureAwait(continueOnCapturedContext: true); // Set to true as we need to continue in the UI context
@@ -154,6 +154,18 @@ namespace Timelapse.Dialog
         #region Button callbacks
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
+        {
             if (WatermarkDateTimePicker.Value.HasValue == false || DateTimeHandler.TryParseDisplayDateTime((string)OriginalDate.Content, out DateTime originalDateTime) == false)
             {
                 // This should not happen
@@ -185,7 +197,7 @@ namespace Timelapse.Dialog
             ObservableCollection<DateTimeFeedbackTuple> feedbackRows = await TaskFixedCorrectionAsync(adjustment).ConfigureAwait(true);
 
             // Hide the busy indicator and update the UI, e.g., to show which files have changed dates
-            // Provide summary feedback 
+            // Provide summary feedback
             if (IsAnyDataUpdated && Token.IsCancellationRequested == false)
             {
                 string message =

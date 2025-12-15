@@ -129,7 +129,7 @@ namespace Timelapse.DataTables
             return $"{prefix}{DateTimeHandler.ToStringCSVDateTimeWithoutTSeparator(DateTime)}";
         }
 
-      public string GetValueCSVDateString(bool insertSpaceBefore)
+        public string GetValueCSVDateString(bool insertSpaceBefore)
         {
             string prefix = insertSpaceBefore ? " " : string.Empty;
             // Convert this.DateTime to a displayable Date for the CSV file
@@ -264,33 +264,22 @@ namespace Timelapse.DataTables
         {
             try
             {
-                Dictionary<string, ImageMetadata> metadata = [];
-
-                if (metadataOnLoad.MetadataToolSelected == MetadataToolEnum.MetadataExtractor)
-                {
+                var metadata =
                     // MetadataExtractor - specific code
-                    metadata = ImageMetadataDictionary.LoadMetadata(GetFilePath(folderPath));
-                }
-                else // if metadataToolSelected == MetadataToolEnum.ExifTool
-                {
-                    // ExifTool specific code - we transform the ExifTool results into the same dictionary structure used by the MetadataExtractor
-                    metadata.Clear();
-                    Dictionary<string, string> exifData = GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(GetFilePath(folderPath), metadataOnLoad.Tags);
-
-                    foreach (KeyValuePair<string, string> kvp in exifData)
-                    {
-                        metadata.Add(kvp.Key, new(string.Empty, kvp.Key, kvp.Value));
-                    }
-                }
+                    metadataOnLoad.MetadataToolSelected == MetadataToolEnum.MetadataExtractor ? ImageMetadataDictionary.LoadMetadata(GetFilePath(folderPath)) :
+                    // if metadataToolSelected == MetadataToolEnum.ExifTool
+                    // ExifTool specific code - now returns the same Dictionary<string, ImageMetadata> structure as MetadataExtractor
+                    GlobalReferences.TimelapseState.ExifToolManager.FetchExifFrom(GetFilePath(folderPath), metadataOnLoad.Tags);
 
                 // At this point, regardless of which metadata tool was used, we have all the information we need
                 // to add the metadata to a datafield.
-                foreach (KeyValuePair<string, string> kvp in metadataOnLoad.SelectedImageMetadataDataLabels)
+
+                foreach (var item in metadataOnLoad.SelectedImageMetadataDataLabels)
                 {
-                    // Key is the metadata tag, Value is the data label
-                    if (metadata.TryGetValue(kvp.Key, out var value))
+                    // MetadataTag is the metadata tag, DataLabel is the data label, Type is the control type
+                    if (metadata.TryGetValue(item.MetadataTag, out var value))
                     {
-                        Row.SetField(kvp.Value, value.Value);
+                        Row.SetField(item.DataLabel, value.Value);
                     }
                 }
             }

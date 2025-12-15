@@ -1,7 +1,10 @@
-﻿using System.Windows;
+﻿using System;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -22,9 +25,21 @@ namespace Timelapse.Dialog
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await Window_LoadedAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Window_LoadedAsync()
+        {
             this.Message.BuildContentFromProperties();
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            
+
             // Set up a progress handler for long-running atomic operation
             InitalizeProgressHandler(BusyCancelIndicator);
             Mouse.OverrideCursor = Cursors.Wait;

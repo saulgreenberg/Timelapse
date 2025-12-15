@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -9,6 +10,7 @@ using Timelapse.ControlsMetadata;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -41,6 +43,18 @@ namespace Timelapse.Dialog
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Window_LoadedAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Window_LoadedAsync()
         {
             FormattedDialogHelper.SetupStaticReferenceResolver(MessageNoDivergence);
             FormattedDialogHelper.SetupStaticReferenceResolver(MessageDivergence);

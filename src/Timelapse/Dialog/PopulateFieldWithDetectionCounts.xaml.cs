@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
@@ -6,6 +7,7 @@ using System.Windows.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using Control = Timelapse.Constant.Control;
 
@@ -81,6 +83,18 @@ namespace Timelapse.Dialog
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
         {
 
             bool isCompleted = await PopulateAsync().ConfigureAwait(true);

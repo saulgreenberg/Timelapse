@@ -121,7 +121,7 @@ namespace Timelapse.Dialog
         {
             FeedbackGrid.Columns[0].Header = "File name (only for files whose date was changed)";
             FeedbackGrid.Columns[0].Width = new(1, DataGridLengthUnitType.Auto);
-            FeedbackGrid.Columns[1].Header = "Old date  \x2192  New date \x2192 Delta";
+            FeedbackGrid.Columns[1].Header = "Old date → New date → Delta";
             FeedbackGrid.Columns[1].Width = new(2, DataGridLengthUnitType.Star);
         }
         #endregion
@@ -150,7 +150,6 @@ namespace Timelapse.Dialog
                     feedbackRows.Clear();
                     feedbackRows.Add(new("Cancelled", "No changes were made"));
                     IsAnyDataUpdated = false;
-                    return feedbackRows;
                 }
                 return feedbackRows;
             }, Token).ConfigureAwait(continueOnCapturedContext: true); // Set to true as we need to continue in the UI context
@@ -213,8 +212,20 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Button callbacks
-        // Set up the UI and invoke the linear correction 
+        // Set up the UI and invoke the linear correction
         private async void Start_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
         {
             // A few checks just to make sure we actually have something to do...
             if (dateTimePickerLatestDateTime.Value.HasValue == false)
@@ -248,7 +259,7 @@ namespace Timelapse.Dialog
             ObservableCollection<DateTimeFeedbackTuple> feedbackRows = await TaskLinearCorrectionAsync(newestImageAdjustment, intervalFromOldestToNewestImage).ConfigureAwait(true);
 
             // Hide the busy indicator and update the UI, e.g., to show which files have changed dates
-            // Provide summary feedback 
+            // Provide summary feedback
             if (IsAnyDataUpdated && Token.IsCancellationRequested == false)
             {
                 string message =

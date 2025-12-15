@@ -95,9 +95,7 @@ namespace Timelapse.Standards
                     int level = infoRow.Level;
 
                     // Get the rows for this level
-                    DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
-                        ? null
-                        : value;
+                    DataTableBackedList<MetadataRow> rows = database.MetadataTablesByLevel.GetValueOrDefault(level);
                     if (rows == null)
                     {
                         return null;
@@ -462,9 +460,7 @@ namespace Timelapse.Standards
                     int level = 2;
 
                     // Get the rows for the deployment level
-                    DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
-                        ? null
-                        : value;
+                    DataTableBackedList<MetadataRow> rows = database.MetadataTablesByLevel.GetValueOrDefault(level);
 
                     // Get the data labels in their original creation order, as the camtrapDP validator expects columns
                     // in a certain order (yup, brain-dead).

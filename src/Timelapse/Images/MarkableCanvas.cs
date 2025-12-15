@@ -40,11 +40,11 @@ namespace Timelapse.Images
         /// </summary>
         public BoundingBoxes BoundingBoxes
         {
-            get => boundingBoxes;
+            get;
             set
             {
                 // update bounding boxes
-                boundingBoxes = value;
+                field = value;
                 // render new bounding boxes and update display image
                 RefreshBoundingBoxes();
             }
@@ -55,17 +55,13 @@ namespace Timelapse.Images
         /// </summary>
         public ThumbnailGrid ThumbnailGrid { get; }
 
-        /// <summary>
-        /// We need a reference to the DataEntry Controls so we can enable and disable some of them
-        /// </summary>
-        private DataEntryControls dataEntryControls;
         public DataEntryControls DataEntryControls
         {
-            get => dataEntryControls;
+            get;
             set
             {
                 ThumbnailGrid.DataEntryControls = value;
-                dataEntryControls = value;
+                field = value;
             }
         }
 
@@ -166,7 +162,6 @@ namespace Timelapse.Images
         private List<Marker> markers;
 
         // bounding boxes for detection
-        private BoundingBoxes boundingBoxes;
 
         // mouse and position states used to discriminate clicks from drags
         private UIElement mouseDownSender;

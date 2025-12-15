@@ -38,6 +38,7 @@ namespace Timelapse
             MenuItemExportThisImage.IsEnabled = IsDisplayingSingleImage();
             MenuItemExportSelectedImages.IsEnabled = IsFileDatabaseAvailable();
             MenuItemCopyFiles.IsEnabled = IsFileDatabaseAvailable();
+            //MenuItemExportDataIntoImageFile.IsEnabled = IsFileDatabaseAvailable() && IsDisplayingSingleImage();
         }
         #endregion
 
@@ -100,6 +101,18 @@ namespace Timelapse
         // Load template, images, and video files...
         private async void MenuItemLoadImages_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemLoadImages_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemLoadImages_ClickAsync()
+        {
             if (TryGetTemplatePath(out string templateDatabasePath))
             {
                 // If its not a valid template, display a dialog and abort
@@ -140,6 +153,18 @@ namespace Timelapse
 
         // Load a recently used image set
         private async void MenuItemRecentImageSet_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemRecentImageSet_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemRecentImageSet_ClickAsync(object sender)
         {
             string recentTemplatePath = (string)((MenuItem)sender).ToolTip;
 
@@ -183,6 +208,18 @@ namespace Timelapse
         // The empty file is normally used for merging.
         private async void MenuItemCreateEmptyDatabaseForMerging_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemCreateEmptyDatabaseForMerging_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemCreateEmptyDatabaseForMerging_ClickAsync()
+        {
             string abortMessage = "Aborted. Empty database was not created.";
             string successMessage = "Empty database created.";
             State.RecentlyOpenedTemplateFiles.TryGetMostRecent(out string initialFolder);
@@ -220,6 +257,18 @@ namespace Timelapse
 
         #region Merging: Check in one or more databases into the master
         private async void MenuItemCheckInDatabases_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemCheckInDatabases_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemCheckInDatabases_ClickAsync()
         {
             MergeCheckinDatabaseFiles mergeSelectedDatabaseFiles =
                 new(this,
@@ -268,8 +317,20 @@ namespace Timelapse
 
         #region Export/Import image CSV file
         // Export data for this image set as a .csv file
-        // Export data for this image set as a .csv file and preview in Excel 
+        // Export data for this image set as a .csv file and preview in Excel
         private async void MenuItemExportCsv_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemExportCsv_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemExportCsv_ClickAsync(object sender)
         {
             if (State.SuppressSelectedCsvExportPrompt == false &&
                 DataHandler.FileDatabase.FileSelectionEnum != FileSelectionEnum.All)
@@ -281,7 +342,7 @@ namespace Timelapse
                 }
             }
 
-            // Generate the candidate file name/path 
+            // Generate the candidate file name/path
             string csvFileName = Path.Combine(DataHandler.FileDatabase.RootPathToDatabase, File.CSVImageDataFileName);
 
             // Get the selected filepath from the user
@@ -305,7 +366,7 @@ namespace Timelapse
                 return;
             }
 
-            // Backup the csv file if it exists, as the export will overwrite it. 
+            // Backup the csv file if it exists, as the export will overwrite it.
             StatusBar.SetMessage(FileBackup.TryCreateBackup(RootPathToDatabase, selectedCSVFilePath)
                 ? "Backup of csv file made."
                 : "No csv file backup was made.");
@@ -369,6 +430,18 @@ namespace Timelapse
         // Import data from a CSV file. Display instructions and error messages as needed.
         private async void MenuItemImportFromCsv_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemImportFromCsv_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemImportFromCsv_ClickAsync()
+        {
             if (State.SuppressCsvImportPrompt == false)
             {
                 // Tell the user how importing CSV files work. Give them the opportunity to abort.
@@ -431,6 +504,18 @@ namespace Timelapse
 
         #region Export All data to CSV
         private async void MenuItem_ExportAllDataToCSV_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItem_ExportAllDataToCSV_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItem_ExportAllDataToCSV_ClickAsync()
         {
             if (DataHandler?.FileDatabase == null) return;
 
@@ -564,6 +649,15 @@ namespace Timelapse
         }
         #endregion
 
+        #region export data into Image files
+        private void MenuItemExportDataIntoImageFile_Click(object sender, RoutedEventArgs e)
+        {
+            Dialog.FileMetadataExportDataIntoFiles dialog = new Dialog.FileMetadataExportDataIntoFiles(this);
+            dialog.ShowDialog();
+        }
+
+
+        #endregion
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {

@@ -13,9 +13,9 @@ using Timelapse.Util;
 namespace Timelapse.Dialog
 {
     /// <summary>
-    /// Interaction logic for PopulateFieldsWithImageMetadataOnLoad.xaml
+    /// Interaction logic for FileMetadataPopulateAllOnLoad.xaml
     /// </summary>
-    public partial class PopulateFieldsWithImageMetadataOnLoad
+    public partial class FileMetadataPopulateAllOnLoad
     {
         #region Private variables
         // Passed in parameters
@@ -29,7 +29,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Initialization
-        public PopulateFieldsWithImageMetadataOnLoad(Window owner, FileDatabase fileDatabase, string filePath)
+        public FileMetadataPopulateAllOnLoad(Window owner, FileDatabase fileDatabase, string filePath)
         {
             InitializeComponent();
             FormattedDialogHelper.SetupStaticReferenceResolver(Message);
@@ -43,21 +43,42 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
             Mouse.OverrideCursor = null;
 
+            MetadataGrid.viewModel.RootPath = FileDatabase.RootPathToDatabase;
             MetadataGrid.viewModel.FilePath = FilePath;
 
-            // Construct a dictionary of the available note fields as labels|datalabels
-            // and a list of only the note field labels which will be used to populate the ComboBoxes in the datagrid
+            // Construct a dictionary of the available data fields
+            // Include Note, MultiLine, numeric types, Flag, and DateTime types
+            // The FileMetadataGrid will filter these per-row based on metadata value type
+            // Exclude certain system fields that should not be populated from metadata on load
             Dictionary<string, string> collectLabels = [];
+            Dictionary<string, string> collectControlTypes = [];
+            Dictionary<string, Choices> collectChoices = [];
             foreach (ControlRow control in FileDatabase.Controls)
             {
-                if (control.Type == Control.Note)
+                // Skip controls with DataLabels: File, RelativePath, DateTime, DeleteFlag
+                if (control.DataLabel == DatabaseColumn.File ||
+                    control.DataLabel == DatabaseColumn.RelativePath ||
+                    control.DataLabel == DatabaseColumn.DateTime ||
+                    control.DataLabel == DatabaseColumn.DeleteFlag)
                 {
-                    collectLabels.Add(control.DataLabel, control.Label);
+                    continue;
+                }
+
+                collectLabels.Add(control.DataLabel, control.Label);
+                collectControlTypes.Add(control.DataLabel, control.Type);
+
+                // For FixedChoice and MultiChoice controls, parse and store the choices
+                if (control.Type == Constant.Control.FixedChoice || control.Type == Constant.Control.MultiChoice)
+                {
+                    Choices choices = Choices.ChoicesFromJson(control.List);
+                    collectChoices.Add(control.DataLabel, choices);
                 }
             }
 
-            // Setting DictDataLabel_Label will result in desired updating side effects in the FileMetadataGrid user control
+            // Setting DictDataLabel_Label will result in desired side effects in the FileMetadataGrid user control
             MetadataGrid.DictDataLabel_Label = collectLabels;
+            MetadataGrid.SetControlTypeMapping(collectControlTypes);
+            MetadataGrid.SetChoicesMapping(collectChoices);
             MetadataGrid.SelectedMetadata.CollectionChanged += SelectedMetadata_CollectionChanged;
         }
 
@@ -85,6 +106,7 @@ namespace Timelapse.Dialog
             if (Dialogs.TryGetFileFromUserUsingOpenFileDialog("Select a typical file to inspect", ".", filter, File.JpgFileExtension, out string filePath))
             {
                 FilePath = filePath;
+                MetadataGrid.viewModel.RootPath = FileDatabase.RootPathToDatabase;
                 MetadataGrid.viewModel.FilePath = FilePath;
                 MetadataGrid.Refresh();
             }

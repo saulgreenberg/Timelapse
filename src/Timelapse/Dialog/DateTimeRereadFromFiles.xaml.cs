@@ -61,7 +61,7 @@ namespace Timelapse.Dialog
         {
             FeedbackGrid.Columns[0].Header = "File name (only for files whose date differs)";
             FeedbackGrid.Columns[0].Width = new(1, DataGridLengthUnitType.Auto);
-            FeedbackGrid.Columns[1].Header = "Old date  \x2192  New Date_ if it differs";
+            FeedbackGrid.Columns[1].Header = "Old date → New Date_ if it differs";
             FeedbackGrid.Columns[1].Width = new(2, DataGridLengthUnitType.Star);
         }
         #endregion
@@ -178,7 +178,7 @@ namespace Timelapse.Dialog
                     // This shouldn't happen, but just in case. 
                     TracePrint.PrintMessage(
                         $"Unexpected exception processing '{file.File}' in DateTimeReread. {exception}");
-                    feedbackMessage += $"\x2716 skipping: {exception.Message}";
+                    feedbackMessage += $"✖ skipping: {exception.Message}";
                     feedbackRows.Add(new(file.File, feedbackMessage));
                     break;
                 }
@@ -246,6 +246,18 @@ namespace Timelapse.Dialog
         // Set up the UI and invoke the Reread
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await StartButton_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task StartButton_ClickAsync()
+        {
             // ConfigureFormatForDateTimeCustom the UI's initial state
             CancelButton.IsEnabled = false;
             CancelButton.Visibility = Visibility.Hidden;
@@ -257,7 +269,7 @@ namespace Timelapse.Dialog
             WindowCloseButtonIsEnabled(false);
 
             // Reread the Date_/Times from each file
-            // feedbackRows will hold key / value pairs that will be bound to the datagrid feedback, 
+            // feedbackRows will hold key / value pairs that will be bound to the datagrid feedback,
             // which is the way to make those pairs appear in the data grid during background worker progress updates
             // The progress bar will be displayed during this process.
             ObservableCollection<DateTimeFeedbackTuple> feedbackRows = await TaskRereadDatesAsync().ConfigureAwait(true);

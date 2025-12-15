@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Timelapse.Database;
 using Timelapse.DataTables;
 
@@ -225,9 +226,7 @@ namespace Timelapse.Standards
         #region Get a bounding box around the various deployment's lat/long coordinates
         public static string CalculateLatLongBoundingBoxFromDeployments(FileDatabase fileDatabase)
         {
-            DataTableBackedList<MetadataRow> rows = false == fileDatabase.MetadataTablesByLevel.TryGetValue(2, out var value)
-                ? null
-                : value;
+            DataTableBackedList<MetadataRow> rows = fileDatabase.MetadataTablesByLevel.GetValueOrDefault(2);
             if (rows == null) return null;
 
             decimal illegalCoordinate = 200;

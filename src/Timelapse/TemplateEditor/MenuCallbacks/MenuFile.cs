@@ -1,9 +1,11 @@
 ﻿using Microsoft.Win32;
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
@@ -31,6 +33,19 @@ namespace TimelapseTemplateEditor
         #region  MenuFileNewTemplate
         // Creates a new database file of a user chosen name in a user chosen location.
         private async void MenuFileNewTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuFileNewTemplateAsync();
+            }
+            catch (Exception ex)
+            {
+                // Handle or log exception
+                TracePrint.CatchException($"An error occurred while creating a new template: {ex.Message}");
+            }
+        }
+
+        private async Task MenuFileNewTemplateAsync()
         {
             await CreateNewTemplateFile();
             this.TemplateUI.RowControls.IsEnabled = true;
@@ -83,6 +98,18 @@ namespace TimelapseTemplateEditor
         // Create an alberta metadata standard template programmatically
         private async void MenuFileNewAlbertaMetadataStandardProgramatically_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuFileNewAlbertaMetadataStandardProgramatically_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuFileNewAlbertaMetadataStandardProgramatically_ClickAsync()
+        {
             string rtfPath = EditorConstant.Standards.AlbertaMetadataStandardsOverview;
             ShowRtfFile show = new(this, "Alberta Metadata Standard and Timelapse",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
@@ -105,6 +132,18 @@ namespace TimelapseTemplateEditor
         // Create a camtrapDP template programmatically
         private async void MenuFileNewCameratrapDPProgramatically_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuFileNewCameratrapDPProgramatically_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuFileNewCameratrapDPProgramatically_ClickAsync()
+        {
             ShowRtfFile show = new(this, "The CamtrapDP Standard",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
                 "pack://application:,,,/TemplateEditor/Resources/CamtrapDPOverview.rtf");
@@ -126,6 +165,18 @@ namespace TimelapseTemplateEditor
         // For testing: Create a template containing all the different control types programmatically
         private async void MenuFileNewAllControlsStandard_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuFileNewAllControlsStandard_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuFileNewAllControlsStandard_ClickAsync()
+        {
             await CreateNewTemplateFile();
             this.DoCreateMetadataStandardFields(AllControlsStandard.FolderMetadataRows, AllControlsStandard.ImageTemplateRows, AllControlsStandard.Aliases);
             this.TemplateUI.RowControls.IsEnabled = true;
@@ -135,6 +186,18 @@ namespace TimelapseTemplateEditor
 
         // Create a practice image set template programmatically
         private async void MenuFileNewPracticeImageSetStandard_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuFileNewPracticeImageSetStandard_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuFileNewPracticeImageSetStandard_ClickAsync()
         {
             ShowRtfFile show = new(this, "The Practice Image Set Tutorial Standard",
                 "Important: The image set's sub-folder structure must match the hierarchy described in this standard",
@@ -177,6 +240,18 @@ namespace TimelapseTemplateEditor
 
         public async void OpenTemplateFileInTemplateEditor(string fileName)
         {
+            try
+            {
+                await OpenTemplateFileInTemplateEditorAsync(fileName);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task OpenTemplateFileInTemplateEditorAsync(string fileName)
+        {
             // If its not a valid template, display a dialog and abort
             if (false == Dialogs.DialogIsFileValid(this, fileName))
             {
@@ -194,6 +269,18 @@ namespace TimelapseTemplateEditor
 
         #region  MenuItemRecentTemplate
         private async void MenuItemRecentTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemRecentTemplate_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemRecentTemplate_ClickAsync(object sender)
         {
             string recentTemplatePath = (string)((MenuItem)sender).ToolTip;
 
@@ -259,6 +346,18 @@ namespace TimelapseTemplateEditor
         #region Menu Helpers
         private async void CreateNewTemplateFileFromResource(string standardResourceFileName)
         {
+            try
+            {
+                await CreateNewTemplateFileFromResourceAsync(standardResourceFileName);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task CreateNewTemplateFileFromResourceAsync(string standardResourceFileName)
+        {
             // If this operation would over-write an existing tdb file, we would back that old file up
             // before creating a new one
 
@@ -268,7 +367,7 @@ namespace TimelapseTemplateEditor
             {
                 FileName = Path.GetFileNameWithoutExtension(File.DefaultTemplateDatabaseFileName), // Default file name without the extension
                 DefaultExt = File.TemplateDatabaseFileExtension, // Default file extension
-                Filter = "Database Files (" + File.TemplateDatabaseFileExtension + ")|*" + File.TemplateDatabaseFileExtension, // Filter files by extension 
+                Filter = "Database Files (" + File.TemplateDatabaseFileExtension + ")|*" + File.TemplateDatabaseFileExtension, // Filter files by extension
                 AddExtension = true,
                 Title = "Select Location to Save New Template File"
             };

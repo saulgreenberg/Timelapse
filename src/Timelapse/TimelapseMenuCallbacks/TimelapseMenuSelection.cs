@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Constant;
@@ -55,6 +56,18 @@ namespace Timelapse
         #region Select callback: All file, Missing, Marked for Deletion
         private async void MenuItemSelectFiles_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemSelectFiles_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSelectFiles_ClickAsync(object sender)
+        {
             MenuItem item = (MenuItem)sender;
             FileSelectionEnum selection;
             FileSelectionEnum oldSelection = DataHandler.FileDatabase.FileSelectionEnum;
@@ -63,7 +76,7 @@ namespace Timelapse
             // Consequently, set the bounding box override to 1 i.e., so the over-ride has no effect in the display (if any) of bounding boxes.
             GlobalReferences.TimelapseState.BoundingBoxThresholdOveride = 1;
 
-            // Set the selection enum to match the menu selection 
+            // Set the selection enum to match the menu selection
             if (item == MenuItemSelectAllFiles)
             {
                 selection = FileSelectionEnum.All;
@@ -78,7 +91,7 @@ namespace Timelapse
             }
             else if (item == MenuItemSelectByRelativePath)
             {
-                // MenuItemSelectByRelativePathTreeView and its child folders should not be activated from here, 
+                // MenuItemSelectByRelativePathTreeView and its child folders should not be activated from here,
                 // but we add this test just as a reminder that we haven't forgotten it
                 return;
             }
@@ -178,6 +191,18 @@ namespace Timelapse
         }
         private async void MenuItemSelectByFolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            try
+            {
+                await MenuItemSelectByFolderTreeView_SelectedItemChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSelectByFolderTreeView_SelectedItemChangedAsync(object sender)
+        {
             if (this.tv.DontInvoke)
             {
                 return;
@@ -194,7 +219,7 @@ namespace Timelapse
                 return;
             }
 
-            // If its select all folders, then 
+            // If its select all folders, then
             if (TreeViewWithRelativePaths.SelectedPath == "All files")
             {
                 // its all folders, so just select all folders
@@ -227,6 +252,18 @@ namespace Timelapse
 
         #region Custom Selection: raises a dialog letting the user specify their selection criteria
         private async void MenuItemSelectCustomSelection_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemSelectCustomSelection_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSelectCustomSelection_ClickAsync()
         {
             // the first time the custom selection dialog is launched update the DateTime search terms to the time of the current image
             SearchTerm firstDateTimeSearchTerm = DataHandler.FileDatabase.CustomSelection.SearchTerms.FirstOrDefault(searchTerm => searchTerm.DataLabel == DatabaseColumn.DateTime);
@@ -286,9 +323,21 @@ namespace Timelapse
         #endregion
 
         #region Refresh the Selection
-        // Refresh the selection: based on the current select criteria. 
+        // Refresh the selection: based on the current select criteria.
         // Useful when, for example, the user has selected a view, but then changed some data values where items no longer match the current selection.
         private async void MenuItemSelectReselect_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemSelectReselect_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSelectReselect_ClickAsync()
         {
             if (DataHandler.ImageCache.Current == null)
             {
@@ -296,7 +345,7 @@ namespace Timelapse
                 TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                 return;
             }
-            // Reselect the images, which re-sorts them to the current sort criteria. 
+            // Reselect the images, which re-sorts them to the current sort criteria.
             await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
         }
 
@@ -304,6 +353,18 @@ namespace Timelapse
 
         #region Select Random Sample
         private async void MenuItemSelectRandomSample_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemSelectRandomSample_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSelectRandomSample_ClickAsync()
         {
             MenuItemSelectAllFiles.IsChecked = false;
             int currentSelectionCount = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;

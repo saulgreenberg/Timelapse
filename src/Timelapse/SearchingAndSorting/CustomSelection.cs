@@ -587,8 +587,6 @@ namespace Timelapse.SearchingAndSorting
                             expression = "Case 1";
                             break;
                         }
-
-                        return false;
                     }
                     return false;
                 case SearchTermOperator.LessThanOrEqual:
@@ -601,8 +599,6 @@ namespace Timelapse.SearchingAndSorting
                             expression = "Case 2";
                             break;
                         }
-
-                        return false;
                     }
                     return false;
                 default:

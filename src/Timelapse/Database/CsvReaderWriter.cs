@@ -282,9 +282,7 @@ namespace Timelapse.Database
                         string filePath = Path.Combine(folderPath, alias + ".csv");
 
                         // Get the rows for this level
-                        DataTableBackedList<MetadataRow> rows = false == database.MetadataTablesByLevel.TryGetValue(level, out var value)
-                            ? null
-                            : value;
+                        DataTableBackedList<MetadataRow> rows = database.MetadataTablesByLevel.GetValueOrDefault(level);
 
                         // Get the data labels in spreadsheet order
                         Dictionary<string, string> dataLabelsAndTypesInSpreadsheetOrder = database.MetadataGetDataLabelsInSpreadsheetOrderForExport(level);

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -629,7 +630,7 @@ namespace Timelapse
         private void FolderSelectionDialog_FolderChanging(object sender, CommonFileDialogFolderChangeEventArgs e)
         {
             // require folders to be loaded be either the same folder as the .tdb and .ddb or subfolders of it
-            if (e.Folder.StartsWith(RootPathToImages, StringComparison.OrdinalIgnoreCase) == false)
+            if (e.Folder == null || e.Folder.StartsWith(RootPathToImages, StringComparison.OrdinalIgnoreCase) == false)
             {
                 e.Cancel = true;
             }
@@ -858,6 +859,18 @@ namespace Timelapse
         }
 
         private async void HelpDocument_Drop(object sender, DragEventArgs dropEvent)
+        {
+            try
+            {
+                await HelpDocument_DropAsync(dropEvent);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task HelpDocument_DropAsync(DragEventArgs dropEvent)
         {
             if (DragDropFile.IsTemplateFileDragging(dropEvent, out string templateDatabasePath))
             {

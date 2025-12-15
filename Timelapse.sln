@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32228.430
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D10D2658-BDA4-409C-BF0F-E1893DFD175D}"
 	ProjectSection(SolutionItems) = preProject
@@ -9,10 +8,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timelapse", "src\Timelapse\Timelapse.csproj", "{F223A2F9-F2C2-47A8-80F3-472349176579}"
+	ProjectSection(ProjectDependencies) = postProject
+		{72E591D6-8F83-4D8C-8F67-9C325E623234} = {72E591D6-8F83-4D8C-8F67-9C325E623234}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimelapseTemplateEditor", "src\TimelapseTemplateEditor\TimelapseTemplateEditor.vcxproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F223A2F9-F2C2-47A8-80F3-472349176579} = {F223A2F9-F2C2-47A8-80F3-472349176579}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimelapseViewOnly", "src\TimelapseViewOnly\TimelapseViewOnly.vcxproj", "{AAE4E0DA-90B4-4137-BE8C-1090443A6402}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F223A2F9-F2C2-47A8-80F3-472349176579} = {F223A2F9-F2C2-47A8-80F3-472349176579}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimelapseWpf.Toolkit", "src\TimelapseWpf.Toolkit\TimelapseWpf.Toolkit.csproj", "{72E591D6-8F83-4D8C-8F67-9C325E623234}"
 EndProject
@@ -43,11 +51,11 @@ Global
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.Build.0 = Debug|x64
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x86.ActiveCfg = Debug|x64
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|x64
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|x64
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.ActiveCfg = Release|x64
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.Build.0 = Release|x64
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x86.ActiveCfg = Release|x64
 		{AAE4E0DA-90B4-4137-BE8C-1090443A6402}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{AAE4E0DA-90B4-4137-BE8C-1090443A6402}.Debug|Any CPU.Build.0 = Debug|x64
 		{AAE4E0DA-90B4-4137-BE8C-1090443A6402}.Debug|x64.ActiveCfg = Debug|x64
 		{AAE4E0DA-90B4-4137-BE8C-1090443A6402}.Debug|x64.Build.0 = Debug|x64
 		{AAE4E0DA-90B4-4137-BE8C-1090443A6402}.Debug|x86.ActiveCfg = Debug|x64
@@ -70,11 +78,6 @@ Global
 		{72E591D6-8F83-4D8C-8F67-9C325E623234}.Release|x64.Build.0 = Release|Any CPU
 		{72E591D6-8F83-4D8C-8F67-9C325E623234}.Release|x86.ActiveCfg = Release|Any CPU
 		{72E591D6-8F83-4D8C-8F67-9C325E623234}.Release|x86.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectDependencies) = postSolution
-		{F223A2F9-F2C2-47A8-80F3-472349176579}.0 = {72E591D6-8F83-4D8C-8F67-9C325E623234}
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.0 = {F223A2F9-F2C2-47A8-80F3-472349176579}
-		{AAE4E0DA-90B4-4137-BE8C-1090443A6402}.0 = {F223A2F9-F2C2-47A8-80F3-472349176579}
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

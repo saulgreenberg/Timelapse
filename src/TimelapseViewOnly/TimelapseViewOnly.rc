@@ -15,12 +15,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Greenberg Consulting Inc. / University of Calgary"
             VALUE "FileDescription", "Timelapse View Only Launcher"
-            VALUE "FileVersion", "2.4.0.1"
+            VALUE "FileVersion", "2.5.0.0"
             VALUE "InternalName", "Timelapse-ViewOnly"
             VALUE "LegalCopyright", "Copyright (C) 2023"
             VALUE "OriginalFilename", "Timelapse-ViewOnly.exe"
             VALUE "ProductName", "Timelapse"
-            VALUE "ProductVersion", "2.4.0.1"
+            VALUE "ProductVersion", "2.5.0.0"
         END
     END
     BLOCK "VarFileInfo"

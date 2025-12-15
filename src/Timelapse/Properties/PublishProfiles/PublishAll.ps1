@@ -12,13 +12,13 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 try {
-    # Step 1: Publish RequiresDotNet8-win-x64
-    Write-Host "[1/5] Publishing RequiresDotNet8-win-x64..." -ForegroundColor Yellow
-    $result = & dotnet publish $ProjectPath -p:PublishProfile=RequiresDotNet8-win-x64 -p:Configuration=Release
+    # Step 1: Publish RequiresDotNet10-win-x64
+    Write-Host "[1/5] Publishing RequiresDotNet10-win-x64..." -ForegroundColor Yellow
+    $result = & dotnet publish $ProjectPath -p:PublishProfile=RequiresDotNet10-win-x64 -p:Configuration=Release
     if ($LASTEXITCODE -ne 0) {
-        throw "RequiresDotNet8-win-x64 publish failed"
+        throw "RequiresDotNet10-win-x64 publish failed"
     }
-    Write-Host "[DONE] RequiresDotNet8-win-x64 publish completed" -ForegroundColor Green
+    Write-Host "[DONE] RequiresDotNet10-win-x64 publish completed" -ForegroundColor Green
     Write-Host ""
 
     # Step 2: Publish SelfContained-win-x64
@@ -89,8 +89,8 @@ try {
     Write-Host "Output locations:" -ForegroundColor Cyan
 
     $projectDir = Split-Path $ProjectPath -Parent
-    Write-Host "  - RequiresDotNet8: $projectDir\bin\Publish\RequiresDotNet8-win-x64\" -ForegroundColor White
-    Write-Host "  - SelfContained:   $projectDir\bin\Publish\SelfContained-win-x64\" -ForegroundColor White
+    Write-Host "  - RequiresDotNet10: $projectDir\bin\Publish\RequiresDotNet10-win-x64\" -ForegroundColor White
+    Write-Host "  - SelfContained:    $projectDir\bin\Publish\SelfContained-win-x64\" -ForegroundColor White
     Write-Host "  - Zip Package:     $InstallersDir\bin\Release\Timelapse-Executables.zip" -ForegroundColor White
     Write-Host "  - PerMachine MSI:  $InstallersDir\bin\Release\TimelapseInstaller-PerMachine.msi" -ForegroundColor White
     Write-Host "  - PerUser MSI:     $InstallersDir\bin\Release\TimelapseInstaller-PerUser.msi" -ForegroundColor White

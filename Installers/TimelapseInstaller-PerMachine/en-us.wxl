@@ -11,6 +11,6 @@
   here" />
   
   <!-- Override Ready to install message -->
-  <String Id="VerifyReadyDlgInstallText" Value="Note: Timelapse requires .Net8 (Desktop Runtime), which must be installed separately.&#13;&#10;See https://dotnet.microsoft.com/en-us/download/dotnet/8.0 &#13;&#10;&#13;&#10;This installation will install Timelapse so that it is accessible to all users of this computer.&#13;&#10;• Install to begin the installation.&#13;&#10;• Back to review or change settings&#13;&#10;• Cancel to exit" />
+  <String Id="VerifyReadyDlgInstallText" Value="Note: Timelapse requires .Net10 (Desktop Runtime), which must be installed separately.&#13;&#10;See https://dotnet.microsoft.com/en-us/download/dotnet/10.0 &#13;&#10;&#13;&#10;This installation will install Timelapse so that it is accessible to all users of this computer.&#13;&#10;• Install to begin the installation.&#13;&#10;• Back to review or change settings&#13;&#10;• Cancel to exit" />
 
 </WixLocalization>

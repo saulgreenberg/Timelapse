@@ -20,5 +20,10 @@ namespace Timelapse.Util
             }
             return false;
         }
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new(propertyName));
+        }
     }
 }

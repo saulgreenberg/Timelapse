@@ -12,18 +12,16 @@ namespace Timelapse.Controls
     {
         #region Public Properties and private variables
         // Gets/sets the string displayed in the auto tooltip's content.
-        private string autoToolTipContent = string.Empty;
         public string AutoToolTipContent
         {
-            get => autoToolTipContent;
+            get;
             set
             {
-                autoToolTipContent = value;
+                field = value;
                 FormatAutoToolTipContent();
             }
-        }
+        } = string.Empty;
 
-        private ToolTip autoToolTip;
         #endregion
 
         #region Constructor
@@ -31,17 +29,17 @@ namespace Timelapse.Controls
         {
             get
             {
-                if (autoToolTip == null)
+                if (field == null)
                 {
-                    FieldInfo field = typeof(Slider).GetField(
+                    FieldInfo fieldInfo = typeof(Slider).GetField(
                         "_autoToolTip",
                         BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (field != null) 
-                    { 
-                        autoToolTip = field.GetValue(this) as ToolTip;
+                    if (fieldInfo != null)
+                    {
+                        field = fieldInfo.GetValue(this) as ToolTip;
                     }
                 }
-                return autoToolTip;
+                return field;
             }
         }
         #endregion

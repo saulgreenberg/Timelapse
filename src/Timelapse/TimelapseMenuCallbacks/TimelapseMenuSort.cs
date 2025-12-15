@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Constant;
@@ -23,6 +24,18 @@ namespace Timelapse
         #region Sort callbacks
         // Handle the standard menu sorting items
         private async void MenuItemSort_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemSort_ClickAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSort_ClickAsync(object sender)
         {
 
             // While this should never happen, don't do anything if we don's have any data
@@ -77,6 +90,18 @@ namespace Timelapse
         // Custom Sort: raises a dialog letting the user specify their sort criteria
         private async void MenuItemSortCustom_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItemSortCustom_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSortCustom_ClickAsync()
+        {
             // Raise a dialog where user can specify the sorting criteria
             CustomSort customSort = new(DataHandler.FileDatabase)
             {
@@ -89,14 +114,26 @@ namespace Timelapse
             }
             else
             {
-                // Ensure the checkmark appears next to the correct menu item 
+                // Ensure the checkmark appears next to the correct menu item
                 ShowSortFeedback(true);
             }
         }
 
-        // Refresh the sort: based on the current sort criteria. 
+        // Refresh the sort: based on the current sort criteria.
         // Useful when, for example, the user has sorted a view, but then changed some data values where items are no longer sorted correctly.
         private async void MenuItemSortResort_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItemSortResort_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItemSortResort_ClickAsync()
         {
             await DoSortAndShowSortFeedbackAsync(false).ConfigureAwait(true);
         }

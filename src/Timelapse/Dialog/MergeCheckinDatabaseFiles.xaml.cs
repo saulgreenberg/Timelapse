@@ -264,13 +264,25 @@ namespace Timelapse.Dialog
         // Start the merge process
         private async void CheckInButton_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await CheckInButton_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task CheckInButton_ClickAsync()
+        {
             // Before doing the merge, check if one or more databases are nested in a common folder/subfolder.
             // If so, warn the user and give them the option to abort.
             string warningMessage = GenerateTextMessageIfDatabasesAreInNestedFolders();
 
             if (false == string.IsNullOrWhiteSpace(warningMessage))
             {
-                MergingDatabaseWarningAsDuplicateEntriesPossible messageBox = new(this, warningMessage);
+                MergeDatabaseWarningAsDuplicateEntriesPossible messageBox = new(this, warningMessage);
                 if (false == messageBox.ShowDialog())
                 {
                     // The user has decided not to merge the databases

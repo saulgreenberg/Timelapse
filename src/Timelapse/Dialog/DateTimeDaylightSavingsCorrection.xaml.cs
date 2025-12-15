@@ -19,7 +19,7 @@ namespace Timelapse.Dialog
     /// This dialog lets a user enter a time change correction of +/-1 hour, which is propagated backwards/forwards.
     /// The current image as set by the user in the radio buttons.
     /// </summary>
-    public partial class DateDaylightSavingsTimeCorrection
+    public partial class DateTimeDaylightSavingsCorrection
     {
         #region Private Variables
         private readonly int currentImageRow;
@@ -31,7 +31,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Constructor, Loaded, AutoGeneration, and Closing
-        public DateDaylightSavingsTimeCorrection(Window owner, FileDatabase database, FileTableEnumerator fileEnumerator) : base(owner)
+        public DateTimeDaylightSavingsCorrection(Window owner, FileDatabase database, FileTableEnumerator fileEnumerator) : base(owner)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(database, nameof(database));
@@ -76,7 +76,7 @@ namespace Timelapse.Dialog
         {
             FeedbackGrid.Columns[0].Header = "File name (only for files whose date was changed)";
             FeedbackGrid.Columns[0].Width = new(1, DataGridLengthUnitType.Auto);
-            FeedbackGrid.Columns[1].Header = "Old date  \x2192  New Date \x2192 Delta";
+            FeedbackGrid.Columns[1].Header = "Old date → New Date → Delta";
             FeedbackGrid.Columns[1].Width = new(2, DataGridLengthUnitType.Star);
         }
         #endregion
@@ -104,7 +104,6 @@ namespace Timelapse.Dialog
                 {
                     feedbackRows.Clear();
                     feedbackRows.Add(new("Cancelled", "No changes were made"));
-                    return feedbackRows;
                 }
                 return feedbackRows;
             }, Token).ConfigureAwait(continueOnCapturedContext: true); // Set to true as we need to continue in the UI context
@@ -156,6 +155,18 @@ namespace Timelapse.Dialog
         // When the user clicks ok, add/subtract an hour propagated forwards/backwards as specified
         private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await StartButton_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task StartButton_ClickAsync()
+        {
             // We have a valide new time that differs by at least one second.
             // ConfigureFormatForDateTimeCustom the UI's initial state
             CancelButton.IsEnabled = false;
@@ -190,7 +201,7 @@ namespace Timelapse.Dialog
             ObservableCollection<DateTimeFeedbackTuple> feedbackRows = await TaskDaylightSavingsCorrectionAsync(daylightSavingsAdjustment, startRow, endRow).ConfigureAwait(true);
 
             // Hide the busy indicator and update the UI, e.g., to show which files have changed dates
-            // Provide summary feedback 
+            // Provide summary feedback
             if (IsAnyDataUpdated && Token.IsCancellationRequested == false)
             {
                 string message =

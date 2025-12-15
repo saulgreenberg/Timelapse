@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Controls;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 
 namespace Timelapse
@@ -10,6 +12,18 @@ namespace Timelapse
     public partial class TimelapseWindow
     {
         public async void HandleArgumentsOnOpen()
+        {
+            try
+            {
+                await HandleArgumentsOnOpenAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task HandleArgumentsOnOpenAsync()
         {
             // Note: Timelapse allows  -viewOnly, -relativepath <relative path>, -templatepath <template path>, -templateeditor arguments to be combined.
             // It also allows a single argument containing a template or data file to be specified, e.g., by double clicking on a .tdb or .ddb file in Explorer
@@ -142,20 +156,6 @@ namespace Timelapse
                 Dialogs.ArgumentRelativePathDialog(this, Arguments.RelativePath);
                 MenuItemExit.Header = "Close image set and exit Timelapse";
                 MenuFileCloseImageSet.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        // Open the template editor and close the Timelapse window
-        // if a valid template file was specified, open it in the template editor
-        // Note: -viewonly and -relativePath arguments are ignored in template editor mode
-        private void HandleOpenInTemplateEditor(string templateFilePath)
-        {
-            this.MenuItemSwitchToTheTemplateEditor_Click(null, null);
-
-            // If a template was specified, load it into the template editor
-            if (null != this.TimelapseTemplateEditor && false == string.IsNullOrEmpty(templateFilePath) && File.Exists(templateFilePath))
-            {
-                this.TimelapseTemplateEditor.OpenTemplateFileInTemplateEditor(Arguments.TdbFile);
             }
         }
     }

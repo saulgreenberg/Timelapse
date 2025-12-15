@@ -40,10 +40,9 @@ namespace Timelapse.ControlsDataEntry
             set => core.ContentChanged = value;
         }
 
-        private WatermarkTextBox _watermarkTextBox;
         private WatermarkTextBox WatermarkTextBox
         {
-            get { return _watermarkTextBox ??= (WatermarkTextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl); }
+            get { return field ??= (WatermarkTextBox)ContentControl.Template.FindName("PART_TextBox", ContentControl); }
         }
 
         private readonly bool AllowPositiveNumbersOnly;

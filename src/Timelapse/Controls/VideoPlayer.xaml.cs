@@ -711,7 +711,7 @@ namespace Timelapse.Controls
             {
                 // The frame rate will be 
                 ShellObject obj = ShellObject.FromParsingName(path);
-                ShellProperty<uint?> rateProp = obj.Properties.GetProperty<uint?>("System.Video.FrameRate");
+                ShellProperty<uint?> rateProp = obj?.Properties?.GetProperty<uint?>("System.Video.FrameRate");
                 return rateProp?.Value == null
                     ? null
                     : (float?)(rateProp.Value / 1000.0); // converts it from milliseconds to seconds

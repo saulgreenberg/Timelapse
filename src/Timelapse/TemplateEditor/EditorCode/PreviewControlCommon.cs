@@ -62,7 +62,7 @@ namespace TimelapseTemplateEditor.EditorCode
             {
                 Content = control.Label,
                 ToolTip = control.Tooltip,
-                Style = styleProvider.FindResource(ControlLabelStyleEnum.DefaultLabel.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlLabelStyleEnum.DefaultLabel)) as Style
             };
             return label;
         }
@@ -77,7 +77,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 Width = controlType == ControlTypeEnum.MetadataControl
                     ? ControlDefault.MetadataDataEntryControlDefaultWidth
                     : ((ControlRow)control).Width,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.ImprintNoteTextBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.ImprintNoteTextBox)) as Style
             };
             return textBox;
         }
@@ -94,7 +94,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 Width = controlType == ControlTypeEnum.MetadataControl
                     ? ControlDefault.MetadataDataEntryControlDefaultWidth
                     : ((ControlRow) control).Width,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.MultiLineTextBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.MultiLineTextBox)) as Style
             };
             return textBox;
         }
@@ -118,7 +118,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 DisplayDefaultValueOnEmptyText = true,
                 DefaultValue = null,
                 UpdateValueOnEnterKey = true,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.IntegerTextBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.IntegerTextBox)) as Style
             };
             return integerUpDown;
         }
@@ -144,7 +144,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 UpdateValueOnEnterKey = true,
                 CultureInfo = CultureInfo.InvariantCulture,
                 FormatString = Timelapse.Constant.ControlDefault.DecimalFormatString,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.DoubleTextBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.DoubleTextBox)) as Style
             };
             return doubleUpDown;
         }
@@ -157,7 +157,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 GroupName = "DataEntryCounter",
                 Content = control.Label,
                 ToolTip = control.Tooltip,
-                Style = styleProvider.FindResource(ControlLabelStyleEnum.CounterButton.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlLabelStyleEnum.CounterButton)) as Style
             };
             return radioButton;
         }
@@ -171,7 +171,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 Width = controlType == ControlTypeEnum.MetadataControl
                     ? ControlDefault.MetadataDataEntryControlDefaultWidth
                     : ((ControlRow)control).Width,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.ChoiceComboBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.ChoiceComboBox)) as Style
             };
 
             // Add items to the combo box
@@ -200,7 +200,7 @@ namespace TimelapseTemplateEditor.EditorCode
                 Width = controlType == ControlTypeEnum.MetadataControl
                     ? ControlDefault.MetadataDataEntryControlDefaultWidth
                     : ((ControlRow)control).Width,
-                Style = styleProvider.FindResource(ControlContentStyleEnum.MultiChoiceComboBox.ToString()) as Style
+                Style = styleProvider.FindResource(nameof(ControlContentStyleEnum.MultiChoiceComboBox)) as Style
             };
 
             // Add items to the combo box

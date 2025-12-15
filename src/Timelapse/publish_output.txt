@@ -1,0 +1,6 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Building C++ wrapper executables...
+  'Build.bat' is not recognized as an internal or external command,
+  operable program or batch file.
+D:\@Timelapse\Timelapse\src\Timelapse\Timelapse.csproj(108,5): error MSB3073: The command "cmd /c "cd /d D:\@Timelapse\Timelapse\src\Timelapse\..\TimelapseTemplateEditor && Build.bat"" exited with code 1.

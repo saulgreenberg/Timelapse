@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Standards;
@@ -24,6 +26,18 @@ namespace Timelapse
 
          private async void MenuItem_CamtrapDPPopulateFields_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await MenuItem_CamtrapDPPopulateFields_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItem_CamtrapDPPopulateFields_ClickAsync()
+        {
             FileDatabase fileDatabase = GlobalReferences.MainWindow.DataHandler.FileDatabase;
             PopulateCamtrapDataFields dialog = new(this, fileDatabase);
             if (ShowDialogAndCheckIfChangesWereMade(dialog))
@@ -37,6 +51,18 @@ namespace Timelapse
         #region Export Camtrap files
 
         private async void MenuItem_ExportCamtrapDP_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await MenuItem_ExportCamtrapDP_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MenuItem_ExportCamtrapDP_ClickAsync()
         {
             if (DataHandler?.FileDatabase == null || false == DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard()) return;
 

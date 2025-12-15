@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using TimelapseTemplateEditor.Dialog;
+using Timelapse.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 
 namespace TimelapseTemplateEditor
@@ -36,8 +36,8 @@ namespace TimelapseTemplateEditor
         /// </summary>
         private void MenuItemInspectImageMetadata_Click(object sender, RoutedEventArgs e)
         {
-            InspectMetadata inspectMetadata = new(this);
-            inspectMetadata.ShowDialog();
+            FileMetadataViewFromEditor imageMetadataViewFromEditor = new(this);
+            imageMetadataViewFromEditor.ShowDialog();
             State.ExifToolManager.Stop();
         }
         #endregion

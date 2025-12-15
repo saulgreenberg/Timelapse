@@ -2,7 +2,7 @@
 # Extracts version from Timelapse.exe and updates Product.wxs
 
 param(
-    [string]$ExePath = "..\..\src\Timelapse\bin\Publish\RequiresDotNet8-win-x64\Timelapse.exe",
+    [string]$ExePath = "..\..\src\Timelapse\bin\Publish\RequiresDotNet10-win-x64\Timelapse.exe",
     [string]$WxsPath = "Product.wxs"
 )
 

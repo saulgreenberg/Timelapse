@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using MetadataExtractor;
 using Timelapse.DataStructures;
+using Directory = MetadataExtractor.Directory;
 
 namespace Timelapse.Util
 {
@@ -15,7 +17,7 @@ namespace Timelapse.Util
         public static Dictionary<string, ImageMetadata> LoadMetadata(string filePath)
         {
             Dictionary<string, ImageMetadata> metadataDictionary = [];
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(filePath) || false == File.Exists(filePath))
             {
                 return metadataDictionary;
             }

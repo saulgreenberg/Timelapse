@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
@@ -58,10 +59,55 @@ namespace Timelapse.ExifTool
         public string ExifToolVersion { get; private set; }
 
         private const string ExeName = "exiftool(-k).exe";
-        private const string Arguments = "-fast  -m -q -q -stay_open True -@ - -common_args -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   //-g for groups
-        private const string ArgumentsFaster = "-fast2 -m -q -q -stay_open True -@ - -common_args -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";
+        //private const string Arguments = "-fast  -m -q -q -stay_open True -@ - -common_args -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   //-g for groups
+        //private const string Arguments = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
+        private const string Arguments = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y-%m-%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
+       
+        //private const string ArgumentsFaster = "-fast2 -m -q -q -stay_open True -@ - -common_args -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";
+        //private const string ArgumentsFaster = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
+        private const string ArgumentsFaster = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y-%m-%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
         private const string ExitMessage = "-- press RETURN --";
         internal const string SuccessMessage = "1 image files updated";
+
+        /// <summary>
+        /// Get the ExifTool executable path
+        /// </summary>
+        private static string GetExifToolPath()
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+                if (dir == null)
+                {
+                    return ExeName;
+                }
+                return Path.Combine(dir, ExeName);
+            }
+            catch
+            {
+                return ExeName;
+            }
+        }
+
+        /// <summary>
+        /// Escape special characters in metadata values for ExifTool
+        /// </summary>
+        internal static string EscapeMetadataValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value ?? string.Empty;
+
+            // Escape backslashes first (must be done before other escapes)
+            value = value.Replace("\\", "\\\\");
+            // Escape newlines
+            value = value.Replace("\n", "\\n");
+            // Escape carriage returns
+            value = value.Replace("\r", "\\r");
+            // Escape tabs
+            value = value.Replace("\t", "\\t");
+
+            return value;
+        }
 
         //-fast2 also causes exiftool to avoid extracting any EXIF MakerNote information
 
@@ -265,7 +311,7 @@ namespace Timelapse.ExifTool
             }
         }
 
-        private readonly object _lockObj = new();
+        private readonly Lock _lockObj = new();
 
         private void DirectSend(string cmd, params object[] args)
         {
@@ -382,9 +428,116 @@ namespace Timelapse.ExifTool
             return cmdRes ? new(cmdRes.Result) : cmdRes;
         }
 
-        public Dictionary<string, string> FetchExifFrom(string path, IEnumerable<string> tagsToKeep = null, bool keepKeysWithEmptyValues = true)
+        /// <summary>
+        /// Write EXIF/XMP metadata to a file using a custom config file
+        /// NOTE: This launches ExifTool as a one-shot process (not stay-open mode)
+        /// because -config must be the first argument on the command line
+        /// </summary>
+        /// <param name="path">Path to the image file</param>
+        /// <param name="data">List of tag=value pairs (e.g., "XMP-TimelapseData:Species"="Lion")</param>
+        /// <param name="configFilePath">Path to the ExifTool config file</param>
+        /// <param name="overwriteOriginal">If true, don't create backup file</param>
+        /// <returns>ExifToolResponse indicating success or failure</returns>
+        public static async System.Threading.Tasks.Task<ExifToolResponse> SetExifIntoWithConfigAsync(string path, List<KeyValuePair<string, string>> data,
+            string configFilePath, bool overwriteOriginal = true)
         {
-            var res = new Dictionary<string, string>();
+            // Validate inputs
+            if (data == null)
+            {
+                TracePrint.StackTrace(1);
+                return new(false, "data list is null");
+            }
+
+            if (!File.Exists(path))
+            {
+                return new(false, $"'{path}' not found");
+            }
+
+            if (!File.Exists(configFilePath))
+            {
+                return new(false, $"Config file '{configFilePath}' not found");
+            }
+
+            // Get ExifTool path directly (static method)
+            string exifToolPath = GetExifToolPath();
+
+            // Build arguments list for one-shot ExifTool invocation
+            // -config MUST be first argument on command line
+            var args = new List<string>
+            {
+                "-config",
+                configFilePath
+            };
+
+            // Add each metadata tag
+            foreach (KeyValuePair<string, string> kv in data)
+            {
+                string escapedValue = EscapeMetadataValue(kv.Value);
+                args.Add($"-{kv.Key}={escapedValue}");
+            }
+
+            // Add overwrite flag
+            if (overwriteOriginal)
+            {
+                args.Add("-overwrite_original");
+            }
+
+            // Add file path
+            args.Add(path);
+
+            // Launch ExifTool as one-shot process (not stay-open mode)
+            // Use Task.Run to run synchronous process execution on background thread
+            return await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = exifToolPath,
+                        Arguments = string.Join(" ", args.Select(a => $"\"{a}\"")), // Quote each argument
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        RedirectStandardInput = true  // Redirect stdin to prevent hanging
+                    };
+
+                    using var proc = Process.Start(psi);
+                    if (proc == null)
+                    {
+                        return new ExifToolResponse(false, "Failed to start ExifTool process");
+                    }
+
+                    // Close stdin immediately - we're not sending any input
+                    proc.StandardInput.Close();
+
+                    // Read output and error synchronously (we're on a background thread via Task.Run)
+                    string output = proc.StandardOutput.ReadToEnd();
+                    string error = proc.StandardError.ReadToEnd();
+
+                    // Wait for process to exit
+                    proc.WaitForExit();
+
+                    // Check for success
+                    if (output.Contains(SuccessMessage))
+                    {
+                        return new ExifToolResponse(true, output);
+                    }
+
+                    // Return error if present, otherwise return output
+                    string result = !string.IsNullOrEmpty(error) ? error : output;
+                    return new ExifToolResponse(false, result);
+                }
+                catch (Exception ex)
+                {
+                    return new ExifToolResponse(false, $"Exception launching ExifTool: {ex.Message}");
+                }
+            }).ConfigureAwait(false);
+        }
+
+        public Dictionary<string, ImageMetadata> FetchExifFrom(string path, IEnumerable<string> tagsToKeep = null, bool keepKeysWithEmptyValues = true)
+        {
+            var res = new Dictionary<string, ImageMetadata>();
 
             if (!File.Exists(path))
             {
@@ -409,17 +562,61 @@ namespace Timelapse.ExifTool
                     // Debug.Print("ExifToolWrapper: Ready0000 caught and ignored.");
                     continue;
                 }
-                Debug.Assert(kv.Length == 2, $"Can not parse line :'{s}'");
 
-                if (kv.Length != 2 || (!keepKeysWithEmptyValues && string.IsNullOrEmpty(kv[1])))
+                // Handle both 2-column and 3-column formats from ExifTool
+                // 2-column (without -G1): TagName<tab>Value
+                // 3-column (with -G1 -t): Group<tab>TagName<tab>Value
+
+                string directory = string.Empty;
+                string tagName;
+                string value;
+
+                if (kv.Length == 3)
+                {
+                    // 3-column format: Group<tab>TagName<tab>Value
+                    directory = kv[0];
+                    tagName = kv[1];
+                    value = kv[2];
+                }
+                else if (kv.Length == 2)
+                {
+                    // 2-column format: TagName<tab>Value (or [Group]TagName<tab>Value)
+                    string tagWithGroup = kv[0];
+                    value = kv[1];
+                    tagName = tagWithGroup;
+
+                    // Extract group/directory if present in format [Group]TagName
+                    if (tagWithGroup.StartsWith("[") && tagWithGroup.Contains("]"))
+                    {
+                        int closeBracket = tagWithGroup.IndexOf(']');
+                        directory = tagWithGroup.Substring(1, closeBracket - 1);
+                        tagName = tagWithGroup.Substring(closeBracket + 1).Trim();
+                    }
+                }
+                else
+                {
+                    // Skip lines that don't match expected formats (2 or 3 columns)
+                    continue;
+                }
+
+                // Skip empty values if requested
+                if (!keepKeysWithEmptyValues && string.IsNullOrEmpty(value))
                 {
                     continue;
                 }
-                if (filter && !tagsTable.ContainsKey(kv[0]))
+
+                // Filter by tag name
+                if (filter && !tagsTable.ContainsKey(tagName))
                 {
                     continue;
                 }
-                res[kv[0]] = kv[1];
+
+                // Create ImageMetadata matching MetadataExtractor format
+                var metadata = new ImageMetadata(directory, tagName, value);
+
+                // Use TagName as dictionary key (same as MetadataExtractor does)
+                // Note: If duplicate tag names exist in different groups, only the first is kept
+                res.TryAdd(tagName, metadata);
             }
             return res;
         }
@@ -652,5 +849,205 @@ namespace Timelapse.ExifTool
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Manages a dedicated stay-open ExifTool process for batch writing with custom config file.
+    /// Optimized for writing metadata to thousands of files efficiently.
+    /// </summary>
+    public sealed class ExifToolConfigBatchWriter : IDisposable
+    {
+        private Process _process;
+        private StreamWriter _stdin;
+        private StreamReader _stdout;
+        private StreamReader _stderr;
+        private readonly string _configPath;
+        private readonly string _exifToolPath;
+        private bool _isStarted;
+        private bool _disposed;
+
+        private const string ReadyToken = "{ready}";
+        private const string ExecuteCommand = "-execute\n";
+
+        public ExifToolConfigBatchWriter(string configFilePath)
+        {
+            if (string.IsNullOrEmpty(configFilePath))
+                throw new ArgumentNullException(nameof(configFilePath));
+            if (!System.IO.File.Exists(configFilePath))
+                throw new FileNotFoundException("Config file not found", configFilePath);
+
+            _configPath = configFilePath;
+            _exifToolPath = GetExifToolPath();
+        }
+
+        private static string GetExifToolPath()
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+                if (dir == null)
+                {
+                    return "exiftool(-k).exe";
+                }
+                return Path.Combine(dir, "exiftool(-k).exe");
+            }
+            catch
+            {
+                return "exiftool(-k).exe";
+            }
+        }
+
+        /// <summary>
+        /// Start the stay-open ExifTool process with config file
+        /// </summary>
+        public void Start()
+        {
+            if (_isStarted)
+                return;
+
+            try
+            {
+                // Build command: exiftool -config path -stay_open True -@ -
+                var psi = new ProcessStartInfo
+                {
+                    FileName = _exifToolPath,
+                    Arguments = $"-config \"{_configPath}\" -stay_open True -@ -",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                _process = Process.Start(psi);
+                if (_process == null)
+                    throw new Exception("Failed to start ExifTool process");
+
+                _stdin = _process.StandardInput;
+                _stdout = _process.StandardOutput;
+                _stderr = _process.StandardError;
+
+                // Set stdin to auto-flush
+                _stdin.AutoFlush = true;
+
+                // Read stderr on background thread to prevent buffer deadlock
+                // After ~30 files with special characters, stderr buffer can fill up and block the process
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        while (_stderr.ReadLine() is { } line)
+                        {
+                            // Filter out the "-- press ENTER --" message from exiftool(-k).exe
+                            // This is a harmless prompt that appears when using the -k flag version
+                            if (line.Contains("-- press ENTER --") || line.Trim() == "--" || string.IsNullOrWhiteSpace(line))
+                            {
+                                continue;
+                            }
+
+                            // Log stderr output to prevent buffer filling
+                            System.Diagnostics.Debug.WriteLine($"ExifTool stderr: {line}");
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore errors when reading stderr (process may have exited)
+                    }
+                });
+
+                _isStarted = true;
+            }
+            catch (Exception ex)
+            {
+                Dispose();
+                throw new Exception($"Failed to start ExifTool batch writer: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Write metadata to a single file
+        /// </summary>
+        public ExifToolResponse WriteFileMetadata(string filePath, List<KeyValuePair<string, string>> metadata, bool overwriteOriginal)
+        {
+            if (!_isStarted)
+                throw new InvalidOperationException("Batch writer not started");
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(ExifToolConfigBatchWriter));
+
+            try
+            {
+                // Build command for this file
+                foreach (var kv in metadata)
+                {
+                    // Use ^= operator to write empty string instead of deleting tag when value is empty
+                    // See: https://exiftool.org/exiftool_pod.html
+                    // -TAG^= writes empty string, -TAG= deletes the tag
+                    string escapedValue = ExifToolWrapper.EscapeMetadataValue(kv.Value);
+                    _stdin.WriteLine($"-{kv.Key}^={escapedValue}");
+                }
+
+                if (overwriteOriginal)
+                {
+                    _stdin.WriteLine("-overwrite_original");
+                }
+
+                // Suppress XMP-x:XMPToolkit tag that ExifTool adds automatically
+                _stdin.WriteLine("-XMP-x:XMPToolkit=");
+
+                _stdin.WriteLine(filePath);
+                _stdin.WriteLine(ExecuteCommand);
+
+                // Read response until we see {ready} token
+                var response = new StringBuilder();
+                while (_stdout.ReadLine() is { } line)
+                {
+                    if (line.Contains(ReadyToken))
+                        break;
+                    response.AppendLine(line);
+                }
+
+                return new ExifToolResponse(response.ToString());
+            }
+            catch (Exception ex)
+            {
+                return new ExifToolResponse(false, $"Error writing metadata: {ex.Message}");
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            try
+            {
+                if (_isStarted && _process is { HasExited: false })
+                {
+                    // Send stop command
+                    _stdin?.WriteLine("-stay_open");
+                    _stdin?.WriteLine("False");
+
+                    // Give it a moment to exit gracefully
+                    if (!_process.WaitForExit(5000))
+                    {
+                        _process.Kill();
+                    }
+                }
+
+                _stdin?.Dispose();
+                _stdout?.Dispose();
+                _stderr?.Dispose();
+                _process?.Dispose();
+            }
+            catch
+            {
+                // Suppress disposal exceptions
+            }
+            finally
+            {
+                _disposed = true;
+                _isStarted = false;
+            }
+        }
     }
 }

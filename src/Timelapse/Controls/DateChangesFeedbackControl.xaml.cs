@@ -168,7 +168,6 @@ namespace Timelapse.Controls
         {
             // Properties in Tuple that are shown on the data table
             public bool Select { get; set; }
-            public string SampleFileName { get; set; } = sampleFileName;
             public string CurrentDate { get; set; } = currentDate;
             // ReSharper disable once UnusedMember.Global
             public string NewDate { get; set; } = newDate;

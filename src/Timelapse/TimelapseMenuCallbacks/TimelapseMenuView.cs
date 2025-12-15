@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 
@@ -33,6 +34,9 @@ namespace Timelapse
             MenuItemBookmarkDefaultPanZoom.IsEnabled = this.MarkableCanvas?.isZooming == true;
             MenuItemBookmarkSavePanZoom.IsEnabled = filesSelectedAndSingleImage;
             MenuItemBookmarkSetPanZoom.IsEnabled = filesSelectedAndSingleImage;
+
+            // ViewMetadata menu item
+            MenuItemViewMetadata.IsEnabled = filesSelectedAndSingleImage;
 
             // Show in explorer menu item
             MenuItemShowInExplorer.IsEnabled =
@@ -211,6 +215,20 @@ namespace Timelapse
                     this.FileShow(index);
                 }
             }
+        }
+        #endregion
+
+        #region Viewing metadata
+        private void MenuItemViewMetadata_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataHandler.ImageCache.Current == null)
+            {
+                // Shouldn't happen
+                TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
+                return;
+            }
+            FileMetadataView viewMetadata = new(this, DataHandler.FileDatabase, DataHandler, DataHandler.ImageCache.Current.GetFilePath(RootPathToImages));
+            viewMetadata.ShowDialog();
         }
         #endregion
 

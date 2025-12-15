@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dialog:FileMetadataDialogBase
+    x:Class="Timelapse.Dialog.FileMetadataView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Timelapse.Controls"
+    xmlns:dialog="clr-namespace:Timelapse.Dialog"
+    xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+    mc:Ignorable="d"
+    Title="Inspect file metadata"
+    MinHeight="600" MinWidth="768"
+    Height="856" Width="840"
+    ResizeMode="CanResizeWithGrip"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner"
+    Loaded="Window_Loaded" Closing="Window_Closing">
+
+    <Grid>
+        <DockPanel Grid.Row="0">
+
+            <toolkit:FormattedMessageContent x:Name="ViewOnlyMessage" DockPanel.Dock="Top"
+                                             Icon="{x:Static toolkit:DialogIconType.Question}"
+                                             DialogTitle=" Inspect a File's Metadata"
+                                             What="Inspect the metadata embedded within particular image or video files."
+                                             Reason="Information is usually embedded within image and/or video files that describes its characteristics, origin, and content."
+                                             Solution="Various viewing options are avaiable for inspecting the File's metadata.
+                                             [ni][b]Select a metadata inspection tool[/b]
+                                             [ni 2][e]ExifTool[/e] is much better at finding all metadata fields, or
+                                             [ni 2][e]MetadataExtractor[/e] is faster, but usually only displays a subset of available metadata.
+                                             [ni] [b]Use the slider[/b] to view metadata for other files in your current selection. 
+                                             [ni] [b]Sort by Metadata group[/b], either by clicking the [e]Metadata group[/e] header or, if enabled, the [e]Sort by metadata group[/e] button. 
+                                             [ni] [b]Select a row[/b] to keep it in view while navigating, allowing for easier viewing of metadata presence and value differences across files."
+                                             Hint="[li]The [e]Metadata group[/e] field is used to organize metadata tags and distinguish between them.
+                                             [li]The [e]XMP-TimelapseData[/e] metadata group, if present, groups file metadata previously created via the [e]File|Export (embed) data into files as file metadata&#x2026;[/e]"
+                                             Result="Each file's metadata values are displayed"
+                                             ShowExplanationVisibility="True" />
+
+            <Grid Name="GridSlider" DockPanel.Dock ="Top" HorizontalAlignment="Stretch"  Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Content="Select a file to view:" FontWeight="DemiBold" VerticalAlignment="Center"/>
+                <Slider Grid.Column="1" Name="SliderFileNavigator" HorizontalAlignment="Stretch" Width="Auto" VerticalAlignment="Center" />
+                <Label Name="FileNameWhileScrolling" Grid.Column="2" Content="" FontWeight="DemiBold" VerticalAlignment="Center" />
+            </Grid>
+
+            <DockPanel LastChildFill="True" >
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10,0,10,0">
+                    <Rectangle Fill="#FF868686" Height="2" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="OkayButton" IsCancel="True" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkayButton_Click">_Okay</Button>
+                </StackPanel>
+
+                <controls:FileMetadataGrid x:Name="MetadataGrid"  DockPanel.Dock="Top" VerticalAlignment="Stretch"/>
+            </DockPanel>
+        </DockPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+    </Grid>
+</dialog:FileMetadataDialogBase>

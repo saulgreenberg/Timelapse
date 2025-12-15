@@ -530,11 +530,11 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             catch (Exception exception)
             {
                 new Random().Next(100);
-                string replacementText = "DataLabel_" + new Random().Next(99); ;
+                string replacementText = "DataLabel_" + new Random().Next(99);
                 Dialogs.EditorDataLabelIsInvalidDialog(Globals.RootEditor, "", replacementText);
                 textBox.Text = replacementText;
                 TracePrint.PrintMessage(exception.Message);
-                return;
+                
             }
         }
 

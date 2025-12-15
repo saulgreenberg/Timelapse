@@ -429,7 +429,7 @@ namespace Timelapse.ControlsMetadata
         // Note - commit contents when user presses return, enter, or escape. Tab is handled elsewhere.
         private void Note_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is TextBox textBox && (e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab))
+            if (sender is TextBox textBox && (e.Key is Key.Return or Key.Escape or Key.Tab))
             {
                 if (textBox.Tag is MetadataDataEntryControl control)
                 {
@@ -463,7 +463,7 @@ namespace Timelapse.ControlsMetadata
         private void AlphaNumeric_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (sender is TextBox alphaNumberic &&
-                e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+                e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (alphaNumberic.Tag is MetadataDataEntryControl control)
                 {
@@ -475,7 +475,7 @@ namespace Timelapse.ControlsMetadata
         // IntegerAny and IntegerPositive: commit contents when user presses return, enter, escape or Tab.
         private void Integer_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is IntegerUpDown integerUpDown && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is IntegerUpDown integerUpDown && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (integerUpDown.Tag is MetadataDataEntryControl control)
                 {
@@ -487,7 +487,7 @@ namespace Timelapse.ControlsMetadata
         // DecimalAny and DecimalPositive: commit contents when user presses return, enter, escape or Tab.
         private void Decimal_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is DoubleUpDown doubleUpDown && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is DoubleUpDown doubleUpDown && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (doubleUpDown.Tag is MetadataDataEntryControl control)
                 {
@@ -499,7 +499,7 @@ namespace Timelapse.ControlsMetadata
         // FixedChoice: commit contents when user presses return, enter, escape or Tab.
         private void FixedChoice_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is ComboBox comboBox && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is ComboBox comboBox && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (comboBox.Tag is MetadataDataEntryControl control)
                 {
@@ -511,7 +511,7 @@ namespace Timelapse.ControlsMetadata
         // MultiChoice: commit contents when user presses return, enter, escape or Tab.
         private void MultiChoice_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is WatermarkCheckComboBox checkComboBox && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is WatermarkCheckComboBox checkComboBox && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (checkComboBox.Tag is MetadataDataEntryControl control)
                 {
@@ -523,7 +523,7 @@ namespace Timelapse.ControlsMetadata
         // DateTime_ and Date_: commit contents when user presses return, enter, escape or Tab.
         private void DateTime_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is WatermarkDateTimePicker dateTimePicker && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is WatermarkDateTimePicker dateTimePicker && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (dateTimePicker.Tag is MetadataDataEntryControl control)
                 {
@@ -547,7 +547,7 @@ namespace Timelapse.ControlsMetadata
         // DateTime_: commit contents when user presses return, enter, escape or Tab.
         private void Time_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is WatermarkTimePicker timePicker && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is WatermarkTimePicker timePicker && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (timePicker.Tag is MetadataDataEntryControl control)
                 {
@@ -559,7 +559,7 @@ namespace Timelapse.ControlsMetadata
         // Flag: commit contents when user presses return, enter, escape or Tab.
         private void Flag_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (sender is CheckBox checkbox && e.Key is Key.Return or Key.Enter or Key.Escape or Key.Tab)
+            if (sender is CheckBox checkbox && e.Key is Key.Return or Key.Escape or Key.Tab)
             {
                 if (checkbox.Tag is MetadataDataEntryControl control)
                 {

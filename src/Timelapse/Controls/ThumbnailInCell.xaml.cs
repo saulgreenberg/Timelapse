@@ -52,15 +52,14 @@ namespace Timelapse.Controls
         }
 
         // Whether the Checkbox is checked i.e., the ThumbnailInCell is selected
-        private bool isSelected;
         public bool IsSelected
         {
-            get => isSelected;
+            get;
             set
             {
-                isSelected = value;
+                field = value;
                 // Show or hide the checkmark 
-                if (isSelected)
+                if (field)
                 {
                     Cell.Background = selectedBrush;
                     SelectionTextBlock.Text = "\u2713"; // Checkmark in unicode

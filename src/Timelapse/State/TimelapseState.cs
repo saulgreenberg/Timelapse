@@ -37,13 +37,12 @@ namespace Timelapse.State
         // as otherwise wrong thumbnails (matching previous selections) may be displayed.
         public bool IsNewSelection { get; set; }
 
-        private double _boundingBoxDisplayThreshold;
         public double BoundingBoxDisplayThreshold
         {
-            get => _boundingBoxDisplayThreshold;
+            get;
             set
             {
-                _boundingBoxDisplayThreshold = value;
+                field = value;
                 if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null)
                 {
                     GlobalReferences.MainWindow.DataHandler?.FileDatabase.TrySetBoundingBoxDisplayThreshold((float)value);

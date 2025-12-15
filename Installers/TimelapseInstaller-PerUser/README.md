@@ -97,7 +97,7 @@ Once set as the default, double-clicking `.tdb` or `.ddb` files will automatical
 ### Publisher Information
 
 - **Manufacturer**: Greenberg Consulting Inc. and University of Calgary
-- **Version**: 2.4.0.0
+- **Version**: 2.5.0.0
 - **Product Name**: Timelapse Image Analyzer
 
 ## Files Included

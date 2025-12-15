@@ -146,8 +146,20 @@ namespace Timelapse.Dialog
             CountTimer.Tick += CountTimer_Tick;
         }
 
-        // When the window is loaded, construct all the SearchTerm controls 
+        // When the window is loaded, construct all the SearchTerm controls
         private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Window_LoadedAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Window_LoadedAsync()
         {
             this.Message.BuildContentFromProperties();
 
@@ -1068,6 +1080,18 @@ namespace Timelapse.Dialog
         // Radio buttons for determing if we use And or Or
         private async void AndOrRadioButton_Checked(object sender, RoutedEventArgs args)
         {
+            try
+            {
+                await AndOrRadioButton_CheckedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task AndOrRadioButton_CheckedAsync(object sender)
+        {
             RadioButton radioButton = sender as RadioButton;
             Database.CustomSelection.TermCombiningOperator = (radioButton == RadioButtonTermCombiningAnd) ? CustomSelectionOperatorEnum.And : CustomSelectionOperatorEnum.Or;
             await UpdateSearchDialogFeedback();
@@ -1075,9 +1099,21 @@ namespace Timelapse.Dialog
 
         // Select: When the use checks or unchecks the checkbox for a row
         // - activate or deactivate the search criteria for that row
-        // - update the searchterms to reflect the new status 
+        // - update the searchterms to reflect the new status
         // - update the UI to activate or deactivate (or show or hide) its various search terms
         private async void Select_CheckedOrUnchecked(object sender, RoutedEventArgs args)
+        {
+            try
+            {
+                await Select_CheckedOrUncheckedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Select_CheckedOrUncheckedAsync(object sender)
         {
             if (sender is CheckBox select == false)
             {
@@ -1104,8 +1140,20 @@ namespace Timelapse.Dialog
 
         // Operator: The user has selected a new expression
         // - set its corresponding search term in the searchList data structure
-        // - update the UI to show the search criteria 
+        // - update the UI to show the search criteria
         private async void Operator_SelectionChanged(object sender, SelectionChangedEventArgs args)
+        {
+            try
+            {
+                await Operator_SelectionChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Operator_SelectionChangedAsync(object sender)
         {
             if (sender is ComboBox comboBox == false)
             {
@@ -1120,8 +1168,20 @@ namespace Timelapse.Dialog
 
         // Value (Counters and Notes): The user has selected a new value
         // - set its corresponding search term in the searchList data structure
-        // - update the UI to show the search criteria 
+        // - update the UI to show the search criteria
         private async void Note_TextChanged(object sender, TextChangedEventArgs args)
+        {
+            try
+            {
+                await Note_TextChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Note_TextChangedAsync(object sender)
         {
             if (sender is TextBox textBox == false)
             {
@@ -1139,6 +1199,18 @@ namespace Timelapse.Dialog
         // - update the UI to show the search criteria
 
         private async void MultiLineValue_TextHasChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                await MultiLineValue_TextHasChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task MultiLineValue_TextHasChangedAsync(object sender)
         {
             if (sender is MultiLineText textBox == false)
             {
@@ -1180,6 +1252,18 @@ namespace Timelapse.Dialog
 
         private async void Integer_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
         {
+            try
+            {
+                await Integer_ValueChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Integer_ValueChangedAsync(object sender)
+        {
             if (sender is IntegerUpDown textBox == false)
             {
                 // This shouldn't happen
@@ -1192,6 +1276,18 @@ namespace Timelapse.Dialog
         }
 
         private async void Decimal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
+        {
+            try
+            {
+                await Decimal_ValueChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Decimal_ValueChangedAsync(object sender)
         {
             if (sender is DoubleUpDown textBox == false)
             {
@@ -1206,6 +1302,18 @@ namespace Timelapse.Dialog
 
         // Value (DateTime): we need to construct a string DateTime from it
         private async void DateTime_SelectedDateChanged(object sender, RoutedPropertyChangedEventArgs<object> args)
+        {
+            try
+            {
+                await DateTime_SelectedDateChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task DateTime_SelectedDateChangedAsync(object sender)
         {
             if (sender is WatermarkDateTimePicker datePicker == false)
             {
@@ -1223,10 +1331,22 @@ namespace Timelapse.Dialog
             }
         }
 
-        // Value (FixedChoice): The user has selected a new value 
+        // Value (FixedChoice): The user has selected a new value
         // - set its corresponding search term in the searchList data structure
-        // - update the UI to show the search criteria 
+        // - update the UI to show the search criteria
         private async void FixedChoice_SelectionChanged(object sender, SelectionChangedEventArgs args)
+        {
+            try
+            {
+                await FixedChoice_SelectionChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task FixedChoice_SelectionChangedAsync(object sender)
         {
             if (sender is ComboBox comboBox == false)
             {
@@ -1246,6 +1366,18 @@ namespace Timelapse.Dialog
 
         // Value: (MultiChoice)
         private async void WatermarkCheckComboBox_ItemSelectionChanged(object sender, ItemSelectionChangedEventArgs e)
+        {
+            try
+            {
+                await WatermarkCheckComboBox_ItemSelectionChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task WatermarkCheckComboBox_ItemSelectionChangedAsync(object sender)
         {
             if (sender is WatermarkCheckComboBox checkComboBox == false)
             {
@@ -1274,10 +1406,22 @@ namespace Timelapse.Dialog
 
         }
 
-        // Value (Flags): The user has checked or unchecked a new value 
+        // Value (Flags): The user has checked or unchecked a new value
         // - set its corresponding search term in the searchList data structure
-        // - update the UI to show the search criteria 
+        // - update the UI to show the search criteria
         private async void Flag_CheckedOrUnchecked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Flag_CheckedOrUncheckedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Flag_CheckedOrUncheckedAsync(object sender)
         {
             if (sender is CheckBox checkBox == false)
             {
@@ -1292,6 +1436,18 @@ namespace Timelapse.Dialog
 
         private async void DateTimeCustomPicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            try
+            {
+                await DateTimeCustomPicker_ValueChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task DateTimeCustomPicker_ValueChangedAsync(object sender)
+        {
             if (sender is WatermarkDateTimePicker dateTimePicker == false)
             {
                 // Shouldn't happen
@@ -1304,6 +1460,18 @@ namespace Timelapse.Dialog
         }
 
         private async void DatePicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            try
+            {
+                await DatePicker_ValueChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task DatePicker_ValueChangedAsync(object sender)
         {
             if (sender is WatermarkDateTimePicker dateTimePicker == false)
             {
@@ -1318,6 +1486,18 @@ namespace Timelapse.Dialog
 
         private async void TimePicker_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            try
+            {
+                await TimePicker_ValueChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task TimePicker_ValueChangedAsync(object sender)
+        {
             if (sender is WatermarkTimePicker timePicker == false)
             {
                 // Shouldn't happen
@@ -1331,6 +1511,18 @@ namespace Timelapse.Dialog
 
         // The RelativePathControl SelectedItemChanged callback: This does the work when a relative path is selected
         private async void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            try
+            {
+                await RelativePathControl_SelectedItemChangedAsync(sender);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task RelativePathControl_SelectedItemChangedAsync(object sender)
         {
             if (this.treeViewWithRelativePaths.DontInvoke)
             {
@@ -1605,6 +1797,18 @@ namespace Timelapse.Dialog
 
         #region EpisodeStuff - Move this code into proper regions later
         private async void CheckboxShowAllEpisodeImages_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await CheckboxShowAllEpisodeImages_CheckedChangedAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task CheckboxShowAllEpisodeImages_CheckedChangedAsync()
         {
             if (Database == null)
             {

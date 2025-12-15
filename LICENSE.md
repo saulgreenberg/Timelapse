@@ -128,5 +128,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-**Last Updated:** 2025-12-09
-**Timelapse Version:** 2.4.0.1+
+**Last Updated:** 2026-01-01
+**Timelapse Version:** 2.5.0.0+

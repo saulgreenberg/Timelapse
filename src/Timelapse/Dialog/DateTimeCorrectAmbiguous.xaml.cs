@@ -8,6 +8,7 @@ using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -15,7 +16,7 @@ namespace Timelapse.Dialog
     /// <summary>
     /// Detects and displays ambiguous dates, and allows the user to select which ones (if any) should be swapped.
     /// </summary>
-    public partial class DateCorrectAmbiguous
+    public partial class DateTimeCorrectAmbiguous
     {
         #region Private Varaibles
         // Remember passed in arguments
@@ -28,7 +29,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Constructor and Loaded
-        public DateCorrectAmbiguous(Window owner, FileDatabase fileDatabase) : base(owner)
+        public DateTimeCorrectAmbiguous(Window owner, FileDatabase fileDatabase) : base(owner)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
@@ -208,11 +209,23 @@ namespace Timelapse.Dialog
             StartDoneButton.IsEnabled = DateChangeFeedback.AreAnySelected();
         }
 
-        // When the start button is clicked, 
+        // When the start button is clicked,
         // - apply the date change
-        // - change the UI so that the start button (and its event handler) becomes a 'Done' button, 
+        // - change the UI so that the start button (and its event handler) becomes a 'Done' button,
         //   temporarily disable the window's close button, and show the progress bar.
         private async void Start_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task Start_ClickAsync()
         {
             // We have a valide new time that differs by at least one second.
             // ConfigureFormatForDateTimeCustom the UI's initial state

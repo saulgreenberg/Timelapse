@@ -350,7 +350,7 @@ namespace Timelapse.Dialog
             folderSelectionDialog.Multiselect = false;
             folderSelectionDialog.InitialDirectory = folderSelectionDialog.DefaultDirectory;
             folderSelectionDialog.FolderChanging += FolderSelectionDialog_FolderChanging;
-            if (folderSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            if (folderSelectionDialog.ShowDialog() == CommonFileDialogResult.Ok && folderSelectionDialog.FileName != null)
             {
                 // Trim the root folder path from the folder name to produce a relative path. 
                 return (folderSelectionDialog.FileName.Length > initialFolder.Length) ? folderSelectionDialog.FileName[(initialFolder.Length + 1)..] : string.Empty;
@@ -367,8 +367,9 @@ namespace Timelapse.Dialog
                 return;
             }
 
+
             // require folders to be loaded be either the same folder as the .tdb and .ddb or subfolders of it
-            if (e.Folder.StartsWith(dialog.DefaultDirectory, StringComparison.OrdinalIgnoreCase) == false)
+            if (dialog.DefaultDirectory == null || e.Folder?.StartsWith(dialog.DefaultDirectory, StringComparison.OrdinalIgnoreCase) == false)
             {
                 e.Cancel = true;
             }

@@ -4,11 +4,11 @@ using Timelapse.Util;
 namespace Timelapse.Dialog
 {
     /// <summary>
-    /// Interaction logic for MergingDatabaseWarningAsDuplicateEntriesPossible.xaml
+    /// Interaction logic for MergeDatabaseWarningAsDuplicateEntriesPossible.xaml
     /// </summary>
-    public partial class MergingDatabaseWarningAsDuplicateEntriesPossible
+    public partial class MergeDatabaseWarningAsDuplicateEntriesPossible
     {
-        public MergingDatabaseWarningAsDuplicateEntriesPossible(Window owner, string details) 
+        public MergeDatabaseWarningAsDuplicateEntriesPossible(Window owner, string details) 
         {
             InitializeComponent();
             InitializeComponent();

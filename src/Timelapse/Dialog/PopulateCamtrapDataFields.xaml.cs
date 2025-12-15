@@ -8,6 +8,7 @@ using System.Windows;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Standards;
 using Timelapse.Util;
 
@@ -70,8 +71,20 @@ namespace Timelapse.Dialog
 
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await Start_ClickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
 
-            // Update the UI before starting the operation, 
+        private async Task Start_ClickAsync()
+        {
+
+            // Update the UI before starting the operation,
             CancelButton.IsEnabled = false;
             CancelButton.IsEnabled = false;
             StartDoneButton.Content = "_Processing";

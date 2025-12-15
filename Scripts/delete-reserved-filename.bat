@@ -9,12 +9,26 @@ if "%~1"=="" (
     exit /b 1
 )
 
-echo Attempting to delete: %~1
-del "\\?\%~1"
-
-if %errorlevel% equ 0 (
-    echo Successfully deleted: %~1
+echo Checking if file exists: %~1
+if exist "\\?\%~1" (
+    echo File found. Attempting to delete...
+    del "\\?\%~1" 2>nul
+    if %errorlevel% equ 0 (
+        echo Successfully deleted: %~1
+    ) else (
+        echo DEL failed. Trying RMDIR...
+        rmdir "\\?\%~1" 2>nul
+        if %errorlevel% equ 0 (
+            echo Successfully removed directory: %~1
+        ) else (
+            echo ERROR: Failed to delete: %~1
+            exit /b 1
+        )
+    )
 ) else (
-    echo Failed to delete: %~1
-    exit /b 1
+    echo File does not exist: %~1
+    echo Trying alternate method...
+    del "\\?\%~1" 2>nul
+    rmdir "\\?\%~1" 2>nul
+    echo Deletion commands executed. Please verify manually.
 )

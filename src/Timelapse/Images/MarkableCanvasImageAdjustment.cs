@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.EventArguments;
@@ -62,6 +63,18 @@ namespace Timelapse.Images
         // Store these parameters and then try to update the image
         public async void AdjustImage_EventHandler(object sender, ImageAdjusterEventArgs e)
         {
+            try
+            {
+                await AdjustImage_EventHandlerAsync(e);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task AdjustImage_EventHandlerAsync(ImageAdjusterEventArgs e)
+        {
             if (e == null)
             {
                 // Shouldn't happen, but...
@@ -71,7 +84,7 @@ namespace Timelapse.Images
             string path = DataEntryHandler.TryGetFilePathFromGlobalDataHandler();
             if (string.IsNullOrEmpty(path))
             {
-                // The file cannot be opened or is not displayable. 
+                // The file cannot be opened or is not displayable.
                 // Signal change in image state, which essentially says there is no displayable image to adjust (consumed by ImageAdjuster)
                 OnImageStateChanged(new(false)); //  Signal change in image state (consumed by ImageAdjuster)
                 return;
@@ -89,7 +102,7 @@ namespace Timelapse.Images
                 return;
             }
 
-            // Process the image based on the current image processing arguments. 
+            // Process the image based on the current image processing arguments.
             if (e.ForceUpdate == false && (e.Contrast == lastContrast && Math.Abs(e.Brightness - lastBrightness) < .001 && e.DetectEdges == lastDetectEdges && e.Sharpen == lastSharpen && e.UseGamma == lastUseGamma && Math.Abs(e.GammaValue - lastGammaValue) < .0001))
             {
                 // If there is no change from the last time we processed an image, abort as it would not make any difference to what the user sees
@@ -106,8 +119,20 @@ namespace Timelapse.Images
         }
 
         // Because an event may come in while an image is being processed, the timer
-        // will try to continue the processing the image with the latest image processing parameters (if any) 
+        // will try to continue the processing the image with the latest image processing parameters (if any)
         private async void TimerImageProcessingUpdate_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                await TimerImageProcessingUpdate_TickAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task TimerImageProcessingUpdate_TickAsync()
         {
             if (Processing)
             {

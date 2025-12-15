@@ -29,18 +29,18 @@
             <!-- #region File Menu -->
             <MenuItem Name="FileMenu" Header="_File" SubmenuOpened="FileMenu_OnSubmenuOpened">
 
-                <MenuItem Name="MenuText" Header="_Test some code..." Click="MenuTestSomeCode_Click" ToolTip="Test some code out" Visibility ="Collapsed" />
+                <MenuItem Name="MenuText" Header="_Test some code&#x2026;" Click="MenuTestSomeCode_Click" ToolTip="Test some code out" Visibility ="Collapsed" />
 
                 <!-- New -->
-                <MenuItem Name="MenuFileNewTemplate" Header="_New template..." Click="MenuFileNewTemplate_Click" ToolTip="Create a new data template file">
+                <MenuItem Name="MenuFileNewTemplate" Header="_New template&#x2026;" Click="MenuFileNewTemplate_Click" ToolTip="Create a new data template file">
                     <MenuItem.Icon>
                         <Image Height="16" Width="16" Source="Icons/NewFile_40x.png"  />
                     </MenuItem.Icon>
                 </MenuItem>
 
                 <!-- New based on as standard-->
-                <MenuItem Name="MenuFileNewTemplateFromStandard" Header="_New template based on a standard..." ToolTip="Create a new data template file based on a particular standard">
-                    <MenuItem Name="MenuFileNewAlbertaMetadataStandard" Header="_Alberta Metadata Standard..." 
+                <MenuItem Name="MenuFileNewTemplateFromStandard" Header="_New template based on a standard&#x2026;" ToolTip="Create a new data template file based on a particular standard">
+                    <MenuItem Name="MenuFileNewAlbertaMetadataStandard" Header="_Alberta Metadata Standard.&#x2026;" 
                               Click="MenuFileNewFromStandardResourceFile_Click" 
                               Tag ="AlbertaMetadataStandards"
                               ToolTip="Create a new data template file based on the Alberta Metadata Standard. You can edit it afterwards if desired.">
@@ -49,7 +49,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Name="MenuFileNewAlbertaMetadataStandardProgramatically" Header="_Alberta Metadata Standard (programatically)..." 
+                    <MenuItem Name="MenuFileNewAlbertaMetadataStandardProgramatically" Header="_Alberta Metadata Standard (programatically)&#x2026;" 
                               Visibility ="Collapsed"
                               Click="MenuFileNewAlbertaMetadataStandardProgramatically_Click" 
                               ToolTip="Create a new data template file based on the Alberta Metadata Standard. You can edit it afterwards if desired.">
@@ -58,7 +58,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Name="MenuFileNewCameratrapDP" Header="_CamtrapDP..." 
+                    <MenuItem Name="MenuFileNewCameratrapDP" Header="_CamtrapDP&#x2026;" 
                               Visibility ="Visible"
                               Click="MenuFileNewFromStandardResourceFile_Click" 
                               Tag ="CamtrapDP"
@@ -68,7 +68,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Name="MenuFileNewCameratrapDPProgrammaticaly" Header="_CamtrapDP (programatically)..." 
+                    <MenuItem Name="MenuFileNewCameratrapDPProgrammaticaly" Header="_CamtrapDP (programatically)&#x2026;" 
                               Visibility ="Collapsed"
                               Click="MenuFileNewCameratrapDPProgramatically_Click" 
                               ToolTip="Create a new data template file based on the CamtrapDP standard. You can edit it afterwards if desired.">
@@ -77,8 +77,8 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    
-                    <MenuItem Name="MenuFileNewPracticeImageSetStandard" Header="_Practice Image Set metadata example..." 
+
+                    <MenuItem Name="MenuFileNewPracticeImageSetStandard" Header="_Practice Image Set metadata example&#x2026;" 
                               Visibility ="Collapsed"
                               Click="MenuFileNewPracticeImageSetStandard_Click" 
                               ToolTip="Create a new data template file based on an example simple standard that matches the practice image set. You can edit it afterwards if desired.">
@@ -87,7 +87,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Name="MenuFileNewAllControlsStandard" Header="_All controls metadata example..."
+                    <MenuItem Name="MenuFileNewAllControlsStandard" Header="_All controls metadata example&#x2026;"
                               Visibility ="Collapsed"
                               Click="MenuFileNewAllControlsStandard_Click" 
                               ToolTip="Create a new data template file based on an example standard that lists all controls. You can edit it afterwards if desired.">
@@ -98,7 +98,7 @@
                 </MenuItem>
                 <Separator/>
                 <!-- Open -->
-                <MenuItem Name="MenuFileOpenTemplate" Header="_Open template..." Click="MenuFileOpenTemplate_Click" ToolTip="Open an existing data template file">
+                <MenuItem Name="MenuFileOpenTemplate" Header="_Open template&#x2026;" Click="MenuFileOpenTemplate_Click" ToolTip="Open an existing data template file">
                     <MenuItem.Icon>
                         <Image Height="16" Width="16" Source="Icons/OpenFile_32x.png" />
                     </MenuItem.Icon>
@@ -110,7 +110,7 @@
                 <Separator />
 
                 <!-- Upgrade Timelapse Files -->
-                <MenuItem Name="MenuItemUpgradeTimelapseFiles" Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version (.tdb/.ddb)..." Click="MenuItemUpgradeTimelapseFiles_Click" IsEnabled="true" ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
+                <MenuItem Name="MenuItemUpgradeTimelapseFiles" Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version (.tdb/.ddb)&#x2026;" Click="MenuItemUpgradeTimelapseFiles_Click" IsEnabled="true" ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
                     <MenuItem.Icon>
                         <Image Source="Icons/ConvertFile_32x.png" />
                     </MenuItem.Icon>
@@ -149,7 +149,7 @@
             <MenuItem Name="MenuMetadata" Header="_Edit" IsEnabled="False" SubmenuOpened="Metadata_SubmenuOpening">
 
                 <!-- Add a new metadata level.. -->
-                <MenuItem Name="MenuItemAddLevel" Header="New folder level..." ToolTip="Add a folder level to your folder data definitions" 
+                <MenuItem Name="MenuItemAddLevel" Header="New folder level&#x2026;" ToolTip="Add a folder level to your folder data definitions" 
                           Click="MenuItemAddLevel_Click" />
             </MenuItem>
             <!-- #endregion -->
@@ -158,7 +158,7 @@
             <MenuItem Name="MenuView" Header="_View" IsEnabled="False">
 
                 <!-- Inspect metadata -->
-                <MenuItem Name="MenuItemInspectImageMetadata" Header="Inspect file _metadata..." ToolTip="See what metadata is available in an image or video of your choosing" Click="MenuItemInspectImageMetadata_Click">
+                <MenuItem Name="MenuItemInspectImageMetadata" Header="Inspect file _metadata&#x2026;" ToolTip="See what metadata is available in an image or video of your choosing" Click="MenuItemInspectImageMetadata_Click">
                     <MenuItem.Icon>
                         <Image Source="Icons/InspectMetadata_32x.png" />
                     </MenuItem.Icon>
@@ -186,7 +186,7 @@
             <!--COPY EVERYTHING BETWEEEN BRACKETS FROM  TimelapseWindow | MenuItemHelp}-->
             <MenuItem Name="MenuItemHelp" Header="_Help" IsEnabled="true" IsTabStop="false" SubmenuOpened="Help_SubmenuOpening" >
 
-                <MenuItem Name="MenuItemTimelapseHomePage" Header="Timelapse web site (via your web browser)..." Click="MenuTimelapseWebPage_Click" ToolTip="Displays the Timelapse web site's home page in your browser">
+                <MenuItem Name="MenuItemTimelapseHomePage" Header="Timelapse web site (via your web browser)&#x2026;" Click="MenuTimelapseWebPage_Click" ToolTip="Displays the Timelapse web site's home page in your browser">
                     <MenuItem.Icon>
                         <Image Source="Icons/Home_32x.png" />
                     </MenuItem.Icon>
@@ -265,7 +265,7 @@
                 </MenuItem>
 
                 <!-- Video Lessons -->
-                <MenuItem Name="MenuItemVideoFeatures" Header="Timelapse instructional videos..." Click="MenuVideoPlay_Click" ToolTip="Video lessons on using Timelapse.">
+                <MenuItem Name="MenuItemVideoFeatures" Header="Timelapse instructional videos&#x2026;" Click="MenuVideoPlay_Click" ToolTip="Video lessons on using Timelapse.">
                     <MenuItem.Icon>
                         <Image Source="Icons/MediaControl-PlayButton.png" />
                     </MenuItem.Icon>
@@ -397,7 +397,7 @@
                     </MenuItem>
                 </MenuItem>
 
-                <MenuItem Name="MenuItemFAQ" Header="Timelapse FAQ (Frequently asked questions)..." Click="MenuItemFAQ_Click" ToolTip="Displays the Timelapse Frequently Asked Questions page in a web browser">
+                <MenuItem Name="MenuItemFAQ" Header="Timelapse FAQ (Frequently asked questions)&#x2026;" Click="MenuItemFAQ_Click" ToolTip="Displays the Timelapse Frequently Asked Questions page in a web browser">
                     <MenuItem.Icon>
                         <Image Source="Icons/EmailSend_32x.png" />
                     </MenuItem.Icon>
@@ -405,12 +405,12 @@
 
                 <Separator/>
 
-                <MenuItem Name="MenuItemJoinMailingList" Header="Timelapse mailing list - _Join it (via your web browser)..." Click="MenuJoinTimelapseMailingList_Click" ToolTip="Using your browser, go to the page that lets you join the timelapse mailing list. You will be informed about updates, and you can post requests to it.">
+                <MenuItem Name="MenuItemJoinMailingList" Header="Timelapse mailing list - _Join it (via your web browser)&#x2026;" Click="MenuJoinTimelapseMailingList_Click" ToolTip="Using your browser, go to the page that lets you join the timelapse mailing list. You will be informed about updates, and you can post requests to it.">
                     <MenuItem.Icon>
                         <Image Source="Icons/JoinMailingList_32x.png" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Name="MenuItemMailToMailingList" Header="Timelapse mailing list - Send _email..." Click="MenuMailToTimelapseMailingList_Click" ToolTip="Post an email to the Timelapse mailing list. You should join the mailing list before doing this.">
+                <MenuItem Name="MenuItemMailToMailingList" Header="Timelapse mailing list - Send _email&#x2026;" Click="MenuMailToTimelapseMailingList_Click" ToolTip="Post an email to the Timelapse mailing list. You should join the mailing list before doing this.">
                     <MenuItem.Icon>
                         <Image Source="Icons/EmailSend_32x.png" />
                     </MenuItem.Icon>
@@ -418,14 +418,14 @@
 
                 <Separator/>
 
-                <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer..." Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
+                <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer&#x2026;" Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
                     <MenuItem.Icon>
                         <Image Source="Icons/EmailSend_32x.png" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
 
-                <MenuItem Name="MenuItemAbout" Header="_About..." Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
+                <MenuItem Name="MenuItemAbout" Header="_About&#x2026;" Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
                     <MenuItem.Icon>
                         <Image Source="Icons/About_32x.png" />
                     </MenuItem.Icon>

@@ -1,5 +1,5 @@
-﻿using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
-using Microsoft.WindowsAPICodePack.Shell;
+﻿using Microsoft.WindowsAPICodePack.Shell;
+using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,9 +13,9 @@ using Timelapse.Database;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
-using File = System.IO.File;
 using Timelapse.Extensions;
 using TimelapseTemplateEditor;
+using File = System.IO.File;
 
 namespace Timelapse.Util
 {
@@ -717,6 +717,38 @@ namespace Timelapse.Util
 
         #endregion
 
+        #region Public Static Methods - TruncateFileNameForDisplay
+
+        // Truncate a file name for display purposes to fit within the indicated length, adding ellipses as needed, preferably in the path section
+        // An example returned value might be: C:\Users\Owner\Deskto…\Test sets\MergeLarge\foo\TimelapseData.ddb
+        public static string TruncateFileNameForDisplay(string fileName, string path, int length)
+        {
+            if (fileName == null) return string.Empty;
+            string newFile = Path.Combine(path, fileName);
+            if (newFile.Length <= length)
+            {
+                // Its less than the length, so return it unchanged
+                return newFile;
+            }
+
+            int fileNameLength = fileName.Length;
+            if (fileNameLength > length)
+            {
+                // /The file name itself is longer than the length, so truncate it
+                return $"…{fileName.Substring(fileName.Length - length - 1)}";
+            }
+            // The file name length is less than the length, so truncate the path
+            int desiredPathLength = length - fileNameLength - 2; // -1 for the path separator and ellipsis
+
+            // Get the front half and the back half of the path, and stitch them together with an ellipsis in between
+            string frontPath = path.Substring(0, desiredPathLength/2);
+            string backPath = path.Substring(path.Length - desiredPathLength/2);
+            string pathAfterTruncation = $"{frontPath}…{backPath}";
+            return Path.Combine(pathAfterTruncation, fileName);
+
+        }
+        #endregion
+
         #region Public Static Methods - Get Path Parts
         // Given a relative path return the subfolder path after the first folder e.g., e.g. a\b\c returns b\c
         // If its a root folder, return "" as there are not folders after that e.g., a returns ""
@@ -897,8 +929,12 @@ namespace Timelapse.Util
 
             using ShellObject shell = ShellObject.FromParsingName(filePath);
             // alternatively: shell.Properties.GetProperty("System.Media.Duration");
-            ShellProperty<ulong?> prop = shell.Properties.System.Media.Duration;
+            ShellProperty<ulong?> prop = shell?.Properties?.System?.Media.Duration;
             // Duration will be formatted as 00:44:08
+            if (prop == null)
+            {
+                return 0;
+            }
             string durationAsString = prop.FormatForDisplay(PropertyDescriptionFormatOptions.None);
             if (TimeSpan.TryParse(durationAsString, out TimeSpan duration))
             {

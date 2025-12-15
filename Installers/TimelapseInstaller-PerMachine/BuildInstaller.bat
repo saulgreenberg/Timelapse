@@ -8,14 +8,14 @@ echo ========================================
 echo.
 
 REM Set paths
-set RELEASE_DIR=..\..\src\Timelapse\bin\Publish\RequiresDotNet8-win-x64
+set RELEASE_DIR=..\..\src\Timelapse\bin\Publish\RequiresDotNet10-win-x64
 set OUTPUT_DIR=..\bin\Release
 
 REM Check if release folder exists
 if not exist "%RELEASE_DIR%" (
     echo ERROR: Release folder not found: %RELEASE_DIR%
-    echo Please publish Timelapse with RequiresDotNet8 profile first.
-    echo Run: dotnet publish ..\..\Timelapse\Timelapse.csproj -p:PublishProfile=RequiresDotNet8-win-x64
+    echo Please publish Timelapse with RequiresDotNet10 profile first.
+    echo Run: dotnet publish ..\..\Timelapse\Timelapse.csproj -p:PublishProfile=RequiresDotNet10-win-x64
     pause
     exit /b 1
 )

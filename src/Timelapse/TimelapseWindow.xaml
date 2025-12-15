@@ -54,7 +54,7 @@
 
                     <!-- Load template, images, and video files... -->
                     <MenuItem Name="MenuItemLoadFiles" 
-                              Header="_Load template, images, and video files..." 
+                              Header="_Load template, images, and video files&#x2026;" 
                               Click="MenuItemLoadImages_Click" 
                               ToolTip="Asks for the template location, and then opens an existing image set database, or creates a new image set database">
                         <MenuItem.Icon>
@@ -72,7 +72,7 @@
                     </MenuItem>
 
                     <MenuItem Name="MenuItemAddFilesToImageSet" IsEnabled="false" 
-                              Header="_Add image and video files to this image set..." 
+                              Header="_Add image and video files to this image set&#x2026;" 
                               Click="MenuItemAddImagesToImageSet_Click" 
                               ToolTip="Add more images or videos to the currently opened image set">
                         <MenuItem.Icon>
@@ -82,25 +82,36 @@
 
                     <Separator />
 
-                    <!-- Upgrade Timelapse Files -->
-                    <MenuItem Name="MenuItemUpgradeTimelapseFiles"  IsEnabled="true" 
-                              Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version..." 
-                              Click="MenuItemUpgradeTimelapseFiles_Click"
-                              ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
-                        <MenuItem.Icon>
-                            <Image Source="Icons/ConvertFile_32x.png" />
-                        </MenuItem.Icon>
+                    <!-- Merge -->
+                    <MenuItem Name="MenuItemMerging" Header="_Merging Databases&#x2026;" 
+                              ToolTip="Merge a sub-folder's databases in /out of a master database">
+
+                        <MenuItem Name="MenuItemCreateEmptyDatabase" 
+                                  Header="Create and load an empty master database (for merging databases in sub-folders)&#x2026;" 
+                                  Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
+                                  ToolTip="Asks for the template location, and then creates an empty image set database.
+                             &#10;Usually used as a master database, where we can check in / out sub-folder specific databases that only contains that sub-folder's data."/>
+
+                        <MenuItem Name="MenuItemCheckOutDatabase" IsEnabled="false" 
+                                  Header="Check out (copy) a sub-folder database from the master database&#x2026;" 
+                                  Click="MenuItemCheckOutDatabase_Click" 
+                                  ToolTip="Creates a database in a subfolder that contains only the entries for that subfolder"/>
+
+                        <MenuItem Name="MenuItemCheckInDatabases" IsEnabled="false" 
+                                  Header="Check in (merge) a sub-folder's database into the master database&#x2026;" 
+                                  Click="MenuItemCheckInDatabases_Click" 
+                                  ToolTip="Merge one or more databases into an existing master database"/>
                     </MenuItem>
 
-
                     <Separator />
+
                     <!--Export or Import data to csv-->
                     <MenuItem Name="MenuItemExportData" IsEnabled="false"
-                              Header="Export or import data to/from a csv file..." >
+                              Header="Export or import data to/from a csv file&#x2026;" >
 
                         <!-- Export data for selected images as a .csv file... -->
                         <MenuItem Name="MenuItemExportAsCsv" IsEnabled="false" 
-                                  Header="Export image/video data in the current selection to a .csv file..." 
+                                  Header="Export image/video data in the current selection to a .csv file&#x2026;" 
                                   Click="MenuItemExportCsv_Click" ToolTip="Exports data for the selected files into a .csv (comma separated value) file">
                             <MenuItem.Icon>
                                 <Image Source="Icons/CSVExport_32x.png" />
@@ -109,7 +120,7 @@
 
                         <!-- Export data for this image set as a .csv file and preview in _Excel.. -->
                         <MenuItem Name="MenuItemExportAsCsvAndPreview" IsEnabled="false" 
-                                  Header="Export image/video data in the current selection to a .csv file and preview in _Excel..." 
+                                  Header="Export image/video data in the current selection to a .csv file and preview in _Excel&#x2026;" 
                                   Click="MenuItemExportCsv_Click" 
                                   ToolTip="Exports data for the selected files in the image set into a .csv (comma separated value) file and previews it in Excel">
                             <MenuItem.Icon>
@@ -119,7 +130,7 @@
 
                         <!-- Import data from a .csv file...-->
                         <MenuItem Name="MenuItemImportFromCsv" IsEnabled="false" 
-                                  Header="I_mport image/video data from a .csv file ..." 
+                                  Header="I_mport image/video data from a .csv file &#x2026;" 
                                   Click="MenuItemImportFromCsv_Click" 
                                   ToolTip="Import data in this image set from a CSV (comma separated value) file">
                             <MenuItem.Icon>
@@ -131,7 +142,7 @@
 
                         <!-- Export folder data to a .csv file...-->
                         <MenuItem Name="MenuItemExportAllDataAsCSV" IsEnabled="false" 
-                                  Header="Export all data (folder data, image/video data) to .csv files ..." 
+                                  Header="Export all data (folder data, image/video data) to .csv files &#x2026;" 
                                   Click="MenuItem_ExportAllDataToCSV_Click" 
                                   ToolTip="Exports all data in this image set to CSV (comma separated value) files as:
                                   &#10; image/video data in a file you can name,
@@ -141,15 +152,20 @@
                             </MenuItem.Icon>
                         </MenuItem>
 
+
                     </MenuItem>
 
-                    <Separator />
+                    <MenuItem Name="MenuItemExportDataIntoImageFile" 
+                              Header="Export (embed) data into files as file metadata" 
+                              Visibility="Visible" 
+                              Click="MenuItemExportDataIntoImageFile_Click" 
+                              ToolTip="Export Timelapse data by embedding it into each of your currently selected image or video files as file metadata." />
 
                     <MenuItem Name="MenuItemCopyFiles" IsEnabled="false"
-                              Header="Copy image/video file(s) to another folder...">
+                              Header="Export (copy) image/video file(s) to another folder&#x2026;">
                         <!-- Export the current image or video file...-->
                         <MenuItem Name="MenuItemExportThisImage" IsEnabled="false" 
-                                  Header="Copy the current image or video _file to..." 
+                                  Header="Copy the current image or video _file to&#x2026;" 
                                   Click="MenuItemExportThisImage_Click" 
                                   ToolTip="Copy the displayed image or video file into a location of your choosing">
                             <MenuItem.Icon>
@@ -159,7 +175,7 @@
 
                         <!-- Export all images or videos files in the current selection...-->
                         <MenuItem Name="MenuItemExportSelectedImages" IsEnabled="false" 
-                                  Header="Copy all images and video files in the current selection to..." 
+                                  Header="Copy all images and video files in the current selection to&#x2026;" 
                                   Click="MenuItemExportAllSelectedImages_Click" 
                                   ToolTip="Copy all images and video files in the current selection into a folder of your choosing">
                             <MenuItem.Icon>
@@ -169,32 +185,11 @@
                     </MenuItem>
                     <Separator />
 
-                    <!-- Merge -->
-                    <MenuItem Name="MenuItemMerging" Header="_Merging Databases..." 
-                              ToolTip="Merge a sub-folder's databases in /out of a master database">
-
-                        <MenuItem Name="MenuItemCreateEmptyDatabase" 
-                                  Header="Create and load an empty master database (for merging databases in sub-folders)..." 
-                                  Click="MenuItemCreateEmptyDatabaseForMerging_Click" 
-                                  ToolTip="Asks for the template location, and then creates an empty image set database.
-                              &#10;Usually used as a master database, where we can check in / out sub-folder specific databases that only contains that sub-folder's data."/>
-
-                        <MenuItem Name="MenuItemCheckOutDatabase" IsEnabled="false" 
-                                  Header="Check out (copy) a sub-folder database from the master database..." 
-                                  Click="MenuItemCheckOutDatabase_Click" 
-                                  ToolTip="Creates a database in a subfolder that contains only the entries for that subfolder"/>
-
-                        <MenuItem Name="MenuItemCheckInDatabases" IsEnabled="false" 
-                                  Header="Check in (merge) a sub-folder's database into the master database..." 
-                                  Click="MenuItemCheckInDatabases_Click" 
-                                  ToolTip="Merge one or more databases into an existing master database"/>
-                    </MenuItem>
-
-                    <Separator />
+ 
 
                     <!-- Rename the _data file...-->
                     <MenuItem Name="MenuItemRenameFileDatabaseFile" IsEnabled="false" 
-                              Header="Rename the _data (.ddb) file for this image set..." 
+                              Header="Rename the _data (.ddb) file for this image set&#x2026;" 
                               Click="MenuItemRenameFileDatabaseFile_Click" 
                               ToolTip="Renames the database (.ddb) file  for this image set to a name of your choosing"/>
                     <Separator />
@@ -245,7 +240,7 @@
 
                     <!-- QuickPaste Window-->
                     <MenuItem Name="MenuItemShowQuickPasteWindow" IsEnabled="True" Header="Show QuickPaste Window" Click="MenuItemQuickPasteWindowShow_Click" InputGestureText="Q" ToolTip="Display the Quickpaste window, which lets you create, selected, edit and delete QuickPaste items"/>
-                    <MenuItem Name="MenuItemImportQuickPasteFromDB" IsEnabled="True" Header="Import QuickPaste Items from .ddb file..." Click="MenuItemQuickPasteImportFromDB_Click" ToolTip="Import Quickpaste items that were created in another timelapse database (.ddb) file"/>
+                    <MenuItem Name="MenuItemImportQuickPasteFromDB" IsEnabled="True" Header="Import QuickPaste Items from .ddb file&#x2026;" Click="MenuItemQuickPasteImportFromDB_Click" ToolTip="Import Quickpaste items that were created in another timelapse database (.ddb) file"/>
                     <Separator />
 
                     <!-- Copy previous values / Restore Defaults-->
@@ -261,11 +256,11 @@
                     <Separator Name="MenuS2"/>
 
                     <!-- Populate fields ... -->
-                    <MenuItem Name="MenuItemPopulateFieldFromMetadata" Header="Populate one or more fields with any metadata..." ToolTip="Match text-based data fields with the desired metadata. Then populate those fields across all selected files with the corresponding metadata values." Click="MenuItemPopulateFieldFromMetadata_Click"/>
-                    <MenuItem Name="MenuItemPopulateDateTimeFieldFromMetadata" Header="Populate one or more Date/Time fields with Date/Time metadata..." Click="MenuItemPopulateDateTimesfromMetadata_Click" ToolTip="Match Date/Time data fields with the desired Date/Time metadata. Then populate those fields across all selected files with the corresponding Date/Time metadata values" />
-                    <MenuItem Name="MenuItemPopulateEpisodeField" Header="Populate a field with episode data..." Click="MenuItemEditPopulateFieldWithEpisodeData_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
-                    <MenuItem Name="MenuItemPopulateFieldWithGUID" Header="Populate a field with globally unique identifiers..." Click="MenuItemEditPopulateFieldWithGUID_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
-                    <MenuItem Name="MenuItemPopulateWithDarkImages" Header="Populate a field with Dark classifications..." IsEnabled="True" Click="MenuItemEditClassifyDarkImages_Click" ToolTip="Populate a flag field with classification data that determines (for each selected image) whether it is a dark (usualy night-time ) shot."  />
+                    <MenuItem Name="MenuItemPopulateFieldFromMetadata" Header="Populate one or more fields with any metadata&#x2026;" ToolTip="Match text-based data fields with the desired metadata. Then populate those fields across all selected files with the corresponding metadata values." Click="MenuItemPopulateFieldFromMetadata_Click"/>
+                    <MenuItem Name="MenuItemPopulateDateTimeFieldFromMetadata" Header="Populate one or more Date/Time fields with Date/Time metadata&#x2026;" Click="MenuItemPopulateDateTimesfromMetadata_Click" ToolTip="Match Date/Time data fields with the desired Date/Time metadata. Then populate those fields across all selected files with the corresponding Date/Time metadata values" />
+                    <MenuItem Name="MenuItemPopulateEpisodeField" Header="Populate a field with episode data&#x2026;" Click="MenuItemEditPopulateFieldWithEpisodeData_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
+                    <MenuItem Name="MenuItemPopulateFieldWithGUID" Header="Populate a field with globally unique identifiers&#x2026;" Click="MenuItemEditPopulateFieldWithGUID_Click" IsEnabled="False" ToolTip="Populate a field for the currently selected files with Episode Information"/>
+                    <MenuItem Name="MenuItemPopulateWithDarkImages" Header="Populate a field with Dark classifications&#x2026;" IsEnabled="True" Click="MenuItemEditClassifyDarkImages_Click" ToolTip="Populate a flag field with classification data that determines (for each selected image) whether it is a dark (usualy night-time ) shot."  />
 
 
                     <Separator Name="MenuS3" />
@@ -276,40 +271,40 @@
 
                     <!-- Delete submenu-->
                     <MenuItem Name="MenuItemDelete" Header="D_elete"  SubmenuOpened="MenuItemDelete_SubmenuOpening"  >
-                        <MenuItem Name="MenuItemDeleteCurrentFile" Header="The current image or video _file..." Click="MenuItemDeleteFiles_Click"  ToolTip="Deletes the current image or video file, but leaves entered data intact"/>
-                        <MenuItem Name="MenuItemDeleteCurrentFileAndData" Header="The current image or video file and its _data..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the current image or video file, as well as the data entered for that file"/>
-                        <MenuItem Name="MenuItemDeleteCurrentData" Header="Only the data associated with the current file..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the data  entered for the current image or video file, but leaves the file in place"/>
+                        <MenuItem Name="MenuItemDeleteCurrentFile" Header="The current image or video _file&#x2026;" Click="MenuItemDeleteFiles_Click"  ToolTip="Deletes the current image or video file, but leaves entered data intact"/>
+                        <MenuItem Name="MenuItemDeleteCurrentFileAndData" Header="The current image or video file and its _data&#x2026;" Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the current image or video file, as well as the data entered for that file"/>
+                        <MenuItem Name="MenuItemDeleteCurrentData" Header="Only the data associated with the current file&#x2026;" Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the data  entered for the current image or video file, but leaves the file in place"/>
                         <Separator/>
-                        <MenuItem Name="MenuItemDeleteFiles" Header="_All selected image or video files marked for deletion ..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes  images and videos in the current selection that are marked for deletion, but leaves entered data intact"/>
-                        <MenuItem Name="MenuItemDeleteFilesAndData" Header="All selected image or video files marked for deletion and their data..." Click="MenuItemDeleteFiles_Click"  ToolTip="Deletes images and videos in the current selection that are marked for deletion, as well as the data entered for those files"/>
-                        <MenuItem Name="MenuItemDeleteFilesData" Header="Only the data associated with all selected image or video files marked for deletion..." Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the data  associated with images and videos in the current selection, but leaves the image and video files in place"/>
+                        <MenuItem Name="MenuItemDeleteFiles" Header="_All selected image or video files marked for deletion&#x2026;" Click="MenuItemDeleteFiles_Click" ToolTip="Deletes  images and videos in the current selection that are marked for deletion, but leaves entered data intact"/>
+                        <MenuItem Name="MenuItemDeleteFilesAndData" Header="All selected image or video files marked for deletion and their data&#x2026;" Click="MenuItemDeleteFiles_Click"  ToolTip="Deletes images and videos in the current selection that are marked for deletion, as well as the data entered for those files"/>
+                        <MenuItem Name="MenuItemDeleteFilesData" Header="Only the data associated with all selected image or video files marked for deletion&#x2026;" Click="MenuItemDeleteFiles_Click" ToolTip="Deletes the data  associated with images and videos in the current selection, but leaves the image and video files in place"/>
                     </MenuItem>
 
                     <!-- Date correction submenu-->
                     <MenuItem Name="MenuItemDateCorrection" Header="_Date correction" SubmenuOpened="MenuItemDateCorrection_SubmenuOpened" >
-                        <MenuItem Name="MenuItemRereadDatesfromImages" Header="_Re-read dates and times from files..." Click="MenuItemRereadDateTimesfromFiles_Click"  ToolTip="Re-read the dates and times from files" IsEnabled="True" />
-                        <MenuItem Name="MenuItemDaylightSavingsTimeCorrection" Header="Correct for standard and _daylight savings time changes..." Click="MenuItemDaylightSavingsTimeCorrection_Click"  ToolTip="Correct daylight saving time issues" IsEnabled="True" />
-                        <MenuItem Name="MenuItemDateTimeFixedCorrection" Header="Correct for cameras not set to the right date and time..." Click="MenuItemDateTimeFixedCorrection_Click"  ToolTip="Correct for cameras  not initially set to the right date and/or time." IsEnabled="True" />
-                        <MenuItem Name="MenuItemDateTimeLinearCorrection" Header="Correct for cameras whose cloc_k runs fast or slow..." Click="MenuItemDateTimeLinearCorrection_Click"  ToolTip="Correct for a camera's clock running fast or slow" IsEnabled="True" />
-                        <MenuItem Name="MenuItemModifyAmbiguousDates" Header="Check and correct _ambiguous dates..." Click="MenuItemCorrectAmbiguousDates_Click"  ToolTip="Check and optionally correct ambiguous dates, where day-month could have been read as month-day" IsEnabled="True" />
-                        <MenuItem Name="MenuItemDateTimeRereadDatesFromSelectedMetadata" Header="Populate one or more Date/Time fields with metadata..." Click="MenuItemPopulateDateTimesfromMetadata_Click" ToolTip="Read and update the dates and times from a metadata field of your choosing" IsEnabled="True" />
+                        <MenuItem Name="MenuItemRereadDatesfromImages" Header="_Re-read dates and times from files&#x2026;" Click="MenuItemRereadDateTimesfromFiles_Click"  ToolTip="Re-read the dates and times from files" IsEnabled="True" />
+                        <MenuItem Name="MenuItemDaylightSavingsTimeCorrection" Header="Correct for standard and _daylight savings time changes&#x2026;" Click="MenuItemDaylightSavingsTimeCorrection_Click"  ToolTip="Correct daylight saving time issues" IsEnabled="True" />
+                        <MenuItem Name="MenuItemDateTimeFixedCorrection" Header="Correct for cameras not set to the right date and time&#x2026;" Click="MenuItemDateTimeFixedCorrection_Click"  ToolTip="Correct for cameras  not initially set to the right date and/or time." IsEnabled="True" />
+                        <MenuItem Name="MenuItemDateTimeLinearCorrection" Header="Correct for cameras whose cloc_k runs fast or slow&#x2026;" Click="MenuItemDateTimeLinearCorrection_Click"  ToolTip="Correct for a camera's clock running fast or slow" IsEnabled="True" />
+                        <MenuItem Name="MenuItemModifyAmbiguousDates" Header="Check and correct _ambiguous dates&#x2026;" Click="MenuItemCorrectAmbiguousDates_Click"  ToolTip="Check and optionally correct ambiguous dates, where day-month could have been read as month-day" IsEnabled="True" />
+                        <MenuItem Name="MenuItemDateTimeRereadDatesFromSelectedMetadata" Header="Populate one or more Date/Time fields with metadata&#x2026;" Click="MenuItemPopulateDateTimesfromMetadata_Click" ToolTip="Read and update the dates and times from a metadata field of your choosing" IsEnabled="True" />
                     </MenuItem>
 
                     <Separator Name="MenuS5"/>
                     <!-- Folder editor, missing folders, missingfiles -->
                     <!-- Test some code here - should only be enabled when developing code -->
-                    <MenuItem Name="MenuItemFolderEditor" Header="_Folder editor (move, rename etc)..." IsEnabled="True" Click="MenuItemFolderEditor_Click" ToolTip="Used internally to test some could. Should not be visible." />
+                    <MenuItem Name="MenuItemFolderEditor" Header="_Folder editor (move, rename etc)&#x2026;" IsEnabled="True" Click="MenuItemFolderEditor_Click" ToolTip="Used internally to test some could. Should not be visible." />
                     <!-- Test some code here - should only be enabled when developing code -->
                     <MenuItem Name="MenuItemAnalyzeFolderStructure" Header="Analyze folder structure" Visibility="Visible" Click="MenuItemAnalyzeFolderStructure_Click" 
                               ToolTip="Analyze and compare your image set folder structure to the expected folder structure as defined in your template" />
                     <Separator Name="MenuS6"/>
 
-                    <MenuItem Name="MenuItemFindMissingImage" Header="Try to find this (and other) missing files ..." IsEnabled="True" Click="MenuItemEditFindMissingImage_Click" ToolTip="Try to find the currently displayed missing file, as well as other missing images in the same folder as this one "  />
-                    <MenuItem Name="MenuItemFindMissingFolder" Header="Try to find any missing folders ..." IsEnabled="True" Click="MenuItemEditFindMissingFolder_Click" ToolTip="Check to see if any folders are missing. If so, try to find them."  />
+                    <MenuItem Name="MenuItemFindMissingImage" Header="Try to find this (and other) missing files &#x2026;" IsEnabled="True" Click="MenuItemEditFindMissingImage_Click" ToolTip="Try to find the currently displayed missing file, as well as other missing images in the same folder as this one "  />
+                    <MenuItem Name="MenuItemFindMissingFolder" Header="Try to find any missing folders &#x2026;" IsEnabled="True" Click="MenuItemEditFindMissingFolder_Click" ToolTip="Check to see if any folders are missing. If so, try to find them."  />
                     <Separator Name="MenuS7"/>
 
                     <!-- Edit notes for this image set... -->
-                    <MenuItem Name="MenuItemLog" Header="Edit _notes for this image set..." Click="MenuItemLog_Click"  ToolTip="View and edit any notes (e.g., a log of activites or to-do items) particular to this Image Set" IsEnabled="True" />
+                    <MenuItem Name="MenuItemLog" Header="Edit _notes for this image set&#x2026;" Click="MenuItemLog_Click"  ToolTip="View and edit any notes (e.g., a log of activites or to-do items) particular to this Image Set" IsEnabled="True" />
                 </MenuItem>
 
                 <!-- Options Menu -->
@@ -323,21 +318,21 @@
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemImageAdjuster" Header="_Adjust image appearance..." Click="MenuItemImageAdjuster_Click" IsEnabled="False" ToolTip="Temporarily adjust the brightness, contrast, gamma, sharpness or edging of the displayed image"/>
-                    <MenuItem Name="MenuItemFilePlayerOptions" Header="_Adjust FilePlayer playback speeds..." Click="MenuItemFilePlayerOptions_Click" IsEnabled="True" ToolTip="File Player options to adjust the image display speed"/>
+                    <MenuItem Name="MenuItemImageAdjuster" Header="_Adjust image appearance&#x2026;" Click="MenuItemImageAdjuster_Click" IsEnabled="False" ToolTip="Temporarily adjust the brightness, contrast, gamma, sharpness or edging of the displayed image"/>
+                    <MenuItem Name="MenuItemFilePlayerOptions" Header="_Adjust FilePlayer playback speeds&#x2026;" Click="MenuItemFilePlayerOptions_Click" IsEnabled="True" ToolTip="File Player options to adjust the image display speed"/>
                     <MenuItem Name="MenuItemEpisodeOptions" 
-                              Header="_Adjust episode time threshold..." 
+                              Header="_Adjust episode time threshold&#x2026;" 
                               Click="MenuItemEpisodeOptions_Click" 
                               IsEnabled="False" 
                               ToolTip="Adjust the time threshold for determining how files are grouped into episodes"/>
- 
+
                     <Separator/>
 
                     <MenuItem Name="MenuItemDialogsOnOrOff" Header="_Show or hide various informational dialogs" IsEnabled="True" Click="MenuItemDialogsOnOrOff_Click"/>
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemPreferences" Header="Preferences..." Click="MenuItemPreferences_Click" IsEnabled="True" ToolTip="Other Timelapse configuration options you can set"/>
+                    <MenuItem Name="MenuItemPreferences" Header="Preferences&#x2026;" Click="MenuItemPreferences_Click" IsEnabled="True" ToolTip="Other Timelapse configuration options you can set"/>
 
 
 
@@ -366,7 +361,7 @@
                               InputGestureText="E" 
                               Click="MenuItemEpisodeShowHide_Click" 
                               ToolTip="Show or hide information that groups files separated by brief time periods into episodes"/>
-                   
+
                     <MenuItem Name="MenuItemViewNextEpisode" Header="View _next episode" 
                               Click="MenuItemShowNextEpisode_Click" 
                               InputGestureText="&#60;Shift&#62;&#x2192;" 
@@ -380,33 +375,33 @@
 
                     <!--<MenuItem Name="MenuItemViewInOverview"
                               Header="Thumbnail overview navigation">-->
-                        <MenuItem Name="MenuItemViewNextRowInOverview" 
+                    <MenuItem Name="MenuItemViewNextRowInOverview" 
                               Header="View next thumbnail row" 
                               Click="MenuItemShowInOverview_Click" 
                               InputGestureText="&#x2193;" 
                               Tag="RowDown"
                               ToolTip="View next row of thumbnails seen in the overview"/>
-                        <MenuItem Name="MenuItemViewPreviousRowInOverview" 
+                    <MenuItem Name="MenuItemViewPreviousRowInOverview" 
                               Header="View previous thumbnail row" 
                               Tag="RowUp"
                               Click="MenuItemShowInOverview_Click" 
                               InputGestureText="&#x2191;" 
                               ToolTip="View previous row of thumbnails seen in the overview" />
 
-                        <MenuItem Name="MenuItemViewNextPageInOverview" 
+                    <MenuItem Name="MenuItemViewNextPageInOverview" 
                               Header="View next thumbnail page" 
                               Tag="PageDown"
                               Click="MenuItemShowInOverview_Click" 
                               InputGestureText="&#60;Shift&#62;&#x2193;" 
                               ToolTip="View next page of thumbnails seen in the overview"/>
 
-                        <MenuItem Name="MenuItemViewPreviousPageInOverview" 
+                    <MenuItem Name="MenuItemViewPreviousPageInOverview" 
                               Header="View previous thumbnail page" 
                               Tag="PageUp"
                               Click="MenuItemShowInOverview_Click" 
                               InputGestureText="&#60;Shift&#62;&#x2191;" 
                               ToolTip="View previous page of thumbnails seen in the overview" />
-                        
+
                     <!--</MenuItem>-->
 
                     <Separator/>
@@ -451,20 +446,29 @@
                               InputGestureText="k" 
                               Click="MenuItem_DogearSwitch" 
                               ToolTip="Navigate to the dogeared image, or back to the last seen image" />
+
                     <Separator/>
- 
+
+                 
                     <MenuItem Name="MenuItemViewDifferencesCycleThrough" 
                               Header="Cycle through image differences" 
                               Click="MenuItemViewDifferencesCycleThrough_Click" 
                               InputGestureText="&#x2191;" 
                               ToolTip="View an enhancement that cycles through the differences between the current and the next file, and then the previous file"/>
-       
+
                     <MenuItem Name="MenuItemViewDifferencesCombined" 
                               Header="View combined image differences" 
                               Click="MenuItemViewDifferencesCombined_Click" 
                               InputGestureText="&#x2193;" 
                               ToolTip="View an enhancement that simultaneously shows the differences between the current image vs. the next and previous files."/>
                     <Separator/>
+
+                    <MenuItem Name="MenuItemViewMetadata" 
+                              Header="Inspect file metadata&#x2026;" 
+                              Click="MenuItemViewMetadata_Click" 
+                              ToolTip="Inspect the metadata embedded within the current image or video file"/>
+                    <Separator/>
+
                     <MenuItem Name="MenuItemShowInExplorer" 
                               Header="Show in Explorer" 
                               Click="MenuItemShowInExplorer_Click" 
@@ -480,7 +484,7 @@
                               Click="MenuItemSelectFiles_Click" 
                               ToolTip="Shows all files in the root folder and its subfolders"/>
                     <MenuItem Name="MenuItemSelectByRelativePath" IsEnabled="True"
-                              Header="All files in a folder and its subfolders..." 
+                              Header="All files in a folder and its subfolders&#x2026;" 
                               SubmenuOpened="MenuItemSelectByFolder_SubmenuOpening">
                         <controls:TreeViewWithRelativePaths  
                             x:Name="tv"
@@ -525,7 +529,7 @@
                               ToolTip="Shows all files marked for deletion"/>
                     <Separator/>
                     <MenuItem Name="MenuItemSelectCustomSelection" IsCheckable="True" IsChecked="False" 
-                              Header="_Custom selection..."  
+                              Header="_Custom selection&#x2026;"  
                               ToolTip="Create a custom selection using filters to display a subset of files.&#10;Filters include your choice of data fields and values and/or particular recognitions.&#10;The custom selection only displays files that match those filters." 
                               Click="MenuItemSelectCustomSelection_Click"/>
                     <Separator/>
@@ -534,7 +538,7 @@
                               Click="MenuItemSelectFiles_Click" 
                               ToolTip="Show the subset of files in the current selection that are missing (likely because they were moved, renamed or deleted)"/>
                     <MenuItem Name="MenuItemSelectRandomSample" 
-                              Header="Create a random sample from the current selection..." 
+                              Header="Create a random sample from the current selection&#x2026;" 
                               Click="MenuItemSelectRandomSample_Click" 
                               ToolTip="Randomly sample and select a subset of files from the current selection"/>
                     <MenuItem Name="MenuItemSelectReselect" 
@@ -557,7 +561,7 @@
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemSortCustom" IsCheckable="True" IsChecked="False" Header="_Custom sort..." Click="MenuItemSortCustom_Click" ToolTip="Customize the sorting order by particular fields."/>
+                    <MenuItem Name="MenuItemSortCustom" IsCheckable="True" IsChecked="False" Header="_Custom sort&#x2026;" Click="MenuItemSortCustom_Click" ToolTip="Customize the sorting order by particular fields."/>
 
                     <Separator/>
 
@@ -567,19 +571,19 @@
                 <!-- Recognition Menu -->
                 <MenuItem Name="MenuItemRecognitions" Header="_Recognitions" IsEnabled="False" IsTabStop="false" SubmenuOpened="MenuItemRecognitions_SubmenuOpening">
 
-                    <MenuItem Name="MenuBoundingBoxSetOptions" Header="Set bounding box options..." Visibility="Visible"
+                    <MenuItem Name="MenuBoundingBoxSetOptions" Header="Set bounding box options&#x2026;" Visibility="Visible"
                               Click="MenuBoundingBoxSetOptions_Click" ToolTip="Set various options for displaying image recognition bounding boxes" />
 
-                    <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="Populate a data field with detection counts..." Visibility="Visible"
+                    <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="Populate a data field with detection counts&#x2026;" Visibility="Visible"
                               Click="MenuItemPopulateDataFieldWithDetectionCounts_Click" ToolTip="Populates a data field in your currently selected files with detection counts over a given confidence values" />
 
-                    <MenuItem Name="MenuItemPopulateWithRecognitinoData" Header="Populate a data field with recognition data..." Visibility="Visible"
+                    <MenuItem Name="MenuItemPopulateWithRecognitinoData" Header="Populate a data field with recognition data&#x2026;" Visibility="Visible"
                               Click="MenuItemPopulateDataFieldWithRecognitionData_Click" ToolTip="Populates a data field in your currently selected files with recognition data of your choice" />
 
                     <Separator />
 
                     <!-- Import Detections -->
-                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set..." IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
+                    <MenuItem Name="MenuItemImportDetectionData" Header="Import image recognition data for this image set&#x2026;" IsEnabled="False" Click="MenuItemImportRecognitionData_Click" ToolTip="Import image recognition data for the image set from a Microsoft-supplied .json file">
                         <MenuItem.Icon>
                             <Image Source="Icons/JSONImport_32x.png" />
                         </MenuItem.Icon>
@@ -587,12 +591,12 @@
 
                     <Separator />
                     <!-- EcoAsssist -->
-                    <MenuItem Header="AddaxAI Image Recognizer..." SubmenuOpened="MenuItem_OnAddaxAISubmenuOpened" >
+                    <MenuItem Header="AddaxAI Image Recognizer&#x2026;" SubmenuOpened="MenuItem_OnAddaxAISubmenuOpened" >
                         <MenuItem.Icon>
                             <Image Source="Icons/AddaxAI.png" />
                         </MenuItem.Icon>
 
-                        <MenuItem Name="MenuItemAddaxAIRun" Header="Run AddaxAI recognizer on a folder..." IsEnabled="True" Click="MenuItemAddaxAIRun_Click" ToolTip="Run the AddaxAI recognizer on a folder that you select">
+                        <MenuItem Name="MenuItemAddaxAIRun" Header="Run AddaxAI recognizer on a folder&#x2026;" IsEnabled="True" Click="MenuItemAddaxAIRun_Click" ToolTip="Run the AddaxAI recognizer on a folder that you select">
                             <MenuItem.Icon>
                                 <Image Source="Icons/AddaxAI.png" />
                             </MenuItem.Icon>
@@ -600,13 +604,13 @@
 
                         <Separator />
 
-                        <MenuItem Name="MenuItemAddaxAIDownload" Header="Install AddaxAI image recognizer (via browser)..." IsEnabled="True" Click="MenuItemAddaxAIDownload_Click" ToolTip="Go to the AddaxAI web page for installing the Timelapse-friendly version of the AddaxAI image recognizer">
+                        <MenuItem Name="MenuItemAddaxAIDownload" Header="Install AddaxAI image recognizer (via browser)&#x2026;" IsEnabled="True" Click="MenuItemAddaxAIDownload_Click" ToolTip="Go to the AddaxAI web page for installing the Timelapse-friendly version of the AddaxAI image recognizer">
                             <MenuItem.Icon>
                                 <Image Source="Icons/AddaxAIUpload.png" />
                             </MenuItem.Icon>
                         </MenuItem>
 
-                        <MenuItem Name="MenuItemAddaxAICheckForUpdates" Header="Uninstall AddaxAI (via browser)..." IsEnabled="True" Click="MenuItemAddaxAIUninstall_Click" ToolTip="Go to the Uninstall AddaxAI web page to download the AddaxAI Unninstall utility">
+                        <MenuItem Name="MenuItemAddaxAICheckForUpdates" Header="Uninstall AddaxAI (via browser)&#x2026;" IsEnabled="True" Click="MenuItemAddaxAIUninstall_Click" ToolTip="Go to the Uninstall AddaxAI web page to download the AddaxAI Unninstall utility">
                             <MenuItem.Icon>
                                 <Image Source="Icons/AddaxAIUninstall.png" />
                             </MenuItem.Icon>
@@ -617,10 +621,10 @@
 
                 <!-- CamtrapDP Menu -->
                 <MenuItem Name="MenuItemCamtrapDP" Header="_CamtrapDP" IsEnabled="false" IsTabStop="false" SubmenuOpened="CamtrapDP_SubmenuOpening">
-                    <MenuItem Name="MenuItemCamtrapDPPopulateFields" Header="_Populate CamtrapDP fields..." Click="MenuItem_CamtrapDPPopulateFields_Click" ToolTip="Populate various CamtrapDP fields"/>
+                    <MenuItem Name="MenuItemCamtrapDPPopulateFields" Header="_Populate CamtrapDP fields&#x2026;" Click="MenuItem_CamtrapDPPopulateFields_Click" ToolTip="Populate various CamtrapDP fields"/>
                     <!-- Export CamtrapDP files...-->
 
-                    <MenuItem Name="MenuItem_ExportCamtrapDP" Header="Export all data as CamtrapDP files..." IsEnabled="true" Click="MenuItem_ExportCamtrapDP_Click" 
+                    <MenuItem Name="MenuItem_ExportCamtrapDP" Header="Export all data as CamtrapDP files&#x2026;" IsEnabled="true" Click="MenuItem_ExportCamtrapDP_Click" 
                               ToolTip="Exports all data in this image set as set of CamtrapDP files (for CamtrapDP-compatible templates only)">
                         <MenuItem.Icon>
                             <Image Source="Icons/CSVExport_32x.png" />
@@ -682,11 +686,11 @@
 
                 <!-- Help Menu -->
                 <MenuItem Name="MenuItemHelp" Header="_Help" IsEnabled="true" IsTabStop="false" SubmenuOpened="Help_SubmenuOpening" >
-                    <MenuItem Name="MenuKeyboardShortcuts" Header="_Keyboard shortcuts..." Click="MenuItem_KeyboardShortcuts_Click" ToolTip="A list of various keyboard shortcuts available within Timelapse" />
+                    <MenuItem Name="MenuKeyboardShortcuts" Header="_Keyboard shortcuts&#x2026;" Click="MenuItem_KeyboardShortcuts_Click" ToolTip="A list of various keyboard shortcuts available within Timelapse" />
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemTimelapseHomePage" Header="Timelapse web site (via your web browser)..." Click="MenuTimelapseWebPage_Click" ToolTip="Displays the Timelapse web site's home page in your browser">
+                    <MenuItem Name="MenuItemTimelapseHomePage" Header="Timelapse web site (via your web browser)&#x2026;" Click="MenuTimelapseWebPage_Click" ToolTip="Displays the Timelapse web site's home page in your browser">
                         <MenuItem.Icon>
                             <Image Source="Icons/Home_32x.png" />
                         </MenuItem.Icon>
@@ -777,7 +781,7 @@
 
 
                     <!-- Video Lessons -->
-                    <MenuItem Name="MenuItemVideoFeatures" Header="Timelapse instructional videos..." Click="MenuVideoPlay_Click" ToolTip="Video lessons on using Timelapse.">
+                    <MenuItem Name="MenuItemVideoFeatures" Header="Timelapse instructional videos&#x2026;" Click="MenuVideoPlay_Click" ToolTip="Video lessons on using Timelapse.">
                         <MenuItem.Icon>
                             <Image Source="Icons/MediaControl-PlayButton.png" />
                         </MenuItem.Icon>
@@ -916,7 +920,7 @@
 
                     </MenuItem>
 
-                    <MenuItem Name="MenuItemFAQ" Header="Timelapse FAQ (Frequently asked questions)..." Click="MenuItemFAQ_Click" ToolTip="Displays the Timelapse Frequently Asked Questions page in a web browser">
+                    <MenuItem Name="MenuItemFAQ" Header="Timelapse FAQ (Frequently asked questions)&#x2026;" Click="MenuItemFAQ_Click" ToolTip="Displays the Timelapse Frequently Asked Questions page in a web browser">
                         <MenuItem.Icon>
                             <Image Source="Icons/OpenFile_32x.png" />
                         </MenuItem.Icon>
@@ -924,12 +928,12 @@
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemJoinMailingList" Header="Timelapse mailing list - _Join it (via your web browser)..." Click="MenuJoinTimelapseMailingList_Click" ToolTip="Using your browser, go to the page that lets you join the timelapse mailing list. You will be informed about updates, and you can post requests to it.">
+                    <MenuItem Name="MenuItemJoinMailingList" Header="Timelapse mailing list - _Join it (via your web browser)&#x2026;" Click="MenuJoinTimelapseMailingList_Click" ToolTip="Using your browser, go to the page that lets you join the timelapse mailing list. You will be informed about updates, and you can post requests to it.">
                         <MenuItem.Icon>
                             <Image Source="Icons/JoinMailingList_32x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem Name="MenuItemMailToMailingList" Header="Timelapse mailing list - Send _email..." Click="MenuMailToTimelapseMailingList_Click" ToolTip="Post an email to the Timelapse mailing list. You should join the mailing list before doing this.">
+                    <MenuItem Name="MenuItemMailToMailingList" Header="Timelapse mailing list - Send _email&#x2026;" Click="MenuMailToTimelapseMailingList_Click" ToolTip="Post an email to the Timelapse mailing list. You should join the mailing list before doing this.">
                         <MenuItem.Icon>
                             <Image Source="Icons/EmailSend_32x.png" />
                         </MenuItem.Icon>
@@ -937,19 +941,34 @@
 
                     <Separator/>
 
-                    <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer..." Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
+                    <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer&#x2026;" Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
                         <MenuItem.Icon>
                             <Image Source="Icons/EmailSend_32x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator/>
 
-                    <MenuItem Name="MenuItemAbout" Header="_About..." Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
+                    <MenuItem Name="MenuItemAbout" Header="_About&#x2026;" Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
                         <MenuItem.Icon>
                             <Image Source="Icons/About_32x.png" />
                         </MenuItem.Icon>
                     </MenuItem>
+
+                    <Separator />
+                    <MenuItem Header="Utilities">
+                        <!-- Upgrade Timelapse Files -->
+                        <MenuItem Name="MenuItemUpgradeTimelapseFiles"  IsEnabled="true" 
+                              Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version&#x2026;" 
+                              Click="MenuItemUpgradeTimelapseFiles_Click"
+                              ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
+                            <MenuItem.Icon>
+                                <Image Source="Icons/ConvertFile_32x.png" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuItem>
+
                 </MenuItem>
+
             </Menu>
             <!-- #endregion -->
 
