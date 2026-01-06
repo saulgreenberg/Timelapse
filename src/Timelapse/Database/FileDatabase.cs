@@ -693,6 +693,9 @@ namespace Timelapse.Database
             //    }
             //}
 
+            // Drop all detection-related tables if they are empty
+            DropDetectionTablesIfEmpty();
+
             // Note that the templateDatabase are guaranteed to have the MetadataTables and their corresponding data structures included
             // as definded in the tdb, or as empty tables/datastructures if they are not present in the tdb file (e.g., an old format tdb)
             await UpgradeDatabasesForBackwardsCompatabilityAsync(templateDatabase).ConfigureAwait(true);
@@ -2925,7 +2928,7 @@ namespace Timelapse.Database
 
                         clearDBRecognitionData = false; // just to make it more readable
 
-                        progress.Report(new(0, "Retrieving recognitions from the database. Please wait...", true, true)); 
+                        progress.Report(new(0, "Retrieving recognitions from the database. Please wait...", true, true));
                         if (cancelTokenSource.Token.IsCancellationRequested)
                         {
                             return RecognizerImportResultEnum.Cancelled;
@@ -3346,6 +3349,20 @@ namespace Timelapse.Database
             {
                 return RecognizerValues.DefaultTypicalDetectionThresholdIfUnknown;
             }
+        }
+
+        // If we have a detection table but its emtpy, then delete all detection-related tables
+        public void DropDetectionTablesIfEmpty()
+        {
+            if (Database.TableExists(Constant.DBTables.Detections) && false == Database.TableHasContent(Constant.DBTables.Detections))
+            {
+                Database.DropTable(Constant.DBTables.DetectionCategories);
+                Database.DropTable(Constant.DBTables.Detections);
+                Database.DropTable(Constant.DBTables.DetectionsVideo);
+                Database.DropTable(Constant.DBTables.ClassificationCategories);
+                Database.DropTable(Constant.DBTables.Classifications);
+            }
+            detectionExists = false;
         }
 
         // Unused but keep for now in case it becomes useful at some point
@@ -3853,7 +3870,7 @@ namespace Timelapse.Database
 
                 //bool parseResultClassificationCategory = null != customSelectionFromJson.RecognitionSelections?.ClassificationCategoryNumber && Int32.TryParse(customSelectionFromJson.RecognitionSelections.ClassificationCategoryNumber, out classificationCategoryAsInt);
                 if (null == customSelectionFromJson.RecognitionSelections?.UseRecognition ||
-                      (customSelectionFromJson.RecognitionSelections.UseRecognition  &&
+                      (customSelectionFromJson.RecognitionSelections.UseRecognition &&
                        false == DetectionsExists()) ||
                         parseResultDetectionCategory == false ||
                         detectionCategoryAsInt >= detectionCategoriesDictionary?.Count

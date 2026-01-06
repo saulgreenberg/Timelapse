@@ -14,6 +14,7 @@
     <!-- Platform target for all builds -->
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RollForward>LatestPatch</RollForward>
 
     <!-- Assembly version - increment for each release -->
     <AssemblyVersion>2.5.0.0</AssemblyVersion>
@@ -108,11 +109,11 @@
     <MakeDir Directories="$(ProjectDir)bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
 
     <!-- Build TimelapseTemplateEditor wrapper -->
-    <Exec Command="$(ProjectDir)..\TimelapseTemplateEditor\Build.bat $(Configuration)"
+    <Exec Command="&quot;$(ProjectDir)..\TimelapseTemplateEditor\Build.bat&quot; $(Configuration)"
           WorkingDirectory="$(ProjectDir)..\TimelapseTemplateEditor" />
 
     <!-- Build Timelapse-ViewOnly wrapper -->
-    <Exec Command="$(ProjectDir)..\TimelapseViewOnly\Build.bat $(Configuration)"
+    <Exec Command="&quot;$(ProjectDir)..\TimelapseViewOnly\Build.bat&quot; $(Configuration)"
           WorkingDirectory="$(ProjectDir)..\TimelapseViewOnly" />
 
     <Message Text="C++ wrapper executables built successfully for $(Configuration)" Importance="high" />

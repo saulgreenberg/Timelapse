@@ -208,6 +208,7 @@ namespace Timelapse.Dialog
                             "Doing database maintenance...",
                             false, true));
                         FileDatabase sourceFileDatabase = new(sourceFileInfo.FullPath, false);
+                        sourceFileDatabase.DropDetectionTablesIfEmpty();
                         sourceFileDatabase.ResetIDsAndVacuum();
                         progress.Report(new((int)(i++ / (double)sourceDdbCount * 100.0),
                             $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
