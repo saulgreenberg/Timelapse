@@ -103,9 +103,15 @@ namespace Timelapse.Util
                 Background = GetBackgroundColor(type),
                 BorderBrush = GetBorderColor(type),
                 BorderThickness = new(1),
-                CornerRadius = new(8),
-                Margin = new(20),
-                Padding = new(16, 12, 16, 12),
+                CornerRadius = options.Compact
+                ? new CornerRadius(3)
+                : new CornerRadius(8),
+                Margin = options.Compact
+                    ? new Thickness(2)
+                    : new Thickness(20),
+                Padding = options.Compact 
+                    ? new Thickness(2)
+                    : new Thickness(16, 12, 16, 12),
                 //Padding = new Thickness(20),
                 //MaxWidth = 400,
                 Effect = new System.Windows.Media.Effects.DropShadowEffect
@@ -125,17 +131,21 @@ namespace Timelapse.Util
                 Text = message,
                 Foreground = GetForegroundColor(type),
                 FontFamily = new("Segoe UI"),
-                FontSize = 14,
+                FontSize = options.Compact ? 10 : 14,
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center
             };
             var closeButton = new Button
             {
-                Content = "×",
-                Margin= new(10, 0, 0, 0),
+                Content = "X",
+                VerticalContentAlignment = VerticalAlignment.Center,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                Margin =   options.Compact              
+                    ? new(4, 0, 0, 0)
+                    : new(10, 0, 0, 0),
                 FontSize = 16,
-                Width = 32,
-                Height = 32,
+                Width = options.Compact  ? 24 : 32,
+                Height = options.Compact ? 24 : 32,
                 Background = Brushes.Transparent,
                 BorderBrush = Brushes.Transparent,
                 Foreground = GetForegroundColor(type),
@@ -152,14 +162,18 @@ namespace Timelapse.Util
             border.Child = stackPanel;
             popup.Child = border;
 
-            // Position in top-right corner of the owner window
-            //popup.HorizontalOffset = _owner.ActualWidth - 440;
-            //popup.VerticalOffset = 40;
-
-            // Position notification in center of the owner window
+            // Position notification in center of the owner window unless explicitely asked to put it on the top left
             // The centering math here is a hack as  we don't know the size of the popup, but it works well enough for now
-            popup.HorizontalOffset = owner.ActualWidth / 2.0 - 220;
-            popup.VerticalOffset = owner.ActualHeight / 2.0 - 80;
+            if (options.TopLeft)
+            {
+                popup.HorizontalOffset = 0;
+                popup.VerticalOffset = 0;
+            }
+            else
+            {
+                popup.HorizontalOffset = owner.ActualWidth / 2.0 - 220;
+                popup.VerticalOffset = owner.ActualHeight / 2.0 - 80;
+            }
 
             popup.IsOpen = true;
 
@@ -246,5 +260,7 @@ namespace Timelapse.Util
         public int CloseAfter { get; set; } = 8000; // Default 8 seconds
         public bool ShowCloseButton { get; set; } = true;
         public string Tag { get; set; } = "";
+        public bool TopLeft { get; set; } = false;
+        public bool Compact { get; set; } = false;
     }
 }

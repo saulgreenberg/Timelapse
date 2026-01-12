@@ -196,7 +196,12 @@ namespace Timelapse.ControlsDataEntry
             {
                 return;
             }
+            Do_PreviewKeyDown(sender, keyEvent);
+            
+        }
 
+        protected void Do_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
+        {
             // Possible shortcut keys (delegated to main window):
             // - any Control key press could indicate a Shortcut key, and
             // - a few very specific keys that don't require a Control key press

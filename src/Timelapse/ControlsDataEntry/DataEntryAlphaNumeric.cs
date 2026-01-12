@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.ControlsCore;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.Enums;
 using Timelapse.Util;
 
 namespace Timelapse.ControlsDataEntry
@@ -31,14 +34,49 @@ namespace Timelapse.ControlsDataEntry
 
         #region Event handlers 
         // These handlers limit text entry (including pasting) to alphanumeric text
-        
-        // Limit how spaces are used. (PreviewTextInput allows spaces to go through so we have to do it here) 
+
+        // 1. Handle Ctl-C, Ctl-V, Ctl-A keystrokes here so the do the correct thing
+        // 2. Limit how spaces are used. (PreviewTextInput allows spaces to go through so we have to do it here) 
         private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
-            if (processEvents)
+            if (processEvents == false)
             {
-                ControlsDataHelpers.AlphaNumericHandleKeyDownForSpace(this, keyEvent);
+                return;
             }
+            // TODO: Handle Ctl-C, Ctl-V, Ctl-A keystrokes here so that they are not intercepted by the base class
+            //if (IsCondition.IsKeyControlDown())
+            //{
+            //    // Handle Ctl-A, Ctl-C
+            //    if (keyEvent.Key is Key.A or Key.C)
+            //    {
+            //        // Let windows handle select all and copy
+            //        return;
+            //    }
+            //    // Handle Ctl-V, ensuring that pasted text is alphanumeric. If not, just flash the control
+            //    if (false == Util.IsCondition.IsKeyShiftDown() && keyEvent.Key is Key.V && GlobalReferences.TimelapseState.IsViewOnly == false)
+            //    {
+            //        try
+            //        {
+            //            if (Util.IsCondition.IsAlphaNumeric(Clipboard.GetText()))
+            //            {
+            //                // Pasting works as its alphanumeric
+            //                return;
+            //            }
+            //            this.FlashContentControl(FlashEnum.UseErrorFlash);
+            //            keyEvent.Handled = true;
+            //            return;
+            //        }
+            //        catch
+            //        {
+            //            // Handle clipboard access errors gracefully, by just ignoring the paste operation.
+            //            this.FlashContentControl(FlashEnum.UseErrorFlash);
+            //            keyEvent.Handled = true;
+            //            return;
+            //        }
+            //    }
+            //}
+            // Limit how spaces are used
+            ControlsDataHelpers.AlphaNumericHandleKeyDownForSpace(this, keyEvent);
         }
 
         // Allow only alphanumeric characters (although editing characters like backspace etc still go through)

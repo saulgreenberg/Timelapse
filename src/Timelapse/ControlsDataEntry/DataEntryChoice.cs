@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
 using Timelapse.DataStructures;
@@ -11,6 +14,8 @@ using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 using TimelapseWpf.Toolkit;
+using TimelapseWpf.Toolkit.Primitives;
+using static System.Net.Mime.MediaTypeNames;
 using Point = System.Windows.Point;
 
 namespace Timelapse.ControlsDataEntry
@@ -123,7 +128,7 @@ namespace Timelapse.ControlsDataEntry
                 GlobalReferences.MainWindow.TrySetKeyboardFocusToMarkableCanvas(false, keyEvent);
                 keyEvent.Handled = true;
             }
-           
+
 
             // Depending on the key event, this pass the key to the main window 
             base.Container_PreviewKeyDown(sender, keyEvent);
@@ -143,7 +148,51 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
             ContentControl.ForceWatermark = false;
-            ContentControl.Text = value;
+            //ContentControl.Text = value;
+
+            // Setting ComboBox.Text on a non-editable ComboBox doesn't properly select items by their content - it's unreliable,
+            // especially for empty strings. Finding the ComboBoxItem whose Content matches the value and then using
+            // SelectedItem will properly find and select the ComboBoxItem that has Content = string.Empty,
+            // instead of relying on the unreliable Text property for non-editable ComboBoxes
+            // Find the ComboBoxItem whose Content matches the value
+
+            // Find the matching item's index
+            int matchingIndex = -1;
+            for (int i = 0; i < ContentControl.Items.Count; i++)
+            {
+                if (ContentControl.Items[i] is ComboBoxItem cbi && (string)cbi.Content == value)
+                {
+                    matchingIndex = i;
+                    break;
+                }
+            }
+
+            if (matchingIndex >= 0)
+            {
+                // Found it - select by index
+                ContentControl.SelectedIndex = matchingIndex;
+            }
+            else
+            {
+                // Not found - add it as a temporary item, select it so the value changes, then delete it
+                ComboBoxItem tempItem = new ComboBoxItem { Content = value };
+                ContentControl.Items.Add(tempItem);
+                ContentControl.SelectedIndex = ContentControl.Items.Count - 1;
+                ContentControl.Items.Remove(tempItem);
+                this.FlashContentControl(FlashEnum.UseErrorFlash);
+                NotificationOptions toastOptions = new()
+                {
+                    ShowCloseButton = true,
+                    CloseAfter = 4000,
+                    TopLeft = true,
+                    Compact = true
+                    
+                     
+                };
+                string toastMessage = $"{this.Label} cannot display its value '{value}' as there is no matching menu item.";
+                GlobalReferences.MainWindow.ToastNotifier.ShowWarning(toastMessage, toastOptions);
+            }
+
             ContentControl.ForceWatermark = false;
             ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
         }
@@ -181,7 +230,6 @@ namespace Timelapse.ControlsDataEntry
                         : GetColorAnimationWarning());
             }
         }
-
 
         public override void ShowPreviewControlValue(string value)
         {

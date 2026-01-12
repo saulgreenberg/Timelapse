@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
+using Timelapse.Util;
 using TimelapseWpf.Toolkit;
 
 namespace Timelapse.ControlsDataEntry
@@ -51,10 +54,27 @@ namespace Timelapse.ControlsDataEntry
             ContentControl.AutocompletionsAsPopup = false;
             ContentControl.AutocompletePopupMaxSize = 10;
             ContentControl.Imprint = Unicode.Ellipsis;
-
-
+            //ContentControl.PreviewKeyDown += ContentControl_PreviewKeyDown;
         }
         #endregion
+
+        protected override bool HandleKeyboardNavigationInBase()
+        {
+            return false; // We handle our own keyboard navigation
+        }
+
+        // Handle Ctl-C, Ctl-V, Ctl-A keystrokes here so that they are not intercepted by the base class
+        //private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
+        //{
+        //    if (IsCondition.IsKeyControlDown() && (keyEvent.Key is Key.A or Key.V || (false == Util.IsCondition.IsKeyShiftDown() && keyEvent.Key is Key.C)))
+        //    {
+        //        // Let windows do its thing
+        //        return;
+        //    }
+
+        //    // The base can handle the other shortcuts
+        //    base.Do_PreviewKeyDown(sender, keyEvent);
+        //}
 
         #region Setting Content and Tooltip
         public override void SetContentAndTooltip(string value)
