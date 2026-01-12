@@ -89,7 +89,7 @@ namespace Timelapse.State
             using RegistryKey registryKey = OpenRegistryKey();
             BookmarkScale = new(registryKey.GetDouble(WindowRegistryKeys.BookmarkScaleX, 1.0), registryKey.GetDouble(WindowRegistryKeys.BookmarkScaleY, 1.0));
             BookmarkTranslation = new(registryKey.GetDouble(WindowRegistryKeys.BookmarkTranslationX, 1.0), registryKey.GetDouble(WindowRegistryKeys.BookmarkTranslationY, 1.0));
-            BoundingBoxAnnotate = registryKey.GetBoolean(WindowRegistryKeys.BoundingBoxAnnotate, false);
+            BoundingBoxAnnotate = registryKey.GetBoolean(WindowRegistryKeys.BoundingBoxAnnotate, true);
             BoundingBoxColorBlindFriendlyColors = registryKey.GetBoolean(WindowRegistryKeys.BoundingBoxColorBlindFriendlyColors, false);
             CSVDateTimeOptions = registryKey.GetEnum(WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptionsEnum.DateTimeWithoutTSeparatorColumn);
             if (CSVDateTimeOptions == CSVDateTimeOptionsEnum.DateTimeUTCWithOffset)
