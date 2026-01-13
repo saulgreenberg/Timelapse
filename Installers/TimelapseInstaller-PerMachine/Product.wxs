@@ -5,7 +5,7 @@
 
   <Package Name="Timelapse Image Analyzer"
            Manufacturer="Greenberg Consulting Inc. and University of Calgary"
-           Version="2.5.0.0"
+           Version="2.5.0.1"
            UpgradeCode="F8A1B2C3-D4E5-6F78-9ABC-DEF012345678"
            Compressed="yes"
            InstallerVersion="500"

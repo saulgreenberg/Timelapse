@@ -15,8 +15,8 @@
     <Authors>DotNetProjects</Authors>
     <PackageId>TimelapseWpf.Toolkit</PackageId>
     <Version>1.0.0</Version>
-    <AssemblyVersion>2.5.0.0</AssemblyVersion>
-    <FileVersion>2.5.0.0</FileVersion>
+    <AssemblyVersion>2.5.0.1</AssemblyVersion>
+    <FileVersion>2.5.0.1</FileVersion>
     <RootNamespace>TimelapseWpf.Toolkit</RootNamespace>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>

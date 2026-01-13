@@ -278,7 +278,7 @@ namespace Timelapse.Constant
         public const string VersionNumberMinimum = "2.3.0.0"; // Earlier versions than this requires a special software update to the database files as done via DialogUpgradeFils.dll
         public const string VersionNumberBackwardsCompatible = "2.3.3.0"; // The earliest version known to be backwards compatible with this database
         public const string VersionNumberBackwardsCompatibleForTemplates = "2.3.0.0"; // The earliest version known to be backwards compatible with this database
-        public const string VersionPatchNumber = "p2"; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #." 
+        public const string VersionPatchNumber = ""; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #." 
         public const string DefaultSortTerms = "[ { \"DataLabel\":\"RelativePath\", \"DisplayLabel\":\"RelativePath\", \"ControlType\":\"RelativePath\", \"IsAscending\":\"true\" }, { \"DataLabel\":\"DateTime\", \"DisplayLabel\":\"DateTime\", \"ControlType\":\"DateTime\", \"IsAscending\":\"true\" } ]";
         public const string DefaultSearchTerms = "{}";
         public const string DefaultQuickPasteJSON = "[]";
