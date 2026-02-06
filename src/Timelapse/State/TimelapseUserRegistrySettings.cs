@@ -15,6 +15,7 @@ namespace Timelapse.State
     public class TimelapseUserRegistrySettings : UserRegistrySettings
     {
         #region Public Properties - Settings that will be saved into the registry
+        public bool AutoUpdateRecognitionCounts { get; set; }
         public Point BookmarkScale { get; set; }
         public Point BookmarkTranslation { get; set; }
         public bool BoundingBoxAnnotate { get; set; }
@@ -137,6 +138,7 @@ namespace Timelapse.State
             Throttles.SetDesiredImageRendersPerSecond(registryKey.GetDouble(WindowRegistryKeys.DesiredImageRendersPerSecond, ThrottleValues.DesiredMaximumImageRendersPerSecondDefault));
             TimelapseWindowPosition = registryKey.GetRect(WindowRegistryKeys.TimelapseWindowPosition, new(0.0, 0.0, 1350.0, 900.0));
             TemplateEditorWindowSize = registryKey.GetSize(WindowRegistryKeys.TemplateEditorWindowSize, new(1350.0, 900.0));
+            AutoUpdateRecognitionCounts = registryKey.GetBoolean(WindowRegistryKeys.AutoUpdateRecognitionCounts, true);
             VideoAutoPlay = registryKey.GetBoolean(WindowRegistryKeys.VideoAutoPlay, false);
             VideoMute = registryKey.GetBoolean(WindowRegistryKeys.VideoMute, false);
             VideoRepeat = registryKey.GetBoolean(WindowRegistryKeys.VideoRepeat, false);
@@ -239,6 +241,7 @@ namespace Timelapse.State
             registryKey.Write(WindowRegistryKeys.TabOrderIncludeDeleteFlag, TabOrderIncludeDeleteFlag);
             registryKey.Write(WindowRegistryKeys.TimelapseWindowPosition, TimelapseWindowPosition);
             registryKey.Write(WindowRegistryKeys.TemplateEditorWindowSize, TemplateEditorWindowSize);
+            registryKey.Write(WindowRegistryKeys.AutoUpdateRecognitionCounts, AutoUpdateRecognitionCounts);
             registryKey.Write(WindowRegistryKeys.VideoAutoPlay, VideoAutoPlay);
             registryKey.Write(WindowRegistryKeys.VideoMute, VideoMute);
             registryKey.Write(WindowRegistryKeys.VideoRepeat, VideoRepeat);

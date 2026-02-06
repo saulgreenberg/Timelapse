@@ -1,14 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
-using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
-using Timelapse.Util;
 using TimelapseWpf.Toolkit;
 
 namespace Timelapse.ControlsDataEntry
@@ -58,10 +55,10 @@ namespace Timelapse.ControlsDataEntry
         }
         #endregion
 
-        protected override bool HandleKeyboardNavigationInBase()
-        {
-            return false; // We handle our own keyboard navigation
-        }
+        //protected override bool HandleKeyboardNavigationInBase()
+        //{
+        //    return false; // We handle our own keyboard navigation
+        //}
 
         // Handle Ctl-C, Ctl-V, Ctl-A keystrokes here so that they are not intercepted by the base class
         //private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)

@@ -73,7 +73,18 @@ namespace Timelapse.DebuggingSupport
         /// </summary>
         /// <param name="message"></param>
         [Conditional("TRACE")]
-        // Option to print various failure messagesfor debugging
+        // Option to print various informational messages for debugging
+        public static void PrintMessageOnly(string message)
+        {
+            Debug.Print("Status: " + message);
+        }
+
+        /// <summary>
+        /// Debug print a message
+        /// </summary>
+        /// <param name="message"></param>
+        [Conditional("TRACE")]
+        // Option to print various failure messages for debugging
         public static void PrintMessage(string message)
         {
             Debug.Print("Failure: " + message);

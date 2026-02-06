@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Timelapse.Constant;
 using Timelapse.Enums;
+using Timelapse.Util;
 using Control = Timelapse.Constant.Control;
 
 // ReSharper disable UnusedMember.Global
@@ -20,19 +21,17 @@ namespace Timelapse
         public const string AsReal = " AS REAL ";
         public const string Ascending = " ASC ";
         public const string AttachDatabase = " ATTACH DATABASE ";
-        public const string BooleanEquals = " == ";
-        public const string Commit = " COMMIT ";
-        public const string Concatenate = " || ";
-        public const string Descending = " DESC ";
-        public const string Dot = ".";
-        public const string DotStar = Dot + Star;
         public const string BeginTransaction = " BEGIN TRANSACTION ";
+        public const string BooleanEquals = " == ";
+
         public const string BeginTransactionSemiColon = BeginTransaction + Semicolon;
         public const string Between = " BETWEEN ";
         public const string Case = " CASE ";
         public const string CaseWhen = Case + " WHEN ";
         public const string Cast = " CAST ";
         public const string Coalesce = " COALESCE ";
+        public const string Commit = " COMMIT ";
+        public const string Concatenate = " || ";
         public const string Count = " Count ";
         public const string CountStar = Count + OpenParenthesis + Star + CloseParenthesis;
         public const string CreateIndex = " CREATE INDEX ";
@@ -49,6 +48,9 @@ namespace Timelapse
         public const string DateTimeFunction = " DateTime ";
         public const string Default = " DEFAULT ";
         public const string DeleteFrom = "DELETE FROM ";
+        public const string Descending = " DESC ";
+        public const string Dot = ".";
+        public const string DotStar = Dot + Star;
         public const string Do = " DO ";
         public const string DoUpdate = " Do UPDATE ";
         public const string DropIndex = " DROP INDEX ";
@@ -107,6 +109,7 @@ namespace Timelapse
         public const string Or = " OR ";
         public const string OrderBy = " ORDER BY ";
         public const string OrderByRandom = OrderBy + " RANDOM() ";
+        public const string PartitionBy = " PARTITION BY ";
         public const string Placeholder = " PLACEHOLDER ";
         public const string Plus = " + ";
         public const string Pragma = " PRAGMA ";
@@ -117,7 +120,7 @@ namespace Timelapse
         public const string PragmaForeignKeysOff = PragmaForeignKeysEquals + " OFF ";
         public const string PragmaForeignKeysOn = PragmaForeignKeysEquals + " ON ";
         public const string PragmaJournalModeWall = Pragma + " journal_mode = WAL";
-        public const string PragmaQuickCheck = Pragma + " QUICK_CHECK "; 
+        public const string PragmaQuickCheck = Pragma + " QUICK_CHECK ";
         public const string PragmaSynchronousNormal = Pragma + " synchronous = NORMAL";
         public const string PragmaTempStoreMemory = Pragma + " temp_store = MEMORY";
         public const string PrimaryKey = " PRIMARY KEY ";
@@ -152,7 +155,7 @@ namespace Timelapse
         public const string Strftime = " Strftime ";
         public const string StringType = " STRING ";
         public const string Substr = " SUBSTR ";
-
+        public const string Sum = " SUM ";
         public const string Real = " REAL ";
         public const string TBLINFO = " TBLINFO ";
         public const string Text = "TEXT";
@@ -259,7 +262,7 @@ namespace Timelapse
         //  "Select Max(columnName) from tableName
         public static string GetMaxColumnValue(string columnName, string tableName)
         {
-            return $"{Sql.Select} {Sql.Max} {Sql.OpenParenthesis} {columnName} {Sql.CloseParenthesis} {Sql.From} {tableName} {Sql.Semicolon} {Environment.NewLine}"; 
+            return $"{Sql.Select} {Sql.Max} {Sql.OpenParenthesis} {columnName} {Sql.CloseParenthesis} {Sql.From} {tableName} {Sql.Semicolon} {Environment.NewLine}";
         }
 
         //  INSERT INTO table1 SELECT * FROM table2;
@@ -409,15 +412,32 @@ namespace Timelapse
         {
             value = value == null ? string.Empty : value.Trim();
 
-            if (sqlDataType == Sql.IntegerType)
+            switch (sqlDataType)
             {
-                return Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsInteger + Sql.CloseParenthesis + mathOperator + Sql.Quote(value);
+                // TODO 1 Urgent With Ints and reals: The Sql expressions are inconsistent with 0 vs blank. Debug with column where some values are blank and others are 0 with = and <>
+                // Empty strings are Cast to 0. However, the empty string must be quoted as otherwise there is no SQL value!). 
+                // I suspect those cases are handled in the Were early, as this expression is also returned with blanks
+                // but that happens AS THE STRING IS BEING ENTERED!!!! So maybe should only update the count after the Custom Select string is committed
+                // SELECT COUNT  ( * )  FROM DataTable WHERE ( ( img_individual_count IS NULL  OR img_individual_count =  ''  ) )
+                case Sql.IntegerType:
+                {
+                    if (false == IsCondition.IsNumeric(value))
+                    {
+                        value = "0"; // Sql.Quote(value);
+                    }
+                    return Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsInteger + Sql.CloseParenthesis + mathOperator + value;
+                }
+                case Sql.RealType:
+                {
+                    if (false == IsCondition.IsNumeric(value))
+                    {
+                        value = "0";//Sql.Quote(value);
+                    }
+                    return Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsReal + Sql.CloseParenthesis + mathOperator + value;
+                }
+                default:
+                    return dataLabel + mathOperator + Sql.Quote(value);
             }
-            if (sqlDataType == Sql.RealType)
-            {
-                return Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsReal + Sql.CloseParenthesis + mathOperator + Sql.Quote(value);
-            }
-            return dataLabel + mathOperator + Sql.Quote(value);
         }
 
         /// <returns>Match the Date portion only  by extracting the Date from the DateTime string value, e.g., DataLabel operator "value", e.g., Date_(datetime)= Date_('2016-08-19 19:08:22')</returns>

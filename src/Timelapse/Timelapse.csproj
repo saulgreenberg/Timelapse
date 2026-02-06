@@ -17,8 +17,8 @@
     <RollForward>LatestMinor</RollForward>
 
     <!-- Assembly version - increment for each release -->
-    <AssemblyVersion>2.5.0.1</AssemblyVersion>
-    <FileVersion>2.5.0.1</FileVersion>
+    <AssemblyVersion>2.5.0.2</AssemblyVersion>
+    <FileVersion>2.5.0.2</FileVersion>
 
     <!-- NOTE: Additional assembly attributes (ThemeInfo, InternalsVisibleTo) are defined in Properties/AssemblyAttributes.cs -->
 
@@ -109,12 +109,10 @@
     <MakeDir Directories="$(ProjectDir)bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
 
     <!-- Build TimelapseTemplateEditor wrapper -->
-    <Exec Command="&quot;$(ProjectDir)..\TimelapseTemplateEditor\Build.bat&quot; $(Configuration)"
-          WorkingDirectory="$(ProjectDir)..\TimelapseTemplateEditor" />
+    <Exec Command="&quot;$(ProjectDir)..\TimelapseTemplateEditor\Build.bat&quot; $(Configuration)" WorkingDirectory="$(ProjectDir)..\TimelapseTemplateEditor" />
 
     <!-- Build Timelapse-ViewOnly wrapper -->
-    <Exec Command="&quot;$(ProjectDir)..\TimelapseViewOnly\Build.bat&quot; $(Configuration)"
-          WorkingDirectory="$(ProjectDir)..\TimelapseViewOnly" />
+    <Exec Command="&quot;$(ProjectDir)..\TimelapseViewOnly\Build.bat&quot; $(Configuration)" WorkingDirectory="$(ProjectDir)..\TimelapseViewOnly" />
 
     <Message Text="C++ wrapper executables built successfully for $(Configuration)" Importance="high" />
   </Target>
@@ -132,9 +130,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NReco.VideoConverter" Version="1.2.1" />
     <PackageReference Include="MetadataExtractor" Version="2.9.0" />
+    <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
     <PackageReference Include="WindowsAPICodePack" Version="8.0.14" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
-    <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.1" />
     <PackageReference Include="XmpCore" Version="6.1.10.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
   </ItemGroup>

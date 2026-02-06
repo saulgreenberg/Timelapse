@@ -170,7 +170,7 @@ if (Test-Path $TimelapseExe) {
     if ($CanWriteRegistry) {
         # Register .tdb extension
         Write-Host "  Registering .tdb extension..." -ForegroundColor Cyan
-        if (Register-FileAssociation -Extension ".tdb" -ProgId "Timelapse.Database" -Description "Timelapse Database File" -ExecutablePath $TimelapseExe) {
+        if (Register-FileAssociation -Extension ".tdb" -ProgId "Timelapse.Template" -Description "Timelapse Template File" -ExecutablePath $TimelapseExe) {
             $SuccessfulOperations += "Registered .tdb file association"
             Write-Host "    [OK] .tdb files will open with Timelapse" -ForegroundColor Green
         } else {

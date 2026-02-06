@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.ControlsCore;
-using Timelapse.DataStructures;
 using Timelapse.DataTables;
-using Timelapse.Enums;
 using Timelapse.Util;
 
 namespace Timelapse.ControlsDataEntry

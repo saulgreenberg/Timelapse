@@ -121,6 +121,7 @@ namespace Timelapse
                 return;
             }
 
+            bool userSaidImportFile = false;
             // Check if the file name is image_recognitions.json; if so, warn the user that this file was likely created outside of Timelapse
             if (Path.GetFileName(jsonFilePath) == "image_recognition_file.json")
             {
@@ -128,6 +129,8 @@ namespace Timelapse
                 {
                     return;
                 }
+
+                userSaidImportFile = true;
             }
             //
             // 2. Read recognitions from the Json file.
@@ -140,6 +143,15 @@ namespace Timelapse
                 Dialogs.MenuFileRecognizersDataCouldNotBeReadDialog(this);
                 BusyCancelIndicator.Reset(false);
                 return;
+            }
+
+            if (false == userSaidImportFile && false == jsonRecognitions.IsRecognitionTimelapseCompatible())
+            {
+                if (false == Dialogs.MenuFileRecognitionsLikelyFromExternallyRunAddaxAIDialog(this))
+                {
+                    BusyCancelIndicator.Reset(false);
+                    return;
+                }
             }
 
             if (jsonRecognitions.info == null)

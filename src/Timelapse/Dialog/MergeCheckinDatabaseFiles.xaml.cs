@@ -209,7 +209,7 @@ namespace Timelapse.Dialog
                             false, true));
                         FileDatabase sourceFileDatabase = new(sourceFileInfo.FullPath, false);
                         sourceFileDatabase.DropDetectionTablesIfEmpty();
-                        sourceFileDatabase.ResetIDsAndVacuum();
+                        FileDatabase.ResetIDsAndVacuumAsync(sourceFileDatabase.Database);
                         progress.Report(new((int)(i++ / (double)sourceDdbCount * 100.0),
                             $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
                             "Merging...",
@@ -251,7 +251,7 @@ namespace Timelapse.Dialog
                             $"Doing database maintenance after the merge. Please wait...",
                             "Doing database maintenance...",
                             false, true));
-                        fileDatabase.ResetIDsAndVacuum();
+                        FileDatabase.ResetIDsAndVacuum(fileDatabase.Database);
                     }
                 }
 

@@ -303,6 +303,10 @@ namespace Timelapse
                 {
                     if (ShowDialogAndCheckIfChangesWereMade(populateField))
                     {
+                        if (false == string.IsNullOrEmpty(populateField.EpisodeDataLabel))
+                        {
+                            DataHandler.FileDatabase.IndexCreateForEpisodeFieldIfNeeded(populateField.EpisodeDataLabel);
+                        }
                         await FilesSelectAndShowAsync().ConfigureAwait(true);
                     }
                 }
@@ -469,7 +473,7 @@ namespace Timelapse
                     }
                 }
 
-                videoPositionInSeconds -= (float) (1.0 / frameRate * .5f);
+                videoPositionInSeconds -= (float)(1.0 / frameRate * .5f);
                 if (videoPositionInSeconds < 0) videoPositionInSeconds = 0; // In case its at the beginning of the video
 
                 // Do the frame grab, where its source will be the frame as a BitmapImage
@@ -503,7 +507,7 @@ namespace Timelapse
                 {
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse could extract the frame, it couldn't write it to a file");
                 }
-                
+
                 if (false == await DuplicateCurrentRecord(true, newFileName))
                 {
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse created the frame as a file, it couldn't create the data record for it");

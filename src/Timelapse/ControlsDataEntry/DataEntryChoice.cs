@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection.PortableExecutable;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
 using Timelapse.DataStructures;
@@ -14,8 +11,6 @@ using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
 using TimelapseWpf.Toolkit;
-using TimelapseWpf.Toolkit.Primitives;
-using static System.Net.Mime.MediaTypeNames;
 using Point = System.Windows.Point;
 
 namespace Timelapse.ControlsDataEntry

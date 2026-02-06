@@ -310,7 +310,7 @@ namespace Timelapse
                 await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();
 
                 // Check if we need this...
-                DataHandler.FileDatabase.IndexCreateForDetectionsIfNotExists();
+                DataHandler.FileDatabase.IndexCreateForDetectionsIfNeeded();
                 Episodes.Episodes.Reset();
             }
             TryFileShowWithoutSliderCallback(DirectionEnum.Next);

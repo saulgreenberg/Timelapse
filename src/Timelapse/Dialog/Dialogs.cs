@@ -3045,19 +3045,18 @@ namespace Timelapse.Dialog
                 DialogTitle = title,
                 Problem = $"This recognition file is only partially compatible with Timelapse",
                 Reason = $"Depending on how it is invoked, [i]AddaxAI[/i] creates different versions of its recognition file. " +
-                         $"[br 6][ni][b]Compatible version[/b]: [i]AddaxAI[/i] should be invoked withing Timelapse via the [b]Recognition|Addax Image Recognizer|Run AddaxAI Image Recognizer[/b] menu. " +
-                         $"[li 2]This normally produces  a file called [i]timelapse_recognition_file.json[/i], which conforms to what Timelapse expects." +
-                         $"[br 6][ni][b]Incompatible version[/b]: [i]AddaxAI[/i] was invoked externally (e.g., by directly opening it). " +
-                         $"[li 2]This normally produces a file called [i]image_recognition_file.json[/i]. While Timelapse can import that, there are differences that can mess up your recognitions." +
-                         $"[br 6]In this case, Timelapse noticed that you are trying to open a recognition file named [i]image_recognition_file.json[/i]",
-                Solution = $"[ni] Re-run [i]AddaxAI[/i] by selecting [b]Recognition|Addax Image Recognizer|Run AddaxAI Image Recognizer[/b] from the Timelapse menu." +
-                           $"[ni] Alternately, and only if you did intend to run [i]AddaxAI[/i] externally and know what you are doing, you can still import it. However, be aware that:" +
-                           $"[li 2] The folder paths in the recognition file may not match your image set's folder structure." +
-                           $"[li 2] The recognition categories may differ from those previously used in your image set." +
-                           $"[li 2] The classification categories may be duplicated on the detection categories." +
-                           $"[br 10]Select:" +
-                           $"[li] [b]Ok[/b] to import the recognition file anyways," +
-                           $"[li] [b]Cancel[/b] to abort.",
+                         $"[br 6][ni][b]Compatible file[/b]: [i]AddaxAI[/i] is invoked within Timelapse via the " +
+                         $"[li 2][e]Recognitions|Addax Image Recognizer|Run AddaxAI Image Recognizer[/e] menu. " +
+                         $"[br 6][ni][b]Problematic file[/b]: [i]AddaxAI[/i] was invoked directly outside of Timelapse. " +
+                         $"[li 2]While Timelapse can import that, there are differences that can mess up your recognitions. ",
+                Solution = $"Select:" +
+                           $"[li] [b]Ok[/b] to import the recognition file anyways (see Hint for possible issues)," +
+                           $"[li] [b]Cancel[/b] to abort. You can then re-run [i]AddaxAI[/i] via the Timelapse menu:" +
+                           $"[li 2] [e]Recognitions|Addax Image Recognizer|Run AddaxAI Image Recognizer[/e].",
+                Hint = $"Some or all of these issues may arise if you import a problematic file:" +
+                       $"[li] Classification categories are likely duplicated on the detection categories." +
+                       $"[li] Folder paths in the recognition file may not match your image set's folder structure." +
+                       $"[li] Recognition categories may differ from those previously used in your image set."
             };
             return dialog.BuildAndShowDialog();
         }

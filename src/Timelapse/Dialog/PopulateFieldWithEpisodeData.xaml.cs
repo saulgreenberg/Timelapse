@@ -19,10 +19,13 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class PopulateFieldWithEpisodeData
     {
+        public string EpisodeDataLabel => episodeFieldDataLabel;
+
         #region Private Variables
         private readonly FileDatabase fileDatabase;
         private readonly Dictionary<string, string> dataLabelByLabel;
-        private string dataFieldLabel = string.Empty;
+        private string episodeFieldLabel = string.Empty;
+        private string episodeFieldDataLabel = string.Empty;
         private double TotalImages;
         private double SingleCount;
         private double EpisodeCount;
@@ -174,7 +177,7 @@ namespace Timelapse.Dialog
                             singletonData = "1|1";
                         }
 
-                        List<ColumnTuple> ctl = [new(dataLabelByLabel[dataFieldLabel], singletonData)];
+                        List<ColumnTuple> ctl = [new(dataLabelByLabel[episodeFieldLabel], singletonData)];
                         imagesToUpdate.Add(new(ctl, fileDatabase.FileTable[imageIndex].ID));
                         SingleCount++;
                         imageIndex++;
@@ -201,7 +204,7 @@ namespace Timelapse.Dialog
 
                             List<ColumnTuple> ctl =
                             [
-                                new(dataLabelByLabel[dataFieldLabel], episodeData)
+                                new(dataLabelByLabel[episodeFieldLabel], episodeData)
                             ];
                             imagesToUpdate.Add(new(ctl, fileDatabase.FileTable[imageIndex].ID));
                             imageIndex++;
@@ -256,8 +259,9 @@ namespace Timelapse.Dialog
         {
             if (sender is ComboBox cb)
             {
-                dataFieldLabel = ((string)cb.SelectedValue).Trim();
-                StartDoneButton.IsEnabled = !string.IsNullOrEmpty(dataFieldLabel);
+                episodeFieldLabel = ((string)cb.SelectedValue).Trim();
+                episodeFieldDataLabel = dataLabelByLabel.TryGetValue(episodeFieldLabel, out string dataLabel) ? dataLabel : string.Empty;
+                StartDoneButton.IsEnabled = !string.IsNullOrEmpty(episodeFieldDataLabel);
             }
         }
 

@@ -4,7 +4,7 @@
 
   <Package Name="Timelapse Image Analyzer"
            Manufacturer="Greenberg Consulting Inc. and University of Calgary"
-           Version="2.5.0.1"
+           Version="2.5.0.2"
            UpgradeCode="F8A1B2C3-D4E5-6F78-9ABC-DEF012345678"
            Compressed="yes"
            InstallerVersion="500"
@@ -165,7 +165,7 @@
       <!-- .tdb file extension -->
       <RegistryValue Root="HKCU" Key="Software\Classes\.tdb" Type="string" Value="Timelapse.tdb" KeyPath="yes" />
       <RegistryValue Root="HKCU" Key="Software\Classes\.tdb\OpenWithProgids" Name="Timelapse.tdb" Type="string" Value="" />
-      <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.tdb" Type="string" Value="Timelapse Database File" />
+      <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.tdb" Type="string" Value="Timelapse Template File" />
       <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.tdb\DefaultIcon" Type="string" Value="[INSTALLFOLDER]Timelapse.exe,0" />
       <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.tdb\shell" Type="string" Value="open" />
       <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.tdb\shell\open" Type="string" Value="&amp;Open" />
@@ -174,7 +174,7 @@
       <!-- .ddb file extension -->
       <RegistryValue Root="HKCU" Key="Software\Classes\.ddb" Type="string" Value="Timelapse.ddb" />
       <RegistryValue Root="HKCU" Key="Software\Classes\.ddb\OpenWithProgids" Name="Timelapse.ddb" Type="string" Value="" />
-      <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.ddb" Type="string" Value="Timelapse Template File" />
+      <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.ddb" Type="string" Value="Timelapse Database File" />
       <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.ddb\DefaultIcon" Type="string" Value="[INSTALLFOLDER]Timelapse.exe,0" />
       <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.ddb\shell" Type="string" Value="open" />
       <RegistryValue Root="HKCU" Key="Software\Classes\Timelapse.ddb\shell\open" Type="string" Value="&amp;Open" />

@@ -913,7 +913,12 @@ namespace Timelapse.Dialog
         {
             this.RefreshRecognitionCountsRequired = e.RefreshRecognitionCountsRequired;
             this.RecognitonsGroupBoxFeedback.Text = ComposeRecognitionsSelectionFeedback(e.DetectionCategoryLabel, e.ClassificationCategoryLabel);
-            // this.SelectionGroupBox.IsEnabled = false == this.Database.CustomSelection.ShowMissingDetections;
+            bool showAllEpisodeEnableState = false == e.DisableEpisodeAny || string.IsNullOrEmpty(Database.CustomSelection.EpisodeNoteField);
+
+            this.ShowEpisodeOptionsPanel.IsEnabled = showAllEpisodeEnableState;
+            this.CheckboxShowAllEpisodeImages.Foreground = showAllEpisodeEnableState
+                ? Brushes.Black
+                : Brushes.Gray;
             this.CountTimer.Start();
         }
 
@@ -1717,6 +1722,7 @@ namespace Timelapse.Dialog
                 return;
             }
 
+
             int count = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
             MatchingFilesCount.Text = count > 0 ? count.ToString() : "0";
             this.MatchingFilesCountLabel.Text = count == 1
@@ -1724,14 +1730,18 @@ namespace Timelapse.Dialog
                 : " files match your query";
 
             OkButton.IsEnabled = count > 0; // Dusable OK button if there are no matches
-
-            if (null != this.RecognitionSelector)
+            //if (this.Database.CustomSelection.ShowMissingDetections)
+            //{
+            //    System.Diagnostics.Debug.Print("Show missing detections:" + this.Database.CustomSelection.ShowMissingDetections.ToString());
+            //}
+            if (null != this.RecognitionSelector )
             {
                 this.RecognitionSelector.UpdateDisplayOfTotalFileCounts(MatchingFilesCount.Text);
-                if (this.RefreshRecognitionCountsRequired)
+                if (this.RefreshRecognitionCountsRequired 
+                    && false == this.Database.CustomSelection.ShowMissingDetections)
                 {
                     // await this.RecognitionSelector.RecognitionsRefreshCounts();
-                    this.RecognitionSelector.ClearCountsAndResetUI();
+                    this.RecognitionSelector.ClearCountsAndResetUI(true);
                 }
             }
 
@@ -1828,6 +1838,7 @@ namespace Timelapse.Dialog
                 }
 
             }
+            Database.IndexCreateForEpisodeFieldIfNeeded(NoteDataLabelContainingEpisodeData);
             Database.CustomSelection.EpisodeShowAllIfAnyMatch = true == CheckboxShowAllEpisodeImages.IsChecked;
             await UpdateSearchDialogFeedback();
         }

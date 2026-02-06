@@ -46,8 +46,8 @@ namespace Timelapse
 
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            Dialog.TestSomeCodeDialog dialog = new Dialog.TestSomeCodeDialog(this);
-            dialog.ShowDialog();
+            //Dialog.TestSomeCodeDialog dialog = new Dialog.TestSomeCodeDialog(this);
+            //dialog.ShowDialog();
         }
 
         #endregion

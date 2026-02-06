@@ -316,8 +316,7 @@ namespace Timelapse
                 BusyCancelIndicator.Reset(true);
                 BusyCancelIndicator.EnableForDatabaseMaintenance(true);
 
-                await fileDatabase.ResetIDsAndVacuumAsync();
-                fileDatabase.Database.Vacuum();
+                await FileDatabase.ResetIDsAndVacuumAsync(fileDatabase.Database);
                 BusyCancelIndicator.Reset(false);
                 Mouse.OverrideCursor = null;
             }
@@ -359,7 +358,7 @@ namespace Timelapse
             // Newer databases (from 2.2.4.4 onwards) will have these indexes created and updated whenever images are loaded or added for the first time.
             // If the index exists, this is a very cheap operation so there really is no need to do it by a version number check.
             // TODO This may be redundant as it already exists in TryBeginImageFolderLoad ... perhapse we should move it to OnFolderLoadingComplete and only invoke it once?
-            DataHandler.FileDatabase.IndexCreateForFileAndRelativePathIfNotExists();
+            DataHandler.FileDatabase.IndexCreateForFileAndRelativePathIfNeeded();
 
             // --------------
             // Loading Images
@@ -571,7 +570,7 @@ namespace Timelapse
                 }
 
                 // Create an index on RelativePath, File,and RelativePath/File if it doesn't already exist
-                DataHandler.FileDatabase.IndexCreateForFileAndRelativePathIfNotExists();
+                DataHandler.FileDatabase.IndexCreateForFileAndRelativePathIfNeeded();
 
                 // Show the file slider
                 FileNavigatorSlider.Visibility = Visibility.Visible;

@@ -6,7 +6,7 @@
              xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
              mc:Ignorable="d" 
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
-             d:DesignHeight="350" d:DesignWidth="600" Loaded="RecognitionsSelector_OnLoaded">
+             d:DesignHeight="350" d:DesignWidth="600" Loaded="RecognitionsSelector_OnLoaded" Unloaded="RecognitionSelector_OnUnloaded">
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
@@ -172,39 +172,24 @@
                         <TextBlock Name="MatchingFilesCount" Text=""  FontWeight="DemiBold" VerticalAlignment="Center" Margin="0,0,0,0"/>
                         <TextBlock Name="MatchingFilesCountLabel" Text="" VerticalAlignment="Center" Margin="0,0,0,0"/>
                     </StackPanel>
-                    <Button Name="BtnCountRecognitions" Content ="Update counts" Click="BtnCountRecognitions_OnClick" Height="30" Margin="0,10,0,0"/>
+                    <Button Name="BtnCountRecognitions" Content="Update counts" Click="BtnCountRecognitions_OnClick" 
+                            Height="30" Margin="0,10,0,0"
+                            ToolTip="Shows counts of matching images for each recognition whenever you click the button."/>
+                    <CheckBox Name="CBAutoCount" Content="update automatically" IsChecked ="false" 
+                              ToolTip="Shows counts automatically whenever your selection changes.&#x0a;Turn it off if counting is slow." />
                 </StackPanel>
 
                 <!-- Sorting by Confidence -->
-                <TextBlock Name="TextBlockSortAllByLabel" Text="Sort all by:" FontWeight="Bold" Margin="0,10,0,0"/>
+                <!--<TextBlock Name="TextBlockSortAllByLabel" Text="Sort returned images by:" FontWeight="Bold" Margin="0,10,0,0"/>-->
 
                 <!-- Rank By Confidence Checkbox-->
-                <StackPanel Name="SPRadioButtonsRankBy" Orientation="Vertical">
-                    <RadioButton Name="RankByDetectionConfidenceCheckbox"
-                             Tag="Detections"
-                             GroupName="RankByRadioButtons" 
-                             Content="detection confidence" Margin="5,2,0,0" 
-                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
-                             Checked="RankByConfidence_CheckedChanged" 
-                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by detection confidence and then by classification confidence"/>
+                <StackPanel Name="SPRadioButtonsRankBy" Margin="0,15,0,0" Orientation="Vertical">
 
-                    <RadioButton Name="RankByClassificationConfidenceCheckbox" 
-                             Tag="Classifications"
-                             GroupName="RankByRadioButtons" 
-                             Content="classification confidence" Margin="5,2,0,0" 
-                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
-                             Checked="RankByConfidence_CheckedChanged" 
-                             ToolTip="Returns all selected files regardless of its confidence&#10;sorted by classification confidence and then by detection confidence"/>
-
-                    <RadioButton Name="RankByNoneCheckbox" 
-                             GroupName="RankByRadioButtons" 
-                             Tag="None"
-                             Content="none" Margin="5,2,0,0" 
-                             VerticalAlignment="Center" HorizontalAlignment="Left" IsChecked="False" 
-                             Checked="RankByConfidence_CheckedChanged" 
-                             ToolTip="Returns all selected files within the chosen confidence range"/>
+                    <CheckBox x:Name="CBRankRecognitions" Content="Select / sort matching files &#10;by detection confidence" 
+                              ToolTip="Ignoring confidence ranges, return all matching files processed by the recognizer,&#10;ordered from highest to lowest detection confidence."/>
                 </StackPanel>
-                <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only those files&#10;the recognizer did not&#10; process" 
+ 
+                <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only matching files&#10;the recognizer didn't process" 
                           IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,15,0,0" 
                           ToolTip="Shows only files that were not processed by the image recognizer&#10;i.e.,files that were not mentioned in the recognition file"
                           Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>

@@ -697,7 +697,10 @@ namespace Timelapse.Database
         /// Allows the programmer to interact with the database for purposes other than a query.
         /// </summary>
         /// <param name="commandString">The SQL command to be run.</param>
-        public void ExecuteNonQuery(string commandString)
+        /// <param name="busyTimeoutMs">If > 0, SQLite will retry for this many milliseconds when the database is locked, instead of failing immediately.
+        ///   Only use this for standalone operations (e.g. cleanup DROP TABLE) that have no dependent follow-on statements,
+        ///   as the delay breaks ordering guarantees for callers that execute a logical sequence outside of a transaction.</param>
+        public void ExecuteNonQuery(string commandString, int busyTimeoutMs = 0)
         {
             if (string.IsNullOrEmpty(commandString))
             {
@@ -708,6 +711,10 @@ namespace Timelapse.Database
             {
                 using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                 connection.Open();
+                if (busyTimeoutMs > 0)
+                {
+                    connection.BusyTimeout = busyTimeoutMs;
+                }
                 using SQLiteCommand command = new(connection);
                 command.CommandText = commandString;
                 command.ExecuteNonQuery();

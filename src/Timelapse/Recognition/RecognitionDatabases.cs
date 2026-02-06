@@ -458,7 +458,7 @@ namespace Timelapse.Recognition
                 }
                 detectionDB.Insert(DBTables.Detections, detectionInsertionStatements, progress, "Adding detections", 1000);
                 detectionDB.Insert(DBTables.DetectionsVideo, detectionVideoInsertionStatements, progress, "Adding detections for Video", 1000);
-                fileDatabase.IndexCreateForDetectionsIfNotExists();
+                fileDatabase.IndexCreateForDetectionsIfNeeded();
                 dataTable?.Dispose();
             }
         }

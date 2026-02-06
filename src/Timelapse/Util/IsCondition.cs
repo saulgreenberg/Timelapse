@@ -97,6 +97,20 @@ namespace Timelapse.Util
             // we have to negate it as the regular expression returns true only if any other characters are matched 
             return !Regex.IsMatch(text, RegExExpressions.NotDecimalPositiveCharacters);
         }
+
+        public static bool IsNumeric(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return false; // Empty or whitespace is not a number
+
+            // Try parsing with any number style and invariant culture
+            return double.TryParse(
+                input,
+                NumberStyles.Any,
+                CultureInfo.InvariantCulture,
+                out _
+            );
+        }
         #endregion
 
         #region Date/Time Characters

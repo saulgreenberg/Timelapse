@@ -570,7 +570,7 @@ namespace Timelapse.Database
             destinationDdb.ExecuteNonQuery(query);
 
             // Part 8. Create the indexes for the detections and detectionsVideo table if they don't already exist
-            FileDatabase.IndexCreateForDetectionsIfNotExists(destinationDdb);
+            FileDatabase.IndexCreateForDetectionsIfNeeded(destinationDdb);
             return DatabaseFileErrorsEnum.Ok;
         }
         #endregion

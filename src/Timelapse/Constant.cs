@@ -284,9 +284,12 @@ namespace Timelapse.Constant
         public const string DefaultQuickPasteJSON = "[]";
         public const string IndexRelativePath = "IndexRelativePath";
         public const string IndexRelativePathFile = "IndexRelativePathFile";
+        public const string IndexRelativePathDateTimeFile = "IndexRelativePathDateTimeFile";
         public const string IndexFile = "IndexFile";
-        public const string IndexID = "IndexDetectionID";
+        public const string IndexDetectionID = "IndexDetectionID";
         public const string IndexDetectionVideoID = "IndexDetectionVideoID";
+        public const string IndexDetectionsClassificationConfidence = "IndexDetectionsClassificationConfidence";
+        public const string IndexEpisodeField = "IndexEpisodeField";
 
         // Marker values
         public const string DefaultMarkerValue = "[]";    // Default is the empty Json value 
@@ -612,6 +615,10 @@ namespace Timelapse.Constant
         // key containing the size the Template Editor Window, as a point
         // the top left location of the Template Editor Window will be the same as the Timelapse Window
         public const string TemplateEditorWindowSize = "TemplateEditorWindowSize";
+
+        // Whether to automatically update the recognition counts in the CustomSelect dialog, or to wait until the user clicks the update button.
+        // This is because updating the recognition counts can be time consuming for large image sets, so some users may prefer to only update them when they choose to.
+        public const string AutoUpdateRecognitionCounts = "AutoUpdateRecognitionCounts";
 
         // key containing the top left location of the Timelapse Window, as a point
         // key containing the size of the Timelapse Window, as a Height
