@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 
@@ -68,6 +69,21 @@ namespace Timelapse.Controls
         {
             set => Busy.DisplayAfter = value ? TimeSpan.FromSeconds(0) : TimeSpan.FromMilliseconds(100);
         }
+        #endregion
+
+        #region UseStaticProgressBar
+        /// <summary>
+        /// When true, collapses MyProgressBar and makes StaticProgressBar visible.
+        /// When false (default), MyProgressBar is visible and StaticProgressBar is collapsed.
+        /// </summary>
+        public bool UseStaticProgressBar
+        {
+            get => (bool)GetValue(UseStaticProgressBarProperty);
+            set => SetValue(UseStaticProgressBarProperty, value);
+        }
+        public static readonly DependencyProperty UseStaticProgressBarProperty =
+            DependencyProperty.Register(nameof(UseStaticProgressBar), typeof(bool), typeof(BusyCancelIndicator),
+                new FrameworkPropertyMetadata(false));
         #endregion
 
         #region IsIndeterminate
@@ -163,7 +179,36 @@ namespace Timelapse.Controls
         public void Reset(bool isBusy)
         {
             IsBusy = isBusy;
+            UseStaticProgressBar = false;
             GlobalReferences.CancelTokenSource = new();
+        }
+
+        /// <summary>
+        /// Resets to busy state and immediately triggers the toolkit BusyIndicator's visual
+        /// state change, bypassing the DataBind-deferred binding from BusyCancelIndicator.IsBusy
+        /// to Busy.IsBusy. This ensures the "Visible" storyboard starts on the current call stack
+        /// rather than waiting for the next DataBind dispatch cycle.
+        /// After calling this, the caller must await one WPF render frame (e.g., via
+        /// CompositionTarget.Rendering) before starting heavy UI-blocking work, so that the
+        /// DWM-driven clock tick, layout pass, and channel commit all complete before the UI
+        /// thread blocks.
+        /// </summary>
+        public void ResetAndEnableImmediately()
+        {
+            GlobalReferences.CancelTokenSource = new();
+            UseStaticProgressBar = false;
+            Busy.DisplayAfter = TimeSpan.Zero;
+            IsBusy = true; // Set the source DP first so the binding sees the correct value
+            // Synchronously force the OneWay binding (BusyCancelIndicator.IsBusy → Busy.IsBusy)
+            // to re-evaluate now, bypassing the normal DataBind-priority deferral.
+            // UpdateTarget() pushes the source value through the existing binding expression
+            // rather than calling SetValue directly — so the binding remains active and
+            // Reset(false) can still hide the indicator via the normal DataBind path.
+            // OnIsBusyChanged fires synchronously (false→true), sets IsContentVisible=true,
+            // and calls ChangeVisualState(true) → GoToState("Visible"/"Busy") — starting the storyboards.
+            BindingOperations
+                .GetBindingExpression(Busy, TimelapseWpf.Toolkit.BusyIndicator.IsBusyProperty)
+                ?.UpdateTarget();
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsMetadata;
@@ -132,9 +133,24 @@ namespace Timelapse
 
         private async Task<bool> DoLoadImages(string templateDatabasePath)
         {
+            // Set up busy indicators. Note that this was not originally showing the busy indicator,
+            // but the messy code below now does that albeit without animating the progress bar
             Mouse.OverrideCursor = Cursors.Wait;
-            StatusBar.SetMessage("Loading images, please wait...");
+            BusyCancelIndicator.ResetAndEnableImmediately();
+            BusyCancelIndicator.Message = "Loading images. Please wait...";
+            BusyCancelIndicator.UseStaticProgressBar = true;
+            var renderTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            EventHandler renderingHandler = null;
+            renderingHandler = (_, _) =>
+            {
+                CompositionTarget.Rendering -= renderingHandler;
+                renderTcs.TrySetResult(true);
+            };
+            CompositionTarget.Rendering += renderingHandler;
+            await renderTcs.Task;
+            
             Tuple<bool, string> results = await TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
+ 
             if (results.Item1 == false)
             {
                 StatusBar.SetMessage("Aborted. Images were not added to the image set.");
@@ -144,10 +160,12 @@ namespace Timelapse
                     // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
                     FilesFolders.TryDeleteFileIfExists(results.Item2);
                 }
+                BusyCancelIndicator.Reset(false);
                 return false;
             }
 
             Mouse.OverrideCursor = null;
+            BusyCancelIndicator.Reset(false);
             return true;
         }
 

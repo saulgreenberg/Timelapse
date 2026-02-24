@@ -14,15 +14,36 @@
                              >
 
             <!-- Construct the new content: A text message, a progress bar and a cancel button -->
+            <!-- The static progress bar is displayed instead of the normal progress bar if UseStaticProgressBar is true. Normally used when the progress bar can't animate -->
             <toolkit:BusyIndicator.BusyContentTemplate>
                 <DataTemplate>
                     <StackPanel Margin="4,0,4,0" Orientation="Vertical" MinWidth="350">
                         <Label x:Name="MyLabel" Content="{Binding Path=Message,ElementName=MyBusyIndicator}" />
 
-                        <ProgressBar x:Name="MyProgressBar" Height="15" 
+                        <ProgressBar x:Name="MyProgressBar" Height="15" Visibility="Visible"
                                      Value="{Binding Path=Percent,ElementName=MyBusyIndicator}"
                                      IsIndeterminate="{Binding Path=IsIndeterminate,ElementName=MyBusyIndicator}"
                                      />
+                        
+                        <Rectangle x:Name="StaticProgressBar" Height="15" Stroke="Black" StrokeThickness="1" Visibility="Collapsed" >
+                            <Rectangle.Fill>
+                                <DrawingBrush TileMode="Tile" Viewport="0,0,8,8" ViewportUnits="Absolute">
+                                    <DrawingBrush.Drawing>
+                                        <GeometryDrawing Brush="Transparent">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="LimeGreen" Thickness="1" />
+                                            </GeometryDrawing.Pen>
+                                            <GeometryDrawing.Geometry>
+                                                <GeometryGroup>
+                                                    <LineGeometry StartPoint="0,8" EndPoint="8,0" />
+                                                </GeometryGroup>
+                                            </GeometryDrawing.Geometry>
+                                        </GeometryDrawing>
+                                    </DrawingBrush.Drawing>
+                                </DrawingBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+
                         <Button Margin="10" x:Name="MyButton" 
                                 IsEnabled="{Binding Path=CancelButtonIsEnabled,ElementName=MyBusyIndicator}"
                                 Visibility="{Binding Path=CancelButtonIsVisible,ElementName=MyBusyIndicator}"
@@ -31,6 +52,13 @@
                                 />
                         <!--Click="CancelAsyncOperationButton_Click" />-->
                     </StackPanel>
+                    <DataTemplate.Triggers>
+                        <!-- When UseStaticProgressBar is true, swap the animated bar for the static hatched rectangle -->
+                        <DataTrigger Binding="{Binding Path=UseStaticProgressBar, ElementName=MyBusyIndicator}" Value="True">
+                            <Setter TargetName="MyProgressBar"     Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="StaticProgressBar" Property="Visibility" Value="Visible"   />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
                 </DataTemplate>
             </toolkit:BusyIndicator.BusyContentTemplate>
 
