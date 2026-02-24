@@ -158,7 +158,8 @@ namespace Timelapse.Util
             return Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
         }
 
-        public static bool IsKeyControlAndShiftKeyDown()
+        // ReSharper disable once UnusedMember.Global
+        public static bool IsKeyControlAndShiftDown()
         {
             return IsKeyControlDown() && IsKeyShiftDown();
         }

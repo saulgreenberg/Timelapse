@@ -85,9 +85,19 @@ namespace Timelapse.Database
         #region Indexes: Create or Drop (Public)
         // Creates or drops various indexes in table tableName named index name to the column names
 
+        // ReSharper disable once UnusedMember.Global
         public bool IndexExists(string indexName)
         {
             return 0 != ScalarGetScalarFromSelectAsInt(Sql.SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals + Sql.Quote(indexName));
+        }
+
+        // Drop a single index named indexName if it exists
+        // ReSharper disable once UnusedMember.Global
+        public void IndexDropIfExists(string indexName)
+        {
+            // Form: DROP INDEX IF EXISTS indexName 
+            string query = Sql.DropIndex + Sql.IfExists + indexName;
+            ExecuteNonQuery(query);
         }
 
         // Create a single index named indexName if it doesn't already exist
@@ -103,17 +113,10 @@ namespace Timelapse.Database
             ExecuteNonQuery(query);
         }
 
-        // Drop a single index named indexName if it exists
-        public void IndexDrop(string indexName)
-        {
-            // Form: DROP INDEX IF EXISTS indexName 
-            string query = Sql.DropIndex + Sql.IfExists + indexName;
-            ExecuteNonQuery(query);
-        }
 
         // Create multiple indexes wrapped in a begin / end 
         // Each tuple provides the indexName, tableName, and columnNames
-        public void IndexCreateMultipleIfNotExists(List<Tuple<string, string, string>> tuples)
+        public void IndexCreateIfNotExists(List<Tuple<string, string, string>> tuples)
         {
             List<string> queries = [];
             foreach (Tuple<string, string, string> tuple in tuples)

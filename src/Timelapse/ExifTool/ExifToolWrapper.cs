@@ -59,35 +59,11 @@ namespace Timelapse.ExifTool
         public string ExifToolVersion { get; private set; }
 
         private const string ExeName = "exiftool(-k).exe";
-        //private const string Arguments = "-fast  -m -q -q -stay_open True -@ - -common_args -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   //-g for groups
-        //private const string Arguments = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
         private const string Arguments = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y-%m-%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
        
-        //private const string ArgumentsFaster = "-fast2 -m -q -q -stay_open True -@ - -common_args -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";
-        //private const string ArgumentsFaster = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y.%m.%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
         private const string ArgumentsFaster = "-a -m -q -q -stay_open True -@ - -common_args -G1 -s -d \"%Y-%m-%d %H:%M:%S\" -c \"%d %d %.6f\" -t";   // -G1 -s gives [Group]TagName format
         private const string ExitMessage = "-- press RETURN --";
         internal const string SuccessMessage = "1 image files updated";
-
-        /// <summary>
-        /// Get the ExifTool executable path
-        /// </summary>
-        private static string GetExifToolPath()
-        {
-            try
-            {
-                string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-                if (dir == null)
-                {
-                    return ExeName;
-                }
-                return Path.Combine(dir, ExeName);
-            }
-            catch
-            {
-                return ExeName;
-            }
-        }
 
         /// <summary>
         /// Escape special characters in metadata values for ExifTool
@@ -426,113 +402,6 @@ namespace Timelapse.ExifTool
 
             //if failed return as it is, if it's success must check the response
             return cmdRes ? new(cmdRes.Result) : cmdRes;
-        }
-
-        /// <summary>
-        /// Write EXIF/XMP metadata to a file using a custom config file
-        /// NOTE: This launches ExifTool as a one-shot process (not stay-open mode)
-        /// because -config must be the first argument on the command line
-        /// </summary>
-        /// <param name="path">Path to the image file</param>
-        /// <param name="data">List of tag=value pairs (e.g., "XMP-TimelapseData:Species"="Lion")</param>
-        /// <param name="configFilePath">Path to the ExifTool config file</param>
-        /// <param name="overwriteOriginal">If true, don't create backup file</param>
-        /// <returns>ExifToolResponse indicating success or failure</returns>
-        public static async System.Threading.Tasks.Task<ExifToolResponse> SetExifIntoWithConfigAsync(string path, List<KeyValuePair<string, string>> data,
-            string configFilePath, bool overwriteOriginal = true)
-        {
-            // Validate inputs
-            if (data == null)
-            {
-                TracePrint.StackTrace(1);
-                return new(false, "data list is null");
-            }
-
-            if (!File.Exists(path))
-            {
-                return new(false, $"'{path}' not found");
-            }
-
-            if (!File.Exists(configFilePath))
-            {
-                return new(false, $"Config file '{configFilePath}' not found");
-            }
-
-            // Get ExifTool path directly (static method)
-            string exifToolPath = GetExifToolPath();
-
-            // Build arguments list for one-shot ExifTool invocation
-            // -config MUST be first argument on command line
-            var args = new List<string>
-            {
-                "-config",
-                configFilePath
-            };
-
-            // Add each metadata tag
-            foreach (KeyValuePair<string, string> kv in data)
-            {
-                string escapedValue = EscapeMetadataValue(kv.Value);
-                args.Add($"-{kv.Key}={escapedValue}");
-            }
-
-            // Add overwrite flag
-            if (overwriteOriginal)
-            {
-                args.Add("-overwrite_original");
-            }
-
-            // Add file path
-            args.Add(path);
-
-            // Launch ExifTool as one-shot process (not stay-open mode)
-            // Use Task.Run to run synchronous process execution on background thread
-            return await System.Threading.Tasks.Task.Run(() =>
-            {
-                try
-                {
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = exifToolPath,
-                        Arguments = string.Join(" ", args.Select(a => $"\"{a}\"")), // Quote each argument
-                        CreateNoWindow = true,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        RedirectStandardInput = true  // Redirect stdin to prevent hanging
-                    };
-
-                    using var proc = Process.Start(psi);
-                    if (proc == null)
-                    {
-                        return new ExifToolResponse(false, "Failed to start ExifTool process");
-                    }
-
-                    // Close stdin immediately - we're not sending any input
-                    proc.StandardInput.Close();
-
-                    // Read output and error synchronously (we're on a background thread via Task.Run)
-                    string output = proc.StandardOutput.ReadToEnd();
-                    string error = proc.StandardError.ReadToEnd();
-
-                    // Wait for process to exit
-                    proc.WaitForExit();
-
-                    // Check for success
-                    if (output.Contains(SuccessMessage))
-                    {
-                        return new ExifToolResponse(true, output);
-                    }
-
-                    // Return error if present, otherwise return output
-                    string result = !string.IsNullOrEmpty(error) ? error : output;
-                    return new ExifToolResponse(false, result);
-                }
-                catch (Exception ex)
-                {
-                    return new ExifToolResponse(false, $"Exception launching ExifTool: {ex.Message}");
-                }
-            }).ConfigureAwait(false);
         }
 
         public Dictionary<string, ImageMetadata> FetchExifFrom(string path, IEnumerable<string> tagsToKeep = null, bool keepKeysWithEmptyValues = true)

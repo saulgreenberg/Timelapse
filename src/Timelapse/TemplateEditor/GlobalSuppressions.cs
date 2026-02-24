@@ -6,4 +6,3 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "SYSLIB1045:Convert to 'GeneratedRegexAttribute'.", Justification = "<Pending>", Scope = "member", Target = "~M:TimelapseTemplateEditor.Controls.TemplateDataGridControl.ValidateDataLabel(System.Windows.Controls.DataGridCellEditEndingEventArgs)")]
-[assembly: SuppressMessage("Performance", "SYSLIB1045:Convert to 'GeneratedRegexAttribute'.", Justification = "<Pending>", Scope = "member", Target = "~M:TimelapseTemplateEditor.TemplateEditorWindow.CreateLabel(System.String)~System.String")]

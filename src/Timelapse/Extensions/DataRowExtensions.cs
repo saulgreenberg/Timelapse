@@ -40,6 +40,8 @@ namespace Timelapse.Extensions
                 }
             }
 
+            // ReSharper disable once UnusedMember.Global
+            // Currently unused, but leave for potential future use?
             public TEnum GetEnumField<TEnum>(string column) where TEnum : struct, IComparable, IFormattable, IConvertible
             {
                 string fieldAsString = row.GetStringField(column);
@@ -89,19 +91,6 @@ namespace Timelapse.Extensions
             {
                 // Check the arguments for null 
                 ThrowIf.IsNullArgument(row, nameof(row));
-                //var foo = row[column];
-
-                //try
-                //{
-                //    var result = Convert.ToInt64(foo);
-                //    Debug.Print("Success as long:<" + result.ToString() + ">");
-                //    return (long)result;
-                //}
-                //catch (Exception e)
-                //{
-                //    Debug.Print("Fail as long:<" + foo.ToString() + ">");
-                //}
-
                 return (long)row[column];
             }
 
@@ -119,11 +108,8 @@ namespace Timelapse.Extensions
                     return null;
                 }
                 return field.ToString();
-                //return (string)field.ToString();
             }
         }
-
-        // ReSharper disable once UnusedMember.Global
 
         #endregion
 

@@ -685,7 +685,7 @@ namespace Timelapse.Controls
             }
         }
 
-        private async void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
+        private void SliderDetectionConf_ValueChanged(object sender, RoutedEventArgs e)
         {
             // Abort if we can't or shouldn't do anything
             if (sender is not RangeSlider slider || null == this.DetectionCategories || ignoreSliderUpdate)
@@ -788,7 +788,7 @@ namespace Timelapse.Controls
             this.savedSelectedCategoryCount = (CategoryCount)DataGridClassifications?.SelectedItem;
         }
 
-        private async void SliderClassificationConf_ValueChanged(object sender, RoutedEventArgs e)
+        private void SliderClassificationConf_ValueChanged(object sender, RoutedEventArgs e)
         {
             // Abort if we can't or shouldn't do anything
             if (sender is not RangeSlider slider || null == this.DetectionCategories || ignoreSliderUpdate)

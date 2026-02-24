@@ -3,7 +3,6 @@
     public enum ImageMetadataFiltersEnum
     {
         DatesOnly,
-        NotesAndMultiLinesOnly,
         AllMetadata
     }
 }

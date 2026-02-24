@@ -70,6 +70,8 @@ namespace Timelapse.Extensions
                 return difference;
             }
 
+            // ReSharper disable once UnusedMember.Global
+            // I may use it in the future?
             public bool ClassifyImageDarkness(int darkPixelThreshold, double darkPixelRatio)
             {
                 return unaltered.IsDark(darkPixelThreshold, darkPixelRatio, out _, out _);

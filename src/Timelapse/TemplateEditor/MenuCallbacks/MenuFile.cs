@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -491,14 +490,6 @@ namespace TimelapseTemplateEditor
                 MenuFileClose.IsEnabled = true;
                 MenuMetadata.IsEnabled = true;
             }
-        }
-
-        // Create a numbered label whose prefix is the label
-        private static string CreateLabel(string label)
-        {
-            string temp = Regex.Replace(label, @"ID", "Id");
-            temp = Regex.Replace(temp, @"([A-Z])", " $1");
-            return $"{temp[0].ToString().ToUpper()}{temp[1..]}";
         }
 
         /// Update the list of recent databases (ensuring they still exist) displayed under File -> Recent Databases.

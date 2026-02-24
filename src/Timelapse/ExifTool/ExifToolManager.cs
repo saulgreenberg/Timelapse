@@ -125,16 +125,6 @@ namespace Timelapse.ExifTool
         }
 
         /// <summary>
-        /// Write metadata to a file using a custom ExifTool config file
-        /// </summary>
-        public async System.Threading.Tasks.Task<ExifToolResponse> WriteMetadataWithConfigAsync(string filepath, List<KeyValuePair<string, string>> metadata,
-            string configFilePath, bool overwriteOriginal = true)
-        {
-            // Call static method directly - no wrapper instance needed
-            return await ExifToolWrapper.SetExifIntoWithConfigAsync(filepath, metadata, configFilePath, overwriteOriginal);
-        }
-
-        /// <summary>
         /// Create a batch writer for efficiently writing metadata to many files with custom config
         /// </summary>
         public ExifToolConfigBatchWriter CreateBatchWriter(string configFilePath)

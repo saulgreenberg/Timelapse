@@ -3774,6 +3774,7 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static void UnknownErrorDialog(Window owner)
         {
             var dialog = new FormattedDialog()

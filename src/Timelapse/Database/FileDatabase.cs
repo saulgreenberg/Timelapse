@@ -3362,15 +3362,5 @@ namespace Timelapse.Database
             }
         }
         #endregion
-
-        #region Public Methods - Wrapper methods for compatibility
-        /// <summary>
-        /// Wrapper method for GetDataLabelsExceptIDInSpreadsheetOrderFromControls() to maintain compatibility
-        /// </summary>
-        public List<string> GetDataLabelsExceptIDInSpreadsheetOrder()
-        {
-            return GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
-        }
-        #endregion
     }
 }

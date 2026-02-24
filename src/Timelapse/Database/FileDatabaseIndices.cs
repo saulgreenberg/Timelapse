@@ -25,7 +25,7 @@ namespace Timelapse.Database
                 new(DatabaseValues.IndexRelativePathDateTimeFile, DBTables.FileData, 
                    $"{DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}")
             ];
-            Database.IndexCreateMultipleIfNotExists(tuples);
+            Database.IndexCreateIfNotExists(tuples);
         }
 
         #endregion
@@ -45,7 +45,7 @@ namespace Timelapse.Database
                 new(DatabaseValues.IndexDetectionsClassificationConfidence, DBTables.Detections, 
                     $"{DetectionColumns.Classification}, {DetectionColumns.Conf}, {DetectionColumns.ClassificationConf}, {DetectionColumns.ImageID}"),
             ];
-            database.IndexCreateMultipleIfNotExists(tuples);
+            database.IndexCreateIfNotExists(tuples);
         }
         #endregion
 

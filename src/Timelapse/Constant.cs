@@ -429,6 +429,7 @@ namespace Timelapse.Constant
     public const string TimelapseVideosImageRecognitionTalk = TimelapseVideosUploadLink + "/ImageRecognitionForCameraTraps.mp4";
 
     public static readonly string EmailAddress = "saul@ucalgary.ca";
+    // ReSharper disable once UnusedMember.Global
     public static readonly string GmailAddress = "saul.greenberg@gmail.com";
 
     // Camtrap

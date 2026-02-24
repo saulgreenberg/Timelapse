@@ -328,6 +328,8 @@ namespace Timelapse.Controls
 
 
         // Try refreshing the source video
+        // Unused, but hesitant to delete it in case I need it in the future
+        // ReSharper disable once UnusedMember.Global
         public void TryRefreshSource()
         {
             if (this.Visibility == Visibility.Visible && null != this.MediaElement?.Source)

@@ -1601,19 +1601,5 @@ namespace Timelapse.ControlsMetadata
             return allPaths;
         }
         #endregion
-
-        #region Public Properties for compatibility with OldMetadataDataEntryPanel
-        /// <summary>
-        /// Expose the AddMetadata button for compatibility
-        /// </summary>
-        public Button AddMetadata => ButtonAddMetadata;
-
-        /// <summary>
-        /// Expose the RelativePathToCurrentImage text block for compatibility
-        /// </summary>
-        public TextBlock RelativePathToCurrentImage => TextBlockRelativePathToCurrentImage;
-
-        // ControlsPanel is automatically accessible from XAML x:Name="ControlsPanel" - no additional property needed
-        #endregion
     }
 }
