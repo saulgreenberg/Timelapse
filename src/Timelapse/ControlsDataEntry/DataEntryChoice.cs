@@ -78,7 +78,13 @@ namespace Timelapse.ControlsDataEntry
                 {
                     Content = string.Empty
                 };
-                ContentControl.Items.Insert(0, new Separator());
+                //WPF's built-in ComboBox text-search feature. When you type a character, it calls ToString() on each item to find a     
+                // match. A Separator control returns "System.Windows.Controls.Separator" from ToString() — which starts with "S", so typing "S" lands on it.
+                // The fix is to set the TextSearch.Text attached property on the separator to a character that can never be typed, so nothing will match it.
+                Separator separator = new Separator();
+                TextSearch.SetText(separator, "\x0001");
+                ContentControl.Items.Insert(0, separator);
+
                 ContentControl.Items.Insert(0, cbi);
             }
         }

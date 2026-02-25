@@ -1,4 +1,4 @@
-﻿<controls:BusyableDialogWindow  x:Class="Timelapse.Dialog.TestSomeCodeDialog"
+﻿<Window  x:Class="Timelapse.Dialog.TestSomeCodeDialog"
                                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,7 +11,7 @@
         <Grid Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -20,10 +20,10 @@
                             Icon="{x:Static toolkit:DialogIconType.Question}"
                             DialogTitle="Test"
                             What="Test dialog."
-
                             ShowExplanationVisibility="True" />
-
+            <ComboBox Name="CB" Width="200" Height="40" Grid.Row="1"/>
+            <ComboBox Name="CBX" Width="200" Height="40" Grid.Row="2"/>
         </Grid>
-        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+
     </Grid>
-</controls:BusyableDialogWindow>
+</Window  >
