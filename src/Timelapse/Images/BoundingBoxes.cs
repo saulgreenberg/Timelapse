@@ -204,7 +204,7 @@ namespace Timelapse.Images
                 // Or, if the user doesn't want them displayed, we don't show them. 
                 return false;
             }
-
+            System.Diagnostics.Debug.Print("Here");
             // Ignore any bounding box that is below the desired confidence threshold for displaying it.
             // We use MaxConfidence to test against, as its the max confidence over all bounding boxes for this file, regardless of the detection category.
             // Note that

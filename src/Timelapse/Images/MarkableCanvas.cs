@@ -178,6 +178,8 @@ namespace Timelapse.Images
 
         // Whether to force updating on an image with ImageProcessing settings (if that control is visible) whenever a new image is displayed
         private bool forceImageProcessingUpdate;
+
+        private bool isRefreshBoundingBoxesPending;
         #endregion
 
         #region Events
@@ -691,7 +693,26 @@ namespace Timelapse.Images
             RefreshBoundingBoxes();
         }
 
+        // RefreshBoundingBoxes can be invoked multiple times in rapid succession for the same image (e.g., during the initial image  
+        // display and the subsequent resize events). By using a guard flag, it will only execute the actual drawing logic once per      
+        // render cycle. This ensures that bounding boxes are still displayed on placeholder images but       
+        // without the redundant multiple-invocation overhead.
         private void RefreshBoundingBoxes()
+        {
+            if (isRefreshBoundingBoxesPending)
+            {
+                return;
+            }
+
+            isRefreshBoundingBoxesPending = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ActuallyRefreshBoundingBoxes();
+                isRefreshBoundingBoxesPending = false;
+            }), DispatcherPriority.Render);
+        }
+
+        private void ActuallyRefreshBoundingBoxes()
         {
             if (ImageToDisplay != null)
             {
