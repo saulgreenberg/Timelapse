@@ -33,6 +33,7 @@ namespace Timelapse.ControlsDataEntry
     {
         #region DataEntry-Specific Properties
         /// <summary>Gets the screen position of the content control (DataEntry mode only)</summary>
+        // ReSharper disable once UnusedMember.Global
         public abstract Point TopLeft { get; }
 
         /// <summary>Gets or sets whether the control's contents are copyable (DataEntry mode only)</summary>

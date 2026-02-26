@@ -152,6 +152,7 @@ namespace Timelapse.Extensions
                 row[column] = value;
             }
 
+            // ReSharper disable once UnusedMember.Global
             public void SetField<TEnum>(string column, TEnum value) where TEnum : struct, IComparable, IFormattable, IConvertible
             {
                 row.SetField(column, value.ToString());

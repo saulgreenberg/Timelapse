@@ -837,6 +837,54 @@ namespace Timelapse.Images
             return mousePosition.X >= 0 && mousePosition.X <= VideoPlayer.MediaElement.ActualWidth &&
                    mousePosition.Y >= 0 && mousePosition.Y <= VideoPlayer.MediaElement.ActualHeight;
         }
+
+        // Flip the OffsetLens to whichever quadrant keeps it on-screen.
+        private void UpdateOffsetLensDirection(Point mousePosition)
+        {
+            double width = VideoPlayer.MediaElement.ActualWidth;
+            double height = VideoPlayer.MediaElement.ActualHeight;
+            const double EdgeThreshold = Constant.MarkableCanvas.MagnifyingGlassDiameter;
+
+            bool nearLeft = mousePosition.X < EdgeThreshold;
+            bool nearRight = mousePosition.X > width - EdgeThreshold;
+            bool nearTop = mousePosition.Y < EdgeThreshold;
+            bool nearBot = mousePosition.Y > height - EdgeThreshold;
+
+            OffsetLensDirection newDirection;
+            if (nearTop && nearRight)
+                newDirection = OffsetLensDirection.BottomLeft;
+            else if (nearTop && nearLeft)
+                newDirection = OffsetLensDirection.BottomRight;
+            else if (nearBot && nearRight)
+                newDirection = OffsetLensDirection.TopLeft;
+            else if (nearBot && nearLeft)
+                newDirection = OffsetLensDirection.TopRight;
+            else if (nearRight)
+                // keep vertical side, flip horizontal to Left
+                newDirection = (OffsetLens.Direction == OffsetLensDirection.TopRight || OffsetLens.Direction == OffsetLensDirection.TopLeft)
+                    ? OffsetLensDirection.TopLeft
+                    : OffsetLensDirection.BottomLeft;
+            else if (nearLeft)
+                // keep vertical side, flip horizontal to Right
+                newDirection = (OffsetLens.Direction == OffsetLensDirection.TopRight || OffsetLens.Direction == OffsetLensDirection.TopLeft)
+                    ? OffsetLensDirection.TopRight
+                    : OffsetLensDirection.BottomRight;
+            else if (nearTop)
+                // keep horizontal side, flip to Bottom
+                newDirection = (OffsetLens.Direction == OffsetLensDirection.TopLeft || OffsetLens.Direction == OffsetLensDirection.BottomLeft)
+                    ? OffsetLensDirection.BottomLeft
+                    : OffsetLensDirection.BottomRight;
+            else if (nearBot)
+                // keep horizontal side, flip to Top
+                newDirection = (OffsetLens.Direction == OffsetLensDirection.TopLeft || OffsetLens.Direction == OffsetLensDirection.BottomLeft)
+                    ? OffsetLensDirection.TopLeft
+                    : OffsetLensDirection.TopRight;
+            else
+                newDirection = OffsetLens.Direction; // centre — no change
+
+            if (newDirection != OffsetLens.Direction)
+                OffsetLens.SetDirection(newDirection);
+        }
         #endregion
 
         #region Public / Private methods: ThumbnailGrid
@@ -1075,6 +1123,7 @@ namespace Timelapse.Images
             else if (OffsetLens.IsEnabled && displayingImage == false)
             {
                 SetMagnifiersAccordingToCurrentState(false, true);
+                UpdateOffsetLensDirection(e.GetPosition(VideoPlayer.MediaElement));
             }
 
             if (isPanning)

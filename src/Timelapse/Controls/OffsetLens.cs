@@ -1,6 +1,8 @@
-﻿using System.Windows;
+using System;
+using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
@@ -10,20 +12,8 @@ using TimelapseWpf.Toolkit;
 namespace Timelapse.Controls
 {
     /// <summary>
-    /// An implementation of the Offset lens, which inherits the XCEED toolkit Magnifier Adorner
-    /// Some things to work on here
-    /// - Direction can be explicitly set to four angles. However, I only use the NorthEast angle for now but left the code for angles intact
-    /// - To implementation Direction rotation, I modified the XCEED manifier to:
-    ///   - intercept RenderTransform, where it rotates the magnifier part differently from the entire object to keep it upright
-    ///      as otherwise the magnified region would be rotated as well)
-    ///   -implement a private RotateFactor, which when set will automatically rotate the magnifier part above
-    ///    All modified code is in a well defined region. However, it can be discarded if needed if I decide to not use any magnifer render transforms.
-    /// - Having said that, I don't use it as this current implementation just uses the NorthEast angle, so its for future work    
-    ///     The problem is that animation doesn't seem to work on it, as part of the Magnifier uses Freeze - I have to look into that.
-    ///     I also have to detect the edges of objects to decide when to do a rotation.
-    /// - Using this offset lens also works on other objects. However, if those objects are scaled, the magnifier is as well, as it is an adorner.
-    ///     Its possible that https://stackoverflow.com/questions/9672207/how-to-create-adorners-that-dont-scale-with-adornedelement has a solution.
-    ///  - Various sizes are hard-wired. These should be dyanmic and placed in Constants.
+    /// An implementation of the Offset lens, which inherits the toolkit Magnifier Adorner
+    /// To be used over videos
     /// </summary>
     public class OffsetLens : Magnifier
     {
@@ -70,6 +60,44 @@ namespace Timelapse.Controls
         private Point Offset = new(125, -125);
         private MagHandleAdorner magHandleAdorner;
         private AdornerLayer myAdornerLayer;
+        // Persistent transforms kept across direction changes so BeginAnimation can be called repeatedly.
+        // (Adorners track layout position, not RenderTransform, so the adorner needs its own matching translate.)
+        private TranslateTransform lensTranslate;
+        private TranslateTransform adornerTranslate;
+        #endregion
+
+        #region Arc-animation DependencyProperty
+        // All four lens positions sit on the same circle (r = |Offset|*√2) centred on the cursor,
+        // exactly 90° apart.  Animating a single angle and deriving (x,y) in the callback gives a
+        // circular arc — the same rigid-unit-rotation feel as the MagnifyingGlass — without
+        // rotating the lens content.  The callback also calls InvalidateVisual on the handle
+        // adorner each frame, so no separate CompositionTarget.Rendering hook is needed.
+        private static readonly DependencyProperty CurrentAngleProperty =
+            DependencyProperty.Register(
+                "CurrentAngle", typeof(double), typeof(OffsetLens),
+                new PropertyMetadata(-45.0, OnCurrentAngleChanged));
+
+        private static void OnCurrentAngleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not OffsetLens lens || lens.lensTranslate == null) return;
+
+            double theta = (double)e.NewValue * Math.PI / 180.0;
+            double r = Math.Sqrt(lens.Offset.X * lens.Offset.X + lens.Offset.Y * lens.Offset.Y);
+            double x = r * Math.Cos(theta);
+            double y = r * Math.Sin(theta);
+
+            lens.lensTranslate.X = x;
+            lens.lensTranslate.Y = y;
+            lens.adornerTranslate.X = x;
+            lens.adornerTranslate.Y = y;
+            lens.magHandleAdorner?.InvalidateVisual();
+        }
+        #endregion
+
+        #region Internal accessor for MagHandleAdorner
+        // Exposes the current animated offset so OnRender can compute the handle position
+        // dynamically at every frame during the arc.
+        internal TranslateTransform AdornerTranslate => adornerTranslate;
         #endregion
 
         #region Constructors, Loading
@@ -92,14 +120,16 @@ namespace Timelapse.Controls
         {
             IsEnabled = true;
 
-            // Handle adorner, including calculating its original offset
+            // Handle adorner — give it its own persistent TranslateTransform so we can
+            // animate it in sync with the lens transform (adorners follow layout position,
+            // not the adorned element's RenderTransform, so the adorner needs its own offset).
             myAdornerLayer = AdornerLayer.GetAdornerLayer(this);
             magHandleAdorner = new(this)
             {
                 IsHitTestVisible = false
             };
-            TranslateTransform tt = new(Offset.X, Offset.Y);
-            magHandleAdorner.RenderTransform = tt;
+            adornerTranslate = new TranslateTransform(Offset.X, Offset.Y);
+            magHandleAdorner.RenderTransform = adornerTranslate;
             if (null != myAdornerLayer)
             {
                 myAdornerLayer.Add(magHandleAdorner);
@@ -109,46 +139,48 @@ namespace Timelapse.Controls
                 TracePrint.NullException(nameof(myAdornerLayer));
             }
 
-            SetDirection(OffsetLensDirection.TopRight);
+            // Initialize lens at default TopRight position (no animation on first placement)
+            lensTranslate = new TranslateTransform(Offset.X, Offset.Y);
+            RenderTransform = lensTranslate;
+            Direction = OffsetLensDirection.TopRight;
         }
         #endregion
 
         #region Private Methods (internal use)
-        // Actually set the direction of the offset lens
-        private void SetDirection(OffsetLensDirection direction)
+        // Swing the lens to the new direction along the shortest circular arc around the cursor.
+        //
+        // All four positions lie on a circle of radius r = |Offset|*√2 at angles:
+        //   TopRight = −45°,  TopLeft = −135°,  BottomRight = +45°,  BottomLeft = +135°
+        // Animating the angle DP (instead of X and Y separately) keeps r constant throughout,
+        // so the lens sweeps in an arc exactly like the MagnifyingGlass rotates around its handle.
+        public void SetDirection(OffsetLensDirection direction)
         {
-            double x;
-            double y;
-            double angle;
+            // Loaded hasn't fired yet — transforms aren't initialised; the initial TopRight
+            // position will be set correctly once Loaded runs.
+            if (lensTranslate == null || adornerTranslate == null)
+                return;
 
-            // Set lens transformation
-            switch (direction)
+            double targetAngle = direction switch
             {
-                case OffsetLensDirection.TopLeft: // Up and Left
-                    x = -Offset.X;
-                    y = Offset.Y;
-                    angle = -90;
-                    break;
-                case OffsetLensDirection.TopRight: // Up and Right
-                default:
-                    x = Offset.X;
-                    y = Offset.Y;
-                    angle = 0;
-                    break;
-                case OffsetLensDirection.BottomLeft: // Lower Right
-                    x = -Offset.X;
-                    y = 3 * Offset.Y;
-                    angle = -180;
-                    break;
-                case OffsetLensDirection.BottomRight: // Lower Left
-                    x = Offset.X;
-                    y = 3 * Offset.Y;
-                    angle = -270;
-                    break;
-            }
-            // Now rotate and position the entire magnifying glass
-            RenderTransform = CreateTransformGroup(x, y, angle);
+                OffsetLensDirection.TopLeft    => -135.0,
+                OffsetLensDirection.BottomLeft =>  135.0,
+                OffsetLensDirection.BottomRight =>  45.0,
+                _                              =>  -45.0   // TopRight
+            };
+
+            // Current angle from the live transform values (correct even mid-arc, because the
+            // OnCurrentAngleChanged callback keeps lensTranslate in sync each frame).
+            double currentAngle = Math.Atan2(lensTranslate.Y, lensTranslate.X) * (180.0 / Math.PI);
+
+            // Shortest arc: normalise delta to (−180, +180]
+            double delta = targetAngle - currentAngle;
+            if (delta >  180.0) delta -= 360.0;
+            if (delta < -180.0) delta += 360.0;
+
             Direction = direction;
+            BeginAnimation(CurrentAngleProperty,
+                new DoubleAnimation(currentAngle, currentAngle + delta,
+                    new Duration(TimeSpan.FromMilliseconds(500))));
         }
 
         private static LinearGradientBrush MakeOutlineBrush()
@@ -171,57 +203,60 @@ namespace Timelapse.Controls
             outlineBrush.GradientStops.Add(new(darkGrey, 1));
             return outlineBrush;
         }
-
-        private static TransformGroup CreateTransformGroup(double x, double y, double angle)
-        {
-            TransformGroup transformGroup = new();
-            TranslateTransform tt = new(x, y);
-            RotateTransform rt = new(angle);
-            transformGroup.Children.Add(tt);
-            transformGroup.Children.Add(rt);
-            return transformGroup;
-        }
         #endregion
     }
 
     #region Class: Magnifier Handle and Crosshairs Adorner. Used internal to construct the magnifying glass appearance
-    // Create an adorner for the magnifier that attahces a handle to it and draws crosshairs at its center
+    // Create an adorner for the magnifier that attaches a handle to it and draws crosshairs at its center
     internal class MagHandleAdorner : Adorner
     {
         internal MagHandleAdorner(UIElement adornedElement)
          : base(adornedElement)
         {
         }
-        // A common way to implement an adorner's rendering behavior is to override the OnRender
-        // method, which is called by the layout system as part of a rendering pass.
+
+        // Called by the layout system as part of each rendering pass, and explicitly via
+        // InvalidateVisual() on every animation frame while the lens is swinging.
         protected override void OnRender(DrawingContext drawingContext)
         {
             Rect adornedElementRect = new(AdornedElement.DesiredSize);
-            int centerOffset = 75;
-            Point handleStartOffset = new(0, 0);
-            Point handleEndOffset = new(-39, 39);
-            Point center = new(adornedElementRect.Width / 2, adornedElementRect.Height / 2);
-            Point centerLeft = PointSubtract(center, new(-centerOffset, 0));
-            Point centerRight = PointSubtract(center, new(centerOffset, 0));
-            Point centerTop = PointSubtract(center, new(0, -centerOffset));
-            Point centerBottom = PointSubtract(center, new(0, centerOffset));
-            Point handleStart = PointSubtract(adornedElementRect.BottomLeft, handleStartOffset);
-            Point handleEnd = PointSubtract(adornedElementRect.BottomLeft, handleEndOffset);
+            double radius = adornedElementRect.Width / 2;   // 125
+            Point center = new(radius, radius);
 
-            // Draw the handle
-            Pen handlePen = new(new SolidColorBrush(Colors.Green), 4);
-            drawingContext.DrawLine(handlePen, handleStart, handleEnd);
-            drawingContext.DrawLine(handlePen, handleStart, handleEnd);
-
-            // Draw the crosshairs
+            // Crosshairs at lens center (unchanged)
+            const int crosshairHalf = 75;
             Pen crosshairPen = new(new SolidColorBrush(Colors.LightGray), .5);
-            drawingContext.DrawLine(crosshairPen, centerLeft, centerRight);
-            drawingContext.DrawLine(crosshairPen, centerTop, centerBottom);
-        }
+            drawingContext.DrawLine(crosshairPen,
+                center with { X = center.X - crosshairHalf },
+                center with { X = center.X + crosshairHalf });
+            drawingContext.DrawLine(crosshairPen,
+                center with { Y = center.Y - crosshairHalf },
+                center with { Y = center.Y + crosshairHalf });
 
-        private static Point PointSubtract(Point p1, Point p2)
-        {
-            return new(p1.X - p2.X, p1.Y - p2.Y);
+            // Handle: bottom fixed at mouse cursor, top at the nearest point on the lens border.
+            //
+            // Coordinate derivation:
+            //   The adorner's layout origin is the lens's layout position (cursor centre).
+            //   adornerTranslate(tx, ty) is the post-render shift applied by WPF, so a point
+            //   drawn at (x, y) appears on screen at (layoutOrigin + tx + x, layoutOrigin + ty + y).
+            //   Cursor on screen == layoutOrigin, so:
+            //       cursor_draw = (radius − tx,  radius − ty)
+            //   The lens circle: centre (radius, radius), radius r.
+            //   Border point closest to cursor = centre + radius * normalise(cursor_draw − centre)
+            //                                  = centre + radius * normalise(−tx, −ty)
+            TranslateTransform at = (AdornedElement as OffsetLens)?.AdornerTranslate;
+            if (at == null) return;
+
+            Point cursorDraw = new(radius - at.X, radius - at.Y);
+            Vector toCursor = cursorDraw - center;  // == (−tx, −ty)
+            if (toCursor.Length < 1.0) return;      // cursor at lens centre — degenerate, skip
+
+            toCursor.Normalize();
+            Point borderPoint = new(center.X + toCursor.X * radius,
+                                    center.Y + toCursor.Y * radius);
+
+            Pen handlePen = new(new SolidColorBrush(Colors.Green), 4);
+            drawingContext.DrawLine(handlePen, cursorDraw, borderPoint);
         }
     }
     #endregion

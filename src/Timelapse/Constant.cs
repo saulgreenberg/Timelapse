@@ -107,7 +107,6 @@ namespace Timelapse.Constant
         public const string DecimalAny = "DecimalAny"; // A decimal
         public const string DecimalPositive = "DecimalPositive"; // A decimal
         public const string DateTime_ = "DateTime_"; // A custom DateTime
-        public const string DateTimeCustom = "DateTimeCustom"; // A custom DateTime (legacy)
         public const string Date_ = "Date_"; // A custom DateTime showing only the date
         public const string Time_ = "Time_"; // A custom DateTime showing only the time
         // A list of all control types

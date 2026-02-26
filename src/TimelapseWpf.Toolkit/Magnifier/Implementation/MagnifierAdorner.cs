@@ -41,8 +41,8 @@ namespace TimelapseWpf.Toolkit
             UpdateViewBox();
             AddVisualChild(_magnifier);
 
-            Loaded += (_, _) => InputManager.Current.PostProcessInput += OnProcessInput;
-            Unloaded += (_, _) => InputManager.Current.PostProcessInput -= OnProcessInput;
+            Loaded += (_, _) => CompositionTarget.Rendering += OnRendering;
+            Unloaded += (_, _) => CompositionTarget.Rendering -= OnRendering;
         }
 
 
@@ -50,30 +50,20 @@ namespace TimelapseWpf.Toolkit
 
         #region Private/Internal methods
 
-        private void OnProcessInput(object sender, ProcessInputEventArgs e)
+        private void OnRendering(object sender, EventArgs e)
         {
-            if (!IsLoaded)
-            {
-                // Avoids System.ComponentModel.Win32Exception in PresentationCore.dll when the window unloaded and the mouse moves.
+            if (!IsLoaded || _magnifier.IsFrozen)
                 return;
-            }
 
-            Point pt;
-            this.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                pt = Mouse.GetPosition(this);
+            Point pt = Mouse.GetPosition(this);
 
-                if (DoubleHelper.AreVirtuallyEqual(_currentMousePosition, pt) && DoubleHelper.AreVirtuallyEqual(_magnifier.ZoomFactor, _currentZoomFactor))
-                    return;
+            if (DoubleHelper.AreVirtuallyEqual(_currentMousePosition, pt) && DoubleHelper.AreVirtuallyEqual(_magnifier.ZoomFactor, _currentZoomFactor))
+                return;
 
-                if (_magnifier.IsFrozen)
-                    return;
-
-                _currentMousePosition = pt;
-                _currentZoomFactor = _magnifier.ZoomFactor;
-                UpdateViewBox();
-                InvalidateArrange();
-            }), System.Windows.Threading.DispatcherPriority.Background);
+            _currentMousePosition = pt;
+            _currentZoomFactor = _magnifier.ZoomFactor;
+            UpdateViewBox();
+            InvalidateArrange();
         }
 
         internal void UpdateViewBox()
@@ -91,27 +81,20 @@ namespace TimelapseWpf.Toolkit
 
         private Point CalculateViewBoxLocation()
         {
-            double left = 0;
-            double top = 0;
+            Point adorner = Mouse.GetPosition(this);
+            Point element = Mouse.GetPosition(AdornedElement);
 
-            this.Dispatcher.BeginInvoke(new Action(() =>
-             {
-                 Point adorner = Mouse.GetPosition(this);
-                 Point element = Mouse.GetPosition(AdornedElement);
+            var offsetX = element.X - adorner.X;
+            var offsetY = element.Y - adorner.Y;
 
-                 var offsetX = element.X - adorner.X;
-                 var offsetY = element.Y - adorner.Y;
+            //An element will use the offset from its parent (StackPanel, Grid, etc.) to be rendered.
+            //When this element is put in a VisualBrush, the element will draw with that offset applied.
+            //To fix this: we add that parent offset to Magnifier location.
+            Vector parentOffsetVector = VisualTreeHelper.GetOffset(_magnifier.Target);
+            Point parentOffset = new(parentOffsetVector.X, parentOffsetVector.Y);
 
-                 //An element will use the offset from its parent (StackPanel, Grid, etc.) to be rendered.
-                 //When this element is put in a VisualBrush, the element will draw with that offset applied. 
-                 //To fix this: we add that parent offset to Magnifier location.
-                 Vector parentOffsetVector = VisualTreeHelper.GetOffset(_magnifier.Target);
-                 Point parentOffset = new(parentOffsetVector.X, parentOffsetVector.Y);
-
-                 left = _currentMousePosition.X - ((_magnifier.ViewBox.Width / 2) + offsetX) + parentOffset.X;
-                 top = _currentMousePosition.Y - ((_magnifier.ViewBox.Height / 2) + offsetY) + parentOffset.Y;
-
-             }), System.Windows.Threading.DispatcherPriority.Background);
+            double left = _currentMousePosition.X - ((_magnifier.ViewBox.Width / 2) + offsetX) + parentOffset.X;
+            double top = _currentMousePosition.Y - ((_magnifier.ViewBox.Height / 2) + offsetY) + parentOffset.Y;
             return new(left, top);
         }
 
