@@ -19,7 +19,7 @@ namespace Timelapse.Images
         // Given a stream and various image-processing parameters, generate a bitmap frame processed according to those parameters
         // Arguments also indicates orientation as read from the exif orientaton flag:
         // - Angle gives the angle in degrees (eg., 90) while rotateflip gives it as a rotatefliptype. 
-        public static async Task<BitmapFrame> StreamToImageProcessedBitmap(MemoryStream inImageStream, double brightness, int contrast, bool sharpen, bool detectEdges, bool useGamma, float gammaValue, int rotation, RotateFlipType rotateFlip)
+        public static async Task<BitmapFrame> StreamToImageProcessedBitmap(MemoryStream inImageStream, double brightness, int contrast, bool sharpen, bool mono, bool detectEdges, bool useGamma, float gammaValue, int rotation, RotateFlipType rotateFlip)
         {
             if (inImageStream == null || inImageStream.CanRead == false)
             {
@@ -68,13 +68,17 @@ namespace Timelapse.Images
                             // Apply edge detection
                             if (detectEdges)
                             {
-                                x.DetectEdges(KnownEdgeDetectorKernels.Scharr);
+                                x.DetectEdges(KnownEdgeDetectorKernels.Kirsch);
                             }
 
                             // Apply sharpening
                             if (sharpen)
                             {
                                 x.GaussianSharpen(3.0f); // radius 3
+                            }
+                            if (mono)
+                            {
+                                x.HistogramEqualization();
                             }
                         });
 

@@ -175,6 +175,9 @@ namespace Timelapse.Images
         private bool displayingImage;
 
         private readonly OffsetLens OffsetLens = new();
+
+        // Whether to force updating on an image with ImageProcessing settings (if that control is visible) whenever a new image is displayed
+        private bool forceImageProcessingUpdate;
         #endregion
 
         #region Events
@@ -353,7 +356,7 @@ namespace Timelapse.Images
             // change to new markers
             markers = markersList;
 
-            ImageToDisplay.Source = bitmapSource;
+            //ImageToDisplay.Source = bitmapSource;
             // initiate render of magnified image
             // The asynchronous chain behind this is not entirely trivial.  The links are
             //   1) ImageToMagnify_SizeChanged fires and updates canvasToMagnify's size to match
@@ -367,6 +370,19 @@ namespace Timelapse.Images
             // Another race exists as this.Markers can be set during the above rendering, initiating a second, concurrent marker render.  This is unavoidable
             // due to the need to expose a marker property but is mitigated by accepting new markers through this API and performing the set above as 
             // this.markers rather than this.Markers.
+
+            if (GlobalReferences.MainWindow.ImageAdjuster?.IsVisible == true && GlobalReferences.MainWindow.ImageAdjuster.UpdateAutomatically && GlobalReferences.MainWindow.ImageAdjuster.IsNeutralImageAppearance() == false
+                && false == Constant.ImageValues.IsPlaceholderImage(bitmapSource))
+            {
+                // Update the image as at least one parameter has changed (which will affect the image's appearance)
+                // TODO Note that because of the delay, the markers and bounding box may appear before the image appears. Not sure if its easily fixed
+                forceImageProcessingUpdate = true;
+                timerImageProcessingUpdate.Start();
+            }
+            else
+            {
+                ImageToDisplay.Source = bitmapSource;
+            }
             ImageToMagnify.Source = bitmapSource;
             displayingImage = true;
 

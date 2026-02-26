@@ -522,6 +522,14 @@ namespace Timelapse.Constant
         public static readonly Lazy<BitmapImage> BlankVideo = Load("BlankVideo.jpg");
         public static readonly Lazy<BitmapImage> FilePathTooLong = Load("FilePathTooLong.jpg");
 
+        public static bool IsPlaceholderImage(BitmapSource source) =>
+            source == Corrupt.Value ||
+            source == FileNoLongerAvailable.Value ||
+            source == NoFilesAvailable.Value ||
+            source == LoadAnImageSet.Value ||
+            source == BlankVideo.Value ||
+            source == FilePathTooLong.Value;
+
         private static Lazy<BitmapImage> Load(string fileName)
         {
             return new(() =>

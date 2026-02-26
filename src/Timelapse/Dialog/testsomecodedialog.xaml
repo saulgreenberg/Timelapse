@@ -3,7 +3,6 @@
                                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                                xmlns:controls="clr-namespace:Timelapse.Controls"
                                 xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
                                 mc:Ignorable="d"
                                 Title="Export data into image files as XMP/IPTC metadata" Height="900" Width="740" Loaded="TestSomeCodeDialog_OnLoaded">

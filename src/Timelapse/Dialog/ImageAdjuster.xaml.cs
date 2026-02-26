@@ -14,6 +14,11 @@ namespace Timelapse.Dialog
     /// </summary>
     public partial class ImageAdjuster
     {
+        #region Public properties
+
+        public bool UpdateAutomatically => this.CBUpdateAutomatically?.IsChecked == true;
+        #endregion
+
         #region Private variables
         // Store the various parameters that indicate how the image should be adjusted
         private int Contrast;
@@ -21,6 +26,7 @@ namespace Timelapse.Dialog
         private bool DetectEdges;
         private bool Sharpen;
         private bool UseGamma;
+        private bool Mono;
         private float GammaValue = 1;
 
         // State information
@@ -52,6 +58,7 @@ namespace Timelapse.Dialog
             // Register the various control callbacks. 
             CBEdges.Checked += RadioButtons_CheckChanged;
             CBSharpen.Checked += RadioButtons_CheckChanged;
+            CBMono.Checked += RadioButtons_CheckChanged;
             CBNone.Checked += RadioButtons_CheckChanged;
             ContrastSlider.ValueChanged += ImageSliders_ValueChanged;
             BrightnessSlider.ValueChanged += ImageSliders_ValueChanged;
@@ -105,15 +112,19 @@ namespace Timelapse.Dialog
             CBNone.Foreground = enabledState ? enabledOtherBrush : isEnabledBrush;
             CBEdges.Foreground = CBNone.Foreground;
             CBSharpen.Foreground = CBNone.Foreground;
+            CBMono.Foreground = CBNone.Foreground;
             BrightnessLabel.Foreground = CBNone.Foreground;
             ContrastLabel.Foreground = CBNone.Foreground;
+            
 
             OtherControlsArea.Background = enabledState && (CBGamma.IsChecked == false) ? Brushes.White : Brushes.WhiteSmoke;
             GammaArea.Background = enabledState && (CBGamma.IsChecked == true) ? Brushes.White : Brushes.WhiteSmoke;
             CBGamma.Foreground = enabledState ? enabledGammaBrush : isEnabledBrush;
 
             ButtonArea.Background = enabledState ? Brushes.White : Brushes.WhiteSmoke;
-            ButtonReset.IsEnabled = !IsNeutral();
+            ButtonReset.IsEnabled = !IsNeutralControlSettings();
+            CBUpdateAutomatically.IsEnabled = !IsNeutralControlSettings();
+            TBUpdateAutomatically.Foreground = CBUpdateAutomatically.IsEnabled ? Brushes.Black : Brushes.Gray;
         }
         #endregion
 
@@ -129,24 +140,27 @@ namespace Timelapse.Dialog
                 return;
             }
 
+            
             // We only update everything and send the event if the final values differ from the current values
-            if (forceUpdate || (Contrast != Convert.ToInt32(ContrastSlider.Value) || Math.Abs(Brightness - BrightnessSlider.Value) > .0001 || Math.Abs(GammaValue - GammaSlider.Value) > .0001
-                || DetectEdges != CBEdges.IsChecked || Sharpen != CBSharpen.IsChecked || UseGamma != CBGamma.IsChecked))
+            if (forceUpdate || Contrast != Convert.ToInt32(ContrastSlider.Value) || Math.Abs(Brightness - BrightnessSlider.Value) > .0001 || Math.Abs(GammaValue - GammaSlider.Value) > .0001
+                || DetectEdges != CBEdges.IsChecked || Sharpen != CBSharpen.IsChecked || UseGamma != CBGamma.IsChecked)
             {
                 Contrast = Convert.ToInt32(ContrastSlider.Value);
                 Brightness = BrightnessSlider.Value;
                 DetectEdges = CBEdges.IsChecked == true;
                 Sharpen = CBSharpen.IsChecked == true;
+                Mono = CBMono.IsChecked == true;
                 UseGamma = CBGamma.IsChecked == true;
                 GammaValue = (float)(GammaSlider.Maximum - GammaSlider.Value);
 
                 // Generate an event to inform the Markable Canvase to update the image. 
                 // Note that the last argument (to invoke an external image viewer) is always false, as that is handeld separately
-                OnImageProcessingParametersChanged(new(Brightness, Contrast, Sharpen, DetectEdges, UseGamma, GammaValue, false, forceUpdate));
+                OnImageProcessingParametersChanged(new(Brightness, Contrast, Sharpen, DetectEdges, Mono, UseGamma, GammaValue, false, forceUpdate));
             }
-            ButtonReset.IsEnabled = !IsNeutral();
+            ButtonReset.IsEnabled = !IsNeutralControlSettings();
         }
 
+       
         // Reset the controls  to their neutral values (i.e. to restore the original image)
         private void ResetControlsToNeutralValues()
         {
@@ -175,7 +189,7 @@ namespace Timelapse.Dialog
         {
             // Generate an event to inform the Markable Canvas, in this case to invoke the file viewer 
             // The only thing of importance in this call is that the final argument (openExternalViewer) is true. The other values will be ignored. 
-            OnImageProcessingParametersChanged(new(Brightness, Contrast, Sharpen, DetectEdges, UseGamma, GammaValue, true, false));
+            OnImageProcessingParametersChanged(new(Brightness, Contrast, Sharpen, DetectEdges, Mono, UseGamma, GammaValue, true, false));
         }
 
         // Update allimage processing parameters whenever the user changes any of them
@@ -200,6 +214,11 @@ namespace Timelapse.Dialog
 
         private void ButtonReset_Click(object sender, RoutedEventArgs e)
         {
+            DoSetToNeutralAndApply();
+        }
+
+        private void DoSetToNeutralAndApply()
+        {
             ResetControlsToNeutralValues();
             UpdateImageParametersAndGenerateEvent();
         }
@@ -222,11 +241,42 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Helpers
-        private bool IsNeutral()
+        // True if all controls / sliders are at their neutral settings
+        // Used to see if any control is off their neutral setting, even if some are not enabled
+        private bool IsNeutralControlSettings()
         {
-            return ((CBGamma.IsChecked == false && CBNone.IsChecked == true && Math.Abs(BrightnessSlider.Value - 1) < .001 && ContrastSlider.Value == 0)
-                     || (CBGamma.IsChecked == true && Math.Abs(GammaSlider.Value - 1) < .0001));
+            return CBGamma.IsChecked == false
+                    && CBNone.IsChecked == true
+                    && 0 == Convert.ToInt32(ContrastSlider.Value)
+                    && Math.Abs(1 - BrightnessSlider.Value) < .0001
+                    && Math.Abs(GammaSlider.Value) < .0001;
+        }
+
+        // true if the settings are neutral, i.e., would not change the image appearance
+        public bool IsNeutralImageAppearance()
+        {
+            return CBGamma.IsChecked == false
+                   && CBNone.IsChecked == true
+                   && 0 == Convert.ToInt32(ContrastSlider.Value)
+                   && Math.Abs(1 - BrightnessSlider.Value) < .0001;
         }
         #endregion
+
+        private void CBUpdateAutomatically_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is not CheckBox cb)
+            {
+                return;
+            }
+
+            if (cb.IsChecked == true)
+            {
+                UpdateImageParametersAndGenerateEvent(true);
+            }
+            else
+            {
+                DoSetToNeutralAndApply();
+            }
+        }
     }
 }

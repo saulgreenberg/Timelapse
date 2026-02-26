@@ -87,7 +87,7 @@ namespace Timelapse
         private List<QuickPasteEntry> quickPasteEntries;              // 0 or more custum paste entries that can be created or edited by the user
         private QuickPasteWindow quickPasteWindow;
 
-        private ImageAdjuster ImageAdjuster;    // The image adjuster controls
+        public ImageAdjuster ImageAdjuster;    // The image adjuster controls
 
 
         // Timer for periodically updating images as the ImageNavigator slider is being used

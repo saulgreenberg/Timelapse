@@ -38,14 +38,17 @@ namespace Timelapse.Images
         private double brightness;
         private bool detectEdges;
         private bool sharpen;
+        private bool mono;
         private bool useGamma;
         private float gammaValue;
+
 
         // We track the last parameters used, as if they haven't changed we won't update the image
         private int lastContrast;
         private double lastBrightness;
         private bool lastDetectEdges;
         private bool lastSharpen;
+        private bool lastMono;
         private bool lastUseGamma;
         private float lastGammaValue = 1;
         #endregion
@@ -55,7 +58,7 @@ namespace Timelapse.Images
         private void InitializeImageAdjustment()
         {
             // When started, ensures that the final image processing parameters are applied to the image
-            timerImageProcessingUpdate.Interval = TimeSpan.FromSeconds(0.1);
+            timerImageProcessingUpdate.Interval = TimeSpan.FromSeconds(0.01);
             timerImageProcessingUpdate.Tick += TimerImageProcessingUpdate_Tick;
         }
 
@@ -103,7 +106,7 @@ namespace Timelapse.Images
             }
 
             // Process the image based on the current image processing arguments.
-            if (e.ForceUpdate == false && (e.Contrast == lastContrast && Math.Abs(e.Brightness - lastBrightness) < .001 && e.DetectEdges == lastDetectEdges && e.Sharpen == lastSharpen && e.UseGamma == lastUseGamma && Math.Abs(e.GammaValue - lastGammaValue) < .0001))
+            if (e.ForceUpdate == false && (e.Contrast == lastContrast && Math.Abs(e.Brightness - lastBrightness) < .001 && e.DetectEdges == lastDetectEdges && e.Sharpen == lastSharpen && e.Mono == lastMono && e.UseGamma == lastUseGamma && Math.Abs(e.GammaValue - lastGammaValue) < .0001))
             {
                 // If there is no change from the last time we processed an image, abort as it would not make any difference to what the user sees
                 return;
@@ -112,6 +115,7 @@ namespace Timelapse.Images
             brightness = e.Brightness;
             detectEdges = e.DetectEdges;
             sharpen = e.Sharpen;
+            mono = e.Mono;
             useGamma = e.UseGamma;
             gammaValue = e.GammaValue;
             timerImageProcessingUpdate.Start();
@@ -138,11 +142,13 @@ namespace Timelapse.Images
             {
                 return;
             }
-            if (contrast != lastContrast || Math.Abs(brightness - lastBrightness) > .01 || detectEdges != lastDetectEdges || sharpen != lastSharpen || lastUseGamma != useGamma || Math.Abs(lastGammaValue - gammaValue) > .0001)
+            if (forceImageProcessingUpdate || contrast != lastContrast || Math.Abs(brightness - lastBrightness) > .01 || detectEdges != lastDetectEdges || sharpen != lastSharpen ||  mono != lastMono || lastUseGamma != useGamma || Math.Abs(lastGammaValue - gammaValue) > .0001)
             {
                 // Update the image as at least one parameter has changed (which will affect the image's appearance)
                 await UpdateAndProcessImage().ConfigureAwait(true);
+                forceImageProcessingUpdate = false;
             }
+
             timerImageProcessingUpdate.Stop();
         }
 
@@ -177,15 +183,14 @@ namespace Timelapse.Images
                 lastBrightness = brightness;
                 lastContrast = contrast;
                 lastSharpen = sharpen;
+                lastMono = mono;
                 lastDetectEdges = detectEdges;
                 lastUseGamma = useGamma;
                 lastGammaValue = gammaValue;
-                BitmapFrame bf = await ImageProcess.StreamToImageProcessedBitmap(imageStream, brightness, contrast, sharpen, detectEdges, useGamma, gammaValue, angle, rotateFlip).ConfigureAwait(true);
+                BitmapFrame bf = await ImageProcess.StreamToImageProcessedBitmap(imageStream, brightness, contrast, sharpen, mono, detectEdges, useGamma, gammaValue, angle, rotateFlip).ConfigureAwait(true);
                 if (bf != null)
                 {
                     ImageToDisplay.Source = bf;
-                    // In an earlier version, I was I was invoking StreamToImageProcessedBitmap twice, but am not sure why. So I commented it out but left it here just in case there was a reason for this.
-                    // await ImageProcess.StreamToImageProcessedBitmap(imageStream, this.brightness, this.contrast, this.sharpen, this.detectEdges, this.useGamma, this.gammaValue).ConfigureAwait(true);
                 }
             }
             catch

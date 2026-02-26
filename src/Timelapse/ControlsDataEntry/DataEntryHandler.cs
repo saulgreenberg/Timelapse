@@ -1476,16 +1476,11 @@ namespace Timelapse.ControlsDataEntry
         {
             // If anything is null, we defer resetting anything. Note that we may get an update later (e.g., via the timer)
             DataEntryHandler handler = GlobalReferences.MainWindow?.DataHandler;
-            if (handler == null)
+            if (handler?.ImageCache?.Current == null)
             {
-                TracePrint.NullException(nameof(handler));
                 return null;
             }
-            if (handler.ImageCache?.Current == null)
-            {
-                TracePrint.NullException(nameof(handler.ImageCache));
-                return null;
-            }
+
             if (handler.ImageCache?.CurrentDifferenceState != null && handler.FileDatabase != null)
             {
                 // Get the path
