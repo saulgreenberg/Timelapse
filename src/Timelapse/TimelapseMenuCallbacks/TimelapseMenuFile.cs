@@ -138,6 +138,8 @@ namespace Timelapse
             Mouse.OverrideCursor = Cursors.Wait;
             BusyCancelIndicator.ResetAndEnableImmediately();
             BusyCancelIndicator.Message = "Loading images. Please wait...";
+            BusyCancelIndicator.CancelButtonIsEnabled = false;
+            BusyCancelIndicator.CancelButtonText = "Processing...";
             BusyCancelIndicator.UseStaticProgressBar = true;
             var renderTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             EventHandler renderingHandler = null;
