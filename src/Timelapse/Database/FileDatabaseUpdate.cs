@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Timelapse.Constant;
+using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Database
@@ -37,7 +40,7 @@ namespace Timelapse.Database
         /// <summary>
         /// Set one property on all rows in the selected view to a given value
         /// </summary>
-        public void UpdateFiles(ImageRow valueSource, DataEntryControl control)
+        public async Task UpdateFiles(ImageRow valueSource, DataEntryControl control)
         {
             // We update the the files using the database format for dates (Time is the same across all of them)
             if (control is DataEntryDateTimeCustom dateTimeCustom)
@@ -45,7 +48,7 @@ namespace Timelapse.Database
                 if (dateTimeCustom.ContentControl.Value != null)
                 {
                     string dateTimeAsDatabaseString = DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimeCustom.ContentControl.Value);
-                    UpdateFiles(dateTimeAsDatabaseString, control.DataLabel, 0, CountAllCurrentlySelectedFiles - 1);
+                    await UpdateFiles(dateTimeAsDatabaseString, control.DataLabel, 0, CountAllCurrentlySelectedFiles - 1);
                 }
             }
             else if (control is DataEntryDate date)
@@ -53,17 +56,17 @@ namespace Timelapse.Database
                 if (date.ContentControl.Value != null)
                 {
                     string dateAsDatabaseString = DateTimeHandler.ToStringDatabaseDate((DateTime)date.ContentControl.Value);
-                    UpdateFiles(dateAsDatabaseString, control.DataLabel, 0, CountAllCurrentlySelectedFiles - 1);
+                    await UpdateFiles(dateAsDatabaseString, control.DataLabel, 0, CountAllCurrentlySelectedFiles - 1);
                 }
             }
             // No need to do DataEntryTime as the database and display format are the same.
             else
             {
-                UpdateFiles(valueSource, control.DataLabel);
+                await UpdateFiles(valueSource, control.DataLabel);
             }
         }
 
-        public void UpdateFiles(ImageRow valueSource, DataEntryControl control, int from, int to)
+        public async Task UpdateFiles(ImageRow valueSource, DataEntryControl control, int from, int to)
         {
             // We update the the files using the database format for dates (Time is the same across all of them)
             if (control is DataEntryDateTimeCustom dateTimeCustom)
@@ -71,7 +74,7 @@ namespace Timelapse.Database
                 if (dateTimeCustom.ContentControl.Value != null)
                 {
                     string dateTimeAsDatabaseString = DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimeCustom.ContentControl.Value);
-                    UpdateFiles(dateTimeAsDatabaseString, control.DataLabel, from, to);
+                    await UpdateFiles(dateTimeAsDatabaseString, control.DataLabel, from, to);
                 }
             }
             else if (control is DataEntryDate date)
@@ -79,7 +82,7 @@ namespace Timelapse.Database
                 if (date.ContentControl.Value != null)
                 {
                     string dateAsDatabaseString = DateTimeHandler.ToStringDatabaseDate((DateTime)date.ContentControl.Value);
-                    UpdateFiles(dateAsDatabaseString, control.DataLabel, from, to);
+                    await UpdateFiles(dateAsDatabaseString, control.DataLabel, from, to);
                 }
             }
             else if (control is DataEntryTime time)
@@ -87,18 +90,18 @@ namespace Timelapse.Database
                 if (time.ContentControl.Value != null)
                 {
                     string timeString = DateTimeHandler.ToStringTime((DateTime)time.ContentControl.Value);
-                    UpdateFiles(timeString, control.DataLabel, from, to);
+                    await UpdateFiles(timeString, control.DataLabel, from, to);
                 }
             }
             else
             {
-                UpdateFiles(valueSource, control.DataLabel, from, to);
+                await UpdateFiles(valueSource, control.DataLabel, from, to);
             }
         }
 
-        public void UpdateFiles(ImageRow valueSource, string dataLabel)
+        public async Task UpdateFiles(ImageRow valueSource, string dataLabel)
         {
-            UpdateFiles(valueSource, dataLabel, 0, CountAllCurrentlySelectedFiles - 1);
+            await UpdateFiles(valueSource, dataLabel, 0, CountAllCurrentlySelectedFiles - 1);
         }
 
 
@@ -121,46 +124,15 @@ namespace Timelapse.Database
             Database.Update(DBTables.FileData, columnToUpdate);
         }
 
-        // Given a range of selected files, update the field identifed by dataLabel with the value in valueSource
-        // Updates are applied to both the datatable (so the user sees the updates immediately) and the database
-        public void UpdateFiles(ImageRow valueSource, string dataLabel, int fromIndex, int toIndex)
+        // Given a range of selected files, update the field identified by dataLabel with the value from valueSource
+        public async Task UpdateFiles(ImageRow valueSource, string dataLabel, int fromIndex, int toIndex)
         {
-            // Check the arguments for null 
             ThrowIf.IsNullArgument(valueSource, nameof(valueSource));
-
-            if (fromIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(fromIndex));
-            }
-            if (toIndex < fromIndex || toIndex > CountAllCurrentlySelectedFiles - 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(toIndex));
-            }
-
-            string value = valueSource.GetValueDatabaseString(dataLabel);
-            List<ColumnTuplesWithWhere> imagesToUpdate = [];
-            for (int index = fromIndex; index <= toIndex; index++)
-            {
-                // update data table
-                ImageRow image = FileTable[index];
-                if (null == image)
-                {
-                    Debug.Print($"in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {index}");
-                    continue;
-                }
-                image.SetValueFromDatabaseString(dataLabel, value);
-
-                // update database
-                List<ColumnTuple> columnToUpdate = [new(dataLabel, value)];
-                ColumnTuplesWithWhere imageUpdate = new(columnToUpdate, image.ID);
-                imagesToUpdate.Add(imageUpdate);
-            }
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, imagesToUpdate);
+            await UpdateFiles(valueSource.GetValueDatabaseString(dataLabel), dataLabel, fromIndex, toIndex);
         }
 
-        // Like above, but given a value update the field identified by the data label
-        public void UpdateFiles(string value, string dataLabel, int fromIndex, int toIndex)
+        // Given a range of selected files, update the field identified by dataLabel with the given value
+        public async Task UpdateFiles(string value, string dataLabel, int fromIndex, int toIndex)
         {
             if (fromIndex < 0)
             {
@@ -170,63 +142,103 @@ namespace Timelapse.Database
             {
                 throw new ArgumentOutOfRangeException(nameof(toIndex));
             }
-
-            List<ColumnTuplesWithWhere> imagesToUpdate = [];
-            for (int index = fromIndex; index <= toIndex; index++)
-            {
-                // update data table
-                ImageRow image = FileTable[index];
-                if (null == image)
-                {
-                    Debug.Print(
-                        $"in FileDatabase.UpdateFiles v1: FileTable returned null as there is no index: {index}");
-                    continue;
-                }
-                image.SetValueFromDatabaseString(dataLabel, value);
-
-                // update database
-                List<ColumnTuple> columnToUpdate = [new(dataLabel, value)];
-                ColumnTuplesWithWhere imageUpdate = new(columnToUpdate, image.ID);
-                imagesToUpdate.Add(imageUpdate);
-            }
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, imagesToUpdate);
+            int count = toIndex - fromIndex + 1;
+            await UpdateFilesCore(Enumerable.Range(fromIndex, count), count, dataLabel, value);
         }
 
-        // Similar to above
-        // Given a list of selected files, update the field identifed by dataLabel with the value in valueSource
-        // Updates are applied to both the datatable (so the user sees the updates immediately) and the database
-        public void UpdateFiles(List<int> fileIndexes, string dataLabel, string value)
+        // Given a list of selected files, update the field identified by dataLabel with the given value
+        public async Task UpdateFiles(List<int> fileIndexes, string dataLabel, string value)
         {
-            // Check the arguments for null 
             ThrowIf.IsNullArgument(fileIndexes, nameof(fileIndexes));
-
             if (fileIndexes.Count == 0)
             {
                 return;
             }
+            await UpdateFilesCore(fileIndexes, fileIndexes.Count, dataLabel, value);
+        }
 
-            // string value = valueSource.GetValueDatabaseString(dataLabel);
-            List<ColumnTuplesWithWhere> imagesToUpdate = [];
-            foreach (int fileIndex in fileIndexes)
+        // The minimum file count required before the BusyCancelIndicator progress is shown
+        private const int ProgressIndicatorThreshold = 10000;
+
+        // Updates both the in-memory FileTable rows and the database for each index in fileIndexes.
+        // For large updates (above ProgressIndicatorThreshold) the BusyCancelIndicator is raised and
+        // the loop runs on a background thread so the UI and progress bar remain responsive.
+        // Performance note: the per-row cost is dominated by DataRow's internal record-versioning
+        // machinery (proposed-record allocation + copy on every SetValueFromDatabaseString call);
+        // this cannot be eliminated through the public DataRow API.
+        private async Task UpdateFilesCore(IEnumerable<int> fileIndexes, int count, string dataLabel, string value)
+        {
+            // Show the BusyCancelIndicator with a determinate progress bar for large updates
+            bool showProgress = count >= ProgressIndicatorThreshold;
+            BusyCancelIndicator bci = showProgress ? GlobalReferences.BusyCancelIndicator : null;
+            if (bci != null)
             {
-                // update data table
-                ImageRow image = FileTable[fileIndex];
-                if (null == image)
-                {
-                    Debug.Print(
-                        $"in FileDatabase.UpdateFiles v2: FileTable returned null as there is no index: {fileIndex}");
-                    continue;
-                }
-                image.SetValueFromDatabaseString(dataLabel, value);
-
-                // update database
-                List<ColumnTuple> columnToUpdate = [new(dataLabel, value)];
-                ColumnTuplesWithWhere imageUpdate = new(columnToUpdate, image.ID);
-                imagesToUpdate.Add(imageUpdate);
+                bci.Reset(true);
+                bci.UseStaticProgressBar = false;
+                bci.IsIndeterminate = false;
+                bci.CancelButtonIsEnabled = false;
+                bci.CancelButtonText = "Please wait...";
+                bci.Percent = 0;
+                bci.Message = $"Updating {dataLabel} for {count:N0} files...";
             }
-            CreateBackupIfNeeded();
-            Database.Update(DBTables.FileData, imagesToUpdate);
+
+            // Progress<T> captures the calling thread's SynchronizationContext, so reports are
+            // automatically marshalled back to the UI thread to update the indicator safely.
+            IProgress<ProgressBarArguments> progress = bci != null
+                ? new Progress<ProgressBarArguments>(args =>
+                {
+                    bci.Percent = args.PercentDone;
+                    bci.Message = args.Message;
+                })
+                : null;
+
+            // Run the in-memory update loop on a background thread so the UI and progress bar
+            // remain responsive. The FileTable is not modified concurrently during this operation.
+            List<long> listOfIDs = await Task.Run(() =>
+            {
+                List<long> ids = new(count);
+                int reportEvery = 25000; //Math.Max(1, count / 100); // report approximately every 1%
+                int i = 0;
+                foreach (int index in fileIndexes)
+                {
+                    if (FileTable[index] is not { } image)
+                    {
+                        TracePrint.StackTrace($"in FileDatabase.UpdateFiles: FileTable returned null as there is no index: {index}");
+                        i++;
+                        continue;
+                    }
+                    image.SetValueFromDatabaseString(dataLabel, value);
+                    ids.Add(image.ID);
+                    i++;
+                    if (progress != null && i % reportEvery == 0)
+                    {
+                        int percent = (int)(100.0 * i / count);
+                        progress.Report(new(percent, $"Updating {dataLabel} for {i:N0}/{count:N0} files...", false, false));
+                    }
+                }
+                return ids;
+            });
+
+            // Update bci directly — we're on the UI thread here, so direct assignment renders
+            // immediately once the await below yields back to the dispatcher.
+            if (bci != null)
+            {
+                bci.Message = $"Updating the database for {count:N0} files...";
+            }
+
+            // Wrapping Database.Update in Task.Run serves two purposes:
+            // 1. The await yields to the dispatcher, allowing the message above to render.
+            // 2. The database update itself no longer blocks the UI thread.
+            await Task.Run(() =>
+            {
+                CreateBackupIfNeeded();
+                Database.Update(DBTables.FileData, listOfIDs, dataLabel, value);
+            });
+
+            if (bci != null)
+            {
+                bci.Reset(false);
+            }
         }
         #endregion
 

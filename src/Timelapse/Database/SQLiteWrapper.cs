@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Linq;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Threading;
@@ -497,6 +498,71 @@ namespace Timelapse.Database
             string query = Sql.Update + tableName + Sql.Set;
             query += $" {columnToUpdate.Name} = {Sql.Quote(columnToUpdate.Value)}";
             ExecuteNonQuery(query);
+        }
+
+        // Efficient update for a list of IDs
+        // Rather than having an update for every single ID, we look for contiguous and non-contiguous IDs
+        // The SQL expressin will look somethinig like:
+        // Update tableName SET columnName = value
+        // WHERE columnName BETWEEEN x AND y
+        // OR columnName IN (a,b,c) 
+        // the above are repeated as needed whenever contiguous and non-contiguous ids are found
+        // For example:
+        // UPDATE DataTable SET CamID = '10'
+        // WHERE Id BETWEEN 1 AND 870798
+        // OR Id BETWEEN 870800 AND 870801
+        // OR Id BETWEEN 870809 AND 909567
+        // OR Id IN (870803,870806)
+        public void Update(string tableName, List<long> listOfIDs, string columnName, string value)
+        {
+            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
+            if (sorted.Count == 0)
+            {
+                return;
+            }
+
+            // Build WHERE clause by collapsing contiguous IDs into BETWEEN ranges
+            // and collecting isolated IDs into an IN list.
+            List<string> conditions = [];
+            List<long> singles = [];
+
+            int i = 0;
+            while (i < sorted.Count)
+            {
+                long rangeStart = sorted[i];
+                long rangeEnd = rangeStart;
+                while (i + 1 < sorted.Count && sorted[i + 1] == sorted[i] + 1)
+                {
+                    i++;
+                    rangeEnd = sorted[i];
+                }
+
+                if (rangeEnd > rangeStart)
+                {
+                    conditions.Add($"Id BETWEEN {rangeStart} AND {rangeEnd}");
+                }
+                else
+                {
+                    singles.Add(rangeStart);
+                }
+                i++;
+            }
+
+            if (singles.Count == 1)
+            {
+                conditions.Add($"Id = {singles[0]}");
+            }
+            else if (singles.Count > 1)
+            {
+                conditions.Add($"Id IN ({string.Join(",", singles)})");
+            }
+
+            string whereClause = string.Join(" OR ", conditions);
+            List<string> queries =
+            [
+                $"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereClause}"
+            ];
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
 
         // Return a single update query as a string

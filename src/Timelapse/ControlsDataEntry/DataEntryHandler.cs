@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -437,7 +438,7 @@ namespace Timelapse.ControlsDataEntry
         // Menu selections for propagating or copying the current value of this control to all images
 
         // Copy the last non-empty value in this control preceding this file up to the current image
-        protected virtual void MenuItemPropagateFromLastValue_Click(object sender, RoutedEventArgs e)
+        protected virtual async void MenuItemPropagateFromLastValue_Click(object sender, RoutedEventArgs e)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(sender, nameof(sender));
@@ -507,13 +508,13 @@ namespace Timelapse.ControlsDataEntry
             // Update the affected files. Note that we start on the row after the one with a value in it to the current row.
             Mouse.OverrideCursor = Cursors.Wait;
             //this.FileDatabase.UpdateFiles(valueSource, control.DataLabel, indexToCopyFrom + 1, currentRowIndex);
-            FileDatabase.UpdateFiles(valueSource, control, indexToCopyFrom + 1, currentRowIndex);
+            await FileDatabase.UpdateFiles(valueSource, control, indexToCopyFrom + 1, currentRowIndex);
             control.SetContentAndTooltip(newContent);
             Mouse.OverrideCursor = null;
         }
 
         // Copy the current value of this control to all images
-        protected virtual void MenuItemCopyCurrentValueToAll_Click(object sender, RoutedEventArgs e)
+        protected virtual async void MenuItemCopyCurrentValueToAll_Click(object sender, RoutedEventArgs e)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(sender, nameof(sender));
@@ -550,12 +551,12 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
 
-            FileDatabase.UpdateFiles(imageRow, control);
+            await FileDatabase.UpdateFiles(imageRow, control);
             Mouse.OverrideCursor = null;
         }
 
         // Propagate the current value of this control forward from this point across the current set of selected images
-        protected virtual void MenuItemPropagateForward_Click(object sender, RoutedEventArgs e)
+        protected virtual async void MenuItemPropagateForward_Click(object sender, RoutedEventArgs e)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(sender, nameof(sender));
@@ -595,7 +596,7 @@ namespace Timelapse.ControlsDataEntry
             // Update the files from the next row (as we are copying from the current row) to the end.
             Mouse.OverrideCursor = Cursors.Wait;
             int nextRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow + 1 : ThumbnailGrid.GetSelected()[0] + 1;
-            FileDatabase.UpdateFiles(imageRow, control, nextRowIndex, FileDatabase.CountAllCurrentlySelectedFiles - 1);
+            await FileDatabase.UpdateFiles(imageRow, control, nextRowIndex, FileDatabase.CountAllCurrentlySelectedFiles - 1);
             Mouse.OverrideCursor = null;
         }
 
@@ -1299,7 +1300,7 @@ namespace Timelapse.ControlsDataEntry
         #region Update Rows
         // Update either the current row or the selected rows in the database, 
         // depending upon whether we are in the single image or  theThumbnailGrid view respectively.
-        public void UpdateRowsDependingOnThumbnailGridState(string datalabel, string content)
+        public async void UpdateRowsDependingOnThumbnailGridState(string datalabel, string content)
         {
             if (ThumbnailGrid == null) return;
             if (ThumbnailGrid.IsVisible == false && ThumbnailGrid.IsGridActive == false)
@@ -1314,7 +1315,7 @@ namespace Timelapse.ControlsDataEntry
             else
             {
                 // Multiple images are displayed: update the database for all selected rows with the control's value
-                FileDatabase.UpdateFiles(ThumbnailGrid.GetSelected(), datalabel, content.Trim());
+                await FileDatabase.UpdateFiles(ThumbnailGrid.GetSelected(), datalabel, content.Trim());
             }
         }
         #endregion
