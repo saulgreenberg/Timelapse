@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Constant;
@@ -15,6 +16,7 @@ using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using Timelapse.Util;
+using File = System.IO.File;
 
 namespace Timelapse.Database
 {
@@ -27,7 +29,7 @@ namespace Timelapse.Database
         #region Public Static Method - Export to CSV
         // Export all the database data associated with the selected view to the .csv file indicated in the file path so that spreadsheet applications (like Excel) can display it.
         public static async Task<bool> ExportToCsv(FileDatabase database, DataEntryControls controls, string filePath, CSVDateTimeOptionsEnum csvDateTimeOptions,
-            bool csvInsertSpaceBeforeDates, bool csvIncludeRootFolderColumn, string rootFolder)
+            bool csvInsertSpaceBeforeDates, bool csvIncludeRootFolderColumn, string rootFolder, CancellationToken token = default)
         {
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new(value =>
@@ -36,11 +38,11 @@ namespace Timelapse.Database
                 UpdateProgressBar(GlobalReferences.BusyCancelIndicator, value.PercentDone, value.Message, value.IsCancelEnabled, value.IsIndeterminate);
             });
             IProgress<ProgressBarArguments> progress = progressHandler;
-            return await Task.Run(() =>
+            bool result = await Task.Run(() =>
             {
                 try
                 {
-                    progress.Report(new(0, "Writing the CSV file. Please wait", false, true));
+                    progress.Report(new(0, "Writing the CSV file. Please wait", true, true));
                     using StreamWriter fileWriter = new(filePath, false);
                     // Get all data labels except those excluded from export (via a false ExportToCSV field)
                     List<string> dataLabelsToExport =
@@ -87,6 +89,7 @@ namespace Timelapse.Database
 
                     for (int row = 0; row < countAllCurrentlySelectedFiles; row++)
                     {
+                        if (token.IsCancellationRequested) return false;
                         includeComma = false;
                         StringBuilder csvRow = new();
                         ImageRow image = database.FileTable[row];
@@ -155,7 +158,7 @@ namespace Timelapse.Database
 
                                 // Now check for these custom controls, as represented by its data type
                                 else if (control is DataEntryDateTimeCustom)
-                                    // Export the  DateTime_ column as determined by the options
+                                // Export the  DateTime_ column as determined by the options
                                 {
                                     if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                     {
@@ -190,7 +193,7 @@ namespace Timelapse.Database
 
                                 // Now check for these custom controls, as represented by its data type
                                 else if (control is DataEntryDate)
-                                    // Export the  Date_ column as determined by the options
+                                // Export the  Date_ column as determined by the options
                                 {
                                     if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                     {
@@ -215,7 +218,7 @@ namespace Timelapse.Database
                                 }
 
                                 else if (control is DataEntryTime)
-                                    // Export the  Time_ column as determined by the options
+                                // Export the  Time_ column as determined by the options
                                 {
                                     if (DateTime.TryParse(image.GetValueDatabaseString(dataLabel), out DateTime dateTime))
                                     {
@@ -243,7 +246,7 @@ namespace Timelapse.Database
                         if (row % 5000 == 0)
                         {
                             progress.Report(new(Convert.ToInt32(((double)row) / countAllCurrentlySelectedFiles * 100.0),
-                                $"Writing {row}/{countAllCurrentlySelectedFiles} file entries to CSV file. Please wait...", false, false));
+                                $"Writing {row}/{countAllCurrentlySelectedFiles} file entries to CSV file. Please wait...", true, false));
                         }
                     }
 
@@ -253,7 +256,13 @@ namespace Timelapse.Database
                 {
                     return false;
                 }
-            }).ConfigureAwait(true);
+            }, token).ConfigureAwait(true);
+
+            if (!result && token.IsCancellationRequested && File.Exists(filePath))
+            {
+                try { File.Delete(filePath); } catch { /* best effort */ }
+            }
+            return result;
         }
         #endregion
 
@@ -444,7 +453,7 @@ namespace Timelapse.Database
         // - rows in the .ddb file that are not in the CSV file are ignored
         // - if there are more duplicate rows for an image in the .csv file than there are in the .ddb file, those extra duplicates are ignored (not reported - maybe it should be?)
         // - if there are more duplicate rows for an image in the .ddb file than there are in the .csv file, those extra duplicates are ignored (not reported - maybe it should be?)
-        public static async Task<Tuple<bool, List<string>>> TryImportFromCsv(string filePath, FileDatabase fileDatabase)
+        public static async Task<Tuple<bool, List<string>>> TryImportFromCsv(string filePath, FileDatabase fileDatabase, CancellationToken token = default)
         {
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new(value =>
@@ -461,12 +470,19 @@ namespace Timelapse.Database
                 int processedFilesCount = 0;
                 int totalFilesProcessed = 0;
                 int dateTimeErrors = 0;
-                progress.Report(new(0, "Reading the CSV file. Please wait", false, true));
+                progress.Report(new(0, "Reading the CSV file. Please wait", true, true));
 
                 // PART 1. Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
                 if (false == CSVHelpers.TryReadingCSVFile(filePath, out List<List<string>> parsedFile, importErrors))
                 {
-                    return new(false, importErrors);
+                    return new(true, importErrors);
+                }
+
+                // Cancel if requested 
+                if (token.IsCancellationRequested)
+                {
+                    importErrors.Add("Import cancelled. No data was changed");
+                    return new(true, importErrors);
                 }
 
                 // Trim the metadata column from the parsed file, as they are not relevant when importing the data
@@ -475,14 +491,40 @@ namespace Timelapse.Database
                 // Now that we have a parsed file, get its headers, which we will use as DataLabels
                 List<string> dataLabelsFromCSV = parsedFile[0].Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
 
+                // Cancel if requested 
+                if (token.IsCancellationRequested)
+                {
+                    importErrors.Add("Import cancelled. No data was changed");
+                    return new(true, importErrors);
+                }
+
+                progress.Report(new(0, "Checking CSV columns against the Database columns. Please wait", true, true));
+
                 // Part 2. Abort if required CSV column are missing or there is a problem matching the CSV file headers against the DB headers.
                 if (false == VerifyCSVHeaders(fileDatabase, dataLabelsFromCSV, importErrors))
                 {
-                    return new(false, importErrors);
+                    return new(true, importErrors);
                 }
+
+                // Cancel if requested 
+                if (token.IsCancellationRequested)
+                {
+                    importErrors.Add("Import cancelled. No data was changed");
+                    return new(true, importErrors);
+                }
+
+                progress.Report(new(0, "Validating CSV rows. Please wait", true, true));
 
                 // Part 3: Create a List of all data rows, where each row is a dictionary containing the header and that row's valued for the header
                 List<Dictionary<string, string>> rowDictionaryList = CSVHelpers.GetAllDataRows(dataLabelsFromCSV, parsedFile);
+
+
+                // Cancel if requested 
+                if (token.IsCancellationRequested)
+                {
+                    importErrors.Add("Import cancelled. No data was changed");
+                    return new(true, importErrors);
+                }
 
                 // Part 4. For every row, validate each column's data against its type. Abort if the type does not match
                 if (false == VerifyDataInColumns(fileDatabase, dataLabelsFromCSV, rowDictionaryList, importErrors))
@@ -490,9 +532,14 @@ namespace Timelapse.Database
                     return new(false, importErrors);
                 }
 
+                // Cancel if requested before committing data to the database
+                if (token.IsCancellationRequested) return new(false, importErrors);
+
                 //
-                // Part 5. Check and manage duplicates
-                // 
+                // Part 5. Check and manage duplicates (cancellation disabled from here on)
+                //
+                progress.Report(new(0, "Importing CSV data. Please wait...", false, true));
+
                 // Get a list of duplicates in the database, i.e. rows with both the Same relativePath and File
                 List<string> databaseDuplicates = fileDatabase.GetDistinctRelativePathFileCombinationsDuplicates();
 
@@ -509,6 +556,7 @@ namespace Timelapse.Database
                 List<Dictionary<string, string>> duplicatesDictionaryList = [];
 
                 CultureInfo provider = CultureInfo.InvariantCulture;
+
                 foreach (Dictionary<string, string> rowDict in sortedRowDictionaryList)
                 {
                     // For every row...
@@ -599,6 +647,7 @@ namespace Timelapse.Database
                     DateTime datePortion = DateTime.MinValue;
                     DateTime timePortion = DateTime.MinValue;
                     DateTime dateTime = DateTime.MinValue;
+
                     foreach (string header in rowDict.Keys)
                     {
                         string type;
@@ -752,11 +801,14 @@ namespace Timelapse.Database
 
                     // Write current batch of updates to database. Note that we Update the database every number of rows as specified in bulkFilesToHandle.
                     // We should probably put in a cancellation CancelToken somewhere around here...
+
                     if (imagesToUpdate.Count >= bulkFilesToHandle)
                     {
                         processedFilesCount += bulkFilesToHandle;
+
                         progress.Report(new(Convert.ToInt32(((double)processedFilesCount) / sortedRowDictionaryListCount * 100.0),
-                            $"Processing {processedFilesCount}/{sortedRowDictionaryListCount} files. Please wait...", false, false));
+                        $"Updating data for {processedFilesCount}/{sortedRowDictionaryListCount} files. Please wait...", false, false));
+
                         fileDatabase.UpdateFiles(imagesToUpdate);
                         imagesToUpdate.Clear();
                     }
@@ -780,7 +832,7 @@ namespace Timelapse.Database
 
                 fileDatabase.UpdateFiles(imagesToUpdate);
                 return new Tuple<bool, List<string>>(true, importErrors);
-            }).ConfigureAwait(true);
+            }, token).ConfigureAwait(true);
         }
 
         #region Helpers for TryImportFromCsv. These just reduce the size of the method to make it easier to debug.

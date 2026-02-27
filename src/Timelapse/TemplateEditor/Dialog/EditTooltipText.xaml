@@ -11,7 +11,7 @@
     <DockPanel >
 
         <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch">
-            <TextBlock  Text="Edit tooltip text" FontWeight="Bold" Padding="0,0,0,0"  FontSize="14" VerticalAlignment="Center"/>
+            <TextBlock  Text="Edit tooltip text" FontWeight="Bold" Padding="5"  FontSize="14" VerticalAlignment="Center"/>
             <Rectangle Fill="#FF868686" Height="2" />
         </StackPanel>
 

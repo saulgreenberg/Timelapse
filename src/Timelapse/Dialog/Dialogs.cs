@@ -1671,6 +1671,24 @@ namespace Timelapse.Dialog
             return result;
         }
 
+        // CSV import Cancelled 
+        public static void MenuFileImportCSVFileCancelledDialog(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Importing of data from CSV file cancelled.";
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = title,
+                Icon = DialogIconType.Information,
+                // Height = 265,
+                What = $"Importing of data from a CSV file was cancelled by you",
+                Result = "Nothing was imported, so your data remains unchanged.",
+
+            };
+            dialog.BuildAndShowDialog();
+        }
+
         /// <summary>
         /// Can't import CSV File
         /// </summary>

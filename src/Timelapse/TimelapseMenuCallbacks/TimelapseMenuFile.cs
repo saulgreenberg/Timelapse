@@ -393,17 +393,18 @@ namespace Timelapse
 
             try
             {
-                // Show the Busy indicator
-                BusyCancelIndicator.IsBusy = true;
-                if (false == await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, selectedCSVFilePath,
-                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName))
+                // Show the Busy indicator, with cancellation enabled
+                BusyCancelIndicator.Reset(true);
+                bool success = await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, selectedCSVFilePath,
+                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName,
+                        GlobalReferences.CancelTokenSource.Token);
+                bool wasCancelled = GlobalReferences.CancelTokenSource.IsCancellationRequested;
+                BusyCancelIndicator.Reset(false);
+                if (!success)
                 {
-                    Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);
-                    BusyCancelIndicator.IsBusy = false;
+                    if (!wasCancelled) Dialogs.FileCantOpen(GlobalReferences.MainWindow, selectedCSVFilePath, true);
                     return;
                 }
-                // Hide the Busy indicator
-                BusyCancelIndicator.IsBusy = false;
             }
             catch (Exception exception)
             {
@@ -490,14 +491,20 @@ namespace Timelapse
 
             try
             {
-                // Show the Busy indicator
-                BusyCancelIndicator.IsBusy = true;
+                // Show the Busy indicator, with cancellation enabled for Parts 1-4 of the import
+                BusyCancelIndicator.Reset(true);
 
-                Tuple<bool, List<string>> resultAndImportErrors = await CsvReaderWriter.TryImportFromCsv(csvFilePath, DataHandler.FileDatabase).ConfigureAwait(true);
+                Tuple<bool, List<string>> resultAndImportErrors = await CsvReaderWriter.TryImportFromCsv(csvFilePath, DataHandler.FileDatabase, GlobalReferences.CancelTokenSource.Token).ConfigureAwait(true);
 
-                BusyCancelIndicator.IsBusy = false;
+                bool wasCancelled = GlobalReferences.CancelTokenSource.IsCancellationRequested;
+                BusyCancelIndicator.Reset(false);
 
-                if (resultAndImportErrors.Item1 == false)
+                if (wasCancelled)
+                {
+                    StatusBar.SetMessage("CSV file import cancelled.");
+                    Dialogs.MenuFileImportCSVFileCancelledDialog(this);
+                }
+                else if (resultAndImportErrors.Item1 == false)
                 {
                     // Can't import CSV File
                     Dialogs.MenuFileCantImportCSVFileDialog(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
@@ -623,23 +630,24 @@ namespace Timelapse
             // Export the Image data
             try
             {
-                // Show the Busy indicator
-                BusyCancelIndicator.IsBusy = true;
-                if (false == await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, imageFilePath,
-                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName))
+                // Show the Busy indicator, with cancellation enabled
+                BusyCancelIndicator.Reset(true);
+                bool success = await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, imageFilePath,
+                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName,
+                        GlobalReferences.CancelTokenSource.Token);
+                bool wasCancelled = GlobalReferences.CancelTokenSource.IsCancellationRequested;
+                BusyCancelIndicator.Reset(false);
+                if (!success)
                 {
-                    Dialogs.FileCantOpen(GlobalReferences.MainWindow, imageFilePath, true);
-                    BusyCancelIndicator.IsBusy = false;
+                    if (!wasCancelled) Dialogs.FileCantOpen(GlobalReferences.MainWindow, imageFilePath, true);
                     StatusBar.SetMessage("Csv file export cancelled.");
                     return;
                 }
-                // Hide the Busy indicator
-                BusyCancelIndicator.IsBusy = false;
             }
             catch (Exception exception)
             {
                 // Can't write the spreadsheet file
-                BusyCancelIndicator.IsBusy = false;
+                BusyCancelIndicator.Reset(false);
                 Dialogs.MenuFileCantWriteSpreadsheetFileDialog(this, imageFilePath, exception.GetType().FullName, exception.Message);
                 StatusBar.SetMessage("Csv file export cancelled.");
                 return;
