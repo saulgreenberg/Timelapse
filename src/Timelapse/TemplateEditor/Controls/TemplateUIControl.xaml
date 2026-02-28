@@ -25,9 +25,11 @@
                 <ColumnDefinition Name="EditButtonColumn" Width="130"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <!-- Setting the row's MinHeight keeps the Buttons column always in view -->
-                <RowDefinition Name="DisplayGridRow" Height="*" MinHeight="215"/>
-                <RowDefinition Height="Auto" />
+                <!-- Row 0: data grid + buttons; MinHeight ensures buttons are always fully visible -->
+                <RowDefinition Name="DisplayGridRow" Height="1.5*" MinHeight="260"/>
+                <!-- Row 1: Auto so it only takes as much space as its content needs; MaxHeight on the
+                     panel element caps it when there are many controls, activating the inner ScrollViewer -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -44,9 +46,10 @@
                 Margin="20,0,0,0"/>
 
             <!-- Data Entry Panel Preview for Template Creation  -->
-            <local:TemplateDataEntryPreviewPanel 
+            <!-- MaxHeight is set dynamically in code-behind to ensure the Spreadsheet below is always visible -->
+            <local:TemplateDataEntryPreviewPanel
                 x:Name="TemplateDataEntryPreviewPanel"
-                Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                 Margin="0,10,0,0"/>
 
             <!-- Spreadsheet preview for Template Creation-->

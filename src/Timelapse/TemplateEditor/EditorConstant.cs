@@ -7,6 +7,7 @@ namespace TimelapseTemplateEditor
     internal static class EditorConstant
     {
         public const string MainWindowBaseTitle = "Timelapse Template Editor";  // The initial title shown in the window title bar
+        public const string DefaultValueWatermark = "Click to set\u2026";  // Watermark shown in DefaultValue cells when the value is empty
         public static TemplateEditorWindow templateEditorWindow;
 
         public static readonly SolidColorBrush NotEditableCellColor = Brushes.LightGray; // Color of non-editable data grid items 

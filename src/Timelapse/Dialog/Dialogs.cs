@@ -3949,24 +3949,25 @@ namespace Timelapse.Dialog
             };
             dialog.BuildAndShowDialog();
         }
-        /// <summary>
-        /// DefaultChoiceValuesMustMatchChoiceLists
-        /// </summary>
-        public static void EditorDefaultChoiceValuesMustMatchChoiceListsDialog(Window owner, string invalidDefaultValue)
-        {
-            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
-            {
-                Owner = owner,
-                DialogTitle = "Choice default values must match an item in the Choice menu",
-                Icon = DialogIconType.Warning,
-                Problem =
-                    $"[b]{invalidDefaultValue}[/b] is not allowed as a default value, as it is not one of your [b]Define List[/b] items.[br 4]" +
-                    $"[li] Choice default values must be either empty or must match one of those items.",
-                Result = "The default value will be cleared.",
-                Hint = "Copy an item from your [b]Define List[/b] and paste it into your default value field as needed."
-            };
-            dialog.BuildAndShowDialog();
-        }
+        // <summary>
+        // DefaultChoiceValuesMustMatchChoiceLists
+        // TODO Delete as no longer needed since user cannot enter invalid choice
+        // </summary>
+        //public static void EditorDefaultChoiceValuesMustMatchChoiceListsDialog(Window owner, string invalidDefaultValue)
+        //{
+        //    var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+        //    {
+        //        Owner = owner,
+        //        DialogTitle = "Choice default values must match an item in the Choice menu",
+        //        Icon = DialogIconType.Warning,
+        //        Problem =
+        //            $"[b]{invalidDefaultValue}[/b] is not allowed as a default value, as it is not one of your [b]Define List[/b] items.[br 4]" +
+        //            $"[li] Choice default values must be either empty or must match one of those items.",
+        //        Result = "The default value will be cleared.",
+        //        Hint = "Copy an item from your [b]Define List[/b] and paste it into your default value field as needed."
+        //    };
+        //    dialog.BuildAndShowDialog();
+        //}
 
         /// <summary>
         /// EditorDefaultChoiceValuesMustMatchNonEmptyChoiceLists
@@ -4045,8 +4046,8 @@ namespace Timelapse.Dialog
                 Result = $"Select:[br 4]"
                          + $"[li] [b]Okay[/b] to keep [b]{changeType.ToLower()}[/b] anyways,"
                          + "[li]  [b]Cancel[/b] to abort.",
-                Reason = $"The [i]{standardType}[/i] defines what levels and fields are needed and how they are named. " +
-                         "Changes to levels or fields can (perhaps) affect how other software uses your data.",
+                Reason = $"The [i]{standardType}[/i] defines what levels, fields and values are needed and how they are named. " +
+                         "Changes to levels, fields and values can (perhaps) affect how other software uses your data.",
                 Hint = "This is just a warning, as it really depends upon what you plan to do with your data. "
                        + "Ignore this if you know what you are doing.",
                 DontShowAgain =

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -441,9 +441,16 @@ namespace Timelapse.ControlsDataEntry
         // Menu selections for propagating or copying the current value of this control to all images
 
         // Copy the last non-empty value in this control preceding this file up to the current image
-        protected virtual async void MenuItemPropagateFromLastValue_Click(object sender, RoutedEventArgs e)
+        protected virtual void MenuItemPropagateFromLastValue_Click(object sender, RoutedEventArgs e)
         {
-            // Check the arguments for null 
+            MenuItemPropagateFromLastValueAsync(sender, e)
+                .ContinueWith(t => Trace.WriteLine(t.Exception),
+                              TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        protected virtual async Task MenuItemPropagateFromLastValueAsync(object sender, RoutedEventArgs e)
+        {
+            // Check the arguments for null
             ThrowIf.IsNullArgument(sender, nameof(sender));
 
             // Get the chosen data entry control
@@ -490,7 +497,7 @@ namespace Timelapse.ControlsDataEntry
             string newContent = valueToCopy;
             if (indexToCopyFrom < 0)
             {
-                // Display a dialog box saying there is nothing to propagate. 
+                // Display a dialog box saying there is nothing to propagate.
                 // Note that this should never be displayed, as the menu shouldn't be highlit if there is nothing to propagate
                 // But just in case...
                 Dialogs.DataEntryNothingToPropagateDialog(Application.Current.MainWindow);
@@ -517,9 +524,16 @@ namespace Timelapse.ControlsDataEntry
         }
 
         // Copy the current value of this control to all images
-        protected virtual async void MenuItemCopyCurrentValueToAll_Click(object sender, RoutedEventArgs e)
+        protected virtual void MenuItemCopyCurrentValueToAll_Click(object sender, RoutedEventArgs e)
         {
-            // Check the arguments for null 
+            MenuItemCopyCurrentValueToAllAsync(sender, e)
+                .ContinueWith(t => Trace.WriteLine(t.Exception),
+                              TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        protected virtual async Task MenuItemCopyCurrentValueToAllAsync(object sender, RoutedEventArgs e)
+        {
+            // Check the arguments for null
             ThrowIf.IsNullArgument(sender, nameof(sender));
 
             // Get the chosen data entry control
@@ -536,7 +550,7 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
 
-            // Display a dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control 
+            // Display a dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control
             bool checkForZero = control is DataEntryCounter;
             int filesAffected = FileDatabase.CountAllCurrentlySelectedFiles;
             if (Dialogs.DataEntryConfirmCopyCurrentValueToAllDialog(Application.Current.MainWindow, control.Content, filesAffected, checkForZero) != true)
@@ -559,9 +573,16 @@ namespace Timelapse.ControlsDataEntry
         }
 
         // Propagate the current value of this control forward from this point across the current set of selected images
-        protected virtual async void MenuItemPropagateForward_Click(object sender, RoutedEventArgs e)
+        protected virtual void MenuItemPropagateForward_Click(object sender, RoutedEventArgs e)
         {
-            // Check the arguments for null 
+            MenuItemPropagateForwardAsync(sender, e)
+                .ContinueWith(t => Trace.WriteLine(t.Exception),
+                              TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        protected virtual async Task MenuItemPropagateForwardAsync(object sender, RoutedEventArgs e)
+        {
+            // Check the arguments for null
             ThrowIf.IsNullArgument(sender, nameof(sender));
 
             // Get the chosen data entry control
@@ -575,14 +596,14 @@ namespace Timelapse.ControlsDataEntry
             int imagesAffected = FileDatabase.CountAllCurrentlySelectedFiles - currentRowIndex - 1;
             if (imagesAffected == 0)
             {
-                // Display a dialog box saying there is nothing to copy forward. 
+                // Display a dialog box saying there is nothing to copy forward.
                 // Note that this should never be displayed, as the menu shouldn't be highlit if we are on the last image
                 // But just in case...
                 Dialogs.DataEntryNothingToCopyForwardDialog(Application.Current.MainWindow);
                 return;
             }
 
-            // Display the appropriate dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control 
+            // Display the appropriate dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control
             ImageRow imageRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.Current : FileDatabase.FileTable[ThumbnailGrid.GetSelected()[0]];
             if (imageRow == null)
             {
@@ -1339,7 +1360,14 @@ namespace Timelapse.ControlsDataEntry
         #region Update Rows
         // Update either the current row or the selected rows in the database, 
         // depending upon whether we are in the single image or  theThumbnailGrid view respectively.
-        public async void UpdateRowsDependingOnThumbnailGridState(string datalabel, string content)
+        public void UpdateRowsDependingOnThumbnailGridState(string datalabel, string content)
+        {
+            UpdateRowsDependingOnThumbnailGridStateAsync(datalabel, content)
+                .ContinueWith(t => Trace.WriteLine(t.Exception),
+                              TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        public async Task UpdateRowsDependingOnThumbnailGridStateAsync(string datalabel, string content)
         {
             if (ThumbnailGrid == null) return;
             if (ThumbnailGrid.IsVisible == false && ThumbnailGrid.IsGridActive == false)

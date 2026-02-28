@@ -717,7 +717,7 @@ namespace Timelapse.ControlsCore
 
         #region DateTime handlers
         // Handle erroneous decimal strings entered into the text box by clearing the textbox and showing an error dialog
-        public static bool TextBoxHandleDateTimeTextChanged(Window window, TextBox textBox, DateTimeFormatEnum dateTimeFormat, bool showDialog)
+        public static bool TextBoxHandleDateTimeTextChanged(Window window, TextBox textBox, DateTimeFormatEnum dateTimeFormat, bool showDialog, string preEditValue = "")
         {
             if (dateTimeFormat == DateTimeFormatEnum.DateAndTime)
             {
@@ -727,7 +727,9 @@ namespace Timelapse.ControlsCore
                     {
                         Dialogs.InvalidDataFieldInput(window, Control.DateTime_, textBox.Text);
                     }
-                    textBox.Text = DateTimeHandler.ToStringDatabaseDateTime(ControlDefault.DateTimeCustomDefaultValue);
+                    textBox.Text = string.IsNullOrEmpty(preEditValue)
+                        ? DateTimeHandler.ToStringDatabaseDateTime(ControlDefault.DateTimeCustomDefaultValue)
+                        : preEditValue;
                     return false;
                 }
             }
@@ -739,7 +741,9 @@ namespace Timelapse.ControlsCore
                     {
                         Dialogs.InvalidDataFieldInput(window, Control.Date_, textBox.Text);
                     }
-                    textBox.Text = DateTimeHandler.ToStringDatabaseDate(ControlDefault.Date_DefaultValue);
+                    textBox.Text = string.IsNullOrEmpty(preEditValue)
+                        ? DateTimeHandler.ToStringDatabaseDate(ControlDefault.Date_DefaultValue)
+                        : preEditValue;
                     return false;
                 }
             }
@@ -747,12 +751,13 @@ namespace Timelapse.ControlsCore
             {
                 if (false == DateTimeHandler.TryParseDatabaseTime(textBox.Text, out DateTime _))
                 {
-
                     if (showDialog)
                     {
                         Dialogs.InvalidDataFieldInput(window, Control.Time_, textBox.Text);
                     }
-                    textBox.Text = DateTimeHandler.ToStringTime(ControlDefault.Time_DefaultValue);
+                    textBox.Text = string.IsNullOrEmpty(preEditValue)
+                        ? DateTimeHandler.ToStringTime(ControlDefault.Time_DefaultValue)
+                        : preEditValue;
                     return false;
                 }
             }

@@ -62,6 +62,7 @@ namespace TimelapseTemplateEditor.Controls
                     case DatabaseColumn.DateTime:
                         Label dateTimeLabel = PreviewControlCommon.CreateLabel(styleProvider, control);
                         WatermarkDateTimePicker dateTimeContent = CreateControls.CreateWatermarkDateTimePicker(control, DateTimeFormatEnum.DateAndTime, ControlDefault.DateTimeDefaultValue);
+                        dateTimeContent.Width = control.Width;
                         dateTimeContent.PreviewKeyDown += Timelapse.Util.ValidationCallbacks.PreviewKeyDown_HandleKeyDownForEnter;
                         stackPanel = PreviewControlCommon.CreateStackPanel(styleProvider, dateTimeLabel, dateTimeContent);
                         break;
@@ -174,6 +175,7 @@ namespace TimelapseTemplateEditor.Controls
                             DateTimeHandler.TryParseDatabaseDateTime(control.DefaultValue, out DateTime dateTime)
                             ? dateTime
                             : ControlDefault.DateTimeCustomDefaultValue);
+                        dateTimeCustomContent.Width = control.Width;
                         dateTimeCustomContent.PreviewKeyDown += Timelapse.Util.ValidationCallbacks.PreviewKeyDown_HandleKeyDownForEnter;
                         stackPanel = PreviewControlCommon.CreateStackPanel(styleProvider, dateTimeCustomLabel, dateTimeCustomContent);
                         break;
@@ -183,6 +185,7 @@ namespace TimelapseTemplateEditor.Controls
                             DateTimeHandler.TryParseDatabaseDate(control.DefaultValue, out DateTime date)
                                 ? date
                                 : ControlDefault.Date_DefaultValue);
+                        dateContent.Width = control.Width;
                         dateContent.PreviewKeyDown += Timelapse.Util.ValidationCallbacks.PreviewKeyDown_HandleKeyDownForEnter;
                         stackPanel = PreviewControlCommon.CreateStackPanel(styleProvider, dateLabel, dateContent);
                         break;
@@ -192,6 +195,7 @@ namespace TimelapseTemplateEditor.Controls
                             DateTimeHandler.TryParseDatabaseTime(control.DefaultValue, out DateTime time)
                                 ? time
                                 : ControlDefault.Time_DefaultValue);
+                        timeContent.Width = control.Width;
                         timeContent.PreviewKeyDown += Timelapse.Util.ValidationCallbacks.PreviewKeyDown_HandleKeyDownForEnter;
                         stackPanel = PreviewControlCommon.CreateStackPanel(styleProvider, timeLabel, timeContent);
                         break;

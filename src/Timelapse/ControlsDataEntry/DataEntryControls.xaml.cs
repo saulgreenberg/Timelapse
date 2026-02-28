@@ -333,7 +333,6 @@ namespace Timelapse.ControlsDataEntry
         // Try to add the values in the current note fields to the autocompletion list, assuming that it is different.
         // This is triggered whenever we show a file, where it tries to add the values of the currently displayed file
         // (the 'current file') before navigating to the new file.
-        // ZZZupdate DataEntryControls: During FileShow, Search controls for notes and addd current value to autocomplete
         public void AutocompletionUpdateWithCurrentRowValues()
         {
             foreach (DataEntryControl control in Controls)

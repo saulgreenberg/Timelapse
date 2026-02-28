@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
@@ -8,6 +9,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
 using Timelapse.DataStructures;
@@ -19,6 +22,7 @@ using Timelapse.Standards;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
+using TimelapseWpf.Toolkit;
 using Control = Timelapse.Constant.Control;
 
 namespace TimelapseTemplateEditor.ControlsMetadata
@@ -31,6 +35,9 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         public DataGrid DataGridInstance { get; set; }
         public ObservableCollection<DataGridColumn> Columns => this.DataGridInstance.Columns;
         private int LastRowCount = -1; // Tracked to see if we need to update the layout: only if row count changes
+        private Window _hostWindow;
+        private bool _rowHeaderWasSelected;
+        private DataGridRow _rowHeaderClickedRow;
 
         #region Constructor, Loaded, LayoutUpdated
 
@@ -44,6 +51,51 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         private void DataGrid_OnLoaded(object sender, RoutedEventArgs e)
         {
             this.DoLayoutUpdated(true);
+            _hostWindow = Window.GetWindow(this);
+            if (_hostWindow != null)
+                _hostWindow.AddHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(HostWindow_PreviewMouseDown), true);
+        }
+
+        private void DataGrid_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (_hostWindow == null) return;
+            _hostWindow.RemoveHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(HostWindow_PreviewMouseDown));
+            _hostWindow = null;
+        }
+
+        // Commit any in-progress DefaultValue cell edit when the user clicks outside the DataGrid.
+        private void HostWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!DataGrid.IsKeyboardFocusWithin) return;
+            if (e.OriginalSource is Visual source && DataGrid.IsAncestorOf(source)) return;
+            // Don't commit while a dropdown popup (ComboBox, CheckComboBox) belonging to the
+            // DataGrid is open — the selection-change handler will commit the value.
+            if (IsInsideDataGridPopup(e.OriginalSource as DependencyObject)) return;
+            DataGrid.CommitEdit(DataGridEditingUnit.Row, true);
+        }
+
+        // Walks the visual tree upward from element; when it hits the root of a popup visual tree,
+        // checks whether the owning Popup's TemplatedParent or PlacementTarget is inside the DataGrid.
+        private bool IsInsideDataGridPopup(DependencyObject element)
+        {
+            DependencyObject current = element;
+            while (current != null)
+            {
+                // VisualTreeHelper.GetParent throws for non-Visual elements (e.g. Run, TextElement).
+                // Fall back to the logical tree for those so we can still reach the nearest Visual ancestor.
+                DependencyObject visualParent = current is Visual || current is System.Windows.Media.Media3D.Visual3D
+                    ? VisualTreeHelper.GetParent(current)
+                    : LogicalTreeHelper.GetParent(current);
+                if (visualParent != null) { current = visualParent; continue; }
+                // Reached the top of a separate visual subtree — check if it's popup content.
+                if (current is FrameworkElement { Parent: Popup popup })
+                {
+                    if (popup.TemplatedParent is Visual tv && DataGrid.IsAncestorOf(tv)) return true;
+                    if (popup.PlacementTarget is Visual pt && DataGrid.IsAncestorOf(pt)) return true;
+                }
+                break;
+            }
+            return false;
         }
 
         // Updates colors when rows are added, moved, or deleted.
@@ -80,8 +132,16 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         {
             if (Globals.Root.dataGridBeingUpdatedByCode == false)
             {
-                Globals.Root.DoSyncMetadataControlToDatabase(new(e.Row));
-                this.DoLayoutUpdated(true);
+                // Defer the DB sync + UI rebuild to run after the current input event (e.g. Tab) completes.
+                // DoSyncMetadataControlToDatabase calls MetadataTemplateDoGeneratePreviews which rebuilds preview
+                // panel controls synchronously while the DataGrid is still processing Tab, disrupting WPF's focus
+                // tracking and causing Tab to escape to the window menu.
+                MetadataControlRow snapshot = new(e.Row);
+                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+                {
+                    Globals.Root.DoSyncMetadataControlToDatabase(snapshot);
+                    this.DoLayoutUpdated(true);
+                }));
             }
         }
 
@@ -94,6 +154,9 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         /// Another method re-enables the cell immediately afterwards.
         /// The reason for this implementation is because disabled cells cannot be single clicked, which is needed for row actions.
         /// </summary>
+        private string _preEditDefaultValue = string.Empty;
+        private DataRowView _multiLineEditingRow;
+
         private void MetadataDataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
             bool isStandardButNotCamtrapDP = EditorConstant.templateEditorWindow.standardType != string.Empty &&
@@ -107,14 +170,64 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                 return;
             }
 
+            // Capture the current default value before editing begins so that, on a validation
+            // error, date/time fields can revert to it rather than to the type's hardcoded default.
+            if ((string)e.Column.Header == EditorConstant.ColumnHeader.DefaultValue)
+            {
+                MetadataControlRow control = new((e.Row.Item as DataRowView)?.Row);
+                _preEditDefaultValue = control.DefaultValue ?? string.Empty;
+                if (control.Type == Control.MultiLine)
+                    _multiLineEditingRow = e.Row.Item as DataRowView;
+            }
+
             DataGridCommonCode.BeginningEdit(DataGrid);
         }
 
         // After cell editing ends (prematurely or no), re-enable disabled cells.
-        // See MetadataDataGrid_BeginningEdit below for full explanation.
         private void MetadataDataGrid_CurrentCellChanged(object sender, EventArgs e)
         {
+            // If Tab navigation landed on a non-editable cell, skip past it automatically.
+            // The cell background is reliable here because VirtualizingStackPanel.IsVirtualizing=False
+            // keeps all cells in the visual tree with backgrounds set from the previous layout pass.
+            if (Keyboard.IsKeyDown(Key.Tab) &&
+                DataGridCommonCode.TryGetCurrentCell(DataGrid, out DataGridCell tabCell, out _) &&
+                tabCell.Background.Equals(EditorConstant.NotEditableCellColor))
+            {
+                bool backward = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
+                Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+                {
+                    if (DataGridCommonCode.TryGetCurrentCell(DataGrid, out DataGridCell cell, out _))
+                        cell.MoveFocus(new TraversalRequest(
+                            backward ? FocusNavigationDirection.Previous : FocusNavigationDirection.Next));
+                }));
+                return;
+            }
+
             DataGridCommonCode.CurrentCellChanged(DataGrid);
+
+            // Auto-enter edit mode for dedicated-control DefaultValue rows on single click.
+            if (DataGrid.CurrentColumn?.Header is EditorConstant.ColumnHeader.DefaultValue
+                && DataGrid.CurrentItem is DataRowView rowView)
+            {
+                MetadataControlRow control = new(rowView.Row);
+                if (control.Type == Control.MultiLine ||
+                    control.Type == Control.MultiChoice ||
+                    control.Type == Control.FixedChoice ||
+                    control.Type == Control.AlphaNumeric ||
+                    control.Type == Control.IntegerAny ||
+                    control.Type == Control.IntegerPositive ||
+                    control.Type == Control.DecimalAny ||
+                    control.Type == Control.DecimalPositive ||
+                    control.Type == Control.Flag ||
+                    control.Type == Control.Date_ ||
+                    control.Type == Control.Time_ ||
+                    control.Type == Control.DateTime_)
+                {
+                    DataGrid.Dispatcher.BeginInvoke(
+                        DispatcherPriority.Input,
+                        new Action(() => DataGrid.BeginEdit()));
+                }
+            }
         }
 
         // After editing is complete, validate the data labels, default values, and widths as needed.
@@ -141,7 +254,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                     ValidateDataLabel(e);
                     break;
                 case EditorConstant.ColumnHeader.DefaultValue:
-                    ValidateDefaults(e, e.Row);
+                    ValidateDefaults(e, e.Row, _preEditDefaultValue);
                     break;
                 case Control.Label:
                     ValidateLabels(e, e.Row);
@@ -162,15 +275,46 @@ namespace TimelapseTemplateEditor.ControlsMetadata
 
         #endregion
 
+        #region Callback: Row header mouse toggle
+
+        // Save whether the clicked row was already selected, so MouseLeftButtonUp can decide whether to deselect.
+        private void MetadataDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (FindAncestor<DataGridRowHeader>(e.OriginalSource as DependencyObject) is { } header)
+            {
+                _rowHeaderClickedRow = FindAncestor<DataGridRow>(header);
+                _rowHeaderWasSelected = _rowHeaderClickedRow?.IsSelected ?? false;
+            }
+            else
+            {
+                _rowHeaderClickedRow = null;
+                _rowHeaderWasSelected = false;
+            }
+        }
+
+        // If the row was already selected when the row header was pressed, deselect it now (after built-in selection handling).
+        private void MetadataDataGrid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_rowHeaderClickedRow != null && _rowHeaderWasSelected)
+            {
+                DataGrid.SelectedItem = null;
+                DataGrid.CurrentCell = new DataGridCellInfo();
+            }
+            _rowHeaderClickedRow = null;
+            _rowHeaderWasSelected = false;
+        }
+
+        #endregion
+
         #region Callback: PreviewKeyDown, PreviewTextInput
 
         // Cell editing: Preview character by character entry to disallow spaces in particular fields (DataLabels, Width, Counters)
         private void MetadataDataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Ignore non-editable cells
+            // Ignore non-editable cells, but allow Tab/Shift+Tab through so the DataGrid can navigate away
             if (false == DataGridCommonCode.TryGetCurrentEditableCell(DataGrid, out DataGridCell cell, out DataGridRow currentRow))
             {
-                e.Handled = true;
+                if (e.Key is not Key.Tab and not Key.Up and not Key.Down) e.Handled = true;
                 return;
             }
 
@@ -184,11 +328,9 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                         Dialogs.EditorDataLabelRequirementsDialog(Globals.RootEditor);
                         e.Handled = true;
                     }
-                    else if (e.Key == Key.Tab)
-                    {
-                        // Commit the edit before going to the next cell
-                        DataGridCommonCode.ApplyPendingEdits(DataGrid);
-                    }
+                    // Tab: let the DataGrid commit the edit naturally via CellEditEnding.
+                    // Calling ApplyPendingEdits here triggers RowChanged → UpdateCellEditabilityAndVisibility
+                    // synchronously before Tab navigation, which can disrupt focus and cause Tab to escape the DataGrid.
 
                     break;
                 case EditorConstant.ColumnHeader.Width:
@@ -197,11 +339,14 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                     break;
 
                 case EditorConstant.ColumnHeader.DefaultValue:
-                    // These controls should not accept spaces 
                     ControlRow control = new((currentRow.Item as DataRowView)?.Row);
                     switch (control.Type)
                     {
                         case Control.AlphaNumeric:
+                            // Default Value is a DataGridTemplateColumn, so cell.Content is the data row,
+                            // not a TextBox. Block Space directly rather than routing through the helper.
+                            if (e.Key == Key.Space) e.Handled = true;
+                            break;
                         case Control.IntegerAny:
                         case Control.IntegerPositive:
                         case Control.DecimalAny:
@@ -328,6 +473,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             {
                 ParentTab.MetadataEditRowControls.RemoveControlButton.IsEnabled = false;
             }
+
         }
 
         #endregion
@@ -350,31 +496,199 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                 return;
             }
 
+            // If we are using a standard, raise a warning if the user is trying to modify the list.
+            bool keepGoing = true;
+            if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+            {
+                keepGoing = true == Dialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Changing the Choice List", EditorConstant.templateEditorWindow.standardType);
+            }
+            if (false == keepGoing)
+            {
+                return;
+            }
+
             Choices choices = Choices.ChoicesFromJson(choiceControl.List);
             bool showEmptyChoiceOption = choiceControl.Type == Control.FixedChoice;
             EditChoiceList choiceListDialog = new(button, choices, showEmptyChoiceOption, Globals.RootEditor);
             bool? result = choiceListDialog.ShowDialog();
             if (result == true)
             {
-                // Ensure that choices disallowing empties have an appropriate default value
-                if (false == choiceListDialog.Choices.IncludeEmptyChoice &&
-                    (string.IsNullOrEmpty(choiceControl.DefaultValue) || false == choiceListDialog.Choices.Contains(choiceControl.DefaultValue)))
+                // Silently validate DefaultValue against the updated list after the dialog closes.
+                Choices newChoices = choiceListDialog.Choices;
+                if (choiceControl.Type == Control.MultiChoice)
                 {
-                    Dialogs.EditorDefaultChoiceValuesMustMatchNonEmptyChoiceListsDialog(Globals.RootEditor, choiceControl.DefaultValue);
-                    choiceControl.DefaultValue = choiceListDialog.Choices.ChoiceList[0];
+                    // MultiChoice stores a comma-separated list of selections: retain only values
+                    // still present in the new list; discard any that were removed.
+                    if (!string.IsNullOrEmpty(choiceControl.DefaultValue))
+                    {
+                        IEnumerable<string> retained = choiceControl.DefaultValue
+                            .Split(',')
+                            .Select(s => s.Trim())
+                            .Where(s => s.Length > 0 && newChoices.Contains(s));
+                        choiceControl.DefaultValue = string.Join(",", retained);
+                    }
                 }
-                // Ensure that non-empty default values matches an entry on the edited choice menu
-                else if (!string.IsNullOrEmpty(choiceControl.DefaultValue) && choiceListDialog.Choices.Contains(choiceControl.DefaultValue) == false)
+                else
                 {
-                    Dialogs.EditorDefaultChoiceValuesMustMatchChoiceListsDialog(Globals.RootEditor, choiceControl.DefaultValue);
-                    choiceControl.DefaultValue = string.Empty;
+                    // FixedChoice stores a single value:
+                    // - Clear it if it is no longer in the new list.
+                    // - If empty and empty choices are not allowed, set it to the first choice.
+                    if (!string.IsNullOrEmpty(choiceControl.DefaultValue) && !newChoices.Contains(choiceControl.DefaultValue))
+                    {
+                        choiceControl.DefaultValue = string.Empty;
+                    }
+                    else if (string.IsNullOrEmpty(choiceControl.DefaultValue) && !newChoices.IncludeEmptyChoice)
+                    {
+                        choiceControl.DefaultValue = newChoices.ChoiceList.Count > 0 ? newChoices.ChoiceList[0] : string.Empty;
+                    }
                 }
-
-                choiceControl.List = choiceListDialog.Choices.GetAsJson;
+                choiceControl.List = newChoices.GetAsJson;
                 Globals.RootEditor.DoSyncMetadataControlToDatabase(choiceControl);
+                this.DoLayoutUpdated(true);
             }
         }
 
+        #endregion
+
+        #region Callback: DataGrid_PreparingCellForEdit
+        // After BeginEdit completes and the editing template is instantiated, move keyboard
+        // focus into the first focusable element of the editing ContentControl.
+        private void DataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
+        {
+            if (e.Column?.Header is not string header || header != EditorConstant.ColumnHeader.DefaultValue)
+                return;
+            if (e.EditingElement is not ContentControl contentControl)
+                return;
+
+            contentControl.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+            {
+                contentControl.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
+            }));
+        }
+        #endregion
+
+        #region Callbacks: DefaultValue FixedChoice ComboBox
+        // Flag used to suppress SelectionChanged writes while we're programmatically
+        // repopulating the ComboBox items (which would otherwise clear SelectedItem).
+        private bool _populatingFixedChoiceComboBox;
+
+        // Populate items and restore the current DefaultValue selection.
+        // Called both on Loaded (first appearance in edit mode) and on DropDownOpened.
+        private void PopulateFixedChoiceComboBox(ComboBox comboBox)
+        {
+            if (comboBox.DataContext is not DataRowView rowView) return;
+            MetadataControlRow control = new(rowView.Row);
+            Choices choices = Choices.ChoicesFromJson(control.List);
+
+            _populatingFixedChoiceComboBox = true;
+            comboBox.Items.Clear();
+            if (choices.IncludeEmptyChoice)
+                comboBox.Items.Add(string.Empty);
+            foreach (string choice in choices.ChoiceList)
+                comboBox.Items.Add(choice);
+            comboBox.SelectedItem = control.DefaultValue;
+            _populatingFixedChoiceComboBox = false;
+        }
+
+        private void DefaultValueFixedChoiceLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+                PopulateFixedChoiceComboBox(comboBox);
+        }
+
+        private void DefaultValueFixedChoiceDropDownOpened(object sender, EventArgs e)
+        {
+            if (sender is ComboBox comboBox)
+                PopulateFixedChoiceComboBox(comboBox);
+        }
+
+        private void DefaultValueFixedChoiceSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_populatingFixedChoiceComboBox) return;
+            if (sender is not ComboBox comboBox) return;
+            if (comboBox.DataContext is not DataRowView rowView) return;
+            if (e.AddedItems.Count == 0) return;
+
+            MetadataControlRow control = new(rowView.Row)
+            {
+                DefaultValue = comboBox.SelectedItem as string ?? string.Empty
+            };
+            Globals.RootEditor.DoSyncMetadataControlToDatabase(control);
+        }
+        #endregion
+
+        #region Callbacks: DefaultValue MultiChoice CheckComboBox
+        // Flag used to suppress Closed writes while we're programmatically populating the control.
+        private bool _populatingMultiChoiceComboBox;
+
+        // Populate items from the row's List JSON and restore the Text to the stored DefaultValue.
+        // Called on Loaded and again on Opened so the list always reflects the latest Define-List choices.
+        private void PopulateMultiChoiceCheckComboBox(WatermarkCheckComboBox checkComboBox)
+        {
+            if (checkComboBox.DataContext is not DataRowView rowView) return;
+            MetadataControlRow control = new(rowView.Row);
+            Choices choices = Choices.ChoicesFromJson(control.List);
+
+            _populatingMultiChoiceComboBox = true;
+            checkComboBox.Items.Clear();
+            foreach (string choice in choices.ChoiceList)
+                checkComboBox.Items.Add(choice);
+            checkComboBox.Text = control.DefaultValue ?? string.Empty;
+            _populatingMultiChoiceComboBox = false;
+        }
+
+        private void DefaultValueMultiChoiceLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is WatermarkCheckComboBox checkComboBox)
+                PopulateMultiChoiceCheckComboBox(checkComboBox);
+        }
+
+        private void DefaultValueMultiChoiceOpened(object sender, RoutedEventArgs e)
+        {
+            if (sender is not WatermarkCheckComboBox checkComboBox) return;
+            // Repopulate items in case the list changed via DefineList since last open
+            PopulateMultiChoiceCheckComboBox(checkComboBox);
+            // Sync checkmarks to the current Text (comma-separated selected values)
+            checkComboBox.SelectedItemsOverride = new ObservableCollection<string>(
+                checkComboBox.Text.Split(','));
+        }
+
+        private void DefaultValueMultiChoiceClosed(object sender, RoutedEventArgs e)
+        {
+            if (_populatingMultiChoiceComboBox) return;
+            if (sender is not WatermarkCheckComboBox checkComboBox) return;
+            if (checkComboBox.DataContext is not DataRowView rowView) return;
+
+            // Standard CheckComboBox cleanup: SelectedItemsOverride = null clears Text,
+            // so save and restore it first, then trim any stray leading/trailing commas.
+            string savedText = checkComboBox.Text;
+            checkComboBox.SelectedItemsOverride = null;
+            checkComboBox.Text = savedText.Trim(',');
+
+            // Write the updated selection back to DefaultValue
+            MetadataControlRow control = new(rowView.Row)
+            {
+                DefaultValue = checkComboBox.Text
+            };
+            Globals.RootEditor.DoSyncMetadataControlToDatabase(control);
+        }
+        #endregion
+
+        #region Callback: DefaultValue MultiLine popup
+        private void DefaultValueMultiLineClosed(object sender, EventArgs e)
+        {
+            if (sender is not MultiLineText multiLineText) return;
+            // DataContext may be null if the cell exited edit mode before the deferred popup-close ran;
+            // fall back to the row captured in BeginningEdit.
+            DataRowView rowView = multiLineText.DataContext as DataRowView ?? _multiLineEditingRow;
+            _multiLineEditingRow = null;
+            if (rowView == null) return;
+            MetadataControlRow control = new(rowView.Row)
+            {
+                DefaultValue = multiLineText.Text
+            };
+            Globals.RootEditor.DoSyncMetadataControlToDatabase(control);
+        }
         #endregion
 
         #region Callback: EditTooltipButton_Click
@@ -431,6 +745,38 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                     !(Globals.Root.standardType == Timelapse.Constant.Standards.CamtrapDPStandard &&
                          CamtrapDPHelpers.IsDataPackageDeploymentField(control.DataLabel));
             }
+        }
+
+        #endregion
+
+        #region Visual tree helpers
+
+        // Traverses the visual tree upward to find the nearest ancestor of type T.
+        // Falls back to the logical tree for non-Visual elements (e.g. Run, TextElement)
+        // to avoid InvalidOperationException from VisualTreeHelper.GetParent.
+        private static T FindAncestor<T>(DependencyObject element) where T : DependencyObject
+        {
+            while (element != null)
+            {
+                if (element is T result) return result;
+                element = element is Visual || element is System.Windows.Media.Media3D.Visual3D
+                    ? VisualTreeHelper.GetParent(element)
+                    : LogicalTreeHelper.GetParent(element);
+            }
+            return null;
+        }
+
+        // Traverses the visual tree to find the first child of type T
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T result) return result;
+                T found = FindVisualChild<T>(child);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         #endregion
@@ -589,12 +935,46 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             }
         }
 
-        // Validation of Defaults: Particular defaults (Flags) cannot be empty 
-        // There is no need to check other validations here (e.g., unallowed characters) as these will have been caught previously 
-        private static void ValidateDefaults(DataGridCellEditEndingEventArgs e, DataGridRow currentRow)
+        // Validation of Defaults: Particular defaults (Flags) cannot be empty
+        // There is no need to check other validations here (e.g., unallowed characters) as these will have been caught previously
+        private static void ValidateDefaults(DataGridCellEditEndingEventArgs e, DataGridRow currentRow, string preEditValue = "")
         {
             MetadataControlRow control = new((currentRow.Item as DataRowView)?.Row);
-            if (e.EditingElement is not TextBox textBox)
+
+            // The Default Value column is a DataGridTemplateColumn. DataGridTemplateColumn always
+            // wraps its CellEditingTemplate in a ContentPresenter (via GenerateEditingElement), so
+            // e.EditingElement is a ContentPresenter whose ContentTemplate is our DataTemplate.
+            TextBox textBox;
+            if (e.EditingElement is TextBox directTextBox)
+            {
+                textBox = directTextBox;
+            }
+            else if (e.EditingElement is ContentPresenter contentPresenter)
+            {
+                // For these types the ContentPresenter hosts a dedicated control that manages its
+                // own persistence (UpdateSourceTrigger=PropertyChanged or code-behind), so
+                // validation here is not needed.
+                if (control.Type == Control.MultiLine ||
+                    control.Type == Control.MultiChoice ||
+                    control.Type == Control.FixedChoice ||
+                    control.Type == Control.IntegerAny ||
+                    control.Type == Control.IntegerPositive ||
+                    control.Type == Control.DecimalAny ||
+                    control.Type == Control.DecimalPositive ||
+                    control.Type == Control.Flag ||
+                    control.Type == Control.Date_ ||
+                    control.Type == Control.Time_ ||
+                    control.Type == Control.DateTime_)
+                    return;
+
+                textBox = FindVisualChild<TextBox>(contentPresenter);
+                if (textBox == null)
+                {
+                    TracePrint.NullException();
+                    return;
+                }
+            }
+            else
             {
                 TracePrint.NullException();
                 return;
@@ -627,14 +1007,12 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                     Choices choices = Choices.ChoicesFromJson(control.List);
                     if (choices.IncludeEmptyChoice == false && string.IsNullOrWhiteSpace(textBox.Text))
                     {
-                        // Can't have an empty default if the IncludeEmptyChoice is unselecteds
+                        // Can't have an empty default if the IncludeEmptyChoice is unselected
                         Dialogs.EditorDefaultChoiceValuesMustMatchNonEmptyChoiceListsDialog(Globals.RootEditor, textBox.Text);
                         if (choices.ChoiceList.Count > 0)
                         {
-                            // Set it to the first item
                             textBox.Text = choices.ChoiceList[0];
                         }
-                        // Note: Undefined if we have an empty choice list with IncludeEmptyChoice of false!
                     }
                     else if (string.IsNullOrWhiteSpace(textBox.Text) == false)
                     {
@@ -642,19 +1020,17 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                     }
                     break;
                 case Control.MultiChoice:
-                    // Check to see if the value matches one or more of the items on the menu, and resort them if needed
                     ValidationCallbacks.TextChanged_MultiChoiceTextOnly(textBox, null, Choices.ChoicesFromJson(control.List));
                     break;
 
                 case Control.DateTime_:
-                    // Check if its a valid DateTime in database format
-                    ValidationCallbacks.TextChanged_DateTimeTextOnly(textBox, null, DateTimeFormatEnum.DateAndTime);
+                    ValidationCallbacks.TextChanged_DateTimeTextOnly(textBox, null, DateTimeFormatEnum.DateAndTime, preEditValue);
                     break;
                 case Control.Date_:
-                    ValidationCallbacks.TextChanged_DateTimeTextOnly(textBox, null, DateTimeFormatEnum.DateOnly);
+                    ValidationCallbacks.TextChanged_DateTimeTextOnly(textBox, null, DateTimeFormatEnum.DateOnly, preEditValue);
                     break;
                 case Control.Time_:
-                    ValidationCallbacks.TextChanged_DateTimeTextOnly(textBox, null, DateTimeFormatEnum.TimeOnly);
+                    ValidationCallbacks.TextChanged_DateTimeTextOnly(textBox, null, DateTimeFormatEnum.TimeOnly, preEditValue);
                     break;
 
                 // Flag fields
@@ -695,6 +1071,26 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         #endregion
 
         #region Callback: Type ComboBox specific handlers
+        // When the Type ComboBox has keyboard focus and its dropdown is closed, redirect Up/Down to
+        // DataGrid row navigation instead of letting the ComboBox cycle through its items.
+        private void TypeComboBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if ((e.Key != Key.Up && e.Key != Key.Down) ||
+                sender is not ComboBox cb || cb.IsDropDownOpen)
+                return;
+
+            e.Handled = true; // prevent ComboBox from consuming the key
+
+            int newIndex = DataGrid.SelectedIndex + (e.Key == Key.Down ? 1 : -1);
+            if (newIndex < 0 || newIndex >= DataGrid.Items.Count) return;
+
+            DataGridColumn col = DataGrid.CurrentColumn;
+            DataGrid.SelectedIndex = newIndex;
+            if (col != null)
+                DataGrid.CurrentCell = new DataGridCellInfo(DataGrid.Items[newIndex], col);
+            DataGrid.ScrollIntoView(DataGrid.Items[newIndex]!);
+        }
+
         // Manipulate the TypeComboBox dropdown based on its current value,
         // where we disable the visibility of items that don't make sense for the current type.
         // That is, make it so the use can only select an item that changes from one type to another equivalent, or to a more general type.

@@ -41,7 +41,16 @@ namespace TimelapseTemplateEditor.Controls
         // - required rows cannot be deleted, as the RemoveControl button will be unselectable.
         private void ButtonRemoveDataRow_Click(object sender, RoutedEventArgs e)
         {
-            Globals.Root.TemplateDoRemoveSelectedRow();
+            bool result = true;
+            if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+            {
+                result = true == Dialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Deleting controls", EditorConstant.templateEditorWindow.standardType);
+            }
+
+            if (result)
+            {
+                Globals.Root.TemplateDoRemoveSelectedRow();
+            }
             RemoveControlButton.IsEnabled = false;
         }
         #endregion

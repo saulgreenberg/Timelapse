@@ -4,13 +4,14 @@
     <UserControl x:Class="TimelapseTemplateEditor.Controls.TemplateDataGridControl"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:timelapseTemplateEditor2="clr-namespace:TimelapseTemplateEditor"
                  xmlns:dataTables="clr-namespace:Timelapse.DataTables"
                  xmlns:editorCode="clr-namespace:TimelapseTemplateEditor.EditorCode"
                  xmlns:controlsDataEntry="clr-namespace:Timelapse.ControlsDataEntry"
-                 mc:Ignorable="d editorCode" 
+                 xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+                 mc:Ignorable="d editorCode"
                  d:DesignHeight="250" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -19,20 +20,236 @@
             </ResourceDictionary.MergedDictionaries>
             <editorCode:CellTextBlockConverter x:Key="CellTextBlockConverter"
                                                d:IsDataSource="True"/>
+        <editorCode:TimeStringToDateTimeConverter x:Key="TimeStringToDateTimeConverter"/>
+        <editorCode:DateTimeStringToDateTimeConverter x:Key="DateTimeStringToDateTimeConverter"/>
+        <editorCode:DateStringToDateTimeConverter x:Key="DateStringToDateTimeConverter"/>
+        <editorCode:StringToBoolConverter x:Key="StringToBoolConverter"/>
+        <editorCode:StringToNullableIntConverter x:Key="StringToNullableIntConverter"/>
+        <editorCode:StringToNullableDoubleConverter x:Key="StringToNullableDoubleConverter"/>
+        <editorCode:DecimalDisplayConverter x:Key="DecimalDisplayConverter"/>
+
+        <!-- Default Value column: IntegerUpDown for IntegerAny type -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueIntegerTemplate">
+            <toolkit:IntegerUpDown
+                Value="{Binding DefaultValue, Converter={StaticResource StringToNullableIntConverter}, UpdateSourceTrigger=PropertyChanged}"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Default Value column: IntegerUpDown (non-negative) for Counter and IntegerPositive types -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValuePositiveIntegerTemplate">
+            <toolkit:IntegerUpDown
+                Value="{Binding DefaultValue, Converter={StaticResource StringToNullableIntConverter}, UpdateSourceTrigger=PropertyChanged}"
+                Minimum="0"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Default Value column: DoubleUpDown for DecimalAny type -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueDecimalTemplate">
+            <toolkit:DoubleUpDown
+                Value="{Binding DefaultValue, Converter={StaticResource StringToNullableDoubleConverter}, UpdateSourceTrigger=PropertyChanged}"
+                FormatString="0.00"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Default Value column: DoubleUpDown (non-negative) for DecimalPositive type -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValuePositiveDecimalTemplate">
+            <toolkit:DoubleUpDown
+                Value="{Binding DefaultValue, Converter={StaticResource StringToNullableDoubleConverter}, UpdateSourceTrigger=PropertyChanged}"
+                Minimum="0"
+                FormatString="0.00"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Default Value column: CheckComboBox for MultiChoice type.
+             Items are populated from the row's List JSON each time the dropdown opens.
+             Multiple selections are stored as a comma-separated string in DefaultValue.
+             Populated and synced via code-behind; no empty-item option needed. -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueMultiChoiceTemplate">
+            <toolkit:WatermarkCheckComboBox
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                BorderThickness="0"
+                Margin="1.5"
+                Background="White"
+                Loaded="DefaultValueMultiChoiceLoaded"
+                Opened="DefaultValueMultiChoiceOpened"
+                Closed="DefaultValueMultiChoiceClosed"/>
+        </DataTemplate>
+
+        <!-- Default Value column: ComboBox for FixedChoice type.
+             Items are populated from the row's List JSON each time the dropdown opens,
+             respecting IncludeEmptyChoice. Populated and synced via code-behind. -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueFixedChoiceTemplate">
+            <toolkit:WatermarkComboBox
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                BorderThickness="0"
+                Margin="1.5"
+                Background="White"
+                Loaded="DefaultValueFixedChoiceLoaded"
+                DropDownOpened="DefaultValueFixedChoiceDropDownOpened"
+                SelectionChanged="DefaultValueFixedChoiceSelectionChanged"/>
+        </DataTemplate>
+
+        <!-- Default Value column: MultiLineText popup editor for MultiLine type -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueMultiLineTemplate">
+            <toolkit:MultiLineText
+                Text="{Binding DefaultValue, UpdateSourceTrigger=PropertyChanged}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Margin="1.5"
+                PopupClosed="DefaultValueMultiLineClosed"/>
+        </DataTemplate>
+
+        <!-- Default Value column: CheckBox for Flag type (edit template only) -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueFlagTemplate">
+            <CheckBox IsChecked="{Binding DefaultValue, Converter={StaticResource StringToBoolConverter}, UpdateSourceTrigger=PropertyChanged}"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center"
+                      Background="White"
+                      Margin="1.5">
+                <CheckBox.Style>
+                    <Style TargetType="CheckBox">
+                        <Setter Property="Content" Value="false"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Content" Value="true"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </CheckBox.Style>
+            </CheckBox>
+        </DataTemplate>
+
+        <!-- Default Value column: disabled CheckBox for DeleteFlag (default is read-only) -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueDeleteFlagTemplate">
+            <CheckBox IsChecked="{Binding DefaultValue, Converter={StaticResource StringToBoolConverter}}"
+                      Content="{Binding DefaultValue}"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center"
+                      Background="White"
+                      IsEnabled="False"
+                      Margin="1.5"/>
+        </DataTemplate>
+
+        <!-- Default Value column: display TextBlock for all types except Date_, Time_, DateTime_ -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueTextBlockTemplate">
+            <TextBlock ToolTip="{StaticResource DefaultValueToolTip}" Margin="1.5">
+                <TextBlock.Style>
+                    <Style TargetType="{x:Type TextBlock}">
+                        <Setter Property="Text" Value="{Binding Path=DefaultValue, Converter={StaticResource CellTextBlockConverter}}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Type}" Value="Counter">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="IntegerAny">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="IntegerPositive">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="DecimalAny">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="DecimalPositive">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="DecimalAny">
+                                <Setter Property="Text" Value="{Binding Path=DefaultValue, Converter={StaticResource DecimalDisplayConverter}}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="DecimalPositive">
+                                <Setter Property="Text" Value="{Binding Path=DefaultValue, Converter={StaticResource DecimalDisplayConverter}}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding DefaultValue}" Value="">
+                                <Setter Property="Text" Value="{x:Static timelapseTemplateEditor2:EditorConstant.DefaultValueWatermark}"/>
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Setter Property="TextAlignment" Value="Left"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </DataTemplate>
+
+        <!-- Default Value column: plain TextBox for all types except Time_ -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueTextBoxTemplate">
+            <toolkit:WatermarkTextBox
+                Text="{Binding DefaultValue, UpdateSourceTrigger=LostFocus}"
+                VerticalAlignment="Center" BorderThickness="0" Padding="2,0" Margin="1.5"/>
+        </DataTemplate>
+
+        <!-- Default Value column: TextBox for AlphaNumeric type (letters, digits, underscore, dash only;
+             input filtering is handled by the DataGrid's PreviewKeyDown and PreviewTextInput callbacks) -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueAlphaNumericTemplate">
+            <toolkit:WatermarkTextBox
+                Text="{Binding DefaultValue, UpdateSourceTrigger=LostFocus}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center" BorderThickness="0" Padding="2,0" Margin="1.5"/>
+        </DataTemplate>
+
+        <!-- Default Value column: TimePicker for Time_ type (used in both display and edit templates) -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueTimePickerTemplate">
+            <toolkit:WatermarkTimePicker
+                Value="{Binding DefaultValue, Converter={StaticResource TimeStringToDateTimeConverter}, UpdateSourceTrigger=PropertyChanged}"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Default Value column: DatePicker (date only) for Date_ type (used in both display and edit templates) -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueDatePickerTemplate">
+            <toolkit:WatermarkDateTimePicker
+                Value="{Binding DefaultValue, Converter={StaticResource DateStringToDateTimeConverter}, UpdateSourceTrigger=PropertyChanged}"
+                ToolTip="{Binding DefaultValue}"
+                Format="Custom"
+                FormatString="dd-MMM-yyyy"
+                TimePickerVisibility="Collapsed"
+                AutoCloseCalendar="True"
+                CultureInfo="en-US"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
+
+        <!-- Default Value column: DateTimePicker for DateTime_ type (used in both display and edit templates) -->
+        <DataTemplate DataType="{x:Type dataTables:ControlRow}" x:Key="DefaultValueDateTimePickerTemplate">
+            <toolkit:WatermarkDateTimePicker
+                Value="{Binding DefaultValue, Converter={StaticResource DateTimeStringToDateTimeConverter}, UpdateSourceTrigger=PropertyChanged}"
+                ToolTip="{Binding DefaultValue}"
+                Format="Custom"
+                FormatString="dd-MMM-yyyy HH:mm:ss"
+                AutoCloseCalendar="True"
+                CultureInfo="en-US"
+                BorderThickness="0"
+                Margin="1.5"
+                VerticalAlignment="Center"/>
+        </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
     <Grid>
         <!-- The primary template data grid -->
        
-        <DataGrid Name="DataGrid"  MinHeight="215" VerticalAlignment="Top"  Grid.Row="0" Grid.Column="0" RowHeight="25" 
+        <DataGrid Name="DataGrid"  MinHeight="215" VerticalAlignment="Top"  Grid.Row="0" Grid.Column="0" RowHeight="30" RowHeaderWidth="22"
                 VirtualizingStackPanel.IsVirtualizing="False"
                 AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" 
                 BeginningEdit="TemplateDataGrid_BeginningEdit"
                 CellEditEnding="TemplateDataGrid_CellEditEnding"
-                CurrentCellChanged="TemplateDataGrid_CurrentCellChanged" 
-                PreviewKeyDown="TemplateDataGrid_PreviewKeyDown" 
-                PreviewTextInput="TemplateDataGrid_PreviewTextInput" 
+                CurrentCellChanged="TemplateDataGrid_CurrentCellChanged"
+                PreparingCellForEdit="DataGrid_PreparingCellForEdit"
+
+                PreviewMouseLeftButtonDown="TemplateDataGrid_PreviewMouseLeftButtonDown"
+                MouseLeftButtonUp="TemplateDataGrid_MouseLeftButtonUp"
+                PreviewKeyDown="TemplateDataGrid_PreviewKeyDown"
+                PreviewTextInput="TemplateDataGrid_PreviewTextInput"
                 LayoutUpdated="TemplateDataGrid_LayoutUpdated"  
                 SelectionChanged="TemplateDataGrid_SelectionChanged" SelectionMode="Single" 
                 ItemsSource="{Binding}"  
@@ -40,7 +257,7 @@
                 GotFocus="DataGrid_OnGotFocus"
                 LostFocus="DataGrid_OnLostFocus"
                 Loaded="DataGrid_OnLoaded"
-                
+                Unloaded="DataGrid_OnUnloaded"
                 ColumnHeaderStyle="{DynamicResource VerticalGridHeaderStyle}" 
                                             >
             <DataGrid.Resources>
@@ -48,7 +265,56 @@
                     <Setter Property="VerticalContentAlignment" Value="Bottom"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                 </Style>
+                <!-- Base cell style:
+                     - Always reserves BorderThickness=2 (transparent) so layout never shifts.
+                     - Selected cells get a light-blue tint; focused cell within selected row gets a darker blue border. -->
+                <Style x:Key="CellFocusStyle" TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#CCE8FF"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                        </Trigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsFocused}" Value="True"/>
+                                <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True"/>
+                            </MultiDataTrigger.Conditions>
+                            <MultiDataTrigger.Setters>
+                                <Setter Property="BorderBrush" Value="#0078D4"/>
+                            </MultiDataTrigger.Setters>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
             </DataGrid.Resources>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+            </DataGrid.CellStyle>
+            <DataGrid.RowHeaderStyle>
+                <Style TargetType="DataGridRowHeader">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridRowHeader">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                    <CheckBox IsChecked="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Mode=OneWay}"
+                                              IsHitTestVisible="False"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                            <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowHeaderStyle>
             <!-- If you change the visible rows or header names, please check UpdateCellColors() constants to ensure they match new conventions -->
             <DataGrid.Columns >
 
@@ -65,22 +331,26 @@
                 <!-- #endregion -->
 
                 <!-- #region Type Column -->
-                <DataGridTemplateColumn MinWidth="110" MaxWidth="110" Width="110"
-                                        Header="Type" 
-                                        CanUserSort="False" >
+                <DataGridTemplateColumn MinWidth="120" Width="110"
+                                        Header="Type"
+                                        CanUserSort="False">
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+                    </DataGridTemplateColumn.CellStyle>
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="dataTables:ControlRow">
-                            <ComboBox 
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <ComboBox
                                  Name="typeComboBox"
                                  Text="{Binding Path=Type, Converter={StaticResource CellTextBlockConverter}}"
-                                 Tag="{Binding Path=ControlOrder}" 
-                                 MinWidth="110"
-                                 MaxWidth="110"
+                                 Tag="{Binding Path=ControlOrder}"
+                                 HorizontalAlignment="Stretch"
                                  HorizontalContentAlignment="Left"
-                                 Margin="0,0,0,0" 
+                                 Background="White"
+                                 Margin="1.5"
                                  Visibility="Visible"
-                                 DropDownOpened ="TypeComboBoxDropDownOpened" 
+                                 DropDownOpened ="TypeComboBoxDropDownOpened"
                                  SelectionChanged="TypeComboBox_SelectionChanged"
+                                 PreviewKeyDown="TypeComboBox_PreviewKeyDown"
                             >
                                 <ComboBox.Style>
                                     <Style TargetType="ComboBox">
@@ -168,39 +438,96 @@
                 <!-- #endregion -->
 
                 <!-- #region Default Value Column -->
-                <DataGridTextColumn MinWidth="100" Width="100" 
-                    Header="Default Value" Binding="{Binding Path=DefaultValue, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Setter Property="ToolTip" Value="{StaticResource DefaultValueToolTip}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Type}" Value="Counter">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="IntegerAny">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="IntegerPositive">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="DecimalAny">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="DecimalPositive">
-                                    <Setter Property="TextAlignment" Value="Right"/>
-                                </DataTrigger>
-
-                            </Style.Triggers>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                <DataGridTemplateColumn MinWidth="100" Width="160"
+                                        Header="Default Value" CanUserSort="False">
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+                    </DataGridTemplateColumn.CellStyle>
+                    <!-- Display: TextBlock for all types except DeleteFlag (always a disabled checkbox). -->
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <ContentControl Content="{Binding}">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueTextBlockTemplate}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Type}" Value="DeleteFlag">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueDeleteFlagTemplate}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ContentControl.Style>
+                            </ContentControl>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <!-- Edit: TextBox for most types; dedicated control for Flag, DeleteFlag, Date_, Time_, DateTime_ -->
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <ContentControl Content="{Binding}">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueTextBoxTemplate}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Type}" Value="MultiLine">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueMultiLineTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="MultiChoice">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueMultiChoiceTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="FixedChoice">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueFixedChoiceTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="AlphaNumeric">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueAlphaNumericTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Counter">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValuePositiveIntegerTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="IntegerAny">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueIntegerTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="IntegerPositive">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValuePositiveIntegerTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="DecimalAny">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueDecimalTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="DecimalPositive">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValuePositiveDecimalTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Flag">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueFlagTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="DeleteFlag">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueDeleteFlagTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Date_">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueDatePickerTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="Time_">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueTimePickerTemplate}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Type}" Value="DateTime_">
+                                                <Setter Property="ContentTemplate" Value="{StaticResource DefaultValueDateTimePickerTemplate}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ContentControl.Style>
+                            </ContentControl>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
                 <!-- #endregion -->
 
                 <!-- #region Label Column -->
                 <DataGridTextColumn MinWidth="100"  Header="Label" Binding="{Binding Path=Label, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+                    </DataGridTextColumn.CellStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="ToolTip" Value="{StaticResource LabelToolTip}"/>
+                            <Setter Property="Margin" Value="1.5"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -208,36 +535,64 @@
 
                 <!-- #region Data Label Column -->
                 <DataGridTextColumn MinWidth="100"   Header="Data Label"  Binding="{Binding Path=DataLabel,  Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+                    </DataGridTextColumn.CellStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="ToolTip" Value="{StaticResource DataLabelToolTip}"/>
+                            <Setter Property="Margin" Value="1.5"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <!-- #endregion -->
 
                 <!-- #region Tooltip Column -->
-                <DataGridTemplateColumn MinWidth="50" Width="*" 
-                                       Header="Tooltip" 
-                                       CanUserSort="False" 
-                                       IsReadOnly="True"
-                                       >
+                <DataGridTemplateColumn MinWidth="50" Width="*"
+                                       Header="Tooltip"
+                                       CanUserSort="False"
+                                       IsReadOnly="True">
+                    <DataGridTemplateColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+                    </DataGridTemplateColumn.CellStyle>
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="dataTables:ControlRow">
-                            <StackPanel>
-                                <Button Name="btnEditTooltipButton"  
-                                        HorizontalContentAlignment="Left"
-                                        Background="White"
-                                        BorderThickness ="0"
-                                        
-                                        Content="{Binding Path=Tooltip}" 
-                                        Margin="0"
-                                        Padding="3,1,3,1"  
-                                        Tag="{Binding Path=ControlOrder}" 
-                                        Visibility="Visible"
-                                        ToolTip="{StaticResource TooltipToolTip}"
-                                        Click="EditTooltipButton_Click" />
-                            </StackPanel>
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
+                            <Button Name="btnEditTooltipButton"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Focusable="False"
+                                    BorderThickness="0"
+                                    Content="{Binding Path=Tooltip}"
+                                    Margin="1.5"
+                                    Padding="3,0,3,0"
+                                    Tag="{Binding Path=ControlOrder}"
+                                    Visibility="Visible"
+                                    ToolTip="{StaticResource TooltipToolTip}"
+                                    Click="EditTooltipButton_Click">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="White"/>
+                                        <!-- Replace the default template to remove the built-in hover colour effect -->
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                                                <Setter Property="Background" Value="#CCE8FF"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -248,11 +603,11 @@
                 <DataGridTemplateColumn MinWidth="70" MaxWidth="70" Width="70"
                                         Header="List" CanUserSort="False" IsReadOnly="True" >
                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="dataTables:ControlRow">
+                        <DataTemplate DataType="{x:Type dataTables:ControlRow}">
                             <StackPanel>
                                 <Button Name="btnButton"  
                                         Content="Define List" 
-                                        Margin="3,1,3,1"  
+                                        Margin="1.5"
                                         Tag="{Binding Path=ControlOrder}" 
                                         Visibility="Hidden"
                                         ToolTip="{StaticResource ListFixedChoiceToolTip}"
@@ -281,9 +636,13 @@
 
                 <!--#region Width Column -->
                 <DataGridTextColumn MinWidth="45" Width="45" MaxWidth="45"  Header="Width" Binding="{Binding Path=TXTBOXWIDTH, Converter={StaticResource CellTextBlockConverter}}" CanUserSort="False" >
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource CellFocusStyle}"/>
+                    </DataGridTextColumn.CellStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="{x:Type TextBlock}">
                             <Setter Property="ToolTip" Value="{StaticResource WidthToolTip}"/>
+                            <Setter Property="Margin" Value="1.5"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -293,11 +652,11 @@
                 <DataGridTemplateColumn  MinWidth="65" MaxWidth="65" Width="65" Header="Copyable" SortMemberPath="Include" CanUserSort="False" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="{x:Type controlsDataEntry:DataEntryControl}">
-                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Copyable, UpdateSourceTrigger=PropertyChanged}"/>
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Copyable, UpdateSourceTrigger=PropertyChanged}" Margin="1.5"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellStyle>
-                        <Style TargetType="{x:Type DataGridCell}">
+                        <Style TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource CellFocusStyle}">
                             <Setter Property="ToolTip" Value="{StaticResource CopyableToolTip}"/>
                         </Style>
                     </DataGridTemplateColumn.CellStyle>
@@ -308,11 +667,11 @@
                 <DataGridTemplateColumn MinWidth="50" Width="50" MaxWidth="50" Header="Visible" SortMemberPath="Include" CanUserSort="False" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="{x:Type dataTables:ControlRow}">
-                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="{Binding Path=Visible, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=Visible, UpdateSourceTrigger=PropertyChanged}" Margin="1.5"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellStyle>
-                        <Style TargetType="{x:Type DataGridCell}">
+                        <Style TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource CellFocusStyle}">
                             <Setter Property="ToolTip" Value="{StaticResource VisibleToolTip}"/>
                         </Style>
                     </DataGridTemplateColumn.CellStyle>
@@ -320,15 +679,15 @@
                 <!--#endregion -->
 
                 <!--#region ExportToCSV Column -->
-                <DataGridTemplateColumn MinWidth="48" Width="48" MaxWidth="48" 
+                <DataGridTemplateColumn MinWidth="48" Width="48" MaxWidth="48"
                                         Header="Export" SortMemberPath="Include" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="{x:Type dataTables:ControlRow}">
-                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=ExportToCSV, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Name="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding Path=ExportToCSV, UpdateSourceTrigger=PropertyChanged}" Margin="1.5"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellStyle>
-                        <Style TargetType="{x:Type DataGridCell}">
+                        <Style TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource CellFocusStyle}">
                             <Setter Property="ToolTip" Value="{StaticResource ExportToCSVToolTip}"/>
                         </Style>
                     </DataGridTemplateColumn.CellStyle>

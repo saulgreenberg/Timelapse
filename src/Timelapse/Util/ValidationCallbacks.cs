@@ -205,12 +205,12 @@ namespace Timelapse.Util
 
         #endregion
         #region DateTime versions callbacks
-        public static void TextChanged_DateTimeTextOnly(object sender, object _, DateTimeFormatEnum dateTimeFormat)
+        public static void TextChanged_DateTimeTextOnly(object sender, object _, DateTimeFormatEnum dateTimeFormat, string preEditValue = "")
         {
             if (sender is TextBox textBox)
             {
                 Window window = textBox.FindParentOfType<Window>();
-                ControlsDataHelpers.TextBoxHandleDateTimeTextChanged(window, textBox, dateTimeFormat, true);
+                ControlsDataHelpers.TextBoxHandleDateTimeTextChanged(window, textBox, dateTimeFormat, true, preEditValue);
             }
         }
         #endregion

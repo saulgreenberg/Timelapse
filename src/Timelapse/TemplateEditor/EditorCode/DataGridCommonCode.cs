@@ -101,7 +101,7 @@ namespace TimelapseTemplateEditor.EditorCode
                     }
 
 
-                    MetadataControlRow control = new(((DataRowView)dataGrid.Items[rowIndex]).Row);
+                    MetadataControlRow control = new((((DataRowView)dataGrid.Items[rowIndex])!).Row);
                     string controlType = control.Type;
 
                     // These columns should always be editable
@@ -181,17 +181,17 @@ namespace TimelapseTemplateEditor.EditorCode
 
                             // camtrapDP type, lists, export should not be editable at any level, unless its an added custom field
                             ((columnHeader == Control.Type ||
-                               columnHeader == Control.List ||
+                               //columnHeader == Control.List || // We now allow the list to be editable, but we display a warning instead
                                columnHeader == "Export") &&
-                              (level == -1 && CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel)) ||
-                              (level == 1 && CamtrapDPHelpers.IsDataPackageField(control.DataLabel)) ||
-                              (level == 2 && CamtrapDPHelpers.IsDeploymentField(control.DataLabel))) ||
+                              ((level == -1 && CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel)) ||
+                               (level == 1 && CamtrapDPHelpers.IsDataPackageField(control.DataLabel)) ||
+                               (level == 2 && CamtrapDPHelpers.IsDeploymentField(control.DataLabel)))) ||
 
                              // camtrapDP data labels should not be editable at any level, unless its an added custom field
                              (columnHeader == EditorConstant.ColumnHeader.DataLabel &&
-                                (level == -1 && CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel)) ||
-                                (level == 1 && CamtrapDPHelpers.IsDataPackageField(control.DataLabel)) ||
-                                (level == 2 && CamtrapDPHelpers.IsDeploymentField(control.DataLabel))) ||
+                                ((level == -1 && CamtrapDPHelpers.IsMediaOrObservationField(control.DataLabel)) ||
+                                 (level == 1 && CamtrapDPHelpers.IsDataPackageField(control.DataLabel)) ||
+                                 (level == 2 && CamtrapDPHelpers.IsDeploymentField(control.DataLabel)))) ||
 
                              // camtrapDP lists should not be editable 
 
@@ -227,35 +227,17 @@ namespace TimelapseTemplateEditor.EditorCode
                             }
                         }
 
-                        if (controlType == Control.Date_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue)
-                        {
-                            // Date_ values are the complete date/time. As we only want to display the date portion, we trim the Time_ portion off here.
-                            if (cell.Content is TextBlock textBlock && false == string.IsNullOrWhiteSpace(textBlock.Text))
-                            {
-                                textBlock.Text = textBlock.Text.Split()[0];
-                            }
-                        }
-                        else if (controlType == Control.Time_ && columnHeader == EditorConstant.ColumnHeader.DefaultValue)
-                        {
-                            // Time_ values are the complete date/time. As we only want to display the time portion, we trim the Date_ portion here.
-                            if (cell.Content is TextBlock textBlock && false == string.IsNullOrWhiteSpace(textBlock.Text))
-                            {
-                                string[] splitText = textBlock.Text.Split();
-                                if (splitText.Length > 1)
-                                {
-                                    textBlock.Text = textBlock.Text.Split()[1];
-                                }
-                            }
-                        }
                         cell.Background = EditorConstant.NotEditableCellColor;
                         cell.Foreground = Brushes.Gray;
-                        cell.SetValue(System.Windows.Controls.Control.IsTabStopProperty, false);  // Disallow tabbing in non-editable fields
 
                         // This actually disallows editing 
                         cell.IsEditing = false;
 
                         // if cell has a checkbox, also disable it.
-                        if (cellContent?.ContentTemplate.FindName("CheckBox", cellContent) is CheckBox checkbox)
+                        // Use visual tree traversal rather than FindName to avoid an InvalidOperationException
+                        // that occurs when the ContentTemplate is set but not yet applied as TemplateInternal
+                        // (e.g. on the first layout pass for DataGridTemplateColumn cells).
+                        if (VisualChildren.GetVisualChild<CheckBox>(cell) is { } checkbox)
                         {
                             checkbox.IsEnabled = false;
                         }
@@ -264,11 +246,10 @@ namespace TimelapseTemplateEditor.EditorCode
                     {
                         // An editable cell
                         cell.ClearValue(System.Windows.Controls.Control.BackgroundProperty); // otherwise when scrolling cells offscreen get colored randomly
-                        cell.SetValue(System.Windows.Controls.Control.IsTabStopProperty, true);
                         // if cell has a checkbox, enable it.
                         if (cellContent != null)
                         {
-                            if (cellContent.ContentTemplate.FindName("CheckBox", cellContent) is CheckBox checkbox)
+                            if (VisualChildren.GetVisualChild<CheckBox>(cell) is { } checkbox)
                             {
                                 checkbox.IsEnabled = true;
                             }
@@ -607,6 +588,146 @@ namespace TimelapseTemplateEditor.EditorCode
                 return valString.Trim();
             }
             return string.Empty;
+        }
+    }
+    #endregion
+
+    #region Class TimeStringToDateTimeConverter
+    // Converts between a time string in database format (HH:mm:ss) and a nullable DateTime,
+    // used to bind the WatermarkTimePicker in the Default Value column for Time_ rows.
+    public class TimeStringToDateTimeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && DateTimeHandler.TryParseDatabaseTime(s, out DateTime dt))
+                return dt;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is DateTime dt)
+                return DateTimeHandler.ToStringTime(dt);
+            return Binding.DoNothing;
+        }
+    }
+    #endregion
+
+    #region Class DateTimeStringToDateTimeConverter
+    // Converts between a datetime string in database format (yyyy-MM-dd HH:mm:ss) and a nullable DateTime,
+    // used to bind the WatermarkDateTimePicker in the Default Value column for DateTime_ rows.
+    public class DateTimeStringToDateTimeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && DateTimeHandler.TryParseDatabaseDateTime(s, out DateTime dt))
+                return dt;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is DateTime dt)
+                return DateTimeHandler.ToStringDatabaseDateTime(dt);
+            return Binding.DoNothing;
+        }
+    }
+    #endregion
+
+    #region Class StringToNullableIntConverter
+    // Converts between an integer default-value string and a nullable int,
+    // used to bind IntegerUpDown controls in the Default Value column.
+    public class StringToNullableIntConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && int.TryParse(s, out int i))
+                return i;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int i)
+                return i.ToString();
+            return string.Empty;
+        }
+    }
+    #endregion
+
+    #region Class StringToNullableDoubleConverter
+    // Converts between a decimal default-value string and a nullable double,
+    // used to bind DoubleUpDown controls in the Default Value column for DecimalAny/DecimalPositive rows.
+    public class StringToNullableDoubleConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && double.TryParse(s, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out double d))
+                return d;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is double d)
+                return d.ToString(CultureInfo.InvariantCulture);
+            return string.Empty;
+        }
+    }
+    #endregion
+
+    #region Class DecimalDisplayConverter
+    // Formats a decimal default-value string with at least two decimal places (e.g. "0" → "0.00", "1.5" → "1.50")
+    // for display in the DefaultValue TextBlock of DecimalAny/DecimalPositive rows.
+    public class DecimalDisplayConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && !string.IsNullOrEmpty(s) &&
+                double.TryParse(s, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out double d))
+                return d.ToString("0.00", CultureInfo.InvariantCulture);
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => value;
+    }
+    #endregion
+
+    #region Class StringToBoolConverter
+    // Converts between the "true"/"false" default-value string and a bool,
+    // used to bind the CheckBox in the Default Value column for Flag rows.
+    public class StringToBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is string s && s.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is true ? "true" : "false";
+        }
+    }
+    #endregion
+
+    #region Class DateStringToDateTimeConverter
+    // Converts between a date string in database format (yyyy-MM-dd) and a nullable DateTime,
+    // used to bind the WatermarkDateTimePicker in the Default Value column for Date_ rows.
+    public class DateStringToDateTimeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && DateTimeHandler.TryParseDatabaseDate(s, out DateTime dt))
+                return dt;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is DateTime dt)
+                return DateTimeHandler.ToStringDatabaseDate(dt);
+            return Binding.DoNothing;
         }
     }
     #endregion

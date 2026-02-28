@@ -73,6 +73,7 @@ namespace TimelapseWpf.Toolkit
 
         private readonly bool _isPopupOpenAnimating = false;
         private HwndSource? _windowSource;
+        private Window? _hostWindow;
 
         // Template parts
         private Grid? MainGrid;
@@ -105,18 +106,22 @@ namespace TimelapseWpf.Toolkit
             // Handle clicks outside the popup when loaded
             Loaded += (_, _) =>
             {
-                if (Application.Current?.MainWindow != null)
+                // Use the actual containing window, not Application.Current.MainWindow, so that
+                // the handler is registered on the right window when the control lives in a
+                // secondary window (e.g. the TemplateEditor opened from the Timelapse main window).
+                _hostWindow = Window.GetWindow(this);
+                if (_hostWindow != null)
                 {
                     // Use PreviewMouseDown to commit BEFORE other controls process the click
                     // This prevents text being committed to the wrong item during navigation
-                    Application.Current.MainWindow.AddHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(ExternalControl_PreviewMouseDown), true);
-                    Application.Current.MainWindow.AddHandler(UIElement.MouseDownEvent, new MouseButtonEventHandler(MainWindow_MouseDown), true);
-                    Application.Current.MainWindow.Deactivated += MainWindow_Deactivated;
-                    Application.Current.MainWindow.LocationChanged += MainWindow_LocationChanged;
-                    Application.Current.MainWindow.SizeChanged += MainWindow_SizeChanged;
+                    _hostWindow.AddHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(ExternalControl_PreviewMouseDown), true);
+                    _hostWindow.AddHandler(UIElement.MouseDownEvent, new MouseButtonEventHandler(MainWindow_MouseDown), true);
+                    _hostWindow.Deactivated += MainWindow_Deactivated;
+                    _hostWindow.LocationChanged += MainWindow_LocationChanged;
+                    _hostWindow.SizeChanged += MainWindow_SizeChanged;
 
                     // Hook into window messages to catch title bar clicks
-                    _windowSource = HwndSource.FromHwnd(new WindowInteropHelper(Application.Current.MainWindow).Handle);
+                    _windowSource = HwndSource.FromHwnd(new WindowInteropHelper(_hostWindow).Handle);
                     _windowSource?.AddHook(WindowProc);
                 }
             };
@@ -174,14 +179,15 @@ namespace TimelapseWpf.Toolkit
 
         private void MultiLineText_Unloaded(object sender, RoutedEventArgs e)
         {
-            // Clean up event handlers
-            if (Application.Current?.MainWindow != null)
+            // Clean up event handlers — use the same window reference saved at load time
+            if (_hostWindow != null)
             {
-                Application.Current.MainWindow.RemoveHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(ExternalControl_PreviewMouseDown));
-                Application.Current.MainWindow.RemoveHandler(UIElement.MouseDownEvent, new MouseButtonEventHandler(MainWindow_MouseDown));
-                Application.Current.MainWindow.Deactivated -= MainWindow_Deactivated;
-                Application.Current.MainWindow.LocationChanged -= MainWindow_LocationChanged;
-                Application.Current.MainWindow.SizeChanged -= MainWindow_SizeChanged;
+                _hostWindow.RemoveHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(ExternalControl_PreviewMouseDown));
+                _hostWindow.RemoveHandler(UIElement.MouseDownEvent, new MouseButtonEventHandler(MainWindow_MouseDown));
+                _hostWindow.Deactivated -= MainWindow_Deactivated;
+                _hostWindow.LocationChanged -= MainWindow_LocationChanged;
+                _hostWindow.SizeChanged -= MainWindow_SizeChanged;
+                _hostWindow = null;
             }
 
             // Clean up window message hook

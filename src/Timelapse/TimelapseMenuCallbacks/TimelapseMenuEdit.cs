@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1200,6 +1201,13 @@ namespace Timelapse
         //-put in edit menu
         private void MenuItemRestoreDefaultValues_Click(object sender, RoutedEventArgs e)
         {
+            MenuItemRestoreDefaultValuesAsync()
+                .ContinueWith(t => Trace.WriteLine(t.Exception),
+                              TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        private async Task MenuItemRestoreDefaultValuesAsync()
+        {
             // Retrieve the controls
             foreach (KeyValuePair<string, DataEntryControl> pair in DataEntryControls.ControlsByDataLabelThatAreVisible)
             {
@@ -1225,7 +1233,7 @@ namespace Timelapse
                 else
                 {
                     // Multiple images are displayed: update the database for all selected rows with the control's value
-                    DataHandler.FileDatabase.UpdateFiles(MarkableCanvas.ThumbnailGrid.GetSelected(), control.DataLabel, imageDatabaseControl.DefaultValue);
+                    await DataHandler.FileDatabase.UpdateFiles(MarkableCanvas.ThumbnailGrid.GetSelected(), control.DataLabel, imageDatabaseControl.DefaultValue);
                 }
                 control.SetContentAndTooltip(imageDatabaseControl.DefaultValue);
             }
