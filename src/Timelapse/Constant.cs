@@ -147,6 +147,8 @@ namespace Timelapse.Constant
                 typeof(WatermarkComboBox),  // choice controls with watermark
                 typeof(TextBox),           // note controls
                 typeof(WatermarkTextBox),   // date time or counter control
+                typeof(WatermarkDateTimePicker), // date time control
+                typeof(WatermarkTimePicker),     // time control
 
         }.AsReadOnly();
 

@@ -60,7 +60,7 @@ namespace Timelapse.ControlsDataEntry
             ContentControl.GotKeyboardFocus += ContentControl_GotKeyboardFocus;
             ContentControl.LostKeyboardFocus += ContentControl_LostKeyboardFocus;
             ContentControl.PreviewGotKeyboardFocus += ContentControl_PreviewGotKeyboardFocus;
-            ContentControl.PreviewGotKeyboardFocus += ContentControl_PreviewLostKeyboardFocus;
+            ContentControl.PreviewLostKeyboardFocus += ContentControl_PreviewLostKeyboardFocus;
             ContentControl.Watermark = Unicode.Ellipsis;
         }
         #endregion

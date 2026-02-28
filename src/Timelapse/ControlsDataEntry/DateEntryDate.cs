@@ -29,6 +29,7 @@ namespace Timelapse.ControlsDataEntry
                 ContentControl.ForceWatermark = true;
                 ContentControl.HideOnFocus = false;
                 ContentControl.ToolTip = "Edit to change the " + Label + " for the selected image";
+
             }
             else
             {
@@ -40,25 +41,6 @@ namespace Timelapse.ControlsDataEntry
                 }
                 ContentControl.ToolTip = value;
             }
-            //if (ContentControl.Template.FindName("PART_TextBox", ContentControl) is WatermarkTextBox textBox)
-            //{
-            //    if (value == null)
-            //    {
-            //        textBox.Text = Unicode.Ellipsis;
-            //    }
-            //    else
-            //    {
-            //        textBox.Text = DateTimeHandler.TryParseDateDatabaseAndDisplayFormats(value, out DateTime dateTime2)
-            //            ? DateTimeHandler.ToStringDisplayDatePortion(dateTime2)
-            //            : value;
-            //        ContentControl.Text = textBox.Text;
-            //    }
-            //}
-            //else
-            //{
-            //    ContentControl.Text = value;
-            //}
-            //ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for the selected image";
         }
         #endregion
     }

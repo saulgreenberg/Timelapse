@@ -631,6 +631,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         dateTime_.IsEnabled = true;
+                        dateTime_.ContentControl.AllowSpin = true;
                         dateTime_.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(dateTime_.DataLabel));
                     }
                     else
@@ -640,6 +641,7 @@ namespace Timelapse.ControlsDataEntry
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
                         string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(dateTime_.DataLabel);
                         dateTime_.IsEnabled = (imagesSelected >= 1);
+                        dateTime_.ContentControl.AllowSpin = contentAndTooltip != null;
                         dateTime_.SetContentAndTooltip(contentAndTooltip);
                     }
                 }
@@ -650,6 +652,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         date_.IsEnabled = true;
+                        date_.ContentControl.AllowSpin = true;
                         date_.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(date_.DataLabel));
                     }
                     else
@@ -659,6 +662,7 @@ namespace Timelapse.ControlsDataEntry
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
                         string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(date_.DataLabel);
                         date_.IsEnabled = (imagesSelected >= 1);
+                        date_.ContentControl.AllowSpin = contentAndTooltip != null;
                         date_.SetContentAndTooltip(contentAndTooltip);
                     }
                 }
@@ -669,6 +673,7 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // Single images view - Enable and show its contents
                         time_.IsEnabled = true;
+                        time_.ContentControl.AllowSpin = true;
                         time_.SetContentAndTooltip(dataEntryHandler.ImageCache.Current.GetValueDisplayString(time_.DataLabel));
                     }
                     else
@@ -677,7 +682,8 @@ namespace Timelapse.ControlsDataEntry
                         // When one or more images are selected, display it as enabled and editable.
                         // Note that if the contentAndTooltip is null (due to no value or to conflicting values), SetContentAndTooltip will display an ellipsis
                         string contentAndTooltip = dataEntryHandler.GetValueDisplayStringCommonToFileIds(time_.DataLabel);
-                        time_.IsEnabled = (imagesSelected >= 1);
+                        time_.IsEnabled = imagesSelected >= 1;
+                        time_.ContentControl.AllowSpin = contentAndTooltip != null;
                         time_.SetContentAndTooltip(contentAndTooltip);
                     }
                 }

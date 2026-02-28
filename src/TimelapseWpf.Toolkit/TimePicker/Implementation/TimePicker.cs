@@ -32,6 +32,7 @@ namespace TimelapseWpf.Toolkit
 
     private ListBox _timeListBox;
     private bool _isListBoxInvalid = true;
+    private bool _timeListSelectionChanged;
     internal static readonly TimeSpan EndTimeDefaultValue = new( 23, 59, 0 );
     internal static readonly TimeSpan StartTimeDefaultValue = new( 0, 0, 0 );
     internal static readonly TimeSpan TimeIntervalDefaultValue = new( 1, 0, 0 );
@@ -188,6 +189,23 @@ namespace TimelapseWpf.Toolkit
 
     #endregion //TimeInterval
 
+    #region ValueSelected
+
+    /// <summary>
+    /// Fires when the user explicitly clicks a time item in the list that is the same as the current value.
+    /// (ValueChanged does not fire when the same time is re-selected.)
+    /// </summary>
+    public static readonly RoutedEvent ValueSelectedEvent = EventManager.RegisterRoutedEvent(
+      nameof(ValueSelected), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(TimePicker));
+    public event RoutedEventHandler ValueSelected
+    {
+      add => AddHandler(ValueSelectedEvent, value);
+      remove => RemoveHandler(ValueSelectedEvent, value);
+    }
+    private void RaiseValueSelectedEvent() => RaiseEvent(new RoutedEventArgs(ValueSelectedEvent, this));
+
+    #endregion //ValueSelected
+
     #endregion //Properties
 
     #region Constructors
@@ -267,6 +285,7 @@ namespace TimelapseWpf.Toolkit
           this.UpdateListBoxSelectedItem();
         }
         _timeListBox.Focus();
+        _timeListSelectionChanged = false; // Reset after initialization so it's clean for user interaction
       }
     }
 
@@ -353,6 +372,7 @@ namespace TimelapseWpf.Toolkit
         var date = this.Value ?? this.ContextNow;
         this.Value = new DateTime(date.Year, date.Month, date.Day, time.Hours, time.Minutes,
           time.Seconds, time.Milliseconds, date.Kind);
+        _timeListSelectionChanged = true;
         //}
       }
     }
@@ -364,7 +384,14 @@ namespace TimelapseWpf.Toolkit
 
     private void TimeListBox_MouseUp( object sender, MouseButtonEventArgs e )
     {
+      bool sameValue = !_timeListSelectionChanged;
+      _timeListSelectionChanged = false;
       this.ClosePopup( true );
+      if( sameValue )
+      {
+        // The selected time equals the current value; ValueChanged won't fire, so raise ValueSelected.
+        RaiseValueSelectedEvent();
+      }
     }
 
     #endregion //Event Handlers

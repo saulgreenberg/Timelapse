@@ -38,6 +38,7 @@ namespace TimelapseWpf.Toolkit
     private TimePicker _timePicker;
     private DateTime? _calendarTemporaryDateTime;
     private DateTime? _calendarIntendedDateTime;
+    private bool _calendarSelectionChanged;
 
     #endregion //Members
 
@@ -160,6 +161,23 @@ namespace TimelapseWpf.Toolkit
 
     #endregion //TimeWatermarkTemplate
 
+    #region ValueSelected
+
+    /// <summary>
+    /// Fires when the user explicitly selects a date from the calendar that is the same as the current value.
+    /// (ValueChanged does not fire when the same date is re-selected.)
+    /// </summary>
+    public static readonly RoutedEvent ValueSelectedEvent = EventManager.RegisterRoutedEvent(
+      nameof(ValueSelected), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DateTimePicker));
+    public event RoutedEventHandler ValueSelected
+    {
+      add => AddHandler(ValueSelectedEvent, value);
+      remove => RemoveHandler(ValueSelectedEvent, value);
+    }
+    private void RaiseValueSelectedEvent() => RaiseEvent(new RoutedEventArgs(ValueSelectedEvent, this));
+
+    #endregion //ValueSelected
+
     #endregion //Properties
 
     #region Constructors
@@ -194,11 +212,13 @@ namespace TimelapseWpf.Toolkit
       if( _timePicker != null )
       {
         _timePicker.ValueChanged -= this.TimePicker_ValueChanged;
+        _timePicker.ValueSelected -= this.TimePicker_ValueSelected;
       }
       _timePicker = GetTemplateChild( PART_TimeUpDown ) as TimePicker;
       if( _timePicker != null )
       {
         _timePicker.ValueChanged += this.TimePicker_ValueChanged;
+        _timePicker.ValueSelected += this.TimePicker_ValueSelected;
       }
     }
 
@@ -211,7 +231,14 @@ namespace TimelapseWpf.Toolkit
         // Do not close calendar on Year/Month Selection. Close only on Day selection.
         if( AutoCloseCalendar && _calendar is { DisplayMode: CalendarMode.Month } )
         {
+          bool sameValue = !_calendarSelectionChanged;
+          _calendarSelectionChanged = false;
           ClosePopup( true );
+          if( sameValue )
+          {
+            // The selected date equals the current value; ValueChanged won't fire, so raise ValueSelected.
+            RaiseValueSelectedEvent();
+          }
         }
       }
       base.OnPreviewMouseUp( e );
@@ -256,6 +283,7 @@ namespace TimelapseWpf.Toolkit
       {
         _calendarTemporaryDateTime = null;
         _calendarIntendedDateTime = null;
+        _calendarSelectionChanged = false;
       }
     }
 
@@ -296,6 +324,12 @@ namespace TimelapseWpf.Toolkit
         return;
 
       base.HandleKeyDown( sender, e );
+    }
+
+    private void TimePicker_ValueSelected( object sender, RoutedEventArgs e )
+    {
+      e.Handled = true;
+      RaiseValueSelectedEvent();
     }
 
     private void TimePicker_ValueChanged( object sender, RoutedPropertyChangedEventArgs<object> e )
@@ -379,6 +413,7 @@ namespace TimelapseWpf.Toolkit
         if (!object.Equals(newDate, Value))
         {
           this.Value = newDate;
+          _calendarSelectionChanged = true;
         }
         //}
       }

@@ -161,6 +161,7 @@ namespace Timelapse.ControlsDataEntry
                     case Control.DateTime_:
                         DataEntryDateTimeCustom dateTimeCustom = (DataEntryDateTimeCustom)pair.Value;
                         dateTimeCustom.ContentControl.ValueChanged += DateTimeCustomControl_ValueChanged;
+                        dateTimeCustom.ContentControl.ValueSelected += DateTimeCustomControl_ValueSelected;
                         // Add keyboard paste support for Ctl-V
                         dateTimeCustom.ContentControl.PreviewKeyDown += DateTimeCustomControl_PreviewKeyDown;
                         SetContextMenuCallbacks(dateTimeCustom);
@@ -168,6 +169,7 @@ namespace Timelapse.ControlsDataEntry
                     case Control.Date_:
                         DataEntryDate date = (DataEntryDate)pair.Value;
                         date.ContentControl.ValueChanged += DateControl_ValueChanged;
+                        date.ContentControl.ValueSelected += DateControl_ValueSelected;
                         // Add keyboard paste support for Ctl-V
                         date.ContentControl.PreviewKeyDown += DateControl_PreviewKeyDown;
                         SetContextMenuCallbacks(date);
@@ -175,6 +177,7 @@ namespace Timelapse.ControlsDataEntry
                     case Control.Time_:
                         DataEntryTime time = (DataEntryTime)pair.Value;
                         time.ContentControl.ValueChanged += TimeControl_ValueChanged;
+                        time.ContentControl.ValueSelected += TimeControl_ValueSelected;
                         // Add keyboard paste support for Ctl-V
                         time.ContentControl.PreviewKeyDown += TimeControl_PreviewKeyDown;
                         SetContextMenuCallbacks(time);
@@ -1260,6 +1263,18 @@ namespace Timelapse.ControlsDataEntry
             UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
         }
 
+        // Fires when the same datetime is re-confirmed via the calendar (ValueChanged does not fire in that case)
+        private void DateTimeCustomControl_ValueSelected(object sender, RoutedEventArgs e)
+        {
+            if (IsProgrammaticControlUpdate) return;
+            WatermarkDateTimePicker dateTimePicker = (WatermarkDateTimePicker)sender;
+            if (dateTimePicker.Value.HasValue == false) return;
+            DataEntryControl control = (DataEntryControl)dateTimePicker.Tag;
+            string value = DateTimeHandler.ToStringDatabaseDateTime((DateTime)dateTimePicker.Value);
+            control.SetContentAndTooltip(value);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
+        }
+
         private void DateControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (IsProgrammaticControlUpdate)
@@ -1278,6 +1293,18 @@ namespace Timelapse.ControlsDataEntry
             UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
         }
 
+        // Fires when the same date is re-confirmed via the calendar (ValueChanged does not fire in that case)
+        private void DateControl_ValueSelected(object sender, RoutedEventArgs e)
+        {
+            if (IsProgrammaticControlUpdate) return;
+            WatermarkDateTimePicker dateTimePicker = (WatermarkDateTimePicker)sender;
+            if (dateTimePicker.Value.HasValue == false) return;
+            DataEntryControl control = (DataEntryControl)dateTimePicker.Tag;
+            string value = DateTimeHandler.ToStringDatabaseDate((DateTime)dateTimePicker.Value);
+            control.SetContentAndTooltip(value);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
+        }
+
         private void TimeControl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (IsProgrammaticControlUpdate)
@@ -1291,6 +1318,18 @@ namespace Timelapse.ControlsDataEntry
             }
             DataEntryControl control = (DataEntryControl)timePicker.Tag;
 
+            string value = DateTimeHandler.ToStringTime((DateTime)timePicker.Value);
+            control.SetContentAndTooltip(value);
+            UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);
+        }
+
+        // Fires when the same time is re-confirmed via the time list (ValueChanged does not fire in that case)
+        private void TimeControl_ValueSelected(object sender, RoutedEventArgs e)
+        {
+            if (IsProgrammaticControlUpdate) return;
+            WatermarkTimePicker timePicker = (WatermarkTimePicker)sender;
+            if (timePicker.Value.HasValue == false) return;
+            DataEntryControl control = (DataEntryControl)timePicker.Tag;
             string value = DateTimeHandler.ToStringTime((DateTime)timePicker.Value);
             control.SetContentAndTooltip(value);
             UpdateRowsDependingOnThumbnailGridState(control.DataLabel, value);

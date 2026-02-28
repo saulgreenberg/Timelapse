@@ -73,7 +73,7 @@ namespace Timelapse.ControlsCore
             {
                 ToolTip =tooltip,
                 Height = 26,
-                CultureInfo = CultureInfo.CreateSpecificCulture("en-US")
+                CultureInfo = CultureInfo.CreateSpecificCulture("en-US"),
             };
             switch (dateTimeFormat)
             {
@@ -100,7 +100,6 @@ namespace Timelapse.ControlsCore
             dateTimePicker.AutoCloseCalendar = true;
             dateTimePicker.Format = DateTimeFormat.Custom;
             dateTimePicker.CultureInfo = CultureInfo.CreateSpecificCulture("en-US");
-
             switch (dateTimeFormat)
             {
                 case DateTimeFormatEnum.DateOnly:

@@ -951,6 +951,7 @@ namespace Timelapse.Images
                     // Zoom in another step
                     //this.ThumbnailGridState--;
                     ThumbnailGridRefreshStatus status = RefreshThumbnailGrid(zoomIn);
+                    DataEntryControls.SetEnableState(ControlsEnableStateEnum.MultipleImageView, ThumbnailGrid.SelectedCount()); 
                     if (status == ThumbnailGridRefreshStatus.NotEnoughSpaceForEvenOneCell)
                     {
                         // we couldn't refresh the grid, likely because there is not enough space available to show even a single image at this image state
