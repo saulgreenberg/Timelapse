@@ -16,8 +16,9 @@ namespace Timelapse
         {
             FilePlayer_Stop(); // In case the FilePlayer is going
 
-            bool filesSelected = IsDisplayingActiveSingleImageOrVideo(); //IsFileDatabaseAvailable() && DataHandler.FileDatabase.CountAllCurrentlySelectedFiles > 0; // A non-empty image set is loaded
+            bool filesSelected = IsDisplayingActiveSingleImageOrVideo();  // A non-empty image set is loaded
             bool filesSelectedAndSingleImage = filesSelected && this.MarkableCanvas?.ImageToDisplay is { IsVisible: true };
+            bool filesSelectedAndSingleImageOrVideo = filesSelected && (this.MarkableCanvas?.ImageToDisplay is { IsVisible: true } || this.MarkableCanvas?.VideoPlayer is { IsVisible: true });
             bool overviewIsVisible = this.MarkableCanvas?.ImageToDisplay is { IsVisible: false };
 
             MenuItemViewDifferencesCycleThrough.IsEnabled = filesSelected;
@@ -45,7 +46,7 @@ namespace Timelapse
 
             // Dogear menu item
             // The dogear menu items are enabled (and their text) depends on a variety of conditions
-            MenuItemDogearSet.IsEnabled = filesSelectedAndSingleImage && this.ImageDogear != null;
+            MenuItemDogearSet.IsEnabled = filesSelectedAndSingleImageOrVideo && this.ImageDogear != null;
             if (this.ImageDogear != null)
             {
                 if (false == this.ImageDogear.IsDogearTheCurrentImage())
@@ -54,7 +55,7 @@ namespace Timelapse
                     {
                         // We can only go to a dogeared image
                         MenuItemDogearSwitch.Header = "Go to the dogeared image";
-                        MenuItemDogearSwitch.IsEnabled = filesSelectedAndSingleImage;
+                        MenuItemDogearSwitch.IsEnabled = filesSelectedAndSingleImageOrVideo;
                     }
                     else
                     {
@@ -68,7 +69,7 @@ namespace Timelapse
                     {
                         // We can only go to the last seen image
                         MenuItemDogearSwitch.Header = "Return to the last seen image";
-                        MenuItemDogearSwitch.IsEnabled = filesSelectedAndSingleImage;
+                        MenuItemDogearSwitch.IsEnabled = filesSelectedAndSingleImageOrVideo;
                     }
                     else
                     {
@@ -209,10 +210,10 @@ namespace Timelapse
             if (this.ImageDogear != null)
             {
                 int index = this.ImageDogear.TryGetDogearOrPreviouslySeenImageIndex();
-                if (index != Constant.DatabaseValues.InvalidRow)
+                if (index != Constant.DatabaseValues.InvalidRow &&  null != DataHandler?.ImageCache)
                 {
-                    // Show the image at the bookmark index
-                    this.FileShow(index);
+                    // Move to the image at the bookmark index
+                    DataHandler.ImageCache.TryMoveToFile(index);
                 }
             }
         }
