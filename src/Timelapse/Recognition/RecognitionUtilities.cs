@@ -17,12 +17,6 @@ namespace Timelapse.Recognition
     public static class RecognitionUtilities
     {
         #region Get detection info and various category tables from DB as dictionaries
-        public static void GenerateRecognitionDictionariesFromDB(string ddbPath, Dictionary<string, object> infoDict, Dictionary<string, string> detectionCategoriesDict, Dictionary<string, string> classificationCategoriesDict, Dictionary<string, string> classificationDescriptionDict)
-        {
-            SQLiteWrapper db = new(ddbPath);
-            GenerateRecognitionDictionariesFromDB(db, infoDict, detectionCategoriesDict, classificationCategoriesDict, classificationDescriptionDict);
-        }
-
         public static void GenerateRecognitionDictionariesFromDB(SQLiteWrapper db, Dictionary<string, object> infoDict, Dictionary<string, string> detectionCategoriesDict, Dictionary<string, string> classificationCategoriesDict, Dictionary<string,string> classificationDescriptionDict)
         {
             if (false == db.TableExists(DBTables.Info))

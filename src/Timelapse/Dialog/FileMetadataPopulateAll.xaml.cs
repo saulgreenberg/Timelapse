@@ -79,11 +79,13 @@ namespace Timelapse.Dialog
             Dictionary<string, Choices> collectChoices = [];
             foreach (ControlRow control in FileDatabase.Controls)
             {
-                if (control.Visible == false)
-                {
-                    // Don't show controls if they are hidden in the UI
-                    continue;
-                }
+                // I switched things to hide invisible controls, but a user asked for it back
+                // so its now commented out
+                //if (control.Visible == false)
+                //{
+                //    // Don't show controls if they are hidden in the UI
+                //    continue;
+                //}
                 collectLabels.Add(control.DataLabel, control.Label);
                 collectControlTypes.Add(control.DataLabel, control.Type);
 
