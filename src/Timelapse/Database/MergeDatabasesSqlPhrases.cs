@@ -1,36 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Text.RegularExpressions;
 using Timelapse.Constant;
+using Timelapse.DataTables;
 using Timelapse.Enums;
+using Timelapse.Recognition;
 
 namespace Timelapse.Database
 {
-    public static partial class MergeDatabases
+    public static class MergeDatabasesSqlPhrases
     {
         // Generate various SQL phrases for merging as needed. Used by MergeDatabases only
-
-        #region Update the column (normally relative path) to include the indicated prefix
-        // Form: columnName should be RelativePath)
-        //   UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("pathPrefixToAdd" || RelativePath) ELSE ("pathPrefixToAdd"\\ || RelativePath) END;
-        private static string SqlQueryUpdateTablesColumnByIncludingPathPrefix(string tableName, string pathPrefixToAdd, string columnName)
-        {
-            if (string.IsNullOrWhiteSpace(pathPrefixToAdd))
-            {
-                // No need to construct a new relative path if there is nothing to add to it
-                return string.Empty;
-            }
-            // Note that tableName must be a DataTable for this to work
-            return $"{Sql.Update} {tableName} {Sql.Set} {columnName} {Sql.Equal} " +
-                   $"{Sql.CaseWhen} {columnName} {Sql.Equal} {Sql.Quote(string.Empty)} {Sql.Then} " +
-                   $"{Sql.OpenParenthesis} {Sql.Quote(pathPrefixToAdd)} {Sql.Concatenate} {columnName} {Sql.CloseParenthesis} " +
-                   $"{Sql.Else} {Sql.OpenParenthesis} {Sql.Quote(pathPrefixToAdd + "\\")} {Sql.Concatenate} {columnName} {Sql.CloseParenthesis} {Sql.End} {Sql.Semicolon} {Environment.NewLine}";
-        }
-        #endregion
-
         #region Update the Info table with the new values
         // Form: UPDATE Info SET Detector = 'detector', DetectorVersion = 'megadetector_version', DetectionCompletionTime = 'detection_completion_time', etc
-        private static string SqlQueryUpdateInfoTableWithValues(string detector, string megadetector_version,
+        public static string GetQueryUpdateInfoTableWithValues(string detector, string megadetector_version,
             string detection_completion_time, string classifier, string classification_completion_time,
             double typical_detection_threshold, double conservative_detection_threshold,
             double typical_classification_threshold)
@@ -47,154 +31,6 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Replace old table values (assuming only two columns are in the table) with new values
-        // Generate a query to clear the given table and to populate its columns as needed
-        // with the values in the dictionary. The dictionary pairs order must match the column1/2 order
-        // FORM example (using DetectionCategories and its category/label columns): 
-        // DELETE FROM DetectionCategories;
-        // INSERT INTO  DetectionCategories(category, label)   VALUES('0', 'Empty');
-        // ('1', 'animal'),
-        // ('5', 'train5'),
-        // ('6', 'car6'),
-        // ('7', 'newEntity7');
-        private static string SqlQueryReplaceValuesInTwoColumnTable(string tableName, Dictionary<string, string> dictionaryOfNewValues, string column1, string column2)
-        {
-            string query = string.Empty;
-
-            // Clear the table
-            query += $"{Sql.DeleteFrom}  {tableName} {Sql.Semicolon} {Environment.NewLine}";
-
-            // Update the two columns in the table with the dictionary values.
-            query += $"{Sql.InsertInto} {tableName} " +
-                     $"{Sql.OpenParenthesis} {column1} {Sql.Comma} {column2} {Sql.CloseParenthesis} {Sql.Values}";
-            foreach (KeyValuePair<string, string> kvp in dictionaryOfNewValues)
-            {
-                query += $"{Sql.OpenParenthesis} {Sql.Quote(kvp.Key)} {Sql.Comma} {Sql.Quote(kvp.Value)} {Sql.CloseParenthesis} {Sql.Comma}";
-            }
-
-            // Replace the last comma with a semicolon
-            query = query[..query.LastIndexOf(Sql.Comma, StringComparison.Ordinal)];
-            query += Sql.Semicolon + Environment.NewLine;
-            return query;
-        }
-        #endregion
-
-        #region Replace old table values (assuming only two columns are in the table) with new values
-        // Generate a query to clear the given table and to populate its columns as needed
-        // with the values in the dictionary. The dictionary pairs order must match the column1/2 order
-        // FORM example (using DetectionCategories and its category/label columns): 
-        // DELETE FROM DetectionCategories;
-        // INSERT INTO  DetectionCategories(category, label)   VALUES('0', 'Empty');
-        // ('1', 'animal', 'some description1'),
-        // ('5', 'train5', 'some description2'),
-        // ('6', 'car6',   'some description3'),
-        // ('7', 'newEntity7','some description4');
-        private static string SqlQueryReplaceValuesInTheeColumnTable(string tableName, Dictionary<string, Tuple<string, string>> dictionaryOfNewValues, string column1, string column2, string column3)
-        {
-            string query = string.Empty;
-
-            // Clear the table
-            query += $"{Sql.DeleteFrom}  {tableName} {Sql.Semicolon} {Environment.NewLine}";
-
-            // Update the three columns in the table with the dictionary values.
-            query += $"{Sql.InsertInto} {tableName} " +
-                     $"{Sql.OpenParenthesis} {column1} {Sql.Comma} {column2} {Sql.Comma} {column3} {Sql.CloseParenthesis} {Sql.Values}";
-            foreach (KeyValuePair<string, Tuple<string,string>> kvp in dictionaryOfNewValues)
-            {
-                query += $"{Sql.OpenParenthesis} {Sql.Quote(kvp.Key)} {Sql.Comma} {Sql.Quote(kvp.Value.Item1)} {Sql.Comma} {Sql.Quote(kvp.Value.Item2)} {Sql.CloseParenthesis} {Sql.Comma}";
-            }
-
-            // Replace the last comma with a semicolon
-            query = query[..query.LastIndexOf(Sql.Comma, StringComparison.Ordinal)];
-            query += Sql.Semicolon + Environment.NewLine;
-            return query;
-        }
-        #endregion
-
-        #region Merge DataTable
-        // DataTable create merge query
-        //  Create the first part of the query to:
-        //  - Attach the ddbFile
-        //  - Create a temporary DataTable mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
-        //  - Update the DataTable with the modified Ids
-        //  - Update the DataTable with the path prefix
-        //  - Insert the DataTable  into the main db's DataTable
-        // Form: ATTACH DATABASE 'sourceDdbPath' AS attachedSourceDB; 
-        //       CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM attachedSourceDB.DataTable;
-        //       UPDATE tempDataTable SET Id = (offsetID + tempDataTable.Id);  // This line only inserted if offset > 0
-        //       UPDATE TempDataTable SET RelativePath =  CASE WHEN RelativePath = '' THEN ("PrefixPath" || RelativePath) ELSE ("PrefixPath\\" || RelativePath) END
-        //       INSERT INTO DataTable SELECT * FROM tempDataTable;
-        private static string QueryPhraseMergeDataTable(long offsetId, SQLiteWrapper destinationDdb, string attachedSourceDB, string tempDataTable, string relativePathDifference)
-        {
-            string query = string.Empty;
-            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(DBTables.FileData);
-
-
-            // Create a temporary table from the markers table, where we will update that table
-            query += SqlLine.CreateTemporaryTableFromExistingTable(tempDataTable, attachedSourceDB, DBTables.FileData);
-
-            // Add the offset to the IDs to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
-            query += SqlLine.AddOffsetToColumnInTable(tempDataTable, DatabaseColumn.ID, offsetId);
-
-            // Add the prefix to the relative path
-            query += SqlQueryUpdateTablesColumnByIncludingPathPrefix(tempDataTable, relativePathDifference, DatabaseColumn.RelativePath) + Environment.NewLine;
-
-            // Insert the modified DataTable into the current database's datatable
-            query += SqlLine.InsertTable2DataIntoTable1(DBTables.FileData, tempDataTable, currentDataLabels);
-
-            // We no longer need the temporary data table, so drop it.
-            query += $"{Sql.DropTableIfExists} {tempDataTable} {Sql.Semicolon} {Environment.NewLine}";
-            return query;
-        }
-        #endregion
-
-        #region Merge Markers table
-        // Markers Table create merge query
-        //  Create the second part of the query to:
-        //  - Create a temporary Markers Table mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
-        //  - Note that we have to ensure that the columns in both markers table are in the same order. Consequently, we
-        //    get the ordered column names from the main database, and then construct a query that creates the tempTable
-        //    by selecting on those column names (in order)
-        //  - Update the Markers Table with the modified Ids
-        //  - Insert the Markers Table  into the main db's Markers Table
-        //  Form: select name from pragma_table_info('MarkersTable')  as tblInfo  - return a list of columns
-        //  CREATE TEMPORARY TABLE tempMarkers AS SELECT <comma-spearated column list> FROM attachedSourceDB.Markers;
-        //       UPDATE tempMarkers SET Id = (offsetID + tempMarkers.Id); // This line only inserted if offset > 0
-        //       INSERT INTO Markers SELECT * FROM tempMarkers;
-        private static string QueryPhraseMergeMarkersTable(long offsetId, SQLiteWrapper destinationDdb,
-            string attachedSourceDB, string tempMarkersTable)
-        {
-            string query = string.Empty;
-            // Get the columns in order
-            // Form: select name from pragma_table_info('MarkersTable')  as tblInfo 
-            string queryGetColumnName = Sql.SelectNameFromPragmaTableInfo + Sql.OpenParenthesis +
-                                        Sql.Quote(DBTables.Markers) + Sql.CloseParenthesis + Sql.As +
-                                        Sql.TBLINFO;
-            DataTable dataTable = destinationDdb.GetDataTableFromSelect(queryGetColumnName);
-            string columns = string.Empty;
-            int i = 0;
-            foreach (DataRow row in dataTable.Rows)
-            {
-                if (i++ != 0)
-                {
-                    columns += $"{Sql.Comma} ";
-                }
-                columns += $"{row[0]} ";
-            }
-
-            // Create a temporary table from the markers table, where we will update that table
-            query += SqlLine.CreateTemporaryTableFromExistingTable(tempMarkersTable, attachedSourceDB, DBTables.Markers, columns);
-
-            // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
-            query += SqlLine.AddOffsetToColumnInTable(tempMarkersTable, DatabaseColumn.ID, offsetId);
-            query += SqlLine.InsertTable2DataIntoTable1(DBTables.Markers, tempMarkersTable);
-
-            // We no longer need the temporary data table, so drop it.
-            query += SqlLine.DropTableIfExists(tempMarkersTable);
-            return query;
-        }
-        #endregion
-
         #region Remap categories in category table and detection table
         // Remap the desired categories (which are either detection or classificaton categories) and corresponding values in the indicated category table
         //     and the corresponding column values in the detection table.
@@ -202,7 +38,7 @@ namespace Timelapse.Database
         //   which we previously generated by merging the updated source and destination dictionaries
         // - Replace the category values in the detection table as needed
         // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
-        private static Tuple<DatabaseFileErrorsEnum, string, bool> SqlPhraseUpdateCategory(
+        public static Tuple<DatabaseFileErrorsEnum, string, bool> GetQueryUpdateCategory(
             string query, string tempDetectionsTable, string tableName, string categoryColumn, string labelColumn,
             Dictionary<string, string> destinationCategories, Dictionary<string, string> remappedCategoryDict, Dictionary<string, string> categoryLookupMappingDict, bool updateTempDetectionsTable)
         {
@@ -216,7 +52,7 @@ namespace Timelapse.Database
             {
                 return new(DatabaseFileErrorsEnum.DetectionCategoriesIncompatible, query, false);
             }
-            query += SqlQueryReplaceValuesInTwoColumnTable(tableName, mergedDetectionDictionary, categoryColumn, labelColumn);
+            query += GetQueryReplaceValuesInTwoColumnTable(tableName, mergedDetectionDictionary, categoryColumn, labelColumn);
 
             // 7b: Update the temporaryDetections Category table if asked to do so 
             if (updateTempDetectionsTable)
@@ -231,7 +67,7 @@ namespace Timelapse.Database
             return new(DatabaseFileErrorsEnum.Ok, query, false);
         }
 
-        private static Tuple<DatabaseFileErrorsEnum, string, bool> SqlPhraseUpdateClassificationCategory(
+        public static Tuple<DatabaseFileErrorsEnum, string, bool> SqlPhraseUpdateClassificationCategory(
             string query, string tempDetectionsTable, string tableName, string categoryColumn, string labelColumn, string descriptionColumn,
             Dictionary<string, Tuple<string,string>> mergedClassificationColumns, Dictionary<string, string> categoryLookupMappingDict)
         {
@@ -241,7 +77,7 @@ namespace Timelapse.Database
             // - Remap the source dictionary's detection category number to match those in the destination dictionary
             // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
            
-            query += SqlQueryReplaceValuesInTheeColumnTable(tableName, mergedClassificationColumns, categoryColumn, labelColumn, descriptionColumn);
+            query += GetQueryReplaceValuesInTheeColumnTable(tableName, mergedClassificationColumns, categoryColumn, labelColumn, descriptionColumn);
 
             // 7b: Update the temporaryDetections Category table if asked to do so 
             if (categoryLookupMappingDict.Count > 0)
@@ -258,8 +94,16 @@ namespace Timelapse.Database
         #endregion
 
         #region Merge Detections table
-        private static string QueryPhraseMergeDetectionsTable(long offsetId, string attachedSourceDB, string tempDetectionsTable)
+        public static string GetQueryMergeDetectionsTable(long offsetId, string attachedSourceDB, string tempDetectionsTable)
         {
+            //   INSERT INTO Detections
+            //     SELECT
+            //         28 + Id,  -- 28 is the max ID
+            //         File,
+            //         IIF(RelativePath = '', 'Station1\Deployment1a', 'Station1\Deployment1a\' || RelativePath),
+            //         DateTime,
+            //         img_species, img_individual_count, img_sequence, img_temperature, DeleteFlag  -- all column names explicitely listed
+            //     FROM attachedSourceDB.DataTable;
             string query = string.Empty;
 
             // Just to make sure we are starting with a new temporary table
@@ -279,7 +123,7 @@ namespace Timelapse.Database
         #endregion 
 
         #region Merge levels
-        private static string SqlQueryPhraseMergeLevelsTable(SQLiteWrapper destinationDdb,
+        public static string GetQueryMergeLevelsTable(SQLiteWrapper destinationDdb,
             string attachedSourceDB, string srcTableName, string destTableName, string relativePathDifference)
         {
             string tmpLevelsTable = $"tmp{srcTableName}";
@@ -289,7 +133,7 @@ namespace Timelapse.Database
             // Add the offset to the IDd to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
             query += SqlLine.AddOffsetToColumnInTable(tmpLevelsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
 
-            query += SqlQueryUpdateTablesColumnByIncludingPathPrefix(tmpLevelsTable, relativePathDifference, DatabaseColumn.FolderDataPath) + Environment.NewLine;
+            query += GetQueryUpdateTablesColumnByIncludingPathPrefix(tmpLevelsTable, relativePathDifference, DatabaseColumn.FolderDataPath) + Environment.NewLine;
             query += SqlLine.InsertTable2DataIntoTable1(destTableName, tmpLevelsTable);
             query += SqlLine.DropTableIfExists(tmpLevelsTable) + Environment.NewLine;
             return query;
@@ -297,7 +141,7 @@ namespace Timelapse.Database
         #endregion
 
         #region Merge detections - Should only be invoked if detections exist
-        private static string SqlQueryPhraseMergeDetectionTableUsingOffsets(long offsetId, long offsetDetectionId, string detectionsTable)
+        public static string GetQueryMergeDetectionTableUsingOffsets(long offsetId, long offsetDetectionId, string detectionsTable)
         {
             // Add the offset to the ID to make sure IDs don't conflict with existing IDs. (A zero offset is a noop).
             string query = SqlLine.AddOffsetToColumnInTable(detectionsTable, DatabaseColumn.ID, offsetId) + Environment.NewLine;
@@ -320,6 +164,719 @@ namespace Timelapse.Database
             return query;
         }
 
+        #endregion
+
+        #region Return a list of all DataTable IDs with the provided relative path
+
+        // Return a list of all IDs in the DataTable in the provided database with the provided relative path
+        // with or without a trailing '\'
+        public static List<long> GetDataTableIDsMatchingRelativePathsExpression(SQLiteWrapper database, string relativePathDifference)
+        {
+            // SELECT Id FROM DataTable WHERE RelativePath LIKE 'relativePathDifference\% OR RelativePath = 'relativePathDifference'
+            string query = $@"SELECT Id FROM DataTable WHERE RelativePath LIKE '{relativePathDifference}\%' OR RelativePath = '{relativePathDifference}';";
+            DataTable IDs = database.GetDataTableFromSelect(query);
+            List<long> list = [.. IDs.AsEnumerable()
+                .Select(r => r[0])
+                .Where(val => val != null && val != DBNull.Value)
+                .Select(val => (long)val)];
+            return list;
+        }
+        #endregion
+
+        #region Delete rows from the table with the given IDs
+        public static string GetQueryDeleteEntriesFromTableMatchingIDs(string tableName, List<long> listOfIDs)
+        {
+            if (listOfIDs.Count == 0)
+            {
+                return string.Empty;
+            }
+            // Use the Ids of the deleted entries to remove corresponding entries (if they exist) from the Markers table
+            string whereClause = SQLiteWrapper.BuildWhereListofIds(Constant.DatabaseColumn.ID, listOfIDs);
+            return $"{Sql.DeleteFrom}  {tableName} {Sql.Where} {whereClause} ;";
+        }
+
+        // Delete rows from certain Metadata levels tables containing the provided relative path with or without a trailing '\'
+        public static List<string> GetQueryDeleteMetadataEntriesFromDestinationDdbMatchingPath(SQLiteWrapper destinationDdb, string relativePathDifference, int levelsToIgnore)
+        {
+            List<string> queries = [];
+            string where = DatabaseColumn.FolderDataPath
+                           + Sql.Like
+                           + Sql.Quote(relativePathDifference + @"\" + "%") // like root/*
+                           + Sql.Or
+                           + DatabaseColumn.FolderDataPath + Sql.Equal
+                           + Sql.Quote(relativePathDifference); // or equals root 
+
+            // We know that the source has some metadata structures, so lets load them
+            // Query the template table in the destinatonDDb
+            using CommonDatabase destinationDdbTemplate = new(destinationDdb.FilePath);
+            destinationDdbTemplate.LoadMetadataControlsAndInfoFromTemplateDBSortedByControlOrder();
+            
+            // For each levels table in the destination, starting with levelsToIgnore...
+            for (int rowIndex = levelsToIgnore; rowIndex < destinationDdbTemplate.MetadataInfo.RowCount; rowIndex++)
+            {
+                MetadataInfoRow infoRow = destinationDdbTemplate.MetadataInfo[rowIndex];
+                string metadataTable = FileDatabase.MetadataComposeTableNameFromLevel(infoRow.Level);
+                if (false == destinationDdb.TableExists(metadataTable))
+                {
+                    // This shouldn't happen, but just in case...
+                    continue;
+                }
+
+                // Each query deletes  entries from the current Levels table whose RelativePath begins with the (folder) path from the root folder.
+
+                queries.Add($"{Sql.DeleteFrom} {metadataTable}{Sql.Where} {where};");                   
+            }
+
+            return queries;
+        }
+
+        #endregion
+
+        #region DataTable / Markers Table: Insert columns from source DB into destination DB, correcting for ID and RelativePath
+        // DataTable: Insert the columns from the source DB into the destination DB, correcting for ID and RelativePath
+        public static string GetQueryDataTableInsertColumnsFromSourcWithCorrectedID(string attachedSourceDB, List<string> destinationDataTableColumns, long destinationOffsetId, string relativePathDifference)
+        {
+            // DataTable: Insert the columns from the source DB nto the destination DB, correcting for ID and RelativePath
+            //   INSERT INTO DataTable
+            //     SELECT
+            //         28 + Id,  -- 28 is the max ID
+            //         File,
+            //         IIF(RelativePath = '', 'Station1\Deployment1a', 'Station1\Deployment1a\' || RelativePath),
+            //         DateTime,
+            //         img_species, img_individual_count, img_sequence, img_temperature, DeleteFlag  -- all column names explicitely listed
+            //     FROM attachedSourceDB.DataTable;
+            string query = $"{Sql.InsertInto} {DBTables.FileData} {Sql.Select} ";
+            string backslash = "\\";
+            foreach (string column in destinationDataTableColumns)
+            {
+                if (column == DatabaseColumn.ID)
+                {
+                    query += $"{destinationOffsetId} + {DatabaseColumn.ID},";
+                }
+
+                else if (column == DatabaseColumn.RelativePath)
+                {
+                    // IIF(RelativePath = '', 'Station1\Deployment1a', 'Station1\Deployment1a\' || RelativePath),
+                    query +=
+                        $"IIF({DatabaseColumn.RelativePath} = '', {Sql.Quote(relativePathDifference)}, {Sql.Quote(relativePathDifference + backslash)} || {DatabaseColumn.RelativePath}),";
+                }
+                else
+                {
+                    query += $"{column},";
+                }
+            }
+
+            query = query.TrimEnd(',');
+            query += $"{Sql.From} {attachedSourceDB}.{DBTables.FileData}; ";
+            return query;
+        }
+
+        // MarkersTable: Insert the columns from the source DB nto the destination DB, correcting for ID and RelativePath
+        // INSERT INTO MarkersTable
+        // SELECT 28 + Id, img_individual_count  -- 28 is the max ID, then whatever columns exist
+        // FROM attachedSourceDB.MarkersTable;
+        public static string GetQueryMarkersTableInsertColumnsFromSourceWithCorrectedID(string attachedSourceDB, List<string> destinationMarkersTableColumns, long destinationOffsetId)
+        {
+            string query = $"{Sql.InsertInto} {DBTables.Markers} {Sql.Select} ";
+            foreach (string column in destinationMarkersTableColumns)
+            {
+                if (column == DatabaseColumn.ID)
+                {
+                    query += $"{destinationOffsetId} + {DatabaseColumn.ID},";
+                }
+                else
+                {
+                    query += $"{column},";
+                }
+            }
+            query = query.TrimEnd(',');
+            query += $"{Sql.From} {attachedSourceDB}.{DBTables.Markers}; ";
+            return query;
+        }
+        #endregion
+
+        #region QueryPhrases used to merge various datatables
+        public static Tuple<DatabaseFileErrorsEnum, string, bool> GetQueryMergeRecognitionTablesAsNeeded(
+            string query,
+            SQLiteWrapper destinationDdb,
+            SQLiteWrapper sourceDdb,
+            string attachedSourceDB,
+            bool destinationDetectionsExists,
+            bool srcDetectionsExists,
+            long offsetId)
+        {
+            string tempDetectionsTable = "tempDetectionTable";
+            //
+            // 1. Case: sourceDdb does not contain reconitions 
+            //         Abort merging recognitions if a recognition table isn't present, as there are no recognitions to import
+            if (false == srcDetectionsExists)
+            {
+                return new(DatabaseFileErrorsEnum.Ok, query, false);
+            }
+
+            //
+            // 2. Case: destinationDdb doesn't have detections, sourceDdb has detections,
+            // Create and copy all recognition tables from the source to the destination database in their entirety, correcting the ID offset as needed
+            //
+            if (false == destinationDetectionsExists)
+            {
+                query = GetQueryInsertRecognitionTablesFromOneDBIntoAnother(query, destinationDdb, attachedSourceDB);
+                query += GetQueryMergeDetectionsTable(offsetId, attachedSourceDB, tempDetectionsTable);
+                query += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, $"{attachedSourceDB}.{Constant.DBTables.DetectionsVideo}");
+                return new(DatabaseFileErrorsEnum.Ok, query, true);
+            }
+
+            //
+            // From here on, both the destinationDdb and sourceDdb have recognitions so we have to merge the various recognition tables
+            // We assume that the source and destination databases have some detection categories, although it is possible (but very unlikely)that they don't.
+
+            // Step 4. Dictionaries: Populate various dictionaries with selected source and destination table values
+            // Source database dictionaries 
+            Dictionary<string, object> sourceInfoDictionary = [];
+            Dictionary<string, string> sourceDetectionCategories = [];
+            Dictionary<string, string> sourceClassificationCategories = [];
+            Dictionary<string, string> sourceClassificationDescriptions = [];
+
+            // Destination database database dictionaries 
+            Dictionary<string, object> destinationInfoDictionary = [];
+            Dictionary<string, string> destinationDetectionCategories = [];
+            Dictionary<string, string> destinationClassificationCategories = [];
+            Dictionary<string, string> destinationClassificationDescriptions = [];
+
+            // Fill them in
+            RecognitionUtilities.GenerateRecognitionDictionariesFromDB(sourceDdb, sourceInfoDictionary,
+                sourceDetectionCategories, sourceClassificationCategories, sourceClassificationDescriptions);
+            RecognitionUtilities.GenerateRecognitionDictionariesFromDB(destinationDdb, destinationInfoDictionary,
+                destinationDetectionCategories, destinationClassificationCategories, destinationClassificationDescriptions);
+            //
+            // Step 5. Info: Generate a new info structure that is a best effort combination of the db and json info structure,
+            //     Then Update the destinationDdb Info table with those values.
+            //     Note the we do it even if no update is really needed, as its lightweight
+            Dictionary<string, object> mergedInfoDictionary =
+                RecognitionUtilities.GenerateBestRecognitionInfoFromTwoInfos(destinationInfoDictionary, sourceInfoDictionary);
+            query += GetQueryUpdateInfoTableWithValues(
+                (string)mergedInfoDictionary[InfoColumns.Detector],
+                (string)mergedInfoDictionary[InfoColumns.DetectorVersion],
+                (string)mergedInfoDictionary[InfoColumns.DetectionCompletionTime],
+                (string)mergedInfoDictionary[InfoColumns.Classifier],
+                (string)mergedInfoDictionary[InfoColumns.ClassificationCompletionTime],
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalDetectionThreshold]),
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.ConservativeDetectionThreshold]),
+                Convert.ToDouble(mergedInfoDictionary[InfoColumns.TypicalClassificationThreshold]));
+
+            //
+            // Step 6. ImageSetTable: Update the destinationDdb ImageSet table BoundingBoxDisplayThreshold to its undefined value.
+            //
+            query += SqlLine.UpdateColumnInTable(DBTables.ImageSet, DatabaseColumn.BoundingBoxDisplayThreshold, Constant.RecognizerValues.BoundingBoxDisplayThresholdDefault);
+
+            //
+            // Step 7. detectionCategory table. Replace the detectionCategory table in the destinationDB with a table that merges the current destination and updated src table:
+            //     If category numbers differ, ensure that the source and destination category numbers are compatible by:
+            //     - creating a temporary table in the source database that contains the detection categories, 
+            //     - updating (remapping) its category numbers to match those in the destination ddb,
+            //     - updating the src detections table (via a temporary table) to match the new category numbers
+            query += SqlLine.CreateTemporaryTableFromExistingTable(tempDetectionsTable, attachedSourceDB, DBTables.Detections);
+
+            if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationDetectionCategories, sourceDetectionCategories,
+                out Dictionary<string, string> remappedDetectionCategoryDict, out Dictionary<string, string> detectionCategoryLookupMappingDict))
+            {
+                // 7a: Remapping detection categories and corresponding values in the detection table is needed,
+                // - Replace the detection categories table contents with the pairs found in the remappedDetectionCategoryDict
+                //   which we generate by merging the updated source and destination dictionaries
+                // - Remap the source dictionary's detection category number to match those in the destination dictionary
+                // The lookup dictionary contains the mapping of the old to the new category numbers as old/new number pairs
+
+                Tuple<DatabaseFileErrorsEnum, string, bool> tuple = MergeDatabasesSqlPhrases.GetQueryUpdateCategory(
+                    query, tempDetectionsTable, DBTables.DetectionCategories, DetectionCategoriesColumns.Category, DetectionCategoriesColumns.Label,
+                    destinationDetectionCategories, remappedDetectionCategoryDict, detectionCategoryLookupMappingDict, true);
+                if (tuple.Item1 != DatabaseFileErrorsEnum.Ok)
+                {
+                    return tuple;
+                }
+                query = tuple.Item2;
+            }
+
+            // 7b. Simlar to above but with classification categories
+            // TODO: Changed to difft method that includes Categore Descriptions. See Importing recognitions for difft way to do it.
+            if (FileDatabase.RemapAndReplaceCategoryNumbersIfNeeded(destinationClassificationCategories, sourceClassificationCategories,
+                    out Dictionary<string, string> remappedClassificationCategoryDict, out Dictionary<string, string> classificationCategoryLookupMappingDict))
+            {
+                // TODO: SEE 15- THIS ONE DOESN"T WORK PROPERLY IF DESTINATONCLASSDESCR HAS EMPTY?
+                FileDatabase.RemapAndReplaceDescriptonNumbersIfNeeded(sourceClassificationDescriptions, classificationCategoryLookupMappingDict,
+                    out Dictionary<string, string> remappedClassificationDescriptionsDict);
+
+                // The merged dictionary will be category number, category label, description
+                MergeSourceAndDestinationClassificationDictionaries(
+                    destinationClassificationCategories, remappedClassificationCategoryDict,
+                    destinationClassificationDescriptions, remappedClassificationDescriptionsDict,
+                    out Dictionary<string, Tuple<string, string>> mergedClassificationColumns);
+
+                Tuple<DatabaseFileErrorsEnum, string, bool> tuple = MergeDatabasesSqlPhrases.SqlPhraseUpdateClassificationCategory(
+                    query, tempDetectionsTable, DBTables.ClassificationCategories, ClassificationCategoriesColumns.Category, ClassificationCategoriesColumns.Label, ClassificationCategoriesColumns.Description,
+                    mergedClassificationColumns, classificationCategoryLookupMappingDict);
+
+                if (tuple.Item1 != DatabaseFileErrorsEnum.Ok)
+                {
+                    return tuple;
+                }
+                query = tuple.Item2;
+            }
+            else if (sourceClassificationCategories.Count > 0 && destinationClassificationCategories.Count == 0)
+            {
+                // Classification categories were found in the source but not in the destination. 
+                // So just copy the table over.
+                query += SqlLine.InsertTable2DataIntoTable1(DBTables.ClassificationCategories, $"{attachedSourceDB}.{Constant.DBTables.ClassificationCategories}");
+            }
+            // There are no further else statements, as the only way to get here is if the source and destination classification categories are the same, or if the source has no classification categories
+            // So nothing needs to be done.
+
+            // Calculate an offset (the max DetectionIDs), where we will be adding that to all detectionIds in the ddbFile to merge. 
+            long offsetDetectionId = destinationDdb.ScalarGetMaxValueAsLong(DBTables.Detections, DetectionColumns.DetectionID);
+
+            // Merge the Detections table into the destination database
+            query += GetQueryMergeDetectionTableUsingOffsets(offsetId, offsetDetectionId, tempDetectionsTable);
+            query += SqlLine.DropTableIfExists(tempDetectionsTable);
+
+            // 5th: Merge the temporary detectionsVidoes table into the destination database
+            if (sourceDdb.TableExists(Constant.DBTables.DetectionsVideo))
+            {
+                string tempDetectionsVideoTable = "tempDetectionsVideoTable";
+                query += SqlLine.CreateTemporaryTableFromExistingTable(tempDetectionsVideoTable, attachedSourceDB, DBTables.DetectionsVideo);
+                query += SqlLine.AddOffsetToColumnInTable(tempDetectionsVideoTable, DetectionColumns.DetectionID, offsetDetectionId) + Environment.NewLine;
+                query += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, tempDetectionsVideoTable);
+                query += SqlLine.DropTableIfExists(tempDetectionsTable);
+            }
+
+            return new(DatabaseFileErrorsEnum.Ok, query, true);
+        }
+        #endregion
+
+        #region QueryPhrases used to checkout a database subset (based on a relative path) from a source database
+        // DataTable Checkout create merge query
+        //  Create the first part of the query to:
+        //  - Attach the ddbFile
+        //  - Create a temporary DataTable mirroring the one in the toBeMergedDDB (so updates to that don't affect the original ddb)
+        //  - Update the DataTable with the modified Ids
+        //  - Update the DataTable with the path prefix
+        //  - Insert the DataTable  into the main db's DataTable
+        // Form example: 
+        // ATTACH DATABASE '<sourceDdbPath>' AS attachedSourceDB;
+        // CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM dataBaseName.tableName
+        //    WHERE RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>\%' 
+        // INSERT INTO Constant.DBTables.FileData SELECT <comma separated data labels> FROM tempDataTable
+        public static string QueryCheckoutMergeDataTable(SQLiteWrapper destinationDdb, string sourceDdbPath, string attachedSourceDB, string tempDataTable, string relativePath)
+        {
+            string queryPhrase = string.Empty;
+            List<string> currentDataLabels = destinationDdb.SchemaGetColumns(DBTables.FileData);
+            queryPhrase += SqlLine.AttachDatabaseAs(sourceDdbPath, attachedSourceDB);
+            queryPhrase += QueryCheckoutCreateTableFromRelativePathInExistingTable(tempDataTable, attachedSourceDB, DBTables.FileData, relativePath, DatabaseColumn.RelativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutTrimRelativePath(tempDataTable, relativePath, DatabaseColumn.RelativePath) + Environment.NewLine;
+            queryPhrase += QueryCheckoutInsertTable2DataIntoTable1(tempDataTable, DBTables.FileData, currentDataLabels) + Environment.NewLine;
+            return queryPhrase;
+        }
+
+
+        // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
+        //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
+        public static string QueryCheckoutMarkersTable(string attachedSourceDB, string tempMarkersTable, string relativePath)
+        {
+            string attachedMarkersTable = attachedSourceDB + Sql.Dot + DBTables.Markers;
+            string attachedDataTable = attachedSourceDB + Sql.Dot + DBTables.FileData;
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.CreateTemporaryTable + tempMarkersTable + Sql.As
+                + Sql.Select + DBTables.Markers + Sql.DotStar + Sql.From + attachedMarkersTable
+                + Sql.Join + attachedDataTable + Sql.On
+                + attachedMarkersTable + Sql.Dot + DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + DatabaseColumn.ID
+                + Sql.And + Sql.OpenParenthesis
+                + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                + Sql.Or
+                + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                + Sql.CloseParenthesis + Sql.Semicolon;
+            queryPhrase += SqlLine.InsertTable2DataIntoTable1(DBTables.Markers, tempMarkersTable);
+            return queryPhrase;
+        }
+
+        // Update the ImageSetTable by importing the values for Quickpaste and BBDisplayThreshold
+        public static string QueryCheckoutImageSetTable(string attachedSourceDB)
+        {
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.Update + DBTables.ImageSet + Sql.Set + DatabaseColumn.QuickPasteTerms + Sql.Equal
+                                      + Sql.OpenParenthesis + Sql.Select + DatabaseColumn.QuickPasteTerms +
+                                      Sql.From + attachedSourceDB + Sql.Dot + DBTables.ImageSet + Sql.Where +
+                                      DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
+            queryPhrase += Sql.Update + DBTables.ImageSet + Sql.Set + DatabaseColumn.BoundingBoxDisplayThreshold + Sql.Equal
+                           + Sql.OpenParenthesis + Sql.Select + DatabaseColumn.BoundingBoxDisplayThreshold +
+                           Sql.From + attachedSourceDB + Sql.Dot + DBTables.ImageSet + Sql.Where +
+                           DatabaseColumn.ID + Sql.Equal + Sql.Quote("1") + Sql.CloseParenthesis + Sql.Semicolon;
+            return queryPhrase;
+        }
+
+        // Form: CREATE TEMPORARY TABLE tempMarkersTable AS  Select MarkersTable.* from AttachedSourceDb.MarkersTable  JOIN DataTable on MarkersTable.Id=DataTable.Id
+        //       And (RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>)\%' ;
+        public static string QueryCheckoutRecognitionTables(string attachedSourceDB, string relativePath, bool checkoutClassificationCategoriesTable)
+        {
+            string attachedDataTable = attachedSourceDB + Sql.Dot + DBTables.FileData;
+
+            // Copy the Detections table matching the ids and relative paths
+            string tmpDetections = "tmpDetections";
+            string attachedDetections = attachedSourceDB + Sql.Dot + DBTables.Detections;
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.CreateTemporaryTable + tmpDetections + Sql.As
+                           + Sql.Select + DBTables.Detections + Sql.DotStar + Sql.From + attachedDetections
+                           + Sql.Join + attachedDataTable + Sql.On
+                           + attachedDetections + Sql.Dot + DatabaseColumn.ID + Sql.Equal + attachedDataTable + Sql.Dot + DatabaseColumn.ID
+                           + Sql.And + Sql.OpenParenthesis
+                           + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Equal + Sql.Quote(relativePath)
+                           + Sql.Or
+                           + attachedDataTable + Sql.Dot + DatabaseColumn.RelativePath + Sql.Like + Sql.Quote(relativePath + "\\%")
+                           + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
+            queryPhrase += SqlLine.InsertTable2DataIntoTable1(DBTables.Detections, tmpDetections);
+
+            string tmpDetectionsVideo = "tmpDetectionsVideos";
+            string attachedDetectionsVideos = attachedSourceDB + Sql.Dot + DBTables.DetectionsVideo;
+            queryPhrase += Sql.CreateTemporaryTable + tmpDetectionsVideo + Sql.As
+                + Sql.Select + DetectionColumns.FrameNumber + Sql.Comma + DetectionColumns.FrameRate + Sql.Comma + DetectionColumns.DetectionID + Sql.From + attachedDetectionsVideos
+                + Sql.Join + tmpDetections + Sql.Using + Sql.OpenParenthesis + DetectionColumns.DetectionID + Sql.CloseParenthesis + Sql.Semicolon + Environment.NewLine;
+            queryPhrase += SqlLine.InsertTable2DataIntoTable1(DBTables.DetectionsVideo, tmpDetectionsVideo);
+
+            // Copy the Detection Categories table
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpDetectionCategories", DBTables.DetectionCategories, attachedSourceDB);
+
+            // Copy the Info table 
+            queryPhrase += QueryCheckoutCopyCompleteTable("tmpInfo", DBTables.Info, attachedSourceDB);
+
+            // Copy the Classification Categories table if not empty
+            if (checkoutClassificationCategoriesTable)
+            {
+                queryPhrase += QueryCheckoutCopyCompleteTable("tmpClassificationCategories", DBTables.ClassificationCategories, attachedSourceDB);
+            }
+            return queryPhrase;
+        }
+
+
+        // Copy the source Level Table to the dest Level Table, renaming that table as needed and adjusting the relative path in the destination to trim the unneeded levels from it.
+        public static string QueryCheckoutLevelTable(FileDatabase sourceDdbFileDatabase, string attachedSourceDB, string srcLevelTableName, string destLevelTableName, string relativePath)
+        {
+            // Create the tables in the destination 
+            // To do this, we need to retrieve the schema from the source tables and manipulate it (as it includes the old table name in it)
+            string queryPhrase = string.Empty;
+            DataTable dtschema = sourceDdbFileDatabase.Database.GetDataTableFromSelect($"{SqlPhrase.GetSchemaFromTable(srcLevelTableName)}");
+            if (dtschema.Rows.Count != 0)
+            {
+                string createTableWithSchema = dtschema.Rows[0].ItemArray[0]!.ToString();
+                // Substitute the new table name into the creation string
+                createTableWithSchema = Regex.Replace(createTableWithSchema!, @"CREATE .*\(", $"CREATE TABLE {destLevelTableName} (", RegexOptions.IgnoreCase);
+                queryPhrase += createTableWithSchema + Sql.Semicolon + Environment.NewLine;
+            }
+
+            // The source database should already be attached by previous calls, named attachedSourceDB.
+            // Populate the just created table with the contents of the old table that match the relative path
+            // and then trim the relative path to remove unneeded levels
+            queryPhrase += QueryCheckoutPopulateTableFromRelativePathInExistingTable(
+                destLevelTableName, attachedSourceDB, srcLevelTableName, relativePath,
+                            DatabaseColumn.FolderDataPath);
+            queryPhrase += QueryCheckoutTrimRelativePath(destLevelTableName, relativePath, DatabaseColumn.FolderDataPath) + Environment.NewLine;
+            return queryPhrase;
+        }
+        #endregion
+
+        #region Private: QueryPhrases used by above to checkout a database subset (based on a relative path) from a source database
+        // CREATE TEMPORARY TABLE tempDataTable AS SELECT * FROM dataBaseName.tableName
+        //    WHERE RelativePath = '<relativePath>' OR RelativePath LIKE '<relativePath>\%' ; 
+        private static string QueryCheckoutCreateTableFromRelativePathInExistingTable(string tempDataTable, string dataBaseName, string tableName, string relativePath, string RelativePathColumnName, bool useTemporaryTable = true)
+        {
+            return $"{(useTemporaryTable ? Sql.CreateTemporaryTable : Sql.CreateTable)}  {tempDataTable}  {Sql.As} {Sql.SelectStarFrom}  {dataBaseName}{Sql.Dot}{tableName} {Sql.Where} {RelativePathColumnName} {Sql.Equal} {Sql.Quote(relativePath)}" +
+                   $"{Sql.Or} {RelativePathColumnName} {Sql.Like} + {Sql.Quote(relativePath + "\\%")} {Sql.Semicolon}";
+        }
+
+        private static string QueryCheckoutPopulateTableFromRelativePathInExistingTable(string dataTable, string dataBaseName, string tableName, string relativePath, string RelativePathColumnName)
+        {
+            return $"{Sql.InsertInto}  {dataTable} {Sql.SelectStarFrom}  {dataBaseName}{Sql.Dot}{tableName} {Sql.Where} {RelativePathColumnName} {Sql.Equal} {Sql.Quote(relativePath)}" +
+                   $"{Sql.Or} {RelativePathColumnName} {Sql.Like} + {Sql.Quote(relativePath + "\\%")} {Sql.Semicolon}";
+        }
+
+        // Insert columns from one table where rows must match only the relative paths
+        // Form (see above): 
+        // INSERT INTO table2 SELECT <comma separated data labels> FROM table1
+        private static string QueryCheckoutInsertTable2DataIntoTable1(string table1, string table2, List<string> listDataLabels)
+        {
+            return Sql.InsertInto + table2 + Sql.Select + String.Join(",", listDataLabels) + Sql.From + table1 + Sql.Semicolon;
+        }
+
+        // Form:
+        // Update DataTable Set RelativePath = '' where RelativePath = '<relativePath';
+        private static string QueryCheckoutTrimRelativePath(string table, string relativePath, string RelativePathColumnName)
+        {
+            string queryPhrase = string.Empty;
+            queryPhrase += Sql.Update + table + Sql.Set + RelativePathColumnName + Sql.Equal + "''"
+                + Sql.Where + RelativePathColumnName + Sql.Equal + Sql.Quote(relativePath) + Sql.Semicolon;
+
+            queryPhrase += Sql.Update + table + Sql.Set + RelativePathColumnName + Sql.Equal
+                + Sql.Substr + Sql.OpenParenthesis + RelativePathColumnName + Sql.Comma
+                + Sql.Length + Sql.OpenParenthesis + Sql.Quote(relativePath + "\\") + Sql.CloseParenthesis + Sql.Plus + "1" + Sql.CloseParenthesis
+                + Sql.Where + RelativePathColumnName + Sql.Like + Sql.Quote(relativePath + "\\%")
+                + Sql.Semicolon;
+            return queryPhrase;
+        }
+        private static string QueryCheckoutCopyCompleteTable(string tmpTableName, string TableName, string attachedSourceDB)
+        {
+            string queryPhrase = Sql.CreateTemporaryTable + tmpTableName + Sql.As
+                                 + Sql.Select + TableName + Sql.DotStar
+                                 + Sql.From + attachedSourceDB + Sql.Dot + TableName + Sql.Semicolon + Environment.NewLine;
+            queryPhrase += SqlLine.InsertTable2DataIntoTable1(TableName, tmpTableName);
+            return queryPhrase;
+        }
+        #endregion
+
+        #region Private: Update the column (normally relative path) to include the indicated prefix
+        // Form: columnName should be RelativePath)
+        //   UPDATE tableName SET RelativePath = CASE WHEN RelativePath = '' THEN ("pathPrefixToAdd" || RelativePath) ELSE ("pathPrefixToAdd"\\ || RelativePath) END;
+        private static string GetQueryUpdateTablesColumnByIncludingPathPrefix(string tableName, string pathPrefixToAdd, string columnName)
+        {
+            if (string.IsNullOrWhiteSpace(pathPrefixToAdd))
+            {
+                // No need to construct a new relative path if there is nothing to add to it
+                return string.Empty;
+            }
+            // Note that tableName must be a DataTable for this to work
+            return $"{Sql.Update} {tableName} {Sql.Set} {columnName} {Sql.Equal} " +
+                   $"{Sql.CaseWhen} {columnName} {Sql.Equal} {Sql.Quote(string.Empty)} {Sql.Then} " +
+                   $"{Sql.OpenParenthesis} {Sql.Quote(pathPrefixToAdd)} {Sql.Concatenate} {columnName} {Sql.CloseParenthesis} " +
+                   $"{Sql.Else} {Sql.OpenParenthesis} {Sql.Quote(pathPrefixToAdd + "\\")} {Sql.Concatenate} {columnName} {Sql.CloseParenthesis} {Sql.End} {Sql.Semicolon} {Environment.NewLine}";
+        }
+        #endregion
+
+        #region Private: Replace old table values (assuming only two columns are in the table) with new values
+        // Generate a query to clear the given table and to populate its columns as needed
+        // with the values in the dictionary. The dictionary pairs order must match the column1/2 order
+        // FORM example (using DetectionCategories and its category/label columns): 
+        // DELETE FROM DetectionCategories;
+        // INSERT INTO  DetectionCategories(category, label)   VALUES('0', 'Empty');
+        // ('1', 'animal'),
+        // ('5', 'train5'),
+        // ('6', 'car6'),
+        // ('7', 'newEntity7');
+        private static string GetQueryReplaceValuesInTwoColumnTable(string tableName, Dictionary<string, string> dictionaryOfNewValues, string column1, string column2)
+        {
+            string query = string.Empty;
+
+            // Clear the table
+            query += $"{Sql.DeleteFrom}  {tableName} {Sql.Semicolon} {Environment.NewLine}";
+
+            // Update the two columns in the table with the dictionary values.
+            query += $"{Sql.InsertInto} {tableName} " +
+                     $"{Sql.OpenParenthesis} {column1} {Sql.Comma} {column2} {Sql.CloseParenthesis} {Sql.Values}";
+            foreach (KeyValuePair<string, string> kvp in dictionaryOfNewValues)
+            {
+                query += $"{Sql.OpenParenthesis} {Sql.Quote(kvp.Key)} {Sql.Comma} {Sql.Quote(kvp.Value)} {Sql.CloseParenthesis} {Sql.Comma}";
+            }
+
+            // Replace the last comma with a semicolon
+            query = query[..query.LastIndexOf(Sql.Comma, StringComparison.Ordinal)];
+            query += Sql.Semicolon + Environment.NewLine;
+            return query;
+        }
+        #endregion
+
+        #region Private: Replace old table values (assuming only two columns are in the table) with new values
+        // Generate a query to clear the given table and to populate its columns as needed
+        // with the values in the dictionary. The dictionary pairs order must match the column1/2 order
+        // FORM example (using DetectionCategories and its category/label columns): 
+        // DELETE FROM DetectionCategories;
+        // INSERT INTO  DetectionCategories(category, label)   VALUES('0', 'Empty');
+        // ('1', 'animal', 'some description1'),
+        // ('5', 'train5', 'some description2'),
+        // ('6', 'car6',   'some description3'),
+        // ('7', 'newEntity7','some description4');
+        private static string GetQueryReplaceValuesInTheeColumnTable(string tableName, Dictionary<string, Tuple<string, string>> dictionaryOfNewValues, string column1, string column2, string column3)
+        {
+            string query = string.Empty;
+
+            // Clear the table
+            query += $"{Sql.DeleteFrom}  {tableName} {Sql.Semicolon} {Environment.NewLine}";
+
+            // Update the three columns in the table with the dictionary values.
+            query += $"{Sql.InsertInto} {tableName} " +
+                     $"{Sql.OpenParenthesis} {column1} {Sql.Comma} {column2} {Sql.Comma} {column3} {Sql.CloseParenthesis} {Sql.Values}";
+            foreach (KeyValuePair<string, Tuple<string, string>> kvp in dictionaryOfNewValues)
+            {
+                query += $"{Sql.OpenParenthesis} {Sql.Quote(kvp.Key)} {Sql.Comma} {Sql.Quote(kvp.Value.Item1)} {Sql.Comma} {Sql.Quote(kvp.Value.Item2)} {Sql.CloseParenthesis} {Sql.Comma}";
+            }
+
+            // Replace the last comma with a semicolon
+            query = query[..query.LastIndexOf(Sql.Comma, StringComparison.Ordinal)];
+            query += Sql.Semicolon + Environment.NewLine;
+            return query;
+        }
+        #endregion
+
+        #region Private: InsertRecognitionTablesFromOneDBIntoAnother
+
+        // Insert various recognition tables found in the attachedSourceDB into the destinationDdb
+        private static string GetQueryInsertRecognitionTablesFromOneDBIntoAnother(
+            string query,
+            SQLiteWrapper destinationDdb,
+            string attachedSourceDB)
+        {
+            // Condition 1. The destinationDdb doesn't have detections, but we now know that the sourceDdb does,
+            // Thus we need to create and copy the detection tables in the destination database.
+            // Since we are copying the tables in their entirety, we don't have to create temporary tables.
+
+            RecognitionDatabases.PrepareRecognitionTablesAndColumns(destinationDdb, false);
+
+            // Import the Detection Categories, Classification Categories and Info from the sourceDdb
+
+            // Now we insert those tables into the current database
+            query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.DetectionCategories, attachedSourceDB);
+            query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.ClassificationCategories, attachedSourceDB);
+            query += SqlLine.InsertTableDataFromAnotherDatabase(DBTables.Info, attachedSourceDB);
+
+            // At this point,we have 
+            // - created the recognition database tables in the destination, 
+            // - filled in the info and the two detection/classification category tables
+            return query;
+        }
+        #endregion
+
+        #region Internal helpers: Merge source and destination dictionaries
+        // This should always work, as the source and destination databases should have the same values before this is invoked
+        private static void MergeSourceAndDestinationClassificationDictionaries(
+            Dictionary<string, string> destinationCategories, Dictionary<string, string> remappedCategories,
+            Dictionary<string, string> destinationDescriptions, Dictionary<string, string> remappedDescriptions,
+            out Dictionary<string, Tuple<string, string>> mergedClassificationColumns)
+        {
+            mergedClassificationColumns = [];
+
+
+            if ((destinationCategories == null || destinationCategories.Count == 0) && (remappedCategories == null || remappedCategories.Count == 0))
+            {
+                // No categories exist
+                // As no categories exist at all, definitions (even if present) aren't relevant
+                // so return an empty merged dictionary 
+                // so mergedDictionary has 0 items
+                return;
+            }
+
+            if (destinationCategories == null || destinationCategories.Count == 0)
+            {
+                // As the destination categories don't exist, just return a merge of the (remapped) source categories and its corresponding descriptions
+                // even if there is a destination description
+                foreach (KeyValuePair<string, string> kvp in remappedCategories)
+                {
+                    if (remappedDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new(kvp.Value, description));
+                    }
+                    else
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new(kvp.Value, string.Empty));
+                    }
+                }
+                return;
+            }
+
+            if (remappedCategories == null || remappedCategories.Count == 0)
+            {
+                foreach (KeyValuePair<string, string> kvp in destinationCategories)
+                {
+                    if (destinationDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new(kvp.Value, description));
+                    }
+                    else
+                    {
+                        mergedClassificationColumns.Add(kvp.Key, new(kvp.Value, string.Empty));
+                    }
+                }
+                return;
+            }
+
+            // At this point, there is something in both destination and merged categories
+            // This commented out code is for debugging to check if the dictionaries are compatable, i.e., that the common keys have the same values.
+            //foreach (KeyValuePair<string, string> pair in destinationCategories)
+            //{
+            //    if (remappedCategories.TryGetValue(pair.Key, out string value))
+            //    {
+            //        // If the key is in remappedCategories and it has a different value, we've failed for some unusual reason
+            //        // This shouldn't happen, but just in case
+            //        if (value != pair.Value)
+            //        {
+            //            Debug.Print("In MergeSourceAndDestinationClassificationDictionaries: Problem as values don't match");
+            //        }
+            //    }
+            //}
+            //foreach (KeyValuePair<string, string> pair in remappedCategories)
+            //{
+            //    if (destinationCategories.TryGetValue(pair.Key, out string value))
+            //    {
+            //        // If the key is in destinationCategories and it has a different value, we've failed
+            //        if (value != pair.Value)
+            //        {
+            //           Debug.Print("In MergeSourceAndDestinationClassificationDictionaries: Problem as values don't match");
+            //        }
+            //    }
+            //}
+
+            // At this point we know that the dictionaries are compatable. 
+            // Start by adding all KVP in destinationCategories to the merged dictionary
+            // By default, this means that the destination descriptions are also populated
+            foreach (KeyValuePair<string, string> kvp in destinationCategories)
+            {
+                if (destinationDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                {
+                    mergedClassificationColumns.Add(kvp.Key, new(kvp.Value, description));
+                }
+                else
+                {
+                    mergedClassificationColumns.Add(kvp.Key, new(kvp.Value, string.Empty));
+                }
+            }
+
+            // Now add the KVP in remappedDescriptions that aren't present in destinationCategories
+            // At the same time, test if there are empty descriptions and if so use the non-empty description
+            foreach (KeyValuePair<string, string> kvp in remappedCategories)
+            {
+                if (remappedDescriptions.TryGetValue(kvp.Key, out string description) && false == string.IsNullOrWhiteSpace(description))
+                {
+                    // We have remapped description. Use that if the destination's description is empty, otherwise stick with the destination's description
+                    if (destinationDescriptions.TryGetValue(kvp.Key, out string destinationDescription) && false == string.IsNullOrWhiteSpace(destinationDescription))
+                    {
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, destinationDescription);
+                    }
+                    else
+                    {
+                        // This pair is in the source but not in the destination
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, description);
+                    }
+                }
+                else
+                {
+                    // the remapped description is empty. Try to get it from the destination
+                    if (destinationDescriptions.TryGetValue(kvp.Key, out string destinationDescription) && false == string.IsNullOrWhiteSpace(destinationDescription))
+                    {
+                        // Use destination description. If the key already exists, just update the value
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, destinationDescription);
+                    }
+                    else
+                    {
+                        // There are no descriptions in either, so use empty descriptions. If the key already exists, just update the value
+                        MergedClassificationUpsert(mergedClassificationColumns, kvp.Key, kvp.Value, string.Empty);
+                    }
+                }
+            }
+        }
+        private static void MergedClassificationUpsert(Dictionary<string, Tuple<string, string>> mergedClassificationColumns, string key, string value, string description)
+        {
+            if (mergedClassificationColumns.ContainsKey(key))
+            {
+                mergedClassificationColumns[key] = new(value, description);
+            }
+            else
+            {
+                // Empty description
+                mergedClassificationColumns.Add(key, new(value, description));
+            }
+        }
         #endregion
     }
 }

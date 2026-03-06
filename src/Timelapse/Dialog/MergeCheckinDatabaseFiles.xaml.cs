@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,7 +129,7 @@ namespace Timelapse.Dialog
             int sourceDdbCount = selectedSourceDdbFiles.Count;
             int i = 0;
             bool cancelled = false;
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
                 bool atLeastOneMergeSucceeded = false;
                 foreach (SourceFileInfo sourceFileInfo in selectedSourceDdbFiles)
@@ -153,79 +154,79 @@ namespace Timelapse.Dialog
                     // A. Checks to see if we can merge the file
 
                     // Check if its a valid readable database ddb file
-                    sourceFileInfo.DatabaseFileError =
-                        FilesFolders.QuickCheckDatabaseFile(sourceFileInfo.FullPath);
+                    sourceFileInfo.DatabaseFileError = FilesFolders.QuickCheckDatabaseFile(sourceFileInfo.FullPath);
                     if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if it is problematic
                         continue;
                     }
 
-                    // Now check if the templates are compatable
+                    // Check if the templates are compatable
                     // TODO: MAYBE return a more specific error message if the error is in the metadata?
-                    SQLiteWrapper sourceDdb = new(sourceFileInfo.FullPath);
-
                     // TODO: Check if the sourceDdb needs upgrading!!!
+                    SQLiteWrapper sourceDdb = new(sourceFileInfo.FullPath);
                     int levelsToIgnore = FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath).Split(Path.DirectorySeparatorChar).Length;
-                    sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb, levelsToIgnore);
+                    sourceFileInfo.DatabaseFileError = MergeDatabases.CheckIfDatabaseTemplatesAreMergeCompatable(sourceDdb, destinationDdb, levelsToIgnore);
                     if (HasError(sourceFileInfo.DatabaseFileError))
                     {
                         // Skip the merge on this file if the templates are problematic
                         continue;
                     }
 
-                    // TODO: The next few steps can be problematic if the Merge fails, as we just deleted all these entries!!!
-                    // TODO: TEST THIS. Maybe we can do this AFTER the query has been generated in the MergeSourceIntoDestinationDdb?
-
+                    // B. Get all Ids in the destination for rows with the given relative path
+                    // Then compose a list of queries that will removing entries with those Ids in the DataTable, MarkersTable, and selected levels tables
+                    // so that the source entries can take their place.
                     string relativePathDifference =
                         FilesFolders.GetDifferenceBetweenPathAndSubPath(destinationDdbPath, sourceFileInfo.FullPath);
+                    List<long> listOfIDs = MergeDatabasesSqlPhrases.GetDataTableIDsMatchingRelativePathsExpression(destinationDdb, relativePathDifference);
+                    
+                    List<string> deletionQueries =
+                    [
+                        ..new[]    
+                        {
+                            MergeDatabasesSqlPhrases.GetQueryDeleteEntriesFromTableMatchingIDs(Constant.DBTables.FileData, listOfIDs),
+                                // We don't need to delete markers or detections with those IDs, as this is done automatically as foreign keys will be on.
+                                // However, we left the code commented out that does explicitly delete those markers where a prior verion had foreign keys off
+                                // MergeDatabases.GetQueryDeleteEntriesFromTableMatchingIDs(Constant.DBTables.Markers, listOfIDs)
+                        }
+                            .Where(q => !string.IsNullOrWhiteSpace(q))
+                    ];
+                    deletionQueries.AddRange(MergeDatabasesSqlPhrases.GetQueryDeleteMetadataEntriesFromDestinationDdbMatchingPath(destinationDdb, relativePathDifference, levelsToIgnore)) ;
 
-                    sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.RemoveEntriesFromDestinationDdbMatchingPath(destinationDdb, relativePathDifference);
-                    if (HasError(sourceFileInfo.DatabaseFileError))
-                    {
-                        // Skip the merge on this file if the templates are problematic
-                        continue;
-                    }
 
-                    // Remove the metadata entries from the destination ddb.
-                    sourceFileInfo.DatabaseFileError =
-                        MergeDatabases.RemoveMetadataEntriesFromDestinationDdbMatchingPath(destinationDdb, relativePathDifference, levelsToIgnore);
-                    if (HasError(sourceFileInfo.DatabaseFileError))
-                    {
-                        // Skip the merge on this file if the templates are problematic
-                        continue;
-                    }
-
-                    // Try updating the IDs of the child if the IDs are really large
-                    // IDs can be up to Long.MaxValue, we really don't want to get close to that so we try to restrict it to around Int32.MaxValue
-                    // This tries to mitigate the issue of multiple merges producing very large IDs that are close to the maximum supported by SQLite.
-                    if (true)// && srcIDDmaxValue > Int32.MaxValue)
+                    // C. Before doing the merge, if the IDs are really large in the source, update its IDs to lesser values
+                    // This mitigate the issue where multiple merges may produce very large IDs that could be greater than the maximum supported by SQLite.
+                    // Note: IDs can be up to Long.MaxValue, but we don't want to get close to that so we try to restrict it to around Int32.MaxValue
+                    long srcIDDmaxValue = sourceDdb.ScalarGetMaxValueAsLong(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
+                    if (srcIDDmaxValue > Int32.MaxValue)
                     {
                         progress.Report(new((int)(i++ / (double)sourceDdbCount * 100.0),
                             $"Doing child database maintenance before merging. Please wait...",
                             "Doing database maintenance...",
                             false, true));
-                        FileDatabase sourceFileDatabase = new(sourceFileInfo.FullPath, false);
+                        using FileDatabase sourceFileDatabase = new(sourceFileInfo.FullPath, false);
                         sourceFileDatabase.DropDetectionTablesIfEmpty();
-                        FileDatabase.ResetIDsAndVacuumAsync(sourceFileDatabase.Database);
-                        progress.Report(new((int)(i++ / (double)sourceDdbCount * 100.0),
-                            $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
-                            "Merging...",
-                            true, false));
-                        if (cancelTokenSource.IsCancellationRequested)
-                        {
-                            cancelled = true;
-                            sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
-                            continue;
-                        }
+                        await FileDatabase.ResetIDsAndVacuumAsync(sourceFileDatabase.Database);
                     }
 
-                    // g. Do the merge
-                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore);
+                    // D. Do the merge
+                    // sourceFileDatabase is now disposed and its connection fully closed
+                    // before MergeSourceIntoDestinationDdb opens its own connection to the same file
+                    progress.Report(new((int)(i++ / (double)sourceDdbCount * 100.0),
+                        $"Merging {sourceFileInfo.ShortPathDisplayName}. Please wait...",
+                        "Merging...",
+                        true, false));
+                    if (cancelTokenSource.IsCancellationRequested)
+                    {
+                        cancelled = true;
+                        sourceFileInfo.DatabaseFileError = DatabaseFileErrorsEnum.Cancelled;
+                        continue;
+                    }
+                   
+                    sourceFileInfo.DatabaseFileError = MergeDatabases.MergeSourceIntoDestinationDdb(destinationDdb, sourceFileInfo.FullPath, relativePathDifference, levelsToIgnore,
+                        deletionQueries);
 
-                    // h. Update the detection and classification category tables
+                    // E. Update the detection and classification category tables
                     // The above may have altered the two category dictionaries, so lets update them
                     fileDatabase.detectionCategoriesDictionary = null;
                     fileDatabase.CreateDetectionCategoriesDictionaryIfNeeded();
@@ -234,10 +235,10 @@ namespace Timelapse.Dialog
                     fileDatabase.classificationDescriptionsDictionary = null;
                     fileDatabase.CreateClassificationDescriptionsDictionaryIfNeeded();
 
-
                     atLeastOneMergeSucceeded = true;
                 }
-                // Rebuild the dataTable ID and the detection detection ID to start at 1
+
+                // Rebuild the dataTable ID and the detection detection ID to start at 1 if needed
                 // then Vacuum it to reclaim space if needed
                 // Try updating the IDs of the File databases if the IDs are really large.
                 // IDs can be up to Long.MaxValue, we really don't want to get close to that so we try to restrict it to around Int32.MaxValue
@@ -245,13 +246,14 @@ namespace Timelapse.Dialog
 
                 if (fileDatabase != null && atLeastOneMergeSucceeded)
                 {
-                    if (true)// && destIDmaxValue > Int32.MaxValue)
+                    long destIDmaxValue = destinationDdb.ScalarGetMaxValueAsLong(Constant.DBTables.FileData, Constant.DatabaseColumn.ID);
+                    if (destIDmaxValue > int.MaxValue)
                     {
                         progress.Report(new((int)(i++ / (double)sourceDdbCount * 100.0),
                             $"Doing database maintenance after the merge. Please wait...",
                             "Doing database maintenance...",
                             false, true));
-                        FileDatabase.ResetIDsAndVacuum(fileDatabase.Database);
+                        await FileDatabase.ResetIDsAndVacuumAsync(fileDatabase.Database);
                     }
                 }
 
@@ -338,7 +340,7 @@ namespace Timelapse.Dialog
                 {
                     mergedSourceFileInfos.Add(sourceFileInfo);
                     fileDatabase.ImageSet.Log +=
-                        $"{Environment.NewLine}{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Checked in:     {sourceFileInfo.RelativePathIncludingFileName}";
+                        $"{Environment.NewLine}{DateTime.Now:d} {DateTime.Now:t}: Checked in:     {sourceFileInfo.RelativePathIncludingFileName}";
                 }
                 IsAnyDataUpdated = mergedSourceFileInfos.Count != 0;
             }
@@ -550,6 +552,11 @@ namespace Timelapse.Dialog
                     b1.Click += InvokeErrorExplanation_Click;
                     return new("The file you are trying to merge is incompatible with the version of the master database.", b1);
 
+                case DatabaseFileErrorsEnum.MergeFailedDueToSQLiteQueryError:
+                    b1.Tag = DatabaseFileErrorsEnum.MergeFailedDueToSQLiteQueryError;
+                    b1.Click += InvokeErrorExplanation_Click;
+                    return new("Merging ignored due to a malformed SQLite database query.", b1);
+
                 default:
                     return new("Unknown error", null);
             }
@@ -612,6 +619,10 @@ namespace Timelapse.Dialog
                     case DatabaseFileErrorsEnum.DetectionCategoriesIncompatible:
                     case DatabaseFileErrorsEnum.ClassificationCategoriesIncompatible:
                         Dialogs.MergeErrorRecognitionCategoriesIncompatible(this);
+                        break;
+
+                    case DatabaseFileErrorsEnum.MergeFailedDueToSQLiteQueryError:
+                        Dialogs.MergeSkippedDueToMalformedSQLiteQuery(this);
                         break;
                 }
             }

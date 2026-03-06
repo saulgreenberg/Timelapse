@@ -23,6 +23,7 @@
         DetectionCategoriesIncompatible,
         ClassificationCategoriesIncompatible,
         MetadataLevelsDiffer,
+        MergeFailedDueToSQLiteQueryError,
 
     }
 }

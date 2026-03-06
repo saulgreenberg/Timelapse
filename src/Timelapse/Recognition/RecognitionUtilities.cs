@@ -119,6 +119,13 @@ namespace Timelapse.Recognition
                 // As the first dictionary doesn't exist, return the second dictionary
                 return infoDict2;
             }
+
+            if (infoDict2 == null || infoDict2.Count == 0)
+            {
+                // As the second dictionary doesn't exist, return the first dictionary
+                return infoDict1;
+            }
+
             info info = new();
             info.SetInfoDefaults();
             info.detector = (string)infoDict2[InfoColumns.Detector];

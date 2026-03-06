@@ -232,7 +232,7 @@ namespace Timelapse.Database
             await Task.Run(() =>
             {
                 CreateBackupIfNeeded();
-                Database.Update(DBTables.FileData, listOfIDs, dataLabel, value);
+                Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
             });
 
             if (bci != null)

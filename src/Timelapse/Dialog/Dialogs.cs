@@ -2715,6 +2715,24 @@ namespace Timelapse.Dialog
             dialog.BuildAndShowDialog();
         }
 
+        // Recognizer categories differ
+        public static void MergeSkippedDueToMalformedSQLiteQuery(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Merge skipped...";
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                Icon = DialogIconType.Error,
+                DialogTitle = title,
+                // Height = 380,
+                Problem = $"An error occured while trying to merge, so merging was skipped.",
+                Reason = "Timelapse merges databases by composing SQLite database queries. However, something went wrong internally.[br]The likely cause is a malformed SQLite query.",
+                Solution = emailSaulForHelp
+            };
+            dialog.BuildAndShowDialog();
+        }
+
         #endregion
 
         #region Moving and Creating folder errors (used by the RelativePathEditor)

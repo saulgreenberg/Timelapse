@@ -513,56 +513,17 @@ namespace Timelapse.Database
         // OR Id BETWEEN 870800 AND 870801
         // OR Id BETWEEN 870809 AND 909567
         // OR Id IN (870803,870806)
-        public void Update(string tableName, List<long> listOfIDs, string columnName, string value)
+        public void Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value)
         {
-            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
-            if (sorted.Count == 0)
+            string whereListOfIds = BuildWhereListofIds(IDColumnName, listOfIDs);
+            if (listOfIDs.Count == 0)
             {
+                // nothing to update!
                 return;
             }
 
-            // Build WHERE clause by collapsing contiguous IDs into BETWEEN ranges
-            // and collecting isolated IDs into an IN list.
-            List<string> conditions = [];
-            List<long> singles = [];
-
-            int i = 0;
-            while (i < sorted.Count)
-            {
-                long rangeStart = sorted[i];
-                long rangeEnd = rangeStart;
-                while (i + 1 < sorted.Count && sorted[i + 1] == sorted[i] + 1)
-                {
-                    i++;
-                    rangeEnd = sorted[i];
-                }
-
-                if (rangeEnd > rangeStart)
-                {
-                    conditions.Add($"Id BETWEEN {rangeStart} AND {rangeEnd}");
-                }
-                else
-                {
-                    singles.Add(rangeStart);
-                }
-                i++;
-            }
-
-            if (singles.Count == 1)
-            {
-                conditions.Add($"Id = {singles[0]}");
-            }
-            else if (singles.Count > 1)
-            {
-                conditions.Add($"Id IN ({string.Join(",", singles)})");
-            }
-
-            string whereClause = string.Join(" OR ", conditions);
-            List<string> queries =
-            [
-                $"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereClause}"
-            ];
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+            string query = $"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereListOfIds}";
+            ExecuteNonQuery(query);
         }
 
         // Return a single update query as a string
@@ -627,22 +588,6 @@ namespace Timelapse.Database
             }
             GetDataTableFromSelect(query);
             ExecuteNonQuery(query);
-        }
-
-        public DataTable DeleteRowsReturningIds(string tableName, string where, string whatToReturn)
-        {
-            // DELETE FROM table_name WHERE where RETURNING Id
-            string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
-            if (!string.IsNullOrWhiteSpace(where))
-            {
-                // Add the WHERE clause only when where is not empty
-                query += Sql.Where;                   // WHERE
-                query += where;                                 // where
-            }
-
-            //query += Sql.Returning + Sql.Quote(whatToReturn);
-            query += Sql.Returning + whatToReturn;
-            return GetDataTableFromSelect(query);
         }
 
         /// <summary>
@@ -898,6 +843,61 @@ namespace Timelapse.Database
                     $"Failure near executing statement '{mostRecentStatement}' n ExecuteNonQueryWrappedInBeginEnd. {exception}");
             }
         }
+        #endregion
+
+        #region ExecuteTransactionWithRollback
+
+        // Execute the query, which may include multiple SQLite statements.
+        // If an SQLite error occurs,
+        // - rollback, and detach any attached databases (as these are not automatcially detached by the rollback)
+        // - return false
+        public bool ExecuteTransactionWithRollback(string query)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                return false;
+            }
+
+            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using var command = new SQLiteCommand(query, connection, transaction);
+                command.ExecuteNonQuery();
+                transaction.Commit();
+                return true;
+            }
+            catch
+            {
+                transaction.Rollback();
+
+                try
+                {
+                    // Collect attached database names first (can't detach while reader is open)
+                    var attachedNames = new List<string>();
+                    using (var listCmd = new SQLiteCommand("PRAGMA database_list;", connection))
+                    using (var reader = listCmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var name = reader.GetString(1); // col 0=seq, 1=name, 2=file
+                            if (name != "main" && name != "temp")
+                                attachedNames.Add(name);
+                        }
+                    }
+
+                    foreach (var name in attachedNames)
+                    {
+                        using var detach = new SQLiteCommand($"DETACH DATABASE {name};", connection);
+                        detach.ExecuteNonQuery();
+                    }
+                }
+                catch { /* nothing left to recover */ }
+
+                return false;
+            }
+        }        
         #endregion
 
         #region Get Schema (Private)
@@ -1664,6 +1664,62 @@ namespace Timelapse.Database
             SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
         }
 #pragma warning restore IDE0051 // Remove unused private members
+        #endregion
+
+        #region Query string Helpers
+        // Build a WHERE clause by collapsing contiguous IDs into BETWEEN ranges
+        // and collecting isolated IDs into an IN list.
+        // For example: (assuming IDColumnName is Id
+        // Id BETWEEN 237 AND 240 OR Id BETWEEN 253 AND 255 OR Id IN (244,248)
+        // Handles edge cases,
+        // e.g., if no continguous IDs exist, only the In clause is used
+        //       if all are contiguos, only the Between clause is used
+        public static string BuildWhereListofIds(string IDColumnName, List<long> listOfIDs)
+        {
+            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
+            if (sorted.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            // Build WHERE clause by collapsing contiguous IDs into BETWEEN ranges
+            // and collecting isolated IDs into an IN list.
+            List<string> conditions = [];
+            List<long> singles = [];
+
+            int i = 0;
+            while (i < sorted.Count)
+            {
+                long rangeStart = sorted[i];
+                long rangeEnd = rangeStart;
+                while (i + 1 < sorted.Count && sorted[i + 1] == sorted[i] + 1)
+                {
+                    i++;
+                    rangeEnd = sorted[i];
+                }
+
+                if (rangeEnd > rangeStart)
+                {
+                    conditions.Add($"{IDColumnName} BETWEEN {rangeStart} AND {rangeEnd}");
+                }
+                else
+                {
+                    singles.Add(rangeStart);
+                }
+                i++;
+            }
+
+            if (singles.Count == 1)
+            {
+                conditions.Add($"{IDColumnName} = {singles[0]}");
+            }
+            else if (singles.Count > 1)
+            {
+                conditions.Add($"{IDColumnName} IN ({string.Join(",", singles)})");
+            }
+
+            return $"{string.Join(" OR ", conditions)}";
+        }
         #endregion
     }
 }
