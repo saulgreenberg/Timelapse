@@ -303,9 +303,9 @@ namespace Timelapse
                         }
 
                         control.SetContentAndTooltip(item.Value);
-                        if (control is DataEntryMultiChoice)
+                        if (control is DataEntryMultiChoice or DataEntryChoice or DataEntryDateTimeCustom or DataEntryDate or DataEntryTime)
                         {
-                            // SAULXXX For some reason, I have to do this explicitly for a multichoice control. It warrants looking into,
+                            // SAULXXX For some reason, I have to do this explicitly for the above controls. It warrants looking into,
                             // as other controls don't need this. Likely a function of handling this control in a slightly different way.
                             // I had to make updateRowsDepending... public to make this work. If I fix this, make it private again.
                             DataHandler.UpdateRowsDependingOnThumbnailGridState(control.DataLabel, control.Content);

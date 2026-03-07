@@ -1228,7 +1228,7 @@ namespace Timelapse
                         TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                         continue;
                     }
-                    DataHandler.FileDatabase.UpdateFile(DataHandler.ImageCache.Current.ID, control.DataLabel, imageDatabaseControl.DefaultValue);
+                    await DataHandler.FileDatabase.UpdateFileAsync(DataHandler.ImageCache.Current.ID, control.DataLabel, imageDatabaseControl.DefaultValue);
                 }
                 else
                 {

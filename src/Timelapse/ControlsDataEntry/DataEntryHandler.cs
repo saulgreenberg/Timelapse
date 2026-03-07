@@ -1377,7 +1377,7 @@ namespace Timelapse.ControlsDataEntry
                 {
                     return;
                 }
-                FileDatabase.UpdateFile(ImageCache.Current.ID, datalabel, content);
+                await FileDatabase.UpdateFileAsync(ImageCache.Current.ID, datalabel, content);
             }
             else
             {

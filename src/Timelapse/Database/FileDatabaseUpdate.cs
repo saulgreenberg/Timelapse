@@ -17,9 +17,14 @@ namespace Timelapse.Database
     // - Collects FileDatabase methods that updates the database and/or corresponding data structures
     public partial class FileDatabase
     {
+        // Serializes concurrent in-memory FileTable writes to prevent DataTable UniqueConstraint
+        // violations caused by concurrent background thread access to the DataTable's internal
+        // hash structures (which are not thread-safe).
+        private readonly SemaphoreSlim _fileTableWriteSemaphore = new(1, 1);
+
         #region Update Files
         /// <summary>
-        /// Update the datalabel column in an ImageRow (identified by its fileID) and Database to the provided value 
+        /// Update the datalabel column in an ImageRow (identified by its fileID) and Database to the provided value
         /// </summary>
         public void UpdateFile(long fileID, string dataLabel, string value)
         {
@@ -31,10 +36,37 @@ namespace Timelapse.Database
 
             // update the row in the database
             ColumnTuplesWithWhere columnToUpdate = new();
-            columnToUpdate.Columns.Add(new(dataLabel, value)); // Populate the data 
+            columnToUpdate.Columns.Add(new(dataLabel, value)); // Populate the data
             columnToUpdate.SetWhere(fileID);
 
             this.Database.Update(DBTables.FileData, columnToUpdate);
+        }
+
+        /// <summary>
+        /// Async version of UpdateFile for use in async contexts (e.g. fire-and-forget update paths).
+        /// Serialized with UpdateFilesCore via _fileTableWriteSemaphore to prevent concurrent
+        /// DataTable access which can corrupt the UniqueConstraint's internal hash structures.
+        /// </summary>
+        public async Task UpdateFileAsync(long fileID, string dataLabel, string value)
+        {
+            await _fileTableWriteSemaphore.WaitAsync();
+            try
+            {
+                ImageRow image = this.FileTable.Find(fileID);
+                image.SetValueFromDatabaseString(dataLabel, value);
+
+                this.CreateBackupIfNeeded();
+
+                ColumnTuplesWithWhere columnToUpdate = new();
+                columnToUpdate.Columns.Add(new(dataLabel, value));
+                columnToUpdate.SetWhere(fileID);
+
+                this.Database.Update(DBTables.FileData, columnToUpdate);
+            }
+            finally
+            {
+                _fileTableWriteSemaphore.Release();
+            }
         }
 
         /// <summary>
@@ -168,76 +200,87 @@ namespace Timelapse.Database
         // this cannot be eliminated through the public DataRow API.
         private async Task UpdateFilesCore(IEnumerable<int> fileIndexes, int count, string dataLabel, string value)
         {
-            // Show the BusyCancelIndicator with a determinate progress bar for large updates
-            bool showProgress = count >= ProgressIndicatorThreshold;
-            BusyCancelIndicator bci = showProgress ? GlobalReferences.BusyCancelIndicator : null;
-            if (bci != null)
+            // Serialize with UpdateFileAsync to prevent concurrent DataTable access.
+            // Concurrent Task.Run calls both touching the DataTable can corrupt the UniqueConstraint's
+            // internal hash structures, manifesting as a spurious ConstraintException on the ID column.
+            await _fileTableWriteSemaphore.WaitAsync();
+            try
             {
-                bci.Reset(true);
-                bci.UseStaticProgressBar = false;
-                bci.IsIndeterminate = false;
-                bci.CancelButtonIsEnabled = false;
-                bci.CancelButtonText = "Please wait...";
-                bci.Percent = 0;
-                bci.Message = $"Updating {dataLabel} for {count:N0} files...";
-            }
-
-            // Progress<T> captures the calling thread's SynchronizationContext, so reports are
-            // automatically marshalled back to the UI thread to update the indicator safely.
-            IProgress<ProgressBarArguments> progress = bci != null
-                ? new Progress<ProgressBarArguments>(args =>
+                // Show the BusyCancelIndicator with a determinate progress bar for large updates
+                bool showProgress = count >= ProgressIndicatorThreshold;
+                BusyCancelIndicator bci = showProgress ? GlobalReferences.BusyCancelIndicator : null;
+                if (bci != null)
                 {
-                    bci.Percent = args.PercentDone;
-                    bci.Message = args.Message;
-                })
-                : null;
-
-            // Run the in-memory update loop on a background thread so the UI and progress bar
-            // remain responsive. The FileTable is not modified concurrently during this operation.
-            List<long> listOfIDs = await Task.Run(() =>
-            {
-                List<long> ids = new(count);
-                int reportEvery = 25000; //Math.Max(1, count / 100); // report approximately every 1%
-                int i = 0;
-                foreach (int index in fileIndexes)
-                {
-                    if (FileTable[index] is not { } image)
-                    {
-                        TracePrint.StackTrace($"in FileDatabase.UpdateFiles: FileTable returned null as there is no index: {index}");
-                        i++;
-                        continue;
-                    }
-                    image.SetValueFromDatabaseString(dataLabel, value);
-                    ids.Add(image.ID);
-                    i++;
-                    if (progress != null && i % reportEvery == 0)
-                    {
-                        int percent = (int)(100.0 * i / count);
-                        progress.Report(new(percent, $"Updating {dataLabel} for {i:N0}/{count:N0} files...", false, false));
-                    }
+                    bci.Reset(true);
+                    bci.UseStaticProgressBar = false;
+                    bci.IsIndeterminate = false;
+                    bci.CancelButtonIsEnabled = false;
+                    bci.CancelButtonText = "Please wait...";
+                    bci.Percent = 0;
+                    bci.Message = $"Updating {dataLabel} for {count:N0} files...";
                 }
-                return ids;
-            });
 
-            // Update bci directly — we're on the UI thread here, so direct assignment renders
-            // immediately once the await below yields back to the dispatcher.
-            if (bci != null)
-            {
-                bci.Message = $"Updating the database for {count:N0} files...";
+                // Progress<T> captures the calling thread's SynchronizationContext, so reports are
+                // automatically marshalled back to the UI thread to update the indicator safely.
+                IProgress<ProgressBarArguments> progress = bci != null
+                    ? new Progress<ProgressBarArguments>(args =>
+                    {
+                        bci.Percent = args.PercentDone;
+                        bci.Message = args.Message;
+                    })
+                    : null;
+
+                // Run the in-memory update loop on a background thread so the UI and progress bar
+                // remain responsive.
+                List<long> listOfIDs = await Task.Run(() =>
+                {
+                    List<long> ids = new(count);
+                    int reportEvery = 25000; //Math.Max(1, count / 100); // report approximately every 1%
+                    int i = 0;
+                    foreach (int index in fileIndexes)
+                    {
+                        if (FileTable[index] is not { } image)
+                        {
+                            TracePrint.StackTrace($"in FileDatabase.UpdateFiles: FileTable returned null as there is no index: {index}");
+                            i++;
+                            continue;
+                        }
+                        image.SetValueFromDatabaseString(dataLabel, value);
+                        ids.Add(image.ID);
+                        i++;
+                        if (progress != null && i % reportEvery == 0)
+                        {
+                            int percent = (int)(100.0 * i / count);
+                            progress.Report(new(percent, $"Updating {dataLabel} for {i:N0}/{count:N0} files...", false, false));
+                        }
+                    }
+                    return ids;
+                });
+
+                // Update bci directly — we're on the UI thread here, so direct assignment renders
+                // immediately once the await below yields back to the dispatcher.
+                if (bci != null)
+                {
+                    bci.Message = $"Updating the database for {count:N0} files...";
+                }
+
+                // Wrapping Database.Update in Task.Run serves two purposes:
+                // 1. The await yields to the dispatcher, allowing the message above to render.
+                // 2. The database update itself no longer blocks the UI thread.
+                await Task.Run(() =>
+                {
+                    CreateBackupIfNeeded();
+                    Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
+                });
+
+                if (bci != null)
+                {
+                    bci.Reset(false);
+                }
             }
-
-            // Wrapping Database.Update in Task.Run serves two purposes:
-            // 1. The await yields to the dispatcher, allowing the message above to render.
-            // 2. The database update itself no longer blocks the UI thread.
-            await Task.Run(() =>
+            finally
             {
-                CreateBackupIfNeeded();
-                Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
-            });
-
-            if (bci != null)
-            {
-                bci.Reset(false);
+                _fileTableWriteSemaphore.Release();
             }
         }
         #endregion
