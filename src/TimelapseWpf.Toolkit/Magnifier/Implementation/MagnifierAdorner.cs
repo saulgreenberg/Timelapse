@@ -1,5 +1,5 @@
 /*************************************************************************************
-   
+
    Toolkit for WPF
    Copyright (C) 2007-2019 Xceed Software Inc.
    This program is provided to you under the terms of the Microsoft Public
@@ -13,6 +13,7 @@
   ***********************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -45,18 +46,16 @@ namespace TimelapseWpf.Toolkit
             Unloaded += (_, _) => CompositionTarget.Rendering -= OnRendering;
         }
 
-
         #endregion
 
         #region Private/Internal methods
 
         private void OnRendering(object sender, EventArgs e)
         {
-            if (!IsLoaded || _magnifier.IsFrozen)
+            if (!IsLoaded || !IsVisible || _magnifier.IsFrozen || !AdornedElement.IsVisible)
                 return;
 
             Point pt = Mouse.GetPosition(this);
-
             if (DoubleHelper.AreVirtuallyEqual(_currentMousePosition, pt) && DoubleHelper.AreVirtuallyEqual(_magnifier.ZoomFactor, _currentZoomFactor))
                 return;
 
@@ -68,6 +67,8 @@ namespace TimelapseWpf.Toolkit
 
         internal void UpdateViewBox()
         {
+            if (!IsVisible || !AdornedElement.IsVisible)
+                return;
             try
             {
                 var viewBoxLocation = CalculateViewBoxLocation();

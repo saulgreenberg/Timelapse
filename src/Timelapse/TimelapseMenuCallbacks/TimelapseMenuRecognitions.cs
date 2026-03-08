@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.Constant;
@@ -112,16 +113,16 @@ namespace Timelapse
             //
             string jsonFileName = File.RecognitionJsonDataFileName;
             if (false == Dialogs.TryGetFileFromUserUsingOpenFileDialog(
-                      "Select a .json file that contains the recognition data. It will be merged into the current image set",
-                      Path.Combine(DataHandler.FileDatabase.RootPathToImages, jsonFileName),
-                      String.Format("JSon files (*{0})|*{0}", File.JsonFileExtension),
-                      File.JsonFileExtension,
-                      out string jsonFilePath))
+                    "Select a .json file that contains the recognition data. It will be merged into the current image set",
+                    Path.Combine(DataHandler.FileDatabase.RootPathToImages, jsonFileName),
+                    String.Format("JSon files (*{0})|*{0}", File.JsonFileExtension),
+                    File.JsonFileExtension,
+                    out string jsonFilePath))
             {
                 return;
             }
 
-            bool userSaidImportFile = false;
+            bool userSaidImportFileAnyways = false;
             // Check if the file name is image_recognitions.json; if so, warn the user that this file was likely created outside of Timelapse
             if (Path.GetFileName(jsonFilePath) == "image_recognition_file.json")
             {
@@ -130,8 +131,9 @@ namespace Timelapse
                     return;
                 }
 
-                userSaidImportFile = true;
+                userSaidImportFileAnyways = true;
             }
+
             //
             // 2. Read recognitions from the Json file.
             //    Note that this has its own progress handler
@@ -145,15 +147,33 @@ namespace Timelapse
                 return;
             }
 
-            if (false == userSaidImportFile && false == jsonRecognitions.IsRecognitionTimelapseCompatible())
+            if (false == userSaidImportFileAnyways)
             {
-                if (false == Dialogs.MenuFileRecognitionsLikelyFromExternallyRunAddaxAIDialog(this))
+                RecognitionJsonCompatability recognitionCompatability = jsonRecognitions.IsRecognitionTimelapseCompatible();
+                if (recognitionCompatability == RecognitionJsonCompatability.AddaxAILikelyRanOutsideOfTimelapse)
                 {
-                    BusyCancelIndicator.Reset(false);
-                    return;
+                    if (false == Dialogs.MenuFileRecognitionsLikelyFromExternallyRunAddaxAIDialog(this))
+                    {
+                        BusyCancelIndicator.Reset(false);
+                        return;
+                    }
+                }
+                else if (recognitionCompatability == RecognitionJsonCompatability.CategoriesContainDuplicates)
+                {
+                    // The recognition file may contain duplicate category names for either or both detection and classification categories (albeit rare).
+                    // This can make Timelapse crash, as its expects categories to have distinct names. If duplicates do exists, the user
+                    // will be given the option to resolve those duplicates by merging each duplicate set into a sngle distinct category.
+                    // For example, if GrizzlyBear and BlackBear were two distinct categories with different classification IDs (e.g., 5,7) but labelled as 'bear',
+                    // the 2nd would be removed (7), and all image classifications with the 7 ID would be changed to 5.
+                    if (false == Dialogs.MenuFileRecognitionsContainDuplicateCategoriesDialog(this, jsonRecognitions.DetectionDuplicates, jsonRecognitions.ClassificationDuplicates))
+                    {
+                        BusyCancelIndicator.Reset(false);
+                        return;
+                    }
+                    // The user said resolve the duplicate categories by merging each dupicate set into a single distinct category
+                    jsonRecognitions.ResolveDuplicateCategories();
                 }
             }
-
             if (jsonRecognitions.info == null)
             {
                 // A null info signals that the operation was cancelled. 
@@ -393,7 +413,7 @@ namespace Timelapse
         // Download and install AddaxAI. 
         private void MenuItemAddaxAIDownload_Click(object sender, RoutedEventArgs e)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),  EcoAssist.EcoAssistSubfolderExecutable);
+            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
             string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
             string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
             string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
@@ -451,10 +471,10 @@ namespace Timelapse
             }
 
             string cmd = @"/k ";
-                   cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
-                   cmd += $@"(cd /d {homepath} && ""{homepath}\{AddaxAI.AddaxAISubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) || ";
-                   cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
-                   cmd += $@"(cd /d {homepath} && ""{homepath}\{EcoAssist.EcoAssistSubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) ";
+            cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
+            cmd += $@"(cd /d {homepath} && ""{homepath}\{AddaxAI.AddaxAISubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) || ";
+            cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
+            cmd += $@"(cd /d {homepath} && ""{homepath}\{EcoAssist.EcoAssistSubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) ";
             if (false == ProcessExecution.TryProcessRunCommand(cmd))
             {
                 Dialogs.AddaxAICouldNotBeStarted(this);

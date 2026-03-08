@@ -194,7 +194,12 @@ namespace Timelapse.Controls
         private void DropSessionTempTables()
         {
             string query = SqlForCounting.DoDropTemporaryTablesForSession();
-            Database.Database.ExecuteNonQuery(query, 3000);
+            SqlOperationResult result = Database.Database.ExecuteNonQueryWithRollback(query, 3000);
+            if (!result.Success)
+            {
+                GlobalReferences.MainWindow.OnUnhandledException(this, new UnhandledExceptionEventArgs(new SqlOperationException("Error in DropSessionTempTables", result), true));
+                //Dialogs.SqlError(GlobalReferences.MainWindow,"Error in DropSessinTempTables", result);
+            }
         }
         #endregion
 
@@ -402,7 +407,7 @@ namespace Timelapse.Controls
 
                 string query1 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixCounts(episodeNoteField);
                 //sw.Start();
-                Database.Database.ExecuteNonQuery(query1);
+                Database.Database.ExecuteNonQueryWithRollback(query1);
                 //sw.Stop();
                 //totalTime += sw.ElapsedMilliseconds;
                 // Debug.Print($"tempTable 1 created: {sw.ElapsedMilliseconds}");
@@ -411,7 +416,7 @@ namespace Timelapse.Controls
                 string query2 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixMap(episodeNoteField);
                 //sw.Reset();
                 //sw.Start();
-                Database.Database.ExecuteNonQuery(query2);
+                Database.Database.ExecuteNonQueryWithRollback(query2);
                 //sw.Stop();
                 //totalTime += sw.ElapsedMilliseconds;
                 //Debug.Print($"tempTable 2 created: {sw.ElapsedMilliseconds}");
@@ -432,7 +437,7 @@ namespace Timelapse.Controls
                 string query3 = SqlForCounting.CreateTempTableAndIndexForFilteredImageIds(where);
                 //sw.Reset();
                 //sw.Start();
-                Database.Database.ExecuteNonQuery(query3);
+                Database.Database.ExecuteNonQueryWithRollback(query3);
                 //sw.Stop();
                 //totalTime += sw.ElapsedMilliseconds;
                 //Debug.Print($"tempTable 3 created: {sw.ElapsedMilliseconds}");
@@ -450,7 +455,7 @@ namespace Timelapse.Controls
                 string query4 = SqlForCounting.CreateTempTableAndIndexForEpisodeDetectionFlags(lowerDetectionConfidence, upperDetectionConfidence);
                 //sw.Reset();
                 //sw.Start();
-                Database.Database.ExecuteNonQuery(query4);
+                Database.Database.ExecuteNonQueryWithRollback(query4);
                 //sw.Stop();
                 //totalTime += sw.ElapsedMilliseconds;
                 //Debug.Print($"tempTable 4 created: {sw.ElapsedMilliseconds}");
@@ -900,7 +905,7 @@ namespace Timelapse.Controls
                 }
 
                 // Get the category number from its name
-                if (this.DetectionCategoryNameToNumber.TryGetValue(selectedCategory, out string categoryNumber))
+                if (this.DetectionCategoryNameToNumber != null && this.DetectionCategoryNameToNumber.TryGetValue(selectedCategory, out string categoryNumber))
                 {
                     // Set it to the selected category
                     this.RecognitionSelections.DetectionCategoryNumber = categoryNumber;
@@ -930,7 +935,7 @@ namespace Timelapse.Controls
             if (sender is DataGrid { SelectedItems: [CategoryCount categoryCount] })
             {
                 // The user selected a category
-                if (this.ClassificationCategoryNameToNumber.TryGetValue(categoryCount.Category, out string categoryNumber))
+                if (this.ClassificationCategoryNameToNumber != null && this.ClassificationCategoryNameToNumber.TryGetValue(categoryCount.Category, out string categoryNumber))
                 {
                     // Set the Classification Category to the selected entity
                     this.RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
@@ -1225,10 +1230,10 @@ namespace Timelapse.Controls
         // Show the classification tooltip (but only if a corresponding description exists) when the mouse enters a row
         private void DataGridClassificationsRow_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (sender is not DataGridRow row || this.ClassificationDescriptions.Count == 0) return;
+            if (sender is not DataGridRow row || this.ClassificationDescriptions is not { Count: > 0 }) return;
             if (row.Item is not CategoryCount cc || string.IsNullOrWhiteSpace(cc.Category)) return;
 
-            if (false == this.ClassificationCategoryNameToNumber.TryGetValue(cc.Category, out string categoryNumber)) return;
+            if (this.ClassificationCategoryNameToNumber == null || false == this.ClassificationCategoryNameToNumber.TryGetValue(cc.Category, out string categoryNumber)) return;
             if (false == this.ClassificationDescriptions.TryGetValue(categoryNumber, out string description) || string.IsNullOrWhiteSpace(description)) return;
 
             try

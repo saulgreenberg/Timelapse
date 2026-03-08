@@ -21,6 +21,8 @@ namespace Timelapse.Dialog
 
         private void TestSomeCodeDialog_OnLoaded(object sender, RoutedEventArgs e)
         {
+
+            //throw (new NullReferenceException());
             //Dialogs.TryPositionAndFitDialogIntoWindow(this);
             this.TestMessage.BuildContentFromProperties();
         }

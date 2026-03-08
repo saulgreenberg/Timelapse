@@ -1315,7 +1315,7 @@ namespace Timelapse.Database
                 $"{Sql.Update} {DBTables.MetadataInfo} {Sql.Set} {DatabaseColumn.ID} {Sql.Equal} {DatabaseColumn.ID} - 1 {Sql.Where} {Control.Level} {Sql.GreaterThanEqual} {level}",
                 $"{Sql.Update} {DBTables.MetadataTemplate} {Sql.Set} {Control.Level} {Sql.Equal} {Control.Level} - 1 {Sql.Where} {Control.Level} {Sql.GreaterThan} {level}"
             ];
-            Database.ExecuteNonQueryWrappedInBeginEnd(queries);
+            Database.ExecuteNonQueryWithRollback(queries);
         }
 
         // Move the given level forward or backwards in the table
@@ -1363,7 +1363,7 @@ namespace Timelapse.Database
                 $"{Sql.Update} {DBTables.MetadataTemplate} {Sql.Set} {Control.Level} {Sql.Equal} {level + correction}  {Sql.Where} {Control.Level} {Sql.Equal} {tempLevel}"
             ];
 
-            Database.ExecuteNonQueryWrappedInBeginEnd(queries);
+            Database.ExecuteNonQueryWithRollback(queries);
         }
         #endregion
 

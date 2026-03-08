@@ -1,0 +1,14 @@
+
+D:\@Timelapse\Timelapse-2.5.0.4\Timelapse/Database/SQLiteWrapper.cs is the primary class used to interact with various SQLite databases.
+Currently, this class has no unified error management to inform calling methods about SQLite errors.
+The class also does not have any means to do progress management for long-running operations.
+I have also not examined each method for performance efficiencies and redundancies between methods.
+
+
+Goals:
+1. Change the class to include a unified means for error management that can be propagated to calling methods. This will preferably be via returned values to the callers. If more than one recommended way to do this occurs to you, let me know what strategies you have in mind
+2. For classes that have the potential to be long-running, provide the means to include progress management, where I can invoke the Timelapse BUsyCancelIndicator with the option to cancel and rollback operations that affect the database.
+3. Examine each method and/or compare methods for significant performance efficiencies and redundancy, where you provide recommendations for changing  methods to be more efficient in terms of memory and/or speed and/or removing redundancy while still achieving the same outcome.
+
+Provide a detailed step by step plan for the above, with clear outcomes for each step. Include the stated goals, and the risks and any recommendations that result from generating your plan. Examine each method and tell me which ones would be affected and how. Ask me clarifying questions as needed. Write the plan and context to D:\@Timelapse\Timelapse-2.5.0.4\ToDo\SQLClaudeContextAndCurrentStatus.md, where you will use that same document later to regain the context in later sessions and track your progress. 
+

@@ -113,7 +113,13 @@ namespace Timelapse
         public TimelapseWindow()
         {
 
+            // Catches exceptions from background threads and anything that escapes WPF's dispatcher boundary.
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+
+            // Catches exceptions thrown from WPF dispatcher-invoked code on the UI thread (event handlers,
+            // Loaded callbacks, commands, etc.) that AppDomain.UnhandledException never sees because WPF's
+            // dispatcher acts as an intermediate catch boundary.
+            Application.Current.DispatcherUnhandledException += OnDispatcherUnhandledException;
             InitializeComponent();
 
             // Clean up any leftover print preview files from previous sessions
@@ -147,6 +153,15 @@ namespace Timelapse
             GlobalReferences.BusyCancelIndicator = BusyCancelIndicator; // So other classes can access methods here
             GlobalReferences.CancelTokenSource = new();     // Set the CancellationToken/Source. Only set globally
             GlobalReferences.TimelapseState = State;
+
+            // Record SQL read failures in SqlErrorState rather than immediately showing a dialog.
+            // Safe to call from any thread (e.g. GetDataTableFromSelectAsync runs on a thread-pool thread).
+            // Only the first error is recorded; subsequent calls are ignored so that a cascade of async
+            // operations all failing after a single root cause does not cause multiple dialogs.
+            // Callers at natural task-completion points should check SqlErrorState.HasError and call
+            // SqlOperationResult.GenerateExceptionDialog(SqlErrorState.SqlOperationResult, SqlErrorState.Context).
+            SQLiteWrapper.OnReadError = (context, sqlOperationResult) =>
+                SqlErrorState.TryRecord(sqlOperationResult, context);
 
             // Populate the most recent image set list
             MenuItemRecentImageSets_RefreshItems();
@@ -320,10 +335,46 @@ namespace Timelapse
         #endregion
 
         #region Exception Management
-        // If we get an exception that wasn't handled, show a dialog asking the user to send the bug report to us.
-        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+
+        // Catches exceptions thrown from WPF dispatcher-invoked code on the UI thread (event handlers, Loaded
+        // callbacks, etc.). These never reach OnUnhandledException because WPF's dispatcher catches them first.
+        // Setting e.Handled = true prevents WPF from terminating the app before our dialog has a chance to run.
+        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            if (e.ExceptionObject.ToString()!.Contains("System.IO.PathTooLongException"))
+            e.Handled = true;
+            if (e.Exception is SqlOperationException sqlEx)
+            {
+                ExceptionShutdownDialog dialog = new(this, e.Exception, sqlEx.Result);
+                dialog.ShowDialog();
+            }
+            else if (e.Exception.ToString().Contains("System.IO.PathTooLongException"))
+            {
+                Dialogs.FilePathTooLongDialog(this, e.Exception);
+            }
+            else
+            {
+                ExceptionShutdownDialog dialog = new(this, e.Exception);
+                dialog.ShowDialog();
+            }
+            Close();
+            Application.Current.Shutdown();
+        }
+
+        // If we get an exception that wasn't handled, show a dialog asking the user to send the bug report to us.
+        public void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is SqlOperationException sqlEx)
+            {
+                // A typed SQLite failure was thrown deliberately.
+                // sqlEx.Result carries ErrorMessage, FailingStatement, and the original Exception (which includes the sqlException.Message)
+                // for inclusion in a bug-report dialog or email.
+                //Dialogs.SqlError(this, sqlEx.Message, sqlEx.Result);
+                ExceptionShutdownDialog dialog = new(this, e);
+                dialog.ShowDialog();
+                Close();
+                Application.Current.Shutdown();
+            }
+            else if (e.ExceptionObject.ToString()!.Contains("System.IO.PathTooLongException"))
             {
                 Dialogs.FilePathTooLongDialog(this, e);
             }
@@ -331,7 +382,7 @@ namespace Timelapse
             {
                 ExceptionShutdownDialog dialog = new(this, e);
                 dialog.ShowDialog();
-                // force a shutdown. While some bugs could be recoverable, its dangerous to keep things running. 
+                // force a shutdown. While some bugs could be recoverable, its dangerous to keep things running.
                 Close();
                 Application.Current.Shutdown();
             }

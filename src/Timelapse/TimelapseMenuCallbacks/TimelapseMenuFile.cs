@@ -119,6 +119,12 @@ namespace Timelapse
                 // If its not a valid template, display a dialog and abort
                 if (false == Dialogs.DialogIsFileValid(this, templateDatabasePath))
                 {
+                    // This is an example of how we can catch the error state
+                    if (SqlErrorState.HasError)
+                    //{
+                    //    SqlOperationResult.GenerateExceptionDialog(SqlErrorState.SqlOperationResult, "MenuItemLoadImages_ClickAsync");
+                    //    SqlErrorState.Reset();
+                    //}
                     // Add it to the list, as its originally invalid, but the user was asked to update it
                     // So its likely ok now.
                     return;
@@ -152,7 +158,6 @@ namespace Timelapse
             await renderTcs.Task;
             
             Tuple<bool, string> results = await TryOpenTemplateAndBeginLoadFoldersAsync(templateDatabasePath).ConfigureAwait(true);
- 
             if (results.Item1 == false)
             {
                 StatusBar.SetMessage("Aborted. Images were not added to the image set.");

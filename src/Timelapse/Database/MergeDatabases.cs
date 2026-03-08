@@ -117,7 +117,7 @@ namespace Timelapse.Database
             }
             // Part 6. We are done.
             query += Sql.EndTransactionSemiColon;
-            destinationDdb.ExecuteNonQuery(query);
+            destinationDdb.ExecuteNonQueryWithRollback(query);
         }
         #endregion
 
@@ -219,8 +219,8 @@ namespace Timelapse.Database
             }
 
             // Part 7. The query is now done, execute it
-            bool result = destinationDdb.ExecuteTransactionWithRollback(query);
-            if (result == false)
+            SqlOperationResult result = destinationDdb.ExecuteNonQueryWithRollback(query);
+            if (!result.Success)
             {
                 return DatabaseFileErrorsEnum.MergeFailedDueToSQLiteQueryError;
             }

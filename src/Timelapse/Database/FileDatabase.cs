@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1067,7 +1068,7 @@ namespace Timelapse.Database
                 string command = queryColumns + queryValues.ToString();
 
                 CreateBackupIfNeeded();
-                Database.ExecuteNonQuery(command);
+                Database.ExecuteNonQueryWithRollback(command);
 
                 if (onFileAdded != null)
                 {
@@ -2408,7 +2409,7 @@ namespace Timelapse.Database
                             // If the index wasn't created previously, make sure its there as otherwise its painfully slow.
                             IndexCreateForDetectionsIfNeeded();
                             // Delete these detections and classifications
-                            Database.ExecuteNonQueryWrappedInBeginEnd(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
+                            Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
                         }
                         // At this point, we have deleted the detections and classifications from those images that are both in the
                         // db and the json, which means were are ready to replace them. 
@@ -3360,6 +3361,13 @@ namespace Timelapse.Database
             {
                 Debug.Print("Failed in FileDatabase:DisposeAsNeeded");
             }
+        }
+        #endregion
+
+        #region // A helper method to capture the caller's name
+        private static string GetCallerName([CallerMemberName] string caller = null)
+        {
+            return caller;
         }
         #endregion
     }

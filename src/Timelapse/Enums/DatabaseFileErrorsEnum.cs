@@ -17,11 +17,12 @@
         PathTooLong,
         Cancelled,
 
-        // These results are used during merge testing for incompatabilities
+        // These results are used during merge or other recognition testing for incompatabilities
         TemplateElementsDiffer,
         TemplateElementsSameButOrderDifferent,
         DetectionCategoriesIncompatible,
         ClassificationCategoriesIncompatible,
+
         MetadataLevelsDiffer,
         MergeFailedDueToSQLiteQueryError,
 

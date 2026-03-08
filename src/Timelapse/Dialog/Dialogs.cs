@@ -736,6 +736,30 @@ namespace Timelapse.Dialog
             dialog.BuildAndShowDialog();
         }
 
+        // Overload for use when only an Exception is available (e.g. from DispatcherUnhandledException).
+        public static void FilePathTooLongDialog(Window owner, Exception e)
+        {
+            string title = "Your File Path Names are Too Long to Handle";
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                Icon = DialogIconType.Error,
+                DialogTitle = title,
+                Problem = "Timelapse has to shut down as one or more of your file paths are too long.",
+                Solution = $"[li] Shorten the path name by moving your image folder higher up the folder hierarchy, or" +
+                               "[li] Use shorter folder or file names.",
+                Reason = "Windows cannot perform file operations if the folder path combined with the file name is more than " + File.MaxPathLength + " characters."
+                             + "Timelapse will shut down until you fix this.",
+                Hint = "File paths to files created in your " + File.BackupFolder + " folder must also be less than " + File.MaxPathLength + " characters."
+            };
+            if (e != null)
+            {
+                Clipboard.SetText(e.ToString());
+            }
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
         // This version detects and displays warning messages.
         public static void FilePathTooLongDialog(Window owner, List<string> folders)
         {
@@ -3065,7 +3089,62 @@ namespace Timelapse.Dialog
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
         }
+        /// <summary>
+        /// Recognitions: warning that the recognition file may have duplicate category labels
+        /// </summary>
+        public static bool? MenuFileRecognitionsContainDuplicateCategoriesDialog(Window owner, List<(string Value, int Count)> detectionCategoryDuplicates, List<(string Value, int Count)> classificationCategoryDuplicates)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            bool detectionDuplicates = detectionCategoryDuplicates is { Count: > 0 };
+            bool classificationDuplicates = classificationCategoryDuplicates is { Count: > 0 };
+            string duplicateType = (detectionDuplicates, classificationDuplicates) switch
+            {
+                (true, true)   => "detection and classification categories",
+                (true, false)  => "detection categories",
+                (false, true)  => "classification categories",
+                _ => string.Empty
+             };
 
+            string details = string.Empty;
+            if (detectionDuplicates)
+            {
+                details += "[li]Detecton category duplicates:";
+                foreach (var item in detectionCategoryDuplicates)
+                {
+                    details += $"[li 2]{item.Value} appears {item.Count} times";
+                }
+            }
+            if (classificationDuplicates)
+            {
+                details += "[li]Classification category duplicates:";
+                foreach (var item in classificationCategoryDuplicates)
+                {
+                    details += $"[li 2]{item.Value} appears {item.Count} times";
+                }
+            }
+
+            string title = $"Collapse duplicate {duplicateType}?";
+            var dialog = new FormattedDialog()
+            {
+                Owner = owner,
+                Icon = DialogIconType.Warning,
+                DialogTitle = title,
+                Problem = $"This recognition file contains duplicate {duplicateType}, which should be collapsed.",
+
+                Reason = $"Your recognizer generates {duplicateType}, which it uses to identify paricular recognitions. " +
+                         $"However, some of these {duplicateType} have the same (duplicated) name." +
+                         $"[br 6]This is problematic, as Timelapse expects all {duplicateType} to have unique names, as otherwise it cannot distinguish between them." +
+                         $"[br 6]You can view the duplicate {duplicateType} by expanding the Details section)",
+                Solution = "Select:" +
+                           $"[li] [b]Okay[/b] to fix this, where the {duplicateType} are collapsed and merged into a single category." +
+                           $"[li] [b]Cancel[/b] to cancel importing the recognition file. You (or your recognition person) can then re-examine how your recognizer is labelling its categories.",
+                Hint = $"Consider this made up example. Your recognizer classifies both [i]grizzly bears[/i] and [i]black bears[/i], and treats them as distinct classifications. " +
+                       $"However, the recognizer was told to just label them both as [i]bear[/i]. This is not handled by Timelapse, as it would cause two seemingly identical [i]bear[/i] categories to appear in its dialogs, when they are both actually different. " +
+                       $"Collapsing them would correct this, as it would merge both [i]grizzly[/i] and [i]black bear[/i] classifications into a single distinct [i]bear[/i] category.",
+                Details = details,
+            };
+            return dialog.BuildAndShowDialog();
+        }
 
         /// <summary>
         /// Recognitions: warning that the recognition file may have been created by running AddaxAI externally
@@ -4099,6 +4178,27 @@ namespace Timelapse.Dialog
                 Solution = "Select:"
                     + "[li] [b]Ok[/b] to delete this level,"
                     + "[li] [b]Cancel[/b] to abort deletion.",
+            };
+            return dialog.BuildAndShowDialog();
+        }
+        #endregion
+
+        #region SQLiteExceptionDialog
+        public static bool? SqlError(Window owner, string context, SqlOperationResult sqlOperationResult)
+        {
+            // warn the user about consequences of deleting a level
+            var dialog = new FormattedDialog()
+            {
+                Owner = owner,
+                DialogTitle = $"An SQLite error occurred",
+                Icon = DialogIconType.Error,
+                What = $"Timelapse had a problem interacting with the database:"
+                       + $"[li] [b]message: [/b]{sqlOperationResult.Exception.Message}",
+
+                 Reason = $"[b]Error message: [/b]{sqlOperationResult.ErrorMessage}"
+                    //+ $"[li] [b]Error FailingStatement: [/b]{sqlOperationResult.FailingStatement}"
+                   + $"[br 18] [b]Exception: [/b]{sqlOperationResult.Exception}",
+                Solution = "Mail to saul",
             };
             return dialog.BuildAndShowDialog();
         }

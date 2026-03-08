@@ -21,7 +21,7 @@ namespace Timelapse.Database
         // Do this while maintaining foreign key dependencies to begin at 1, then vacuum
         public static void ResetIDsAndVacuum(SQLiteWrapper database)
         {
-            database.ExecuteNonQuery(ResetIDsGetQuery(database));
+            database.ExecuteNonQueryWithRollback(ResetIDsGetQuery(database));
         }
 
         public static Task ResetIDsAndVacuumAsync(SQLiteWrapper database)

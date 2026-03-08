@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Timelapse.Constant;
+using Timelapse.Enums;
 
 #pragma warning disable IDE1006 // Naming Style - we are using lower case names to match the json structure, we  mute the warning
 namespace Timelapse.Recognition
@@ -25,9 +26,11 @@ namespace Timelapse.Recognition
         public info info { get; set; }
         public Dictionary<string, string> detection_categories { get; set; }
         public Dictionary<string, string> classification_categories { get; set; }
-        public Dictionary<string,string> classification_category_descriptions { get; set; }
+        public Dictionary<string, string> classification_category_descriptions { get; set; }
         public List<image> images { get; set; } = [];
 
+        public List<(string Value, int Count)> DetectionDuplicates { get; set; } = [];
+        public List<(string Value, int Count)> ClassificationDuplicates { get; set; } = [];
         #endregion
 
         #region Public Set Defaults
@@ -62,12 +65,12 @@ namespace Timelapse.Recognition
         // It is judged incompatible if the first classification category value matches any detection category value.
         // Note that this is a heuristic that depends on how AddaxAI adds classification categories to detection categories,
         // where the lowest numbered items are the actual detection categories with remaining numbered items being the classification categories.
-        public bool IsRecognitionTimelapseCompatible()
+        public RecognitionJsonCompatability IsRecognitionTimelapseCompatible()
         {
             //  1. If classification_categories is null or empty, returns true
             if (classification_categories == null || classification_categories.Count == 0)
             {
-                return true;
+                return RecognitionJsonCompatability.Okay;
             }
 
             // 2.Sorts classification_categories by key and gets the first item's value       
@@ -77,17 +80,127 @@ namespace Timelapse.Recognition
                 .Value;
 
             // 3. Steps through detection_categories sorted by key, comparing each value to that first classification category value
-            // 4a. Returns false if a match is found, true if no match is found
+            // 4. Returns false if a match is found
             foreach (KeyValuePair<string, string> kvp in detection_categories.OrderBy(kvp => kvp.Key))
             {
                 if (kvp.Value == firstClassificationValue)
                 {
                     // 4. Returns false if a match is found,
-                    return false;
+                    return RecognitionJsonCompatability.AddaxAILikelyRanOutsideOfTimelapse;
                 }
             }
-            // 4b. Returns true if no match is found
-            return true;
+
+            // 5. Check for duplicate categories.
+
+            DetectionDuplicates = detection_categories.Values
+            .GroupBy(v => v)                   // Group by the value string
+            .Where(g => g.Count() > 1)         // Only keep values that appear more than once
+            .Select(g => (g.Key, g.Count()))   // Create a tuple of (Value, Count)
+            .ToList();
+
+            if (classification_categories is not { Count: 0 })
+            {
+                ClassificationDuplicates = classification_categories.Values
+                .GroupBy(v => v)                   // Group by the value string
+                .Where(g => g.Count() > 1)         // Only keep values that appear more than once
+                .Select(g => (g.Key, g.Count()))   // Create a tuple of (Value, Count)
+                .ToList();
+            }
+
+            if (DetectionDuplicates is { Count: > 0 } || ClassificationDuplicates is { Count: > 0 })
+            {
+                return RecognitionJsonCompatability.CategoriesContainDuplicates;
+            }
+
+            // 6. Returns true as all is good
+            return RecognitionJsonCompatability.Okay; ;
+        }
+
+        /// <summary>
+        /// Identifies duplicate labels in detection and classification categories,
+        /// keeps only the entry with the lowest numerical category number,
+        /// and updates all image data to point to the kept category numbers.
+        /// </summary>
+        public void ResolveDuplicateCategories()
+        {
+            // 1. Generate remapping tables and clean up the dictionaries
+            var detectionRemap = GetCategoryRemap(detection_categories);
+            var classificationRemap = GetCategoryRemap(classification_categories);
+
+            // 2. If no duplicates were found in either set, exit early to save processing time
+            if (detectionRemap.Count == 0 && classificationRemap.Count == 0) return;
+
+            // 3. Single-pass iteration through all images to update category numbers
+            foreach (var image in images)
+            {
+                if (image.detections == null) continue;
+
+                foreach (var detection in image.detections)
+                {
+                    // a) Update detection category number if it was a duplicate
+                    if (detectionRemap.TryGetValue(detection.category, out string newDetCat))
+                    {
+                        detection.category = newDetCat;
+                    }
+
+                    // b) Update classification category numbers if they exist
+                    if (classificationRemap.Count > 0 && detection.classifications != null)
+                    {
+                        foreach (var classification in detection.classifications)
+                        {
+                            // The category number is at index 0 of the Object[]
+                            if (classification.Length > 0 && classification[0] != null)
+                            {
+                                string currentClassCat = classification[0].ToString();
+                                if (currentClassCat != null && classificationRemap.TryGetValue(currentClassCat, out string newClassCat))
+                                {
+                                    classification[0] = newClassCat;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Identifies duplicate values in a category dictionary.
+        /// Keeps the entry with the lowest numerical key, removes others from the dictionary,
+        /// and returns a mapping from deleted keys to the kept key.
+        /// </summary>
+        private Dictionary<string, string> GetCategoryRemap(Dictionary<string, string> categories)
+        {
+            var remap = new Dictionary<string, string>();
+            if (categories == null || categories.Count == 0) return remap;
+
+            // Group by the label (Value) to find duplicates
+            var duplicateGroups = categories
+                .GroupBy(kvp => kvp.Value)
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            foreach (var group in duplicateGroups)
+            {
+                // Sort keys numerically to find the "first" (lowest) category number
+                var sortedKeys = group.Select(kvp => kvp.Key)
+                    .OrderBy(k => int.TryParse(k, out int val) ? val : int.MaxValue)
+                    .ThenBy(k => k) // fallback for non-numeric keys
+                    .ToList();
+
+                string primaryKey = sortedKeys[0];
+
+                // Map all other keys in this group to the primary key
+                for (int i = 1; i < sortedKeys.Count; i++)
+                {
+                    string oldKey = sortedKeys[i];
+                    remap[oldKey] = primaryKey;
+
+                    // Delete the duplicate entry from the original dictionary
+                    categories.Remove(oldKey);
+                }
+            }
+
+            return remap;
         }
         #endregion
 
@@ -183,10 +296,10 @@ namespace Timelapse.Recognition
         #region Public Properties
         public long imageID { get; set; }
         public string file { get; set; } = string.Empty;
-       
+
         // if frame_rate is not present for a video, just set it to a reasonable default frames/sec value.
         // it may be wrong, but its better than nothing.
-        public float? frame_rate { get; set; } = 0; 
+        public float? frame_rate { get; set; } = 0;
         public List<detection> detections { get; set; } = [];
 
         #endregion

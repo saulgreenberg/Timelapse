@@ -267,10 +267,15 @@ namespace Timelapse.Database
                 // Wrapping Database.Update in Task.Run serves two purposes:
                 // 1. The await yields to the dispatcher, allowing the message above to render.
                 // 2. The database update itself no longer blocks the UI thread.
+                string methodName = GetCallerName();
                 await Task.Run(() =>
                 {
                     CreateBackupIfNeeded();
-                    Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
+                    SqlOperationResult result = Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
+                    if (!result.Success)
+                    {
+                        SqlOperationResult.GenerateExceptionDialog(result, methodName);
+                    }
                 });
 
                 if (bci != null)
@@ -491,7 +496,7 @@ namespace Timelapse.Database
                                    + Sql.Where
                                    + DatabaseColumn.RelativePath + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
             }
-            Database.ExecuteNonQuery(query);
+            Database.ExecuteNonQueryWithRollback(query);
         }
         #endregion
     }

@@ -741,8 +741,8 @@ namespace Timelapse.Util
             int desiredPathLength = length - fileNameLength - 2; // -1 for the path separator and ellipsis
 
             // Get the front half and the back half of the path, and stitch them together with an ellipsis in between
-            string frontPath = path.Substring(0, desiredPathLength/2);
-            string backPath = path.Substring(path.Length - desiredPathLength/2);
+            string frontPath = path.Substring(0, desiredPathLength / 2);
+            string backPath = path.Substring(path.Length - desiredPathLength / 2);
             string pathAfterTruncation = $"{frontPath}…{backPath}";
             return Path.Combine(pathAfterTruncation, fileName);
 

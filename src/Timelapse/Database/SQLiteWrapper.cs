@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Linq;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Timelapse.Constant;
@@ -22,12 +22,39 @@ namespace Timelapse.Database
     // Importantly, the wrapper is agnostic to the particular schema used by Timelapse i.e., it is a reusable SQL interface.
     // Typically, the FileDatabase acts as an intermediary between Timelapse and this wrapper, where FileDatabase creates the Timelapse-specific queries
     // and invokes them using this SQLite wrapper
-    public class SQLiteWrapper
+
+    // Note. Some methods set an error state, others return an error, which can be examined from a calling method far up the stack.
+    // The issue is doing it in the right place, as dialogs and other actions lower down the stack may be triggered.
+    // Thus we need to do it quite selectively.
+    // This is an example of how we can check it far up the stack
+    // if (SqlErrorState.HasError)
+    //{
+    //    SqlOperationResult.GenerateExceptionDialog(SqlErrorState.SqlOperationResult, "MenuItemLoadImages_ClickAsync");
+    //    SqlErrorState.Reset();
+    //}
+    // This is an example of how we can check it from a returned value
+    //SqlOperationResult result = Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
+    //if (!result.Success)
+    //{
+    //    SqlOperationResult.GenerateExceptionDialog(result, methodName);
+    //}
+public class SQLiteWrapper
     {
         // A connection string identifying the  database file. Takes the form:
         // "Data Source=filepath" 
         public string ConnectionString { get; }
         public string FilePath { get; }
+
+        /// <summary>
+        /// Optional callback invoked when a read method catches an exception.
+        /// Parameters: context (method name), failing SQL statement (may be null).
+        /// Subscribers can record the failure for later reporting (e.g. via <see cref="Database.SqlErrorState"/>).
+        /// In Debug builds, <c>Debug.Fail</c> fires first; this callback is still invoked afterwards.
+        /// </summary>
+        public static Action<string, SqlOperationResult> OnReadError { get; set; }
+
+        // Ensures only the first SQL read error across all concurrent threads raises the dialog.
+        private static int _errorFired = 0;
 
         #region Constructor
         /// <summary>
@@ -61,15 +88,16 @@ namespace Timelapse.Database
         //     column2name datatype,               NAME TEXT NOT NULL,
         //     ...                                 ...
         //     columnNname datatype);              SALARY REAL);
-        public void CreateTable(string tableName, List<SchemaColumnDefinition> columnDefinitions)
+        public SqlOperationResult CreateTable(string tableName, List<SchemaColumnDefinition> columnDefinitions)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnDefinitions, nameof(columnDefinitions));
 
             // Just in case the table exists, we will want to remove it before trying to create it.
             if (TableExists(tableName))
             {
-                DropTable(tableName);
+                SqlOperationResult dropResult = DropTable(tableName);
+                if (!dropResult.Success) return dropResult;
             }
 
             string query = $"{Sql.CreateTable} {tableName} {Sql.OpenParenthesis} {Environment.NewLine}"; // CREATE TABLE <tablename> (
@@ -79,7 +107,7 @@ namespace Timelapse.Database
             }
             query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);          // remove last comma / new line
             query += $"{Sql.CloseParenthesis} {Sql.Semicolon}";                                          // );
-            ExecuteNonQuery(query);
+            return ExecuteNonQueryWithRollback(query);
         }
         #endregion
 
@@ -98,7 +126,7 @@ namespace Timelapse.Database
         {
             // Form: DROP INDEX IF EXISTS indexName 
             string query = Sql.DropIndex + Sql.IfExists + indexName;
-            ExecuteNonQuery(query);
+            ExecuteNonQueryWithRollback(query);
         }
 
         // Create a single index named indexName if it doesn't already exist
@@ -111,7 +139,7 @@ namespace Timelapse.Database
             }
             // Form: CREATE INDEX IF NOT EXISTS indexName ON tableName  (column1, column2...);
             string query = Sql.CreateIndex + Sql.IfNotExists + indexName + Sql.On + tableName + Sql.OpenParenthesis + columnNames + Sql.CloseParenthesis;
-            ExecuteNonQuery(query);
+            ExecuteNonQueryWithRollback(query);
         }
 
 
@@ -124,7 +152,7 @@ namespace Timelapse.Database
             {
                 queries.Add(Sql.CreateIndex + Sql.IfNotExists + tuple.Item1 + Sql.On + tuple.Item2 + Sql.OpenParenthesis + tuple.Item3 + Sql.CloseParenthesis);
             }
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+            ExecuteNonQueryWithRollback(queries);
         }
         #endregion
 
@@ -153,7 +181,6 @@ namespace Timelapse.Database
                 // Open the connection
                 using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                 connection.Open();
-
                 using SQLiteCommand command = new(connection);
                 command.CommandText = query;
                 // Debug.Print(query);
@@ -164,108 +191,100 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure executing query '{query}' in GetDataTableFromSelect. {exception}");
+#if DEBUG
+                Debug.Fail($"SQL read failure in GetDataTableFromSelect: {exception.Message}\nQuery: {query}");
+#endif
+                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                    OnReadError?.Invoke("GetDataTableFromSelect", new SqlOperationResult
+                    {
+                        Context="GetDataTableFromSelect",
+                        ErrorMessage="SqlStatementFailure",
+                        FailingStatement=query,
+                        Exception = exception
+                    });
                 return dataTable;
             }
         }
-        public async Task<DataTable> GetDataTableFromSelectAsync(string query)
+
+        // Async version with cancellation support. Cannot delegate to the sync version because
+        // cancellation requires access to the command object to call command.Cancel().
+        // When the token fires, Cancel() signals SQLite to abort the current operation and throw
+        // a SQLiteException; the exception filter 'when (token.IsCancellationRequested)' catches
+        // that silently. Genuine SQL errors fall through to the second catch as normal.
+        public async Task<DataTable> GetDataTableFromSelectAsync(string query, CancellationToken token = default)
         {
-            // Debug.Print("GetDataTableFromSelectAsync: " + query);
             return await Task.Run(() =>
             {
                 DataTable dataTable = new();
                 try
                 {
-                    // Open the connection
                     using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                     connection.Open();
-
                     using SQLiteCommand command = new(connection);
                     command.CommandText = query;
-                    // Debug.Print(query);
-                    using SQLiteDataReader reader = command.ExecuteReader();
-                    dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                    dataTable.Load(reader);
+                    using (token.Register(() => command.Cancel()))
+                    {
+                        using SQLiteDataReader reader = command.ExecuteReader();
+                        dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
+                        dataTable.Load(reader);
+                    }
+                    return dataTable;
+                }
+                catch (Exception) when (token.IsCancellationRequested)
+                {
                     return dataTable;
                 }
                 catch (Exception exception)
                 {
-                    TracePrint.PrintMessage($"Failure executing query '{query}' in GetDataTableFromSelect. {exception}");
+#if DEBUG
+                    Debug.Fail($"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}\nQuery: {query}");
+#endif
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("GetDataTableFromSelectAsync", new SqlOperationResult
+                        {
+                            Context = "GetDataTableFromSelectAsync",
+                            ErrorMessage = "SqlStatementFailure",
+                            FailingStatement = query,
+                            Exception = exception
+                        });
                     return dataTable;
                 }
-            });
+            }, token);
         }
-
-
-        // TEST CODE: Interruptable GetDataTableFromSelect
-        //public DataTable GetDataTableFromSelect(string query, bool interruptable)
-        //{
-        //    // Debug.Print("GetDataTableFromSelect: " + query);
-        //    DataTable dataTable = new DataTable();
-        //    try
-        //    {
-        //        // Open the connection
-        //        using (SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(this.connectionString))
-        //        {
-        //            i = 0;
-        //            if (interruptable) { 
-        //                connection.ProgressOps =  10;
-        //                connection.Progress += Connection_Progress;
-        //                Debug.Print("Enabled");
-        //            }
-        //            else 
-        //            {
-        //                connection.ProgressOps = 0;
-        //                connection.Progress += null;
-        //                Debug.Print("Disabled");
-
-        //            }
-        //            connection.Open();
-
-        //            using (SQLiteCommand command = new SQLiteCommand(connection))
-        //            {
-        //                command.CommandText = query;
-        //                //Debug.Print(query);
-        //                using (SQLiteDataReader reader = command.ExecuteReader())
-        //                {
-        //                    dataTable.Columns.CollectionChanged += this.DataTableColumns_Changed;
-        //                    dataTable.Load(reader);
-        //                    return dataTable;
-        //                }
-        //            }
-        //        }
-        //    }
-        //    catch (Exception exception)
-        //    {
-        //        TracePrint.PrintMessage(String.Format("Failure executing query '{0}' in GetDataTableFromSelect. {1}", query, exception.ToString()));
-        //        return dataTable;
-        //    }
-        //}
-
-        //static public int i = 0;
-        //private void Connection_Progress(object sender, ProgressEventArgs e)
-        //{
-        //    if (i++ == 10)
-        //    {
-        //        e.ReturnCode = SQLiteProgressReturnCode.Interrupt;
-        //        Debug.Print("Interrupted: " + i.ToString());
-        //    }
-        //    else Debug.Print ("Going: " + i.ToString());
-        //}
 
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {
-            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-            connection.Open();
-            using SQLiteCommand command = new(connection);
-            command.CommandText = String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName);
-            using SQLiteDataReader reader = command.ExecuteReader();
             List<object> distinctValues = [];
-            while (reader.Read())
+            string lastQuery = string.Empty;
+            try
             {
-                distinctValues.Add(reader[columnName]);
+                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                connection.Open();
+                using SQLiteCommand command = new(connection);
+                command.CommandText = String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName);
+                lastQuery = command.CommandText;
+                using SQLiteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    distinctValues.Add(reader[columnName]);
+                }
+                return distinctValues;
             }
-            return distinctValues;
+            catch (Exception exception)
+            {
+#if DEBUG
+                Debug.Fail($"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}");
+#endif
+                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                    OnReadError?.Invoke("GetDistinctValuesInColumn", new SqlOperationResult
+                    {
+                        Context = "GetDistinctValuesInColumn",
+                        ErrorMessage = "SqlStatementFailure",
+                        FailingStatement = lastQuery,
+                        Exception = exception
+                    });
+                return distinctValues;
+            }
         }
 
         /// <summary>
@@ -289,7 +308,17 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure executing query '{query}' in GetObjectFromSelect: {exception}");
+#if DEBUG
+                Debug.Fail($"SQL read failure in GetScalarFromSelect: {exception.Message}\nQuery: {query}");
+#endif
+                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                    OnReadError?.Invoke("GetScalarFromSelect", new SqlOperationResult
+                    {
+                        Context = "GetScalarFromSelect",
+                        ErrorMessage = "SqlStatementFailure",
+                        FailingStatement = query,
+                        Exception = exception
+                    });
                 return null;
             }
         }
@@ -300,12 +329,12 @@ namespace Timelapse.Database
         // INSERT INTO table_name
         //      colname1, colname12, ... colnameN VALUES
         //      ('value1', 'value2', ... 'valueN');
-        public void Insert(string tableName, List<List<ColumnTuple>> insertionStatements)
+        public SqlOperationResult Insert(string tableName, List<List<ColumnTuple>> insertionStatements)
         {
-            Insert(tableName, insertionStatements, null, string.Empty, 1000);
+            return Insert(tableName, insertionStatements, null, string.Empty, 1000);
         }
 
-        public void Insert(string tableName, List<List<ColumnTuple>> insertionStatements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
+        public SqlOperationResult Insert(string tableName, List<List<ColumnTuple>> insertionStatements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
         {     // Check the arguments for null 
             ThrowIf.IsNullArgument(insertionStatements, nameof(insertionStatements));
 
@@ -343,7 +372,7 @@ namespace Timelapse.Database
             }
 
             // Now try to invoke the batch queries
-            ExecuteNonQueryWrappedInBeginEnd(queries, progress, progressString, progressFrequency);
+            return ExecuteNonQueryWithRollback(queries, progress, progressString, progressFrequency);
         }
         #endregion
 
@@ -352,11 +381,11 @@ namespace Timelapse.Database
         // As required by Sqlite upserts, The OnConflict target (i.e, the whereName) must be a Primary Key (or Unique) in the schema
         // The column names and values to update or insert are provided in the column tuples. 
         // The primaryKeyTuple must be the primary key and its value (which are used to detect conflict, and the indicate Where, and to include as name/value in the insert portion)
-        public void UpsertRow(string tableName, ColumnTuple primaryKeyTuple, List<ColumnTuple> columnTuples)
+        public SqlOperationResult UpsertRow(string tableName, ColumnTuple primaryKeyTuple, List<ColumnTuple> columnTuples)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnTuples, nameof(columnTuples));
-            if (columnTuples.Count == 0) return;
+            if (columnTuples.Count == 0) return SqlOperationResult.Ok();
             string query = Sql.InsertInto + $" {tableName} ";   // Insert Into <tableName>
 
             // Construct the Values list of column names surrounded by parenthesis
@@ -379,7 +408,7 @@ namespace Timelapse.Database
             query = query[..^Sql.Comma.Length]; // Remove the last comma
             query += $"{Sql.Where} {primaryKeyTuple.Name} {Sql.Equal} {primaryKeyTuple.Value}";
 
-            ExecuteNonQuery(query);
+            return ExecuteNonQueryWithRollback(query);
         }
         #endregion
 
@@ -387,10 +416,10 @@ namespace Timelapse.Database
         // Set all rows in a given table's column to a single value
         //  Form, e.g., to set all column values to foobar:
         //  -- Update tableName Set columnName = 'foobar';
-        public void SetColumnToACommonValue(string tableName, string columnName, string value)
+        public SqlOperationResult SetColumnToACommonValue(string tableName, string columnName, string value)
         {
             string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Quote(value);
-            ExecuteNonQuery(query);
+            return ExecuteNonQueryWithRollback(query);
         }
 
         // Trims all the white space from the data held in the list of column_names in table_name
@@ -398,7 +427,7 @@ namespace Timelapse.Database
         // Form:
         // -- UPDATE tablename SET columname = TRIM(columnname);
         // ReSharper disable once UnusedMember.Global
-        public void TrimWhitespace(string tableName, List<string> columnNames)
+        public SqlOperationResult TrimWhitespace(string tableName, List<string> columnNames)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnNames, nameof(columnNames));
@@ -409,7 +438,7 @@ namespace Timelapse.Database
                 string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Trim + Sql.OpenParenthesis + columnName + Sql.CloseParenthesis + Sql.Semicolon;
                 queries.Add(query);
             }
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+            return ExecuteNonQueryWithRollback(queries);
         }
 
         // Update particular column values in the table, where
@@ -419,7 +448,7 @@ namespace Timelapse.Database
         // Form of each update query generated for each key/value dictionary pair (eg., key="Ok"' value="true" :
         // -- Update tableName Set columnName = 'true' where columnName = 'Ok'
         // ReSharper disable once UnusedMember.Global
-        public void UpdateParticularColumnValuesWithNewValues(string tableName, string columnName, Dictionary<string, string> currentValue_newValuePair)
+        public SqlOperationResult UpdateParticularColumnValuesWithNewValues(string tableName, string columnName, Dictionary<string, string> currentValue_newValuePair)
         {
             List<string> queries = [];
             foreach (KeyValuePair<string, string> kvp in currentValue_newValuePair)
@@ -427,7 +456,7 @@ namespace Timelapse.Database
                 string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Quote(kvp.Value) + Sql.Where + columnName + Sql.Equal + Sql.Quote(kvp.Key) + Sql.Semicolon;
                 queries.Add(query);
             }
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+            return ExecuteNonQueryWithRollback(queries);
         }
 
         // Convert all nulls in the list of column_names in table_name
@@ -435,7 +464,7 @@ namespace Timelapse.Database
         // Form for each query generated for each provided column
         // -- UPDATE tablename SET columname = '' WHERE columnname IS NULL;
         // ReSharper disable once UnusedMember.Global
-        public void ChangeNullToEmptyString(string tableName, List<string> columnNames)
+        public SqlOperationResult ChangeNullToEmptyString(string tableName, List<string> columnNames)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(columnNames, nameof(columnNames));
@@ -446,10 +475,10 @@ namespace Timelapse.Database
                 string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + "''" + Sql.Where + columnName + Sql.IsNull + Sql.Semicolon; // Form: UPDATE tablename SET columname = '' WHERE columnname IS NULL;
                 queries.Add(query);
             }
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+            return ExecuteNonQueryWithRollback(queries);
         }
 
-        public void Update(string tableName, List<ColumnTuplesWithWhere> updateQueryList)
+        public SqlOperationResult Update(string tableName, List<ColumnTuplesWithWhere> updateQueryList)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(updateQueryList, nameof(updateQueryList));
@@ -464,7 +493,7 @@ namespace Timelapse.Database
                 }
                 queries.Add(query);
             }
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+            return ExecuteNonQueryWithRollback(queries);
         }
 
         /// <summary>
@@ -479,25 +508,25 @@ namespace Timelapse.Database
         // colnameN = valueN
         // WHERE
         // <condition> e.g., ID=1;
-        public void Update(string tableName, ColumnTuplesWithWhere columnsToUpdate)
+        public SqlOperationResult Update(string tableName, ColumnTuplesWithWhere columnsToUpdate)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnsToUpdate, nameof(columnsToUpdate));
 
             string query = CreateUpdateQuery(tableName, columnsToUpdate);
-            ExecuteNonQuery(query);
+            return ExecuteNonQueryWithRollback(query);
         }
 
-        // UPDATE table_name SET 
-        // columnname = value, 
-        public void Update(string tableName, ColumnTuple columnToUpdate)
+        // UPDATE table_name SET
+        // columnname = value,
+        public SqlOperationResult Update(string tableName, ColumnTuple columnToUpdate)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnToUpdate, nameof(columnToUpdate));
 
             string query = Sql.Update + tableName + Sql.Set;
             query += $" {columnToUpdate.Name} = {Sql.Quote(columnToUpdate.Value)}";
-            ExecuteNonQuery(query);
+            return ExecuteNonQueryWithRollback(query);
         }
 
         // Efficient update for a list of IDs
@@ -519,12 +548,12 @@ namespace Timelapse.Database
         // Crucially, the chunk boundary is based on the number of OR-joined conditions, not the
         // number of IDs — so a single BETWEEN covering 50,000 contiguous IDs still counts as
         // one condition and requires only one query.
-        public void Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value)
+        public SqlOperationResult Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value)
         {
             if (listOfIDs.Count == 0)
             {
-                // nothing to update!
-                return;
+                // nothing to update
+                return SqlOperationResult.Ok();
             }
 
             const int maxClausesPerQuery = 500;
@@ -537,7 +566,8 @@ namespace Timelapse.Database
                 queries.Add($"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereClause}");
                 startIndex = nextIndex;
             }
-            ExecuteNonQueryWrappedInBeginEnd(queries);
+
+            return ExecuteNonQueryWithRollback(queries);
         }
 
         // Return a single update query as a string
@@ -555,10 +585,6 @@ namespace Timelapse.Database
             // WHERE
             // <condition> e.g., ID=1;
             string query = Sql.Update + tableName + Sql.Set;
-            if (columnsToUpdate.Columns.Count < 0)
-            {
-                return string.Empty;     // No data, so nothing to update. This isn't really an error, so...
-            }
 
             // column_name = 'value'
             foreach (ColumnTuple column in columnsToUpdate.Columns)
@@ -590,7 +616,7 @@ namespace Timelapse.Database
         /// <summary>delete specific rows from the DB where...</summary>
         /// <param name="tableName">The table from which to delete.</param>
         /// <param name="where">The where clause for the delete.</param>
-        public void DeleteRows(string tableName, string where = "")
+        public SqlOperationResult DeleteRows(string tableName, string where = "")
         {
             // DELETE FROM table_name WHERE where
             string query = Sql.DeleteFrom + tableName;        // DELETE FROM table_name
@@ -600,8 +626,7 @@ namespace Timelapse.Database
                 query += Sql.Where;                   // WHERE
                 query += where;                                 // where
             }
-            GetDataTableFromSelect(query);
-            ExecuteNonQuery(query);
+            return ExecuteNonQueryWithRollback(query);
         }
 
         /// <summary>
@@ -609,22 +634,22 @@ namespace Timelapse.Database
         /// </summary>
         /// <param name="tableName">The table from which to delete</param>
         /// <param name="whereClauses">The where clauses for the row to delete (e.g., ID=1 ID=3 etc</param>
-        public void Delete(string tableName, List<string> whereClauses)
+        public SqlOperationResult Delete(string tableName, List<string> whereClauses)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(whereClauses, nameof(whereClauses));
 
             if (false == TableExists(tableName))
             {
                 TracePrint.PrintMessage($"CommonDatabase.Delete: Could not delete rows from Table {tableName} as the table does not exist");
-                return;
+                return SqlOperationResult.Ok();
             }
             List<string> queries = [];                      // A list of SQL queries
 
             // Construct a list containing queries of the form DELETE FROM table_name WHERE where
             foreach (string whereClause in whereClauses)
             {
-                // Add the WHERE clause only when uts is not empty
+                // Add the WHERE clause only when it is not empty
                 if (!string.IsNullOrEmpty(whereClause.Trim()))
                 {                                                            // Construct each query statement
                     string query = Sql.DeleteFrom + tableName;     // DELETE FROM tablename
@@ -637,19 +662,20 @@ namespace Timelapse.Database
             // Now try to invoke the batch queries
             if (queries.Count > 0)
             {
-                ExecuteNonQueryWrappedInBeginEnd(queries);
+                return ExecuteNonQueryWithRollback(queries);
             }
+            return SqlOperationResult.Ok();
         }
 
         /// <summary>
         /// Delete all the rows in each table in the provided list 
         /// </summary>
         /// <param name="tables"></param>
-        public void DeleteAllRowsInTables(List<string> tables)
+        public SqlOperationResult DeleteAllRowsInTables(List<string> tables)
         {
             if (tables == null || tables.Count == 0)
             {
-                return;
+                return SqlOperationResult.Ok();
             }
             string queries = string.Empty;                      // A list of SQL queries
 
@@ -669,7 +695,7 @@ namespace Timelapse.Database
             queries += Sql.PragmaForeignKeysOn + ";";
 
             // Invoke the batched queries
-            ExecuteNonQuery(queries);
+            return ExecuteNonQueryWithRollback(queries);
         }
         #endregion
 
@@ -692,11 +718,15 @@ namespace Timelapse.Database
         }
 
         // This query is used to transform scalar queries that
-        // which returns a 1  or a 0 into true or false respectively         
-        // For example, Select EXISTS ( SELECT 1 FROM DataTable WHERE DeleteFlag='true') returnes 1 if any matching row exists else 0
+        // which returns a 1  or a 0 into true or false respectively
         public bool ScalarBoolFromOneOrZero(string query)
         {
-            return (Convert.ToInt32(GetScalarFromSelect(query)) == 1);
+            object obj = GetScalarFromSelect(query);
+            if (obj == null || obj == DBNull.Value)
+            {
+                return false;
+            }
+            return Convert.ToInt32(obj) == 1;
         }
 
         // Get the Maximum value of the field from the datatable  
@@ -720,198 +750,149 @@ namespace Timelapse.Database
 
         #endregion
 
-        #region Execute Non-Queries: one statement, list of statements 
+        #region Execute Non-Queries (unified: single statement or list, always with rollback)
+
         /// <summary>
-        /// Allows the programmer to interact with the database for purposes other than a query.
+        /// Executes a single SQL statement wrapped in a transaction, rolling back on failure.
+        /// If busyTimeoutMs is greater than zero, SQLite will retry for that many milliseconds
+        /// when the database is locked instead of failing immediately. Only use busyTimeoutMs
+        /// for standalone operations (e.g. DROP TABLE cleanup) with no dependent follow-on
+        /// statements, as the delay breaks ordering guarantees for callers that execute a logical
+        /// sequence outside of a transaction.
         /// </summary>
-        /// <param name="commandString">The SQL command to be run.</param>
-        /// <param name="busyTimeoutMs">If > 0, SQLite will retry for this many milliseconds when the database is locked, instead of failing immediately.
-        ///   Only use this for standalone operations (e.g. cleanup DROP TABLE) that have no dependent follow-on statements,
-        ///   as the delay breaks ordering guarantees for callers that execute a logical sequence outside of a transaction.</param>
-        public void ExecuteNonQuery(string commandString, int busyTimeoutMs = 0)
+        /// <returns>
+        /// <see cref="SqlOperationResult.Ok()"/> on success, or
+        /// <see cref="SqlOperationResult.Fail"/> carrying the error message, exception, and the
+        /// failing SQL statement on failure.
+        /// </returns>
+        public SqlOperationResult ExecuteNonQueryWithRollback(string commandString, int busyTimeoutMs = 0)
         {
-            if (string.IsNullOrEmpty(commandString))
+            if (string.IsNullOrWhiteSpace(commandString))
             {
-                // Nothing to execute
-                return;
+                return SqlOperationResult.Ok();
             }
-            try
-            {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                if (busyTimeoutMs > 0)
-                {
-                    connection.BusyTimeout = busyTimeoutMs;
-                }
-                using SQLiteCommand command = new(connection);
-                command.CommandText = commandString;
-                command.ExecuteNonQuery();
-                //Debug.Print(commandString);
-            }
-            catch (Exception exception)
-            {
-                TracePrint.PrintMessage(
-                    $"Failure executing statement '{commandString}'. in ExecuteNonQuery:{exception}");
-            }
+            return ExecuteNonQueryWithRollbackCore([commandString], null, string.Empty, 0, busyTimeoutMs);
         }
 
         /// <summary>
-        /// Given a list of complete queries, wrap up to 500 of them in a BEGIN/END statement so they are all executed in one go for efficiency
-        /// BEGIN
-        ///      query1
-        ///      query2
-        ///      ...
-        ///      queryn
-        /// END
+        /// Executes a list of SQL statements in a single transaction, rolling back all of them on failure.
         /// </summary>
-        /// <param name="statements"></param>
-
-        public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements)
+        /// <returns>
+        /// <see cref="SqlOperationResult.Ok()"/> on success, or
+        /// <see cref="SqlOperationResult.Fail"/> carrying the error message, exception, and the
+        /// last-executing SQL statement on failure.
+        /// </returns>
+        public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements)
         {
-            ExecuteNonQueryWrappedInBeginEnd(statements, null, string.Empty, 0);
-        }
-
-        public void ExecuteNonQueryWrappedInBeginEnd(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
-        {
-            // Check the arguments for null 
             ThrowIf.IsNullArgument(statements, nameof(statements));
+            return ExecuteNonQueryWithRollbackCore(statements);
+        }
 
-            const int MaxStatementCount = 50000;
+        /// <summary>
+        /// Executes a list of SQL statements in a single transaction with progress reporting,
+        /// rolling back all of them on failure. Progress is reported every progressFrequency statements.
+        /// </summary>
+        /// <returns>
+        /// <see cref="SqlOperationResult.Ok()"/> on success, or
+        /// <see cref="SqlOperationResult.Fail"/> carrying the error message, exception, and the
+        /// last-executing SQL statement on failure.
+        /// </returns>
+        public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
+        {
+            ThrowIf.IsNullArgument(statements, nameof(statements));
+            return ExecuteNonQueryWithRollbackCore(statements, progress, progressString, progressFrequency);
+        }
+
+        /// <summary>
+        /// Core implementation shared by all ExecuteNonQueryWithRollback overloads.
+        /// Opens a connection, begins a single transaction, executes all statements, and commits.
+        /// On failure, rolls back the entire transaction — nothing is committed — and returns a
+        /// <see cref="SqlOperationResult"/> that includes the error details and the SQL statement
+        /// that was executing when the failure occurred. The failing statement is preserved in full
+        /// (untruncated) so it can be included in a bug report emailed by the user.
+        /// The connection is declared outside the try block so the catch block can call Rollback
+        /// on the still-open connection. SQLite auto-detaches any attached databases when the
+        /// connection closes, so no explicit DETACH is needed on failure.
+        /// </summary>
+        private SqlOperationResult ExecuteNonQueryWithRollbackCore(
+            IReadOnlyList<string> statements,
+            IProgress<ProgressBarArguments> progress = null,
+            string progressString = "",
+            int progressFrequency = 0,
+            int busyTimeoutMs = 0)
+        {
+            if (statements == null || statements.Count == 0)
+            {
+                return SqlOperationResult.Ok();
+            }
             // ReSharper disable once RedundantAssignment
             string mostRecentStatement = null;
+            // Declared outside try so the catch block can call Rollback on the still-open connection
+            // if an exception is thrown mid-transaction.
+            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+            connection.Open();
+            if (busyTimeoutMs > 0)
+            {
+                connection.BusyTimeout = busyTimeoutMs;
+            }
+            SQLiteTransaction transaction = null;
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                transaction = connection.BeginTransaction();
+
                 if (progress != null)
                 {
                     progress.Report(new(0, progressString, false, true));
-                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 }
 
                 using SQLiteCommand command = new(connection);
-                // Invoke each query in the queries list
-                // ReSharper disable once NotAccessedVariable
-                int rowsUpdated = 0;
-                int statementsInQuery = 0;
+                command.Transaction = transaction;
                 int statementsCount = statements.Count;
                 int i = 0;
                 foreach (string statement in statements)
                 {
-                    if (progress != null && i % progressFrequency == 0)
+                    if (progress != null && progressFrequency > 0 && i % progressFrequency == 0)
                     {
                         int percent = Convert.ToInt32(i * 100.0 / statementsCount);
                         progress.Report(new(percent,
                             $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
-
+                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
-                    // capture the most recent statement so it's available for debugging
+                    // Track the current statement so it is available in the catch block.
+                    // For single-statement calls this is the statement itself; for multi-statement
+                    // transactions it is the last statement executed before the exception, which is
+                    // almost always the one that caused the failure.
                     // ReSharper disable once RedundantAssignment
                     mostRecentStatement = statement;
-                    statementsInQuery++;
-
-                    // Insert a BEGIN if we are at the beginning of the count
-                    if (statementsInQuery == 1)
-                    {
-                        command.CommandText = Sql.BeginTransaction;
-                        //Debug.Print(command.CommandText);
-                        command.ExecuteNonQuery();
-                    }
-
                     command.CommandText = statement;
-                    // Debug.Print(command.CommandText);
-                    // Note: Its more efficient to do it this way than to send
+                    // Note: It is more efficient to do it this way than to send
                     // a bunch of semicolon-separated statements as a single query
-                    rowsUpdated += command.ExecuteNonQuery();
-
-                    // END
-                    if (statementsInQuery > MaxStatementCount)
-                    {
-                        command.CommandText = Sql.EndTransaction;
-                        //Debug.Print(command.CommandText);
-                        rowsUpdated += command.ExecuteNonQuery();
-                        statementsInQuery = 0;
-
-                        if (progress != null)
-                        {
-                            int percent = Convert.ToInt32(i * 100.0 / statementsCount);
-                            progress.Report(new(percent,
-                                $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
-                            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
-                        }
-                    }
+                    command.ExecuteNonQuery();
                     i++;
                 }
-                // END
-                if (statementsInQuery != 0)
-                {
-                    command.CommandText = Sql.EndTransaction;
-                    // ReSharper disable once RedundantAssignment
-                    rowsUpdated += command.ExecuteNonQuery();
-                }
+                transaction.Commit();
+                transaction.Dispose();
+                return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
+                try { transaction?.Rollback(); }
+                catch { /* connection may already be broken; rollback best-effort only */ }
+                finally { transaction?.Dispose(); }
+                // Truncate only for the live-debugging log message; the full statement is
+                // preserved untruncated in SqlOperationResult.FailingStatement for bug reports.
+                string excerpt = mostRecentStatement?.Length > 500
+                    ? mostRecentStatement[..500] + "…"
+                    : mostRecentStatement ?? "(none)";
                 TracePrint.PrintMessage(
-                    $"Failure near executing statement '{mostRecentStatement}' n ExecuteNonQueryWrappedInBeginEnd. {exception}");
+                    $"Failure near executing statement '{excerpt}' in ExecuteNonQueryWithRollbackCore: {exception}");
+                return SqlOperationResult.Fail(
+                    $"Failure near executing statement '{excerpt}'",
+                    exception,
+                    mostRecentStatement);
             }
         }
-        #endregion
-
-        #region ExecuteTransactionWithRollback
-
-        // Execute the query, which may include multiple SQLite statements.
-        // If an SQLite error occurs,
-        // - rollback, and detach any attached databases (as these are not automatcially detached by the rollback)
-        // - return false
-        public bool ExecuteTransactionWithRollback(string query)
-        {
-            if (string.IsNullOrEmpty(query))
-            {
-                return false;
-            }
-
-            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
-            try
-            {
-                using var command = new SQLiteCommand(query, connection, transaction);
-                command.ExecuteNonQuery();
-                transaction.Commit();
-                return true;
-            }
-            catch
-            {
-                transaction.Rollback();
-
-                try
-                {
-                    // Collect attached database names first (can't detach while reader is open)
-                    var attachedNames = new List<string>();
-                    using (var listCmd = new SQLiteCommand("PRAGMA database_list;", connection))
-                    using (var reader = listCmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var name = reader.GetString(1); // col 0=seq, 1=name, 2=file
-                            if (name != "main" && name != "temp")
-                                attachedNames.Add(name);
-                        }
-                    }
-
-                    foreach (var name in attachedNames)
-                    {
-                        using var detach = new SQLiteCommand($"DETACH DATABASE {name};", connection);
-                        detach.ExecuteNonQuery();
-                    }
-                }
-                catch { /* nothing left to recover */ }
-
-                return false;
-            }
-        }        
         #endregion
 
         #region Get Schema (Private)
@@ -1021,7 +1002,11 @@ namespace Timelapse.Database
 
         #region Copy from source table to destination table
         /// <summary>
-        /// Copy all the values from the source table into the destination table. Assumes that both tables are populated with identically-named columns
+        /// Copy all the values from the source table into the destination table using a single schema for both sides.
+        /// Use this when source and destination columns have the same names — the same column list appears in both
+        /// the INSERT and SELECT clauses. Contrast with CopyAllValuesBetweenTables, which uses two separate schemas
+        /// and matches columns positionally, allowing columns with different names (e.g. a rename) to be mapped.
+        /// Note: silently aborts if the schema table has no columns.
         /// </summary>
         private static void CopyAllValuesFromTable(SQLiteConnection connection, string schemaFromTable, string dataSourceTable, string dataDestinationTable)
         {
@@ -1037,7 +1022,13 @@ namespace Timelapse.Database
         }
 
         /// <summary>
-        /// Copy all the values from the source table into the destination table. Assumes that both tables are populated with identically-named columns
+        /// Copy all the values from the source table into the destination table using two separate schemas.
+        /// The INSERT column list is derived from schemaFromDestinationTable and the SELECT column list from
+        /// schemaFromSourceTable. SQLite matches them positionally, so this correctly handles cases where the
+        /// source and destination have columns with different names at the same position (e.g. a column rename).
+        /// Use CopyAllValuesFromTable instead when source and destination column names are identical.
+        /// Note: unlike CopyAllValuesFromTable, this method has no empty-schema guard — an empty schema will
+        /// produce malformed SQL and throw. This is intentional: an empty schema here indicates a genuine bug.
         /// </summary>
         private static void CopyAllValuesBetweenTables(SQLiteConnection connection, string schemaFromSourceTable, string schemaFromDestinationTable, string dataSourceTable, string dataDestinationTable)
         {
@@ -1057,12 +1048,12 @@ namespace Timelapse.Database
         // New attributes are given in the attributes dictionary, where the key indicates the schema field (e.g., Column name, type, NotNull, and Default) and the value is the new value for that field
         // If a field is not specified, jsut keep the old value.  
         // ReSharper disable once UnusedMember.Global
-        public void SchemaRenameTable(string originalTableName, string newTableName)
+        public SqlOperationResult SchemaRenameTable(string originalTableName, string newTableName)
         {
             // Some basic error checking to make sure we can do the operation
             if (false == TableExists(originalTableName))
             {
-                return;
+                return SqlOperationResult.Ok();
             }
 
             try
@@ -1071,21 +1062,25 @@ namespace Timelapse.Database
                 connection.Open();
                 // Rename the table
                 SchemaRenameTable(connection, originalTableName, newTableName);
+                return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in SchemaRenameTable. {exception}");
-                throw;
+                return SqlOperationResult.Fail("Failure in SchemaRenameTable", exception);
             }
         }
 
-        public void SchemaAlterTableWithNewColumnDefinitions(string sourceTable, List<SchemaColumnDefinition> columnDefinitions)
+        public SqlOperationResult SchemaAlterTableWithNewColumnDefinitions(string sourceTable, List<SchemaColumnDefinition> columnDefinitions)
         {
-            string destTable = "TempTable";
+            // A GUID suffix guarantees uniqueness regardless of the user's schema.
+            string destTable = $"_TempTable_{Guid.NewGuid():N}";
             try
             {
                 // Create an empty table with the schema based on columnDefinitions
-                CreateTable(destTable, columnDefinitions);
+                SqlOperationResult createResult = CreateTable(destTable, columnDefinitions);
+                if (!createResult.Success) return createResult;
+
                 using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                 connection.Open();
 
@@ -1095,11 +1090,12 @@ namespace Timelapse.Database
                 // delete the source table, and rename the destination table so it is the same as the source table
                 DropTable(connection, sourceTable);
                 SchemaRenameTable(connection, destTable, sourceTable);
+                return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure in CopyTableContentsToEmptyTable. {exception}");
-                throw;
+                TracePrint.PrintMessage($"Failure in SchemaAlterTableWithNewColumnDefinitions. {exception}");
+                return SqlOperationResult.Fail("Failure in SchemaAlterTableWithNewColumnDefinitions", exception);
             }
         }
 
@@ -1121,7 +1117,17 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure executing getschema in SchemaGetColumns. {exception}");
+#if DEBUG
+                Debug.Fail($"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}");
+#endif
+                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                    OnReadError?.Invoke("SchemaGetColumns", new SqlOperationResult
+                    {
+                        Context = "SchemaGetColumns",
+                        ErrorMessage = "SqlStatementFailure",
+                        FailingStatement = string.Empty,
+                        Exception = exception
+                    });
                 return null;
             }
         }
@@ -1145,7 +1151,17 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure executing getschema in SchemaGetColumnsAndDefaultValues. {exception}");
+#if DEBUG
+                Debug.Fail($"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}");
+#endif
+                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                    OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", new SqlOperationResult
+                    {
+                        Context = "SchemaGetColumnsAndDefaultValues",
+                        ErrorMessage = "SqlStatementFailure",
+                        FailingStatement = string.Empty,
+                        Exception = exception
+                    });
                 return null;
             }
         }
@@ -1161,19 +1177,23 @@ namespace Timelapse.Database
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure in ColumnExists. {exception}");
+#if DEBUG
+                Debug.Fail($"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}");
+#endif
+                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                    OnReadError?.Invoke("SchemaIsColumnInTable", null);
                 return false;
             }
         }
 
         // This method will create a column in a table of type TEXT, where it is added to its end
         // It assumes that the value, if not empty, should be treated as the default value for that column
-        public void SchemaAddColumnToEndOfTable(string tableName, SchemaColumnDefinition columnDefinition)
+        public SqlOperationResult SchemaAddColumnToEndOfTable(string tableName, SchemaColumnDefinition columnDefinition)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnDefinition, nameof(columnDefinition));
 
-            ExecuteNonQuery(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
+            return ExecuteNonQueryWithRollback(Sql.AlterTable + tableName + Sql.AddColumn + columnDefinition);
         }
 
         /// <summary>
@@ -1181,9 +1201,9 @@ namespace Timelapse.Database
         /// The value in columnDefinition is assumed to be the desired default value
         /// </summary>
         // ReSharper disable once UnusedMember.Global
-        public void SchemaAddColumnToTable(string tableName, int columnNumber, SchemaColumnDefinition columnDefinition)
+        public SqlOperationResult SchemaAddColumnToTable(string tableName, int columnNumber, SchemaColumnDefinition columnDefinition)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnDefinition, nameof(columnDefinition));
 
             try
@@ -1204,20 +1224,20 @@ namespace Timelapse.Database
                 // If columnNumber would result in the column being inserted at the end of the table, then use the more efficient method to do so.
                 if (columnNumber >= columnNames.Count)
                 {
-                    SchemaAddColumnToEndOfTable(tableName, columnDefinition);
-                    return;
+                    SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition.ToString());
+                    return SqlOperationResult.Ok();
                 }
 
-                // We need to add a column elsewhere than the end. This requires us to 
+                // We need to add a column elsewhere than the end. This requires us to
                 // create a new schema, create a new table from that schema, copy data over to it, remove the old table
                 // and rename the new table to the name of the old one.
 
-                // Get a schema definition identical to the schema in the existing table, 
+                // Get a schema definition identical to the schema in the existing table,
                 // but with a new column definition of type TEXT added at the given position, where the value is assumed to be the default value
                 string newSchema = SchemaInsertColumn(connection, tableName, columnNumber, columnDefinition);
 
-                // Create a new table 
-                string destTable = tableName + "NEW";
+                // A GUID suffix guarantees the temp name is unique.
+                string destTable = $"{tableName}_NEW_{Guid.NewGuid():N}";
                 string sql = Sql.CreateTable + destTable + Sql.OpenParenthesis + newSchema + Sql.CloseParenthesis;
                 //#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 using (SQLiteCommand command = new(sql, connection))
@@ -1233,17 +1253,18 @@ namespace Timelapse.Database
 
                 // Rename the table
                 SchemaRenameTable(connection, destTable, tableName);
+                return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure in AddColumn. {exception}");
-                throw;
+                TracePrint.PrintMessage($"Failure in SchemaAddColumnToTable. {exception}");
+                return SqlOperationResult.Fail("Failure in SchemaAddColumnToTable", exception);
             }
         }
 
-        public bool SchemaDeleteColumn(string sourceTable, string columnName)
+        public SqlOperationResult SchemaDeleteColumn(string sourceTable, string columnName)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnName, nameof(columnName));
 
             try
@@ -1253,20 +1274,20 @@ namespace Timelapse.Database
                 // Some basic error checking to make sure we can do the operation
                 if (string.IsNullOrEmpty(columnName.Trim()))
                 {
-                    return false;  // The provided column names= is an empty string
+                    return SqlOperationResult.Ok(); // The provided column name is empty — nothing to delete
                 }
                 List<string> columnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
                 if (!columnNames.Contains(columnName))
                 {
-                    return false; // There is no column called columnName in the source Table, so we can't delete ti
+                    return SqlOperationResult.Ok(); // Column doesn't exist — nothing to delete
                 }
 
-                // Get a schema definition identical to the schema in the existing table, 
+                // Get a schema definition identical to the schema in the existing table,
                 // but with the column named columnName deleted from it
                 string newSchema = SchemaRemoveColumn(connection, sourceTable, columnName);
 
-                // Create a new table 
-                string destTable = sourceTable + "NEW";
+                // Guarantees that the table name is unique
+                string destTable = $"{sourceTable}_NEW_{Guid.NewGuid():N}";
                 string sql = Sql.CreateTable + destTable + Sql.OpenParenthesis + newSchema + Sql.CloseParenthesis;
                 using (SQLiteCommand command = new(sql, connection))
                 {
@@ -1281,45 +1302,44 @@ namespace Timelapse.Database
 
                 // Rename the table
                 SchemaRenameTable(connection, destTable, sourceTable);
-                return true;
+                return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure in DeleteColumn. {exception}");
-                throw;
+                TracePrint.PrintMessage($"Failure in SchemaDeleteColumn. {exception}");
+                return SqlOperationResult.Fail("Failure in SchemaDeleteColumn", exception);
             }
         }
 
         // Rename a column in a table. This is just a simpler form of SchemaAlterColumn
-        public void SchemaRenameColumn(string sourceTable, string currentColumnName, string newColumnName)
+        public SqlOperationResult SchemaRenameColumn(string sourceTable, string currentColumnName, string newColumnName)
         {
             Dictionary<SchemaAttributesEnum, string> attributes = new()
             {
                 { SchemaAttributesEnum.Name, newColumnName }
             };
-            SchemaAlterColumn(sourceTable, currentColumnName, attributes);
+            return SchemaAlterColumn(sourceTable, currentColumnName, attributes);
         }
 
         // Alter the column schema
         // New attributes are given in the attributes dictionary, where the key indicates the schema field (e.g., Column name, type, NotNull, and Default) and the value is the new value for that field
         // If a field is not specified, jsut keep the old value.  
-        public void SchemaAlterColumn(string sourceTable, string currentColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
+        public SqlOperationResult SchemaAlterColumn(string sourceTable, string currentColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
-            // Some basic error checking to make sure we can do the operation
+            // Pre-condition: empty column name is a programming error, not a runtime SQL failure
             if (string.IsNullOrWhiteSpace(currentColumnName))
             {
                 throw new ArgumentOutOfRangeException(nameof(currentColumnName));
             }
             if (attributes.Count == 0)
             {
-                // Nothing to change!
-                return;
+                // Nothing to change
+                return SqlOperationResult.Ok();
             }
             try
             {
                 string newColumnName = string.Empty;
                 if (attributes.TryGetValue(SchemaAttributesEnum.Name, out string key))
-                //if (attributes.ContainsKey(SchemaAttributesEnum.Name))
                 {
                     newColumnName = key.Trim();
                 }
@@ -1333,13 +1353,13 @@ namespace Timelapse.Database
                 }
                 if (false == string.IsNullOrEmpty(newColumnName) && currentColumnNames.Contains(newColumnName))
                 {
-                    // If its a name change, we have to ensure that name is valid and that it doesn't already exit
+                    // If its a name change, we have to ensure that name is valid and that it doesn't already exist
                     throw new ArgumentException($"Column '{newColumnName}' is already in use.");
                 }
                 string newSchema = SchemaCloneButAlterColumn(connection, sourceTable, currentColumnName, attributes);
 
-                // Create a new table 
-                string destTable = sourceTable + "NEW";
+                // Guarantees that the table name is unique
+                string destTable = $"{sourceTable}_NEW_{Guid.NewGuid():N}";
                 string sql = Sql.CreateTable + destTable + Sql.OpenParenthesis + newSchema + Sql.CloseParenthesis;
                 using (SQLiteCommand command = new(sql, connection))
                 {
@@ -1354,11 +1374,12 @@ namespace Timelapse.Database
 
                 // Rename the table
                 SchemaRenameTable(connection, destTable, sourceTable);
+                return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
-                TracePrint.PrintMessage($"Failure in RenameColumn. {exception}");
-                throw;
+                TracePrint.PrintMessage($"Failure in SchemaAlterColumn. {exception}");
+                return SqlOperationResult.Fail("Failure in SchemaAlterColumn", exception);
             }
         }
 
@@ -1499,11 +1520,20 @@ namespace Timelapse.Database
         /// <summary>
         /// Drop the database table 'tableName' from the connected database.
         /// </summary>
-        public void DropTable(string tableName)
+        public SqlOperationResult DropTable(string tableName)
         {
-            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-            connection.Open();
-            DropTable(connection, tableName);
+            try
+            {
+                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                connection.Open();
+                DropTable(connection, tableName);
+                return SqlOperationResult.Ok();
+            }
+            catch (Exception exception)
+            {
+                TracePrint.PrintMessage($"Failure in DropTable for table '{tableName}'. {exception}");
+                return SqlOperationResult.Fail($"Failure dropping table '{tableName}'", exception);
+            }
         }
         private static void DropTable(SQLiteConnection connection, string tableName)
         {
@@ -1525,12 +1555,21 @@ namespace Timelapse.Database
         /// <summary>
         /// Vacuum the connected database.
         /// </summary>
-        public void Vacuum()
+        public SqlOperationResult Vacuum()
         {
-            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-            connection.Open();
-            using SQLiteCommand command = new(Sql.Vacuum, connection);
-            command.ExecuteNonQuery();
+            try
+            {
+                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                connection.Open();
+                using SQLiteCommand command = new(Sql.Vacuum, connection);
+                command.ExecuteNonQuery();
+                return SqlOperationResult.Ok();
+            }
+            catch (Exception exception)
+            {
+                TracePrint.PrintMessage($"Failure in Vacuum. {exception}");
+                return SqlOperationResult.Fail("Failure in Vacuum", exception);
+            }
         }
         #endregion
 
@@ -1636,47 +1675,6 @@ namespace Timelapse.Database
         }
 
 
-#pragma warning restore IDE0051 // Remove unused private members
-        #endregion
-
-        #region Unused methods
-#pragma warning disable IDE0051 // Remove unused private members
-        /// <summary>
-        /// CURRENTLY UNUSED
-        /// Add a column to the end of the database table 
-        /// This does NOT require the table to be cloned.
-        /// Note: Some of the AddColumnToEndOfTable methods are currently not referenced, but may be handy in the future.
-        /// </summary>
-        /// <param name="connection">the open and valid connection to the database</param> 
-        /// <param name="tableName">the name of the  table</param> 
-        /// <param name="name">the name of the new column</param> 
-        /// <param name="type">the type of the new column</param> 
-        // ReSharper disable once UnusedMember.Local
-        private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type)
-        {
-            string columnDefinition = name + " " + type;
-            SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
-        }
-
-        /// <summary>
-        /// Add a column to the end of the database table. 
-        /// This does NOT require the table to be cloned.
-        /// </summary>
-        /// <param name="connection">the open and valid connection to the database</param> 
-        /// <param name="tableName">the name of the  table</param> 
-        /// <param name="name">the name of the new column</param> 
-        /// <param name="type">the type of the new column</param> 
-        /// <param name="otherOptions">space-separated options such as PRIMARY KEY AUTOINCREMENT, NULL or NOT NULL etc</param>
-        // ReSharper disable once UnusedMember.Local
-        private static void AddColumnToEndOfTable(SQLiteConnection connection, string tableName, string name, string type, string otherOptions)
-        {
-            string columnDefinition = name + " " + type;
-            if (string.IsNullOrEmpty(otherOptions))
-            {
-                columnDefinition += " " + otherOptions;
-            }
-            SchemaAddColumnToEndOfTable(connection, tableName, columnDefinition);
-        }
 #pragma warning restore IDE0051 // Remove unused private members
         #endregion
 

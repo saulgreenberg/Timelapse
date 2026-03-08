@@ -430,11 +430,14 @@ namespace Timelapse.Constant
     public const string TimelapseVideosImageRecognitionTalk = TimelapseVideosUploadLink + "/ImageRecognitionForCameraTraps.mp4";
 
     public static readonly string EmailAddress = "saul@ucalgary.ca";
-    // ReSharper disable once UnusedMember.Global
-    public static readonly string GmailAddress = "saul.greenberg@gmail.com";
+    public static readonly string EmailAddressAsMailTo = "mailto:saul@ucalgary.ca";
 
-    // Camtrap
-    public static readonly string CamtrapWebSite = "https://camtrap-dp.tdwg.org";
+        // ReSharper disable once UnusedMember.Global
+        public static readonly string GmailAddress = "saul.greenberg@gmail.com";
+        public static readonly string GmailAddressAsMailTo = "mailto:saul.greenberg@gmail.com";
+
+        // Camtrap
+        public static readonly string CamtrapWebSite = "https://camtrap-dp.tdwg.org";
     public static readonly string CamtrapWebSiteValidation = "https://camtrap-dp.tdwg.org/#validation";
 }
     public static class File
