@@ -502,10 +502,10 @@ namespace Timelapse.Database
 
         // Efficient update for a list of IDs
         // Rather than having an update for every single ID, we look for contiguous and non-contiguous IDs
-        // The SQL expressin will look somethinig like:
+        // The SQL expression will look something like:
         // Update tableName SET columnName = value
-        // WHERE columnName BETWEEEN x AND y
-        // OR columnName IN (a,b,c) 
+        // WHERE columnName BETWEEN x AND y
+        // OR columnName IN (a,b,c)
         // the above are repeated as needed whenever contiguous and non-contiguous ids are found
         // For example:
         // UPDATE DataTable SET CamID = '10'
@@ -513,17 +513,31 @@ namespace Timelapse.Database
         // OR Id BETWEEN 870800 AND 870801
         // OR Id BETWEEN 870809 AND 909567
         // OR Id IN (870803,870806)
+        // To avoid SQLite's expression tree depth limit (~1000 nodes), the WHERE clause is built
+        // in clause-count-limited chunks. Each chunk becomes one UPDATE statement, and all
+        // statements run inside a single BEGIN/END transaction for atomicity.
+        // Crucially, the chunk boundary is based on the number of OR-joined conditions, not the
+        // number of IDs — so a single BETWEEN covering 50,000 contiguous IDs still counts as
+        // one condition and requires only one query.
         public void Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value)
         {
-            string whereListOfIds = BuildWhereListofIds(IDColumnName, listOfIDs);
             if (listOfIDs.Count == 0)
             {
                 // nothing to update!
                 return;
             }
 
-            string query = $"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereListOfIds}";
-            ExecuteNonQuery(query);
+            const int maxClausesPerQuery = 500;
+            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
+            List<string> queries = [];
+            int startIndex = 0;
+            while (startIndex < sorted.Count)
+            {
+                string whereClause = BuildWhereListofIds(IDColumnName, sorted, startIndex, maxClausesPerQuery, out int nextIndex);
+                queries.Add($"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereClause}");
+                startIndex = nextIndex;
+            }
+            ExecuteNonQueryWrappedInBeginEnd(queries);
         }
 
         // Return a single update query as a string
@@ -1719,6 +1733,37 @@ namespace Timelapse.Database
             }
 
             return $"{string.Join(" OR ", conditions)}";
+        }
+
+        // Chunked variant of BuildWhereListofIds for use when the full list may produce a WHERE
+        // clause too large for SQLite's expression tree depth limit (~1000 nodes).
+        // Works on a pre-sorted list and processes IDs starting at startIndex, emitting at most
+        // maxClauses OR-joined conditions. Each BETWEEN range and each isolated Id = x counts as
+        // one clause, so the expression tree cost is exactly conditions.Count OR-nodes deep.
+        // Sets nextIndex to the first unprocessed position (== sortedIDs.Count when all done).
+        public static string BuildWhereListofIds(string IDColumnName, List<long> sortedIDs, int startIndex, int maxClauses, out int nextIndex)
+        {
+            List<string> conditions = [];
+            int i = startIndex;
+
+            while (i < sortedIDs.Count && conditions.Count < maxClauses)
+            {
+                long rangeStart = sortedIDs[i];
+                long rangeEnd = rangeStart;
+                while (i + 1 < sortedIDs.Count && sortedIDs[i + 1] == sortedIDs[i] + 1)
+                {
+                    i++;
+                    rangeEnd = sortedIDs[i];
+                }
+
+                conditions.Add(rangeEnd > rangeStart
+                    ? $"{IDColumnName} BETWEEN {rangeStart} AND {rangeEnd}"
+                    : $"{IDColumnName} = {rangeStart}");
+                i++;
+            }
+
+            nextIndex = i;
+            return string.Join(" OR ", conditions);
         }
         #endregion
     }
