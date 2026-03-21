@@ -60,11 +60,18 @@ namespace Timelapse
 
         #region Private methods to actually do FilePlayer actions
 
-        // Play. Stop the timer, reset the timer interval, and then restart the timer 
+        // Play. Stop the timer, reset the timer interval, and then restart the timer
         private void FilePlayer_Play(TimeSpan timespan)
         {
             FilePlayerTimer.Stop();
             FilePlayerTimer.Interval = timespan;
+            // During playback suppress the opposite-direction prefetch to avoid wasting background
+            // I/O on images the player is moving away from.
+            if (DataHandler?.ImageCache != null)
+            {
+                DataHandler.ImageCache.PrefetchForwardEnabled = FilePlayer.Direction == DirectionEnum.Next;
+                DataHandler.ImageCache.PrefetchBackwardEnabled = FilePlayer.Direction == DirectionEnum.Previous;
+            }
             FilePlayerTimer.Start();
         }
 
@@ -73,6 +80,13 @@ namespace Timelapse
         {
             FilePlayerTimer.Stop();
             FilePlayer.Stop();
+            // Re-enable both prefetch directions now that playback has stopped —
+            // we can't predict which way the user will navigate next.
+            if (DataHandler?.ImageCache != null)
+            {
+                DataHandler.ImageCache.PrefetchForwardEnabled = true;
+                DataHandler.ImageCache.PrefetchBackwardEnabled = true;
+            }
         }
 
         // Scroll Row - a row of images the ThumbnailGrid

@@ -112,8 +112,12 @@ namespace Timelapse
                 return false;
             }
 
-            // Add autocompletions of the current file (not the new file) if needed to all autocomplete controls
-            DataEntryControls.AutocompletionUpdateWithCurrentRowValues();
+            // Add autocompletions of the current file (not the new file) if needed to all autocomplete controls.
+            // Skipped during arrow-key auto-repeat; deferred to KeyUp to avoid UI overhead on every repeat.
+            if (!_keyNavSkipSideEffects)
+            {
+                DataEntryControls.AutocompletionUpdateWithCurrentRowValues();
+            }
             // for the bitmap caching logic below to work this should be the only place where code in TimelapseWindow moves the image enumerator
             if (DataHandler.ImageCache.TryMoveToFile(fileIndex, forceUpdate, out bool newFileToDisplayTemp) == false)
             {
@@ -251,8 +255,12 @@ namespace Timelapse
                 }
             }
 
-            // Refresh the CopyPreviousButton and its Previews as needed
-            CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+            // Refresh the CopyPreviousButton and its Previews as needed.
+            // Skipped during arrow-key auto-repeat; deferred to KeyUp to avoid per-repeat glow/effect churn.
+            if (!_keyNavSkipSideEffects)
+            {
+                CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+            }
 
             // Refresh the QuickPasteEntry previews if needed
             if (IsDisplayingSingleImage() && quickPasteWindow != null)

@@ -4,24 +4,26 @@
                                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                                 xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
+                                xmlns:controls="clr-namespace:Timelapse.Controls"
                                 mc:Ignorable="d"
-                                Title="Export data into image files as XMP/IPTC metadata" Height="900" Width="740" Loaded="TestSomeCodeDialog_OnLoaded">
+                                Title="Test for SpeciesNet" Height="900" Width="740" Loaded="TestSomeCodeDialog_OnLoaded">
     <Grid>
         <Grid Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Header/Instructions -->
             <toolkit:FormattedMessageContent x:Name="TestMessage"  Grid.Row="0"
                             Icon="{x:Static toolkit:DialogIconType.Question}"
-                            DialogTitle="Test"
-                            What="Test dialog."
+                            DialogTitle="Test for species net"
+                            What="Select one of these"
                             ShowExplanationVisibility="True" />
-            <ComboBox Name="CB" Width="200" Height="40" Grid.Row="1"/>
-            <ComboBox Name="CBX" Width="200" Height="40" Grid.Row="2"/>
+            <!-- SpecieNet taxonomy tree (test) -->
+            <controls:TreeViewSpecieNet x:Name="SpecieNetTree" Grid.Row="3" />
         </Grid>
 
     </Grid>

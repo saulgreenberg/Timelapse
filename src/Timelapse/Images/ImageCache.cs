@@ -22,6 +22,13 @@ namespace Timelapse.Images
 
         public BitmapSource GetCurrentImage => differenceBitmapCache[CurrentDifferenceState];
 
+        // Controls which prefetch directions are active during navigation.
+        // During forward navigation the backward prefetch is suppressed (and vice versa) to avoid
+        // wasting background I/O on images the user is moving away from.
+        // Both are re-enabled when navigation stops so the cache is warm in either direction.
+        public bool PrefetchForwardEnabled { get; set; } = true;
+        public bool PrefetchBackwardEnabled { get; set; } = true;
+
         #endregion
 
         #region Private Variables
@@ -190,6 +197,17 @@ namespace Timelapse.Images
         public sealed override bool TryMoveToFile(int fileIndex)
         {
             return TryMoveToFile(fileIndex, false, out _);
+        }
+
+        // Returns true if the bitmap for the given row is already in the LRU cache.
+        // Used by the keyboard handler to bypass the repeat throttle when the next image is ready immediately.
+        public bool IsBitmapCached(int row)
+        {
+            if (Database.IsFileRowInRange(row) == false)
+            {
+                return false;
+            }
+            return unalteredBitmapsByID.ContainsKey(Database.FileTable[row].ID);
         }
 
         public bool TryMoveToFile(int fileIndex, bool forceUpdate, out bool newFileToDisplay)
@@ -374,9 +392,18 @@ namespace Timelapse.Images
                     }
                 }
 
-                // Prefetch both forward and backward for smooth bidirectional navigation
-                TryInitiateBitmapPrefetch(CurrentRow + 1);  // Forward
-                TryInitiateBitmapPrefetch(CurrentRow - 1);  // Backward
+                // Prefetch in the direction(s) currently enabled.
+                // During rapid forward navigation the backward prefetch is suppressed (wasted I/O),
+                // and during rapid backward navigation the forward prefetch is suppressed.
+                // Both are re-enabled when navigation stops.
+                if (PrefetchForwardEnabled)
+                {
+                    TryInitiateBitmapPrefetch(CurrentRow + 1);  // Forward
+                }
+                if (PrefetchBackwardEnabled)
+                {
+                    TryInitiateBitmapPrefetch(CurrentRow - 1);  // Backward
+                }
                 return true;
             }
             catch (ArgumentException e)

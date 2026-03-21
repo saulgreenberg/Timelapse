@@ -48,7 +48,7 @@
                     <!-- Test some code here - should only be enabled when developing code -->
                     <MenuItem Name="MenuItemTestSomeCode" 
                               Header="_Test some code" 
-                              Visibility="Collapsed" 
+                              Visibility="Visible" 
                               Click="MenuItemTestSomeCode_Click" 
                               ToolTip="Used internally to test some could. Should not be visible." />
 

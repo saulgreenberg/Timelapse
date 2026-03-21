@@ -1,0 +1,43 @@
+<UserControl x:Class="Timelapse.Controls.TreeViewSpecieNet"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="300">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,4">
+            <RadioButton x:Name="RadioExpandAll"    Content="Expand all"          Margin="0,0,12,0"
+                         Checked="RadioExpandAll_Checked" />
+            <RadioButton x:Name="RadioCollapseAll"  Content="Collapse to first level"
+                         Checked="RadioCollapseAll_Checked" IsChecked="True" />
+        </StackPanel>
+
+        <TreeView x:Name="SpecieNetTreeView" Grid.Row="1"
+                  SelectedItemChanged="SpecieNetTreeView_SelectedItemChanged"
+                  PreviewMouseLeftButtonDown="SpecieNetTreeView_PreviewMouseLeftButtonDown"
+                  PreviewMouseLeftButtonUp="SpecieNetTreeView_PreviewMouseLeftButtonUp"
+                  MouseLeave="SpecieNetTreeView_MouseLeave" />
+
+        <!-- Popup: visible while the mouse button is held over a node -->
+        <Popup x:Name="NodeInfoPopup" Placement="MousePoint" StaysOpen="True"
+               AllowsTransparency="True" HorizontalOffset="16">
+            <Border Background="LightYellow" BorderBrush="Gray" BorderThickness="1"
+                    CornerRadius="3" Padding="6,4">
+                <TextBlock x:Name="PopupTextBlock" FontFamily="Consolas" FontSize="11" />
+            </Border>
+        </Popup>
+
+        <!-- Debug output: shows key/common-name for the selected node and its terminal descendants -->
+        <TextBox x:Name="DebugTextBox" Grid.Row="2"
+                 IsReadOnly="True" Height="80" Margin="0,4,0,0"
+                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 FontFamily="Consolas" FontSize="11" />
+    </Grid>
+</UserControl>

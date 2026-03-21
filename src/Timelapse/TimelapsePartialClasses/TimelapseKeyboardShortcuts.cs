@@ -16,6 +16,9 @@ namespace Timelapse
     // Keyboard shortcuts
     public partial class TimelapseWindow
     {
+        // Set to true when arrow-key navigation is in auto-repeat; cleared on KeyUp after running deferred side-effects.
+        private bool _keyNavSkipSideEffects;
+
         #region Callbacks - PreviewKeyDown and PreviewKeyUp
         // If its an arrow key and the textbox doesn't have the focus,
         // navigate left/right image or up/down to look at differenced image
@@ -51,6 +54,20 @@ namespace Timelapse
         {
             // Force the end of a key repeat cycle
             State.ResetKeyRepeat();
+
+            // If arrow-key auto-repeat was in progress, run the side-effects that were deferred during repeat
+            // and re-enable both prefetch directions now that navigation has stopped.
+            if (_keyNavSkipSideEffects)
+            {
+                _keyNavSkipSideEffects = false;
+                if (DataHandler?.ImageCache != null)
+                {
+                    DataHandler.ImageCache.PrefetchForwardEnabled = true;
+                    DataHandler.ImageCache.PrefetchBackwardEnabled = true;
+                }
+                DataEntryControls.AutocompletionUpdateWithCurrentRowValues();
+                CopyPreviousValuesSetEnableStatePreviewsAndGlowsAsNeeded();
+            }
         }
         #endregion
 
@@ -267,9 +284,22 @@ namespace Timelapse
                     }
 
                     // Now show the file at the indicated increment / diretion
-                    if (currentKey.IsRepeat == false || (currentKey.IsRepeat && keyRepeatCount % State.Throttles.RepeatedKeyAcceptanceInterval == 0))
+                    // Bypass the throttle if the next bitmap is already cached — the display will be instant
+                    // and there is no I/O risk. Falls back to the normal throttle on a cache miss.
+                    int tentativeRow = DataHandler.ImageCache.CurrentRow + (direction == DirectionEnum.Next ? increment : -increment);
+                    bool nextBitmapCached = currentKey.IsRepeat && DataHandler?.ImageCache?.IsBitmapCached(tentativeRow) == true;
+                    if (currentKey.IsRepeat == false || nextBitmapCached || keyRepeatCount % State.Throttles.RepeatedKeyAcceptanceInterval == 0)
                     {
-
+                        // Skip autocomplete and glow updates during auto-repeat; they are deferred to KeyUp.
+                        _keyNavSkipSideEffects = keyRepeatCount > 0;
+                        // During repeat, suppress the opposite-direction prefetch — it wastes background I/O
+                        // on images the user is moving away from. On a single press both are enabled
+                        // since we can't predict which way the user will go next.
+                        if (DataHandler?.ImageCache != null)
+                        {
+                            DataHandler.ImageCache.PrefetchForwardEnabled = !_keyNavSkipSideEffects || direction == DirectionEnum.Next;
+                            DataHandler.ImageCache.PrefetchBackwardEnabled = !_keyNavSkipSideEffects || direction == DirectionEnum.Previous;
+                        }
                         TryFileShowWithoutSliderCallback(direction, increment);
                     }
                     break;
