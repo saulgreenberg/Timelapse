@@ -124,12 +124,13 @@
                                     HigherValueChanged="SliderClassificationConf_ValueChanged" />
 
                 <!--Classifications DataGrid-->
-                <DataGrid Grid.Row="2" Grid.Column="0" 
-                      Name="DataGridClassifications" 
+                <DataGrid Grid.Row="2" Grid.Column="0"
+                      Name="DataGridClassifications"
                       BorderBrush="RosyBrown"
                       ItemsSource ="{Binding ClassificationCountsCollection}"
                       IsReadOnly ="True"
-                      SelectionMode="Single"
+                      AutoGenerateColumns="False"
+                      SelectionMode="Extended"
                       SelectionUnit="FullRow"
                       HorizontalGridLinesBrush="LightGray"
                       VerticalGridLinesBrush="LightGray"
@@ -137,15 +138,14 @@
                       ToolTipService.InitialShowDelay="25"
                       ToolTipService.BetweenShowDelay="25"
                       SelectionChanged="DataGridClassifications_OnSelectionChanged">
-                    <!--Hide rows with a count of 0-->
                     <DataGrid.RowStyle>
                         <Style TargetType="{x:Type DataGridRow}">
+                            <EventSetter Event="MouseEnter" Handler="DataGridClassificationsRow_MouseEnter"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Count}" Value="0">
                                     <Setter Property="Foreground" Value="Gray"/>
                                 </DataTrigger>
                             </Style.Triggers>
-                            <EventSetter Event="MouseEnter" Handler="DataGridClassificationsRow_MouseEnter"/>
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Resources>
@@ -162,6 +162,22 @@
                             </Style.Triggers>
                         </Style>
                     </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <!--Checkbox reflects row selection state via RelativeSource; purely visual, row click drives selection-->
+                        <DataGridTemplateColumn Width="22" CanUserSort="False" CanUserResize="False" CanUserReorder="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected, Mode=OneWay}"
+                                              IsHitTestVisible="False"
+                                              Focusable="False"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Count" Binding="{Binding Count}" Width="Auto" SortMemberPath="Count"/>
+                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="*" SortMemberPath="Category"/>
+                    </DataGrid.Columns>
                 </DataGrid>
             </Grid>
 
@@ -193,6 +209,18 @@
                           IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,15,0,0" 
                           ToolTip="Shows only files that were not processed by the image recognizer&#10;i.e.,files that were not mentioned in the recognition file"
                           Checked="ShowMissingDetectionsCheckbox_CheckedChanged" Unchecked="ShowMissingDetectionsCheckbox_CheckedChanged"/>
+                <Button Name="BtnByTaxonomy" Content="Select classifications by Taxon" Click="BtnByTaxonomy_OnClick" Margin="0,4,0,0" Padding =" 4">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="ToolTip" Value="Select classifications by via its taxonomic rank"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="ToolTip" Value="No taxonomic ranks were specified in the recognition file"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
 
             </StackPanel>
         </Grid>

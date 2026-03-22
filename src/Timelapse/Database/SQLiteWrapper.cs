@@ -54,7 +54,9 @@ public class SQLiteWrapper
         public static Action<string, SqlOperationResult> OnReadError { get; set; }
 
         // Ensures only the first SQL read error across all concurrent threads raises the dialog.
-        private static int _errorFired = 0;
+#if !DEBUG
+        private static int _errorFired;
+#endif
 
         #region Constructor
         /// <summary>
@@ -193,7 +195,7 @@ public class SQLiteWrapper
             {
 #if DEBUG
                 Debug.Fail($"SQL read failure in GetDataTableFromSelect: {exception.Message}\nQuery: {query}");
-#endif
+#else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                     OnReadError?.Invoke("GetDataTableFromSelect", new SqlOperationResult
                     {
@@ -202,6 +204,7 @@ public class SQLiteWrapper
                         FailingStatement=query,
                         Exception = exception
                     });
+#endif
                 return dataTable;
             }
         }
@@ -220,13 +223,21 @@ public class SQLiteWrapper
                 {
                     using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                     connection.Open();
-                    using SQLiteCommand command = new(connection);
-                    command.CommandText = query;
-                    using (token.Register(() => command.Cancel()))
+                    SQLiteCommand command = new(connection);
+                    try
                     {
-                        using SQLiteDataReader reader = command.ExecuteReader();
-                        dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                        dataTable.Load(reader);
+                        command.CommandText = query;
+                        // ReSharper disable once AccessToDisposedClosure
+                        using (token.Register(() => command.Cancel()))
+                        {
+                            using SQLiteDataReader reader = command.ExecuteReader();
+                            dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
+                            dataTable.Load(reader);
+                        }
+                    }
+                    finally
+                    {
+                        command.Dispose();
                     }
                     return dataTable;
                 }
@@ -238,7 +249,7 @@ public class SQLiteWrapper
                 {
 #if DEBUG
                     Debug.Fail($"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}\nQuery: {query}");
-#endif
+#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetDataTableFromSelectAsync", new SqlOperationResult
                         {
@@ -247,6 +258,7 @@ public class SQLiteWrapper
                             FailingStatement = query,
                             Exception = exception
                         });
+#endif
                     return dataTable;
                 }
             }, token);
@@ -255,14 +267,18 @@ public class SQLiteWrapper
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {
             List<object> distinctValues = [];
+#if !DEBUG
             string lastQuery = string.Empty;
+#endif
             try
             {
                 using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                 connection.Open();
                 using SQLiteCommand command = new(connection);
                 command.CommandText = String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName);
+#if !DEBUG
                 lastQuery = command.CommandText;
+#endif
                 using SQLiteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -274,7 +290,7 @@ public class SQLiteWrapper
             {
 #if DEBUG
                 Debug.Fail($"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}");
-#endif
+#else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                     OnReadError?.Invoke("GetDistinctValuesInColumn", new SqlOperationResult
                     {
@@ -283,6 +299,7 @@ public class SQLiteWrapper
                         FailingStatement = lastQuery,
                         Exception = exception
                     });
+#endif
                 return distinctValues;
             }
         }
@@ -310,7 +327,7 @@ public class SQLiteWrapper
             {
 #if DEBUG
                 Debug.Fail($"SQL read failure in GetScalarFromSelect: {exception.Message}\nQuery: {query}");
-#endif
+#else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                     OnReadError?.Invoke("GetScalarFromSelect", new SqlOperationResult
                     {
@@ -319,10 +336,11 @@ public class SQLiteWrapper
                         FailingStatement = query,
                         Exception = exception
                     });
+#endif
                 return null;
             }
         }
-        #endregion
+#endregion
 
         #region Insert
         // Construct each individual query in the form 
@@ -1119,7 +1137,7 @@ public class SQLiteWrapper
             {
 #if DEBUG
                 Debug.Fail($"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}");
-#endif
+#else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                     OnReadError?.Invoke("SchemaGetColumns", new SqlOperationResult
                     {
@@ -1128,6 +1146,7 @@ public class SQLiteWrapper
                         FailingStatement = string.Empty,
                         Exception = exception
                     });
+#endif
                 return null;
             }
         }
@@ -1153,7 +1172,7 @@ public class SQLiteWrapper
             {
 #if DEBUG
                 Debug.Fail($"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}");
-#endif
+#else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                     OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", new SqlOperationResult
                     {
@@ -1162,12 +1181,14 @@ public class SQLiteWrapper
                         FailingStatement = string.Empty,
                         Exception = exception
                     });
+#endif
                 return null;
             }
         }
 
         public bool SchemaIsColumnInTable(string sourceTable, string currentColumnName)
         {
+#pragma warning disable CS0168 // Variable is declared but never used
             try
             {
                 using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
@@ -1179,11 +1200,13 @@ public class SQLiteWrapper
             {
 #if DEBUG
                 Debug.Fail($"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}");
-#endif
+#else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                     OnReadError?.Invoke("SchemaIsColumnInTable", null);
+#endif
                 return false;
             }
+#pragma warning restore CS0168 // Variable is declared but never used
         }
 
         // This method will create a column in a table of type TEXT, where it is added to its end

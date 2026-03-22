@@ -528,15 +528,22 @@ namespace Timelapse
         }
 
         // Count the number of classifications held by a particular detection.
-        // First two number specifies detecton confidence range, second two numbers the classification confidence range, and the classifications is the particular classification of interest
-        // Form:  AND  Detections.conf  BETWEEN  0.3  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.5  AND  1
+        // First two number specifies detecton confidence range, second two numbers the classification confidence range, and the classifications are the particular classificationd of interest
+        // Form:  AND  Detections.conf  BETWEEN  0.3  AND  1  AND  Detections.classification  IN  ('17', '19') AND  Detections.classification_conf  BETWEEN  0.5  AND  1
         // It uses InvariantCulture to ensure that the decimal point is always a '.' in case of region formats that use a comma
-        public static string ClassificationsByDetectionsAndClassificationCategoryAndConfidence(double detectionConfLower, double detectionConfHigher, string classificationCategory, double classificationConfLower,
+        public static string ClassificationsByDetectionsAndClassificationCategoryAndConfidence(double detectionConfLower, double detectionConfHigher, List<string> classificationCategoryNumbers, double classificationConfLower,
             double classificationConfHigher)
         {
-            return $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Conf} {Sql.Between} {detectionConfLower.ToString(CultureInfo.InvariantCulture)} {Sql.And} {detectionConfHigher.ToString(CultureInfo.InvariantCulture)} " +
-                   $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Classification} {Sql.Equal} {Sql.Quote(classificationCategory)}" +
-                   $"{Sql.And} {DBTables.Detections}.{DetectionColumns.ClassificationConf} {Sql.Between} {classificationConfLower.ToString(CultureInfo.InvariantCulture)} {Sql.And} {classificationConfHigher.ToString(CultureInfo.InvariantCulture)}";
+            string queryPhrase =
+                $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Conf} {Sql.Between} {detectionConfLower.ToString(CultureInfo.InvariantCulture)} {Sql.And} {detectionConfHigher.ToString(CultureInfo.InvariantCulture)} " +
+                $"{Sql.And} {DBTables.Detections}.{DetectionColumns.Classification} {Sql.In} ( ";
+            foreach (string classificationCategory in classificationCategoryNumbers)
+            {
+                queryPhrase += $"{Sql.Quote(classificationCategory)},";
+            }
+            queryPhrase = queryPhrase.TrimEnd(',');
+            queryPhrase +=   $" ) {Sql.And} {DBTables.Detections}.{DetectionColumns.ClassificationConf} {Sql.Between} {classificationConfLower.ToString(CultureInfo.InvariantCulture)} {Sql.And} {classificationConfHigher.ToString(CultureInfo.InvariantCulture)}";
+            return queryPhrase;
         }
 
         /// <summary>

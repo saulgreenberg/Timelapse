@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +8,14 @@ using System.Windows.Documents;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Timelapse.Controls
 {
-    public partial class TreeViewSpecieNet : UserControl
+    public partial class TreeViewSpeciesTaxonomy
     {
         #region Constructor
-        public TreeViewSpecieNet()
+        public TreeViewSpeciesTaxonomy()
         {
             InitializeComponent();
         }
@@ -30,10 +32,10 @@ namespace Timelapse.Controls
         public void Populate(Dictionary<string, string> categories, Dictionary<string, string> descriptions)
         {
             SpecieNetTreeView.Items.Clear();
-            DebugTextBox.Text = string.Empty;
 
             var (roots, uncategorized) = BuildTree(categories, descriptions);
             PopulateTreeView(roots, uncategorized);
+            RadioExpandOrder_Checked(null, null);
         }
 
         /// <summary>
@@ -45,42 +47,65 @@ namespace Timelapse.Controls
         {
             // Convert the raw strings into the same two-dictionary form so a single
             // BuildTree implementation handles everything.
-            var categories    = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
-            var descriptions  = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+            var categories = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+            var descriptions = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
 
             foreach (var entry in rawEntries)
             {
                 if (string.IsNullOrWhiteSpace(entry)) continue;
                 var cleaned = entry.Trim().Trim('"');
-                var parts   = cleaned.Split(';');
+                var parts = cleaned.Split(';');
                 if (parts.Length < 7) continue;
 
-                var key        = parts[0].Trim();
+                var key = parts[0].Trim();
                 var commonName = parts[6].Trim();
                 if (string.IsNullOrEmpty(key)) continue;
 
-                categories[key]   = commonName;
+                categories[key] = commonName;
                 descriptions[key] = cleaned;
             }
 
             Populate(categories, descriptions);
         }
 
+        public List<string> SelectedClassifications { get; private set; } = [];
+        public string SelectedTaxonNode { get; private set; } = string.Empty;
+        public event EventHandler SelectionChanged;
+        private bool suppressSelectionEvent;
+
         #endregion
 
         #region Radio Button Handlers
+        private void RadioExpandClass_Checked(object sender, RoutedEventArgs e)
+        {
+            if (SpecieNetTreeView == null) return;
+            SetExpansion(SpecieNetTreeView.Items, expandAll: false);
+        }
 
-        private void RadioExpandAll_Checked(object sender, RoutedEventArgs e)
+        private void RadioExpandOrder_Checked(object sender, RoutedEventArgs e)
+        {
+            if (SpecieNetTreeView == null) return;
+            SetExpansionToDepth(SpecieNetTreeView.Items, maxDepth: 1);
+        }
+
+        private void RadioExpandFamily_Checked(object sender, RoutedEventArgs e)
+        {
+            if (SpecieNetTreeView == null) return;
+            SetExpansionToDepth(SpecieNetTreeView.Items, maxDepth: 2);
+        }
+
+        private void RadioExpandGenus_Checked(object sender, RoutedEventArgs e)
+        {
+            if (SpecieNetTreeView == null) return;
+            SetExpansionToDepth(SpecieNetTreeView.Items, maxDepth: 3);
+        }
+        private void RadioExpandSpecies_Checked(object sender, RoutedEventArgs e)
         {
             if (SpecieNetTreeView == null) return;
             SetExpansion(SpecieNetTreeView.Items, expandAll: true);
         }
 
-        private void RadioCollapseAll_Checked(object sender, RoutedEventArgs e)
-        {
-            if (SpecieNetTreeView == null) return;
-            SetExpansion(SpecieNetTreeView.Items, expandAll: false);
-        }
+
 
         private static void SetExpansion(ItemCollection items, bool expandAll)
         {
@@ -92,21 +117,51 @@ namespace Timelapse.Controls
             }
         }
 
+        // Public entry point: always expands from the root.
+        private void SetExpansionToDepth(ItemCollection items, int maxDepth)
+        {
+            SetExpansionToDepthRecursive(items, depth: 0, maxDepth);
+        }
+
+        private static void SetExpansionToDepthRecursive(ItemCollection items, int depth, int maxDepth)
+        {
+            foreach (TreeViewItem item in items)
+            {
+                item.IsExpanded = depth < maxDepth;
+                if (item.Items.Count > 0)
+                    SetExpansionToDepthRecursive(item.Items, depth + 1, maxDepth);
+            }
+        }
+
         #endregion
 
         #region Selection Handler
 
         private void SpecieNetTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (!(e.NewValue is TreeViewItem selectedItem))
+            SelectedClassifications = [];
+            if (e.NewValue is TreeViewItem selectedItem)
             {
-                DebugTextBox.Text = string.Empty;
-                return;
+                CollectTerminalCommonNames(selectedItem, SelectedClassifications);
+                SelectedTaxonNode = selectedItem.Header is TextBlock tb
+                    ? tb.Inlines.OfType<Run>().FirstOrDefault()?.Text ?? string.Empty
+                    : selectedItem.Header?.ToString() ?? string.Empty;
             }
 
-            var sb = new StringBuilder();
-            CollectTerminalInfo(selectedItem, sb);
-            DebugTextBox.Text = sb.ToString();
+            if (!suppressSelectionEvent)
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Recursively collect CommonName for every terminal node at or below <paramref name="item"/>.
+        /// </summary>
+        private static void CollectTerminalCommonNames(TreeViewItem item, List<string> names)
+        {
+            if (item.Tag is TreeNode { IsTerminal: true } node)
+                names.Add(node.CommonName);
+
+            foreach (TreeViewItem child in item.Items)
+                CollectTerminalCommonNames(child, names);
         }
 
         /// <summary>
@@ -115,11 +170,59 @@ namespace Timelapse.Controls
         /// </summary>
         private static void CollectTerminalInfo(TreeViewItem item, StringBuilder sb)
         {
-            if (item.Tag is TreeNode node && node.IsTerminal)
-                sb.AppendLine($"{node.CommonName}  |  {node.Key}");
+            if (item.Tag is TreeNode { IsTerminal: true } node)
+                sb.AppendLine(node.CommonName);
 
             foreach (TreeViewItem child in item.Items)
                 CollectTerminalInfo(child, sb);
+        }
+
+        public void TrySelectAndRevealNode(string headerText)
+        {
+            if (string.IsNullOrEmpty(headerText)) return;
+            RadioExpandClass.IsChecked = false;
+            RadioExpandOrder.IsChecked = false;
+            RadioExpandFamily.IsChecked = false;
+            RadioExpandGenus.IsChecked = false;
+            RadioExpandSpecies.IsChecked = false;
+            suppressSelectionEvent = true;
+            try
+            {
+                foreach (TreeViewItem item in SpecieNetTreeView.Items)
+                {
+                    if (TrySelectAndRevealNodeRecursive(item, headerText))
+                        break;
+                }
+            }
+            finally
+            {
+                suppressSelectionEvent = false;
+            }
+            SpecieNetTreeView.Focus();
+        }
+
+        private static string GetHeaderText(TreeViewItem item) =>
+            item.Header is TextBlock tb
+                ? tb.Inlines.OfType<Run>().FirstOrDefault()?.Text ?? string.Empty
+                : item.Header?.ToString() ?? string.Empty;
+
+        private static bool TrySelectAndRevealNodeRecursive(TreeViewItem item, string headerText)
+        {
+            if (string.Equals(GetHeaderText(item), headerText, StringComparison.OrdinalIgnoreCase))
+            {
+                item.IsSelected = true;
+                item.BringIntoView();
+                return true;
+            }
+            foreach (TreeViewItem child in item.Items)
+            {
+                if (TrySelectAndRevealNodeRecursive(child, headerText))
+                {
+                    item.IsExpanded = true;
+                    return true;
+                }
+            }
+            return false;
         }
 
         #endregion
@@ -131,6 +234,7 @@ namespace Timelapse.Controls
             // Ignore clicks on the expand/collapse arrow — only respond to the text label.
             if (IsClickOnExpander(e.OriginalSource as DependencyObject))
             {
+                CancelPopupDismiss();
                 NodeInfoPopup.IsOpen = false;
                 return;
             }
@@ -138,6 +242,7 @@ namespace Timelapse.Controls
             var item = GetTreeViewItemUnderMouse(e.OriginalSource as DependencyObject);
             if (item == null)
             {
+                CancelPopupDismiss();
                 NodeInfoPopup.IsOpen = false;
                 return;
             }
@@ -147,17 +252,21 @@ namespace Timelapse.Controls
             var text = sb.ToString().TrimEnd();
             if (string.IsNullOrEmpty(text))
             {
+                CancelPopupDismiss();
                 NodeInfoPopup.IsOpen = false;
                 return;
             }
 
-            PopupTextBlock.Text  = text;
+            // Cancel any in-progress dismiss, force a reopen so MousePoint repositions.
+            CancelPopupDismiss();
+            NodeInfoPopup.IsOpen = false;
+            PopupTextBlock.Text = text;
             NodeInfoPopup.IsOpen = true;
         }
 
         private void SpecieNetTreeView_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            NodeInfoPopup.IsOpen = false;
+            BeginPopupDismiss();
         }
 
         private void SpecieNetTreeView_MouseLeave(object sender, MouseEventArgs e)
@@ -165,7 +274,35 @@ namespace Timelapse.Controls
             // Guard against the spurious MouseLeave that WPF fires when the Popup
             // opens (its own OS window briefly steals mouse focus from the TreeView).
             if (e.LeftButton != MouseButtonState.Pressed)
+                BeginPopupDismiss();
+        }
+
+        // Start the 500 ms linger then 500 ms fade-out sequence.
+        private void BeginPopupDismiss()
+        {
+            if (!NodeInfoPopup.IsOpen) return;
+            var anim = new DoubleAnimation
+            {
+                From = 1.0,
+                To = 0.0,
+                BeginTime = TimeSpan.FromMilliseconds(500),
+                Duration = new Duration(TimeSpan.FromMilliseconds(500)),
+                FillBehavior = FillBehavior.HoldEnd
+            };
+            anim.Completed += (_, _) =>
+            {
                 NodeInfoPopup.IsOpen = false;
+                NodeInfoPopupBorder.BeginAnimation(UIElement.OpacityProperty, null);
+                NodeInfoPopupBorder.Opacity = 1.0;
+            };
+            NodeInfoPopupBorder.BeginAnimation(UIElement.OpacityProperty, anim);
+        }
+
+        // Cancel any in-progress dismiss animation and restore full opacity.
+        private void CancelPopupDismiss()
+        {
+            NodeInfoPopupBorder.BeginAnimation(UIElement.OpacityProperty, null);
+            NodeInfoPopupBorder.Opacity = 1.0;
         }
 
         /// <summary>
@@ -215,12 +352,12 @@ namespace Timelapse.Controls
             Dictionary<string, string> categories,
             Dictionary<string, string> descriptions)
         {
-            var rootDict      = new Dictionary<string, TreeNode>(System.StringComparer.OrdinalIgnoreCase);
+            var rootDict = new Dictionary<string, TreeNode>(System.StringComparer.OrdinalIgnoreCase);
             var uncategorized = new TreeNode { TaxonomyName = "Uncategorized" };
 
             foreach (var kvp in categories)
             {
-                var key        = kvp.Key;
+                var key = kvp.Key;
                 var commonName = kvp.Value;
 
                 // Look up the taxonomy path in descriptions
@@ -244,8 +381,7 @@ namespace Timelapse.Controls
                     uncategorized.Children[key] = new TreeNode
                     {
                         TaxonomyName = commonName,
-                        CommonName   = commonName,
-                        Key          = key
+                        CommonName = commonName,
                     };
                     continue;
                 }
@@ -264,10 +400,9 @@ namespace Timelapse.Controls
                 }
 
                 // Mark the terminal node (first writer wins)
-                if (currentNode != null && currentNode.CommonName == null)
+                if (currentNode is { CommonName: null })
                 {
                     currentNode.CommonName = commonName;
-                    currentNode.Key        = key;
                 }
             }
 
@@ -293,7 +428,7 @@ namespace Timelapse.Controls
                 SpecieNetTreeView.Items.Add(uncatItem);
             }
 
-            SetExpansion(SpecieNetTreeView.Items, expandAll: RadioExpandAll.IsChecked == true);
+            SetExpansion(SpecieNetTreeView.Items, expandAll: RadioExpandSpecies.IsChecked == true);
         }
 
         #endregion
@@ -332,21 +467,15 @@ namespace Timelapse.Controls
 
         private class TreeNode
         {
-            public string TaxonomyName { get; set; } = string.Empty;
+            public string TaxonomyName { get; init; } = string.Empty;
 
             /// <summary>Non-null only when this node is the terminal of an entry.</summary>
             public string CommonName { get; set; }
 
-            /// <summary>The category key that produced this terminal node; null for intermediate nodes.</summary>
-            public string Key { get; set; }
-
-            public Dictionary<string, TreeNode> Children { get; } =
-                new Dictionary<string, TreeNode>(System.StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, TreeNode> Children { get; } = new(System.StringComparer.OrdinalIgnoreCase);
 
             public bool IsTerminal => CommonName != null;
-            public bool HasChildren => Children.Count > 0;
         }
-
         #endregion
     }
 }

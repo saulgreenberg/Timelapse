@@ -4,7 +4,6 @@
                                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                                 xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
-                                xmlns:controls="clr-namespace:Timelapse.Controls"
                                 mc:Ignorable="d"
                                 Title="Test for SpeciesNet" Height="900" Width="740" Loaded="TestSomeCodeDialog_OnLoaded">
     <Grid>
@@ -22,8 +21,7 @@
                             DialogTitle="Test for species net"
                             What="Select one of these"
                             ShowExplanationVisibility="True" />
-            <!-- SpecieNet taxonomy tree (test) -->
-            <controls:TreeViewSpecieNet x:Name="SpecieNetTree" Grid.Row="3" />
+
         </Grid>
 
     </Grid>

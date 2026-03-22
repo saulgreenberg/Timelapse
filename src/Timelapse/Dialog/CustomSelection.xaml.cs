@@ -912,7 +912,12 @@ namespace Timelapse.Dialog
         private void RecognitionSelector_OnRecognitionSelectionEvent(object sender, RecognitionSelectionChangedEventArgs e)
         {
             this.RefreshRecognitionCountsRequired = e.RefreshRecognitionCountsRequired;
-            this.RecognitonsGroupBoxFeedback.Text = ComposeRecognitionsSelectionFeedback(e.DetectionCategoryLabel, e.ClassificationCategoryLabel);
+            string feedbackText = ComposeRecognitionsSelectionFeedback(e.DetectionCategoryLabel, e.ClassificationCategoryLabels, e.SelectedTaxonNode);
+            string truncatedText = TruncateTextToFit(feedbackText, this.RecognitonsGroupBoxFeedback, GetFeedbackAvailableWidth());
+            this.RecognitonsGroupBoxFeedback.Text = truncatedText;
+            this.RecognitonsGroupBoxFeedback.ToolTip = truncatedText != feedbackText
+                ? feedbackText.Replace("(", string.Empty).Replace(")", string.Empty).Replace(": ", ":" + Environment.NewLine).Replace(", ", Environment.NewLine)
+                : null;
             bool showAllEpisodeEnableState = false == e.DisableEpisodeAny || string.IsNullOrEmpty(Database.CustomSelection.EpisodeNoteField);
 
             this.ShowEpisodeOptionsPanel.IsEnabled = showAllEpisodeEnableState;
@@ -922,24 +927,64 @@ namespace Timelapse.Dialog
             this.CountTimer.Start();
         }
 
-        private static string ComposeRecognitionsSelectionFeedback(string detectionCategory, string classificationCategory)
+        private double GetFeedbackAvailableWidth()
         {
-            if (string.IsNullOrEmpty(detectionCategory) && string.IsNullOrEmpty(classificationCategory))
+            double checkboxWidth = this.EnableRecognitionsCheckbox.ActualWidth
+                + this.EnableRecognitionsCheckbox.Margin.Left
+                + this.EnableRecognitionsCheckbox.Margin.Right;
+            double headerTextWidth = this.RecognitonsGroupBoxHeaderText.ActualWidth;
+            double groupBoxIndent = 16; // default WPF GroupBox header chrome indent
+            return Math.Max(0, this.RecognitionsGroupBox.ActualWidth - groupBoxIndent - checkboxWidth - headerTextWidth);
+        }
+
+        private static string TruncateTextToFit(string text, TextBlock textBlock, double availableWidth)
+        {
+            if (string.IsNullOrEmpty(text) || availableWidth <= 0) return text;
+
+            var typeface = new Typeface(textBlock.FontFamily, textBlock.FontStyle, textBlock.FontWeight, textBlock.FontStretch);
+            double pixelsPerDip = VisualTreeHelper.GetDpi(textBlock).PixelsPerDip;
+
+            double Measure(string s) => new FormattedText(
+                s, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                typeface, textBlock.FontSize, textBlock.Foreground, pixelsPerDip).Width;
+
+            if (Measure(text) <= availableWidth) return text;
+
+            const string ellipsis = "…";
+            double targetWidth = availableWidth - Measure(ellipsis);
+
+            int lo = 0, hi = text.Length;
+            while (lo < hi)
+            {
+                int mid = (lo + hi + 1) / 2;
+                if (Measure(text.Substring(0, mid)) <= targetWidth) lo = mid;
+                else hi = mid - 1;
+            }
+            return lo == 0 ? ellipsis : text.Substring(0, lo) + ellipsis;
+        }
+
+        private static string ComposeRecognitionsSelectionFeedback(string detectionCategory, List<string> classificationCategories, string selectedTaxonNode)
+        {
+            if (string.IsNullOrEmpty(detectionCategory) && classificationCategories.Count == 0)
             {
                 return (" (No recognitions selected)");
             }
 
-            if (false == string.IsNullOrEmpty(detectionCategory) && string.IsNullOrEmpty(classificationCategory))
+            if (false == string.IsNullOrEmpty(detectionCategory) && classificationCategories.Count == 0)
             {
                 return ($" ({detectionCategory})");
             }
 
-            if (string.IsNullOrEmpty(detectionCategory) && false == string.IsNullOrEmpty(classificationCategory))
-            {
-                return ($" ({classificationCategory})");
-            }
+            string taxonNode = string.IsNullOrWhiteSpace(selectedTaxonNode)
+                ? string.Empty
+                : $"{selectedTaxonNode}: ";
 
-            return ($" ({detectionCategory}:{classificationCategory})");
+            if (string.IsNullOrEmpty(detectionCategory) && classificationCategories.Count > 0)
+            {
+                return ($" ({taxonNode}{classificationCategories})");
+            }
+            return ($" ({taxonNode}{string.Join(", ", classificationCategories)})");
+            //return ($" ({detectionCategory}:{taxonNode}{string.Join(", ", classificationCategories)})");
         }
         #endregion
 
@@ -1556,13 +1601,13 @@ namespace Timelapse.Dialog
         // When this button is pressed, all the search terms checkboxes are cleared, which is equivalent to showing all images
         private void ResetToAllImagesButton_Click(object sender, RoutedEventArgs e)
         {
-            //EnableRecognitionsCheckbox.IsChecked = false;
             for (int row = 1; row <= Database.CustomSelection.SearchTerms.Count; row++)
             {
                 CheckBox select = GetGridElement<CheckBox>(SelectColumn, row);
                 select.IsChecked = false;
             }
-            //ShowMissingDetectionsCheckbox.IsChecked = false;
+            this.EnableRecognitionsCheckbox.IsChecked = false;
+            ResetToAllImagesButton.IsEnabled = false;
         }
 
         private FileSelectionEnum ChangeSelectionStateIfNeeded()
@@ -1654,7 +1699,7 @@ namespace Timelapse.Dialog
             InitiateShowCountsOfMatchingFiles();
 
             // Enable  the reset button if at least one search term (including detections) is enabled
-            ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected;
+            ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected || this.EnableRecognitionsCheckbox.IsChecked == true;
 
             // Enable the and/or radio buttons if more than one non-standard selection was made
             RadioButtonTermCombiningAnd.IsEnabled = multipleNonStandardSelectionsMade > 1;
@@ -1683,6 +1728,7 @@ namespace Timelapse.Dialog
             {
                 this.CreateRecognitionSelectorControl();
                 RecognitionsGroupBox.Background = Brushes.Azure;
+                ResetToAllImagesButton.IsEnabled = true;
             }
             else
             {
@@ -1691,9 +1737,9 @@ namespace Timelapse.Dialog
                 RecognitionsGroupBox.Background = Brushes.White;
             }
             // Enable or disable the controls depending on the various checkbox states
-
             SetDetectionCriteria();
-            InitiateShowCountsOfMatchingFiles();
+            UpdateSearchDialogFeedback();
+            //InitiateShowCountsOfMatchingFiles();
         }
 
         private void SetDetectionCriteria()

@@ -88,7 +88,7 @@ namespace Timelapse.SearchingAndSorting
                     // - WHERE Detections.category = <DetectionCategoryNumber> GROUP BY ...
                     // The second is a dection but does not use a detection category(i.e., All Detections chosen)
                     // - GROUP BY ...
-                    // XXXX The third uses applies to both
+                    // The third uses applies to both
                     // - WHERE Detections.category = <DetectionCategoryNumber> GROUP BY ...
                     // - GROUP BY...
 
@@ -171,14 +171,14 @@ namespace Timelapse.SearchingAndSorting
                             // Example form:  WHERE  ( DataTable.Note0 IS NULL  OR DataTable.Note0 =  '')  AND Detections.category = 1 AND  Detections.conf  BETWEEN  0.85  AND  1  AND  Detections.classification  =  '17' AND  Detections.classification_conf  BETWEEN  0.6  AND  1
                             Tuple<double, double> detectionConfidenceBounds = RecognitionSelections.ConfidenceDetectionThresholdForSelect;
                             where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(detectionConfidenceBounds.Item1, detectionConfidenceBounds.Item2,
-                                RecognitionSelections.ClassificationCategoryNumber, RecognitionSelections.ClassificationConfidenceLowerForUI,
-                                RecognitionSelections.ClassificationConfidenceHigherForUI);
+                                RecognitionSelections.ClassificationCategoryNumbers, RecognitionSelections.ClassificationConfidenceLowerForUI,
+                                RecognitionSelections.ClassificationConfidenceHigherForUI); 
                         }
                         else
                         {
                             // Sorting works on everything. So need to get all detections and classifications, so we use the confidence range of 0 to 1 for both
                             where += SqlPhrase.ClassificationsByDetectionsAndClassificationCategoryAndConfidence(0, 1,
-                                RecognitionSelections.ClassificationCategoryNumber, 0, 1);
+                                RecognitionSelections.ClassificationCategoryNumbers, 0, 1);
                         }
                     }
                 }

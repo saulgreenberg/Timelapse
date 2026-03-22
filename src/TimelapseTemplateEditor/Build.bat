@@ -12,7 +12,7 @@ REM Set output directory to main Timelapse build folder
 set OUTPUT_DIR=..\Timelapse\bin\%CONFIG%\net10.0-windows\win-x64
 
 REM Initialize Visual Studio environment
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
+call "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tools\VsDevCmd.bat"
 
 REM Compile resource file
 echo Compiling resource file...

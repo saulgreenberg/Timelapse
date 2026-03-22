@@ -25,6 +25,17 @@ namespace Timelapse.Extensions
                 return sourceString.Remove(place, oldSubString.Length).Insert(place, newSubString);
             }
 
+            // ReSharper disable once UnusedMember.Global
+            public string RemoveFromEnd(string suffix)
+            {
+                if (sourceString != null && suffix != null && sourceString.EndsWith(suffix))
+                {
+                    // Use Substring to get the part of the string before the suffix
+                    return sourceString[..^suffix.Length];
+                }
+                return sourceString;
+            }
+
             public string ToWindowsPathSeparatorsAsNeeded()
             {
                 return sourceString.Replace('/', '\\');

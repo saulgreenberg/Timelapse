@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Enums;
@@ -30,7 +31,7 @@ namespace Timelapse.Recognition
         {
             get
             {
-                if (string.IsNullOrEmpty(this.DetectionCategoryNumber) && string.IsNullOrEmpty(this.ClassificationCategoryNumber))
+                if (string.IsNullOrEmpty(this.DetectionCategoryNumber) && this.ClassificationCategoryNumbers is null or { Count: 0 })
                 {
                     // If there is are no recognitions, default the DetectionCategory to 'All'
                     this.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
@@ -38,7 +39,7 @@ namespace Timelapse.Recognition
                     return RecognitionType.Detection;
                 }
 
-                if (string.IsNullOrEmpty(this.ClassificationCategoryNumber))
+                if (this.ClassificationCategoryNumbers is null or { Count: 0 })
                 {
                     return RecognitionType.Detection;
                 }
@@ -52,8 +53,10 @@ namespace Timelapse.Recognition
         public string DetectionCategoryNumber { get; set; }
 
         // Classification type: indicated by its category number
-        public string ClassificationCategoryNumber { get; set; }
+        public List<string> ClassificationCategoryNumbers { get; set; }
 
+        // The last selected taxonomy entry
+        public string SelectedTaxonNode { get; set; } = string.Empty;
 
         //
         // Confidence thresholds, used by the select user interface
@@ -152,7 +155,7 @@ namespace Timelapse.Recognition
             this.AllDetections = true;
             this.RankByDetectionConfidence = false;
 
-            this.ClassificationCategoryNumber = string.Empty;
+            this.ClassificationCategoryNumbers = [];
             this.RankByClassificationConfidence = false;
         }
         #endregion

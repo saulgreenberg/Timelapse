@@ -1288,7 +1288,7 @@ namespace Timelapse.Database
         // Form examples
         // - Select EXISTS  ( SELECT 1   FROM DataTable WHERE DeleteFlag='true')
         // -     SELECT EXISTS  ( SELECT 1  FROM DataTable WHERE  (RelativePath= 'Station1' OR RelativePath GLOB 'Station1\*') AND DeleteFlag = 'TRUE' COllate nocase)
-        // -XXXX SELECT EXISTS  ( SELECT 1  FROM DataTable WHERE  (  ( RelativePath='Station1\\Deployment2' OR RelativePath GLOB 'Station1\\Deployment2\\*' )  AND DeleteFlag='true' )) 
+        // - SELECT EXISTS  ( SELECT 1  FROM DataTable WHERE  (  ( RelativePath='Station1\\Deployment2' OR RelativePath GLOB 'Station1\\Deployment2\\*' )  AND DeleteFlag='true' )) 
         // The performance of this query depends upon how many rows in the table has to be searched
         // before the first exists appears. If there are no matching rows, the performance is more or
         // less equivalent to COUNT as it has to go through every row. 
@@ -2915,6 +2915,11 @@ namespace Timelapse.Database
                     for (int i = 0; i < dataTableRowCount; i++)
                     {
                         DataRow row = dataTable.Rows[i];
+                        string description = (string)row[ClassificationCategoriesColumns.Description];
+                        if (string.IsNullOrEmpty(description))
+                        {
+                            continue;
+                        }
                         classificationDescriptionsDictionary.Add((string)row[ClassificationCategoriesColumns.Category], (string)row[ClassificationCategoriesColumns.Description]);
                     }
                 }

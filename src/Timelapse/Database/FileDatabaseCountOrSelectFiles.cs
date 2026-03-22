@@ -60,16 +60,12 @@ namespace Timelapse.Database
                 else
                 {
                     // Classification selection by detection conf order 
-                    string classificationCategoryNumber = this.CustomSelection.RecognitionSelections.ClassificationCategoryNumber;
-                    if (int.TryParse(classificationCategoryNumber, out _) )
+                    if (this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers == null ||
+                        (this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers is null or { Count: 0 }))
                     {
-                        query = SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, classificationCategoryNumber, true);
-                    }
-                    else
-                    {
-                        // We should always get a match, so this shouldn't happen
                         return 0;
                     }
+                    query = SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers, true);
                 }
                 return DoGetCountFromSelect(query);
             }
@@ -279,7 +275,7 @@ namespace Timelapse.Database
                      && CustomSelection.RecognitionSelections.RecognitionType is RecognitionType.Detection or RecognitionType.Classification
                      && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
             {
-                // Special case limited query: Rank by detection confidence
+                // Special case limited query: Rank by detection or classification confidence
                 // does not work with missing detections, random selection, or episode show all
                 string whereExpression = CustomSelection.GetFilesWhere(false, false, true);
 
@@ -304,12 +300,10 @@ namespace Timelapse.Database
                 else
                 {
                     // Classification selection: Create query for detection 
-                    string classificationCategoryNumber = this.CustomSelection.RecognitionSelections.ClassificationCategoryNumber;
-                    query = int.TryParse(classificationCategoryNumber, out _) 
-                        ? SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, classificationCategoryNumber, false) 
-                        : // We should always get a match, so this shouldn't happen. 
-                          // So we return an empty table with the same schema as the normal query would return, but with no rows.
-                          $"{Sql.SelectStarFrom} {DBTables.FileData}{Sql.Where} 1 = 0";
+                    // If null / 0, return an empty table with the same schema as the normal query would return, but with no rows.
+                    query = this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers is null or { Count: 0 } 
+                        ? $"{Sql.SelectStarFrom} {DBTables.FileData}{Sql.Where} 1 = 0" 
+                        : SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers, false);
                 }
 
                 await DoFileTableGetDataTableFromSelect(query);
@@ -792,7 +786,7 @@ namespace Timelapse.Database
             private static readonly string conf = $"{DetectionColumns.Conf}";
             private static readonly string classConf = $"{DetectionColumns.ClassificationConf}";
             #endregion
-            
+
             internal static string ByDetectionConfidence(string where, string categoryNumber, bool asCount)
             {
                 // Sort all files by detection confidence (with classification confidence as a secondary sort)
@@ -823,7 +817,7 @@ namespace Timelapse.Database
                        + $"{lf}";
             }
 
-            internal static string ByClassificationConfidence(string where, string categoryNumber, bool asCount)
+            internal static string ByClassificationConfidence(string where, List<string> categoryNumbers, bool asCount)
             {
                 // SELECT DataTable.* FROM DataTable
                 // INNER JOIN (
@@ -834,7 +828,13 @@ namespace Timelapse.Database
                 // ) AS best ON best.Id = DataTable.Id AND best.rowNumber = 1
                 // WHERE DataTable.img_species = 'bear'
                 // ORDER BY best.classification_conf DESC, best.conf DESC, RelativePath, DateTime, File
-                string whereCategoryPhrase = $"  {Sql.Where} {DetectionColumns.Classification} {Sql.Equal} {categoryNumber}";
+                string whereCategoryPhrase = $"  {Sql.Where} {DetectionColumns.Classification} {Sql.In} (";
+                foreach (string categoryNumber in categoryNumbers)
+                {
+                    whereCategoryPhrase += $"{Sql.Quote(categoryNumber)},";
+                }
+
+                whereCategoryPhrase = $"{whereCategoryPhrase.TrimEnd(',')} ) ";
 
                 return $"{GetCommonHeader(asCount)}"
                        + $"  {whereCategoryPhrase} {lf}"

@@ -369,7 +369,7 @@ namespace Timelapse
                 // sqlEx.Result carries ErrorMessage, FailingStatement, and the original Exception (which includes the sqlException.Message)
                 // for inclusion in a bug-report dialog or email.
                 //Dialogs.SqlError(this, sqlEx.Message, sqlEx.Result);
-                ExceptionShutdownDialog dialog = new(this, e);
+                ExceptionShutdownDialog dialog = new(this, sqlEx);
                 dialog.ShowDialog();
                 Close();
                 Application.Current.Shutdown();

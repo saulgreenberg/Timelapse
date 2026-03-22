@@ -113,7 +113,7 @@ namespace Timelapse.Recognition
             }
 
             // 6. Returns true as all is good
-            return RecognitionJsonCompatability.Okay; ;
+            return RecognitionJsonCompatability.Okay; 
         }
 
         /// <summary>

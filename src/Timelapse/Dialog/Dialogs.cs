@@ -4184,6 +4184,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region SQLiteExceptionDialog
+        // ReSharper disable once UnusedMember.Global
         public static bool? SqlError(Window owner, string context, SqlOperationResult sqlOperationResult)
         {
             // warn the user about consequences of deleting a level

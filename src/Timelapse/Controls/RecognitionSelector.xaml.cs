@@ -11,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
+using Timelapse.Dialog;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
@@ -62,6 +63,8 @@ namespace Timelapse.Controls
         // They serve as ItemsSource to the corresponding DataGrid and ListBox controls 
         public ObservableCollection<CategoryCount> DetectionCountsCollection { get; set; } = [];
         public ObservableCollection<CategoryCount> ClassificationCountsCollection { get; set; } = [];
+
+
 
         // Original selection parameters so we can restore them as needed on exit
         private RecognitionSelections SavedRecognitionSelections;
@@ -115,9 +118,8 @@ namespace Timelapse.Controls
         {
             DropSessionTempTables();
 
-            // Set the look of the two Datagrids
+            // Set the look of the Detections DataGrid (Classifications columns are sized in XAML)
             SetDataGridCategoryCountLook(this.DataGridDetections);
-            SetDataGridCategoryCountLook(this.DataGridClassifications);
 
             // Abort if there is nothing to show
             if (this.Database == null)
@@ -162,8 +164,12 @@ namespace Timelapse.Controls
                 this.SetClassificationControlsToInitialValues();
             }
 
+            if (this.ClassificationDescriptions?.Count == 0)
+            {
+                this.BtnByTaxonomy.IsEnabled = false;
+            }
             // Set Ranking to saved setting. Note that ranking is done by sorting on detection confidence
-            this.CBRankRecognitions.IsChecked = this.RecognitionSelections.RankByDetectionConfidence || this.RecognitionSelections.RankByClassificationConfidence ;
+            this.CBRankRecognitions.IsChecked = this.RecognitionSelections.RankByDetectionConfidence || this.RecognitionSelections.RankByClassificationConfidence;
 
             // Set event handlers for the rank by confidence checkboxes after setting their initial states, to avoid triggering events during initialization
             this.CBRankRecognitions.Checked += CBRankRecognitions_CheckChanged;
@@ -301,15 +307,15 @@ namespace Timelapse.Controls
 
                     if (countDetections && (this.onlyUpdateClassificationCount == false || this.DetectionCountsCollectionHasCounts() == false))
                     {
-                        string savedClassificationCategoryNumber = this.RecognitionSelections.ClassificationCategoryNumber;
-                        this.RecognitionSelections.ClassificationCategoryNumber = string.Empty;
+                        List<string> savedClassificationCategoryNumber = this.RecognitionSelections.ClassificationCategoryNumbers;
+                        this.RecognitionSelections.ClassificationCategoryNumbers = [];
                         // We have two methods to count detections, each using a different Sql form.
                         // Which is used depends on whether 'Include all files in an episode' is selected
                         allCountsCompleted = CustomSelection.EpisodeShowAllIfAnyMatch
                             ? DoCountDetectionsIfEpisodesShowAll(lowerDetectionConf, higherDetectionConf)
                             : DoCountDetections(lowerDetectionConf, higherDetectionConf);
 
-                        this.RecognitionSelections.ClassificationCategoryNumber = savedClassificationCategoryNumber;
+                        this.RecognitionSelections.ClassificationCategoryNumbers = savedClassificationCategoryNumber;
                         if (!allCountsCompleted)
                         {
                             return false;
@@ -602,6 +608,28 @@ namespace Timelapse.Controls
 
         #endregion
 
+        #region Button Callbacks - BtnByTaxonomy_OnClick
+        private void BtnByTaxonomy_OnClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new ClassificationByTaxonomyDialog(this.Owner, Database, RecognitionSelections.SelectedTaxonNode, BtnByTaxonomy);
+            dialog.TreeViewSpeciesTaxonomy.SelectionChanged += (_, _) =>
+            {
+                SetClassificationsSelected(dialog.TreeViewSpeciesTaxonomy.SelectedClassifications);
+                RecognitionSelections.SelectedTaxonNode = dialog.TreeViewSpeciesTaxonomy.SelectedTaxonNode;
+                DataGridClassifications_OnSelectionChanged(null, null);
+                ScrollFirstSelectedClassificationIntoView();
+            };
+            dialog.Show();
+        }
+
+        private void ScrollFirstSelectedClassificationIntoView()
+        {
+            var first = DataGridClassifications.SelectedItems.OfType<object>().FirstOrDefault();
+            if (first != null)
+                DataGridClassifications.ScrollIntoView(first);
+        }
+        #endregion
+
         #region Checkbox Callbacks - AutoCount, RankByConfidence, ShowMissingDetections
 
         private void CBAutoCount_CheckChanged(object sender, RoutedEventArgs e)
@@ -626,7 +654,7 @@ namespace Timelapse.Controls
 
                 // As turned off for now
                 this.RecognitionSelections.RankByClassificationConfidence = false;
-                
+
                 // Disable sliders if ranking is enabled, as confidence thresholds don't apply when ranking by confidence, and to avoid confusion
                 SlidersEnableState(rankingEnabled == false);
 
@@ -866,7 +894,8 @@ namespace Timelapse.Controls
                 return;
             }
 
-            this.RecognitionSelections.ClassificationCategoryNumber = string.Empty;
+            this.RecognitionSelections.ClassificationCategoryNumbers = [];
+            this.RecognitionSelections.SelectedTaxonNode = string.Empty;
             if (sender is DataGrid { SelectedItems: [CategoryCount categoryCount] })
             {
 
@@ -932,13 +961,33 @@ namespace Timelapse.Controls
                 return;
             }
 
-            if (sender is DataGrid { SelectedItems: [CategoryCount categoryCount] })
+            if (sender is not null)
             {
+                // The selection was done by the user, so clear the taxon node text so the Taxon tree does not show a preselected item 
+                this.RecognitionSelections.SelectedTaxonNode = string.Empty;
+            }
+            List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
+                .Select(cc => cc.Category)
+                .ToList();
+
+            //if (sender is DataGrid { SelectedItems: [CategoryCount categoryCount] })
+            if (classificationCategoryLabels.Count > 0)
+            {
+
                 // The user selected a category
-                if (this.ClassificationCategoryNameToNumber != null && this.ClassificationCategoryNameToNumber.TryGetValue(categoryCount.Category, out string categoryNumber))
+                //if (this.ClassificationCategoryNameToNumber != null && this.ClassificationCategoryNameToNumber.TryGetValue(categoryCount.Category, out string categoryNumber))
+                //{
+                this.RecognitionSelections.ClassificationCategoryNumbers = [];
+                if (this.ClassificationCategoryNameToNumber != null)
                 {
-                    // Set the Classification Category to the selected entity
-                    this.RecognitionSelections.ClassificationCategoryNumber = categoryNumber;
+                    foreach (string label in classificationCategoryLabels)
+                    {
+                        if (this.ClassificationCategoryNameToNumber.TryGetValue(label, out string categoryNumber))
+                        {
+                            // Set the Classification Category to the selected entity
+                            this.RecognitionSelections.ClassificationCategoryNumbers.Add(categoryNumber);
+                        }
+                    }
                     // this.EnableDisableRankByClassificationCheckbox(true);
 
                     // Because we are selecting a classification, we should ensure that the Detections Category is set to All
@@ -970,7 +1019,7 @@ namespace Timelapse.Controls
         // Used only by OnLoaded to show the initial selections.
         private void TryHighlightCurrentSelection()
         {
-            if (string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber) && string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            if (string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber) && this.RecognitionSelections.ClassificationCategoryNumbers is null or {Count:0})
             {
                 // Nothing was selected
                 this.ignoreSelection = true;
@@ -980,7 +1029,7 @@ namespace Timelapse.Controls
                 return;
             }
 
-            if (false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            if (this.RecognitionSelections.ClassificationCategoryNumbers is { Count: > 0 })
             {
                 // if we have a category, this ensures that the detection is set to All
                 this.RecognitionSelections.DetectionCategoryNumber = Constant.RecognizerValues.AllDetectionCategoryNumber;
@@ -1036,7 +1085,7 @@ namespace Timelapse.Controls
                 // Finally, select that item in the data grid, making sure its visible and highlit
                 this.ignoreSelection = true;
                 this.DataGridDetections.SelectedItem = detectionCategoryCount;
-                if (string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+                if (this.RecognitionSelections.ClassificationCategoryNumbers is null or {Count: 0})
                 {
                     this.DataGridClassifications.SelectedItem = null;
                 }
@@ -1047,27 +1096,43 @@ namespace Timelapse.Controls
             }
 
             // If we have a classification selected, highlight it
-            if (null != this.ClassificationCategories && false == string.IsNullOrEmpty(this.RecognitionSelections.ClassificationCategoryNumber))
+            if (null != this.ClassificationCategories && this.RecognitionSelections.ClassificationCategoryNumbers is { Count: > 0 })
             {
                 // Classification
-                this.ClassificationCategories.TryGetValue(this.RecognitionSelections.ClassificationCategoryNumber, out string selectedClassificationCategoryName);
-                if (selectedClassificationCategoryName == null)
+                List<string> categoryLabels = [];
+                foreach (string categoryNumber in this.RecognitionSelections.ClassificationCategoryNumbers)
+                {
+                    this.ClassificationCategories.TryGetValue(categoryNumber, out string selectedClassificationCategoryName);
+                    if (string.IsNullOrWhiteSpace(selectedClassificationCategoryName))
+                    {
+                        continue;
+                    }
+                    categoryLabels.Add(selectedClassificationCategoryName);
+                }
+                //this.ClassificationCategories.TryGetValue(this.RecognitionSelections.ClassificationCategoryNumber, out string selectedClassificationCategoryName);
+                if (categoryLabels.Count == 0)
                 {
                     return;
                 }
 
-                CategoryCount classificationCategoryCount = this.ClassificationCountsCollection.FirstOrDefault(x => x.Category == selectedClassificationCategoryName);
-                if (classificationCategoryCount == null)
+                List<CategoryCount> classificationCategoryCounts = [];
+                foreach (string label in categoryLabels)
+                {
+                    classificationCategoryCounts.Add(this.ClassificationCountsCollection.FirstOrDefault(x => x.Category == label));
+                }
+
+                if (classificationCategoryCounts.Count == 0)
                 {
                     // Something went wrong
                     return;
                 }
-
                 // Finally, select that item in the data grid, making sure its visible and highlit
                 this.ignoreSelection = true;
-                this.DataGridClassifications.SelectedItem = classificationCategoryCount;
+                this.DataGridClassifications.UnselectAll();
+                foreach (CategoryCount cc in classificationCategoryCounts)
+                    this.DataGridClassifications.SelectedItems.Add(cc);
                 this.ignoreSelection = false;
-                this.DataGridClassifications.ScrollIntoView(classificationCategoryCount);
+                this.DataGridClassifications.ScrollIntoView(classificationCategoryCounts[0]);
                 this.DataGridClassifications.Focus();
             }
             else
@@ -1086,7 +1151,6 @@ namespace Timelapse.Controls
         private void SendRecognitionSelectionEvent(bool refreshRecognitionCountsRequired)
         {
             string detectionCategoryLabel = string.Empty;
-            string classificationCategoryLabel = string.Empty;
 
             // Get the current Detection selection, if any
             if (this.DataGridDetections.SelectedItems is [CategoryCount categoryCountDetections])
@@ -1097,17 +1161,20 @@ namespace Timelapse.Controls
             }
 
             // Get the current Classification selection, if any
-            if (DataGridClassifications.SelectedItems is [CategoryCount categoryCountClassifications])
-            {
-                classificationCategoryLabel = categoryCountClassifications.Category;
-            }
+            //if (DataGridClassifications.SelectedItems is [CategoryCount categoryCountClassifications])
+            //{
+            //    classificationCategoryLabel = categoryCountClassifications.Category;
+            //}
+            List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
+                .Select(cc => cc.Category)
+                .ToList();
 
             // Compose the argument and send the event
-            RecognitionSelectionChangedEventArgs e = new(detectionCategoryLabel, classificationCategoryLabel, refreshRecognitionCountsRequired,
+            RecognitionSelectionChangedEventArgs e = new(detectionCategoryLabel, classificationCategoryLabels, refreshRecognitionCountsRequired,
                 // ShowMissingDetectionsCheckbox.IsChecked == true
                 this.CustomSelection.ShowMissingDetections
                 || this.RecognitionSelections.RankByClassificationConfidence
-                || this.RecognitionSelections.RankByDetectionConfidence);
+                || this.RecognitionSelections.RankByDetectionConfidence, RecognitionSelections.SelectedTaxonNode);
             RecognitionSelectionEvent?.Invoke(this, e);
         }
 
@@ -1123,6 +1190,24 @@ namespace Timelapse.Controls
             this.MatchingFilesCount.Text = count;
         }
 
+        // Programmatically select classification rows by category name.
+        // Clears the current selection, then selects every row whose Category is in categoryNames.
+        // Pass null or an empty collection to clear all selections.
+        public void SetClassificationsSelected(IEnumerable<string> categoryNames)
+        {
+            var namesToSelect = categoryNames?.ToHashSet() ?? [];
+            this.ignoreSelection = true;
+            this.DataGridClassifications.UnselectAll();
+            foreach (CategoryCount item in this.ClassificationCountsCollection)
+            {
+                if (item.Category != null && namesToSelect.Contains(item.Category))
+                {
+                    this.DataGridClassifications.SelectedItems.Add(item);
+                }
+            }
+            this.ignoreSelection = false;
+        }
+
         #endregion
 
         #region Save/Restore RecognitionSelections Parameters
@@ -1135,7 +1220,7 @@ namespace Timelapse.Controls
             {
                 UseRecognition = this.RecognitionSelections.UseRecognition,
                 DetectionCategoryNumber = RecognitionSelections.DetectionCategoryNumber,
-                ClassificationCategoryNumber = RecognitionSelections.ClassificationCategoryNumber,
+                ClassificationCategoryNumbers = RecognitionSelections.ClassificationCategoryNumbers,
                 AllDetections = RecognitionSelections.AllDetections,
                 InterpretAllDetectionsAsEmpty = RecognitionSelections.InterpretAllDetectionsAsEmpty,
                 DetectionConfidenceLowerForUI = RecognitionSelections.DetectionConfidenceLowerForUI,
@@ -1163,7 +1248,7 @@ namespace Timelapse.Controls
                 this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SavedRecognitionSelections.DetectionConfidenceHigherForUI;
                 this.RecognitionSelections.ClassificationConfidenceLowerForUI = this.SavedRecognitionSelections.ClassificationConfidenceLowerForUI;
                 this.RecognitionSelections.ClassificationConfidenceHigherForUI = this.SavedRecognitionSelections.ClassificationConfidenceHigherForUI;
-                this.RecognitionSelections.ClassificationCategoryNumber = this.SavedRecognitionSelections.ClassificationCategoryNumber;
+                this.RecognitionSelections.ClassificationCategoryNumbers = this.SavedRecognitionSelections.ClassificationCategoryNumbers;
                 this.RecognitionSelections.RankByDetectionConfidence = this.SavedRecognitionSelections.RankByDetectionConfidence;
             }
 
@@ -1273,6 +1358,7 @@ namespace Timelapse.Controls
 
             // Enable/disable the buttons and checkbox 
             this.BtnCountRecognitions.IsEnabled = enableAllControls;
+            this.BtnByTaxonomy.IsEnabled = enableAllControls;
             this.CBRankRecognitions.IsEnabled = enableAllControls;
             this.CBAutoCount.IsEnabled = enableAllControls;
 
@@ -1318,6 +1404,7 @@ namespace Timelapse.Controls
         {
             this.GridClassifications.Visibility = Visibility.Collapsed;
             this.ClassificationColumnWidth.Width = new(0);
+            this.BtnByTaxonomy.Visibility = Visibility.Collapsed;
         }
 
         private void SlidersEnableState(bool enableState)
@@ -1382,7 +1469,8 @@ namespace Timelapse.Controls
             {
                 Application.Current.Dispatcher.Invoke(delegate
                 {
-                    SortDataGrid(this.DataGridClassifications, 0, ListSortDirection.Descending);
+                    // Column 0 is the checkbox column; Count is at index 1
+                    SortDataGrid(this.DataGridClassifications, 1, ListSortDirection.Descending);
                     this.DataGridClassifications.ScrollIntoViewFirstRow();
                 });
             }
@@ -2207,5 +2295,6 @@ namespace Timelapse.Controls
         }
         #endregion
 
+   
     }
 }
