@@ -47,8 +47,7 @@ namespace Timelapse.Controls
         private readonly FileDatabase Database;
         private readonly CustomSelection CustomSelection;
         private readonly RecognitionSelections RecognitionSelections;
-
-        private static readonly int? NoValue = null;
+        private const string IndexDetectionConfidenceClassification = "IndexDetConfCls";
 
         // Dictionaries that will eventually hold the Detection and Classification categories
         private Dictionary<string, string> DetectionCategories;
@@ -94,6 +93,19 @@ namespace Timelapse.Controls
         private readonly BusyableDialogWindow Owner;
         private readonly BusyCancelIndicator BusyCancelIndicator;
 
+        // Slider interaction state
+        private bool isDetectionSliderMouseDown;
+        private bool isDetectionValueChanged;
+        private bool isClassificationSliderMouseDown;
+        private bool isClassificationValueChanged;
+
+        // Episode-counting cache state (persists across counts within a session)
+        private bool isSessionTmpTablesCreated;
+        private bool isPerWhereTmpTablesCreated;
+        private string lastWhereStatement;
+        private double lastLowerDetectionConfidence = -1;
+        private double lastUpperDetectionConfidence = -1;
+
         #endregion
 
         #region Constructor
@@ -112,7 +124,7 @@ namespace Timelapse.Controls
 
         #endregion
 
-        #region OnLoaded / Unlaoded
+        #region OnLoaded / Unloaded
 
         private void RecognitionsSelector_OnLoaded(object sender, RoutedEventArgs e)
         {
@@ -204,7 +216,6 @@ namespace Timelapse.Controls
             if (!result.Success)
             {
                 GlobalReferences.MainWindow.OnUnhandledException(this, new UnhandledExceptionEventArgs(new SqlOperationException("Error in DropSessionTempTables", result), true));
-                //Dialogs.SqlError(GlobalReferences.MainWindow,"Error in DropSessinTempTables", result);
             }
         }
         #endregion
@@ -272,14 +283,6 @@ namespace Timelapse.Controls
                     DropSessionTempTables();
                 }
             }
-        }
-
-        private async Task AutocountRecognitions()
-        {
-            await Application.Current.Dispatcher.Invoke(async () =>
-            {
-                await RecognitionsRefreshCounts();
-            });
         }
 
         private async Task<bool> DoCountRecognitionsAsync(bool countDetections, bool countClassifications)
@@ -366,12 +369,7 @@ namespace Timelapse.Controls
                 higherConfidenceValue = 1;
             }
             string query = SqlForCounting.GetQueryDetectionCounts(DetectionCategories, where, lowerConfidenceValue, higherConfidenceValue);
-            //System.Diagnostics.Debug.Print(query);
-            // Stopwatch sw = new Stopwatch();
-            //sw.Start();
             DataTable dataTable = Database.Database.GetDataTableFromSelect(query);
-            //sw.Stop();
-            //Debug.Print($"DetectionsNoEpisodes: {sw.ElapsedMilliseconds.ToString()}");
 
             // Parse the results and update the display
             if (dataTable.Rows.Count != 1)
@@ -390,15 +388,8 @@ namespace Timelapse.Controls
 
         }
 
-        private bool isSessionTmpTablesCreated;
-        private bool isPerWhereTmpTablesCreated;
-        private string lastWhereStatement;
-        private double lastLowerDetectionConfidence = -1;
-        private double lastUpperDetectionConfidence = -1;
         private bool DoCountDetectionsIfEpisodesShowAll(double lowerDetectionConfidence, double upperDetectionConfidence)
         {
-            //long totalTime = 0;
-            //Stopwatch sw = new Stopwatch();
             string episodeNoteField = CustomSelection.EpisodeNoteField;
             // All category count 
             // Check if cancelled, and/or show progress
@@ -412,21 +403,10 @@ namespace Timelapse.Controls
                 this.ShowProgressOrAbortIfCancelled(true, "preparations (initial database tables and indexes");
 
                 string query1 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixCounts(episodeNoteField);
-                //sw.Start();
                 Database.Database.ExecuteNonQueryWithRollback(query1);
-                //sw.Stop();
-                //totalTime += sw.ElapsedMilliseconds;
-                // Debug.Print($"tempTable 1 created: {sw.ElapsedMilliseconds}");
-                //Debug.Print($"tempTable 1 created");
 
                 string query2 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixMap(episodeNoteField);
-                //sw.Reset();
-                //sw.Start();
                 Database.Database.ExecuteNonQueryWithRollback(query2);
-                //sw.Stop();
-                //totalTime += sw.ElapsedMilliseconds;
-                //Debug.Print($"tempTable 2 created: {sw.ElapsedMilliseconds}");
-                //Debug.Print($"tempTable 2 created");
                 isSessionTmpTablesCreated = true;
 
             }
@@ -441,13 +421,7 @@ namespace Timelapse.Controls
                 // Rebuild the filtered image IDs temp table when the where statement changes
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query3 = SqlForCounting.CreateTempTableAndIndexForFilteredImageIds(where);
-                //sw.Reset();
-                //sw.Start();
                 Database.Database.ExecuteNonQueryWithRollback(query3);
-                //sw.Stop();
-                //totalTime += sw.ElapsedMilliseconds;
-                //Debug.Print($"tempTable 3 created: {sw.ElapsedMilliseconds}");
-                //Debug.Print($"tempTable 3 created");
             }
 
             if (false == isPerWhereTmpTablesCreated || isWhereChanged || isThresholdChanged)
@@ -459,13 +433,7 @@ namespace Timelapse.Controls
                 // -- ============================================================================
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query4 = SqlForCounting.CreateTempTableAndIndexForEpisodeDetectionFlags(lowerDetectionConfidence, upperDetectionConfidence);
-                //sw.Reset();
-                //sw.Start();
                 Database.Database.ExecuteNonQueryWithRollback(query4);
-                //sw.Stop();
-                //totalTime += sw.ElapsedMilliseconds;
-                //Debug.Print($"tempTable 4 created: {sw.ElapsedMilliseconds}");
-                //Debug.Print($"tempTable 4 created");
                 isPerWhereTmpTablesCreated = true;
             }
             lastWhereStatement = where;
@@ -475,20 +443,13 @@ namespace Timelapse.Controls
 
             // Do the All and Empty count and update the display
             string query5 = SqlForCounting.GetQueryDetectionCountsWithEpisodesAnyForAllAndEmpty();
-            //sw.Reset();
-            //sw.Start();
             DataTable dataTableAllAndEmpty = Database.Database.GetDataTableFromSelect(query5);
-            //sw.Stop();
-            //totalTime += sw.ElapsedMilliseconds;
-            //Debug.Print($"Detections All/Empty selected: {sw.ElapsedMilliseconds}");
-            //int allFilesCount = Convert.ToInt32(dataTableAllAndEmpty.Rows[0]["CountAll"]);
 
             int allFilesCount = Int32.TryParse(dataTableAllAndEmpty.Rows[0]["CountAll"].ToString(), out int countAllResult)
                 ? countAllResult
                 : 0;
             this.SetDetectionCountForCategory(Constant.RecognizerValues.AllDetectionLabel, allFilesCount);
 
-            // int emptyFilesCount = Convert.ToInt32(dataTableAllAndEmpty.Rows[0]["CountEmpty"]);
             int emptyFilesCount = Int32.TryParse(dataTableAllAndEmpty.Rows[0]["CountEmpty"].ToString(), out int countEmptyResult)
                 ? countEmptyResult
                 : 0;
@@ -497,12 +458,7 @@ namespace Timelapse.Controls
             // Do other detection category counts and update the display
             this.ShowProgressOrAbortIfCancelled(true, "remaining detection categories");
             string query6 = SqlForCounting.GetQueryDetectionCountsWithEpisodesAnyForDetectionCategories(lowerDetectionConfidence, upperDetectionConfidence);
-            //sw.Reset();
-            //sw.Start();
             DataTable dataTableOtherDetectionCategories = Database.Database.GetDataTableFromSelect(query6);
-            //sw.Stop();
-            //totalTime += sw.ElapsedMilliseconds;
-            //Debug.Print($"Detections OtherCategories selected: {sw.ElapsedMilliseconds}");
             foreach (DataRow row in dataTableOtherDetectionCategories.Rows)
             {
                 string detCat = row["DetectionCategory"].ToString();
@@ -513,7 +469,6 @@ namespace Timelapse.Controls
                     this.SetDetectionCountForCategory(detectionName, Convert.ToInt32(row["ImageCount"]));
                 }
             }
-            //Debug.Print($"Detections Total time: {totalTime}");
             return true;
         }
 
@@ -529,15 +484,12 @@ namespace Timelapse.Controls
             }
             // Initialize by clearing the various lists
             this.ClearClassificationCounts();
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
-            Database.Database.IndexCreateIfNotExists("IndexDetConfCls", "Detections", "Id, conf, classification_conf, classification");
+            string columnNames = $"{DatabaseColumn.ID}, {DetectionColumns.Conf}, {DetectionColumns.ClassificationConf}, {DetectionColumns.Classification}";
+            Database.Database.IndexCreateIfNotExists(IndexDetectionConfidenceClassification, DBTables.Detections, columnNames);
 
             string where = CustomSelection.GetFilesWhere(true, false);
             string query = SqlForCounting.GetQueryClassificationCounts(where, lowerDetectionConf, higherDetectionConf, lowerClassificationConf, higherClassificationConf);
             DataTable dataTable = Database.Database.GetDataTableFromSelect(query);
-            //sw.Stop();
-            //Debug.Print($"NewClassifications: {sw.ElapsedMilliseconds.ToString()}");
             this.ShowProgressOrAbortIfCancelled(false, "Doing classifications");
             foreach (DataRow row in dataTable.Rows)
             {
@@ -568,11 +520,7 @@ namespace Timelapse.Controls
             string query7 = SqlForCounting.GetQueryClassificationCountsWithEpisodesAny(
                 lowerDetectionConf, higherDetectionConf,
                 lowerClassificationConf, higherClassificationConf);
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
             DataTable dataTable = Database.Database.GetDataTableFromSelect(query7);
-            //sw.Stop();
-            //Debug.Print($"ClassificationsEpisodesAny: {sw.ElapsedMilliseconds.ToString()}");
             this.ShowProgressOrAbortIfCancelled(false, "classification categories");
             foreach (DataRow row in dataTable.Rows)
             {
@@ -639,7 +587,7 @@ namespace Timelapse.Controls
                 GlobalReferences.TimelapseState.AutoUpdateRecognitionCounts = cb.IsChecked == true;
                 if (cb.IsChecked == true)
                 {
-                    Task.Run(async () => await this.AutocountRecognitions());
+                    _ = RecognitionsRefreshCounts();
                 }
             }
         }
@@ -692,8 +640,6 @@ namespace Timelapse.Controls
         // When the detection drag is in progress
         // - disable the detection controls
         // - display the updated slider value
-        private bool isDetectionSliderMouseDown;
-        private bool isDetectionValueChanged;
 
         // We only want to update counts after a slider action is completed, while at the same time display 
         // the current slider range. To make this work,
@@ -748,7 +694,7 @@ namespace Timelapse.Controls
                     // Clearing the current selection and recognition
                     this.sliderConfidenceInitialMovement = true;
 
-                    // As the user is scrolling, indicate this by clearing the current counts (ie., to NoValue)
+                    // As the user is scrolling, indicate this by clearing the current counts (ie., to null)
                     this.ClearCountsAndResetUI();
 
                     // Disable the detection datagrid 
@@ -801,9 +747,6 @@ namespace Timelapse.Controls
         // When the classification drag is in progress
         // - disable the classification controls
         // - display the updated slider value
-        private bool isClassificationSliderMouseDown;
-
-        private bool isClassificationValueChanged;
 
         // We only want to update counts after a slider action is completed, while at the same time display 
         // the current slider range. To make this work,
@@ -860,11 +803,8 @@ namespace Timelapse.Controls
 
             // The user has finished updating the sliders, so we want to both update the display and counts
 
-            // Enable the classification datagrid 
+            // Enable the classification datagrid
             this.ClassificationDataGridEnableState(true, true);
-
-            // The CountRecogntions button is enabled so that the user can recount recogntions
-
 
             // Set and display the new confidence thresholds
             double lowerConf = Math.Round(slider.LowerValue, 2);
@@ -900,7 +840,7 @@ namespace Timelapse.Controls
             {
 
                 // Alter the RecognitionSelection parameters so that the parent can redo the count on it
-                // All special case: By convention, All is mapped to the category string in AllCategoryNumber (NoValue)
+                // All special case: By convention, All is mapped to the category string in AllCategoryNumber (null)
                 if (categoryCount.Category == Constant.RecognizerValues.AllDetectionLabel)
                 {
                     // Set to the currently selected item
@@ -970,13 +910,9 @@ namespace Timelapse.Controls
                 .Select(cc => cc.Category)
                 .ToList();
 
-            //if (sender is DataGrid { SelectedItems: [CategoryCount categoryCount] })
             if (classificationCategoryLabels.Count > 0)
             {
-
                 // The user selected a category
-                //if (this.ClassificationCategoryNameToNumber != null && this.ClassificationCategoryNameToNumber.TryGetValue(categoryCount.Category, out string categoryNumber))
-                //{
                 this.RecognitionSelections.ClassificationCategoryNumbers = [];
                 if (this.ClassificationCategoryNameToNumber != null)
                 {
@@ -988,7 +924,6 @@ namespace Timelapse.Controls
                             this.RecognitionSelections.ClassificationCategoryNumbers.Add(categoryNumber);
                         }
                     }
-                    // this.EnableDisableRankByClassificationCheckbox(true);
 
                     // Because we are selecting a classification, we should ensure that the Detections Category is set to All
                     this.RecognitionSelections.AllDetections = true;
@@ -1109,7 +1044,6 @@ namespace Timelapse.Controls
                     }
                     categoryLabels.Add(selectedClassificationCategoryName);
                 }
-                //this.ClassificationCategories.TryGetValue(this.RecognitionSelections.ClassificationCategoryNumber, out string selectedClassificationCategoryName);
                 if (categoryLabels.Count == 0)
                 {
                     return;
@@ -1161,10 +1095,6 @@ namespace Timelapse.Controls
             }
 
             // Get the current Classification selection, if any
-            //if (DataGridClassifications.SelectedItems is [CategoryCount categoryCountClassifications])
-            //{
-            //    classificationCategoryLabel = categoryCountClassifications.Category;
-            //}
             List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
                 .Select(cc => cc.Category)
                 .ToList();
@@ -1237,20 +1167,17 @@ namespace Timelapse.Controls
 
         private void RecognitionSelectionsRestoreState()
         {
-            if (null != RecognitionSelections)
-            {
-                // Restore original selection parameters as we may have alter some of these
-                this.RecognitionSelections.UseRecognition = this.SavedRecognitionSelections.UseRecognition;
-                this.RecognitionSelections.DetectionCategoryNumber = this.SavedRecognitionSelections.DetectionCategoryNumber;
-                this.RecognitionSelections.AllDetections = this.SavedRecognitionSelections.AllDetections;
-                this.RecognitionSelections.InterpretAllDetectionsAsEmpty = this.SavedRecognitionSelections.InterpretAllDetectionsAsEmpty;
-                this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SavedRecognitionSelections.DetectionConfidenceLowerForUI;
-                this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SavedRecognitionSelections.DetectionConfidenceHigherForUI;
-                this.RecognitionSelections.ClassificationConfidenceLowerForUI = this.SavedRecognitionSelections.ClassificationConfidenceLowerForUI;
-                this.RecognitionSelections.ClassificationConfidenceHigherForUI = this.SavedRecognitionSelections.ClassificationConfidenceHigherForUI;
-                this.RecognitionSelections.ClassificationCategoryNumbers = this.SavedRecognitionSelections.ClassificationCategoryNumbers;
-                this.RecognitionSelections.RankByDetectionConfidence = this.SavedRecognitionSelections.RankByDetectionConfidence;
-            }
+            // Restore original selection parameters as we may have alter some of these
+            this.RecognitionSelections.UseRecognition = this.SavedRecognitionSelections.UseRecognition;
+            this.RecognitionSelections.DetectionCategoryNumber = this.SavedRecognitionSelections.DetectionCategoryNumber;
+            this.RecognitionSelections.AllDetections = this.SavedRecognitionSelections.AllDetections;
+            this.RecognitionSelections.InterpretAllDetectionsAsEmpty = this.SavedRecognitionSelections.InterpretAllDetectionsAsEmpty;
+            this.RecognitionSelections.DetectionConfidenceLowerForUI = this.SavedRecognitionSelections.DetectionConfidenceLowerForUI;
+            this.RecognitionSelections.DetectionConfidenceHigherForUI = this.SavedRecognitionSelections.DetectionConfidenceHigherForUI;
+            this.RecognitionSelections.ClassificationConfidenceLowerForUI = this.SavedRecognitionSelections.ClassificationConfidenceLowerForUI;
+            this.RecognitionSelections.ClassificationConfidenceHigherForUI = this.SavedRecognitionSelections.ClassificationConfidenceHigherForUI;
+            this.RecognitionSelections.ClassificationCategoryNumbers = this.SavedRecognitionSelections.ClassificationCategoryNumbers;
+            this.RecognitionSelections.RankByDetectionConfidence = this.SavedRecognitionSelections.RankByDetectionConfidence;
 
             if (null == CustomSelection)
             {
@@ -1368,8 +1295,6 @@ namespace Timelapse.Controls
             Brush labelColor = enableAllControls ? Brushes.Black : Brushes.DarkGray;
             this.TBDetectionsLabel.Foreground = labelColor;
             this.TBClassificationsLabel.Foreground = labelColor;
-            //this.CBRankByDetectionConfidence.Foreground = labelColor;
-            //this.CBRankByClassificationConfidence.Foreground = labelColor;
             if (false == enableShowMissingDetectionsCheckbox)
             {
                 this.ShowMissingDetectionsCheckbox.Foreground = labelColor;
@@ -1521,8 +1446,7 @@ namespace Timelapse.Controls
 
             if (GlobalReferences.TimelapseState.AutoUpdateRecognitionCounts && doCountIfNeeded)
             {
-                //Debug.Print("======== autoCounting");
-                Task.Run(async () => await this.AutocountRecognitions());
+                _ = RecognitionsRefreshCounts();
             }
         }
 
@@ -1531,14 +1455,14 @@ namespace Timelapse.Controls
         private void ClearDetectionCounts()
         {
             // Clear the All and Empty categories 
-            this.SetDetectionCountForCategory(Constant.RecognizerValues.AllDetectionLabel, NoValue);
-            this.SetDetectionCountForCategory(Constant.RecognizerValues.EmptyDetectionLabel, NoValue);
+            this.SetDetectionCountForCategory(Constant.RecognizerValues.AllDetectionLabel, null);
+            this.SetDetectionCountForCategory(Constant.RecognizerValues.EmptyDetectionLabel, null);
 
             // Detections: clear the count in Category 
             foreach (KeyValuePair<string, string> kvp in DetectionCategories)
             {
                 if (kvp.Key == "0") continue; // Skip empty
-                this.SetDetectionCountForCategory(kvp.Value, NoValue);
+                this.SetDetectionCountForCategory(kvp.Value, null);
             }
         }
 
@@ -1582,7 +1506,7 @@ namespace Timelapse.Controls
             // Classification: clear the count in Category
             foreach (KeyValuePair<string, string> kvp in ClassificationCategories)
             {
-                this.SetClassificationCountForCategory(kvp.Value, NoValue);
+                this.SetClassificationCountForCategory(kvp.Value, null);
             }
         }
 
@@ -1689,8 +1613,7 @@ namespace Timelapse.Controls
                         ? "a new count is pending"
                         : "Custom Select dialog was closed";
                 TracePrint.PrintMessageOnly($"Counting recognitions task cancelled as {reason}");
-                return;
-                //throw new TaskCanceledException();
+                throw new TaskCanceledException();
             }
 
             string what = countingDetections ? "detections" : "classifications";

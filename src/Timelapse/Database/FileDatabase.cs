@@ -2092,8 +2092,10 @@ namespace Timelapse.Database
 
             foreach (image image in jsonRecognizer.images)
             {
-                if (image.detections == null)
+                if (image.detections == null || image.detections.Count == 0)
                 {
+                    // Even if there are no detections, an image entry will be created with bounding box "" and confidence at 0.
+                    // This allows us to know that  this image has been processed by the recognizer
                     continue;
                 }
                 for (int i = image.detections.Count - 1; i >= 0; i--)
