@@ -822,12 +822,39 @@ public class SQLiteWrapper
         }
 
         /// <summary>
+        /// Executes pre-transaction statements, then all transactional statements in a single
+        /// transaction with rollback on failure, then post-transaction statements — all on the
+        /// same connection. Use this overload when certain statements must run outside the
+        /// transaction but on the same connection, such as PRAGMA foreign_keys = OFF/ON (which
+        /// SQLite silently ignores when issued inside a transaction).
+        /// </summary>
+        public SqlOperationResult ExecuteNonQueryWithRollback(
+            List<string> preTransactionStatements,
+            List<string> statements,
+            List<string> postTransactionStatements)
+        {
+            ThrowIf.IsNullArgument(statements, nameof(statements));
+            return ExecuteNonQueryWithRollbackCore(
+                statements,
+                preTransactionStatements: preTransactionStatements,
+                postTransactionStatements: postTransactionStatements);
+        }
+
+        /// <summary>
         /// Core implementation shared by all ExecuteNonQueryWithRollback overloads.
-        /// Opens a connection, begins a single transaction, executes all statements, and commits.
-        /// On failure, rolls back the entire transaction — nothing is committed — and returns a
-        /// <see cref="SqlOperationResult"/> that includes the error details and the SQL statement
-        /// that was executing when the failure occurred. The failing statement is preserved in full
-        /// (untruncated) so it can be included in a bug report emailed by the user.
+        /// Opens a single connection, runs any pre-transaction statements, begins a transaction,
+        /// executes all <paramref name="statements"/>, commits, then runs any post-transaction
+        /// statements — all on that same connection.
+        ///
+        /// Pre- and post-transaction statements exist for the rare cases where SQLite requires
+        /// a statement to run outside any transaction on the same connection:
+        ///   • PRAGMA foreign_keys = OFF/ON — silently ignored when inside a transaction
+        ///   • PRAGMA journal_mode         — cannot be changed inside a transaction
+        ///
+        /// On failure during the transactional statements, the entire transaction is rolled back
+        /// and nothing is committed. Failures in pre- or post-transaction statements are reported
+        /// but cannot be rolled back (there is no active transaction at those points).
+        ///
         /// The connection is declared outside the try block so the catch block can call Rollback
         /// on the still-open connection. SQLite auto-detaches any attached databases when the
         /// connection closes, so no explicit DETACH is needed on failure.
@@ -837,7 +864,9 @@ public class SQLiteWrapper
             IProgress<ProgressBarArguments> progress = null,
             string progressString = "",
             int progressFrequency = 0,
-            int busyTimeoutMs = 0)
+            int busyTimeoutMs = 0,
+            IReadOnlyList<string> preTransactionStatements = null,
+            IReadOnlyList<string> postTransactionStatements = null)
         {
             if (statements == null || statements.Count == 0)
             {
@@ -856,6 +885,21 @@ public class SQLiteWrapper
             SQLiteTransaction transaction = null;
             try
             {
+                // Run pre-transaction statements on the same connection before BeginTransaction.
+                // This is the only way to set pragmas like PRAGMA foreign_keys = OFF that SQLite
+                // silently ignores when issued inside a transaction.
+                if (preTransactionStatements != null)
+                {
+                    using SQLiteCommand preCmd = new(connection);
+                    foreach (string stmt in preTransactionStatements)
+                    {
+                        if (string.IsNullOrWhiteSpace(stmt)) continue;
+                        mostRecentStatement = stmt;
+                        preCmd.CommandText = stmt;
+                        preCmd.ExecuteNonQuery();
+                    }
+                }
+
                 transaction = connection.BeginTransaction();
 
                 if (progress != null)
@@ -891,6 +935,25 @@ public class SQLiteWrapper
                 }
                 transaction.Commit();
                 transaction.Dispose();
+                // Set to null so the catch block does not attempt a rollback after a successful
+                // commit — the transaction is already closed and there is nothing to roll back.
+                transaction = null;
+
+                // Run post-transaction statements on the same connection after the commit.
+                // Used for PRAGMA foreign_keys = ON, which is ignored inside a transaction.
+                // Failures here cannot be rolled back; the transaction has already committed.
+                if (postTransactionStatements != null)
+                {
+                    using SQLiteCommand postCmd = new(connection);
+                    foreach (string stmt in postTransactionStatements)
+                    {
+                        if (string.IsNullOrWhiteSpace(stmt)) continue;
+                        mostRecentStatement = stmt;
+                        postCmd.CommandText = stmt;
+                        postCmd.ExecuteNonQuery();
+                    }
+                }
+
                 return SqlOperationResult.Ok();
             }
             catch (Exception exception)

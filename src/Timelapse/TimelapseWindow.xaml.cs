@@ -272,6 +272,7 @@ namespace Timelapse
         // On exiting, save various attributes so we can use recover them later
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            Keyboard.ClearFocus();
             CloseTimelapseAndSaveState(true);
         }
 

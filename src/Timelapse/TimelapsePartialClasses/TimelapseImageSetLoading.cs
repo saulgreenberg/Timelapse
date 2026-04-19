@@ -312,13 +312,31 @@ namespace Timelapse
             long maxID = fileDatabase.GetValueFromLastInsertedRow(DBTables.FileData, DatabaseColumn.ID);
             if (maxID > int.MaxValue)
             {
+                // Look up the current file's identity before IDs are remapped so we can
+                // find it again afterward. FileTable isn't loaded yet so we query directly.
+                long priorMostRecentFileID = fileDatabase.ImageSet.MostRecentFileID;
+                (string priorRelativePath, string priorFile) = priorMostRecentFileID != DatabaseValues.InvalidID
+                    ? fileDatabase.GetRelativePathAndFileFromID(priorMostRecentFileID)
+                    : (null, null);
+
                 Mouse.OverrideCursor = Cursors.Wait;
                 BusyCancelIndicator.Reset(true);
                 BusyCancelIndicator.EnableForDatabaseMaintenance(true);
 
                 await FileDatabase.ResetIDsAndVacuumAsync(fileDatabase.Database);
+                // We need to refresh the markers table to refresh the IDs.
+                fileDatabase.RefreshMarkers();
                 BusyCancelIndicator.Reset(false);
                 Mouse.OverrideCursor = null;
+
+                // Resolve the new sequential ID for the pre-reset current file and update
+                // MostRecentFileID so OnFolderLoadingCompleteAsync navigates to the right place.
+                // Fall back to InvalidID if the file no longer exists (e.g., deleted in merge).
+                if (!string.IsNullOrEmpty(priorFile))
+                {
+                    long newID = fileDatabase.GetFileIDFromRelativePathAndFile(priorRelativePath, priorFile);
+                    fileDatabase.ImageSet.MostRecentFileID = newID > 0 ? newID : DatabaseValues.InvalidID;
+                }
             }
 
             // Record the version number of the currently executing version of Timelapse only if its greater than the one already stored in the ImageSet Table.

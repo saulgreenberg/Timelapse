@@ -1102,6 +1102,32 @@ namespace Timelapse.Database
         }
         #endregion
 
+        #region Get the file ID of the DataTable entry defined by the RelativePath and File.
+        // Return 0 if there is no such entry
+        public long GetFileIDFromRelativePathAndFile(string relativePath, string file)
+        {
+            return Database.ScalarGetScalarFromSelectAsLong(
+                $"SELECT {DatabaseColumn.ID} FROM {DBTables.FileData}" +
+                $"{Sql.Where} {DatabaseColumn.RelativePath} = {Sql.Quote(relativePath ?? string.Empty)}" +
+                $"{Sql.And} {DatabaseColumn.File} = {Sql.Quote(file)}");
+        }
+
+        // Return the RelativePath and File for the DataTable entry with the given ID,
+        // or (null, null) if no such entry exists.
+        public (string relativePath, string file) GetRelativePathAndFileFromID(long id)
+        {
+            DataTable result = Database.GetDataTableFromSelect(
+                $"SELECT {DatabaseColumn.RelativePath}, {DatabaseColumn.File} FROM {DBTables.FileData}" +
+                $"{Sql.Where} {DatabaseColumn.ID} = {id}");
+            if (result?.Rows.Count == 1)
+            {
+                return (result.Rows[0][DatabaseColumn.RelativePath] as string,
+                        result.Rows[0][DatabaseColumn.File] as string);
+            }
+            return (null, null);
+        }
+        #endregion
+
         #region Exists (all return true or false)
         /// <summary>
         /// Return true/false if the relativePath and filename exist in the Database DataTable  

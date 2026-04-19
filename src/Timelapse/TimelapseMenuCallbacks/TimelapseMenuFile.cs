@@ -298,6 +298,11 @@ namespace Timelapse
 
         private async Task MenuItemCheckInDatabases_ClickAsync()
         {
+            // Capture the current file's identity before the merge — RelativePath + File
+            // survive an ID remap; the ID itself does not.
+            string premergeRelativePath = DataHandler.ImageCache.Current?.RelativePath;
+            string premergeFile         = DataHandler.ImageCache.Current?.File;
+
             MergeCheckinDatabaseFiles mergeSelectedDatabaseFiles =
                 new(this,
                     DataHandler.FileDatabase.FilePath,
@@ -310,7 +315,7 @@ namespace Timelapse
             }
 
             // Reset a bunch of stuff here, as I am not sure if its handled in the OnFolderLoadingComplete method
-            if (DataHandler?.FileDatabase?.CustomSelection?.RecognitionSelections != null)
+            if (DataHandler.FileDatabase.CustomSelection?.RecognitionSelections != null)
             {
                 DataHandler.FileDatabase.CustomSelection.RecognitionSelections.DetectionConfidenceLowerForUI = -1; // this forces it to use the default in the new JSON
             }
@@ -324,6 +329,21 @@ namespace Timelapse
                     await DataHandler.FileDatabase.RefreshDetectionsDataTableAsync();
                 }
             }
+
+            // Resolve the post-reset ID for the pre-merge current file.
+            // Fall back to InvalidID if the file no longer exists (e.g., deleted during merge),
+            // which OnFolderLoadingCompleteAsync treats as "go to first file".
+            long postmergeFileID = DatabaseValues.InvalidID;
+            if (!string.IsNullOrEmpty(premergeFile))
+            {
+                long found = DataHandler!.FileDatabase!.GetFileIDFromRelativePathAndFile(premergeRelativePath, premergeFile);
+                if (found > 0)
+                {
+                    postmergeFileID = found;
+                }
+            }
+            DataHandler!.FileDatabase!.ImageSet.MostRecentFileID = postmergeFileID;
+            DataHandler!.ImageCache.Reset();
 
             // Since we are effectively doing a new image load, invoke this as it resets alot of things
             await OnFolderLoadingCompleteAsync(true);

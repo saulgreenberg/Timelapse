@@ -77,7 +77,7 @@ namespace Timelapse.Database
             string tempMarkersTable = "tempMarkersTable";
 
             // Part 1. Initiate the query phrase with a transaction
-            string query = Sql.BeginTransactionSemiColon + Environment.NewLine;
+            string query = string.Empty;
 
             // Part 2. Create the DataTable in the destination, where it contains only those entries that match the relative path folder and subfolder
             query += MergeDatabasesSqlPhrases.QueryCheckoutMergeDataTable(destinationDdb, sourceDdbPath, attachedSourceDB, tempDataTable, relativePath) + Environment.NewLine;
@@ -116,7 +116,6 @@ namespace Timelapse.Database
                 }
             }
             // Part 6. We are done.
-            query += Sql.EndTransactionSemiColon;
             destinationDdb.ExecuteNonQueryWithRollback(query);
         }
         #endregion

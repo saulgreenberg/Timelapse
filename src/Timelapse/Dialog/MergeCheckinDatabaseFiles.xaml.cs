@@ -253,6 +253,7 @@ namespace Timelapse.Dialog
                             "Doing database maintenance...",
                             false, true));
                         await FileDatabase.ResetIDsAndVacuumAsync(fileDatabase.Database);
+                        fileDatabase.RefreshMarkers();
                     }
                 }
 

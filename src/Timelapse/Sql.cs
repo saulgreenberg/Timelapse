@@ -216,12 +216,6 @@ namespace Timelapse
             return $"{Sql.AttachDatabase} {Sql.Quote(databasePath)} {Sql.As} {alias} {Sql.Semicolon} {Environment.NewLine}";
         }
 
-        // Form: 
-        //  BEGIN TRANSACTION  ; 
-        public static string BeginTransaction()
-        {
-            return $"{Sql.BeginTransactionSemiColon} {Environment.NewLine}";
-        }
 
         // Form:
         //  DROP TABLE IF EXISTS tempTable;
@@ -248,13 +242,6 @@ namespace Timelapse
         public static string DropTableIfExists(string tableName)
         {
             return $"{Sql.DropTableIfExists} {tableName} {Sql.Semicolon} {Environment.NewLine}";
-        }
-
-        // Form: 
-        //  End TRANSACTION  ; 
-        public static string EndTransaction()
-        {
-            return $"{Sql.EndTransactionSemiColon} {Environment.NewLine}";
         }
 
         // Create a query that returns the maximum value in the provided table. For example, it will get the maximum value in the column Id
