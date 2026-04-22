@@ -37,19 +37,19 @@ namespace Timelapse.Database
                      && CustomSelection.ShowMissingDetections == false
                      && CustomSelection.RecognitionSelections.UseRecognition
                      && CustomSelection.RecognitionSelections.RecognitionType is RecognitionType.Detection or RecognitionType.Classification
-                     && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
+                     && (CustomSelection.RecognitionSelections.RankByDetectionConfidence || CustomSelection.RecognitionSelections.RankByClassificationConfidence))
             {
                 // Special case limited query: Rank by detection confidence
                 // does not work with missing detections, random selection, or episode show all
                 string whereExpression = CustomSelection.GetFilesWhere(false, false, true);
-
+                bool rankByDetections = CustomSelection.RecognitionSelections.RankByClassificationConfidence; // rank by classifications if false
                 if (CustomSelection.RecognitionSelections.RecognitionType is RecognitionType.Detection)
                 {
                     // Detection selection by detection conf order 
                     string detectionCategoryNumber = this.CustomSelection.RecognitionSelections.DetectionCategoryNumber;
                     if (int.TryParse(detectionCategoryNumber, out int number) && number != 0)
                     {
-                        query = SqlGetAllRecognitionsSortedBy.ByDetectionConfidence(whereExpression, detectionCategoryNumber, true);
+                        query = SqlGetAllRecognitionsSortedBy.ByDetectionConfidence(whereExpression, detectionCategoryNumber, true, rankByDetections);
                     }
                     else
                     {
@@ -65,7 +65,7 @@ namespace Timelapse.Database
                     {
                         return 0;
                     }
-                    query = SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers, true);
+                    query = SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers, true, rankByDetections);
                 }
                 return DoGetCountFromSelect(query);
             }
@@ -269,16 +269,19 @@ namespace Timelapse.Database
                 query += $"{Sql.SelectStarFrom} {DBTables.FileData}";
             }
 
-            else if (GlobalReferences.DetectionsExists
+            else if (selection == FileSelectionEnum.Custom 
+                     && GlobalReferences.DetectionsExists
                      && CustomSelection.ShowMissingDetections == false
                      && CustomSelection.RecognitionSelections.UseRecognition
                      && CustomSelection.RecognitionSelections.RecognitionType is RecognitionType.Detection or RecognitionType.Classification
-                     && CustomSelection.RecognitionSelections.RankByDetectionConfidence)
+                     && (CustomSelection.RecognitionSelections.RankByDetectionConfidence || CustomSelection.RecognitionSelections.RankByClassificationConfidence))
             {
                 // Special case limited query: Rank by detection or classification confidence
                 // does not work with missing detections, random selection, or episode show all
                 string whereExpression = CustomSelection.GetFilesWhere(false, false, true);
 
+                // if its false, then its RankByClassifications
+                bool rankByDetections = CustomSelection.RecognitionSelections.RankByDetectionConfidence;
 
                 if (CustomSelection.RecognitionSelections.RecognitionType is RecognitionType.Detection)
                 {
@@ -286,7 +289,7 @@ namespace Timelapse.Database
                     string detectionCategoryNumber = this.CustomSelection.RecognitionSelections.DetectionCategoryNumber;
                     if (int.TryParse(detectionCategoryNumber, out int number) && number != 0)
                     {
-                        query = SqlGetAllRecognitionsSortedBy.ByDetectionConfidence(whereExpression, detectionCategoryNumber, false);
+                        query = SqlGetAllRecognitionsSortedBy.ByDetectionConfidence(whereExpression, detectionCategoryNumber, false, rankByDetections);
                     }
                     else
                     {
@@ -303,7 +306,7 @@ namespace Timelapse.Database
                     // If null / 0, return an empty table with the same schema as the normal query would return, but with no rows.
                     query = this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers is null or { Count: 0 } 
                         ? $"{Sql.SelectStarFrom} {DBTables.FileData}{Sql.Where} 1 = 0" 
-                        : SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers, false);
+                        : SqlGetAllRecognitionsSortedBy.ByClassificationConfidence(whereExpression, this.CustomSelection.RecognitionSelections.ClassificationCategoryNumbers, false, rankByDetections);
                 }
 
                 await DoFileTableGetDataTableFromSelect(query);
@@ -787,7 +790,7 @@ namespace Timelapse.Database
             private static readonly string classConf = $"{DetectionColumns.ClassificationConf}";
             #endregion
 
-            internal static string ByDetectionConfidence(string where, string categoryNumber, bool asCount)
+            internal static string ByDetectionConfidence(string where, string categoryNumber, bool asCount, bool rankByDetections)
             {
                 // Sort all files by detection confidence (with classification confidence as a secondary sort)
 
@@ -799,15 +802,19 @@ namespace Timelapse.Database
                 //      WHERE  category  =  1 
                 //  )  AS  best  ON  best.Id  =   DataTable.Id  AND  best.rowNumber  =  1  
                 //  WHERE (DataTable.img_species='bear')
-                //  ORDER BY  best.conf  DESC , best.classification_conf  DESC , RelativePath, DateTime, File
-
+                //  (if rankByDetections is true) ORDER BY  best.conf  DESC , best.classification_conf  DESC , RelativePath, DateTime, File 
+                //  (if rankByDetections is false, i.e., rank by classifications) ORDER BY  best.classification_conf  DESC , best.conf  DESC , RelativePath, DateTime, File 
+                // 
                 // As -1 is All, we can just drop the where condition
                 string whereCategoryPhrase = categoryNumber == "-1" ? string.Empty : $"  {Sql.Where} {DetectionColumns.Category} {Sql.Equal} {categoryNumber}";
-
+                string orderByConfidencePhrase = rankByDetections
+                    ? $"{best}.{conf} {Sql.Descending}, {best}.{classConf} {Sql.Descending}"
+                    : $"{best}.{classConf} {Sql.Descending}, {best}.{conf} {Sql.Descending}";
                 // Order not needed if we are just doing counts
+                
                 string orderByPhrase = asCount
                     ? string.Empty
-                    : $"{Sql.OrderBy} {best}.{conf} {Sql.Descending}, {best}.{classConf} {Sql.Descending}, {DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}{lf}";
+                    : $"{Sql.OrderBy} {orderByConfidencePhrase}, {DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}{lf}";
 
                 return $"{GetCommonHeader(asCount)}"
                        + $"  {whereCategoryPhrase} {lf}"
@@ -817,7 +824,7 @@ namespace Timelapse.Database
                        + $"{lf}";
             }
 
-            internal static string ByClassificationConfidence(string where, List<string> categoryNumbers, bool asCount)
+            internal static string ByClassificationConfidence(string where, List<string> categoryNumbers, bool asCount, bool rankByDetections)
             {
                 // SELECT DataTable.* FROM DataTable
                 // INNER JOIN (
@@ -827,8 +834,14 @@ namespace Timelapse.Database
                 //     WHERE classification = 1
                 // ) AS best ON best.Id = DataTable.Id AND best.rowNumber = 1
                 // WHERE DataTable.img_species = 'bear'
-                // ORDER BY best.classification_conf DESC, best.conf DESC, RelativePath, DateTime, File
+                //  (if rankByDetections is true) ORDER BY best.conf DESC, best.classification_conf DESC,  RelativePath, DateTime, File 
+                //  (if rankByDetections is false, i.e., rank by classifications) ORDER BY best.classification_conf DESC, best.conf DESC, RelativePath, DateTime, File
+
                 string whereCategoryPhrase = $"  {Sql.Where} {DetectionColumns.Classification} {Sql.In} (";
+                string orderByConfidencePhrase = rankByDetections
+                    ? $"{best}.{conf} {Sql.Descending}, {best}.{classConf} {Sql.Descending}"
+                    : $"{best}.{classConf} {Sql.Descending}, {best}.{conf} {Sql.Descending}";
+
                 foreach (string categoryNumber in categoryNumbers)
                 {
                     whereCategoryPhrase += $"{Sql.Quote(categoryNumber)},";
@@ -840,7 +853,7 @@ namespace Timelapse.Database
                        + $"  {whereCategoryPhrase} {lf}"
                        + $"{GetCommonMiddle()}"
                        + $" {where}{lf}"
-                       + $" {Sql.OrderBy} {best}.{conf} {Sql.Descending}, {best}.{classConf} {Sql.Descending}, {DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}{lf}"
+                       + $" {Sql.OrderBy} {orderByConfidencePhrase}, {DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}{lf}"
                        + $"{lf}";
             }
 

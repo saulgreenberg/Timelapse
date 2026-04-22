@@ -199,12 +199,17 @@
                 <!--<TextBlock Name="TextBlockSortAllByLabel" Text="Sort returned images by:" FontWeight="Bold" Margin="0,10,0,0"/>-->
 
                 <!-- Rank By Confidence Checkbox-->
-                <StackPanel Name="SPRadioButtonsRankBy" Margin="0,15,0,0" Orientation="Vertical">
+                <StackPanel Name="SPRadioButtonsRankBy" Margin="0,15,0,0" Orientation="Vertical"
+                            ToolTip="Ignoring confidence ranges, return all matching files processed by the recognizer,&#10;ordered from highest to lowest of the selected confidence type.">
 
-                    <CheckBox x:Name="CBRankRecognitions" Content="Select / sort matching files &#10;by detection confidence" 
-                              ToolTip="Ignoring confidence ranges, return all matching files processed by the recognizer,&#10;ordered from highest to lowest detection confidence."/>
+                    <CheckBox x:Name="CBRankRecognitions" Content="Select / sort matching files by:" />
+                    <ComboBox Name="ComboBoxSortByConfidenceType" Margin="20,0,0,0"  SelectedIndex="0" Height="20" VerticalAlignment="Top" VerticalContentAlignment="Top" >
+                        <ComboBoxItem Content="detection confidence" />
+                        <ComboBoxItem Content="classification confidence"/>
+                    </ComboBox>
+
                 </StackPanel>
- 
+
                 <CheckBox Name="ShowMissingDetectionsCheckbox" Content="Show only matching files&#10;the recognizer didn't process" 
                           IsChecked="False" VerticalAlignment="Center" VerticalContentAlignment="Top" Margin="0,15,0,0" 
                           ToolTip="Shows only files that were not processed by the image recognizer&#10;i.e.,files that were not mentioned in the recognition file"

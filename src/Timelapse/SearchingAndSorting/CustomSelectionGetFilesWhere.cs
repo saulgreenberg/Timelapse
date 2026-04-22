@@ -71,7 +71,7 @@ namespace Timelapse.SearchingAndSorting
             }
 
 
-            // If no detections, or if the detectons are of RecognitionType none, or if we want to ignore recognition terms, we are done.
+            // If no detections, or if the detections are of RecognitionType none, or if we want to ignore recognition terms, we are done.
             // Return the current where clause
             if (false == ignoreRecognitions)
             {
@@ -184,7 +184,7 @@ namespace Timelapse.SearchingAndSorting
                 }
             }
 
-            // Debug.Print("CustomSelection GetFilesWhere: " + where);
+            //Debug.Print("CustomSelection GetFilesWhere: " + where);
             return where;
         }
 

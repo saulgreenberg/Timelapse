@@ -182,10 +182,24 @@ namespace Timelapse.Controls
             }
             // Set Ranking to saved setting. Note that ranking is done by sorting on detection confidence
             this.CBRankRecognitions.IsChecked = this.RecognitionSelections.RankByDetectionConfidence || this.RecognitionSelections.RankByClassificationConfidence;
+            this.ComboBoxSortByConfidenceType.SelectedIndex = this.RecognitionSelections.RankByDetectionConfidence ? 0 : 1;
+
+            if (this.classificationsExist)
+            {
+                this.ComboBoxSortByConfidenceType.SelectionChanged += ComboBoxSortByConfidenceType_SelectionChanged;
+            }
+            else
+            {
+                this.ComboBoxSortByConfidenceType.SelectedIndex = 0;
+                this.RecognitionSelections.RankByClassificationConfidence = false;
+                this.ComboBoxSortByConfidenceType.IsEnabled = false;
+            }
 
             // Set event handlers for the rank by confidence checkboxes after setting their initial states, to avoid triggering events during initialization
             this.CBRankRecognitions.Checked += CBRankRecognitions_CheckChanged;
             this.CBRankRecognitions.Unchecked += CBRankRecognitions_CheckChanged;
+
+
 
             // Set the show missing detections checkbox to its initial value
             this.ShowMissingDetectionsCheckbox.IsChecked = this.CustomSelection.ShowMissingDetections;
@@ -595,23 +609,35 @@ namespace Timelapse.Controls
         // 
         private void CBRankRecognitions_CheckChanged(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb)
+            DoSetRankRecognitions(true);
+        }
+
+
+        private void ComboBoxSortByConfidenceType_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            // We only need to send the event if CBRankRecognitions is checked
+            bool sendEvent = CBRankRecognitions.IsChecked == true;
+            DoSetRankRecognitions(sendEvent);
+        }
+
+        private void DoSetRankRecognitions(bool sendEvent)
+        {
+            bool rankingEnabled = CBRankRecognitions.IsChecked == true;
+
+            RecognitionSelections.RankByDetectionConfidence = rankingEnabled && ComboBoxSortByConfidenceType.SelectedIndex == 0; 
+            RecognitionSelections.RankByClassificationConfidence = rankingEnabled && ComboBoxSortByConfidenceType.SelectedIndex == 1;
+
+            // Disable sliders if ranking is enabled, as confidence thresholds don't apply when ranking by confidence, and to avoid confusion
+            SlidersEnableState(rankingEnabled == false);
+
+            if (rankingEnabled)
             {
-                bool rankingEnabled = cb.IsChecked == true;
-                this.RecognitionSelections.RankByDetectionConfidence = rankingEnabled;
+                // The Empty category will show Empty when a Ranking checkbox is checked
+                this.SetEmptyDetectionCategoryLabel();
+            }
 
-                // As turned off for now
-                this.RecognitionSelections.RankByClassificationConfidence = false;
-
-                // Disable sliders if ranking is enabled, as confidence thresholds don't apply when ranking by confidence, and to avoid confusion
-                SlidersEnableState(rankingEnabled == false);
-
-                if (rankingEnabled)
-                {
-                    // The Empty category will show Empty when a Ranking checkbox is checked
-                    this.SetEmptyDetectionCategoryLabel();
-                }
-
+            if (sendEvent)
+            { 
                 // Send a recognition selection event to the parent
                 this.SendRecognitionSelectionEvent(true);
             }
@@ -954,7 +980,7 @@ namespace Timelapse.Controls
         // Used only by OnLoaded to show the initial selections.
         private void TryHighlightCurrentSelection()
         {
-            if (string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber) && this.RecognitionSelections.ClassificationCategoryNumbers is null or {Count:0})
+            if (string.IsNullOrEmpty(this.RecognitionSelections.DetectionCategoryNumber) && this.RecognitionSelections.ClassificationCategoryNumbers is null or { Count: 0 })
             {
                 // Nothing was selected
                 this.ignoreSelection = true;
@@ -1020,7 +1046,7 @@ namespace Timelapse.Controls
                 // Finally, select that item in the data grid, making sure its visible and highlit
                 this.ignoreSelection = true;
                 this.DataGridDetections.SelectedItem = detectionCategoryCount;
-                if (this.RecognitionSelections.ClassificationCategoryNumbers is null or {Count: 0})
+                if (this.RecognitionSelections.ClassificationCategoryNumbers is null or { Count: 0 })
                 {
                     this.DataGridClassifications.SelectedItem = null;
                 }
@@ -2218,6 +2244,5 @@ namespace Timelapse.Controls
         }
         #endregion
 
-   
     }
 }
