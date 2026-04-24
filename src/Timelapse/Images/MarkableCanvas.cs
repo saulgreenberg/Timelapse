@@ -286,6 +286,9 @@ namespace Timelapse.Images
             // event handlers for image/video interaction: keys, mouse handling for markers
             MouseLeave += ImageOrCanvas_MouseLeave;
             MouseMove += MarkableCanvas_MouseMove;
+            // FIX: Tunnels before any child (including Slider.Thumb which marks bubble MouseDown as handled),
+            // guaranteeing we can reset pan state on every new press regardless of which child the cursor is over.
+            PreviewMouseLeftButtonDown += MarkableCanvas_PreviewMouseLeftButtonDown;
             VideoPlayer.MediaElement.MouseLeave += MediaElementMouseLeave;
             PreviewKeyDown += MarkableCanvas_PreviewKeyDown;
             PreviewKeyUp += MarkableCanvas_PreviewKeyUp;
@@ -1060,14 +1063,50 @@ namespace Timelapse.Images
         #endregion
 
         #region Mouse Event Handlers
+
+        // FIX: Runs before any child processes the press (tunneling phase), so it fires even when
+        // Slider.Thumb marks the bubble-phase MouseDown as handled and stops it from reaching
+        // ImageVideoOrCanvas_MouseDown. Resets pan state unconditionally on every new press, and
+        // clears mouseDownSender when the press is in the VideoPlayer controls panel so that
+        // MarkableCanvas_MouseMove never arms panning for that gesture.
+        private void MarkableCanvas_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            isPanning = false;
+            if (!displayingImage)
+            {
+                Point posInVideoPlayer = e.GetPosition(VideoPlayer);
+                if (posInVideoPlayer.Y > VideoPlayer.VideoCanvas.ActualHeight)
+                {
+                    mouseDownSender = null;
+                }
+            }
+        }
+
         // On Mouse down, record the location, and who sent it.
-        // We will use this information on move and up events to discriminate between 
-        // panning/zooming vs. marking. 
+        // We will use this information on move and up events to discriminate between
+        // panning/zooming vs. marking.
         private void ImageVideoOrCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
             previousMousePosition = e.GetPosition(this);
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                // FIX: When displaying video, MouseDown bubbles up from all VideoPlayer children
+                // (e.g. SliderScrubbing) since Slider does not mark the bubble-phase event as handled.
+                // If the click is below the VideoCanvas (i.e. in the controls panel), clear mouseDownSender
+                // so that MarkableCanvas_MouseMove never arms panning for that press.
+                if (!displayingImage)
+                {
+                    Point posInVideoPlayer = e.GetPosition(VideoPlayer);
+                    if (posInVideoPlayer.Y > VideoPlayer.VideoCanvas.ActualHeight)
+                    {
+                        // Click is in the controls panel — reset state so any lingering isPanning=true
+                        // from a previous gesture doesn't continue to pan while the user drags the slider.
+                        mouseDownSender = null;
+                        isPanning = false;
+                        return;
+                    }
+                }
+
                 mouseDownLocation = (displayingImage)
                     ? e.GetPosition(ImageToDisplay)
                     : e.GetPosition(VideoPlayer.MediaElement);
@@ -1108,8 +1147,11 @@ namespace Timelapse.Images
                     ? e.GetPosition(ImageToDisplay)
                     : e.GetPosition(VideoPlayer.MediaElement);
 
-            // If we are not yet in panning mode, switch into it if the user has moved at least the threshold distance from mouse down position
-            if (e.LeftButton == MouseButtonState.Pressed && isPanning == false && (mouseDownLocation - mousePosition).Length > Constant.MarkableCanvas.MarkingVsPanningDistanceThreshold)
+            // If we are not yet in panning mode, switch into it if the user has moved at least the threshold distance from mouse down position.
+            // FIX: Also guard on mouseDownSender != null so that a press that originated on a video control
+            // (e.g. SliderScrubbing — where ImageVideoOrCanvas_MouseDown clears mouseDownSender) never starts a pan.
+            if (e.LeftButton == MouseButtonState.Pressed && isPanning == false && mouseDownSender != null &&
+                (mouseDownLocation - mousePosition).Length > Constant.MarkableCanvas.MarkingVsPanningDistanceThreshold)
             {
                 isPanning = true;
             }
