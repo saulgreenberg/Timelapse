@@ -74,6 +74,7 @@ namespace Timelapse
 
             // Allow random sampling after a new selection
             this.MenuItemSelectRandomSample.IsEnabled = true;
+            this.MenuItemSelectRandomSample.IsChecked = false;
 
             // Select the files according to the given selection, where Missing files is treated as a special case.
             Mouse.OverrideCursor = Cursors.Wait;

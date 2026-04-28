@@ -2164,6 +2164,25 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog() == true;
         }
 
+        public static bool RandomSelectionDoesntMakeSenseDialog(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Doing a Random Selection your currently selected images doesn't make much sense.";
+            var dialog = new FormattedDialog()
+            {
+                Owner = owner,
+                Icon = DialogIconType.Warning,
+                DialogTitle = title,
+                // Height = 340,
+                Problem = "Your current selection has [i]include all files in an episode[/i] turned on in the Custom Select dialog.[br]This means that a random selection could return:" +
+                          "[li]images that fit your selection criteria" +
+                          "[li]other images associated with matching episodes that don't fit your selection criteria",
+                Solution = "Select:[li][e]Okay[/e] to continue with the random selection, or [li][e]Cancel[/e] to cancel the random selection.",
+                Hint = "This is just a warning, as we just wanted to make sure that this is what you wanted to do."
+            };
+            return true == dialog.BuildAndShowDialog();
+        }
+
         #endregion
 
         #region related to DateTime

@@ -11,6 +11,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.SearchingAndSorting;
+using Timelapse.Util;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse
@@ -47,7 +48,7 @@ namespace Timelapse
             MenuItemSelectCustomSelection.IsChecked = selection == FileSelectionEnum.Custom;
 
             // Random sampling is active only if it isn't the currently active selection. It is also inactive if the EpisodeShowAll selection is true (as it is somewhat nonsensical to do that with a random selection)
-            MenuItemSelectRandomSample.IsEnabled = MenuItemSelectRandomSample.IsEnabled &&  false == DataHandler?.FileDatabase?.CustomSelection.EpisodeShowAllIfAnyMatch && DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
+            MenuItemSelectRandomSample.IsEnabled = MenuItemSelectRandomSample.IsEnabled &&   DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
 
             this.MenuItemSetRelativePathSearchTerm();
         }
@@ -291,7 +292,7 @@ namespace Timelapse
 
             // show the dialog and process the results
             // We save the custom selections, so we can restore them if the user cancels the dialog
-            CustomSelection savedCustomSelection = Util.ObjectUtillities.DeepClone(DataHandler.FileDatabase.CustomSelection);
+            CustomSelection savedCustomSelection = DataHandler.FileDatabase.CustomSelection.DeepClone();
             CustomSelectionWithEpisodes customSelection = new(this, DataHandler.FileDatabase, DataEntryControls, DataHandler.ImageCache.Current, DataHandler.FileDatabase.CustomSelection.RecognitionSelections, this.Arguments)
             {
                 Owner = this
@@ -352,11 +353,32 @@ namespace Timelapse
         #endregion
 
         #region Select Random Sample
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void MenuItemSelectRandomSample_Click(object sender, RoutedEventArgs e)
         {
+            if (true == DataHandler?.FileDatabase?.CustomSelection.EpisodeShowAllIfAnyMatch)
+            {
+                if (true != Dialogs.RandomSelectionDoesntMakeSenseDialog(this))
+                {
+                    return;
+                }
+            }
+
+
             try
             {
-                await MenuItemSelectRandomSample_ClickAsync();
+                if (false == await MenuItemSelectRandomSample_ClickAsync())
+                {
+                    return;
+                }
+                NotificationOptions toastOptions = new()
+                {
+                    ShowCloseButton = true,
+                    CloseAfter = 4000,
+                };
+                string toastMessage = $"You are now viewing a random selection of your currently selected items.";
+                GlobalReferences.MainWindow.ToastNotifier.ShowSuccess(toastMessage, toastOptions);
+                this.MenuItemSelectRandomSample.IsChecked = true;
             }
             catch (Exception ex)
             {
@@ -364,7 +386,7 @@ namespace Timelapse
             }
         }
 
-        private async Task MenuItemSelectRandomSample_ClickAsync()
+        private async Task<bool> MenuItemSelectRandomSample_ClickAsync()
         {
             MenuItemSelectAllFiles.IsChecked = false;
             int currentSelectionCount = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;
@@ -378,7 +400,7 @@ namespace Timelapse
                     // Shouldn't happen
                     TracePrint.NullException(nameof(DataHandler.ImageCache.Current));
                     StatusBar.SetView("Something went wrong with random sample");
-                    return;
+                    return false;
                 }
                 DataHandler.FileDatabase.CustomSelection.RandomSample = customSelection.SampleSize;
                 await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, DataHandler.FileDatabase.FileSelectionEnum).ConfigureAwait(true);
@@ -389,6 +411,8 @@ namespace Timelapse
                 // Disable the random sample selection until the next active selection
                 this.MenuItemSelectRandomSample.IsEnabled = false;
             }
+
+            return true;
         }
         #endregion
     }
