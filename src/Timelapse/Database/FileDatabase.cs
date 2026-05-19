@@ -590,6 +590,30 @@ namespace Timelapse.Database
             // Version 2.3.3.0 changed how recognition tables are managed.
             // Update those tables to their new format if needed
             this.UpdateOldStyleRecognitionTablesIfNeeded();
+
+            // Version 2.3
+            this.RepairClassificationCategoriesIfNeeded();
+
+
+        }
+
+        // In the ClassificationCategories, update rows where the label is empty with a string unknownClassification for the first empty label,
+        // and with the same string suffixed with an incrementing number for subsequent empty labels. and deleting the description field contents.
+        private void RepairClassificationCategoriesIfNeeded()
+        {
+            if (this.DetectionsExists() && this.Database.TableExists(Constant.DBTables.ClassificationCategories))
+            {
+                string table = Constant.DBTables.ClassificationCategories;
+                string label = $"{ Constant.ClassificationCategoriesColumns.Label}";
+                string description = $"{Constant.ClassificationCategoriesColumns.Description}";
+                string newLabel = Sql.Quote(Constant.RecognizerValues.UnknownClassificationLabel);
+                string query = $"WITH SequencedRows AS (SELECT rowid, ROW_NUMBER() OVER (ORDER BY rowid) as seq FROM {table}"
+                               + $" WHERE {label} IS NULL OR TRIM({label}) = '' )" 
+                               + $" UPDATE {table} SET {label} = CASE " 
+                               + $" WHEN sr.seq = 1 THEN {newLabel} ELSE {newLabel} || sr.seq END," 
+                               + $" {description} = '' FROM SequencedRows sr WHERE {table}.rowid = sr.rowid;";
+                this.Database.ExecuteNonQueryWithRollback(query);
+            }
         }
 
         private static SchemaColumnDefinition CreateFileDataColumnDefinition(CommonControlRow control)
@@ -2069,8 +2093,12 @@ namespace Timelapse.Database
                     JsonSerializer serializer = new();
                     jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
 
+                    // Fix a known but rare recognition bug where no classification label is provided
+                    // Replaces buggy classification category with a label "unknownClassification" and removes the corresponding description (if any)
+                    jsonRecognizer.CorrectForEmpyClassificationLabels();
+
                     // trim detections/ classifications below a certain confidence level and only keep the best classification
-                    jsonRecognizer = RecognizerTrimAndSortRecognitionsAsNeeded(jsonRecognizer);
+                    jsonRecognizer.TrimAndSortRecognitionsAsNeeded();
                 }
 
                 catch (Exception e)
@@ -2090,107 +2118,6 @@ namespace Timelapse.Database
             return jsonRecognizer;
         }
 
-        // Trim low-confidence detections and classifications from the recognizer data structure,
-        // Trim all but the highest-confidence classification
-        // Sort the detections by frame number if its a video (which helps performance when displaying video bounding boxes)
-        public static Recognizer RecognizerTrimAndSortRecognitionsAsNeeded(Recognizer jsonRecognizer)
-        {
-            if (jsonRecognizer?.images == null)
-            {
-                // essentially a no-op
-                return jsonRecognizer;
-            }
-            // Set confidence thresholds, where we will delete detections or classifications less than their respective threshold.
-            // This is because detections below that value are rarely useful.
-            // We use the default MinimumDetectionValue, unless the conservative_detection_threshold suggests a higher value. 
-            // Classifciations are somewhat similar, although they only report a typical_classification_threshold
-            double? minimumDetectionConfidence =
-               null != jsonRecognizer.info?.detector_metadata?.conservative_detection_threshold &&
-                       jsonRecognizer.info.detector_metadata.conservative_detection_threshold / 2.5 > Constant.RecognizerValues.MinimumDetectionValue
-                ? jsonRecognizer.info.detector_metadata.conservative_detection_threshold / 2.5
-                : Constant.RecognizerValues.MinimumDetectionValue;
-
-            double? minimumClassificationConfidence =
-                null != jsonRecognizer.info?.classifier_metadata?.typical_classification_threshold &&
-                        jsonRecognizer.info.classifier_metadata.typical_classification_threshold / 2.5 > Constant.RecognizerValues.MinimumClassificationValue
-                    ? jsonRecognizer.info.classifier_metadata.typical_classification_threshold / 2.5
-                    : Constant.RecognizerValues.MinimumClassificationValue;
-
-            foreach (image image in jsonRecognizer.images)
-            {
-                if (image.detections == null || image.detections.Count == 0)
-                {
-                    // Even if there are no detections, an image entry will be created with bounding box "" and confidence at 0.
-                    // This allows us to know that  this image has been processed by the recognizer
-                    continue;
-                }
-                for (int i = image.detections.Count - 1; i >= 0; i--)
-                {
-                    // Round the bounding box values upwards three decimal places, as we really don't need massive precision.
-                    // Also, make the bounding box slightly larger so its edges don't overlap the detected item
-                    if (image.detections[i].bbox != null)
-                    {
-                        for (int j = 0; j < image.detections[i].bbox.Length; j++)
-                        {
-                            image.detections[i].bbox[j] += j <= 1 ? -0.002f : 0.004f; // the 2nd two terms are offset, so we need to double the amount
-                            image.detections[i].bbox[j] = image.detections[i].bbox[j] < 0 ? 0 : Math.Round(image.detections[i].bbox[j], Constant.RecognizerValues.ConfidenceDecimalPlaces);
-                        }
-                    }
-
-                    // Round the confidence to three decimal places, as we really don't need massive precision. I suspect even that is excessive
-                    image.detections[i].conf = (float)Math.Round(image.detections[i].conf, Constant.RecognizerValues.ConfidenceDecimalPlaces);
-
-                    // Delete detections whose confidence is lower than the confidence threshold
-                    // This is done to get rid of detections that have little value.
-                    if (image.detections[i].conf < minimumDetectionConfidence)
-                    {
-                        image.detections.RemoveAt(i);
-                        continue;
-                    }
-
-                    // For each detection, find the highest confidence classification (if any)
-                    detection detection = image.detections[i];
-                    object[] highestConfidenceClassification = null;
-                    double highestConfidenceFound = -1;
-                    for (int j = detection.classifications.Count - 1; j >= 0; j--)
-                    {
-                        // get the confidence of that classification
-                        double conf = double.Parse(detection.classifications[j][1].ToString() ?? "0");
-
-                        if (conf < minimumClassificationConfidence)
-                        {
-                            // Skip this classification if it is below the minimum confidence threshold
-                            continue;
-                        }
-
-                        if (conf > highestConfidenceFound)
-                        {
-                            // We have a new highest confidence classification
-                            highestConfidenceFound = conf;
-                            highestConfidenceClassification = detection.classifications[j];
-                        }
-                    }
-
-                    // If we have a highest confidence classification, replace the classification list with just that classification
-                    // As we do that, also round its confidence to three decimal places, as we really don't need massive precision.
-                    detection.classifications.Clear();
-                    if (null != highestConfidenceClassification)
-                    {
-                        highestConfidenceClassification[1] = Math.Round(highestConfidenceFound, Constant.RecognizerValues.ConfidenceDecimalPlaces);
-                        detection.classifications.Add(highestConfidenceClassification);
-                    }
-                    // At this point there should only be a single classification, with
-                    // other lower ranking classifications filtered out
-                }
-                // Sort the detections by frame number, if any
-                // This will later write the detections into the database in sorted order
-                // I don't actually know if that will preserve the order when they are read back in, but if it does it may 
-                // provide a slight performance advantage for showing bounding boxes on videos
-                image.detections.Sort((x, y) => x.frame_number.CompareTo(y.frame_number));
-            }
-
-            return jsonRecognizer;
-        }
         public async Task<RecognizerImportResultEnum> PopulateRecognitionTablesFromRecognizerAsync(Recognizer jsonRecognizer, List<string> foldersInDBListButNotInJSon, List<string> foldersInJsonButNotInDB, List<string> foldersInBoth, bool tryMerge, IProgress<ProgressBarArguments> progress, CancellationTokenSource cancelTokenSource)
         {
             // Check the arguments for null 

@@ -936,6 +936,8 @@ namespace Timelapse.Constant
         public const string ClassifierUnknown = "ecosystem1_unknown_version";
         public const string ClassificationCompletionTimeUnknown = "unknown";
         public const string FormatVersionUnknown = "";
+
+        public const string UnknownClassificationLabel = "unknownClassification";
     }
 
     public static class ClassificationColumns
