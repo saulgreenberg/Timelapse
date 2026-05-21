@@ -1561,8 +1561,7 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region DataExported/Imported To CSV
-
+        #region DataExported To CSV
         // A message saying that the folder data was exported to various CSV files
         public static void AllDataExportedToCSV(Window owner, string folderPath, List<string> files, bool imageDataIncluded)
         {
@@ -1647,6 +1646,26 @@ namespace Timelapse.Dialog
                 GlobalReferences.TimelapseState.SuppressCsvExportDialog = dialog.DontShowAgain.IsChecked.Value;
             }
         }
+        #endregion
+
+        #region Data Imported To CSV
+        private static readonly string importingCSVRules = $"[b]The first row[/b] in the [i].csv[/i] file must comprise column headers, where:[br 2]"
+                                           + $"[li] [b]File[/b] must be included."
+                                           + $"[li] [b]RelativePath[/b] must be included if any of your images are in subfolders."
+                                           + $"[li] [b]Other headers[/b] are a subset of your template's DataLabels (columns can be omitted)."
+                                           + $"[li] [b]Header labels[/b] must match its corresponding DataLabel labels"
+                                           + $"[br 14][b]Subsequent rows[/b] define the data for each file, where data must match the Header/Template type:"
+                                           + $"[li] [b]File[/b] data must match the name of the file you want to update."
+                                           + $"[li] [b]RelativePath[/b] data should match the sub-folder path containing that file, if any."
+                                           + $"[li] [b]Counter, Integer and Decimal[/b] data must be blank, 0, or a positive integer."
+                                           + $"[li] [b]DateTime[/b], [b]Date[/b] and [b]Time[/b] data must follow the specific date/time formats (see [e]File|Export data[/e])."
+                                           + $"[li] [b]Flag[/b] and [b]DeleteFlag[/b] data must be [i]true[/i] or [i]false[/i]."
+                                           + $"[li] [b]FixedChoice[/b] and [b]MultiChoice[/b] data should exactly match a corresponding list item defined in the template, or empty."
+                                           + $"[li] [b]Folder[/b] and [b]ImageQuality[/b] columns, if included, are skipped over."
+                                           + $"[br 14][b]Important:[/b] The [i]csv[/i] row is skipped if its [b]RelativePath/File[/b] location does not match a file in the Timelapse database.";
+
+        private static readonly string importingCSVRulesDetailsHeading = $"Expand this section to see rules for importing CSV files.";
+
 
         /// <summary>
         /// Tell the user how importing CSV files work. Give them the opportunity to abort.
@@ -1663,23 +1682,8 @@ namespace Timelapse.Dialog
                 // Height = 580,
                 // Width = 640,
                 Title = title,
-                What = "Importing data from a [i].csv[/i] (comma separated value) file follows the rules below.",
-                Reason = $"The first row in the [i].csv[/i] file must comprise column headers, where:[br 2]"
-                          + $"[li] [b]File[/b] must be included."
-                          + $"[li] [b]RelativePath[/b] must be included if any of your images are in subfolders."
-                          + $"[li] [b]Remaining headers[/b] should generally match your template's DataLabels[br 14]"
-                          + $"Headers can be a subset of your template's DataLabels.[br 4]"
-                          + $"Subsequent rows define the data for each file, where it must match the Header type:[br 2]"
-                          + $"[li] [b]File[/b] data should match the name of the file you want to update." +
-                          Environment.NewLine
-                          + $"[li] [b]RelativePath[/b] data should match the sub-folder path containing that file, if any."
-                          + $"[li] [b]Counter[/b] data must be blank, 0, or a positive integer."
-                          + $"[li] [b]DateTime[/b], [b]Date[/b] and [b]Time[/b] data must follow the specific date/time formats (see [e]File|Export data[/e])."
-                          + $"[li] [b]Flag[/b] and [b]DeleteFlag[/b] data must be [i]true[/i] or [i]false[/i]."
-                          + $"[li] [b]FixedChoice[/b] data should exactly match a corresponding list item defined in the template, or empty."
-                          + $"[li] [b]Folder[/b] and [b]ImageQuality[/b] columns, if included, are skipped over.",
-                Result = "Database values will be updated only for matching RelativePath/File entries. Non-matching entries are ignored.",
-                Hint = $"Warnings will be generated for non-matching CSV headers, which you can then fix.[br 18]"
+                What = "Importing data from a [i].csv[/i] (comma separated value) file follows the rules below.[br 14]" + importingCSVRules,
+                Hint = $"Warnings will be generated if Timelapse encounters any issues in your [i].csv[/i] file.[br 18]"
                        + $"{dontShowMessageAgainInstructions}",
                 DontShowAgain =
                 {
@@ -1695,7 +1699,7 @@ namespace Timelapse.Dialog
             return result;
         }
 
-        // CSV import Cancelled 
+        // CSV import Cancelled on user's request
         public static void MenuFileImportCSVFileCancelledDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
@@ -1708,81 +1712,170 @@ namespace Timelapse.Dialog
                 // Height = 265,
                 What = $"Importing of data from a CSV file was cancelled by you",
                 Result = "Nothing was imported, so your data remains unchanged.",
+                DetailsHeading = importingCSVRulesDetailsHeading,
+                Details = importingCSVRules
 
             };
             dialog.BuildAndShowDialog();
         }
 
-        /// <summary>
-        /// Can't import CSV File
-        /// </summary>
-        public static void MenuFileCantImportCSVFileDialog(Window owner, string csvFileName, List<string> resultAndImportErrors)
+        // CSV import Cancelled as can't read file
+        public static void MenuFileImportCSVFileCannotBeReadDialog(Window owner, string csvFileName, List<string> resultAndImportErrors)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "Can't import the .csv file.";
+            const string title = "Timelapse could not open or read your .csv file.";
 
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
                 DialogTitle = title,
                 Icon = DialogIconType.Error,
-                // Height = 580,
-                // Width = 640,
                 Title = title,
-                Problem = $"The file #DarkSlateGray[[e]{csvFileName}[/e]] could not be read.",
-                Reason = "The [i].csv[/i] file is not compatible with the Timelapse template defining the current image set.",
-                Solution = "Change your .csv file to fix the errors listed in the [b]Details[/b] below and try again.[br 2]",
-                Hint = "Timelapse checks the following when importing the .csv file:[br 2]"
-                          + $"[li] The first row is a header whose column names match the data labels in the .tdb template file"
-                          + $"[li] [b]Counter[/b] data values are numbers or blanks."
-                          + $"[li] [b]Flag[/b] and [b]DeleteFlag[/b] values are either [i]True[/i] or [i]False[/i]."
-                          + $"[li] [b]Choice[/b] values are in that field's [i]Choice[/i] list, defined in the template.[br 14]"
-
-                          + "While Timelapse will do the best it can to update your fields:[br 2]"
-                          + $"[li] the [i]csv[/i] row is skipped if its [b]RelativePath/File[/b] location do not match a file in the Timelapse database."
-                          + $"[li] the [i]csv[/i] row's [b]Date/Time[/b] is updated only if it is in the expected format (see [link:{Constant.ExternalLinks.TimelapseGuideReference}|Timelapse Reference Guide]).",
-                Result = "Importing of data from the CSV file was aborted. No changes were made."
+                Problem = $"The file #DarkSlateGray[[e]{csvFileName}[/e]] could not be opened or read.",
+                Solution = "The solution depends on which of the following caused the issue.",
+                Result = "Importing of data from the CSV file was aborted. No changes were made.",
+                DetailsHeading = importingCSVRulesDetailsHeading,
+                Details = importingCSVRules
             };
+
 
             if (resultAndImportErrors != null)
             {
-                dialog.Details = "These errors were recorded: [br 2]";
                 foreach (string importError in resultAndImportErrors)
                 {
-                    string prefix = (importError[0] == '-') ? "   " : "[li] ";
-                    dialog.Details += prefix + importError;
+                    string prefix = "[li] ";
+                    dialog.Solution += prefix + importError;
                 }
             }
 
             dialog.BuildAndShowDialog();
         }
 
+        // CSV import Cancelled as it doesn't contain any data rows (perhaps just headers, or is blank)
+        public static void MenuFileImportCSVFileNoDataPresentDialog(Window owner, string csvFileName, List<string> resultAndImportErrors)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Your .csv file does not contain any data";
+
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = title,
+                Icon = DialogIconType.Error,
+                Title = title,
+                Problem = $"The file #DarkSlateGray[[e]{csvFileName}[/e]] does not contain any data.",
+                Reason = "This is what Timelapse saw.",
+                Result = "Importing of data from the CSV file was aborted. No changes were made.",
+                DetailsHeading = importingCSVRulesDetailsHeading,
+                Details = importingCSVRules
+            };
+
+            if (resultAndImportErrors != null)
+            {
+                foreach (string importError in resultAndImportErrors)
+                {
+                    string prefix = "[li] ";
+                    dialog.Reason += prefix + importError;
+                }
+            }
+
+            dialog.BuildAndShowDialog();
+        }
+
+        // CSV import Cancelled as the csv file contains headers that do not match those in the template
+        public static void MenuFileImportCSVAbortedAsHeaderErrors(Window owner, string csvFileName, List<string> resultAndImportErrors)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Importing aborted as your CSV file header contains errors";
+
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = title,
+                Icon = DialogIconType.Error,
+                Title = title,
+                Problem = $"The header (first row) in your file #DarkSlateGray[[e]{csvFileName}[/e]] contains errors.",
+                Reason = "This is what Timelapse saw.",
+                Result = "Importing of data from the CSV file was aborted. No changes were made.",
+                DetailsHeading = importingCSVRulesDetailsHeading,
+                Details = importingCSVRules
+            };
+
+            if (resultAndImportErrors != null)
+            {
+                foreach (string importError in resultAndImportErrors)
+                {
+                    string prefix = "[li] ";
+                    dialog.Reason += prefix + importError;
+                }
+            }
+
+            dialog.BuildAndShowDialog();
+        }
+
+        // CSV import Cancelled as csv data columns contain errors
+        public static void MenuFileImportCSVAbortedAsDataErrors(Window owner, string csvFileName, List<string> resultAndImportErrors)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Importing aborted as your CSV file data contains errors";
+
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = title,
+                Icon = DialogIconType.Error,
+                Title = title,
+                Problem = $"The data in your file #DarkSlateGray[[e]{csvFileName}[/e]] contains errors.",
+                Reason = "This is what Timelapse saw.",
+                Result = "Importing of data from the CSV file was aborted. No changes were made.",
+                DetailsHeading = importingCSVRulesDetailsHeading,
+                Details = importingCSVRules
+            };
+
+            if (resultAndImportErrors != null)
+            {
+                foreach (string importError in resultAndImportErrors)
+                {
+                    string prefix = "[li] ";
+                    dialog.Reason += prefix + importError;
+                }
+            }
+            
+            dialog.BuildAndShowDialog();
+        }
+
         /// <summary>
-        /// CSV file imported
+        /// CSV file imported, perhaps with warnings
         /// </summary>
         public static void MenuFileCSVFileImportedDialog(Window owner, string csvFileName, List<string> warnings)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            const string title = "CSV file imported";
+            bool warningsExist = warnings.Count > 0;
+            string title = "CSV file imported";
+            if (warningsExist)
+            {
+                title += " but with warnings";
+            }
 
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
                 DialogTitle = title,
                 Icon = DialogIconType.Information,
-                // Height = 360,
                 What = $"The file #DarkSlateGray[[e]{csvFileName}[/e]] was successfully imported.",
                 Hint = $"Check your data. If it is not what you expect, restore your data by using latest backup file in [e]{File.BackupFolder}[/e]. {backupsLinkAndDirections}"
             };
-            if (warnings.Count != 0)
+            if (warningsExist)
             {
-                dialog.Result = "Several warnings were generated. Expand the [b]Details[/b] section to check them.";
-                dialog.Details = "These warnings were generated.[br 2]";
+                dialog.Result = "Warnings are listed below, where some fields may not have been updated.";
                 foreach (string warning in warnings)
                 {
-                    string prefix = (warning[0] == '-') ? "   " : "[li] ";
-                    dialog.Details += Environment.NewLine + prefix + warning;
+                    string prefix = warning[0] == '-' ? "   " : "[li] ";
+                    dialog.Result += Environment.NewLine + prefix + warning;
                 }
+
+                dialog.Details = importingCSVRules;
+                dialog.DetailsHeading = importingCSVRulesDetailsHeading;
             }
 
             dialog.BuildAndShowDialog();
@@ -1790,7 +1883,7 @@ namespace Timelapse.Dialog
         }
 
         /// <summary>
-        /// Can't import the .csv file
+        /// Can't import the .csv file (fallback, unknown reason)
         /// </summary>
         public static void MenuFileCantImportCSVFileDialog(Window owner, string csvFileName, string exceptionMessage)
         {
@@ -1802,18 +1895,18 @@ namespace Timelapse.Dialog
                 Owner = owner,
                 DialogTitle = title,
                 Icon = DialogIconType.Error,
-                // Height = 370,
-                Problem = $"The file #DarkSlateGray[[e]{csvFileName}[/e]] could not be opened.",
-                Reason = "The file is likely already open in another program. The [b]Details[/b] section below provides a technical explanation",
-                Solution = "If the file is open in another program, close it.",
+                Problem = $"The file #DarkSlateGray[[e]{csvFileName}[/e]] could not be opened or its rows read.",
+                Reason = "The [b]Details[/b] section below provides a technical explanation",
                 Result = "Importing of data from the CSV file was aborted. No changes were made.",
-                Hint = "Is the file open in Excel?",
-                Details = "The technical reason for failing to import data is listed below."
-                          + $"[li] {exceptionMessage}"
+                DetailsHeading = "Expand to see the technical reason behind this issue.",
+                Details = $"[li] {exceptionMessage}"
             };
             dialog.BuildAndShowDialog();
         }
 
+        #endregion
+
+        #region ExportCurrentImage
         /// <summary>
         /// Can't export the currently displayed image as a file
         /// </summary>
@@ -1827,7 +1920,6 @@ namespace Timelapse.Dialog
                 Owner = owner,
                 DialogTitle = title,
                 Icon = DialogIconType.Error,
-                // Height = 300,
                 Problem = "Timelapse can't export a copy of the current image or video file.",
                 Reason = "It is likely a corrupted or missing file.",
                 Solution = "Make sure you have navigated to, and are displaying, a valid file before you try to export a copy of it."

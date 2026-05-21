@@ -32,6 +32,7 @@ namespace TimelapseWpf.Toolkit
         private string _result = "";
         private string _hint = "";
         private string _details = "";
+        private string _detailsHeading = "Click to show details";
         private DialogIconType _icon = DialogIconType.None;
         private bool isModal = true;
 
@@ -89,6 +90,13 @@ namespace TimelapseWpf.Toolkit
         {
             get => _details;
             set => _details = value;
+        }
+
+        // Text shown in the Details toggle when the section is collapsed
+        public string DetailsHeading
+        {
+            get => _detailsHeading;
+            set => _detailsHeading = value;
         }
 
         // Icon to display in the dialog header (Error, Information, Warning, Question, or None)
@@ -174,6 +182,7 @@ namespace TimelapseWpf.Toolkit
                 messageContent.Result = _result;
                 messageContent.Hint = _hint;
                 messageContent.Details = _details;
+                messageContent.DetailsHeading = _detailsHeading;
                 messageContent.Icon = _icon;
                 messageContent.NoHeadings = _noHeadings;
 

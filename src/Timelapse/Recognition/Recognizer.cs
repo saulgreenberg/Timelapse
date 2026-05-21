@@ -240,7 +240,7 @@ namespace Timelapse.Recognition
         // Sort the detections by frame number if its a video (which helps performance when displaying video bounding boxes)
         public void TrimAndSortRecognitionsAsNeeded()
         {
-            if (this?.images == null)
+            if (this.images == null)
             {
                 // essentially a no-op
                 return;
@@ -446,7 +446,7 @@ namespace Timelapse.Recognition
         #region Public Properties
         public long detectionID { get; set; }
         public string category { get; set; } = string.Empty;
-        public float conf { get; set; } = 0;
+        public float conf { get; set; }
 
         //#pragma warning disable CA1819 // Properties should not return arrays. Reason: A Json serializer requires direct writing into an array property of this type.
         public double[] bbox { get; set; } = new double[4];

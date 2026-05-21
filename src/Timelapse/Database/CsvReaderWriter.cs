@@ -447,14 +447,23 @@ namespace Timelapse.Database
         // Try importing a CSV file, checking its headers and values against the template's DataLabels and data types.
         // Duplicates are handled.
         // Return a list of errors if needed.
+        // - Item1 is true only if file is readable
+        // - Item2 is true only if read was not cancelled
+        // - Item3 is true only if all rows were successfully read
+        // string is list of message
         // However, error reporting is limited to only gross mismatches.
         // Note that:
         // - rows in the CSV file that are not in the .ddb file are ignored (not reported - maybe it should be?)
         // - rows in the .ddb file that are not in the CSV file are ignored
         // - if there are more duplicate rows for an image in the .csv file than there are in the .ddb file, those extra duplicates are ignored (not reported - maybe it should be?)
         // - if there are more duplicate rows for an image in the .ddb file than there are in the .csv file, those extra duplicates are ignored (not reported - maybe it should be?)
-        public static async Task<Tuple<bool, List<string>>> TryImportFromCsv(string filePath, FileDatabase fileDatabase, CancellationToken token = default)
+        public static async Task<(CSVReadingResult, List<string>)> TryImportFromCsv(string filePath, FileDatabase fileDatabase, CancellationToken token = default)
         {
+            // Todo: Add an option so that it creates new entries for rows in the CSV file that are not in the .ddb file using Upsert instead of Update,
+            // and/or reports them as errors. This would be a more forgiving import option,
+            // as currently we ignore those rows without reporting them, which may lead to user confusion if they expect those rows to be imported.
+            // However, it would also be necessary to set defaults for those columns that are missing in the csv file although this may be done automatically).
+
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new(value =>
             {
@@ -466,99 +475,96 @@ namespace Timelapse.Database
             List<string> importErrors = [];
             return await Task.Run(() =>
             {
-                const int bulkFilesToHandle = 2000;
+                const int bulkFilesToHandle = 10000;
                 int processedFilesCount = 0;
                 int totalFilesProcessed = 0;
                 int dateTimeErrors = 0;
-                progress.Report(new(0, "Reading the CSV file. Please wait", true, true));
+                int part = 1;
 
                 // PART 1. Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
-                if (false == CSVHelpers.TryReadingCSVFile(filePath, out List<List<string>> parsedFile, importErrors))
+                CSVReadingResult result = CSVHelpers.TryReadingCSVFile(filePath, out List<List<string>> parsedFile, importErrors, progress, token, 10000, $"Part {part}/4: Reading the CSV file", true, true);
+                
+                // Cancel if requested 
+                if (token.IsCancellationRequested || result == CSVReadingResult.Cancelled)
                 {
-                    return new(true, importErrors);
+                    importErrors.Add("Import cancelled. No data was changed");
+                    return (CSVReadingResult.Cancelled, importErrors);
+                }
+                
+                if (result is CSVReadingResult.FileNotReadable or CSVReadingResult.NoDataPresent)
+                {
+                    return  (result, importErrors);
                 }
 
-                // Cancel if requested 
+                // Part 2 operations are fairly fast
+                // Part 2a. Trim the metadata column from the parsed file, as they are not relevant when importing the data
+                progress.Report(new(0, $"Part {++part}a/4: Preparing CSV data", true, true));
+
+                parsedFile = CSVHelpers.TrimMetadataColumnsIfNeeded(parsedFile, fileDatabase.MetadataInfo);
                 if (token.IsCancellationRequested)
                 {
                     importErrors.Add("Import cancelled. No data was changed");
-                    return new(true, importErrors);
+                    return (CSVReadingResult.Cancelled, importErrors);
                 }
-
-                // Trim the metadata column from the parsed file, as they are not relevant when importing the data
-                parsedFile = CSVHelpers.TrimMetadataColumnsIfNeeded(parsedFile, fileDatabase.MetadataInfo);
-
                 // Now that we have a parsed file, get its headers, which we will use as DataLabels
                 List<string> dataLabelsFromCSV = parsedFile[0].Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
 
-                // Cancel if requested 
-                if (token.IsCancellationRequested)
-                {
-                    importErrors.Add("Import cancelled. No data was changed");
-                    return new(true, importErrors);
-                }
-
-                progress.Report(new(0, "Checking CSV columns against the Database columns. Please wait", true, true));
-
-                // Part 2. Abort if required CSV column are missing or there is a problem matching the CSV file headers against the DB headers.
+                // Part 2b. Abort if required CSV column are missing or there is a problem matching the CSV file headers against the DB headers.
                 if (false == VerifyCSVHeaders(fileDatabase, dataLabelsFromCSV, importErrors))
                 {
-                    return new(true, importErrors);
+                    return (CSVReadingResult.AbortedAsHeaderErrors, importErrors);
+                }
+                progress.Report(new(0, $"Part {part}2b/4: Preparing CSV data", true, true));
+                if (token.IsCancellationRequested)
+                {
+                    importErrors.Add("Import cancelled. No data was changed");
+                    return (CSVReadingResult.Cancelled, importErrors);
                 }
 
+                // Part 2c: Create a List of all data rows, where each row is a dictionary containing the header and that row's valued for the header
+                List<Dictionary<string, string>> rowDictionaryList = CSVHelpers.GetAllDataRows(dataLabelsFromCSV, parsedFile, progress, token, 10000, $"Part {part}c/4: Preparing CSV data", true, true);
                 // Cancel if requested 
                 if (token.IsCancellationRequested)
                 {
                     importErrors.Add("Import cancelled. No data was changed");
-                    return new(true, importErrors);
+                    return new(CSVReadingResult.Cancelled, importErrors);
                 }
 
-                progress.Report(new(0, "Validating CSV rows. Please wait", true, true));
-
-                // Part 3: Create a List of all data rows, where each row is a dictionary containing the header and that row's valued for the header
-                List<Dictionary<string, string>> rowDictionaryList = CSVHelpers.GetAllDataRows(dataLabelsFromCSV, parsedFile);
-
-
-                // Cancel if requested 
-                if (token.IsCancellationRequested)
+                // Part 3. For every row, validate each column's data against its type. Abort if the type does not match
+                // Todo: This does a check for DateTime, which we repeat again later. We could convert the datetime into the expected database format
+                // as part of the validation, which would save us from having to do the conversion again later when we write to the database.
+                if (false == VerifyDataInColumns(fileDatabase, dataLabelsFromCSV, rowDictionaryList, importErrors, progress, token, 10000, $"Part {++part}/4: Validating CSV data for correctness", true, true))
                 {
-                    importErrors.Add("Import cancelled. No data was changed");
-                    return new(true, importErrors);
+                    return (CSVReadingResult.AbortedAsDataErrors, importErrors);
                 }
+                // One last check before committing data to the database
+                if (token.IsCancellationRequested) return (CSVReadingResult.Cancelled, importErrors);
 
-                // Part 4. For every row, validate each column's data against its type. Abort if the type does not match
-                if (false == VerifyDataInColumns(fileDatabase, dataLabelsFromCSV, rowDictionaryList, importErrors))
-                {
-                    return new(false, importErrors);
-                }
-
-                // Cancel if requested before committing data to the database
-                if (token.IsCancellationRequested) return new(false, importErrors);
-
-                //
-                // Part 5. Check and manage duplicates (cancellation disabled from here on)
-                //
-                progress.Report(new(0, "Importing CSV data. Please wait...", false, true));
-
-                // Get a list of duplicates in the database, i.e. rows with both the Same relativePath and File
+                // Part 4. Check and manage duplicates (cancellation disabled from here on, as we are writing into the database)
+                part++;
+                // Get a list of duplicates in the database, i.e. rows with both the same relativePath and File
                 List<string> databaseDuplicates = fileDatabase.GetDistinctRelativePathFileCombinationsDuplicates();
 
                 // Sort the rowDictionaryList so that duplicates in the CSV file (with the same relative path / File name) are in order, one after the other.
                 List<Dictionary<string, string>> sortedRowDictionaryList = rowDictionaryList.OrderBy(dict => dict["RelativePath"]).ThenBy(dict => dict["File"]).ToList();
                 int sortedRowDictionaryListCount = sortedRowDictionaryList.Count;
-                // Create the data structure for the query
 
+                // Create the data structure for the query
                 List<ColumnTuplesWithWhere> imagesToUpdate = [];
 
                 // Handle duplicates and more
                 int nextRowIndex = 0;
                 string duplicatePath = string.Empty; // a duplicate was identified, and this holds the duplicate path
                 List<Dictionary<string, string>> duplicatesDictionaryList = [];
-
                 CultureInfo provider = CultureInfo.InvariantCulture;
-
                 foreach (Dictionary<string, string> rowDict in sortedRowDictionaryList)
                 {
+                    if (totalFilesProcessed % 10000 == 0)
+                    {
+                     progress.Report(new(Convert.ToInt32(((double)processedFilesCount) / sortedRowDictionaryListCount * 100.0),
+                        $"Part {part}/4: Merging CSV data into Timelapse ({processedFilesCount}/{sortedRowDictionaryListCount}). Please wait...", false, false));
+                    }
+
                     // For every row...
                     nextRowIndex++;
                     string currentPath = Path.Combine(rowDict[DatabaseColumn.RelativePath], rowDict[DatabaseColumn.File]); // the path of the current row 
@@ -566,7 +572,10 @@ namespace Timelapse.Database
                     #region Handle duplicates
                     // Duplicates are special cases, where we have to update each set of duplicates separately as a chunk.
                     // To begin, check if its a duplicate, which occurs if the path (RelativePath/File) is identical
-
+                    // Todo (maybe) - Note that we are invoking an sql update for every duplicate sequence, which is not ideal.
+                    // We could optimize by batching all duplicates together in one update,
+                    // but that would be more complex as we would have to manage the where clause for each duplicate row within the batch.
+                    // Given that duplicates are relatively rare, this may not be worth it.
                     if (currentPath == duplicatePath)
                     {
                         // we are in the middle of a sequence, and this record has the same path as the previously identified duplicate.
@@ -625,8 +634,8 @@ namespace Timelapse.Database
                         duplicatePath = string.Empty;
                         if (databaseDuplicates.Contains(currentPath))
                         {
-                            // But, if the database contains a duplicate with the same relativePath/File, then we want to update just the first database duplicate, rather than update all those
-                            // database duplicates with the same value (if we let it fall thorugh)
+                            // But, if the database contains a duplicate with the same relativePath/File, then we want to update just the first database duplicate,
+                            // rather than update all those database duplicates with the same value (if we let it fall thorugh)
                             duplicatesDictionaryList.Add(rowDict);
                             string error = UpdateDuplicatesInDatabase(fileDatabase, duplicatesDictionaryList, Path.GetDirectoryName(currentPath),
                                 Path.GetFileName(currentPath));
@@ -684,7 +693,6 @@ namespace Timelapse.Database
                                 {
                                     imageToUpdate.Columns.Add(new(header, dateTimeCustom));
                                 }
-
                                 else
                                 {
                                     // Shouldnt happen as error checking of date format was done before this.
@@ -695,7 +703,6 @@ namespace Timelapse.Database
                             {
                                 imageToUpdate.Columns.Add(new(header, rowDict[header]));
                             }
-
                         }
                         else
                         {
@@ -715,7 +722,7 @@ namespace Timelapse.Database
                                 }
                                 else if (DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out dateTime))
                                 {
-                                    // Standard DateTime wit T separator
+                                    // Standard DateTime with T separator
                                     // Debug.Print("StandardT: " + dateTime.ToString());
                                 }
                             }
@@ -767,8 +774,7 @@ namespace Timelapse.Database
                     else if (dateTime == DateTime.MinValue && datePortion == DateTime.MinValue)
                     {
                         dateTimeErrors++;
-                        // importErrors.Add(String.Format("{0}: Could not extract datetime", currentPath));
-                        // Debug.Print("Could not extract datetime");
+                        importErrors.Add($"{currentPath}: Could not extract datetime");
                     }
 
                     // ReSharper disable once RedundantAssignment
@@ -804,11 +810,8 @@ namespace Timelapse.Database
 
                     if (imagesToUpdate.Count >= bulkFilesToHandle)
                     {
+
                         processedFilesCount += bulkFilesToHandle;
-
-                        progress.Report(new(Convert.ToInt32(((double)processedFilesCount) / sortedRowDictionaryListCount * 100.0),
-                        $"Updating data for {processedFilesCount}/{sortedRowDictionaryListCount} files. Please wait...", false, false));
-
                         fileDatabase.UpdateFiles(imagesToUpdate);
                         imagesToUpdate.Clear();
                     }
@@ -831,7 +834,7 @@ namespace Timelapse.Database
                 }
 
                 fileDatabase.UpdateFiles(imagesToUpdate);
-                return new Tuple<bool, List<string>>(true, importErrors);
+                return (CSVReadingResult.Success, importErrors);
             }, token).ConfigureAwait(true);
         }
 
@@ -870,7 +873,7 @@ namespace Timelapse.Database
                 if (dataLabelsFromCSV.Contains(DatabaseColumn.RelativePath) == false)
                 {
                     importErrors.Add(
-                        $"- the '{DatabaseColumn.RelativePath}' column (You still need it even if your files are all in your root folder).");
+                        $"- the '{DatabaseColumn.RelativePath}' column.");
                 }
 
                 abort = true;
@@ -880,7 +883,7 @@ namespace Timelapse.Database
             // NOTE: could do this as a warning rather than as an abort, but...
             if (dataLabelsInHeaderButNotFileDatabase.Count != 0)
             {
-                importErrors.Add("These CSV column headings do not match any of the template'sDataLabels:");
+                importErrors.Add("These CSV column headings do not match any of the template's DataLabels:");
                 foreach (string dataLabel in dataLabelsInHeaderButNotFileDatabase)
                 {
                     importErrors.Add($"- {dataLabel}");
@@ -899,9 +902,10 @@ namespace Timelapse.Database
 
         // Validate Data columns against data type. Return false if any of the types don't match
         private static bool VerifyDataInColumns(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<Dictionary<string, string>> rowDictionaryList,
-            List<string> importErrors)
+            List<string> importErrors, IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
-            bool abort = false;
+            //bool abort = false;
+            CultureInfo provider = CultureInfo.InvariantCulture;
             // For each column in the CSV file,
             // - get its type from the template
             // - for particular types, validate the data in the column against that type
@@ -912,33 +916,41 @@ namespace Timelapse.Database
             //  - Date, Time formats must match exactl
             int rowNumber = 0;
             int numberRowsWithErrors = 0;
-            int maxRowsToReportWithErrors = 2;
+            int maxRowsToReportWithErrors = 5;
+            int rowDictionaryListCount = rowDictionaryList.Count;
             // For every row
             foreach (Dictionary<string, string> rowDict in rowDictionaryList)
             {
+                if (token.IsCancellationRequested)
+                {
+                    return true;
+                }
+
+                if (rowNumber % reportAfter == 0)
+                {
+                    progress.Report(new(0, $"{message} ({rowNumber}/{rowDictionaryListCount}). Please wait", cancelEnabled, isIndeterminate));
+                }
+
                 rowNumber++;
-                bool errorInRow = false;
+                bool firstErrorInRowDetected = false;
+                bool errorExistsInRow = false;
                 // Check for Date and Time columns, and deal with them separately
                 // Get the header type
 
                 // For every column
                 foreach (string csvHeader in dataLabelsFromCSV)
                 {
-                    if (csvHeader == ControlDeprecated.DateLabel
-                        || csvHeader == ControlDeprecated.TimeLabel
-                        || csvHeader == DatabaseColumn.DateTime
-                        || csvHeader == ControlDeprecated.Folder
+                    if (csvHeader == ControlDeprecated.Folder
                         || csvHeader == DatabaseColumn.RootFolder
                         || csvHeader == ControlDeprecated.ImageQuality)
                     {
-                        // Date/Time/DateTime checking is handled elsewhere, while Folder, RootFolder and ImageQuality are skipped
+                        // Folder, RootFolder and ImageQuality are skipped
                         continue;
                     }
 
                     ControlRow controlRow = fileDatabase.GetControlFromControls(csvHeader);
                     string controlRowType = controlRow.Type;
-                    CultureInfo provider = CultureInfo.InvariantCulture;
-                    if (IsCondition.IsControlType_AnyNonRequired(controlRowType))
+                    if (IsCondition.IsControlType_AnyNonRequired(controlRowType) || controlRowType == DatabaseColumn.DateTime)
                     {
                         string content = rowDict[csvHeader];
                         // Validate the data as needed for each of these columns in the row
@@ -949,8 +961,8 @@ namespace Timelapse.Database
                                 if (!Boolean.TryParse(content, out _))
                                 {
                                     // Flag values must be true or false, but its not. So raise an error
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be true or false, but is '{2}'", csvHeader, rowNumber, content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must be true or false"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -959,8 +971,8 @@ namespace Timelapse.Database
                                 if (!string.IsNullOrWhiteSpace(content) && !Int32.TryParse(content, out _))
                                 {
                                     // Counters must be integers / blanks 
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be blank or an integer, but is '{2}'", csvHeader, rowNumber, content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must be blank or an integer"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -968,9 +980,8 @@ namespace Timelapse.Database
                                 if (!string.IsNullOrWhiteSpace(content) && !(Int32.TryParse(content, out int parsedResult) && parsedResult >= 0))
                                 {
                                     // Counters must be positive integers / blanks 
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be blank or a positive integer, but is '{2}'", csvHeader, rowNumber,
-                                        content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must be blank or a positive integer"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -979,8 +990,8 @@ namespace Timelapse.Database
                                 if (!string.IsNullOrWhiteSpace(content) && !Double.TryParse(content, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
                                 {
                                     // Counters must be decimals / blanks 
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be blank or a decimal, but is '{2}'", csvHeader, rowNumber, content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must be blank or a decimal"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -988,9 +999,8 @@ namespace Timelapse.Database
                                 if (!string.IsNullOrWhiteSpace(content) && !(Double.TryParse(content, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedDoublePositiveResult) && parsedDoublePositiveResult >= 0))
                                 {
                                     // Counters must be positive integers / blanks 
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be blank or a positive decimal, but is '{2}'", csvHeader, rowNumber,
-                                        content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must be blank or a positive decimal"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -1000,9 +1010,8 @@ namespace Timelapse.Database
                                 if (false == (string.IsNullOrWhiteSpace(content) || IsCondition.IsAlphaNumeric(content)))
                                 {
                                     // Alphanumeric must be letters, numbers and/or -_ 
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must contain only letters, numbers, dashes and underscore, but is '{2}'",
-                                        csvHeader, rowNumber, content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "should contain only letters, numbers, dashes and underscore)"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -1011,9 +1020,8 @@ namespace Timelapse.Database
                                 if (false == string.IsNullOrWhiteSpace(content) && Choices.ChoicesFromJson(controlRow.List).Contains(content) == false)
                                 {
                                     // Fixed Choices must be in the Choice List
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be in the template's choice list, but '{2}' isn't in it.", csvHeader,
-                                        rowNumber, content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must match an item in the template's choice list"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -1029,23 +1037,32 @@ namespace Timelapse.Database
                                         if (choices.Contains(item) == false)
                                         {
                                             // Multi Choices must be in the Choice List
-                                            importErrors.Add(String.Format("- error in row {1} as {0} values must be in the template's choice list, but '{2}' isn't in it.",
-                                                csvHeader, rowNumber, content));
-                                            abort = true;
+                                            importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "must match an item in the template's choice list"));
+                                            errorExistsInRow = true;
                                         }
                                     }
                                 }
 
                                 break;
+                            case DatabaseColumn.DateTime:
+                                string strDateTime = rowDict[csvHeader];
+                                if (false == DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out _)
+                                    && false == DateTime.TryParseExact(strDateTime, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out _)
+                                    && false == DateTime.TryParseExact(strDateTime, Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out _))
+                                {
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "is not in the expected date format"));
+                                    errorExistsInRow = true;
+                                }
+                                break;
+
                             case Control.DateTime_:
                                 if (false == DateTime.TryParseExact(content, Time.DateTimeCSVWithoutTSeparator, provider, DateTimeStyles.None, out DateTime _) &&
                                     false == DateTime.TryParseExact(content, Time.DateTimeCSVWithTSeparator, provider, DateTimeStyles.None, out _) &&
                                     false == DateTime.TryParseExact(content, Time.DateTimeDisplayFormat, provider, DateTimeStyles.None, out _))
                                 {
                                     // Multi Choices must be in the Choice List
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be in one of the expected data formats, but '{2}' isn't.", csvHeader,
-                                        rowNumber, content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "is not in the expected date format"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -1053,10 +1070,9 @@ namespace Timelapse.Database
                                 if (false == DateTime.TryParseExact(content, Time.DateDisplayFormat, provider, DateTimeStyles.None, out DateTime _) &&
                                     false == DateTime.TryParseExact(content, Time.DateDatabaseFormat, provider, DateTimeStyles.None, out DateTime _))
                                 {
-                                    // Date must be in the display or databae format
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be in one of the expected date formats, but '{2}' isn't.", csvHeader,
-                                        rowNumber, content));
-                                    abort = true;
+                                    // Date must be in the display or database format
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "is not in the expected date format"));
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
@@ -1064,40 +1080,74 @@ namespace Timelapse.Database
                                 if (false == DateTime.TryParseExact(content, Time.TimeFormat, provider, DateTimeStyles.None, out DateTime _))
                                 {
                                     // Date must be in the display or databae format
-                                    importErrors.Add(String.Format("- error in row {1} as {0} values must be in the expected time format, but '{2}' isn't.", csvHeader, rowNumber,
-                                        content));
-                                    abort = true;
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "is not in the expected time format"));
+
+                                    errorExistsInRow = true;
                                 }
 
                                 break;
-                                // case Constant.Control.Note:
-                                // case Constant.Control.MultiLine:
-                                // default:
-                                // as these can be any string, they don't require checking
-                                // break;
+
+                            case ControlDeprecated.DateLabel:
+                            {
+                                // Date only (Deprecated control, but we want to check it if it exists in the CSV file, as some older CSV files may have it)
+                                string strDate = rowDict[csvHeader];
+                                if (false == DateTime.TryParseExact(strDate, Time.DateDisplayFormats, provider, DateTimeStyles.None, out _))
+                                {
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "is not in the expected date-only format"));
+                                    errorExistsInRow = true;
+                                }
+                            }
+                            break;
+
+                            // Time only (Deprecated control, but we want to check it if it exists in the CSV file, as some older CSV files may have it)
+                            case ControlDeprecated.TimeLabel:
+                            {
+                                // Time only
+                                string strTime = rowDict[csvHeader];
+                                if (false == DateTime.TryParseExact(strTime, Time.TimeFormats, provider, DateTimeStyles.None, out _))
+                                {
+                                    importErrors.Add(ComposeRowColumnError(csvHeader, rowNumber, content, "is not in the expected time-only format"));
+                                    errorExistsInRow = true;
+                                }
+                            }
+                             break;
+
+                             // implicit default skips Note and Multiline: as these can be any string, they don't require checking
                         }
 
-                        if (!errorInRow && abort)
+                        if (!firstErrorInRowDetected && errorExistsInRow)
                         {
-                            // If there is an error, only count one error per row.
+                            // If there is an error in the row, increase the count of rows with errors (but only counting once per row).
                             numberRowsWithErrors++;
-                            errorInRow = true;
+                            firstErrorInRowDetected = true;
                         }
 
                         if (numberRowsWithErrors > maxRowsToReportWithErrors)
                         {
+                            importErrors.Add("----------------------------");
                             importErrors.Add(
-                                $"- Timelapse only reports data errors for a maximum of {maxRowsToReportWithErrors} rows. Use the information above to start fixing them.");
-                            importErrors.Add("- Use the information above to check the data values in those columns for all rows.");
+                                $"Note: Timelapse only reports data errors for a maximum of {maxRowsToReportWithErrors} rows.");
+                            importErrors.Add("Use the information above to start fixing them.");
+                            importErrors.Add("Also, check the data values in those columns for all rows as similar errors tend to occur");
                             return false;
                         }
                     }
                 }
+                if (firstErrorInRowDetected)
+                {
+                    // An empty separator is added once between rows with errors in them
+                    importErrors.Add("\u2800");
+                }
             }
 
-            return !abort;
+            return importErrors.Count == 0; //!abort;
         }
 
+        private static string ComposeRowColumnError(string csvHeader, int rowNumber, string content, string expectedFormat)
+        {
+            //return String.Format("Row {1}, [e]{0}[/e] column: values must {3}, but '{2}' is not.", csvHeader, rowNumber, content, expectedFormat);
+            return String.Format("Row {1}, [e]{0}[/e] column: '[i]{2}[/i]' {3}.", csvHeader, rowNumber, content, expectedFormat);
+        }
         #endregion
 
         // Given a list of duplicates and their common relative path, update the corresponding duplicates in the database
@@ -1117,7 +1167,8 @@ namespace Timelapse.Database
                 string dbEntry = duplicateIDS.Count == 1 ? "entry" : "entries";
                 string csvEntry = duplicatesDictionaryList.Count == 1 ? "entry" : "entries";
                 errorMessage =
-                    $"duplicate entry mismatch for {Path.Combine(relativePath, file)}: {duplicateIDS.Count} database {dbEntry} vs. {duplicatesDictionaryList.Count} CSV {csvEntry}.";
+                    $"{Path.Combine(relativePath, file)}:{Environment.NewLine}CSV file has {duplicatesDictionaryList.Count} duplicate {csvEntry} but d" +
+                    $"database file has {duplicateIDS.Count} {dbEntry}.";
             }
 
             int idIndex = 0;

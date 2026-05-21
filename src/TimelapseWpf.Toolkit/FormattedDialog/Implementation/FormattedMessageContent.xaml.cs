@@ -79,6 +79,9 @@ namespace TimelapseWpf.Toolkit
         
         // Detailed information displayed in a separate section with horizontal separator
         public string Details { get; set; } = "";
+
+        // Text shown in the Details toggle when the section is collapsed
+        public string DetailsHeading { get; set; } = "Click to show details";
         
         // Icon to display in the dialog header (Error, Information, Warning, Question, or None)
         public DialogIconType Icon { get; set; } = DialogIconType.None;
@@ -338,7 +341,7 @@ namespace TimelapseWpf.Toolkit
             // Create toggle text that shows current state
             var toggleText = new TextBlock
             {
-                Text = "Click to show details", // Initial text (collapsed state)
+                Text = DetailsHeading, // Initial text (collapsed state)
                 FontSize = 12,
                 FontStyle = FontStyles.Italic,
                 Foreground = Brushes.Gray,
@@ -412,7 +415,7 @@ namespace TimelapseWpf.Toolkit
                     // Collapse: Hide content and change arrow/text to collapsed state
                     contentContainer.Visibility = Visibility.Collapsed;
                     toggleArrow.Text = "▶"; // Right arrow (collapsed state)
-                    toggleText.Text = "Click to show details"; // Updated text for collapsed state
+                    toggleText.Text = DetailsHeading; // Updated text for collapsed state
                 }
             };
 

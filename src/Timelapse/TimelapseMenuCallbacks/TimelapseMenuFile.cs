@@ -522,7 +522,7 @@ namespace Timelapse
                 // Show the Busy indicator, with cancellation enabled for Parts 1-4 of the import
                 BusyCancelIndicator.Reset(true);
 
-                Tuple<bool, List<string>> resultAndImportErrors = await CsvReaderWriter.TryImportFromCsv(csvFilePath, DataHandler.FileDatabase, GlobalReferences.CancelTokenSource.Token).ConfigureAwait(true);
+                (CSVReadingResult, List<string>) resultAndImportErrors = await CsvReaderWriter.TryImportFromCsv(csvFilePath, DataHandler.FileDatabase, GlobalReferences.CancelTokenSource.Token).ConfigureAwait(true);
 
                 bool wasCancelled = GlobalReferences.CancelTokenSource.IsCancellationRequested;
                 BusyCancelIndicator.Reset(false);
@@ -532,26 +532,39 @@ namespace Timelapse
                     StatusBar.SetMessage("CSV file import cancelled.");
                     Dialogs.MenuFileImportCSVFileCancelledDialog(this);
                 }
-                else if (resultAndImportErrors.Item1 == false)
+                else if (resultAndImportErrors.Item1 == CSVReadingResult.FileNotReadable)
                 {
                     // Can't import CSV File
-                    Dialogs.MenuFileCantImportCSVFileDialog(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
+                    Dialogs.MenuFileImportCSVFileCannotBeReadDialog(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
+                }
+                else if (resultAndImportErrors.Item1 == CSVReadingResult.NoDataPresent)
+                {
+                    Dialogs.MenuFileImportCSVFileNoDataPresentDialog(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
+                }
+                else if (resultAndImportErrors.Item1 == CSVReadingResult.AbortedAsHeaderErrors)
+                {
+                    Dialogs.MenuFileImportCSVAbortedAsHeaderErrors(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
+                }
+                else if (resultAndImportErrors.Item1 == CSVReadingResult.AbortedAsDataErrors)
+                {
+                    Dialogs.MenuFileImportCSVAbortedAsDataErrors(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
                 }
                 else
                 {
                     // Importing done.
-                    Dialogs.MenuFileCSVFileImportedDialog(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
+
 
                     // Reload the data
                     BusyCancelIndicator.IsBusy = true;
                     await FilesSelectAndShowAsync().ConfigureAwait(true);
                     BusyCancelIndicator.IsBusy = false;
                     StatusBar.SetMessage("CSV file imported.");
+                    Dialogs.MenuFileCSVFileImportedDialog(this, Path.GetFileName(csvFilePath), resultAndImportErrors.Item2);
                 }
             }
             catch (Exception exception)
             {
-                // Can't import the .csv file
+                // Can't import the .csv file for some unknown reason
                 Dialogs.MenuFileCantImportCSVFileDialog(this, Path.GetFileName(csvFilePath), exception.Message);
             }
         }

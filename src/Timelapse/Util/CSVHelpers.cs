@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using CsvHelper;
-using CsvHelper.Configuration;
+using System.Threading;
+using Timelapse.Controls;
 using Timelapse.DataTables;
+using Timelapse.Enums;
 using Timelapse.Extensions;
 
 namespace Timelapse.Util
@@ -15,37 +19,42 @@ namespace Timelapse.Util
         //Helper methods for various CSVReader/Writers including Standard-specific CSV writers
         #region Read Csv helpers. 
         // Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
-        public static bool TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors)
+        public static CSVReadingResult TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors, 
+            IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
-            parsedFile = CSVFileReadAndParseAsListOfRows(filePath);
-
+            parsedFile = CSVFileReadAndParseAsListOfRows(filePath, progress, token, reportAfter, message, cancelEnabled, isIndeterminate);
+            if (token.IsCancellationRequested)
+            {
+                return CSVReadingResult.Cancelled;
+            }
             // Abort if the CSV file could not be read 
             if (parsedFile == null)
             {
                 // Could not open the file
-                importErrors.Add($"The file '{Path.GetFileName(filePath)}' could not be read. Things to check:");
-                importErrors.Add("- Is the file is currently opened by another application?");
-                importErrors.Add("- Do you have permission to read this file (especially network file systems, which sometimes limit access).");
-                return false;
+                importErrors.Add("Is the file  currently opened by another application? If so, close it.");
+                importErrors.Add("Do you have permission to read this file? If not, set the correct permissions.");
+                return CSVReadingResult.FileNotReadable;
             }
 
             // Abort if The CSV file is empty or only contains a header row
             if (parsedFile.Count < 1)
             {
                 importErrors.Add($"The file '{Path.GetFileName(filePath)}' appears to be empty.");
-                return false;
+                return CSVReadingResult.NoDataPresent;
             }
 
             if (parsedFile.Count < 2)
             {
-                importErrors.Add($"The file '{Path.GetFileName(filePath)}' does not contain any data.");
-                return false;
+                importErrors.Add($"The file '{Path.GetFileName(filePath)}' only has a single line in it.");
+                importErrors.Add($"A valid CSV file should contain a header row and at least one data row in the expected format.");
+                return CSVReadingResult.NoDataPresent;
             }
-            return true;
+            return CSVReadingResult.Success;
         }
 
         // Parse the rows in a CSV file and return it as a list of lines, each line being a list of values in a csv row
-        public static List<List<string>> CSVFileReadAndParseAsListOfRows(string path)
+        public static List<List<string>> CSVFileReadAndParseAsListOfRows(string path, 
+            IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
             try
             {
@@ -61,9 +70,17 @@ namespace Timelapse.Util
 
                 using var reader = new StreamReader(path);
                 using var csv = new CsvReader(reader, config);
-
+                int count = 0;
                 while (csv.Read())
                 {
+                    if (count++ % reportAfter == 0)
+                    {
+                        progress.Report(new(0, $"{message} ({count} rows read). Please wait", cancelEnabled, isIndeterminate));
+                    }
+                    if (token.IsCancellationRequested)
+                    {
+                        return parsedRows;
+                    }
                     // Use Context.Parser.Record which contains all fields for the current row as a string array
                     // This matches the behavior of TextFieldParser.ReadFields() which returns all fields
                     if (csv.Context.Parser?.Record == null)
@@ -89,15 +106,27 @@ namespace Timelapse.Util
         }
 
         // Get all the data rows from the CSV file. Each dictionary entry is a row with a list of matching  CSV column Headers and column value 
-        public static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile)
+        public static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile, IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
             List<Dictionary<string, string>> rowDictionaryList = [];
+
+            int parsedFileCount = parsedFile.Count;
 
             // Part 3. Get all data rows, and validate each column's data against its type. Abort if the type does not match
             int rowNumber = 0;
             int numberOfHeaders = dataLabelsFromCSV.Count;
             foreach (List<string> parsedRow in parsedFile)
             {
+                if (token.IsCancellationRequested)
+                {
+                    return rowDictionaryList;
+                }
+
+                if (rowNumber % reportAfter == 0)
+                {
+                    progress.Report(new(0, $"{message} ({rowNumber}/{parsedFileCount}). Please wait", cancelEnabled, isIndeterminate));
+                }
+
                 // For each data row
                 rowNumber++;
                 if (rowNumber == 1)
