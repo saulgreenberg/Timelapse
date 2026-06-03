@@ -25,10 +25,23 @@ namespace Timelapse.DataStructures
         // TimelapseState instance
         public static TimelapseState TimelapseState { get; set; }
 
-        // Whether or not detections exist
-        public static bool DetectionsExists { get; set; }
+        // Whether or not detections exist.
+        // Backed by a volatile field so background threads always see the current value
+        // written by the UI thread, without the JIT caching it in a register.
+        private static volatile bool _detectionsExists;
+        public static bool DetectionsExists
+        {
+            get => _detectionsExists;
+            set => _detectionsExists = value;
+        }
 
-        // Whether or not we should hid detections
-        public static bool HideBoundingBoxes { get; set; } = false;
+        // Whether or not we should hide detections.
+        // Volatile for the same reason as DetectionsExists.
+        private static volatile bool _hideBoundingBoxes;
+        public static bool HideBoundingBoxes
+        {
+            get => _hideBoundingBoxes;
+            set => _hideBoundingBoxes = value;
+        }
     }
 }

@@ -484,7 +484,7 @@ as before on both image and video. Switch to thumbnail grid view and zoom there 
 ---
 
 ### Step 3 — Add `volatile` to `GlobalReferences` bool fields (Issue 2.3)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **File:** `DataStructures/GlobalReferences.cs`
 
