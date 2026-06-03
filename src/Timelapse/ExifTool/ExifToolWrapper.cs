@@ -209,15 +209,19 @@ namespace Timelapse.ExifTool
 
             Status = ExeStatus.Starting;
 
-            _proc = new() { StartInfo = _psi, EnableRaisingEvents = true };
-            _proc.OutputDataReceived += OutputDataReceived;
-            _proc.ErrorDataReceived += ErrorDataReceived;
-            _proc.Exited += ProcExited;
-            _proc.Start();
+            // Use a local variable so _proc is never visible to other threads as an unstarted Process.
+            // Only assign to the field after Start() has been called and StandardInput is valid.
+            var newProc = new Process() { StartInfo = _psi, EnableRaisingEvents = true };
+            newProc.OutputDataReceived += OutputDataReceived;
+            newProc.ErrorDataReceived += ErrorDataReceived;
+            newProc.Exited += ProcExited;
+            newProc.Start();
 
-            _proc.BeginOutputReadLine();
-            _proc.BeginErrorReadLine();
-            _proc.StandardInput.AutoFlush = true;
+            newProc.BeginOutputReadLine();
+            newProc.BeginErrorReadLine();
+            newProc.StandardInput.AutoFlush = true;
+
+            _proc = newProc;
 
             _waitHandle.Reset();
             _proc.StandardInput.Write("-ver\n-execute0000\n");
@@ -253,17 +257,20 @@ namespace Timelapse.ExifTool
         {
             _stopRequested = true;
 
-            if (Status != ExeStatus.Ready)
+            // Acquire _lockObj so this write to StandardInput cannot race with DirectSend/SendViaFile,
+            // both of which also write to StandardInput while holding this lock.
+            lock (_lockObj)
             {
-                Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
-                // throw new ExifToolException("Process must be ready"); 
-                return;
-
+                if (Status != ExeStatus.Ready)
+                {
+                    Debug.Print("ExifToolWrapper: Can't kill the process as its not ready");
+                    // throw new ExifToolException("Process must be ready");
+                    return;
+                }
+                Status = ExeStatus.Stopping;
+                _waitHandle.Reset();
+                _proc.StandardInput.Write("-stay_open\nFalse\n");
             }
-            Status = ExeStatus.Stopping;
-
-            _waitHandle.Reset();
-            _proc.StandardInput.Write("-stay_open\nFalse\n");
 
             if (!_waitHandle.WaitOne(TimeSpan.FromSeconds(SecondsToWaitForStop)))
             {
@@ -330,6 +337,11 @@ namespace Timelapse.ExifTool
             ExifToolResponse resp;
             lock (_lockObj)
             {
+                // Re-check inside the lock: ProcExited runs on a background thread and can change
+                // Status and _proc between the check above and here.
+                if (Status != ExeStatus.Ready || _proc == null)
+                    return new(false, "Process not ready");
+
                 _waitHandle.Reset();
                 _waitForErrorHandle.Reset();
 

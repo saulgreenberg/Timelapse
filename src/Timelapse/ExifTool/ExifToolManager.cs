@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Timelapse.DataStructures;
@@ -26,6 +27,10 @@ namespace Timelapse.ExifTool
         // The ExifTool Wrapper is a 3rd party wrapper (included here as source) that gives access to the ExifTool.exe
         // It is private to ensure that all access to it is done through the ExifToolManager
         private ExifToolWrapper ExifTool { get; set; }
+
+        // Guards StartIfNotAlreadyStarted so that two threads (e.g. UI + ImageLoader Task.Run)
+        // cannot both see ExifTool == null and race to create duplicate wrapper instances.
+        private readonly Lock _startLock = new();
         #endregion
 
         #region Public Properties
@@ -46,12 +51,19 @@ namespace Timelapse.ExifTool
         #region Start ExifTool
         public void StartIfNotAlreadyStarted()
         {
-            // Start to exiftool if it is not already started
-            if (ExifTool == null)
+            lock (_startLock)
             {
-                // Yes, start  exiftool
-                ExifTool = new();
-                ExifTool.Start();
+                if (ExifTool == null)
+                {
+                    ExifTool = new();
+                    ExifTool.Start();
+                }
+                else if (ExifTool.Status == ExifToolWrapper.ExeStatus.Stopped)
+                {
+                    // The wrapper object exists but the underlying process has stopped
+                    // (and Resurrect hasn't yet completed, or was disabled). Restart it.
+                    ExifTool.Start();
+                }
             }
         }
         #endregion
