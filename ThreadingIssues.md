@@ -427,3 +427,194 @@ inside an async method, which releases the thread-pool thread rather than blocki
 7. **3.2** — Fixes a known `KeyNotFoundException` (see comment at ImageCache.cs:349).
 8. **2.3, 3.1, 6.1** — Low risk; fix when touching surrounding code.
 9. **1.3** — Largest refactor; replace BackgroundWorker with a proper async pipeline.
+
+---
+
+## Fix Plan — Step-by-Step
+
+Each step is independently buildable. Steps 1–7 and 9 have no hard prerequisites and
+can be done in any order. Step 8 requires Step 4. Step 11 requires Step 5.
+
+### Dependency map
+```
+Step 1  (SqlOperationResult)           — no deps
+Step 2  (lock objects)                 — no deps
+Step 3  (volatile)                     — no deps
+Step 4  (TryGetValue fallback)         — no deps; prerequisite for Step 8
+Step 5  (filesSkipped UserState)       — no deps; prerequisite for Step 11
+Step 6  (MediaPlayer STA)             — no deps
+Step 7  (ImageLoader getter)           — no deps
+Step 8  (TryGetBitmap async)           — requires Step 4 complete
+Step 9  (CancelTokenSource ownership)  — no deps
+Step 10 (Thread.Sleep)                — no deps; easier after Steps 8 and 11
+Step 11 (BackgroundWorker → Task)      — requires Step 5 complete; easier after Step 10
+```
+
+---
+
+### Step 1 — Fix fire-and-forget in `SqlOperationResult.GenerateExceptionDialog` (Issue 4.1)
+**Status:** ✅ Complete
+
+**File:** `Database/SqlOperationResult.cs`
+
+Remove the `Task.Run` wrapper and the dead `CheckAccess()` branch. Replace with a
+direct `Application.Current.Dispatcher.Invoke(...)`. `Dispatcher.Invoke` is a no-op
+when already on the UI thread and correctly marshals when called from a background thread.
+
+**Test:** Open a database, then deliberately corrupt it or trigger a SQL error if
+possible. Alternatively, confirm the build succeeds and normal operation is unaffected.
+The dialog path is rarely triggered in normal use; the key check is that the build is
+clean and no regression in database-open or save behaviour.
+
+---
+
+### Step 2 — Replace `lock(WPF element)` with dedicated lock objects (Issue 3.1)
+**Status:** ⬜ Pending
+
+**Files:** `Images/MarkableCanvas.cs` (lines 491, 900, 911), `Controls/VideoPlayer.xaml.cs` (line 988)
+
+Add `private readonly object _zoomLock = new();` to `MarkableCanvas` and
+`private readonly object _scaleLock = new();` to `VideoPlayer`. Replace all four
+`lock(UIElement)` sites with the new objects.
+
+**Test:** Open an image set. Zoom in and out on both a still image and a video using
+the mouse wheel. Pan a zoomed image by dragging. Confirm zoom and pan behave exactly
+as before on both image and video. Switch to thumbnail grid view and zoom there too.
+
+---
+
+### Step 3 — Add `volatile` to `GlobalReferences` bool fields (Issue 2.3)
+**Status:** ⬜ Pending
+
+**File:** `DataStructures/GlobalReferences.cs`
+
+Back `DetectionsExists` and `HideBoundingBoxes` with explicit `volatile` fields
+since auto-properties cannot be marked `volatile` directly.
+
+**Test:** Open an image set that has recognition data. Confirm bounding boxes appear
+and the Hide Bounding Boxes menu toggle shows/hides them correctly. Open an image set
+without recognition data and confirm detection-related UI is appropriately disabled.
+
+---
+
+### Step 4 — Fix `KeyNotFoundException` in `ImageCache.TryGetBitmap` (Issue 3.2)
+**Status:** ⬜ Pending
+
+**File:** `Images/ImageCache.cs`, line 378
+
+Change indexer access after `prefetch.Wait()` to `TryGetValue` with a fallback
+synchronous load. Prerequisite for Step 8.
+
+**Test:** Navigate rapidly through a large image set (hold the right-arrow key for
+several seconds). Confirm no crash or exception. Navigate slowly too — confirm
+images display correctly in both directions.
+
+---
+
+### Step 5 — Fix `filesSkipped` data race (Issue 2.1)
+**Status:** ⬜ Pending
+
+**File:** `TimelapsePartialClasses/TimelapseImageSetLoading.cs`, lines 493, 505
+
+Remove the captured `filesSkipped` variable. Pass the list through `ReportProgress`
+`UserState` and read it in `ProgressChanged` with a pattern match. Prerequisite for Step 11.
+
+**Test:** Add an image set normally — confirm loading completes and the progress
+dialog closes cleanly. If you have a file whose full path exceeds ~260 characters,
+include it and confirm the "path too long" dialog still appears during loading.
+
+---
+
+### Step 6 — Wrap `GetVideoBitmapFromFileUsingMediaEncoder` in an STA thread (Issue 5.1)
+**Status:** ⬜ Pending
+
+**File:** `Images/BitmapUtilities.cs`
+
+Extract method body into a private helper. Public wrapper spawns a dedicated STA
+thread with a pumped `Dispatcher`, runs the helper, then joins.
+
+**Test:** This code path is only reached on a 32-bit OS or when FFmpeg fails. On a
+normal 64-bit machine, confirm video thumbnails still display correctly (FFmpeg path
+is unchanged). If you can simulate an FFmpeg failure (e.g., temporarily rename
+`ffmpeg.exe`), confirm a video still produces a placeholder rather than hanging.
+
+---
+
+### Step 7 — Remove lazy-load blocking wait from `ImageLoader.BitmapSource` (Issue 1.2)
+**Status:** ⬜ Pending
+
+**File:** `ImageSetLoadingPipeline/ImageLoader.cs`, lines 37–44
+
+Remove `task.Wait()` from the property getter. Set the backing field explicitly
+after `LoadImageAsync`'s `Task.Run` completes.
+
+**Test:** Add a new folder of images to an existing image set. Confirm all images
+are added and displayed correctly in the thumbnail grid. Check that the first image
+displayed after load is not blank.
+
+---
+
+### Step 8 — Make `TryGetBitmap` async; replace `prefetch.Wait()` with `await` (Issue 1.1)
+**Status:** ⬜ Pending
+**Requires:** Step 4 complete
+
+**File:** `Images/ImageCache.cs` and all callers up through the navigation stack.
+
+Change `TryGetBitmap` to return `Task<(bool, BitmapSource)>`. Replace
+`prefetch.Wait()` with `await prefetch.ConfigureAwait(true)`. Propagate
+`async`/`await` upward one level at a time, verifying the build at each level.
+
+**Test:** Navigate through images using the arrow keys, the slider, and by clicking
+in the thumbnail grid. Hold the right-arrow key to navigate rapidly. Confirm images
+display without UI freezes. Also confirm the Differences view (previous/next
+difference overlay) still works.
+
+---
+
+### Step 9 — Remove `CancelTokenSource` assignment from background threads (Issue 2.2)
+**Status:** ⬜ Pending
+
+**File:** `Database/FileDatabase.cs`, line 2108
+
+Delete `GlobalReferences.CancelTokenSource = new()` from the `TaskCanceledException`
+catch block. Communicate cancellation through the method return value instead.
+Ensure only `BusyCancelIndicator.Reset()` / `ResetAndEnableImmediately()` (UI thread)
+replace the token source.
+
+**Test:** Start a recognition import (File > Import Recognition Data). While it is
+running, click Cancel. Confirm the import stops cleanly, the busy indicator resets,
+and you can immediately start another operation (e.g., a second import) without the
+cancel state persisting.
+
+---
+
+### Step 10 — Remove `Thread.Sleep` calls from background tasks (Issue 6.1)
+**Status:** ⬜ Pending
+
+**Files:** ~40 locations across `Database/`, `Dialog/`, `Recognition/`, `Images/`
+
+Delete each `Thread.Sleep` that is inside a `Task.Run` lambda and is accompanied by
+a `ReportProgress` call. Update comments. Work file-by-file, building after each file.
+
+**Test:** Run each operation that was modified — date correction dialogs, recognition
+import, dark-image threshold, delete images, export, populate-from-metadata. Confirm
+each operation still completes and the progress bar still updates visibly (i.e., does
+not appear to freeze between updates).
+
+---
+
+### Step 11 — Replace `BackgroundWorker` with an async Task pipeline (Issue 1.3)
+**Status:** ⬜ Pending
+**Requires:** Step 5 complete
+
+**File:** `TimelapsePartialClasses/TimelapseImageSetLoading.cs`
+
+Replace the `BackgroundWorker` setup with a `CancellationToken`-aware async method.
+Move `ProgressChanged` logic into a `Progress<T>` callback. Move `RunWorkerCompleted`
+logic into the `await` continuation.
+
+**Test:** (1) Add a large folder of images — confirm loading completes, the progress
+bar updates throughout, and all images appear correctly. (2) Start loading and click
+Cancel part-way through — confirm the load stops, the UI resets cleanly, and no
+partial database file is left behind. (3) Load a folder a second time immediately
+after cancelling — confirm it works normally.

@@ -114,37 +114,17 @@ namespace Timelapse.Database
                 result.Context = context + $" | {result.Context}";
             }
 
-            Task.Run(() =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                if (Application.Current.Dispatcher.CheckAccess())
+                Dialog.ExceptionShutdownDialog dialog = new ExceptionShutdownDialog(
+                    GlobalReferences.MainWindow,
+                    new UnhandledExceptionEventArgs(result.Exception, false), result);
+                bool? dresult = dialog.ShowDialog();
+                if (dresult == false)
                 {
-                    // If already on the UI thread, execute the action directly
-                    Dialog.ExceptionShutdownDialog dialog = new ExceptionShutdownDialog(
-                        GlobalReferences.MainWindow,
-                        new UnhandledExceptionEventArgs(result.Exception, false), result);
-                    bool? dresult = dialog.ShowDialog();
-                    if (dresult == false)
-                    {
-                        GlobalReferences.MainWindow.Close();
-                        Application.Current.Shutdown();
-                    }
+                    GlobalReferences.MainWindow.Close();
+                    Application.Current.Shutdown();
                 }
-                else
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Dialog.ExceptionShutdownDialog dialog = new ExceptionShutdownDialog(
-                            GlobalReferences.MainWindow,
-                            new UnhandledExceptionEventArgs(result.Exception, false), result);
-                        bool? dresult = dialog.ShowDialog();
-                        if (dresult == false)
-                        {
-                            GlobalReferences.MainWindow.Close();
-                            Application.Current.Shutdown();
-                        }
-                    });
-                }
-
             });
         }
         #endregion
