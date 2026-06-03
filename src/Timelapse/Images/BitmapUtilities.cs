@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using NReco.VideoConverter;
@@ -246,24 +247,50 @@ namespace Timelapse.Images
             }
         }
         
-        // This alternate way to get an image from a video file used the media encoder. 
+        // This alternate way to get an image from a video file uses the media encoder.
         // While it works, its ~twice as slow as using NRECO FFMPeg.
         // We do include it as a fallback for the odd case where ffmpeg doesn't work (I had that with a single video).
         public static BitmapSource GetVideoBitmapFromFileUsingMediaEncoder(string filePath, int? desiredWidth, ImageDisplayIntentEnum displayIntent, ImageDimensionEnum _, out bool isCorruptOrMissing)
         {
-            isCorruptOrMissing = true;
-            // Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
-
+            // Path/existence guards are thread-safe — evaluate before spawning the STA thread.
             if (IsCondition.IsPathLengthTooLong(filePath, FilePathTypeEnum.DisplayFile))
             {
                 isCorruptOrMissing = true;
                 return ImageValues.FilePathTooLong.Value;
             }
-
             if (!File.Exists(filePath))
             {
+                isCorruptOrMissing = true;
                 return ImageValues.FileNoLongerAvailable.Value;
             }
+
+            // MediaPlayer requires an STA thread with a Dispatcher message pump.
+            // Thread-pool threads (used by Task.Run) have neither: MediaPlayer's internal
+            // events (MediaOpened, etc.) are never delivered, so NaturalVideoWidth stays 0.
+            // We spawn a dedicated STA thread and pump the Dispatcher inside the polling loop
+            // via DispatcherFrame so events are delivered between sleep intervals.
+            BitmapSource result = null;
+            bool corrupt = true;
+
+            var staThread = new Thread(() =>
+            {
+                result = GetVideoBitmapCore(filePath, desiredWidth, displayIntent, out corrupt);
+            });
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join(); // Join() is a memory barrier — result and corrupt are safely readable here
+
+            isCorruptOrMissing = corrupt;
+            return result;
+        }
+
+        // Runs the actual MediaPlayer work. Must be called on an STA thread.
+        // Uses PumpDispatcherMessages() in polling loops so that MediaPlayer events
+        // are delivered between sleep intervals.
+        private static BitmapSource GetVideoBitmapCore(string filePath, int? desiredWidth, ImageDisplayIntentEnum displayIntent, out bool isCorruptOrMissing)
+        {
+            isCorruptOrMissing = true;
+            // Debug.Print("FFMPEG failed for some reason, so using MediaEncoder Instead on " + filePath);
 
             MediaPlayer mediaPlayer = new()
             {
@@ -271,19 +298,19 @@ namespace Timelapse.Images
             };
             try
             {
-                // In this method, we open  mediaplayer and play it until we actually get a video frame.
+                // In this method, we open mediaplayer and play it until we actually get a video frame.
                 // Unfortunately, its very time inefficient...
                 mediaPlayer.Open(new(filePath));
                 mediaPlayer.Play();
 
-                // MediaPlayer is not actually synchronous despite exposing synchronous APIs, so wait for it get the video loaded.  Otherwise
+                // MediaPlayer is not actually synchronous despite exposing synchronous APIs, so wait for it to get the video loaded.  Otherwise
                 // the width and height properties are zero and only black pixels are drawn.  The properties will populate with just a call to
-                // Open() call but without also Play() only black is rendered
+                // Open() call but without also Play() only black is rendered.
+                // We pump the Dispatcher between sleeps so MediaPlayer's events are actually delivered.
                 int timesTried = (displayIntent == ImageDisplayIntentEnum.Persistent) ? 1000 : 0;
                 while ((mediaPlayer.NaturalVideoWidth < 1) || (mediaPlayer.NaturalVideoHeight < 1))
                 {
-                    // back off briefly to let MediaPlayer do its loading, which typically takes perhaps 75ms
-                    // a brief Sleep() is used rather than Yield() to reduce overhead as 500k to 1M+ yields typically occur
+                    PumpDispatcherMessages();
                     Thread.Sleep(ThrottleValues.PollIntervalForVideoLoad);
                     if (timesTried-- <= 0)
                     {
@@ -294,6 +321,7 @@ namespace Timelapse.Images
                 }
 
                 // sleep one more time as MediaPlayer has a tendency to still return black frames for a moment after the width and height have populated
+                PumpDispatcherMessages();
                 Thread.Sleep(ThrottleValues.PollIntervalForVideoLoad);
 
                 int pixelWidth = mediaPlayer.NaturalVideoWidth;
@@ -325,8 +353,8 @@ namespace Timelapse.Images
                     renderBitmap.Freeze();
 
                     // check if render succeeded
-                    // hopefully it did and most of the overhead here is WriteableBitmap conversion though, at 2-3ms for a 1280x720 frame, this 
-                    // is not an especially expensive operation relative to the  O(175ms) cost of this function
+                    // hopefully it did and most of the overhead here is WriteableBitmap conversion though, at 2-3ms for a 1280x720 frame, this
+                    // is not an especially expensive operation relative to the O(175ms) cost of this function
                     WriteableBitmap writeableBitmap = renderBitmap.AsWriteable();
                     if (writeableBitmap.IsBlack() == false)
                     {
@@ -337,13 +365,13 @@ namespace Timelapse.Images
                         mediaPlayer.Stop();
                         return writeableBitmap;
                     }
-                    // black frame was rendered; backoff slightly to try again
+                    // black frame was rendered; pump dispatcher and backoff slightly before trying again
+                    PumpDispatcherMessages();
                     Thread.Sleep(TimeSpan.FromMilliseconds(ThrottleValues.ProgressBarSleepInterval.TotalMilliseconds));
                 }
                 // We failed, so just return a blank video.
                 mediaPlayer.Stop();
                 return GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
-                //throw new ApplicationException(String.Format("Limit of {0} render attempts was reached.", Constant.ThrottleValues.MaximumRenderAttempts));
             }
             catch
             {
@@ -352,6 +380,18 @@ namespace Timelapse.Images
                 mediaPlayer.Stop();
                 return GetBitmapFromFileWithPlayButton("pack://application:,,,/Resources/BlankVideo.jpg", desiredWidth);
             }
+        }
+
+        // Push a nested Dispatcher frame to process all pending messages on the current
+        // thread's Dispatcher before returning. This allows MediaPlayer events (MediaOpened,
+        // frame-ready notifications, etc.) to be delivered while we are in a polling loop.
+        private static void PumpDispatcherMessages()
+        {
+            DispatcherFrame frame = new();
+            Dispatcher.CurrentDispatcher.BeginInvoke(
+                new Action(() => frame.Continue = false),
+                DispatcherPriority.Background);
+            Dispatcher.PushFrame(frame);
         }
         #endregion
 

@@ -526,7 +526,7 @@ include it and confirm the "path too long" dialog still appears during loading.
 ---
 
 ### Step 6 — Wrap `GetVideoBitmapFromFileUsingMediaEncoder` in an STA thread (Issue 5.1)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **File:** `Images/BitmapUtilities.cs`
 
