@@ -375,7 +375,14 @@ namespace Timelapse.Images
                     {
                         // bitmap retrieval's already in progress, so wait for it to complete
                         prefetch.Wait();
-                        bitmap = unalteredBitmapsByID[fileRow.ID];
+                        // Use TryGetValue rather than the indexer: if the cache is at capacity a
+                        // concurrent prefetch completing for another image can evict this entry
+                        // between Wait() returning and the read, causing a KeyNotFoundException.
+                        // Fall back to a synchronous load if the entry is no longer present.
+                        if (!unalteredBitmapsByID.TryGetValue(fileRow.ID, out bitmap))
+                        {
+                            bitmap = fileRow.LoadBitmap(Database.RootPathToImages, out _);
+                        }
                         // Debug.Print("Prefetched wait" + fileRow.FileName);
                     }
                     else

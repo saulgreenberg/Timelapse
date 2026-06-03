@@ -498,7 +498,7 @@ without recognition data and confirm detection-related UI is appropriately disab
 ---
 
 ### Step 4 — Fix `KeyNotFoundException` in `ImageCache.TryGetBitmap` (Issue 3.2)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **File:** `Images/ImageCache.cs`, line 378
 
