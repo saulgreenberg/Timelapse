@@ -512,7 +512,7 @@ images display correctly in both directions.
 ---
 
 ### Step 5 — Fix `filesSkipped` data race (Issue 2.1)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **File:** `TimelapsePartialClasses/TimelapseImageSetLoading.cs`, lines 493, 505
 

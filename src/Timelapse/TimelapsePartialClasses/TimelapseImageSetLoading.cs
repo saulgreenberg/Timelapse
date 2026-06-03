@@ -404,7 +404,6 @@ namespace Timelapse
         private bool TryBeginImageFolderLoad(string imageSetFolderPath, string selectedFolderPath, bool isFirstTimeLoad)
         {
             List<FileInfo> filesToAdd = [];
-            List<string> filesSkipped = [];
             bool isCancelled = false;
 
             // TODO: PUT THIS IN THE SHOW PROGRESS LOOP
@@ -490,8 +489,10 @@ namespace Timelapse
                 // If the DoWork delegate is async, this is considered finished before the actual image set is loaded.
                 // Instead of an async DoWork and an await here, wait for the loading to finish.
                 loader.LoadAsync(backgroundWorker.ReportProgress, folderLoadProgress, 500).Wait();
-                filesSkipped = loader.ImagesSkippedAsFilePathTooLong;
-                backgroundWorker.ReportProgress(0, folderLoadProgress); 
+                // Pass the skipped-files list through UserState rather than a shared captured
+                // variable, eliminating the data race between this (background) thread writing
+                // the reference and the ProgressChanged handler (UI thread) reading it.
+                backgroundWorker.ReportProgress(0, loader.ImagesSkippedAsFilePathTooLong);
             };
 
             //
@@ -502,9 +503,9 @@ namespace Timelapse
                 // this gets called on the UI thread
                 ImageSetPane.IsActive = true;
 
-                if (filesSkipped.Count > 0)
+                if (ea.UserState is List<string> skipped && skipped.Count > 0)
                 {
-                    Dialogs.FilePathTooLongDialog(this, filesSkipped);
+                    Dialogs.FilePathTooLongDialog(this, skipped);
                 }
                 string message;
                 if (isCancelled)
