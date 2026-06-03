@@ -469,7 +469,7 @@ clean and no regression in database-open or save behaviour.
 ---
 
 ### Step 2 — Replace `lock(WPF element)` with dedicated lock objects (Issue 3.1)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **Files:** `Images/MarkableCanvas.cs` (lines 491, 900, 911), `Controls/VideoPlayer.xaml.cs` (line 988)
 

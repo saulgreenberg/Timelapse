@@ -179,6 +179,12 @@ namespace Timelapse.Images
         // Whether to force updating on an image with ImageProcessing settings (if that control is visible) whenever a new image is displayed
         private bool forceImageProcessingUpdate;
 
+        // Dedicated lock object for zoom/pan operations.
+        // Replaces the previous pattern of lock(ImageToDisplay), lock(VideoPlayer), and lock(ThumbnailGrid),
+        // which used WPF UI elements as monitor objects — an anti-pattern since WPF controls have
+        // thread affinity and should never be used as lock targets.
+        private readonly object _zoomLock = new();
+
         private bool isRefreshBoundingBoxesPending;
         #endregion
 
@@ -488,7 +494,7 @@ namespace Timelapse.Images
 
             // Scale the image, and at the same time translate it so that the 
             // point in the image under the cursor stays there
-            lock (ImageToDisplay)
+            lock (_zoomLock)
             {
                 double imageWidth = ImageToDisplay.Width * imageToDisplayScale.ScaleX;
                 double imageHeight = ImageToDisplay.Height * imageToDisplayScale.ScaleY;
@@ -897,7 +903,7 @@ namespace Timelapse.Images
             // Manage videos first
             if (IsThumbnailGridVisible == false && ImageToDisplay.IsVisible == false)
             {
-                lock (VideoPlayer)
+                lock (_zoomLock)
                 {
                     // Request Zoom out on a zoomed-in Video
                     if (zoomIn || VideoPlayer.IsUnScaled == false)
@@ -908,7 +914,7 @@ namespace Timelapse.Images
                     }
                 }
             }
-            lock (ThumbnailGrid)
+            lock (_zoomLock)
             {
                 // Request Zoom out on either an unscaled image or the thumbnail grid. 
                 // Note on why this is ambiguous: if the thumbnail grid is visible, it means the (hidden) image is also unscaled

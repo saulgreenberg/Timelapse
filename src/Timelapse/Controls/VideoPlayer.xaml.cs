@@ -64,6 +64,10 @@ namespace Timelapse.Controls
         private readonly ScaleTransform VideoScale;
         private readonly TranslateTransform VideoTranslation;
         private TransformGroup TransformGroup;
+
+        // Dedicated lock object for scale/pan operations.
+        // Replaces the previous lock(MediaElement) anti-pattern.
+        private readonly object _scaleLock = new();
         #endregion
 
         #region Constructor, Loading, Unloading
@@ -985,7 +989,7 @@ namespace Timelapse.Controls
 
             // Scale the video, and at the same time translate it so that the 
             // location in the video (which is the location of the cursor) stays there
-            lock (MediaElement)
+            lock (_scaleLock)
             {
                 double videoWidth = MediaElement.Width * VideoScale.ScaleX;
                 double videoHeight = MediaElement.Height * VideoScale.ScaleY;
