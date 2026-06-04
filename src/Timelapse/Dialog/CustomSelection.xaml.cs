@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -50,6 +51,7 @@ namespace Timelapse.Dialog
         // Detections variables
         private bool dontInvoke;
         private bool dontCount;
+        private CancellationTokenSource countCts = new();
 
         // Variables passed into constructor
         private readonly FileDatabase Database;
@@ -1759,7 +1761,7 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Common to Selections and Detections
-        private void CountTimer_Tick(object sender, EventArgs e)
+        private async void CountTimer_Tick(object sender, EventArgs e)
         {
             CountTimer.Stop();
             // This is set everytime a selection is made
@@ -1768,8 +1770,27 @@ namespace Timelapse.Dialog
                 return;
             }
 
+            // Cancel any previous in-flight count query and start a fresh one.
+            // This prevents a backlog of queries when the user changes criteria rapidly.
+            countCts.Cancel();
+            countCts = new CancellationTokenSource();
+            CancellationToken token = countCts.Token;
 
-            int count = Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom);
+            int count;
+            try
+            {
+                count = await Task.Run(
+                    () => Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom),
+                    token).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            // A newer query may have started while this one was running; discard stale results.
+            if (token.IsCancellationRequested) return;
+
             MatchingFilesCount.Text = count > 0 ? count.ToString() : "0";
             this.MatchingFilesCountLabel.Text = count == 1
                 ? " file matches your query"
@@ -1783,7 +1804,7 @@ namespace Timelapse.Dialog
             if (null != this.RecognitionSelector )
             {
                 this.RecognitionSelector.UpdateDisplayOfTotalFileCounts(MatchingFilesCount.Text);
-                if (this.RefreshRecognitionCountsRequired 
+                if (this.RefreshRecognitionCountsRequired
                     && false == this.Database.CustomSelection.ShowMissingDetections)
                 {
                     // await this.RecognitionSelector.RecognitionsRefreshCounts();
