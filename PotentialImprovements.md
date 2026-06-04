@@ -813,7 +813,7 @@ has transaction infrastructure; the fix is applying it consistently.
 imprecise. Each candidate site must be read in full context to confirm it is a genuine
 bulk operation without a transaction.
 
-*Status: Audit complete — findings below.*
+*Status: ✅ T-1 (CSV import) and T-2 (AddFiles) fixed. T-3 documentation only — low priority.*
 
 #### Transaction Infrastructure
 

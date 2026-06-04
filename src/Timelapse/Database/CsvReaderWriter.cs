@@ -475,8 +475,6 @@ namespace Timelapse.Database
             List<string> importErrors = [];
             return await Task.Run(() =>
             {
-                const int bulkFilesToHandle = 10000;
-                int processedFilesCount = 0;
                 int totalFilesProcessed = 0;
                 int dateTimeErrors = 0;
                 int part = 1;
@@ -561,8 +559,8 @@ namespace Timelapse.Database
                 {
                     if (totalFilesProcessed % 10000 == 0)
                     {
-                     progress.Report(new(Convert.ToInt32(((double)processedFilesCount) / sortedRowDictionaryListCount * 100.0),
-                        $"Part {part}/4: Merging CSV data into Timelapse ({processedFilesCount}/{sortedRowDictionaryListCount}). Please wait...", false, false));
+                     progress.Report(new(Convert.ToInt32(((double)totalFilesProcessed) / sortedRowDictionaryListCount * 100.0),
+                        $"Part {part}/4: Merging CSV data into Timelapse ({totalFilesProcessed}/{sortedRowDictionaryListCount}). Please wait...", false, false));
                     }
 
                     // For every row...
@@ -805,16 +803,6 @@ namespace Timelapse.Database
                         imagesToUpdate.Add(imageToUpdate);
                     }
 
-                    // Write current batch of updates to database. Note that we Update the database every number of rows as specified in bulkFilesToHandle.
-                    // We should probably put in a cancellation CancelToken somewhere around here...
-
-                    if (imagesToUpdate.Count >= bulkFilesToHandle)
-                    {
-
-                        processedFilesCount += bulkFilesToHandle;
-                        fileDatabase.UpdateFiles(imagesToUpdate);
-                        imagesToUpdate.Clear();
-                    }
                 }
 
                 // perform any remaining updates
@@ -833,6 +821,9 @@ namespace Timelapse.Database
                     }
                 }
 
+                // Write all accumulated updates in a single transaction.
+                // Previously updates were flushed every 10,000 rows, creating one fsync per batch.
+                // A single commit here is significantly faster, especially on network-hosted databases.
                 fileDatabase.UpdateFiles(imagesToUpdate);
                 return (CSVReadingResult.Success, importErrors);
             }, token).ConfigureAwait(true);
