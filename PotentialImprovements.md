@@ -952,4 +952,106 @@ or logged.
 
 ---
 
+## Part 5 – Second Round Analysis Areas
+
+Recommended next areas, ordered by expected impact for a long-running desktop app with large datasets.
+
+---
+
+### R-1 · WPF Event Handler Memory Leaks
+
+**Severity:** High — **Fix Risk:** Low
+
+**Why it matters:**
+When dialogs or controls subscribe to events on long-lived objects (the main window, the database,
+`GlobalReferences` statics) without unsubscribing in their `Closing`/`Unloaded` handlers, each
+open-and-close of that window leaks a delegate. The long-lived object holds a reference to the
+delegate, which holds a reference to the dialog/control, preventing GC. Researchers who run
+Timelapse for hours and open many dialogs accumulate this steadily over a session.
+
+**Approach:**
+Audit all dialogs and UserControls for `+=` event subscriptions in constructors, `Loaded` handlers,
+or `Window_Loaded` methods. For each, verify a matching `-=` unsubscription exists in `Closing`,
+`Unloaded`, or `Dispose`. Focus especially on subscriptions to: `GlobalReferences` static events,
+`DataHandler` / `FileDatabase` events, `ImageCache` events, and main window events.
+
+*Status: ✅ Audit complete. No subscriptions to long-lived singletons (GlobalReferences, DataHandler, FileDatabase, ImageCache) found unguarded — the one external subscription (ImageAdjuster → MarkableCanvas.ImageStateChanged) is correctly paired. One real fix applied: `DarkImagesThreshold.Window_Closing` now calls `dispatcherTimer.Stop()` so the timer cannot hold the dialog alive if the user closes before processing finishes.*
+
+---
+
+### R-2 · Startup and Database-Open Performance
+
+**Severity:** High — **Fix Risk:** Low–Medium
+
+**Why it matters:**
+What blocks the UI thread when a user opens a large `.ddb` file? Synchronous database reads, index
+checks, and template comparisons that run on the UI thread during `CreateOrOpenAsync` are the first
+thing researchers notice every session — especially on a network-hosted database.
+
+**Approach:**
+Trace the call chain from the File → Open menu item through `TryOpenTemplateAndBeginLoadFoldersAsync`
+and `FileDatabase.CreateOrOpenAsync`. Identify every synchronous operation (non-`await` calls) that
+touches the database or filesystem. Measure approximate cost per operation and flag anything that
+could be deferred or parallelised.
+
+*Status: Not yet audited.*
+
+---
+
+### R-3 · Path and Filename Edge Cases
+
+**Severity:** Medium — **Fix Risk:** Low
+
+**Why it matters:**
+Timelapse operates on file paths from field sites worldwide — potentially with Unicode characters,
+accented folder names, very long paths, UNC network paths (`\\server\share\...`), and special
+characters. Assumptions about path separators or ASCII-only names surface as real-world crashes
+that don't appear in developer testing.
+
+**Approach:**
+Audit `Path.Combine`, `Uri` construction, `File.Exists`, and `Directory.GetFiles` call sites for
+missing encoding, hard-coded separators (`\` vs `/`), and missing long-path guards. Check whether
+the app registers a manifest entry for long-path awareness on Windows 10+.
+
+*Status: Not yet audited.*
+
+---
+
+### R-4 · Systematic Error Recovery Audit
+
+**Severity:** Medium — **Fix Risk:** Medium
+
+**Why it matters:**
+Some operations that partially succeed can leave the database or filesystem in an inconsistent state
+if interrupted (power loss, crash, network drop). The question for each bulk operation is: does it
+have a clean rollback path? CSV import and `AddFiles` are now wrapped in single transactions (R-1
+addressed), but recognition import, merge operations, and delete operations deserve the same review.
+
+**Approach:**
+For each bulk write operation, verify it is either (a) wrapped in a single SQLite transaction so
+partial failure rolls back atomically, or (b) idempotent so re-running after a failure produces a
+correct result.
+
+*Status: Not yet audited.*
+
+---
+
+### R-5 · Performance Profiling Targets
+
+**Severity:** Medium — **Fix Risk:** N/A (guide only)
+
+**Why it matters:**
+Static analysis identifies candidates; profiling confirms which ones actually dominate in practice.
+The three highest-value targets to instrument are: (1) keypress-to-image-display latency during
+navigation, (2) thumbnail grid load time for a large video-heavy folder, and
+(3) Custom Selection query time with detection data on a 100K+ image database.
+
+**Approach:**
+Use Visual Studio's Diagnostic Tools or dotTrace. For each target, capture a flame graph with a
+representative dataset. Compare against the candidates identified in Parts 1–4 above.
+
+*Status: Not yet audited.*
+
+---
+
 *Analysis performed June 2026 against commit `2fe3fd7` on the `develop` branch.*

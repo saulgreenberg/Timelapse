@@ -134,6 +134,7 @@ namespace Timelapse.Dialog
         #region Closing and Disposing
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            dispatcherTimer.Stop();
             DialogResult = Token.IsCancellationRequested && IsAnyDataUpdated;
         }
         public void Dispose()
