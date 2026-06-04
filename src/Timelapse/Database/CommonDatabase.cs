@@ -290,7 +290,15 @@ namespace Timelapse.Database
         // ASYNC and NON-ASYNC versions
         public virtual async Task LoadControlsFromTemplateDBSortedByControlOrderAsync()
         {
-            await Task.Run(LoadControlsFromTemplateDBSortedByControlOrder).ConfigureAwait(true);
+            // Run only the database read on the thread pool; constructing Controls and
+            // calling BindDataGrid (which sets DataGrid.DataContext / ItemsSource) must
+            // happen on the UI thread after ConfigureAwait(true) returns here.
+            DataTable templateTable = await Task.Run(() =>
+                Database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.Template + Sql.OrderBy + Control.ControlOrder)
+            ).ConfigureAwait(true);
+
+            Controls = new(templateTable, row => new(row));
+            Controls.BindDataGrid(editorDataGrid, onTemplateTableRowChanged);
         }
 
         public void LoadControlsFromTemplateDBSortedByControlOrder()

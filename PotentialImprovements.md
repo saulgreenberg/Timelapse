@@ -28,12 +28,12 @@ queue simply advances to the next.
 | 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low | ⏮ Reverted — caused video thumbnails to stop appearing; root cause unclear; needs investigation before retrying |
 | 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | N/A | 🚫 Won't fix — rare edge case (only on missing-file restore), self-healing via LRU eviction, never user-visible; fix complexity outweighs benefit |
 | 8 | P-2 | Make Custom Selection COUNT query async | Medium | ✅ Done |
-| 9 | CA-4 | Move `BindDataGrid` out of `Task.Run` (dormant threading bug) | Low | ⬜ Pending |
+| 9 | CA-4 | Move `BindDataGrid` out of `Task.Run` (dormant threading bug) | Low | ✅ Done |
 | 10 | C-4 | Thread `CancellationToken` into video frame extraction | Medium | ⬜ Pending |
 | 11 | P-6 | Cache detection/classification COUNT query results | Medium | ⬜ Pending |
 | 12 | P-3 | Async-ify `prefetch.Wait()` (architectural change) | High | ⬜ Pending |
 
-**Current position:** Repair 8 (P-2) complete. Next: Repair 9 (CA-4).
+**Current position:** Repair 9 (CA-4) complete. Next: Repair 10 (C-4).
 
 ---
 
