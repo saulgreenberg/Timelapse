@@ -607,7 +607,7 @@ not appear to freeze between updates).
 ---
 
 ### Step 11 — Replace `BackgroundWorker` with an async Task pipeline (Issue 1.3)
-**Status:** ⬜ Pending
+**Status:** 🚫 Skipped — Risk outweighs gain
 **Requires:** Step 5 complete
 
 **File:** `TimelapsePartialClasses/TimelapseImageSetLoading.cs`
