@@ -188,7 +188,8 @@ public class SQLiteWrapper
                 // Debug.Print(query);
                 using SQLiteDataReader reader = command.ExecuteReader();
                 dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                dataTable.Load(reader);
+                try   { dataTable.Load(reader); }
+                finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
                 return dataTable;
             }
             catch (Exception exception)
@@ -232,7 +233,8 @@ public class SQLiteWrapper
                         {
                             using SQLiteDataReader reader = command.ExecuteReader();
                             dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                            dataTable.Load(reader);
+                            try   { dataTable.Load(reader); }
+                            finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
                         }
                     }
                     finally

@@ -18,22 +18,22 @@ When you type **`Next issue`**, the assistant will:
 Repairs are ordered lowest-risk / highest-payoff first. Skip or defer any item by saying so — the
 queue simply advances to the next.
 
-| # | ID | Short description | Risk |
-|---|----|-------------------|------|
-| 1 | C-3 | Wrap `MemoryStream` in `using` after video load | Low |
-| 2 | P-4 | Add missing index on `Classifications.DetectionID` | Low |
-| 3 | C-5 | Unsubscribe `DataTableColumns_Changed` after `Load` | Low |
-| 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low |
-| 5 | P-5 | Cache EXIF orientation per file path | Low |
-| 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low |
-| 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | Medium |
-| 8 | P-2 | Make Custom Selection COUNT query async | Medium |
-| 9 | CA-4 | Move `BindDataGrid` out of `Task.Run` (dormant threading bug) | Low |
-| 10 | C-4 | Thread `CancellationToken` into video frame extraction | Medium |
-| 11 | P-6 | Cache detection/classification COUNT query results | Medium |
-| 12 | P-3 | Async-ify `prefetch.Wait()` (architectural change) | High |
+| # | ID | Short description | Risk | Status |
+|---|----|-------------------|------|--------|
+| 1 | C-3 | Wrap `MemoryStream` in `using` after video load | Low | ✅ Done |
+| 2 | P-4 | Add missing index on `Classifications.DetectionID` | N/A | ❌ Removed — `Classifications` is a legacy migration table; modern databases do not have it |
+| 3 | C-5 | Unsubscribe `DataTableColumns_Changed` after `Load` | Low | ✅ Done |
+| 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low | ⬜ Pending |
+| 5 | P-5 | Cache EXIF orientation per file path | Low | ⬜ Pending |
+| 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low | ⬜ Pending |
+| 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | Medium | ⬜ Pending |
+| 8 | P-2 | Make Custom Selection COUNT query async | Medium | ⬜ Pending |
+| 9 | CA-4 | Move `BindDataGrid` out of `Task.Run` (dormant threading bug) | Low | ⬜ Pending |
+| 10 | C-4 | Thread `CancellationToken` into video frame extraction | Medium | ⬜ Pending |
+| 11 | P-6 | Cache detection/classification COUNT query results | Medium | ⬜ Pending |
+| 12 | P-3 | Async-ify `prefetch.Wait()` (architectural change) | High | ⬜ Pending |
 
-**Current position:** Repair 1 (C-3) complete. Next: Repair 2 (P-4).
+**Current position:** Repair 3 (C-5) complete. Next: Repair 4 (C-1).
 
 ---
 
