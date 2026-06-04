@@ -1021,7 +1021,7 @@ Audit `Path.Combine`, `Uri` construction, `File.Exists`, and `Directory.GetFiles
 missing encoding, hard-coded separators (`\` vs `/`), and missing long-path guards. Check whether
 the app registers a manifest entry for long-path awareness on Windows 10+.
 
-*Status: Not yet audited.*
+*Status: ✅ Audit complete and fix applied. Unicode/UNC handling is correct throughout. Long-path awareness added to all three manifests (`app.manifest`, `TimelapseTemplateEditor.manifest`, `TimelapseViewOnly.manifest`). `IsCondition.LongPathsSupported` detects Win10+ with registry key `LongPathsEnabled=1`; `IsPathLengthTooLong` skips the 259-char limit when long paths are genuinely supported, preserving existing warning dialogs on older OS and on Win10 without the policy enabled. Other audit findings (Uri constructor, OpenFileDialog gaps) were false positives or already covered.*
 
 ---
 

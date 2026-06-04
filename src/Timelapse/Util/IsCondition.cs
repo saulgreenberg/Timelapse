@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using Microsoft.Win32;
 using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
@@ -314,6 +315,29 @@ namespace Timelapse.Util
         /// (see https://en.wikipedia.org/wiki/8.3_filename)
         /// </summary>
 
+        // True when the OS is Windows 10+ AND the system has long-path support enabled
+        // (HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled = 1).
+        // Cached on first access; safe to call from any thread.
+        public static bool LongPathsSupported => longPathsSupported.Value;
+        private static readonly Lazy<bool> longPathsSupported = new(DetectLongPathSupport);
+        private static bool DetectLongPathSupport()
+        {
+            try
+            {
+                if (Environment.OSVersion.Version.Major < 10)
+                    return false;
+                object value = Registry.GetValue(
+                    @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem",
+                    "LongPathsEnabled",
+                    0);
+                return value is int i && i == 1;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         // Check length of a file
         public static bool IsPathLengthTooLong(string filePath, FilePathTypeEnum filePathType)
         {
@@ -344,12 +368,17 @@ namespace Timelapse.Util
 
         private static bool IsPathLengthTooLong(string filePath)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 // this should not happen
                 TracePrint.StackTrace(1);
                 return false;
+            }
+            if (LongPathsSupported)
+            {
+                // OS supports paths beyond 260 chars — only flag 8.3 short-name paths
+                return IsPathEndingWithAShortFileName(filePath);
             }
             return IsPathEndingWithAShortFileName(filePath) || filePath.Length > File.MaxPathLength;
         }
