@@ -905,7 +905,6 @@ public class SQLiteWrapper
                 if (progress != null)
                 {
                     progress.Report(new(0, progressString, false, true));
-                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 }
 
                 using SQLiteCommand command = new(connection);
@@ -919,7 +918,6 @@ public class SQLiteWrapper
                         int percent = Convert.ToInt32(i * 100.0 / statementsCount);
                         progress.Report(new(percent,
                             $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Track the current statement so it is available in the catch block.
                     // For single-statement calls this is the statement itself; for multi-statement

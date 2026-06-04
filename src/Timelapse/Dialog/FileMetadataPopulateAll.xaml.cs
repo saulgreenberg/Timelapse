@@ -170,7 +170,6 @@ namespace Timelapse.Dialog
                     {
                         int percentDone = Convert.ToInt32(imageIndex / totalImages * 100.0);
                         ReportProgress(new(percentDone, $"{imageIndex}/{totalImages} images. Processing {image.File}", true, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);
                     }
 
                     foreach (var item in MetadataGrid.SelectedMetadata)
@@ -231,7 +230,6 @@ namespace Timelapse.Dialog
                 {
                     isAnyDataUpdated = true;
                     ReportProgress(new(100, $"Writing metadata for {totalImages} files. Please wait...", false, true));
-                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);
                     FileDatabase.UpdateFiles(imagesToUpdate);
                 }
                 return feedbackData;

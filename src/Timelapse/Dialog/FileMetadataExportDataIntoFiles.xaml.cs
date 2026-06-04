@@ -633,7 +633,6 @@ namespace Timelapse.Dialog
                             int percentDone = Convert.ToInt32(i / (double)totalCount * 100.0);
                             Progress.Report(new(percentDone,
                                 $"{i + 1}/{totalCount} files. Processing {FilesFolders.TruncateFileNameForDisplay(imageRow.File, imageRow.RelativePath, 50)}", true, false));
-                            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                         }
 
                         // Check that file exists

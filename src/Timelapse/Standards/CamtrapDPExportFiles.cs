@@ -681,7 +681,6 @@ namespace Timelapse.Standards
                         {
                             int percentDone = (int)100.0 * row / countAllCurrentlySelectedFiles;
                             progress.Report(new(percentDone, "Writing the CamtrapDP Media and Observations CSV files. Please wait", false, false));
-                            Thread.Sleep(ThrottleValues.RenderingBackoffTime); // Allows the UI thread to update every now and then
                         }
 
                         includeMediaComma = false;

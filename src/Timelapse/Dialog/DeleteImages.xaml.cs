@@ -392,11 +392,9 @@ namespace Timelapse.Dialog
                         int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
                         Progress.Report(new(percentDone,
                             $"Pass 1: Deleting {fileIndex} / {count} files", true, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);
                     }
                 }
                 Progress.Report(new(100, $"Pass 2: Updating {count} files. Please wait...", false, true));
-                Thread.Sleep(ThrottleValues.RenderingBackoffTime);
 
                 if (deleteTheData)
                 {

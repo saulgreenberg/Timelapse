@@ -1644,7 +1644,6 @@ namespace Timelapse.Controls
 
             string what = countingDetections ? "detections" : "classifications";
             this.Owner.Progress.Report(new(0, $"Counting {what} ({entity}). Please wait", true, true));
-            Thread.Sleep(ThrottleValues.RenderingBackoffTime); // Allows the UI thread to update every now and then
         }
 
         #endregion

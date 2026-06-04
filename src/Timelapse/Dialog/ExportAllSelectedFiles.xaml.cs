@@ -196,7 +196,6 @@ namespace Timelapse.Dialog
                     int percentDone = Convert.ToInt32((copiedFiles + skippedFiles) / Convert.ToDouble(totalFiles) * 100.0);
                     Progress.Report(new(percentDone,
                         $"Copying {copiedFiles} / {totalFiles} files", true, false));
-                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);
                 }
             }).ConfigureAwait(true);
 

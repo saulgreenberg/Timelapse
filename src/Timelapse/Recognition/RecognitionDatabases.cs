@@ -178,7 +178,6 @@ namespace Timelapse.Recognition
             ThrowIf.IsNullArgument(pathPrefixForTruncation, nameof(pathPrefixForTruncation));
 
             progress.Report(new(0, $"Adding {recognizer.images.Count} new recognitions. Please wait...", false, true));
-            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             // Updating many rows is made hugely more efficient if we create an index for File and Relative Path
             // as otherwise each update is in linear time to the table rows vs log time. 
             // Because we will not need these indexes later, we will drop them after the updates are done
@@ -308,7 +307,6 @@ namespace Timelapse.Recognition
                     {
                         progress.Report(new(Convert.ToInt32(j * 100.0 / totalFiles),
                             $"Adding new recognitions ({j:N0}/{totalFiles:N0})...", false, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     j++;
 

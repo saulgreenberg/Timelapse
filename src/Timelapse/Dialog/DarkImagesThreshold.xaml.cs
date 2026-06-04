@@ -339,7 +339,6 @@ namespace Timelapse.Dialog
                         int percentDone = (int)(100.0 * fileIndex / selectedFilesCount);
                         Progress.Report(new(percentDone,
                             $"{fileIndex}/{selectedFilesCount} images. Processing {file.File}", true, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                 }
 
@@ -347,7 +346,6 @@ namespace Timelapse.Dialog
                 // Tracks whether any changes to the data or database are made
                 Progress.Report(new(100,
                     $"Writing changes for {filesToUpdate.Count} files. Please wait...", false, true));
-                Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                 IsAnyDataUpdated = true;
                 fileDatabase.UpdateFiles(filesToUpdate);
                 return filesToUpdate.Count > 0

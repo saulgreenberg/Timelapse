@@ -592,7 +592,7 @@ cancel state persisting.
 ---
 
 ### Step 10 — Remove `Thread.Sleep` calls from background tasks (Issue 6.1)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **Files:** ~40 locations across `Database/`, `Dialog/`, `Recognition/`, `Images/`
 

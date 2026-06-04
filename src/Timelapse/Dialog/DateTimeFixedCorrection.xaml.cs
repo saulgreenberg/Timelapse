@@ -132,7 +132,6 @@ namespace Timelapse.Dialog
                        int percentDone = Convert.ToInt32(fileIndex / Convert.ToDouble(count) * 100.0);
                        progress.Report(new(percentDone,
                            $"Pass 1: Calculating new date/times for {fileIndex} / {count} files", true, false));
-                       Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                    }
 
                    if (fileIndex >= count)
@@ -141,7 +140,6 @@ namespace Timelapse.Dialog
                        // This really should be somehow signalled from the invoking method (ideally ExecuteNonQueryWrappedInBeginEnd every update interval), but this is a reasonable workaround.
                        progress.Report(new(100,
                            $"Pass 2: Updating {feedbackRows.Count} files. Please wait...", false, true));
-                       Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                    }
                    return imageDateTime + adjustment; // Returns the new time
                },

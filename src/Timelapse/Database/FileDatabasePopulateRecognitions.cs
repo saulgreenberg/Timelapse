@@ -67,7 +67,6 @@ namespace Timelapse.Database
             {
                 return false;
             }
-            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
 
             BboxPrintable bboxPrintable = null;
             Dictionary<long, string> dict = [];
@@ -203,7 +202,6 @@ namespace Timelapse.Database
             }
 
             progress.Report(new(0, "Updating database...", false, true));
-            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             if (columnTuplesWithWhereList.Count > 0)
             {
                 // Update the Database
@@ -234,7 +232,6 @@ namespace Timelapse.Database
                 return false;
             }
             progress.Report(new(0, "Populating fields...", false, true));
-            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
 
             Dictionary<long, int> dict = [];
             foreach (ImageRow image in FileTable)
@@ -266,7 +263,6 @@ namespace Timelapse.Database
             }
 
             progress.Report(new(0, "Updating database...", false, true));
-            Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             if (columnTuplesWithWhereList.Count > 0)
             {
                 // Update the Database

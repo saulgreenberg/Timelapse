@@ -2032,7 +2032,6 @@ namespace Timelapse.Database
             {
                 // Update the progress bar
                 progress.Report(new((int)(100 * p), "Reading the recognition file...", true, false));
-                Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
             }
         }
         public static void UpdateProgressBar(BusyCancelIndicator busyCancelIndicator, int percent, string message, bool isCancelEnabled, bool isIndeterminate)
@@ -2134,7 +2133,6 @@ namespace Timelapse.Database
                 try
                 {
                     progress.Report(new(0, "Examining database recognitions...", true, true));
-                    Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
 
                     // Fill in the jsonRecognizer info structure as needed to ensure it is filled in with reasonable values
                     PopulateRecognizerInfoWithDefaultValuesAsNeeded(jsonRecognizer.info);
@@ -2295,7 +2293,6 @@ namespace Timelapse.Database
                         {
                             return RecognizerImportResultEnum.Cancelled;
                         }
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
                         DataTable dbDetectionTable = Database.GetDataTableFromSelect(
                                     Sql.Select + DatabaseColumn.File + Sql.Comma
                                     + DatabaseColumn.RelativePath + Sql.Comma
@@ -2325,7 +2322,7 @@ namespace Timelapse.Database
                                 }
                                 int percent = Convert.ToInt32(i * 100.0 / count);
                                 progress.Report(new(percent,
-                                    $"Examining your existing recognitions ({i:N2}/{count:N2})...", true, false)); Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and the
+                                    $"Examining your existing recognitions ({i:N2}/{count:N2})...", true, false));
                             }
                             i++;
                         }
@@ -2334,7 +2331,6 @@ namespace Timelapse.Database
                         // Foreach  detection, check if it exists in the database detection table.
                         // If it does, delete all references to that file (via the ID) in the database
                         progress.Report(new(0, "Comparing recognitions. Please wait...", true, true));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                         if (cancelTokenSource.Token.IsCancellationRequested)
                         {
                             return RecognizerImportResultEnum.Cancelled;

@@ -332,7 +332,6 @@ namespace Timelapse.Recognition
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new(percentDone,
                             $"Checking image paths ({i:N0}/{sTotalImages}...)", true, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     if (nonEmptySubfolder && image.file.StartsWith(subFolderPrefix + Path.DirectorySeparatorChar))
                     {
@@ -393,7 +392,6 @@ namespace Timelapse.Recognition
                         int percentDone = Convert.ToInt32(i * 100.0 / totalImages);
                         progress.Report(new(percentDone,
                             $"Correcting image recognition paths ({i:N0}/{sTotalImages}...", false, false));
-                        Thread.Sleep(ThrottleValues.RenderingBackoffTime);  // Allows the UI thread to update every now and then
                     }
                     // Add the prefix to the path
                     image.file = Path.Combine(subFolderPrefix, image.file);
