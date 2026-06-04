@@ -24,16 +24,16 @@ queue simply advances to the next.
 | 2 | P-4 | Add missing index on `Classifications.DetectionID` | N/A | ❌ Removed — `Classifications` is a legacy migration table; modern databases do not have it |
 | 3 | C-5 | Unsubscribe `DataTableColumns_Changed` after `Load` | Low | ✅ Done |
 | 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low | ✅ Done |
-| 5 | P-5 | Cache EXIF orientation per file path | Low | ⬜ Pending |
-| 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low | ⬜ Pending |
-| 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | Medium | ⬜ Pending |
-| 8 | P-2 | Make Custom Selection COUNT query async | Medium | ⬜ Pending |
+| 5 | P-5 | Cache EXIF orientation per file path | N/A | 🚫 Won't fix — `MetadataExtractorGetOrientation` is only called when the bitmap is not in the cache; the bitmap cache already acts as an implicit orientation cache. Re-reads only occur on full bitmap reloads where the EXIF cost is negligible. An explicit orientation cache would waste memory (up to ~350 MB at 1M images) for near-zero benefit. |
+| 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low | ⏮ Reverted — caused video thumbnails to stop appearing; root cause unclear; needs investigation before retrying |
+| 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | N/A | 🚫 Won't fix — rare edge case (only on missing-file restore), self-healing via LRU eviction, never user-visible; fix complexity outweighs benefit |
+| 8 | P-2 | Make Custom Selection COUNT query async | Medium | ✅ Done |
 | 9 | CA-4 | Move `BindDataGrid` out of `Task.Run` (dormant threading bug) | Low | ⬜ Pending |
 | 10 | C-4 | Thread `CancellationToken` into video frame extraction | Medium | ⬜ Pending |
 | 11 | P-6 | Cache detection/classification COUNT query results | Medium | ⬜ Pending |
 | 12 | P-3 | Async-ify `prefetch.Wait()` (architectural change) | High | ⬜ Pending |
 
-**Current position:** Repair 4 (C-1) complete. Next: Repair 5 (P-5).
+**Current position:** Repair 8 (P-2) complete. Next: Repair 9 (CA-4).
 
 ---
 

@@ -181,7 +181,7 @@ namespace Timelapse.Images
                             }
 
                             // Point NReco to the temp directory
-                            ffMpeg.FFMpegToolPath = File.Exists(tempFFmpegPath) 
+                            ffMpeg.FFMpegToolPath = File.Exists(tempFFmpegPath)
                                 ? tempFFmpegDir
                                 // Fallback: try using the installation directory directly
                                 : dir;
