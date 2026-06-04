@@ -273,6 +273,7 @@ namespace Timelapse.Controls
         // If things fail, it changes the BoundingBox's initial frame to 0, otherwise leaves it untouched.
         private bool OkayToDrawAndResetInitialVideoFrameIfNeeded(ImageRow imageRow, BoundingBoxes bBoxes)
         {
+            if (GlobalReferences.MainWindow?.DataHandler == null) return false;
             float? actualDuration = null;
 
             if (imageRow.IsVideo)
@@ -411,6 +412,7 @@ namespace Timelapse.Controls
             }
 
             ImageRow imageRow = fileTable[fileIndex];
+            if (GlobalReferences.MainWindow == null) return;
             Point duplicateSequence = GlobalReferences.MainWindow.DuplicatesCheckIfDuplicateAndGetSequenceNumberIfAny(imageRow, fileIndex);
             if (duplicateSequence.Y > 1)
             {

@@ -121,7 +121,7 @@ namespace Timelapse.Images
 
                 //Saul TO DO:
                 // Note: not sure of the cost of creating a new converter every time. May be better to reuse it?
-                using MemoryStream outputBitmapAsStream = new();
+                Stream outputBitmapAsStream = new MemoryStream();
                 FFMpegConverter ffMpeg = new();
 
                 // IMPORTANT: Set the ffmpeg tool directory to the application's directory.

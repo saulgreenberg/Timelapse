@@ -20,7 +20,7 @@ queue simply advances to the next.
 
 | # | ID | Short description | Risk | Status |
 |---|----|-------------------|------|--------|
-| 1 | C-3 | Wrap `MemoryStream` in `using` after video load | Low | ✅ Done |
+| 1 | C-3 | Wrap `MemoryStream` in `using` after video load | N/A | ⏮ Reverted — `BitmapCacheOption.None` keeps a lazy reference to the stream; the `BitmapImage` owns the stream's lifetime. Disposing early caused video thumbnails to go blank. Original undisposed pattern is correct. |
 | 2 | P-4 | Add missing index on `Classifications.DetectionID` | N/A | ❌ Removed — `Classifications` is a legacy migration table; modern databases do not have it |
 | 3 | C-5 | Unsubscribe `DataTableColumns_Changed` after `Load` | Low | ✅ Done |
 | 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low | ✅ Done |
@@ -928,7 +928,7 @@ and bitmap constructors outside `using` blocks. Verify each is either in a `usin
 explicit `Dispose` call on all exit paths. The `SQLiteWrapper` class already uses `using` for
 its connections — audit the callers that bypass the wrapper.
 
-*Status: Not yet audited.*
+*Status: ✅ Audited — no action needed. Agent findings were mostly false positives: `FFMpegConverter` and `MediaPlayer` do not implement `IDisposable`; `SQLiteDataReader` returned from `GetSchema` is properly wrapped in `using` by its caller. Only real findings: four trivial `MemoryStream` objects in cold-path startup code (`TimelapseAvalonExtensions.cs`) with no unmanaged resources — GC handles them; not worth a dedicated fix.*
 
 ---
 
@@ -948,7 +948,7 @@ return values from database reads (`DataRow["column"]`), file-path operations, a
 collection lookups. Verify each null case is either impossible by invariant, handled explicitly,
 or logged.
 
-*Status: Not yet audited.*
+*Status: ✅ Audit complete. Four fixes applied: `VideoPlayer.xaml.cs:696` — used `mainWindow` (already null-checked) instead of `GlobalReferences.MainWindow`; `ThumbnailInCell.xaml.cs:280,414` — added `GlobalReferences.MainWindow` null guards; `MetadataDataEntryPanel.xaml.cs:50` — static property uses `?.` chain; `TimelapseDuplicates.cs:238` — `FirstOrDefault().Key` null case now inserts detection without classification rather than silently writing null.*
 
 ---
 

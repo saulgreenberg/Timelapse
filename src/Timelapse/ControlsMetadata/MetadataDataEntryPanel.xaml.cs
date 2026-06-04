@@ -47,7 +47,7 @@ namespace Timelapse.ControlsMetadata
         #endregion
 
         #region Private Variables
-        private static FileDatabase FileDatabase => GlobalReferences.MainWindow.DataHandler.FileDatabase;
+        private static FileDatabase FileDatabase => GlobalReferences.MainWindow?.DataHandler?.FileDatabase;
         private readonly TabItem ParentTab;
         private readonly int ExpectedImageLevel;
         private string relativePathToCurrentFolder;
