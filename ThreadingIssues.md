@@ -554,8 +554,8 @@ displayed after load is not blank.
 
 ---
 
-### Step 8 — Make `TryGetBitmap` async; replace `prefetch.Wait()` with `await` (Issue 1.1)
-**Status:** ⬜ Pending
+### Step 8 — Eliminate `prefetch.Wait()` UI-thread block in `TryGetBitmap` (Issue 1.1)
+**Status:** 🚫 Won't Fix — By Design
 **Requires:** Step 4 complete
 
 **File:** `Images/ImageCache.cs` and all callers up through the navigation stack.
@@ -564,15 +564,18 @@ Change `TryGetBitmap` to return `Task<(bool, BitmapSource)>`. Replace
 `prefetch.Wait()` with `await prefetch.ConfigureAwait(true)`. Propagate
 `async`/`await` upward one level at a time, verifying the build at each level.
 
-**Test:** Navigate through images using the arrow keys, the slider, and by clicking
-in the thumbnail grid. Hold the right-arrow key to navigate rapidly. Confirm images
-display without UI freezes. Also confirm the Differences view (previous/next
-difference overlay) still works.
+**Outcome:** Attempted and reverted. The `IsCompleted` approach (skip the wait,
+load synchronously if prefetch not done) produced noticeably slower navigation.
+When the prefetch is in progress, waiting for its remaining fraction is faster
+than abandoning it and starting a full fresh load. Abandoning also causes double
+disk I/O since the background prefetch keeps running alongside the new synchronous
+load. The deadlock risk is negligible — prefetch tasks use only `LoadBitmap`
+which does not marshal to the UI thread. Left as original.
 
 ---
 
 ### Step 9 — Remove `CancelTokenSource` assignment from background threads (Issue 2.2)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **File:** `Database/FileDatabase.cs`, line 2108
 

@@ -2105,8 +2105,12 @@ namespace Timelapse.Database
                 {
                     if (e is TaskCanceledException)
                     {
-                        GlobalReferences.CancelTokenSource = new();
-                        jsonRecognizer = new(); // signal cancel by returning a non-null recognizer where info is null
+                        // Signal cancellation by returning a non-null recognizer whose info is null.
+                        // Do NOT replace GlobalReferences.CancelTokenSource here — this runs on a
+                        // background thread and would race the UI thread. The caller always reaches
+                        // BusyCancelIndicator.Reset() on the UI thread, which replaces the token
+                        // source correctly at the right time.
+                        jsonRecognizer = new();
                     }
                     else
                     {

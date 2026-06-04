@@ -388,7 +388,7 @@ namespace Timelapse.Images
                     else
                     {
                         // No cached bitmaps are available.
-                        // synchronously load the requested bitmap from disk as it isn't cached, 
+                        // synchronously load the requested bitmap from disk as it isn't cached,
                         // doesn't have a prefetch running, and is needed right now by the caller
                         bitmap = fileRow.LoadBitmap(Database.RootPathToImages, out bool isCorruptOrMissing);
                         if (isCorruptOrMissing == false)
