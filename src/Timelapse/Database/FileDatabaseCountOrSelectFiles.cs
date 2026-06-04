@@ -526,7 +526,9 @@ namespace Timelapse.Database
             {
                 int fileCount = FileTable.RowCount;
                 int i = 0;
-                // Check if each file exists. Get all missing files in the selection as a list of file ids, e.g., "1,2,8,10" 
+                // Check if each file exists. Collect missing file IDs in a list to avoid O(n²)
+                // string concatenation, then join once after the loop.
+                List<long> missingIds = [];
                 foreach (ImageRow image in FileTable)
                 {
                     // Update the progress bar and populate the detection tables
@@ -546,14 +548,13 @@ namespace Timelapse.Database
 
                     if (!System.IO.File.Exists(Path.Combine(RootPathToImages, image.RelativePath, image.File)))
                     {
-                        commaSeparatedListOfIDs += image.ID + ",";
+                        missingIds.Add(image.ID);
                     }
                     i++;
                 }
 
-                // remove the trailing comma
-                commaSeparatedListOfIDs = commaSeparatedListOfIDs.TrimEnd(',');
-                return string.IsNullOrEmpty(commaSeparatedListOfIDs)
+                commaSeparatedListOfIDs = string.Join(",", missingIds);
+                return missingIds.Count == 0
                     ? SelectMissingFilesResultEnum.NoMissingFiles
                     : SelectMissingFilesResultEnum.MissingFilesFound;
             }).ConfigureAwait(true);

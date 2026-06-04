@@ -866,7 +866,7 @@ inside `foreach` / `for` loops. Replace string concatenation with `StringBuilder
 `string.Join`. Replace per-row queries with a single parameterised batch query or an
 `IN (…)` clause.
 
-*Status: Not yet audited.*
+*Status: ✅ Audit complete. No N+1 queries found. One O(n²) string concatenation fixed in `FileDatabaseCountOrSelectFiles.cs:549` (`SelectMissingFilesFromCurrentlySelectedFiles`) — replaced `+=` accumulation with `List<long>` + `string.Join`.*
 
 ---
 
