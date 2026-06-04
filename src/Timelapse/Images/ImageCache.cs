@@ -254,19 +254,14 @@ namespace Timelapse.Images
         #region  Public Methods - Invalidate Image in cache / Reset
         public bool TryInvalidate(long id)
         {
-            if (unalteredBitmapsByID.ContainsKey(id) == false)
-            {
-                return false;
-            }
-
-            if (Current == null || Current.ID == id)
+            if (Current?.ID == id)
             {
                 Reset();
             }
 
-            unalteredBitmapsByID.TryRemove(id, out _);
             lock (mostRecentlyUsedIDs)
             {
+                unalteredBitmapsByID.TryRemove(id, out _);
                 return mostRecentlyUsedIDs.TryRemove(id);
             }
         }

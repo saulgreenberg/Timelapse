@@ -23,7 +23,7 @@ queue simply advances to the next.
 | 1 | C-3 | Wrap `MemoryStream` in `using` after video load | Low | ✅ Done |
 | 2 | P-4 | Add missing index on `Classifications.DetectionID` | N/A | ❌ Removed — `Classifications` is a legacy migration table; modern databases do not have it |
 | 3 | C-5 | Unsubscribe `DataTableColumns_Changed` after `Load` | Low | ✅ Done |
-| 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low | ⬜ Pending |
+| 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low | ✅ Done |
 | 5 | P-5 | Cache EXIF orientation per file path | Low | ⬜ Pending |
 | 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low | ⬜ Pending |
 | 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | Medium | ⬜ Pending |
@@ -33,7 +33,7 @@ queue simply advances to the next.
 | 11 | P-6 | Cache detection/classification COUNT query results | Medium | ⬜ Pending |
 | 12 | P-3 | Async-ify `prefetch.Wait()` (architectural change) | High | ⬜ Pending |
 
-**Current position:** Repair 3 (C-5) complete. Next: Repair 4 (C-1).
+**Current position:** Repair 4 (C-1) complete. Next: Repair 5 (P-5).
 
 ---
 
