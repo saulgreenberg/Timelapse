@@ -254,10 +254,16 @@ namespace Timelapse.Database
                 }
                 catch
                 {
-                    return false;
+                    // Delete the partial output file so a corrupt CSV is not left on disk.
+                    if (File.Exists(filePath))
+                    {
+                        try { File.Delete(filePath); } catch { /* best effort */ }
+                    }
+                    throw; // Propagate to caller's catch, which shows a dialog with the exception details.
                 }
             }, token);
 
+            // If the export was cancelled, remove the partial file.
             if (!result && token.IsCancellationRequested && File.Exists(filePath))
             {
                 try { File.Delete(filePath); } catch { /* best effort */ }
@@ -279,9 +285,7 @@ namespace Timelapse.Database
             IProgress<ProgressBarArguments> progress = progressHandler;
             return await Task.Run(() =>
             {
-                try
-                {
-                    progress.Report(new(0, "Writing the CSV file. Please wait", false, true));
+                progress.Report(new(0, "Writing the CSV file. Please wait", false, true));
 
                     // For every level
                     foreach (MetadataInfoRow infoRow in database.MetadataInfo)
@@ -433,11 +437,6 @@ namespace Timelapse.Database
                     }
 
                     return true;
-                }
-                catch
-                {
-                    return false;
-                }
             }).ConfigureAwait(true);
         }
 

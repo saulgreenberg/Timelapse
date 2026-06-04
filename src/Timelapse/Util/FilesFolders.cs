@@ -442,8 +442,9 @@ namespace Timelapse.Util
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                TracePrint.PrintMessage($"GetAllFilesInFoldersAndSubfoldersMatchingPattern failed on '{startFolder}': {exception.Message}");
                 return null;
             }
             return foundFiles;
@@ -465,8 +466,9 @@ namespace Timelapse.Util
                 List<string> foundFiles = [.. Directory.GetFiles(folder)];
                 return FilesRemoveAllButImagesAndVideos(foundFiles);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                TracePrint.PrintMessage($"GetAllImageAndVideoFilesInASingleFolder failed on '{folder}': {exception.Message}");
                 return null;
             }
         }

@@ -887,7 +887,7 @@ collection. Verify `VirtualizingPanel.IsVirtualizing="True"` and
 Check that no `ScrollViewer` with `CanContentScroll="False"` wraps these controls, as that
 disables pixel-based scrolling and defeats virtualisation.
 
-*Status: Not yet audited.*
+*Status: ✅ Audited — no action needed. Main DataGrid uses WPF default virtualization (on). Thumbnail grid is a custom renderer, not an ItemsControl. Three dialogs disable virtualization intentionally for small bounded row counts.*
 
 ---
 
@@ -908,7 +908,7 @@ Search for bare `catch` blocks and `catch` blocks with no logging. Categorise ea
 (b) silent swallow of a recoverable error — add `TracePrint.PrintMessage`;
 (c) silent swallow of an unexpected error — convert to logged rethrow or specific exception type.
 
-*Status: Not yet audited.*
+*Status: ✅ Audit complete. Three sites fixed: `ExportToCsv` catch now re-throws (partial file cleaned up; caller's existing handler shows exception details to user); `ExportMetadataToCsv` inner try/catch removed (exceptions propagate to caller's catch which resets busy indicator); `FilesFolders` file-discovery catches now log via `TracePrint` (debug-mode diagnostic).*
 
 ---
 
