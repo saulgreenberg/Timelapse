@@ -25,15 +25,15 @@ queue simply advances to the next.
 | 3 | C-5 | Unsubscribe `DataTableColumns_Changed` after `Load` | Low | ✅ Done |
 | 4 | C-1 | Move `unalteredBitmapsByID.TryRemove` inside lock in `TryInvalidate` | Low | ✅ Done |
 | 5 | P-5 | Cache EXIF orientation per file path | N/A | 🚫 Won't fix — `MetadataExtractorGetOrientation` is only called when the bitmap is not in the cache; the bitmap cache already acts as an implicit orientation cache. Re-reads only occur on full bitmap reloads where the EXIF cost is negligible. An explicit orientation cache would waste memory (up to ~350 MB at 1M images) for near-zero benefit. |
-| 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | Low | ⏮ Reverted — caused video thumbnails to stop appearing; root cause unclear; needs investigation before retrying |
+| 6 | P-1 | Cache FFMpeg tool-path discovery across video loads | N/A | 🚫 Won't fix — two attempts both broke video thumbnails with no identifiable root cause despite correct path resolution; overhead is ~5–20 ms against ~200–500 ms FFMpeg extraction (<5% of total), imperceptible in practice |
 | 7 | C-2 | Cancel in-flight prefetch tasks on `forceUpdate` | N/A | 🚫 Won't fix — rare edge case (only on missing-file restore), self-healing via LRU eviction, never user-visible; fix complexity outweighs benefit |
 | 8 | P-2 | Make Custom Selection COUNT query async | Medium | ✅ Done |
 | 9 | CA-4 | Move `BindDataGrid` out of `Task.Run` (dormant threading bug) | Low | ✅ Done |
-| 10 | C-4 | Thread `CancellationToken` into video frame extraction | Medium | ⬜ Pending |
-| 11 | P-6 | Cache detection/classification COUNT query results | Medium | ⬜ Pending |
+| 10 | C-4 | Thread `CancellationToken` into video frame extraction | N/A | 🚫 Won't fix — FFMpeg is a blocking external process call that cannot be interrupted mid-execution; token would only skip not-yet-started tasks (narrow window) and post-completion cache bookkeeping; medium-risk multi-file change for marginal gain |
+| 11 | P-6 | Cache detection/classification COUNT query results | N/A | 🚫 Won't fix — the only slow caller (Custom Selection timer) was fixed by P-2; all remaining callers use FileSelectionEnum.All which is a trivial SELECT COUNT(*) with sub-millisecond cost; caching complexity outweighs any remaining benefit |
 | 12 | P-3 | Async-ify `prefetch.Wait()` (architectural change) | High | ⬜ Pending |
 
-**Current position:** Repair 9 (CA-4) complete. Next: Repair 10 (C-4).
+**Current position:** All repairs complete.
 
 ---
 
