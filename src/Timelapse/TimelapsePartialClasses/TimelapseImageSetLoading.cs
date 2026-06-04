@@ -269,7 +269,7 @@ namespace Timelapse
             // TODO: SHOULDN'T WE DO THE DEFAULT SYNCHRONIZATION IN THE PREVIOUS STEPS?
             // The next test is to test and syncronize (if needed) the default values stored in the fileDB table schema to those stored in the template
             // Only invoke this when we know the templateDBs are in sync, and the templateDB matches the FileDB (i.e., same control rows/columns) except for one or more defaults.
-            Dictionary<string, string> columndefaultdict = fileDatabase.SchemaGetColumnsAndDefaultValues(DBTables.FileData);
+            Dictionary<string, string> columndefaultdict = await Task.Run(() => fileDatabase.SchemaGetColumnsAndDefaultValues(DBTables.FileData)).ConfigureAwait(true);
             char[] quote = ['\''];
             foreach (KeyValuePair<string, string> pair in columndefaultdict)
             {
@@ -282,7 +282,7 @@ namespace Timelapse
             }
 
             // Check: if there are any missing folders as specified by the relative paths, ask the user to try to locate those folders.
-            int missingFoldersCount = GetMissingFolders(fileDatabase).Count;
+            int missingFoldersCount = await Task.Run(() => GetMissingFolders(fileDatabase).Count).ConfigureAwait(true);
             if (missingFoldersCount > 0)
             {
                 Dialogs.MissingFoldersInformationDialog(this, missingFoldersCount);

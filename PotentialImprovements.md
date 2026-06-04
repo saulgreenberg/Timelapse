@@ -994,7 +994,15 @@ and `FileDatabase.CreateOrOpenAsync`. Identify every synchronous operation (non-
 touches the database or filesystem. Measure approximate cost per operation and flag anything that
 could be deferred or parallelised.
 
-*Status: Not yet audited.*
+*Status: ✅ Audit complete. R2-1 and R2-2 fixed. R2-3 deferred — fallback paths that may not fire on typical opens; benefit unconfirmed.*
+
+#### Findings
+
+| # | File | Lines | Operation | Cost | Status |
+|---|------|-------|-----------|------|--------|
+| R2-1 | `TimelapseImageSetLoading.cs` | 285 | `GetMissingFolders` — synchronous SQLite query + O(n) `Directory.Exists` loop on UI thread | High | ✅ Done |
+| R2-2 | `TimelapseImageSetLoading.cs` | 272 | `SchemaGetColumnsAndDefaultValues` — synchronous SQLite PRAGMA on UI thread, runs on every open | Medium | ✅ Done |
+| R2-3 | `FileDatabase.cs` | 195–206 | Three synchronous DB reads (`ImageSetLoadFromDatabase`, `MarkersLoadRowsFromDatabase`, `MetadataTableLoadRowsFromDatabase`) on UI thread after async open | Medium | 🚫 Deferred — fallback guards that may not fire on typical opens; confirm they trigger before fixing |
 
 ---
 
