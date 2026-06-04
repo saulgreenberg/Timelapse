@@ -852,10 +852,13 @@ namespace Timelapse.Database
             queryColumns.Remove(queryColumns.Length - 2, 2); // Remove trailing ", "
             queryColumns.Append(Sql.CloseParenthesis + Sql.Values);
 
-            // We should now have a partial SQL expression in the form of: INSERT INTO DataTable ( File, RelativePath, Folder, DateTime, ... )  VALUES 
-            // Create a dataline from each of the image properties, add it to a list of data lines, then do a multiple insert of the list of datalines to the database
-            // We limit the datalines to RowsPerInsert
+            // We should now have a partial SQL expression in the form of: INSERT INTO DataTable ( File, RelativePath, Folder, DateTime, ... )  VALUES
+            // Build all INSERT commands first (each covering up to RowsPerInsert rows to stay within SQLite's
+            // variable limit), then execute them all in a single transaction. This avoids one fsync per batch,
+            // which is especially costly when the database is on a network file server.
+            // Progress is reported during command building so the progress bar advances smoothly.
             int fileCount = files.Count;
+            List<string> insertCommands = new(fileCount / DatabaseValues.RowsPerInsert + 1);
             for (int image = 0; image < fileCount; image += DatabaseValues.RowsPerInsert)
             {
                 StringBuilder queryValues = new();
@@ -1088,18 +1091,21 @@ namespace Timelapse.Database
                 // Remove trailing comma.
                 queryValues.Remove(queryValues.Length - 2, 2); // Remove ", "
 
-                // Create the entire SQL command (limited to RowsPerInsert datalines)
-                string command = queryColumns + queryValues.ToString();
+                // Collect this batch's INSERT statement; execution is deferred until all batches are ready.
+                insertCommands.Add(queryColumns + queryValues.ToString());
 
-                CreateBackupIfNeeded();
-                Database.ExecuteNonQueryWithRollback(command);
-
+                // Report progress now (during command preparation) so the progress bar advances
+                // incrementally. The actual database write follows as a single transaction below.
                 if (onFileAdded != null)
                 {
                     int lastImageInserted = Math.Min(fileCount - 1, image + DatabaseValues.RowsPerInsert);
                     onFileAdded.Invoke(files[lastImageInserted], lastImageInserted);
                 }
             }
+
+            // Execute all batches in one transaction — one fsync regardless of image count.
+            CreateBackupIfNeeded();
+            Database.ExecuteNonQueryWithRollback(insertCommands);
         }
 
         /// <summary>

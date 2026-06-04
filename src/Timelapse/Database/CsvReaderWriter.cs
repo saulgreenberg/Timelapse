@@ -256,7 +256,7 @@ namespace Timelapse.Database
                 {
                     return false;
                 }
-            }, token).ConfigureAwait(true);
+            }, token);
 
             if (!result && token.IsCancellationRequested && File.Exists(filePath))
             {

@@ -780,4 +780,176 @@ might run on the UI thread.
 
 ---
 
+## Part 4 – Next Steps (Further Analysis Areas)
+
+These areas have not yet been audited in detail. Each entry includes a severity rating,
+fix-risk rating, and the planned approach. Items are ordered by expected impact.
+
+Severity scale: **Critical** / **High** / **Medium** / **Low**
+Fix risk scale: **High** / **Medium** / **Low**
+
+---
+
+### NS-1 · SQLite Transaction Usage
+
+**Severity:** High — **Fix Risk:** Low
+
+**Why it matters:**
+SQLite without an explicit transaction wraps every individual `INSERT` or `UPDATE` in its own
+implicit transaction, which means a separate `fsync` disk write per statement. Bulk operations
+that issue many statements in a loop — image set loading, recognition import, CSV import, date
+corrections, metadata population — can be 50–100× slower than the same operation wrapped in a
+single `BEGIN … COMMIT`. On a 100K-image dataset a missing transaction can turn a 1-second
+operation into minutes.
+
+**Approach:**
+Audit all methods that call `ExecuteNonQuery` or equivalent in a loop, or that call high-level
+write helpers (`Insert`, `Update`, `Delete`) multiple times in sequence. Verify whether each
+is already wrapped in a transaction. Where not, add `ExecuteNonQueryWithRollback` wrappers
+or introduce a `BeginTransaction` / `Commit` bracket. The existing `SQLiteWrapper` already
+has transaction infrastructure; the fix is applying it consistently.
+
+**Note:** SQL statements are often built by string concatenation, making static analysis
+imprecise. Each candidate site must be read in full context to confirm it is a genuine
+bulk operation without a transaction.
+
+*Status: Audit complete — findings below.*
+
+#### Transaction Infrastructure
+
+`SQLiteWrapper.cs` has solid transaction infrastructure. The key overload is
+`ExecuteNonQueryWithRollback(List<string>)` which batches all statements in the list into
+**one** `BEGIN … COMMIT`. All the write helpers (`Update`, `Insert`, `Delete`) ultimately
+delegate to this. The question is whether callers supply all their statements at once or
+call it in a loop.
+
+#### Findings
+
+| # | File | Method | Lines | Issue | Severity |
+|---|------|--------|-------|-------|----------|
+| T-1 | `CsvReaderWriter.cs` | `TryImportFromCsv` | ~811–836 | Updates flushed every 10,000 rows — each flush is a separate transaction. A 1M-row import creates 100 separate fsyncs. | **High** |
+| T-2 | `FileDatabase.cs` | `AddFiles` | ~859–1095 | INSERTs batched in groups of 5,000 rows, each group in its own transaction. 100K-file import = 20 separate transactions instead of 1. | **Medium** |
+| T-3 | `SQLiteWrapper.cs` | `Update` (ID-list variant) | ~571–591 | Already chunks large ID lists into 500-clause groups, all within one transaction. Correct; add a comment documenting the 500-clause limit so future maintainers don't remove it. | **Low (doc only)** |
+| T-4 | All other bulk-write paths | `UpdateAdjustedFileTimes`, `RecognitionsPopulateFieldWithData`, `MergeSourceIntoDestinationDdb`, etc. | various | Already correctly use a single transaction for the full operation. | ✅ No issue |
+
+#### Recommended Fixes
+
+**T-1 (High) — CSV import:**
+Accumulate all `imagesToUpdate` entries across the entire file, then call `UpdateFiles` once
+at the end instead of every 10,000 rows. Memory cost is negligible (column-tuple objects);
+the fsync reduction on a 1M-row import goes from 100 disk writes to 1.
+
+**T-2 (Medium) — AddFiles:**
+Collect all per-batch INSERT statements into a single `List<string>` and pass the whole list
+to `ExecuteNonQueryWithRollback(List<string>)` once, outside the loop. The existing
+5,000-row batching logic controls statement size (avoiding SQLite's max-variable limit);
+keeping all batches in one transaction is purely a transaction-boundary change.
+
+---
+
+### NS-2 · N+1 Query Pattern and Loop-Based String Concatenation
+
+**Severity:** High — **Fix Risk:** Low–Medium
+
+**Why it matters:**
+Two related patterns both degrade to O(n) or O(n²) behaviour on large datasets:
+
+1. **N+1 queries** — executing one SQL query per image row inside a loop. For 100K images
+   this multiplies a 10 ms query into a 17-minute loop.
+2. **String concatenation in loops** — building a comma-separated ID list with `+=` is O(n²)
+   because each concatenation copies the entire accumulated string. Already observed one instance
+   in `FileDatabaseCountOrSelectFiles.cs` (`commaSeparatedListOfIDs += image.ID + ","`).
+
+**Approach:**
+Search for `+=` on string variables inside loops that build SQL fragments, and for query calls
+inside `foreach` / `for` loops. Replace string concatenation with `StringBuilder` or
+`string.Join`. Replace per-row queries with a single parameterised batch query or an
+`IN (…)` clause.
+
+*Status: Not yet audited.*
+
+---
+
+### NS-3 · WPF List/Grid Virtualization for Large Datasets
+
+**Severity:** High — **Fix Risk:** Low–Medium
+
+**Why it matters:**
+If any `DataGrid`, `ListView`, or `ItemsControl` that displays the image set has UI
+virtualization disabled — either explicitly or because it is wrapped in a `ScrollViewer`
+that disables it — WPF will attempt to create a UI element for every row at load time.
+For 1M images this causes extreme memory use and a freeze that can last minutes.
+
+**Approach:**
+Audit all list/grid controls in XAML files that bind to the file table or any large
+collection. Verify `VirtualizingPanel.IsVirtualizing="True"` and
+`VirtualizingPanel.VirtualizationMode="Recycling"` are set (or inherited from the default).
+Check that no `ScrollViewer` with `CanContentScroll="False"` wraps these controls, as that
+disables pixel-based scrolling and defeats virtualisation.
+
+*Status: Not yet audited.*
+
+---
+
+### NS-4 · Exception-Swallowing Audit
+
+**Severity:** Medium — **Fix Risk:** Low
+
+**Why it matters:**
+Bare `catch {}` and `catch { return null/false; }` blocks silently discard exceptions,
+hiding real errors from developers and making production bugs extremely difficult to
+diagnose. The codebase already has several (video loading fallback, database path resolution).
+A systematic audit identifies which are intentional safety nets and which are masking real
+bugs.
+
+**Approach:**
+Search for bare `catch` blocks and `catch` blocks with no logging. Categorise each as:
+(a) intentional fallback with a documented reason — leave as-is;
+(b) silent swallow of a recoverable error — add `TracePrint.PrintMessage`;
+(c) silent swallow of an unexpected error — convert to logged rethrow or specific exception type.
+
+*Status: Not yet audited.*
+
+---
+
+### NS-5 · IDisposable Comprehensive Audit
+
+**Severity:** Medium — **Fix Risk:** Low
+
+**Why it matters:**
+Beyond the `MemoryStream` fixed in C-3, other `IDisposable` objects may be created without
+`using` statements: `SQLiteConnection`, `SQLiteCommand`, `DataTable`, file streams, and
+bitmap-related objects. Undisposed connections in particular can cause database locking issues
+on Windows, and undisposed commands can hold schema locks.
+
+**Approach:**
+Search for `new SQLiteConnection`, `new SQLiteCommand`, `new DataTable`, `new FileStream`,
+and bitmap constructors outside `using` blocks. Verify each is either in a `using` or has an
+explicit `Dispose` call on all exit paths. The `SQLiteWrapper` class already uses `using` for
+its connections — audit the callers that bypass the wrapper.
+
+*Status: Not yet audited.*
+
+---
+
+### NS-6 · Nullable Reference Analysis
+
+**Severity:** Low–Medium — **Fix Risk:** Low
+
+**Why it matters:**
+Null dereferences on image/file paths and database row reads are a common source of
+`NullReferenceException` crashes that only appear on edge-case inputs (missing files,
+empty database rows, cancelled operations). Many are already guarded; a focused audit
+looks for unguarded `?.` chains where the null case is silently ignored rather than handled.
+
+**Approach:**
+Search for `.` dereferences on values that are documented or typed as nullable — particularly
+return values from database reads (`DataRow["column"]`), file-path operations, and
+collection lookups. Verify each null case is either impossible by invariant, handled explicitly,
+or logged.
+
+*Status: Not yet audited.*
+
+---
+
 *Analysis performed June 2026 against commit `2fe3fd7` on the `develop` branch.*
