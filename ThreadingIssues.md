@@ -541,7 +541,7 @@ is unchanged). If you can simulate an FFmpeg failure (e.g., temporarily rename
 ---
 
 ### Step 7 — Remove lazy-load blocking wait from `ImageLoader.BitmapSource` (Issue 1.2)
-**Status:** ⬜ Pending
+**Status:** ✅ Complete
 
 **File:** `ImageSetLoadingPipeline/ImageLoader.cs`, lines 37–44
 
