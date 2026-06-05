@@ -67,7 +67,7 @@ namespace Timelapse.Controls
 
         // Dedicated lock object for scale/pan operations.
         // Replaces the previous lock(MediaElement) anti-pattern.
-        private readonly object _scaleLock = new();
+        private readonly System.Threading.Lock _scaleLock = new();
         #endregion
 
         #region Constructor, Loading, Unloading
@@ -948,7 +948,7 @@ namespace Timelapse.Controls
                 currentMousePosition.Y = MediaElement.ActualHeight;
             }
 
-            // We will scale around the current point (This may be a no-op, but am not sure.)
+            // We will scale around the current point (this may be a no-op)
             Point beforeZoom = PointFromScreen(MediaElement.PointToScreen(currentMousePosition));
 
             // Calculate the scaling factor during zoom ins or out. Ensure that we keep within our

@@ -50,11 +50,21 @@ namespace Timelapse
         {
             TryFileShowWithoutSliderCallback(FilePlayer.Direction);
 
-            // Stop the timer if the image reaches the beginning or end of the image set
-            if ((DataHandler.ImageCache.CurrentRow >= DataHandler.FileDatabase.CountAllCurrentlySelectedFiles - 1) || (DataHandler.ImageCache.CurrentRow <= 0))
+            // Stop at the boundary. For the virtual grid use IsAtScrollEnd/Start (scroll-position
+            // facts immune to the currentFirstRow miscalculation caused by WPF scroll clamping).
+            bool atBoundary;
+            if (MarkableCanvas.IsThumbnailGridVirtualizedVisible)
             {
-                FilePlayer_Stop();
+                var vg = MarkableCanvas.ThumbnailGridVirtualized;
+                atBoundary = vg.IsAtScrollEnd || vg.IsAtScrollStart;
             }
+            else
+            {
+                int row = DataHandler.ImageCache.CurrentRow;
+                int total = DataHandler.FileDatabase.CountAllCurrentlySelectedFiles;
+                atBoundary = row >= total - 1 || row <= 0;
+            }
+            if (atBoundary) FilePlayer_Stop();
         }
         #endregion
 
@@ -89,16 +99,20 @@ namespace Timelapse
             }
         }
 
-        // Scroll Row - a row of images the ThumbnailGrid
+        // Scroll Row - a row of images in the active thumbnail grid
         private void FilePlayer_ScrollRow()
         {
-            TryFileShowWithoutSliderCallback(FilePlayer.Direction, MarkableCanvas.ThumbnailGrid.AvailableColumns);
+            int cols = MarkableCanvas.ThumbnailGridVirtualized.AvailableColumns;
+            TryFileShowWithoutSliderCallback(FilePlayer.Direction, cols);
         }
 
-        // ScrollPage: a page of images the ThumbnailGrid
+        // ScrollPage: a page of images in the active thumbnail grid
         private void FilePlayer_ScrollPage()
         {
-            TryFileShowWithoutSliderCallback(FilePlayer.Direction, MarkableCanvas.ThumbnailGrid.AvailableColumns * MarkableCanvas.ThumbnailGrid.AvailableRows);
+            int cols, rows;
+            cols = MarkableCanvas.ThumbnailGridVirtualized.AvailableColumns;
+            rows = MarkableCanvas.ThumbnailGridVirtualized.AvailableRows;
+            TryFileShowWithoutSliderCallback(FilePlayer.Direction, cols * Math.Max(1, rows));
         }
         #endregion
     }

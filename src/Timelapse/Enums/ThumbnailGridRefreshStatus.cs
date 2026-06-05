@@ -9,6 +9,7 @@
         Aborted,
         NotEnoughSpaceForEvenOneCell,
         AtMaximumZoomLevel,
-        AtZeroZoomLevel
+        AtZeroZoomLevel,
+        AnimatingToHome
     }
 }

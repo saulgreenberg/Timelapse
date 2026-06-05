@@ -2,6 +2,8 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -13,6 +15,7 @@ namespace Timelapse.Util
     /// </summary>
     public class ModernNotifier(Window owner)
     {
+        private Popup _currentPopup;
         /// <summary>
         /// Show an information notification
         /// </summary>
@@ -46,6 +49,12 @@ namespace Timelapse.Util
         public void ShowSuccess(string message, NotificationOptions options = null)
         {
             ShowNotification(message, NotificationType.Success, options);
+        }
+
+        public void Dismiss()
+        {
+            if (_currentPopup is { IsOpen: true })
+                _currentPopup.IsOpen = false;
         }
 
         private void ShowNotification(string message, NotificationType type, NotificationOptions options = null)
@@ -95,7 +104,7 @@ namespace Timelapse.Util
                 AllowsTransparency = true,
                 Placement = PlacementMode.Relative,
                 PlacementTarget = owner,
-                StaysOpen = false
+                StaysOpen = true   // false triggers WPF mouse capture, which swallows WM_MOUSEWHEEL
             };
 
             var border = new Border
@@ -162,9 +171,13 @@ namespace Timelapse.Util
             border.Child = stackPanel;
             popup.Child = border;
 
-            // Position notification in center of the owner window unless explicitely asked to put it on the top left
-            // The centering math here is a hack as  we don't know the size of the popup, but it works well enough for now
-            if (options.TopLeft)
+            // Position: explicit offset wins; TopLeft falls back to (0,0); default centres in window.
+            if (options.OffsetX.HasValue && options.OffsetY.HasValue)
+            {
+                popup.HorizontalOffset = options.OffsetX.Value;
+                popup.VerticalOffset = options.OffsetY.Value;
+            }
+            else if (options.TopLeft)
             {
                 popup.HorizontalOffset = 0;
                 popup.VerticalOffset = 0;
@@ -175,6 +188,37 @@ namespace Timelapse.Util
                 popup.VerticalOffset = owner.ActualHeight / 2.0 - 80;
             }
 
+            // WPF's routed event system does not reliably deliver MouseWheel inside a Popup HWND.
+            // Install a raw Win32 hook instead: when WM_MOUSEWHEEL arrives on the popup's HWND we
+            // close the popup and relay the action to the caller.
+            if (options.OnScrollWheel != null)
+            {
+                popup.Opened += (_, _) =>
+                {
+                    if (PresentationSource.FromVisual(popup.Child) is HwndSource hwndSource)
+                    {
+                        hwndSource.AddHook((_, msg, wParam, _, ref handled) =>
+                        {
+                            const int WM_MOUSEWHEEL = 0x020A;
+                            if (msg == WM_MOUSEWHEEL)
+                            {
+                                int delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
+                                bool zIn = delta > 0;
+                                bool ctrl = (wParam.ToInt64() & 0x0008) != 0; // MK_CONTROL
+                                bool callbackZIn = (!ctrl && !zIn) ? true : zIn;
+                                popup.IsOpen = false;
+                                options.OnScrollWheel(callbackZIn);
+                                handled = true;
+                            }
+                            return IntPtr.Zero;
+                        });
+                    }
+                };
+            }
+
+            if (_currentPopup is { IsOpen: true })
+                _currentPopup.IsOpen = false;
+            _currentPopup = popup;
             popup.IsOpen = true;
 
             // Auto-close after specified time
@@ -262,5 +306,10 @@ namespace Timelapse.Util
         public string Tag { get; set; } = "";
         public bool TopLeft { get; set; } = false;
         public bool Compact { get; set; } = false;
+        public double? OffsetX { get; set; } = null;
+        public double? OffsetY { get; set; } = null;
+        // Called when the user scrolls over the popup with an actionable scroll (zoom-in or Ctrl+scroll).
+        // The popup is already closed before the callback fires. Argument is zoomIn (true=in, false=out).
+        public Action<bool> OnScrollWheel { get; set; } = null;
     }
 }

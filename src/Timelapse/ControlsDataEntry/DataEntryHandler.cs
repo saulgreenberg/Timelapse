@@ -20,8 +20,6 @@ using TimelapseWpf.Toolkit.Primitives;
 using Control = Timelapse.Constant.Control;
 using File = System.IO.File;
 using MarkableCanvas = Timelapse.Images.MarkableCanvas;
-using ThumbnailGrid = Timelapse.Controls.ThumbnailGrid;
-
 namespace Timelapse.ControlsDataEntry
 {
     /// <summary>
@@ -36,8 +34,6 @@ namespace Timelapse.ControlsDataEntry
         public ImageCache ImageCache { get; private set; } = new(fileDatabase);
         public bool IsProgrammaticControlUpdate { get; set; }
 
-        // We need to get selected files from the ThumbnailGrid, so we need this reference
-        public ThumbnailGrid ThumbnailGrid { get; set; }
         public MarkableCanvas MarkableCanvas { get; set; }
 
         // Index location of these menu items in the context menu
@@ -467,7 +463,7 @@ namespace Timelapse.ControlsDataEntry
             string valueToCopy = checkForZero ? "0" : string.Empty;
 
             // Search for the row with some value in it, starting from the previous row
-            int currentRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
+            int currentRowIndex = GetCurrentRowIndex();
             for (int previousIndex = currentRowIndex - 1; previousIndex >= 0; previousIndex--)
             {
                 ImageRow file = FileDatabase.FileTable[previousIndex];
@@ -560,7 +556,7 @@ namespace Timelapse.ControlsDataEntry
 
             // Update all files to match the value of the control (identified by the data label) in the currently selected image row.
             Mouse.OverrideCursor = Cursors.Wait;
-            ImageRow imageRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.Current : FileDatabase.FileTable[ThumbnailGrid.GetSelected()[0]];
+            ImageRow imageRow = GetCurrentImageRow();
             if (imageRow == null)
             {
                 // This shouldn't happen, but I did receive an error report ...
@@ -592,7 +588,7 @@ namespace Timelapse.ControlsDataEntry
                 return;
             }
 
-            int currentRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
+            int currentRowIndex = GetCurrentRowIndex();
             int imagesAffected = FileDatabase.CountAllCurrentlySelectedFiles - currentRowIndex - 1;
             if (imagesAffected == 0)
             {
@@ -604,7 +600,7 @@ namespace Timelapse.ControlsDataEntry
             }
 
             // Display the appropriate dialog box that explains what will happen. Arguments indicate how many files will be affected, and is tuned to the type of control
-            ImageRow imageRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.Current : FileDatabase.FileTable[ThumbnailGrid.GetSelected()[0]];
+            ImageRow imageRow = GetCurrentImageRow();
             if (imageRow == null)
             {
                 TracePrint.NullException(nameof(imageRow));
@@ -619,7 +615,7 @@ namespace Timelapse.ControlsDataEntry
 
             // Update the files from the next row (as we are copying from the current row) to the end.
             Mouse.OverrideCursor = Cursors.Wait;
-            int nextRowIndex = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow + 1 : ThumbnailGrid.GetSelected()[0] + 1;
+            int nextRowIndex = GetCurrentRowIndex() + 1;
             await FileDatabase.UpdateFiles(imageRow, control, nextRowIndex, FileDatabase.CountAllCurrentlySelectedFiles - 1);
             Mouse.OverrideCursor = null;
         }
@@ -696,10 +692,11 @@ namespace Timelapse.ControlsDataEntry
             MenuItem menuItemCopyToClipboard = (MenuItem)stackPanel.ContextMenu.Items[CopyToClipboardIndex];
             MenuItem menuItemPasteFromClipboard = (MenuItem)stackPanel.ContextMenu.Items[PasteFromClipboardIndex];
 
-            // Behaviour: 
-            // - if the ThumbnailInCell is visible, disable Copy to all / Copy forward / Propagate if a single item isn't selected
+            // Behaviour:
+            // - if the TGV is visible with multiple selections, disable Copy to all / Copy forward / Propagate
             // - otherwise enable the menu item only if the resulting action is coherent
-            bool enabledIsPossible = ThumbnailGrid.IsVisible == false || ThumbnailGrid.SelectedCount() == 1;
+            bool enabledIsPossible = MarkableCanvas?.IsThumbnailGridVirtualizedVisible != true
+                || MarkableCanvas.ThumbnailGridVirtualized.SelectedCount() == 1;
             menuItemCopyToAll!.IsEnabled = enabledIsPossible;
             menuItemCopyForward!.IsEnabled = enabledIsPossible && (menuItemCopyForward.IsEnabled = IsCopyForwardPossible());
             menuItemPropagateFromLastValue!.IsEnabled = enabledIsPossible && IsCopyFromLastNonEmptyValuePossible(control);
@@ -893,6 +890,26 @@ namespace Timelapse.ControlsDataEntry
         #endregion
 
         #region Helpers for Copy Forward/Backwards etc.
+        private int GetCurrentRowIndex()
+        {
+            if (MarkableCanvas?.IsThumbnailGridVirtualizedVisible == true)
+            {
+                List<int> sel = MarkableCanvas.ThumbnailGridVirtualized.GetSelected();
+                return sel.Count > 0 ? sel[0] : ImageCache.CurrentRow;
+            }
+            return ImageCache.CurrentRow;
+        }
+
+        private ImageRow GetCurrentImageRow()
+        {
+            if (MarkableCanvas?.IsThumbnailGridVirtualizedVisible == true)
+            {
+                List<int> sel = MarkableCanvas.ThumbnailGridVirtualized.GetSelected();
+                return sel.Count > 0 ? FileDatabase.FileTable[sel[0]] : ImageCache.Current;
+            }
+            return ImageCache.Current;
+        }
+
         public bool IsCopyForwardPossible()
         {
             if (ImageCache.Current == null)
@@ -900,8 +917,8 @@ namespace Timelapse.ControlsDataEntry
                 return false;
             }
 
-            // The current row depends on wheter we are in the thumbnail grid or the normal view
-            int currentRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
+            // The current row depends on whether we are in a thumbnail grid or the normal view
+            int currentRow = GetCurrentRowIndex();
             int filesAffected = FileDatabase.CountAllCurrentlySelectedFiles - currentRow - 1;
             return (filesAffected > 0);
         }
@@ -924,8 +941,8 @@ namespace Timelapse.ControlsDataEntry
             // Its in a try/catch as very very occassionally we get a 'system.indexoutofrangeexception'
             try
             {
-                // The current row depends on wheter we are in the thumbnail grid or the normal view
-                int currentRow = (ThumbnailGrid.IsVisible == false) ? ImageCache.CurrentRow : ThumbnailGrid.GetSelected()[0];
+                // The current row depends on whether we are in a thumbnail grid or the normal view
+                int currentRow = GetCurrentRowIndex();
                 for (int fileIndex = currentRow - 1; fileIndex >= 0; fileIndex--)
                 {
                     // ReSharper disable once RedundantAssignment
@@ -1369,20 +1386,18 @@ namespace Timelapse.ControlsDataEntry
 
         public async Task UpdateRowsDependingOnThumbnailGridStateAsync(string datalabel, string content)
         {
-            if (ThumbnailGrid == null) return;
-            if (ThumbnailGrid.IsVisible == false && ThumbnailGrid.IsGridActive == false)
+            if (MarkableCanvas?.IsThumbnailGridVirtualizedVisible == true)
             {
-                // Only a single image is displayed: update the database for the current row with the control's value
-                if (ImageCache?.Current == null)
-                {
-                    return;
-                }
-                await FileDatabase.UpdateFileAsync(ImageCache.Current.ID, datalabel, content);
+                // Virtual grid mode: update all selected thumbnails
+                List<int> selected = MarkableCanvas.ThumbnailGridVirtualized.GetSelected();
+                if (selected.Count == 0) return;
+                await FileDatabase.UpdateFiles(selected, datalabel, content.Trim());
             }
             else
             {
-                // Multiple images are displayed: update the database for all selected rows with the control's value
-                await FileDatabase.UpdateFiles(ThumbnailGrid.GetSelected(), datalabel, content.Trim());
+                // Single image view: update the database for the current row
+                if (ImageCache?.Current == null) return;
+                await FileDatabase.UpdateFileAsync(ImageCache.Current.ID, datalabel, content);
             }
         }
         #endregion
@@ -1436,7 +1451,9 @@ namespace Timelapse.ControlsDataEntry
         {
             double contentsAsDouble = double.MaxValue;
             int contentsAsInteger = int.MaxValue;
-            List<int> fileIds = ThumbnailGrid.GetSelected();
+            List<int> fileIds = (MarkableCanvas?.IsThumbnailGridVirtualizedVisible == true)
+                ? MarkableCanvas.ThumbnailGridVirtualized.GetSelected()
+                : [ImageCache.CurrentRow];
             // There used to be a bug in this code, which resulted from this being invoked in SwitchToThumbnailGridView() when the grid was already being displayed.
             //  I have kept the try/catch in just in case it rears its ugly head elsewhere. Commented out Debug statements are here just in case we need to reexamine it.
             try

@@ -113,6 +113,7 @@ namespace Timelapse.ControlsDataEntry
             {
                 processEvents = false;
                 ContentControl.ShowImprint = true;
+                ContentControl.Text = string.Empty;
                 ContentControl.ToolTip = "Edit to change the " + Label + " for all selected images";
                 processEvents = true;
                 ContentControl.AlwaysInvokeTextChanged = true;

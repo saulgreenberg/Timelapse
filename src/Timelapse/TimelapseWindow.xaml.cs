@@ -129,8 +129,8 @@ namespace Timelapse
             MarkableCanvas.PreviewMouseDown += MarkableCanvas_PreviewMouseDown;
             MarkableCanvas.MouseEnter += MarkableCanvas_MouseEnter;
             MarkableCanvas.MarkerEvent += MarkableCanvas_RaiseMarkerEvent;
-            MarkableCanvas.ThumbnailGrid.DoubleClick += ThumbnailGrid_DoubleClick;
-            MarkableCanvas.ThumbnailGrid.SelectionChanged += ThumbanilGrid_SelectionChanged;
+            MarkableCanvas.ThumbnailGridVirtualized.DoubleClick += ThumbnailGridVirtualized_DoubleClick;
+            MarkableCanvas.ThumbnailGridVirtualized.SelectionChanged += ThumbnailGridVirtualized_SelectionChanged;
             MarkableCanvas.SwitchedToThumbnailGridViewEventAction += SwitchedToThumbnailGrid;
             MarkableCanvas.SwitchedToSingleImageViewEventAction += SwitchedToSingleImagesView;
 
@@ -734,8 +734,7 @@ namespace Timelapse
         // Check to see if we are displaying at least one image (not in the overview), regardless of whether the ImageSetPane is active
         private bool IsDisplayingSingleImage()
         {
-            // Always false If we are in the overiew
-            if (MarkableCanvas.IsThumbnailGridVisible) return false;
+            if (MarkableCanvas.IsThumbnailGridVirtualizedVisible) return false;
 
             // True only if we are displaying at least one file in an image set
             return IsFileDatabaseAvailable() &&
@@ -744,7 +743,7 @@ namespace Timelapse
 
         private bool IsDisplayingMultipleImagesInOverview()
         {
-            return MarkableCanvas.IsThumbnailGridVisible && ImageSetPane.IsActive;
+            return MarkableCanvas.IsThumbnailGridVirtualizedVisible && ImageSetPane.IsActive;
         }
 
         private void SwitchedToThumbnailGrid()
@@ -776,24 +775,17 @@ namespace Timelapse
             }
         }
 
-        // If the DoubleClick on the ThumbnailGrid selected an image or video, display it.
-        private void ThumbnailGrid_DoubleClick(object sender, ThumbnailGridEventArgs e)
+        private void ThumbnailGridVirtualized_DoubleClick(object sender, ThumbnailGridVirtualizedEventArgs e)
         {
-            if (e.ImageRow != null && DataHandler.ImageCache.Current != null)
-            {
-                // Switch to either the video or image view as needed
-                if (DataHandler.ImageCache.Current.IsVideo && DataHandler.ImageCache.Current.IsDisplayable(RootPathToImages))
-                {
-                    MarkableCanvas.SwitchToVideoView();
-                }
-                else
-                {
-                    MarkableCanvas.SwitchToImageView();
-                }
-                FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
-                FileShow(DataHandler.FileDatabase.GetFileOrNextFileIndex(e.ImageRow.ID));
-                FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
-            }
+            if (e.ImageRow == null) return;
+            MarkableCanvas.ThumbnailGridVirtualized.Reset();
+            if (e.ImageRow.IsVideo && e.ImageRow.IsDisplayable(RootPathToImages))
+                MarkableCanvas.SwitchToVideoView();
+            else
+                MarkableCanvas.SwitchToImageView();
+            FileNavigatorSlider_EnableOrDisableValueChangedCallback(false);
+            FileShow(DataHandler.FileDatabase.GetFileOrNextFileIndex(e.ImageRow.ID));
+            FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
         }
         #endregion
 
@@ -823,10 +815,7 @@ namespace Timelapse
             }
         }
 
-        // This event handler is invoked whenever the user does a selection in the overview.
-        // It is used to refresh (and match) what rows are selected in the DataGrid. 
-        // However, because user selections can change rapidly (e.g., by dragging within the overview), we throttle the refresh using a timer 
-        private void ThumbanilGrid_SelectionChanged(object sender, ThumbnailGridEventArgs e)
+        private void ThumbnailGridVirtualized_SelectionChanged(object sender, ThumbnailGridVirtualizedEventArgs e)
         {
             DataGridSelectionsTimer_Reset();
         }
@@ -851,17 +840,12 @@ namespace Timelapse
                     int currentRowIndex = DataHandler.ImageCache.CurrentRow;
                     IdRowIndex.Add(new(DataHandler.FileDatabase.FileTable[currentRowIndex].ID, currentRowIndex));
                 }
-                else
+                else if (MarkableCanvas.IsThumbnailGridVirtualizedVisible)
                 {
-                    // multiple selections are possible in the 
                     int count = DataHandler.FileDatabase.FileTable.RowCount;
-                    foreach (int rowIndex in MarkableCanvas.ThumbnailGrid.GetSelected())
+                    foreach (int rowIndex in MarkableCanvas.ThumbnailGridVirtualized.GetSelected())
                     {
-                        if (rowIndex >= count)
-                        {
-                            // We are out of bounds!
-                            return;
-                        }
+                        if (rowIndex >= count) return;
                         IdRowIndex.Add(new(DataHandler.FileDatabase.FileTable[rowIndex].ID, rowIndex));
                     }
                 }

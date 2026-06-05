@@ -106,14 +106,10 @@ namespace Timelapse
             Episodes.Episodes.ShowEpisodes = show;
             MenuItemEpisodeShowHide.IsChecked = Episodes.Episodes.ShowEpisodes;
 
-            if (IsDisplayingMultipleImagesInOverview())
-            {
-                MarkableCanvas.DisplayEpisodeTextInThumbnailGridIfWarranted();
-            }
+            if (MarkableCanvas.IsThumbnailGridVirtualizedVisible)
+                MarkableCanvas.ThumbnailGridVirtualized.RefreshBoundingBoxesAndEpisodeInfo();
             else
-            {
                 DisplayEpisodeTextInImageIfWarranted(DataHandler.ImageCache.CurrentRow);
-            }
         }
 
         // View next episode in this image set
@@ -198,7 +194,7 @@ namespace Timelapse
         #region Dogears
         private void MenuItem_DogearSet(object sender, RoutedEventArgs e)
         {
-            if (this.MarkableCanvas.IsThumbnailGridVisible)
+            if (this.MarkableCanvas.IsThumbnailGridVirtualizedVisible)
             {
                 return;
             }

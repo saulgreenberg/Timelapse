@@ -83,6 +83,7 @@ namespace Timelapse.ControlsDataEntry
             if (value == null)
             {
                 ContentControl.ShowImprint = true;
+                ContentControl.Text = string.Empty;
                 ContentControl.ToolTip = "Edit to change the " + Label + " for all selected images";
                 ContentControl.AlwaysInvokeTextChanged = true;
                 return;

@@ -93,6 +93,17 @@ namespace Timelapse.Util
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetCursorPos(ref Win32Point pt);
+
+        // VK_CONTROL = 0x11; high bit set means key is currently down.
+        [DllImport("user32.dll")]
+        private static extern short GetKeyState(int nVirtKey);
+        #endregion
+
+        #region Public Methods - Keyboard State
+        // Returns true if either Ctrl key is physically down at the time of the current Win32 message.
+        // More reliable than Keyboard.Modifiers when the window does not have keyboard focus
+        // (e.g., WM_MOUSEWHEEL routed to an inactive window by Windows "scroll inactive windows" feature).
+        public static bool IsCtrlKeyDown() => (GetKeyState(0x11) & 0x8000) != 0;
         #endregion
 
         #region Unused: TransformDeviceIndependentPixelsToPixels

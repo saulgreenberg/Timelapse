@@ -56,7 +56,6 @@ namespace Timelapse
             Arguments = new(null);
 
             // Reset the rest of the user interface 
-            MarkableCanvas.ThumbnailGrid?.Reset();
             State.Reset();
             DataEntryControlPanel.IsVisible = false;
             MarkableCanvas.ZoomOutAllTheWay();

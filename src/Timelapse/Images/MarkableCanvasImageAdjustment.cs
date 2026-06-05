@@ -208,7 +208,7 @@ namespace Timelapse.Images
         // Typically used when the image adjustment window is opened for the first time, as the markable canvas needs to signal its state to it.
         public void GenerateImageStateChangeEventToReflectCurrentStatus()
         {
-            if (ThumbnailGrid.IsGridActive)
+            if (IsThumbnailGridVirtualizedVisible)
             {
                 // In the overview
                 GenerateImageStateChangeEvent(false); //  Signal change in image state (consumed by ImageAdjuser)

@@ -758,7 +758,6 @@ namespace Timelapse.Constant
 
     public static class ThumbnailGrid
     {
-        public static readonly int MaxRows = 15;
         public static readonly double AspectRatioDefault = 1.77777777777778;
         public static readonly double MinumumThumbnailHeight = 96;
     }

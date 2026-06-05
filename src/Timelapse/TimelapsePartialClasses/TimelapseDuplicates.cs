@@ -407,6 +407,7 @@ namespace Timelapse
                 for (int previousFileIndex = selectedRowIndex - 1; previousFileIndex >= 0; previousFileIndex--)
                 {
                     previousOrNextImageRow = DataHandler.FileDatabase.FileTable[previousFileIndex];
+                    if (previousOrNextImageRow == null) break;
                     otherFilesPath = Path.Combine(previousOrNextImageRow.RelativePath, previousOrNextImageRow.File);
                     if (otherFilesPath == currentPath)
                     {
@@ -421,6 +422,7 @@ namespace Timelapse
                 for (int nextFileIndex = selectedRowIndex + 1; nextFileIndex < DataHandler.FileDatabase.CountAllCurrentlySelectedFiles; nextFileIndex++)
                 {
                     previousOrNextImageRow = DataHandler.FileDatabase.FileTable[nextFileIndex];
+                    if (previousOrNextImageRow == null) break;
                     otherFilesPath = Path.Combine(previousOrNextImageRow.RelativePath, previousOrNextImageRow.File);
                     if (otherFilesPath == currentPath)
                     {

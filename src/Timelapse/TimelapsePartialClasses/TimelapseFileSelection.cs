@@ -151,18 +151,22 @@ namespace Timelapse
                 FileNavigatorSlider.TickFrequency = 0.02 * FileNavigatorSlider.Maximum;
             }
 
-            // Reset the ThumbnailGrid selection after every change in the selection
-            if (IsDisplayingMultipleImagesInOverview())
-            {
-                MarkableCanvas.ThumbnailGrid.SelectInitialCellOnly();
-            }
-
             await DataEntryControls.AutocompletionPopulateAllNotesWithFileTableValuesAsync(DataHandler.FileDatabase);
 
             // Always force an update after a selection
             //BusyCancelIndicator.EnableForSelection(true);
             BusyCancelIndicator.Message = "Setting up the file to display. Please wait...";
             await FileShowAsync(DataHandler.FileDatabase.GetFileOrNextFileIndex(imageID), true);
+
+            // After a selection/sort change, reset the virtualized grid to start from file 0:
+            // file 0 becomes the home image, anchor, and only selected thumbnail.
+            if (MarkableCanvas.IsThumbnailGridVirtualizedVisible)
+            {
+                MarkableCanvas.ThumbnailGridVirtualized.FileTableStartIndex = 0;
+                MarkableCanvas.ThumbnailGridVirtualized.NavigateTo(0);      // sets zoomAnchorFileIndex = 0
+                MarkableCanvas.RefreshThumbnailGridVirtualized(null);       // rebuilds pool at current zoom
+                MarkableCanvas.ThumbnailGridVirtualized.SelectInitialCellOnly();
+            }
             // BusyCancelIndicator.EnableForSelection(false);
 
             // Update the status bar accordingly

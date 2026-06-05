@@ -28,7 +28,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <!--Selection checkmark-->
-            <Border BorderThickness="2" BorderBrush="Black" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="0">
+            <Border BorderThickness="2" BorderBrush="Black" Margin="6,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="0">
                 <TextBlock Name="SelectionTextBlock" Text="   " HorizontalAlignment="Left" 
                        VerticalAlignment="Bottom" Foreground="MediumBlue" FontWeight="Bold" FontSize="40">
                     <TextBlock.Background>
@@ -57,6 +57,32 @@
 
         </Grid>
         
+        <!-- Home image indicator: page-turn fold in the top-right corner.
+             Gradient from cream (crease) to amber (tip); shadow falls inward to lift the fold. -->
+        <!-- Home image indicator: page-turn fold aligned with the image's 3px margin. -->
+        <Polygon Name="HomeBadge"
+                 Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Top"
+                 Margin="0,3,3,0"
+                 Points="0,0 24,0 24,24"
+                 Stroke="#808080"
+                 StrokeThickness="1"
+                 IsHitTestVisible="False"
+                 Visibility="Collapsed">
+            <Polygon.Fill>
+                <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                    <GradientStop Color="#808080" Offset="0.5"/>
+                    <GradientStop Color="#C8C8C8" Offset="0.65"/>
+                    <GradientStop Color="#F0F0F0" Offset="0.82"/>
+                    <GradientStop Color="#FFFFFF" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Polygon.Fill>
+            <Polygon.Effect>
+                <DropShadowEffect Direction="225" ShadowDepth="4" BlurRadius="5" Opacity="0.65" Color="Black"/>
+            </Polygon.Effect>
+        </Polygon>
+
         <!--Duplicate information-->
             <TextBlock Name="DuplicateIndicatorInOverview" Text="Duplicate" 
                        Grid.Row="0" Grid.Column="0" 

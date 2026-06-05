@@ -88,14 +88,10 @@ namespace Timelapse
                 Episodes.Episodes.Reset();
             }
 
-            if (IsDisplayingMultipleImagesInOverview())
-            {
-                MarkableCanvas.RefreshIfMultipleImagesAreDisplayed(false);
-            }
+            if (MarkableCanvas.IsThumbnailGridVirtualizedVisible)
+                MarkableCanvas.ThumbnailGridVirtualized.RefreshBoundingBoxesAndEpisodeInfo();
             else
-            {
                 DisplayEpisodeTextInImageIfWarranted(DataHandler.ImageCache.CurrentRow);
-            }
         }
         #endregion
 

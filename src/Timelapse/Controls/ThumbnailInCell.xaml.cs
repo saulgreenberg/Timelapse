@@ -74,6 +74,17 @@ namespace Timelapse.Controls
             }
         }
 
+        public bool IsHome
+        {
+            get;
+            set
+            {
+                field = value;
+                if (field) UpdateHomeBadgeMargin();
+                HomeBadge.Visibility = field ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
         // Path is the RelativePath/FileName of the image file
         public string Path => (ImageRow == null) ? string.Empty : System.IO.Path.Combine(ImageRow.RelativePath, ImageRow.File);
 
@@ -109,7 +120,7 @@ namespace Timelapse.Controls
             // Heuristic for setting font sizes
             SetTextFontSize();
             AdjustMargin();
-            if (ImageRow.IsVideo)
+            if (ImageRow?.IsVideo == true)
             {
                 InitializePlayButton();
                 PlayButton.Visibility = Visibility.Visible;
@@ -152,6 +163,7 @@ namespace Timelapse.Controls
             {
                 Image.Source = bitmapSource;
                 IsBitmapSet = true;
+                if (IsHome) UpdateHomeBadgeMargin();
             }
             catch // (Exception e)
             {
@@ -159,6 +171,13 @@ namespace Timelapse.Controls
                 //Debug.Print("SetSource: Could not set the bitmapSource: " + e.Message);
             }
         }
+
+        public void ClearThumbnail()
+        {
+            Image.Source = null;
+            IsBitmapSet = false;
+        }
+
         #endregion
 
         #region Episodes and Bounding Boxes and Duplicates
@@ -385,7 +404,7 @@ namespace Timelapse.Controls
                 EpisodeTextBlock.Foreground = (episode.Item1 == 1) ? Brushes.Red : Brushes.Black;
                 EpisodeTextBlock.FontWeight = (episode.Item1 == 1 && episode.Item2 != 1) ? FontWeights.Bold : FontWeights.Normal;
 
-                // Filename without the extention and Time in HH: MM
+                // Filename without the extentio - this hasn and Time in HH: MM
                 // This was on request from a user, who needed to scan for the first/last image in a timelapse capture sequence
                 FileNameTextBlock.Text = System.IO.Path.GetFileNameWithoutExtension(ImageRow.File);
                 string timeInHHMM = ImageRow.DateTime.ToString("hh:mm");
@@ -440,14 +459,30 @@ namespace Timelapse.Controls
             DuplicateIndicatorInOverview.FontSize = fontSize / 2.5;
         }
 
-        // Most images have a black bar at its bottom and top. We want to align 
-        // the checkbox / text label to be just outside that black bar. This is guesswork, 
+        // Most images have a black bar at its bottom and top. We want to align
+        // the checkbox / text label to be just outside that black bar. This is guesswork,
         // but the margin should line up within reason most of the time
         // Also, values are hard-coded vs. dynamic. Ok until we change the standard width or layout of the display space.
         private void AdjustMargin()
         {
             int margin = (int)Math.Ceiling(CellHeight / 25) + 1;
             InfoPanel.Margin = new(0, margin, margin, 0);
+        }
+
+        // Position HomeBadge so its tip aligns with the actual image-content corner regardless of aspect ratio.
+        // The Image element occupies CellWidth-6 × natural-height in the cell (3px margin on each side).
+        // With Stretch.Uniform:
+        //   - Wide images (imageAR > cellAR): content fills element width → right edge at CellWidth-3 → rightMargin = 3
+        //   - Narrow images (imageAR ≤ cellAR): content is (CellHeight-6)*imageAR wide, centred → rightMargin = (CellWidth-contentW)/2
+        private void UpdateHomeBadgeMargin()
+        {
+            if (Image.Source == null || Image.Source.Height == 0) return;
+            double imageAR = Image.Source.Width / Image.Source.Height;
+            double cellAR  = CellWidth / CellHeight;
+            double contentW = imageAR > cellAR
+                ? CellWidth - 6
+                : (CellHeight - 6) * imageAR;
+            HomeBadge.Margin = new Thickness(0, 3, (CellWidth - contentW) / 2.0, 0);
         }
         #endregion
     }

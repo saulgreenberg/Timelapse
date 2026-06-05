@@ -3818,13 +3818,13 @@ namespace Timelapse.Dialog
 
                 "[br][i]Episode navigation[/i]" +
                 "[li][b]E[/b] ≡[e]Show episode information[/e]." +
-                "[li]〔Ctl〕[b]⬅[/b] ≡[e]View previous episode[/e]" +
-                "[li]〔Ctl〕[b]⮕[/b] ≡[e]View next episode[/e]" +
+                "[li]〔Shift〕[b]⬅[/b] ≡[e]View previous episode[/e]" +
+                "[li]〔Shift〕[b]⮕[/b] ≡[e]View next episode[/e]" +
 
                 "[br][i]Thumbnail navigation in overview[/i]" +
                 "[li][b]⬆[/b] ≡[e]Previous row[/e] (of thumbnails in overview)" +
-                "[li]〔Shift〕[b]⬇[/b] ≡[e]Next row[/e] (of thumbnails in overview)" +
-                "[li][b]⬆[/b] ≡[e]Previous page[/e] (of thumbnails in overview)" +
+                "[li][b]⬇[/b] ≡[e]Next row[/e] (of thumbnails in overview)" +
+                "[li]〔Shift〕[b]⬆[/b] ≡[e]Previous page[/e] (of thumbnails in overview)" +
                 "[li]〔Shift〕[b]⬆[/b] ≡[e]Next page[/e] (of thumbnails in overview)" +
 
                 "[br][i]Zooming[/i]" +

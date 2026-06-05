@@ -296,7 +296,6 @@ namespace Timelapse
             DataEntryControls.CreateControls(fileDatabase, DataHandler);
             SetUserInterfaceCallbacks();
             MarkableCanvas.DataEntryControls = DataEntryControls; // so the markable canvas can access the controls
-            DataHandler.ThumbnailGrid = MarkableCanvas.ThumbnailGrid;
             DataHandler.MarkableCanvas = MarkableCanvas;
 
             // Initialize the MetadataDataHandler
