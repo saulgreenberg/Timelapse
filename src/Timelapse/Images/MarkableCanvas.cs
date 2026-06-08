@@ -119,7 +119,7 @@ namespace Timelapse.Images
         /// </summary>
         public double ZoomMaximum { get; set; }
 
-        public bool isZooming => IsThumbnailGridVirtualizedVisible || Math.Abs(imageToDisplayScale.ScaleX) - 1 > 1e-5;
+        public bool IsZooming => IsThumbnailGridVirtualizedVisible || Math.Abs(imageToDisplayScale.ScaleX) - 1 > 1e-5;
 
         #endregion
 
@@ -179,7 +179,7 @@ namespace Timelapse.Images
         // Replaces the previous pattern of lock(ImageToDisplay), lock(VideoPlayer), and lock(ThumbnailGrid),
         // which used WPF UI elements as monitor objects — an anti-pattern since WPF controls have
         // thread affinity and should never be used as lock targets.
-        private readonly object _zoomLock = new();
+        private readonly System.Threading.Lock _zoomLock = new();
 
         private bool isRefreshBoundingBoxesPending;
         private DateTime ctrlScrollOutAtMinZoomStartTime = DateTime.MinValue;
@@ -558,12 +558,23 @@ namespace Timelapse.Images
         {
             // a user may want to flip between completely zoomed out / normal pan settings and a saved zoom / pan setting that focuses in on a particular region
             // To do this, we save / restore the zoom pan settings of a particular view, or return to the default zoom/pan.
+            string toastMessage;
+            NotificationOptions toastOptions = new()
+            {
+                ShowCloseButton = true,
+                CloseAfter = 3000,
+            };
             if (Math.Abs(imageToDisplayScale.ScaleX - 1) < .0001 && Math.Abs(imageToDisplayScale.ScaleY - 1) < .0001)
             {
-                // If the scale is unzoomed, then don't bother saving it as it may just be the result of an unintended key press. 
-                return;
+                // If the scale is unzoomed, then don't bother saving it as it may just be the result of an unintended key press.
+                toastMessage = "No bookmark saved, as you are not zoomed in.";
             }
-            bookmark.Set(imageToDisplayScale, imageToDisplayTranslation);
+            else
+            {
+                bookmark.Set(imageToDisplayScale, imageToDisplayTranslation);
+                toastMessage = $"The current zoom and pan settings have been saved as a bookmark.";
+            }
+            GlobalReferences.MainWindow.ToastNotifier.ShowSuccess(toastMessage, toastOptions);
         }
 
         // This version sets the bookmark with the provided points (retrieved from the registry) indicating scale and translation saved from a previous session
@@ -942,24 +953,7 @@ namespace Timelapse.Images
                     // Reset lastZoomChangeTime immediately so rapid follow-up scrolls don't re-trigger
                     // until the user pauses again.
                     lastZoomChangeTime = DateTime.Now;
-                    Point cursorPos = NativeMethods.GetCursorPos(GlobalReferences.MainWindow);
-                    GlobalReferences.MainWindow?.ToastNotifier.ShowInformation(
-                        "Use Ctrl-scrollwheel to display the overview at different sizes.",
-                        new NotificationOptions
-                        {
-                            ShowCloseButton = true,
-                            CloseAfter = 4000,
-                            Compact = true,
-                            OffsetX = cursorPos.X,
-                            OffsetY = cursorPos.Y + 20,
-                            OnScrollWheel = zIn =>
-                            {
-                                // Popup intercepted this scroll; relay it as if it arrived on MarkableCanvas.
-                                Point imgPos = Mouse.GetPosition(ImageToDisplay);
-                                Point vidPos = Mouse.GetPosition(VideoPlayer.MediaElement);
-                                TryZoomInOrOut(zIn, imgPos, vidPos);
-                            }
-                        });
+                    GlobalReferences.MainWindow?.ToastNotifier.ShowInformationByCursor("Use Ctrl-scrollwheel to display the overview at different sizes.");
                 }
                 return;
             }
@@ -1533,8 +1527,8 @@ namespace Timelapse.Images
             markerCanvas.MouseRightButtonUp += Marker_MouseRightButtonUp;
             markerCanvas.MouseWheel += ImageOrCanvas_MouseWheel; // Make the mouse wheel work over marks as well as the image
 
-            markerCanvas.ToolTip = string.IsNullOrEmpty(marker.Tooltip.Trim()) 
-                ? null 
+            markerCanvas.ToolTip = string.IsNullOrEmpty(marker.Tooltip.Trim())
+                ? null
                 : marker.Tooltip;
             markerCanvas.Tag = marker;
 

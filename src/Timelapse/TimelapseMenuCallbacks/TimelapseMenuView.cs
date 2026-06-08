@@ -32,7 +32,7 @@ namespace Timelapse
             
             // Zoom menu items
             // Note: bookmarks are enabled only if a single image is being displayed.
-            MenuItemBookmarkDefaultPanZoom.IsEnabled = this.MarkableCanvas?.isZooming == true;
+            MenuItemBookmarkDefaultPanZoom.IsEnabled = this.MarkableCanvas?.IsZooming == true;
             MenuItemBookmarkSavePanZoom.IsEnabled = filesSelectedAndSingleImage;
             MenuItemBookmarkSetPanZoom.IsEnabled = filesSelectedAndSingleImage;
 

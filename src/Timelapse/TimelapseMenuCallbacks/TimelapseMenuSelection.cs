@@ -374,7 +374,7 @@ namespace Timelapse
                 NotificationOptions toastOptions = new()
                 {
                     ShowCloseButton = true,
-                    CloseAfter = 4000,
+                    CloseAfter = 3000,
                 };
                 string toastMessage = $"You are now viewing a random selection of your currently selected items.";
                 GlobalReferences.MainWindow.ToastNotifier.ShowSuccess(toastMessage, toastOptions);

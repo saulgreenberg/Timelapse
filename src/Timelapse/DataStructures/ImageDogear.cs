@@ -1,4 +1,6 @@
-﻿using Timelapse.ControlsDataEntry;
+﻿using System;
+using Timelapse.ControlsDataEntry;
+using Timelapse.Util;
 
 namespace Timelapse.DataStructures
 {
@@ -15,6 +17,12 @@ namespace Timelapse.DataStructures
             }
             this.DogearedImageIndex = datahandler.ImageCache.CurrentRow;
             this.LastSeenImageIndex = Constant.DatabaseValues.InvalidRow;
+            NotificationOptions toastOptions = new()
+            {
+                ShowCloseButton = true,
+                CloseAfter = 3000,
+            };
+            GlobalReferences.MainWindow.ToastNotifier.ShowSuccess($"Current image is dog-eared.{Environment.NewLine}Press 'k' to switch between your current and dog-eared image. .", toastOptions);
             return true;
         }
 
