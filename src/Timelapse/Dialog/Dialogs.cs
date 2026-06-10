@@ -3813,24 +3813,28 @@ namespace Timelapse.Dialog
                 "[br 8][b][f 5]View menu: [/f][/b]" +
 
                 "[br][i]File navigation[/i]" +
-                "[li][b]⬅[/b] ≡[e]View previous file[/e]" +
-                "[li][b]⮕[/b] ≡[e]View next file[/e]" +
+                "[li][b]⬅[/b] or [b]Page Up[/b] ≡[e]View previous file[/e]" +
+                "[li][b]⮕[/b] or [b]Page Down[/b] ≡[e]View next file[/e]" +
 
                 "[br][i]Episode navigation[/i]" +
                 "[li][b]E[/b] ≡[e]Show episode information[/e]." +
-                "[li]〔Shift〕[b]⬅[/b] ≡[e]View previous episode[/e]" +
-                "[li]〔Shift〕[b]⮕[/b] ≡[e]View next episode[/e]" +
+                "[li]〔Shift〕[b]⬅[/b] or (Shift〕[b]Page Up[/b] ≡[e]View previous episode[/e]" +
+                "[li]〔Shift〕[b]⮕[/b] or (Shift〕[b]Page Down[/b] ≡[e]View next episode[/e]" +
 
                 "[br][i]Thumbnail navigation in overview[/i]" +
                 "[li][b]⬆[/b] ≡[e]Previous row[/e] (of thumbnails in overview)" +
                 "[li][b]⬇[/b] ≡[e]Next row[/e] (of thumbnails in overview)" +
                 "[li]〔Shift〕[b]⬆[/b] ≡[e]Previous page[/e] (of thumbnails in overview)" +
                 "[li]〔Shift〕[b]⬆[/b] ≡[e]Next page[/e] (of thumbnails in overview)" +
+                "[li][b]🖯Scrollwheel[/b] [e]operates Scroll bar [/e] which scrolls rows" +
 
                 "[br][i]Zooming[/i]" +
+                "[li][b]🖯Scrollwheel[/b] ≡[e]Zoom in/out[/e] between image zoom levels" +
+                "[li][b](Ctl)-🖯Scrollwheel[/b] ≡[e]Zoom in/out[/e] (images\u21C4overview and between all zoom levels)" +
                 "[li][b]<[/b] ≡[e]Zoom in[/e] (ignored when data field has the focus)" +
                 "[li][b]>[/b] ≡[e]Zoom out[/e] (ignored when data field has the focus)" +
                 "[li][b]-[/b] ≡[e]Zoom out all the way[/e]" +
+                "[li][b]🖯-click on image[/b] ≡[e]Zoom out all the way[/e] to the clicked on image" +
                 "[li][b]+[/b] ≡[e]Zoom to bookmarked region[/e]" +
                 "[li][b]B[/b] ≡[e]Bookmark current zoom region[/e]" +
 
