@@ -122,6 +122,28 @@ namespace Timelapse.Controls
             track.DecreaseRepeatButton.Click += (_, _) => DoTrackScroll(-1);
             if (track.Thumb != null)
                 track.Thumb.DragCompleted += ScrollThumb_DragCompleted;
+
+            // Replace the arrow (line) buttons with single-row scrolling, matching track behaviour.
+            // Walk the visual tree instead of relying on template part names (which vary by WPF theme).
+            WireLineButton(vsb, ScrollBar.LineUpCommand,   -1);
+            WireLineButton(vsb, ScrollBar.LineDownCommand, +1);
+        }
+
+        private void WireLineButton(DependencyObject root, ICommand targetCommand, double direction)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                if (child is RepeatButton rb && Equals(rb.Command, targetCommand))
+                {
+                    rb.Command = null;
+                    rb.PreviewMouseLeftButtonDown += (_, _) => { trackScrollHoldStart = DateTime.Now; trackScrollFirstClick = true; };
+                    rb.PreviewMouseLeftButtonUp += (_, _) => { trackScrollHoldStart = DateTime.MinValue; SnapToRowBoundary(); };
+                    rb.Click += (_, _) => DoTrackScroll(direction);
+                    return;
+                }
+                WireLineButton(child, targetCommand, direction);
+            }
         }
 
         private void ScrollThumb_DragCompleted(object sender, DragCompletedEventArgs e) => SnapToRowBoundary();
