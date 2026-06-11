@@ -109,9 +109,8 @@ namespace Timelapse
         // ScrollPage: a page of images in the active thumbnail grid
         private void FilePlayer_ScrollPage()
         {
-            int cols, rows;
-            cols = MarkableCanvas.ThumbnailGridVirtualized.AvailableColumns;
-            rows = MarkableCanvas.ThumbnailGridVirtualized.AvailableRows;
+            int cols = MarkableCanvas.ThumbnailGridVirtualized.AvailableColumns;
+            int rows = MarkableCanvas.ThumbnailGridVirtualized.AvailableRows;
             TryFileShowWithoutSliderCallback(FilePlayer.Direction, cols * Math.Max(1, rows));
         }
         #endregion

@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;

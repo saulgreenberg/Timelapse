@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -357,9 +356,9 @@ namespace Timelapse.Util
         public bool ShowCloseButton { get; set; } = true;
         public string Tag { get; set; } = "";
         public bool TopLeft { get; set; } = false;
-        public bool Compact { get; set; } = false;
+        public bool Compact { get; set; }
         public double? OffsetX { get; set; } = null;
         public double? OffsetY { get; set; } = null;
-        public bool AttachToCursor { get; set; } = false;
+        public bool AttachToCursor { get; set; }
     }
 }

@@ -1770,26 +1770,20 @@ namespace Timelapse.Dialog
                 return;
             }
 
-            // Cancel any previous in-flight count query and start a fresh one.
-            // This prevents a backlog of queries when the user changes criteria rapidly.
-            countCts.Cancel();
-            countCts = new CancellationTokenSource();
-            CancellationToken token = countCts.Token;
-
-            int count;
             try
             {
-                count = await Task.Run(
+                // Cancel any previous in-flight count query and start a fresh one.
+                // This prevents a backlog of queries when the user changes criteria rapidly.
+                await countCts.CancelAsync().ConfigureAwait(true);
+                countCts = new CancellationTokenSource();
+                CancellationToken token = countCts.Token;
+
+                int count = await Task.Run(
                     () => Database.CountAllFilesMatchingSelectionCondition(FileSelectionEnum.Custom),
                     token).ConfigureAwait(true);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
 
-            // A newer query may have started while this one was running; discard stale results.
-            if (token.IsCancellationRequested) return;
+                // A newer query may have started while this one was running; discard stale results.
+                if (token.IsCancellationRequested) return;
 
             MatchingFilesCount.Text = count > 0 ? count.ToString() : "0";
             this.MatchingFilesCountLabel.Text = count == 1
@@ -1832,7 +1826,7 @@ namespace Timelapse.Dialog
             //            // Must be  n:1 wbere n < 1
             //            this.QueryFileMatchNote.Text = "(files with no recognized entities or lower-probability recognitions)";
             //        }
-            //        else 
+            //        else
             //        {
             //            // Must be  n:m wbere n,m < 1
             //            this.QueryFileMatchNote.Text = "(files with lower-probability recognitions)";
@@ -1843,6 +1837,16 @@ namespace Timelapse.Dialog
             //        this.QueryFileMatchNote.Text = "(files with a recognized entity within the confidence range)";
             //    }
             //}
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the user changes criteria rapidly; a newer query is already running.
+            }
+            catch (Exception)
+            {
+                // Silently absorb any other error (database fault, disposed control, etc.).
+                // This is a background UI count — failure here must not crash the process.
+            }
         }
 
         // Start the timer that will show how many files match the current selection

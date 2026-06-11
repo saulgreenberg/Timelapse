@@ -4,7 +4,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Threading;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;

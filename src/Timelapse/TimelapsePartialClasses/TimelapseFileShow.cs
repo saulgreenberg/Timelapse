@@ -23,58 +23,39 @@ namespace Timelapse
         // By default, don't force the update
         private void FileShow(Slider fileNavigatorSlider)
         {
-            FileShow((int)fileNavigatorSlider.Value - 1, true, false);
+            FileShow((int)fileNavigatorSlider.Value - 1, false);
         }
 
         // FileShow is invoked from elsewhere than from the slider. 
         // By default, don't force the update
         public void FileShow(int fileIndex)
         {
-            FileShow(fileIndex, false, false);
+            FileShow(fileIndex, false);
         }
 
         // FileShow is invoked from elsewhere than from the slider. 
         // The argument specifies whether we should force the update
         public void FileShow(int fileIndex, bool forceUpdate)
         {
-            FileShow(fileIndex, false, forceUpdate);
+            if (false == FileShowHelperPart1(fileIndex, forceUpdate, out bool newFileToDisplay, out ImageRow imageCacheCurrent))
+            {
+                GlobalReferences.TimelapseState.IsNewSelection = false;
+                return;
+            }
+            BoundingBoxes bboxes = GetBoundingBoxesForCurrentFile(imageCacheCurrent.ID);
+            FileShowHelperPart2(imageCacheCurrent, newFileToDisplay, bboxes, fileIndex);
         }
+
         private async Task FileShowAsync(int fileIndex, bool forceUpdate)
         {
-            await FileShowAsync(fileIndex, false, forceUpdate);
-        }
-        #endregion
-
-        #region FileShow - Full Sync and Async versions
-        // Show the image / video file for the specified row, but only if its different from what is currently being displayed.
-        private void FileShow(int fileIndex, bool isInSliderNavigation, bool forceUpdate)
-        {
             if (false == FileShowHelperPart1(fileIndex, forceUpdate, out bool newFileToDisplay, out ImageRow imageCacheCurrent))
             {
-                // We clear IsNewSelections after files are shown
                 GlobalReferences.TimelapseState.IsNewSelection = false;
                 return;
             }
-            // Sync: Get the bounding boxes and markers (if any) for the current image;
-            BoundingBoxes bboxes = GetBoundingBoxesForCurrentFile(imageCacheCurrent.ID);
-            FileShowHelperPart2(imageCacheCurrent, newFileToDisplay, bboxes, fileIndex, isInSliderNavigation);
-        }
-
-        private async Task FileShowAsync(int fileIndex, bool isInSliderNavigation, bool forceUpdate)
-        {
-            if (false == FileShowHelperPart1(fileIndex, forceUpdate, out bool newFileToDisplay, out ImageRow imageCacheCurrent))
-            {
-                // We clear IsNewSelections after files are shown
-                GlobalReferences.TimelapseState.IsNewSelection = false;
-                return;
-            }
-            // Async Get the bounding boxes and markers (if any) for the current image;
             BoundingBoxes bboxes = await GetBoundingBoxesForCurrentFileAsync(imageCacheCurrent.ID);
-
-            FileShowHelperPart2(imageCacheCurrent, newFileToDisplay, bboxes, fileIndex, isInSliderNavigation);
+            FileShowHelperPart2(imageCacheCurrent, newFileToDisplay, bboxes, fileIndex);
         }
-
-        // Show the image / video file for the specified row, but only if its different from what is currently being displayed.
         #endregion
 
         #region FileShowHelper parts
@@ -198,7 +179,7 @@ namespace Timelapse
             FileNavigatorSlider.Value = fileIndex + 1;
             return true;
         }
-        private void FileShowHelperPart2(ImageRow imageCacheCurrent, bool newFileToDisplay, BoundingBoxes bboxes, int fileIndex, bool isInSliderNavigation)
+         private void FileShowHelperPart2(ImageRow imageCacheCurrent, bool newFileToDisplay, BoundingBoxes bboxes, int fileIndex)
         {
             markersOnCurrentFile = DataHandler.FileDatabase.MarkersGetMarkersForCurrentFile(imageCacheCurrent.ID);
             List<Marker> displayMarkers = GetDisplayMarkers();

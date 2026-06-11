@@ -458,23 +458,6 @@ namespace Timelapse.DataTables
                      out isCorruptOrMissing);
         }
 
-        /// <summary>
-        /// Async Wrapper for LoadBitmap
-        /// </summary>
-        /// <returns>Tuple of the BitmapSource and boolean isCorruptOrMissing output of the underlying load logic</returns>
-        public virtual Task<Tuple<BitmapSource, bool>> LoadBitmapAsync(string baseFolderPath, ImageDisplayIntentEnum imageExpectedUsage, ImageDimensionEnum imageDimension)
-        {
-            // 'out' arguments not allowed in tasks, so it returns a tuple containg the bitmap and the isCorruptOrMissingflag flag indicating bitmap retrieval state 
-            return Task.Run(() =>
-            {
-                BitmapSource bitmap = LoadBitmap(baseFolderPath, imageExpectedUsage == ImageDisplayIntentEnum.Ephemeral ? ImageValues.PreviewWidth128 : null,
-                                               imageExpectedUsage,
-                                               ImageDimensionEnum.UseWidth,
-                                               out bool isCorruptOrMissing);
-                return Tuple.Create(bitmap, isCorruptOrMissing);
-            });
-        }
-
         // Load: Full form
         // Get a bitmap of the desired width. If its not there or something is wrong it will return a placeholder bitmap displaying the 'error'.
         // Also sets a flag (isCorruptOrMissing) indicating if the bitmap wasn't retrieved (signalling a placeholder bitmap was returned)

@@ -750,7 +750,6 @@ namespace Timelapse.Constant
         public const int MaximumRenderAttempts = 10;
 
         public static readonly TimeSpan PollIntervalForVideoLoad = TimeSpan.FromMilliseconds(1.0);
-        public static readonly TimeSpan RenderingBackoffTime = TimeSpan.FromMilliseconds(25.0);
         public static readonly TimeSpan ProgressBarSleepInterval = TimeSpan.FromMilliseconds(10.0);
         public static readonly TimeSpan DataGridTimerInterval = TimeSpan.FromMilliseconds(250);
         public static readonly TimeSpan ProgressBarRefreshInterval = TimeSpan.FromMilliseconds(250);

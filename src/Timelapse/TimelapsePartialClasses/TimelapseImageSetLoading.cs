@@ -502,7 +502,7 @@ namespace Timelapse
                 // this gets called on the UI thread
                 ImageSetPane.IsActive = true;
 
-                if (ea.UserState is List<string> skipped && skipped.Count > 0)
+                if (ea.UserState is List<string> { Count: > 0 } skipped)
                 {
                     Dialogs.FilePathTooLongDialog(this, skipped);
                 }

@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
 using Timelapse.DataStructures;

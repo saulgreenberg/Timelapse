@@ -62,7 +62,7 @@ namespace Timelapse.Controls
         private bool suppressAnchorUpdate; // true while a zoom-triggered ScrollChanged is still pending
         private int zoomLevel;             // discrete zoom counter; 0 = deactivated, 1 = initial view, N = more zoomed out
         private double initialCellHeight;  // cellHeight at zoomLevel 1; all levels derived from this × ZoomStep^(level-1)
-        private DispatcherTimer snapAnimTimer;
+        private readonly DispatcherTimer snapAnimTimer;
         private double snapAnimStart;
         private double snapAnimTarget;
         private int snapAnimStep;
@@ -83,7 +83,7 @@ namespace Timelapse.Controls
         private bool modifierPressedOnMouseDown;
         private bool isDraggingFromCanvas;   // true only when mouse-down landed on a valid cell
         private Point lastDragViewerPoint;   // cursor in ScrollViewer coords, kept current during drag
-        private DispatcherTimer autoScrollTimer;
+        private readonly DispatcherTimer autoScrollTimer;
         private double autoScrollDelta;      // ±cellHeight: one row per tick, sign = direction
         private int startPadding;            // empty cells before file[0] so the zoom-anchor file lands at col=0
         private DateTime trackScrollHoldStart = DateTime.MinValue; // for track-click ease-in
@@ -253,7 +253,7 @@ namespace Timelapse.Controls
             // the same file after column count changes. zoomAnchorFileIndex is only updated on
             // manual scrolls — zoom-triggered ScrollChanged events are suppressed so the anchor
             // does not drift with each zoom step.
-            int? anchorFileIndex = IsGridActive ? (int?)zoomAnchorFileIndex : null;
+            int? anchorFileIndex = IsGridActive ? zoomAnchorFileIndex : null;
 
             // Discrete zoom levels make every zoom-out exactly reversible by one zoom-in.
             // Level 0 = deactivated. Level 1 = initial view (initialCellHeight).
@@ -301,10 +301,10 @@ namespace Timelapse.Controls
                         DispatcherTimer scrollTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
                         scrollTimer.Tick += (t, _) =>
                         {
-                            if (!homeSlideActive) { ((DispatcherTimer)t).Stop(); return; }
+                            if (!homeSlideActive) { ((DispatcherTimer)t)?.Stop(); return; }
                             double progress = Math.Min((DateTime.Now - animStart).TotalMilliseconds / totalMs, 1.0);
                             ScrollViewer.ScrollToVerticalOffset(scrollStart + scrollRange * Math.Pow(progress, 3));
-                            if (progress >= 1.0) ((DispatcherTimer)t).Stop();
+                            if (progress >= 1.0) ((DispatcherTimer)t)?.Stop();
                         };
                         scrollTimer.Start();
 
@@ -362,14 +362,6 @@ namespace Timelapse.Controls
         {
             try { backgroundWorker?.CancelAsync(); }
             catch { /* cancellation errors are acceptable */ }
-        }
-
-        public void SelectNone()
-        {
-            selectedIndices.Clear();
-            anchorIndex = -1;
-            RefreshSelectionVisuals();
-            EnableOrDisableControlsAsNeeded();
         }
 
         public void SelectInitialCellOnly()

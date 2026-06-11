@@ -330,7 +330,7 @@ namespace Timelapse.Util
                     @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem",
                     "LongPathsEnabled",
                     0);
-                return value is int i && i == 1;
+                return value is 1;
             }
             catch
             {

@@ -34,19 +34,11 @@ namespace Timelapse.ImageSetLoadingPipeline
         {
             get
             {
-                if (field == null)
-                {
-                    // Lazy-load a small preview bitmap for the loading progress dialog.
-                    // This getter is only called from a System.Threading.Timer callback
-                    // (ImageSetLoader.LoadAsync) on a thread-pool thread, so calling
-                    // LoadBitmap synchronously is safe and avoids the overhead of
-                    // Task.Run + Wait() that LoadBitmapAsync would introduce.
-                    field = File.LoadBitmap(RootPathToImages,
-                                            Constant.ImageValues.PreviewWidth128,
-                                            ImageDisplayIntentEnum.Ephemeral,
-                                            ImageDimensionEnum.UseWidth,
-                                            out _);
-                }
+                field ??= File.LoadBitmap(RootPathToImages,
+                    Constant.ImageValues.PreviewWidth128,
+                    ImageDisplayIntentEnum.Ephemeral,
+                    ImageDimensionEnum.UseWidth,
+                    out _);
 
                 return field;
             }
