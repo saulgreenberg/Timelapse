@@ -8,7 +8,6 @@
              Focusable="False"
              PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
              PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
-             MouseLeftButtonUp="OnMouseLeftButtonUp"
              MouseMove="OnMouseMove"
              LostMouseCapture="OnLostMouseCapture">
     <Grid>

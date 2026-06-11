@@ -472,18 +472,18 @@ namespace Timelapse.Controls
             cellWidth = newCellWidth;
             cellHeight = newCellHeight;
 
-            // Match ThumbnailGrid's column count formula exactly
-            columnCount = Math.Max(1, (int)(currentGridWidth / cellWidth));
+            // Column count must use the viewport content width (excluding the scrollbar).
+            // Using the full control width causes VirtualCanvas to extend into the scrollbar area;
+            // clicks on the scrollbar then map to the last column and trigger spurious selection.
+            double contentWidth = ScrollViewer.ViewportWidth > 0 ? ScrollViewer.ViewportWidth : currentGridWidth;
+            columnCount = Math.Max(1, (int)(contentWidth / cellWidth));
 
-            // Option 1 resize: when the grid is narrower than one cell, scale both dimensions
-            // down proportionally so the single column always fits without clipping.
-            // Use ViewportWidth (content area after scrollbar) rather than currentGridWidth so
-            // the always-visible vertical scrollbar does not cause residual clipping.
-            if (columnCount == 1 && currentGridWidth < cellWidth)
+            // When the grid is narrower than one cell, scale both dimensions proportionally
+            // so the single column always fits without clipping.
+            if (columnCount == 1 && contentWidth < cellWidth)
             {
-                double viewportW = ScrollViewer.ViewportWidth > 0 ? ScrollViewer.ViewportWidth : currentGridWidth;
-                double scale = viewportW / cellWidth;
-                cellWidth = viewportW;
+                double scale = contentWidth / cellWidth;
+                cellWidth = contentWidth;
                 cellHeight *= scale;
             }
 
@@ -898,6 +898,7 @@ namespace Timelapse.Controls
                 EnableOrDisableControlsAsNeeded();
                 ShowSelectionBadge(selectedIndices.Count);
                 OnSelectionChanged(new ThumbnailGridVirtualizedEventArgs(null));
+                e.Handled = true;
             }
             catch { /* ignored */ }
         }
