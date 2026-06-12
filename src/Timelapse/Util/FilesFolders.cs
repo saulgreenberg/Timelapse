@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Resources;
@@ -737,14 +738,15 @@ namespace Timelapse.Util
             if (fileNameLength > length)
             {
                 // /The file name itself is longer than the length, so truncate it
-                return $"…{fileName.Substring(fileName.Length - length - 1)}";
+                return $"…{fileName[^(length + 1)..]}";
             }
             // The file name length is less than the length, so truncate the path
             int desiredPathLength = length - fileNameLength - 2; // -1 for the path separator and ellipsis
 
             // Get the front half and the back half of the path, and stitch them together with an ellipsis in between
-            string frontPath = path.Substring(0, desiredPathLength / 2);
-            string backPath = path.Substring(path.Length - desiredPathLength / 2);
+            int half = desiredPathLength / 2;
+            string frontPath = path[..half];
+            string backPath = path[^half..];
             string pathAfterTruncation = $"{frontPath}…{backPath}";
             return Path.Combine(pathAfterTruncation, fileName);
 
@@ -1018,6 +1020,76 @@ namespace Timelapse.Util
             }
         }
 
+        #endregion
+
+        #region DeleteFolder (Forced with retries)
+        // Deleting a folder with Directory.Delete can fail if the OneDrive engine has a lock on the folder, even if there are no files in it.
+        // This method first tries to strip off any Read-Only and cloud locks on the folder and its subfolders,
+        // and then retries the delete operation a few times with a delay in between to give the OneDrive engine time to release its locks.
+        public static bool TryForceDeleteDirectory(string targetDir, int maxRetries = 5, int delayMs = 200)
+        {
+            if (string.IsNullOrEmpty(targetDir) || !Directory.Exists(targetDir))
+            {
+                return true;
+            }
+
+            // Fast path: try a direct delete first — avoids per-file syscalls when files are normal
+            try
+            {
+                Directory.Delete(targetDir, true);
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Fast path failed — fall through to attribute-clearing slow path
+            }
+
+            // Slow path: strip ReadOnly/cloud locks then retry.
+            // NOTE: Thread.Sleep blocks the calling thread; callers on the UI thread
+            // should move this call to a background thread.
+            try { CleanAttributesAndFiles(targetDir); } catch { }
+
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    Directory.Delete(targetDir, true);
+                    return true;
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    if (i == maxRetries - 1)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(delayMs);
+                }
+            }
+            return false;
+        }
+
+        private static void CleanAttributesAndFiles(string targetDir)
+        {
+            // Reset folder attributes (best-effort; ignore if the folder itself is locked)
+            try { File.SetAttributes(targetDir, FileAttributes.Normal); } catch { }
+
+            // Process files: clear attributes then delete each file
+            foreach (string file in Directory.EnumerateFiles(targetDir))
+            {
+                try
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(file);
+                }
+                catch { /* Let the main Directory.Delete pick it up */ }
+            }
+
+            // Recurse into subdirectories
+            foreach (string dir in Directory.EnumerateDirectories(targetDir))
+            {
+                CleanAttributesAndFiles(dir);
+            }
+        }
         #endregion
 
         #region Private (internal) methods

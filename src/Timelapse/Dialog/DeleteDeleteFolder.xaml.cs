@@ -1,5 +1,8 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Linq;
+using System.Windows;
 using Timelapse.Util;
+using TimelapseWpf.Toolkit;
 
 namespace Timelapse.Dialog
 {
@@ -9,16 +12,14 @@ namespace Timelapse.Dialog
     public partial class DeleteDeleteFolder
     {
         #region Private Variables
-        private readonly int howManyDeleteFiles;
+        private readonly string DeletedFolderPath;
         #endregion
 
         #region Constructor, Loaded
-        public DeleteDeleteFolder(int howManyDeleteFiles)
+        public DeleteDeleteFolder(string deletedFolderPath)
         {
             InitializeComponent();
-
-            // If there are no files, just abort
-            this.howManyDeleteFiles = howManyDeleteFiles;
+            this.DeletedFolderPath = deletedFolderPath; 
         }
 
         // Adjust this dialog window position
@@ -27,8 +28,6 @@ namespace Timelapse.Dialog
             FormattedDialogHelper.SetupStaticReferenceResolver(Message);
             this.Message.BuildContentFromProperties();
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
-            Message.What =
-                $"Your 'DeletedFiles' sub-folder contains backups of {howManyDeleteFiles} 'deleted' image or video files.";
         }
         #endregion
 
@@ -43,5 +42,22 @@ namespace Timelapse.Dialog
             DialogResult = false;
         }
         #endregion
+
+        private void CountButton_Click(object sender, RoutedEventArgs e)
+        {
+            int count = Directory.EnumerateFiles(DeletedFolderPath, "*", SearchOption.AllDirectories).Count();
+            string article = count == 1 ? "is" : "are";
+            string suffix = count == 1 ? "" : "s";
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = this,
+                DialogTitle = "Deleted Folder File Count",
+                Icon = DialogIconType.Information,
+                What = $"There {article} {count} file{suffix} in the DeletedFiles folder."
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+            //MessageBox.Show(this, $"There {article} {count} file{suffix} in the DeletedFiles folder.", "Deleted Folder File Count", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

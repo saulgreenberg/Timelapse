@@ -819,6 +819,30 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog() == true;
         }
 
+        public static void CouldNotDeleteFoldlerOnExitDialog(Window owner, string folder)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "Timelapse could not delete you Deleted folder";
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = title,
+                Icon = DialogIconType.Information,
+
+                Problem = "You have your options set for Timelapse to delete your [e]Deleted[/e] folder on exit, which permanently removes all your deleted images and/or video files." +
+                          "[br] However, Timelapse was unable to delete that folder.",
+                Reason =  "Your options are set for Timelapse to delete your [e]Deleted[/e] folder on exit, which contains copies of all your deleted images and/or video files." + 
+                         "[br 14] However, deletion likely failed because of permission issues, or because you are using OneDrive (whose structure makes folder deletion fragile).",
+                Solution = $"You can:" +
+                           $"[li] Just ignore this - its not critical, or" +
+                           $"[li] Use your Windows file explorer to go to the [e]Deleted[/e] folder and delete it manually." +
+                           $"[li 2]Folder location: {folder}"
+            };
+            dialog.BuildAndShowDialog();
+        }
+
+
+
 
         // notify the user when the path is too long
         public static void TemplatePathTooLongDialog(Window owner, string templateDatabasePath)

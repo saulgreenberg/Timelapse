@@ -279,16 +279,9 @@ namespace Timelapse
         private void DeleteTheDeletedFilesFolderIfNeeded()
         {
             string deletedFolderPath = Path.Combine(DataHandler.FileDatabase.RootPathToImages, Constant.File.DeletedFilesFolder);
-            string[] extensions = [Constant.File.JpgFileExtension, Constant.File.ASFFileExtension, Constant.File.AviFileExtension, Constant.File.MovFileExtension, Constant.File.Mp4FileExtension
-            ];
-            int howManyDeletedFiles = Directory.Exists(deletedFolderPath) 
-                ? Directory.GetFiles(deletedFolderPath, "*.*", SearchOption.AllDirectories).Where(f => extensions.Contains(Path.GetExtension(f).ToLower()))
-                    .ToArray().Length
-                :0;
-
-            // If there are no files, there is nothing to delete
-            if (howManyDeletedFiles <= 0)
+            if (false == Directory.Exists(deletedFolderPath))
             {
+                // The folder doesn't exist, so nothing to delete
                 return;
             }
 
@@ -299,7 +292,7 @@ namespace Timelapse
             // if its ask the user, then set the flag according to the response
             if (State.DeleteFolderManagement == DeleteFolderManagementEnum.AskToDeleteOnExit)
             {
-                DeleteDeleteFolder deleteDeletedFolders = new(howManyDeletedFiles)
+                DeleteDeleteFolder deleteDeletedFolders = new(deletedFolderPath)
                 {
                     Owner = this
                 };
@@ -307,16 +300,19 @@ namespace Timelapse
             }
             if (deleteTheDeletedFolder)
             {
-                Directory.Delete(deletedFolderPath, true);
+                if (false == Util.FilesFolders.TryForceDeleteDirectory(deletedFolderPath))
+                {
+                    Dialogs.CouldNotDeleteFoldlerOnExitDialog(this, deletedFolderPath);
+                }
             }
         }
         #endregion
+
 
         #region Disposing
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)

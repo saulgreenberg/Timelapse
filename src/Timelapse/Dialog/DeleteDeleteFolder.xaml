@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
         <toolkit:FormattedMessageContent x:Name="Message" Grid.Row="0" Icon="{x:Static toolkit:DialogIconType.Question}"
                             DialogTitle="Empty the DeletedFiles Folder?"
-                            What="Your [i]DeletedFiles[/i] sub-folder contains backups of several deleted image or video files."
+                            What="You have a [i]DeletedFiles[/i] sub-folder, which normally contains backups of deleted image or video files."
                             Solution="Select:
                                       [li] [e]Empty the Folder[/e] to permanently delete those files if you don't need them.
                                       [li] [e]Leave it as is[/e] to leave those files there."
@@ -26,6 +26,7 @@
         <Rectangle Fill="#FF868686" Height="1" Grid.Row="1" />
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="4">
+            <Button Name="CountButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,100,10" Click="CountButton_Click">Tell me how many files would be deleted</Button>
             <Button Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Leave it as is</Button>
             <Button Name="OkButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="OkButton_Click">_Empty the Folder</Button>
         </StackPanel>

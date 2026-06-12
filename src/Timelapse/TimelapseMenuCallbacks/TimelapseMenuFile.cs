@@ -727,6 +727,7 @@ namespace Timelapse
 
 
         #endregion
+
         #region Export the current image or video _file
         private void MenuItemExportThisImage_Click(object sender, RoutedEventArgs e)
         {
