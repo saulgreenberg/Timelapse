@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
+using Timelapse.Dialog;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -309,7 +310,10 @@ namespace TimelapseTemplateEditor.Controls
                     ControlsPanel.Children.Insert(dropTargetIndex, Globals.MouseState.realMouseDragSource);
 
                     // This then rebuilds everything depending on the order of those controls
-                    Globals.RootEditor.TemplateDoUpdateControlOrder();
+                    if (!Globals.RootEditor.TemplateDoUpdateControlOrder())
+                    {
+                        Dialogs.CouldNotSaveControlOrderDialog(Window.GetWindow(this));
+                    }
                     Globals.TemplateDataGridControl.DoLayoutUpdated(true);
                 }
                 MouseReleaseWrapper();

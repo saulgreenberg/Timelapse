@@ -819,6 +819,25 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog() == true;
         }
 
+        public static void CouldNotSaveControlOrderDialog(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Could not save the new control order",
+                Icon = DialogIconType.Warning,
+                Problem = "Timelapse could not save the new control order to your template file.",
+                Reason = "This is likely a temporary issue caused by:" +
+                         "[ni] OneDrive or a network share locking the template file during its internal syncronizatino, or" +
+                         "[ni] an issue with your drive, e.g., a removable drive being disconnected.",
+                Solution = "[ni] Try the operation again in a moment." +
+                           "[ni] If the problem persists, check your drives."
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
         public static void CouldNotDeleteFoldlerOnExitDialog(Window owner, string folder)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

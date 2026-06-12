@@ -878,7 +878,23 @@ public class SQLiteWrapper
             // Declared outside try so the catch block can call Rollback on the still-open connection
             // if an exception is thrown mid-transaction.
             using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-            connection.Open();
+
+            // Retry the open for transient CANTOPEN failures (OneDrive / network-share lock).
+            // BusyTimeout cannot help here — it only applies after a successful open.
+            for (int openAttempt = 0; ; openAttempt++)
+            {
+                try { connection.Open(); break; }
+                catch (SQLiteException ex) when (ex.ResultCode == SQLiteErrorCode.CantOpen)
+                {
+                    if (openAttempt >= 4)
+                    {
+                        TracePrint.PrintMessage($"Unable to open database after 5 attempts: {ex}");
+                        return SqlOperationResult.Fail("Unable to open database file", ex, null);
+                    }
+                    Thread.Sleep(200);
+                }
+            }
+
             if (busyTimeoutMs > 0)
             {
                 connection.BusyTimeout = busyTimeoutMs;

@@ -797,7 +797,7 @@ namespace Timelapse.Database
 
         // Update all ControlOrder and SpreadsheetOrder column entries in the template database to match their in-memory counterparts.
         // Note that this only updates those entries. If other control entries exist in the database table, they will be unaffected.  
-        private void SyncControlsToDatabase()
+        private bool SyncControlsToDatabase()
         {
             // Utilities.PrintMethodName();
             List<ColumnTuplesWithWhere> columnsTuplesWithWhereList = [];    // holds columns which have changed for the current control
@@ -810,11 +810,15 @@ namespace Timelapse.Database
                 columnTupleList.Add(new(Control.SpreadsheetOrder, control.SpreadsheetOrder));
                 columnsTuplesWithWhereList.Add(columnTupleWithWhere);
             }
-            Database.Update(DBTables.Template, columnsTuplesWithWhereList);
+            if (!Database.Update(DBTables.Template, columnsTuplesWithWhereList).Success)
+            {
+                return false;
+            }
 
             // Update the in memory table to reflect current database content
             // Perhaps not needed as the database was generated from the table, but guarantees resorts if control order has changed
             LoadControlsFromTemplateDBSortedByControlOrder();
+            return true;
         }
 
         // Populate the (empty) template database with its in-memory version
@@ -881,7 +885,7 @@ namespace Timelapse.Database
         #region Controls (Editor only) - UpdateControlDisplayOrder, BindToEditorDataGrid
         // Update controls with the new order 
         // Order can be either the control order or the spreadsheet order. The Dictionary holds the new order 
-        public void UpdateControlDisplayOrder(string orderColumnName, Dictionary<string, long> newOrderByDataLabel)
+        public bool UpdateControlDisplayOrder(string orderColumnName, Dictionary<string, long> newOrderByDataLabel)
         {
             // Check the arguments for null 
             ThrowIf.IsNullArgument(newOrderByDataLabel, nameof(newOrderByDataLabel));
@@ -939,7 +943,7 @@ namespace Timelapse.Database
                 }
             }
             // sync the newly ordered controls to the database,, which also reloads the controls into the controls data structure
-            SyncControlsToDatabase();
+            return SyncControlsToDatabase();
         }
 
         public void BindToEditorDataGrid(DataGrid dataGrid, DataRowChangeEventHandler onRowChanged)

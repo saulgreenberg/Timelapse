@@ -173,7 +173,7 @@ namespace TimelapseTemplateEditor
             }
         }
         
-        public void TemplateDoUpdateControlOrder()
+        public bool TemplateDoUpdateControlOrder()
         {
             Dictionary<string, long> newControlOrderByDataLabel = [];
             long controlOrder = 1;
@@ -187,9 +187,10 @@ namespace TimelapseTemplateEditor
                 controlOrder++;
             }
             dataGridBeingUpdatedByCode = true;
-            templateDatabase.UpdateControlDisplayOrder(Control.ControlOrder, newControlOrderByDataLabel);
+            bool success = templateDatabase.UpdateControlDisplayOrder(Control.ControlOrder, newControlOrderByDataLabel);
             dataGridBeingUpdatedByCode = false;
             Globals.TemplateDataEntryPreviewPanelControl.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls); // Ensures that the controls panel updates itself
+            return success;
         }
         #endregion
 

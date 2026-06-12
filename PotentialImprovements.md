@@ -21,6 +21,7 @@ Items are ordered lowest-risk / highest-payoff first. Skip or defer any item by 
 |---|----|-------------------|------|--------|
 | 1 | L-1 | Progressive DataTable population for large databases | High | ⬜ Pending |
 | 2 | V-1 | Virtualized thumbnail grid for unbounded file counts | High | 🔄 In Progress |
+| 3 | DB-1 | SQLite write failures silently swallowed at ~33 call sites | Medium | 🔄 Partially Fixed |
 
 ---
 
@@ -332,5 +333,76 @@ Most of Step 7 was completed as part of Step 6b. What remains are two event wire
 11. Resize the window while the virtual grid is active — confirm the pool resizes and cell positions recalculate correctly.
 
 ---
+
+---
+
+## DB-1 · SQLite Write Failures Silently Swallowed at ~33 Call Sites
+
+### Background — Reported Crash (v2.5.0.6)
+
+A user reported a crash while drag-reordering controls in the Template Editor. The full stack trace:
+
+```
+code = CantOpen (14), message = System.Data.SQLite.SQLiteException: unable to open database file
+   at SQLite3.Open(...)
+   at SQLiteConnection.Open()
+   at SQLiteWrapper.ExecuteNonQueryWithRollbackCore(...)
+   at SQLiteWrapper.ExecuteNonQueryWithRollback(...)
+   at SQLiteWrapper.Update(...)
+   at CommonDatabase.SyncControlsToDatabase()
+   at CommonDatabase.UpdateControlDisplayOrder(...)
+   at TemplateEditorWindow.TemplateDoUpdateControlOrder()
+   at TemplateDataEntryPreviewPanel.ControlsPanel_DragDrop(...)
+```
+
+**Root cause:** `connection.Open()` was called outside the `try` block in `ExecuteNonQueryWithRollbackCore`, so a `SQLiteException(CANTOPEN, 14)` propagated as an unhandled crash rather than returning `SqlOperationResult.Fail`. The trigger was the `.tdb` file being on OneDrive or a network share, which temporarily locks files during sync. The existing `BusyTimeout` mechanism cannot help because it only applies after a connection is successfully opened.
+
+### What Was Fixed (2026-06-11)
+
+**1. `SQLiteWrapper.cs` — retry loop around `connection.Open()`**
+
+Added a 5-attempt retry loop with 200 ms delay specifically for `SQLiteErrorCode.CantOpen`. On exhaustion, returns `SqlOperationResult.Fail` instead of throwing. All other exception types fall through to the existing catch block unchanged.
+
+**2. `CommonDatabase.cs` — `SyncControlsToDatabase` and `UpdateControlDisplayOrder` return `bool`**
+
+Both methods were `void` and discarded the `Database.Update` return value. Changed to `bool`; failure propagates up instead of being silently swallowed.
+
+**3. `TemplateCode.cs` — `TemplateDoUpdateControlOrder` returns `bool`**
+
+Changed from `void` to `bool`; propagates the result from `UpdateControlDisplayOrder`.
+
+**4. `TemplateDataEntryPreviewPanel.xaml.cs` and `TemplateSpreadsheetPreviewControl.xaml.cs`**
+
+Both drag-drop/reorder handlers now check the return value and call `Dialogs.CouldNotSaveControlOrderDialog` on failure, so the user is informed rather than seeing silent data loss.
+
+**5. `Dialogs.cs` — new `CouldNotSaveControlOrderDialog`**
+
+`Warning`-icon dialog explaining the likely OneDrive/network cause and suggesting a retry.
+
+### Remaining Work
+
+Approximately **33 additional call sites** across three files still discard the `SqlOperationResult` return value from `Database.Update`, `Database.Insert`, and `Database.Delete`. A `CANTOPEN` (or any other write failure) at any of these sites silently loses data with no user feedback.
+
+**Priority order:**
+
+| File | Sites | Severity | Notes |
+|------|-------|----------|-------|
+| `FileDatabaseUpdate.cs` | 8 | **Highest** | Runs during normal tagging — silent failure loses annotation data the user just entered |
+| `FileDatabase.cs` | 13 | High | Covers file insertions, deletions, detection data, bounding box updates |
+| `CommonDatabase.cs` | 12 | High | Template control and metadata inserts/updates/deletes |
+| `SQLiteWrapper.cs` | 3 | Low | `IndexDropIfExists`, `IndexCreateIfNotExists` — index failures are survivable |
+
+**Approach for remaining sites:**
+
+Do NOT raise the error dialog inside `SQLiteWrapper` or the database layer — those classes have no window owner, and batch operations would spam one dialog per failed write. Instead, check the result one level above each `Database.Update/Insert/Delete` call and surface a single dialog at the UI layer, consistent with the pattern already established for the control-order fix.
+
+The `FileDatabaseUpdate.cs` sites are the highest priority because they run on every tag/annotation write during a normal session. A network hiccup there silently loses work.
+
+### How to Test
+
+1. Open a `.tdb` or `.ddb` file on a OneDrive or network share.
+2. In the Template Editor, drag a control to reorder it while OneDrive is actively syncing — confirm the dialog appears instead of a crash.
+3. Repeat with the spreadsheet column reorder.
+4. Simulate a `CANTOPEN` failure for the remaining `FileDatabaseUpdate.cs` sites (e.g. briefly make the file read-only while tagging) — confirm the error is surfaced to the user rather than silently dropped.
 
 *Analysis updated June 2026.*

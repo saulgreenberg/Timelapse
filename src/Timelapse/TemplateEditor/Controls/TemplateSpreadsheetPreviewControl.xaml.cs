@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using Timelapse.DataTables;
+using Timelapse.Dialog;
 using Timelapse.DebuggingSupport;
 using TimelapseTemplateEditor.EditorCode;
 using Control = Timelapse.Constant.Control;
@@ -65,7 +67,10 @@ namespace TimelapseTemplateEditor.Controls
                 }
             }
             Globals.RootEditor.dataGridBeingUpdatedByCode = true;
-            Globals.TemplateDatabase.UpdateControlDisplayOrder(Control.SpreadsheetOrder, spreadsheetOrderByDataLabel);
+            if (!Globals.TemplateDatabase.UpdateControlDisplayOrder(Control.SpreadsheetOrder, spreadsheetOrderByDataLabel))
+            {
+                Dialogs.CouldNotSaveControlOrderDialog(Window.GetWindow(this));
+            }
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);
             Globals.RootEditor.dataGridBeingUpdatedByCode = false;
         }
