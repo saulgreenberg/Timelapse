@@ -873,10 +873,6 @@ public class SQLiteWrapper
             {
                 return SqlOperationResult.Ok();
             }
-            // ReSharper disable once RedundantAssignment
-            string mostRecentStatement = null;
-            // Declared outside try so the catch block can call Rollback on the still-open connection
-            // if an exception is thrown mid-transaction.
             using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
 
             // Retry the open for transient CANTOPEN failures (OneDrive / network-share lock).
@@ -899,94 +895,116 @@ public class SQLiteWrapper
             {
                 connection.BusyTimeout = busyTimeoutMs;
             }
-            SQLiteTransaction transaction = null;
-            try
+
+            // Retry the entire transaction on transient BUSY/LOCKED — these resolve when the
+            // competing writer releases its lock. Unrecoverable failures (I/O error, drive gone)
+            // are not BUSY/LOCKED and fall straight through to the general catch.
+            for (int busyAttempt = 0; ; busyAttempt++)
             {
-                // Run pre-transaction statements on the same connection before BeginTransaction.
-                // This is the only way to set pragmas like PRAGMA foreign_keys = OFF that SQLite
-                // silently ignores when issued inside a transaction.
-                if (preTransactionStatements != null)
+                // ReSharper disable once RedundantAssignment
+                string mostRecentStatement = null;
+                // Declared outside try so the catch blocks can call Rollback on the still-open connection.
+                SQLiteTransaction transaction = null;
+                try
                 {
-                    using SQLiteCommand preCmd = new(connection);
-                    foreach (string stmt in preTransactionStatements)
+                    // Run pre-transaction statements only on the first attempt.
+                    // They set connection-level state (e.g. PRAGMA foreign_keys = OFF) that
+                    // persists across retries, so repeating them is redundant.
+                    if (busyAttempt == 0 && preTransactionStatements != null)
                     {
-                        if (string.IsNullOrWhiteSpace(stmt)) continue;
-                        mostRecentStatement = stmt;
-                        preCmd.CommandText = stmt;
-                        preCmd.ExecuteNonQuery();
+                        using SQLiteCommand preCmd = new(connection);
+                        foreach (string stmt in preTransactionStatements)
+                        {
+                            if (string.IsNullOrWhiteSpace(stmt)) continue;
+                            mostRecentStatement = stmt;
+                            preCmd.CommandText = stmt;
+                            preCmd.ExecuteNonQuery();
+                        }
                     }
-                }
 
-                transaction = connection.BeginTransaction();
+                    transaction = connection.BeginTransaction();
 
-                if (progress != null)
-                {
-                    progress.Report(new(0, progressString, false, true));
-                }
-
-                using SQLiteCommand command = new(connection);
-                command.Transaction = transaction;
-                int statementsCount = statements.Count;
-                int i = 0;
-                foreach (string statement in statements)
-                {
-                    if (progress != null && progressFrequency > 0 && i % progressFrequency == 0)
+                    if (progress != null)
                     {
-                        int percent = Convert.ToInt32(i * 100.0 / statementsCount);
-                        progress.Report(new(percent,
-                            $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
+                        progress.Report(new(0, progressString, false, true));
                     }
-                    // Track the current statement so it is available in the catch block.
-                    // For single-statement calls this is the statement itself; for multi-statement
-                    // transactions it is the last statement executed before the exception, which is
-                    // almost always the one that caused the failure.
-                    // ReSharper disable once RedundantAssignment
-                    mostRecentStatement = statement;
-                    command.CommandText = statement;
-                    // Note: It is more efficient to do it this way than to send
-                    // a bunch of semicolon-separated statements as a single query
-                    command.ExecuteNonQuery();
-                    i++;
-                }
-                transaction.Commit();
-                transaction.Dispose();
-                // Set to null so the catch block does not attempt a rollback after a successful
-                // commit — the transaction is already closed and there is nothing to roll back.
-                transaction = null;
 
-                // Run post-transaction statements on the same connection after the commit.
-                // Used for PRAGMA foreign_keys = ON, which is ignored inside a transaction.
-                // Failures here cannot be rolled back; the transaction has already committed.
-                if (postTransactionStatements != null)
-                {
-                    using SQLiteCommand postCmd = new(connection);
-                    foreach (string stmt in postTransactionStatements)
+                    using SQLiteCommand command = new(connection);
+                    command.Transaction = transaction;
+                    int statementsCount = statements.Count;
+                    int i = 0;
+                    foreach (string statement in statements)
                     {
-                        if (string.IsNullOrWhiteSpace(stmt)) continue;
-                        mostRecentStatement = stmt;
-                        postCmd.CommandText = stmt;
-                        postCmd.ExecuteNonQuery();
+                        if (progress != null && progressFrequency > 0 && i % progressFrequency == 0)
+                        {
+                            int percent = Convert.ToInt32(i * 100.0 / statementsCount);
+                            progress.Report(new(percent,
+                                $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
+                        }
+                        // Track the current statement so it is available in the catch block.
+                        // For single-statement calls this is the statement itself; for multi-statement
+                        // transactions it is the last statement executed before the exception, which is
+                        // almost always the one that caused the failure.
+                        // ReSharper disable once RedundantAssignment
+                        mostRecentStatement = statement;
+                        command.CommandText = statement;
+                        // Note: It is more efficient to do it this way than to send
+                        // a bunch of semicolon-separated statements as a single query
+                        command.ExecuteNonQuery();
+                        i++;
                     }
-                }
+                    transaction.Commit();
+                    transaction.Dispose();
+                    // Set to null so the catch block does not attempt a rollback after a successful
+                    // commit — the transaction is already closed and there is nothing to roll back.
+                    transaction = null;
 
-                return SqlOperationResult.Ok();
-            }
-            catch (Exception exception)
-            {
-                try { transaction?.Rollback(); }
-                catch { /* connection may already be broken; rollback best-effort only */ }
-                finally { transaction?.Dispose(); }
-                // Truncate only for the live-debugging log message; the full statement is
-                // preserved untruncated in SqlOperationResult.FailingStatement for bug reports.
-                string excerpt = mostRecentStatement?.Length > 500
-                    ? mostRecentStatement[..500] + "…"
-                    : mostRecentStatement ?? "(none)";
-                TracePrint.PrintMessage(
-                    $"Failure near executing statement '{excerpt}' in ExecuteNonQueryWithRollbackCore: {exception}");
-                return SqlOperationResult.Fail(
-                    $"Failure near executing statement '{excerpt}'",
-                    exception,
-                    mostRecentStatement);
+                    // Run post-transaction statements on the same connection after the commit.
+                    // Used for PRAGMA foreign_keys = ON, which is ignored inside a transaction.
+                    // Failures here cannot be rolled back; the transaction has already committed.
+                    if (postTransactionStatements != null)
+                    {
+                        using SQLiteCommand postCmd = new(connection);
+                        foreach (string stmt in postTransactionStatements)
+                        {
+                            if (string.IsNullOrWhiteSpace(stmt)) continue;
+                            mostRecentStatement = stmt;
+                            postCmd.CommandText = stmt;
+                            postCmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    return SqlOperationResult.Ok();
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                    && busyAttempt < 4)
+                {
+                    // Transient lock — roll back and wait before retrying.
+                    // Linear backoff: 250 ms, 500 ms, 750 ms, 1 000 ms (4 retries → 5 attempts max).
+                    try { transaction?.Rollback(); } catch { }
+                    finally { transaction?.Dispose(); }
+                    int delayMs = (busyAttempt + 1) * 250;
+                    TracePrint.PrintMessage($"Database busy/locked (attempt {busyAttempt + 1}/5), retrying in {delayMs} ms…");
+                }
+                catch (Exception exception)
+                {
+                    try { transaction?.Rollback(); }
+                    catch { /* connection may already be broken; rollback best-effort only */ }
+                    finally { transaction?.Dispose(); }
+                    // Truncate only for the live-debugging log message; the full statement is
+                    // preserved untruncated in SqlOperationResult.FailingStatement for bug reports.
+                    string excerpt = mostRecentStatement?.Length > 500
+                        ? mostRecentStatement[..500] + "…"
+                        : mostRecentStatement ?? "(none)";
+                    TracePrint.PrintMessage(
+                        $"Failure near executing statement '{excerpt}' in ExecuteNonQueryWithRollbackCore: {exception}");
+                    return SqlOperationResult.Fail(
+                        $"Failure near executing statement '{excerpt}'",
+                        exception,
+                        mostRecentStatement);
+                }
+                Thread.Sleep((busyAttempt + 1) * 250);
             }
         }
         #endregion
