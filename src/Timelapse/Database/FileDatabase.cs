@@ -17,6 +17,7 @@ using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Images;
 using Timelapse.Recognition;
@@ -274,7 +275,11 @@ namespace Timelapse.Database
                 new(DatabaseColumn.Standard, existingTemplateDatabase.GetTemplateStandard())
             ];
             List<List<ColumnTuple>> insertionStatements = [columnsToUpdate];
-            Database.Insert(DBTables.ImageSet, insertionStatements);
+            if (!Database.Insert(DBTables.ImageSet, insertionStatements).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnDatabaseCreatedAsync (ImageSet insert)", this.FilePath);
+                return;
+            }
 
             ImageSetLoadFromDatabase();
 
@@ -355,7 +360,11 @@ namespace Timelapse.Database
                         ctww.Columns.Add(new(Control.Guid, row.Guid)); // Populate the data 
                         updateQueryList.Add(ctww);
                     }
-                    Database.Update(DBTables.MetadataInfo, updateQueryList);
+                    if (!Database.Update(DBTables.MetadataInfo, updateQueryList).Success)
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (MetadataInfo update)", this.FilePath);
+                        return;
+                    }
                 }
             }
 
@@ -410,7 +419,11 @@ namespace Timelapse.Database
                                     where += controlRow.DataLabel + Sql.Equal + Sql.Quote(DatabaseValues.DefaultMarkerValue);
                                 }
                             }
-                            Database.DeleteRows(DBTables.Markers, where);
+                            if (!Database.DeleteRows(DBTables.Markers, where).Success)
+                            {
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteRows Markers)", this.FilePath);
+                                return;
+                            }
                         }
                     }
                 }
@@ -491,7 +504,11 @@ namespace Timelapse.Database
             // we should clear the FolderDataInfo table, i.e., return it back to its virgin empty state
             if (countOfLevelTablesDeleted == GetMetadataInfoTableLevels().Count)
             {
-                Database.DeleteAllRowsInTables([DBTables.MetadataInfo]);
+                if (!Database.DeleteAllRowsInTables([DBTables.MetadataInfo]).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteAllRowsInTables MetadataInfo)", this.FilePath);
+                    return;
+                }
             }
 
             // Condition 3: Renamed Controls
@@ -553,7 +570,11 @@ namespace Timelapse.Database
                     if (ddbControl.Type != tdbControl.Type)
                     {
                         ColumnTuple columnToUpdate = new(Constant.DatabaseColumn.SearchTerms, string.Empty);
-                        this.Database.Update(Constant.DBTables.ImageSet, columnToUpdate);
+                        if (!this.Database.Update(Constant.DBTables.ImageSet, columnToUpdate).Success)
+                        {
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (ImageSet search terms update)", this.FilePath);
+                            return;
+                        }
                     }
 
                     // This does the ddb row update. 
@@ -612,7 +633,11 @@ namespace Timelapse.Database
                                + $" UPDATE {table} SET {label} = CASE " 
                                + $" WHEN sr.seq = 1 THEN {newLabel} ELSE {newLabel} || sr.seq END," 
                                + $" {description} = '' FROM SequencedRows sr WHERE {table}.rowid = sr.rowid;";
-                this.Database.ExecuteNonQueryWithRollback(query);
+                if (!this.Database.ExecuteNonQueryWithRollback(query).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath);
+                    return;
+                }
             }
         }
 
@@ -1105,7 +1130,11 @@ namespace Timelapse.Database
 
             // Execute all batches in one transaction — one fsync regardless of image count.
             CreateBackupIfNeeded();
-            Database.ExecuteNonQueryWithRollback(insertCommands);
+            if (!Database.ExecuteNonQueryWithRollback(insertCommands).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in AddFiles", this.FilePath);
+                return;
+            }
         }
 
         /// <summary>
@@ -1310,10 +1339,22 @@ namespace Timelapse.Database
             {
                 idClauses.Add(DatabaseColumn.ID + " = " + fileID);
             }
-            // Delete the data and markers associated with that image
+            // Delete FileData and Markers rows in one transaction so both succeed or both fail
             CreateBackupIfNeeded();
-            Database.Delete(DBTables.FileData, idClauses);
-            Database.Delete(DBTables.Markers, idClauses);
+            List<string> deleteStatements = [];
+            foreach (string whereClause in idClauses)
+            {
+                if (!string.IsNullOrEmpty(whereClause.Trim()))
+                {
+                    deleteStatements.Add(Sql.DeleteFrom + DBTables.FileData + Sql.Where + whereClause + "; ");
+                    deleteStatements.Add(Sql.DeleteFrom + DBTables.Markers + Sql.Where + whereClause + "; ");
+                }
+            }
+            if (deleteStatements.Count > 0 && !Database.ExecuteNonQueryWithRollback(deleteStatements).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in DeleteFilesAndMarkers", this.FilePath);
+                return;
+            }
         }
         #endregion
 
@@ -1614,7 +1655,11 @@ namespace Timelapse.Database
         private void InsertRows(string table, List<List<ColumnTuple>> insertionStatements)
         {
             CreateBackupIfNeeded();
-            Database.Insert(table, insertionStatements);
+            if (!Database.Insert(table, insertionStatements).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertRows", this.FilePath);
+                return;
+            }
         }
         #endregion
 
@@ -1683,7 +1728,11 @@ namespace Timelapse.Database
             }
 
             List<List<ColumnTuple>> insertionStatements = [columns];
-            Database.Insert(DBTables.Markers, insertionStatements);
+            if (!Database.Insert(DBTables.Markers, insertionStatements).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersTryInsertNewMarkerRow", this.FilePath);
+                return false;
+            }
 
             // PERFORMANCE: This is inefficient, as it rereads the entire Markers table from the database
             MarkersLoadRowsFromDatabase(); // Update the markers list to include this new row
@@ -1730,7 +1779,11 @@ namespace Timelapse.Database
             // Update the database and datatable
             // Note that I repeated the null check here, as for some reason it was still coming up as a CA1062 warning
             List<string> whereClauses = [DatabaseColumn.ID + Sql.Equal + imageID];
-            Database.Delete(DBTables.Markers, whereClauses);
+            if (!Database.Delete(DBTables.Markers, whereClauses).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersRemoveMarkerRow", this.FilePath);
+                return;
+            }
         }
         #endregion
 
@@ -1835,7 +1888,11 @@ namespace Timelapse.Database
                 // The row doesn't exist, so insert it
                 // Create a list matching fields we need to update
                 List<List<ColumnTuple>> newTableTuples = [columnTupleList];
-                Database.Insert(tableName, newTableTuples);
+                if (!Database.Insert(tableName, newTableTuples).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (insert)", this.FilePath);
+                    return;
+                }
 
                 // Now add it to the metadataTable
                 MetadataTableLoadRowsFromDatabase(level);
@@ -1844,7 +1901,11 @@ namespace Timelapse.Database
 
             // If we get to here, then the row exists. So we just need to update it instead
             ColumnTuplesWithWhere ctww = new(columnTupleList, (long)dataTable.Rows[0][DatabaseColumn.ID]);
-            Database.Update(tableName, ctww);
+            if (!Database.Update(tableName, ctww).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (update)", this.FilePath);
+                return;
+            }
         }
 
         public void MetadataUpdateFolderDataPath(int level, string oldpath, string newPath)
@@ -1858,8 +1919,11 @@ namespace Timelapse.Database
             {
                 { oldpath, newPath }
             };
-            Database.UpdateParticularColumnValuesWithNewValues(tableName, DatabaseColumn.FolderDataPath, currentAndNewValuePairs);
-
+            if (!Database.UpdateParticularColumnValuesWithNewValues(tableName, DatabaseColumn.FolderDataPath, currentAndNewValuePairs).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataUpdateFolderDataPath", this.FilePath);
+                return;
+            }
         }
 
         public Dictionary<string, string> MetadataGetDataLabels(int level)
