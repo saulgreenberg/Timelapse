@@ -647,6 +647,7 @@ namespace Timelapse.Constant
         public const string CSVDateTimeOptions = "CSVDateTimeOptions2";
         public const string CSVInsertSpaceBeforeDates = "CSVInsertSpaceBeforeDates";
         public const string CSVIncludeFolderColumn = "CSVIncludeFolderColumns";
+        public const string CSVUseASCIIEncoding = "CSVUseASCIIEncoding";
 
         // DarkPixelThreshold and Ratio used to determine image darkness
         public const string DarkPixelThreshold = "DarkPixelThreshold";

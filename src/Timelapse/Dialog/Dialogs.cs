@@ -819,24 +819,24 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog() == true;
         }
 
-        public static void CouldNotSaveControlOrderDialog(Window owner)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
-            {
-                Owner = owner,
-                DialogTitle = "Could not save the new control order",
-                Icon = DialogIconType.Warning,
-                Problem = "Timelapse could not save the new control order to your template file.",
-                Reason = "This is likely a temporary issue caused by:" +
-                         "[ni] OneDrive or a network share locking the template file during its internal syncronizatino, or" +
-                         "[ni] an issue with your drive, e.g., a removable drive being disconnected.",
-                Solution = "[ni] Try the operation again in a moment." +
-                           "[ni] If the problem persists, check your drives."
-            };
-            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
-            dialog.BuildAndShowDialog();
-        }
+        //public static void CouldNotSaveControlOrderDialog(Window owner)
+        //{
+        //    ThrowIf.IsNullArgument(owner, nameof(owner));
+        //    var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+        //    {
+        //        Owner = owner,
+        //        DialogTitle = "Could not save the new control order",
+        //        Icon = DialogIconType.Warning,
+        //        Problem = "Timelapse could not save the new control order to your template file.",
+        //        Reason = "This is likely a temporary issue caused by:" +
+        //                 "[ni] OneDrive or a network share locking the template file during its internal syncronizatino, or" +
+        //                 "[ni] an issue with your drive, e.g., a removable drive being disconnected.",
+        //        Solution = "[ni] Try the operation again in a moment." +
+        //                   "[ni] If the problem persists, check your drives."
+        //    };
+        //    FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+        //    dialog.BuildAndShowDialog();
+        //}
 
         public static void CouldNotDeleteFoldlerOnExitDialog(Window owner, string folder)
         {
@@ -4360,6 +4360,41 @@ namespace Timelapse.Dialog
                 Solution = "Mail to saul",
             };
             return dialog.BuildAndShowDialog();
+        }
+
+        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="")
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Timelapse needs to shut down - Issue writing data.",
+                Icon = DialogIconType.Error,
+                Problem = $"Timelapse tried to write data to the Timelapse {typeOfFile}, but couldn't. Shutting down is a precaution against data loss." ,
+                Reason = "Expand the [e]Details[/e] section below for reasons as to why this could happen.",
+                Details = "Writing issues could caused by one of the following. As some of them are temporary, its a good idea to restart Timelapse to see if the issue is resolved." +
+                         "[li] You are using a network drive or OneDrive, where" +
+                         "[li 2] the file is temporarily locked by the system, or" +
+                         "[li 2] a network glitch resulted in a communication error." +
+                         "[li] Your hard drive is having issues, e.g., a removable drive being disconnected or corrupted." +
+                         "[li] Folder or file permissions disallow writing to that location." +
+                         $"[li] The {typeOfFile} has become corrupted." +
+                         $"[li] The {typeOfFile} no longer exists at that location." +
+                         "[li] Anti-virus software is blocking access to the file.",
+                Result = "Timelapse will pre-emptively shut down to ensure minimal data loss." +
+                         $"[br]You should not suffer any data loss except, perhaps, the very last operation.",
+                Solution = "[ni] [e]Restart Timelapse[/e]. This may be a temporary issue, where you can pick up where you left off. " +
+                           "[ni] [e]If the problem persists:[/e]" +
+                           "[li 2] check to see which of the reasons in the [e]Details[/e] section could be causing it," +
+                           $"[li 2] {emailSaulForHelp}. "
+            };
+            if (false == string.IsNullOrWhiteSpace(message))
+            {
+                dialog.Solution += $"Include this informaton: {message}";
+            }
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
         }
         #endregion
     }

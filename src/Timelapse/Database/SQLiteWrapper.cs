@@ -889,7 +889,7 @@ public class SQLiteWrapper
                     if (openAttempt >= 4)
                     {
                         TracePrint.PrintMessage($"Unable to open database after 5 attempts: {ex}");
-                        return SqlOperationResult.Fail("Unable to open database file", ex, null);
+                        return SqlOperationResult.Fail("Unable to open database file", ex);
                     }
                     Thread.Sleep(200);
                 }

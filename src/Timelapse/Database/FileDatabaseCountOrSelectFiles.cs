@@ -193,7 +193,7 @@ namespace Timelapse.Database
         private int DoGetCountFromSelect(string query)
         {
             // Uncommment this to see the complete query
-            // System.Diagnostics.Debug.Print("File Counts: " + query);
+             System.Diagnostics.Debug.Print("File Counts: " + query);
             return Database.ScalarGetScalarFromSelectAsInt(query);
         }
 

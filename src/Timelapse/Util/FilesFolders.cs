@@ -1047,7 +1047,14 @@ namespace Timelapse.Util
             // Slow path: strip ReadOnly/cloud locks then retry.
             // NOTE: Thread.Sleep blocks the calling thread; callers on the UI thread
             // should move this call to a background thread.
-            try { CleanAttributesAndFiles(targetDir); } catch { }
+            try
+            {
+                CleanAttributesAndFiles(targetDir);
+            }
+            catch
+            {
+                // Ignore
+            }
 
             for (int i = 0; i < maxRetries; i++)
             {
@@ -1071,7 +1078,14 @@ namespace Timelapse.Util
         private static void CleanAttributesAndFiles(string targetDir)
         {
             // Reset folder attributes (best-effort; ignore if the folder itself is locked)
-            try { File.SetAttributes(targetDir, FileAttributes.Normal); } catch { }
+            try
+            {
+                File.SetAttributes(targetDir, FileAttributes.Normal);
+            }
+            catch
+            {
+                // Ignore
+            }
 
             // Process files: clear attributes then delete each file
             foreach (string file in Directory.EnumerateFiles(targetDir))

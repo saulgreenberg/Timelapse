@@ -29,7 +29,7 @@ namespace Timelapse.Database
         #region Public Static Method - Export to CSV
         // Export all the database data associated with the selected view to the .csv file indicated in the file path so that spreadsheet applications (like Excel) can display it.
         public static async Task<bool> ExportToCsv(FileDatabase database, DataEntryControls controls, string filePath, CSVDateTimeOptionsEnum csvDateTimeOptions,
-            bool csvInsertSpaceBeforeDates, bool csvIncludeRootFolderColumn, string rootFolder, CancellationToken token = default)
+            bool csvInsertSpaceBeforeDates, bool csvIncludeRootFolderColumn, bool csvUseASCIIEncoding, string rootFolder, CancellationToken token = default)
         {
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new(value =>
@@ -43,7 +43,7 @@ namespace Timelapse.Database
                 try
                 {
                     progress.Report(new(0, "Writing the CSV file. Please wait", true, true));
-                    using StreamWriter fileWriter = new(filePath, false);
+                    using StreamWriter fileWriter = new(filePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
                     // Get all data labels except those excluded from export (via a false ExportToCSV field)
                     List<string> dataLabelsToExport =
                         database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls().Except(database.GetDataLabelsToExcludeFromExport()).ToList();
@@ -274,7 +274,7 @@ namespace Timelapse.Database
 
         #region Public Static Method - Export Metadata to CSV
         // Export all the database data associated with the selected view to the .csv file indicated in the file path so that spreadsheet applications (like Excel) can display it.
-        public static async Task<bool> ExportMetadataToCsv(FileDatabase database, string folderPath, CSVDateTimeOptionsEnum csvDateTimeOptions, bool csvInsertSpaceBeforeDates)
+        public static async Task<bool> ExportMetadataToCsv(FileDatabase database, string folderPath, CSVDateTimeOptionsEnum csvDateTimeOptions, bool csvInsertSpaceBeforeDates, bool csvUseASCIIEncoding)
         {
             // Set up a progress handler that will update the progress bar
             Progress<ProgressBarArguments> progressHandler = new(value =>
@@ -301,7 +301,7 @@ namespace Timelapse.Database
                         Dictionary<string, string> dataLabelsAndTypesInSpreadsheetOrder = database.MetadataGetDataLabelsInSpreadsheetOrderForExport(level);
 
                         // Write data as CSV rows to the indicated file
-                        using (StreamWriter fileWriter = new(filePath, false))
+                        using (StreamWriter fileWriter = new(filePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8))
                         {
                             // Write the header as defined by the data labels in the template file.
                             // If the data label is an empty string, we use the label instead.

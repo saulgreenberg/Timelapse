@@ -57,6 +57,18 @@
                                        Click="CheckBoxCSVInsertSpaceBeforeDate_Click"
                                           />
                             </StackPanel>
+
+                            <TextBlock DockPanel.Dock="Top" FontWeight="Normal" FontStyle="Normal" FontSize="12" Width="656" Margin="0,10,0,0">
+                                <Italic><Bold>CSV text format</Bold></Italic> is either UTF-8 (allows for special characters such as &#x0100;) or ASCII (plain text). 
+                            </TextBlock>
+                            <StackPanel Orientation="Vertical" DockPanel.Dock="Top"  Margin="0,10,0,0">
+                                <CheckBox Name="CheckBoxSaveCSVAsAscii" Margin="30,0,0,0" 
+                                          Content="Save as plain text (ASCII)" 
+                                          ToolTip="UTF-8 (default) allows for special characters, while ASCII (plain text) does not. Most programs reading CSV files should be able to handle UTF-8, but just in case an plain text option is included."
+                                          Height="22" FontWeight="Normal" VerticalAlignment="Top" Click="CheckBoxIncludeFolderColumn_Click" 
+                                          IsChecked="False"/>
+                            </StackPanel>
+
                         </StackPanel>
                         <Button Name="ResetCSVDefaults" Content="Reset" FontWeight="Normal" Height="30" Width="60" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="ResetCSVDefaults_Click" />
                     </DockPanel>

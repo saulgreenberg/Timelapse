@@ -24,6 +24,7 @@ namespace Timelapse.State
         public CSVDateTimeOptionsEnum CSVDateTimeOptions { get; set; }
         public bool CSVIncludeFolderColumn { get; set; }
         public bool CSVInsertSpaceBeforeDates { get; set; }
+        public bool CSVUseASCIIEncoding { get; set; }
         public int DarkPixelThreshold { get; set; }
         public double DarkPixelRatioThreshold { get; set; }
         public TimeSpan EpisodeTimeThreshold { get; set; }
@@ -101,6 +102,7 @@ namespace Timelapse.State
             }
             CSVIncludeFolderColumn = registryKey.GetBoolean(WindowRegistryKeys.CSVIncludeFolderColumn, true);
             CSVInsertSpaceBeforeDates = registryKey.GetBoolean(WindowRegistryKeys.CSVInsertSpaceBeforeDates, true);
+            CSVUseASCIIEncoding = registryKey.GetBoolean(WindowRegistryKeys.CSVUseASCIIEncoding, false);
             CustomSelectionTermCombiningOperator = registryKey.GetEnum(WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionOperatorEnum.And);
             DarkPixelRatioThreshold = registryKey.GetDouble(WindowRegistryKeys.DarkPixelRatio, ImageValues.DarkPixelRatioThresholdDefault);
             DarkPixelThreshold = registryKey.GetInteger(WindowRegistryKeys.DarkPixelThreshold, ImageValues.DarkPixelThresholdDefault);
@@ -204,6 +206,7 @@ namespace Timelapse.State
             registryKey.Write(WindowRegistryKeys.CSVDateTimeOptions, CSVDateTimeOptions.ToString());
             registryKey.Write(WindowRegistryKeys.CSVIncludeFolderColumn, CSVIncludeFolderColumn.ToString());
             registryKey.Write(WindowRegistryKeys.CSVInsertSpaceBeforeDates, CSVInsertSpaceBeforeDates);
+            registryKey.Write(WindowRegistryKeys.CSVUseASCIIEncoding, CSVUseASCIIEncoding);
             registryKey.Write(WindowRegistryKeys.CustomSelectionTermCombiningOperator, CustomSelectionTermCombiningOperator.ToString());
             registryKey.Write(WindowRegistryKeys.DarkPixelRatio, DarkPixelRatioThreshold);
             registryKey.Write(WindowRegistryKeys.DarkPixelThreshold, DarkPixelThreshold);

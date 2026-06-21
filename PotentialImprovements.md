@@ -392,17 +392,96 @@ Approximately **33 additional call sites** across three files still discard the 
 | `CommonDatabase.cs` | 12 | High | Template control and metadata inserts/updates/deletes |
 | `SQLiteWrapper.cs` | 3 | Low | `IndexDropIfExists`, `IndexCreateIfNotExists` — index failures are survivable |
 
-**Approach for remaining sites:**
+---
 
-Do NOT raise the error dialog inside `SQLiteWrapper` or the database layer — those classes have no window owner, and batch operations would spam one dialog per failed write. Instead, check the result one level above each `Database.Update/Insert/Delete` call and surface a single dialog at the UI layer, consistent with the pattern already established for the control-order fix.
+### Strategy Analysis: Show Dialog + Shutdown/Restart (2026-06-12)
 
-The `FileDatabaseUpdate.cs` sites are the highest priority because they run on every tag/annotation write during a normal session. A network hiccup there silently loses work.
+#### The approach
+
+Rather than tracing every write failure back to the UI and managing undo, show a dialog on any write failure explaining that the last action could not be saved, then shut down. On restart, Timelapse reloads entirely from the database, which is always in a valid (if slightly older) state — effectively undoing the unsaved in-memory changes automatically.
+
+#### Code-level analysis of representative write sites
+
+**`UpdateFile` (FileDatabaseUpdate.cs:29-43) — single field edit**
+
+```
+image.SetValueFromDatabaseString(dataLabel, value);  // in-memory mutated FIRST
+Database.Update(DBTables.FileData, columnToUpdate);  // result discarded
+```
+
+If the write fails, the DataTable has the new value, the DB has the old. On restart the DB is reloaded and the old value is restored. Loss = one field edit. **Restart works cleanly.**
+
+**`UpdateAdjustedFileTimes` (FileDatabaseUpdate.cs:345-413) — bulk time adjustment**
+
+All in-memory rows are mutated before the single batch DB write. `CreateBackupIfNeeded()` runs just before the write, so the backup and the live DB are both in the pre-adjustment state — consistent with each other. On restart, the original times reload. Loss = the bulk adjustment, which can be redone. **No corruption.**
+
+**`DeleteFilesAndMarkers` (FileDatabase.cs:1297-1317)**
+
+The in-memory `FileTable` is not modified inside this method — the caller is responsible for calling `FilesSelectAndShow` afterward to reload it. If the DB delete fails, the rows remain in the DB and reload correctly on the subsequent `FilesSelectAndShow`. **Natural recovery even without restart.**
+
+Nuance: physical file deletion happens before the DB delete (DeleteImages.xaml.cs:370-377), so if the DB write fails, rows remain in the DB pointing to now-missing files. This is a pre-existing ordering issue and not made worse by the restart approach; Timelapse already handles missing-file rows gracefully.
+
+**`SyncControlToDatabase` (CommonDatabase.cs:784-796) — template control edit**
+
+```
+Database.Update(DBTables.Template, ctw);              // result discarded
+LoadControlsFromTemplateDBSortedByControlOrder();     // immediately reloads from DB
+```
+
+This is **self-healing**: the immediate reload after the write reverts in-memory state to the DB automatically if the write failed. No restart needed, but the user sees their change silently disappear without any feedback — confusing.
+
+**`InsertFiles` during initial scan (FileDatabase.cs:1617)**
+
+If an insert fails partway through scanning a new folder, some images land in memory but not in the DB. On restart those images do not appear and the user must rescan. This is the worst case, but it occurs only during the one-time load operation, not during normal annotation work.
+
+#### Is the approach sound?
+
+**Yes.** The key invariant is: in-memory state is always derived from the database at load time, so discarding in-memory state and reloading from the DB always produces a fully consistent state. Restart converts an in-memory-vs-DB divergence back to a clean baseline. Given that failures are rare (transient OneDrive/network locks), the maximum data loss is bounded to whatever happened since the last successful write — typically one action.
+
+This is a standard pattern for desktop applications facing unrecoverable I/O failures. The existing `ExceptionShutdownDialog` even says "When you restart, Timelapse usually picks up where you left off" — exactly describing the intended behavior.
+
+#### Alternative approaches considered
+
+**1. Extend the retry loop (low effort, high value — recommended as a complement)**
+
+The current retry (5 × 200 ms) covers only `CANTOPEN` at `connection.Open()`. Extending it to also retry the statement execution for `BUSY` and `LOCKED` codes would handle the majority of transient network failures transparently, before ever reaching the dialog. Most OneDrive locks resolve within 1–2 seconds.
+
+**2. Central failure hook in `SQLiteWrapper` (eliminates the 33-site problem)**
+
+Rather than auditing 33 call sites individually, add failure handling directly in the three write methods (`Update`, `Insert`, `Delete`). When the returned `SqlOperationResult` is a failure, call `SqlErrorState.TryRecord(result, context)` (already exists) and schedule `GenerateExceptionDialog` on the dispatcher. This is 3 method changes instead of 33, and every future write site is automatically protected. The `SqlErrorState` + `GenerateExceptionDialog` infrastructure exists precisely for this use case; `TimelapseMenuFile.cs:126-129` already has the checking code (commented out). The dialog already has a "Continue anyway" option for when the user judges the failure non-critical.
+
+**3. Persistent connection (medium effort, addresses CANTOPEN root cause)**
+
+Opening and closing a connection per write means every write risks `CANTOPEN`. A single persistent connection opened once at database-open time would eliminate `CANTOPEN` entirely during a session. Risk: persistent connections on network shares behave differently (stale handles after network disconnect, different locking semantics). Worth evaluating for a future version.
+
+**4. Exception-based propagation (low call-site effort, fragile in async contexts)**
+
+Throwing `SqlOperationException` on write failure lets the WPF `DispatcherUnhandledException` handler catch it automatically — zero changes at each call site. However, as documented in `SqlOperationResult.cs:356-370`, this is unreliable for `Task.Run` paths that are not awaited all the way up, and several write paths in `FileDatabaseUpdate.cs` use fire-and-forget tasks. Not recommended as the primary strategy.
+
+**5. Local write-ahead journal (high effort, zero data loss)**
+
+Append every intended write to a `.journal` file on local disk before attempting the DB write. On failure, retain the journal. On restart, replay unconfirmed entries. Guarantees no data loss even across crashes. Significantly complex to implement correctly; overkill given the rarity of failures.
+
+#### Recommended plan
+
+1. **Extend the retry loop** in `ExecuteNonQueryWithRollbackCore` to cover `BUSY` and `LOCKED` in addition to `CANTOPEN`, and to retry the statement execution as well as the `connection.Open()`. Most failures are resolved by retry alone.
+
+2. **Central failure hook**: in `SQLiteWrapper.Update`, `Insert`, and `Delete`, when the result is a failure, call `SqlErrorState.TryRecord` and schedule `GenerateExceptionDialog` via the dispatcher. This covers all 33 remaining sites and all future sites with 3 targeted changes.
+
+3. **Update the dialog message** for write failures specifically: clarify that (a) the last unsaved action will be lost but the database is intact, (b) restarting restores a consistent state, and (c) continuing is inadvisable since subsequent writes may also fail.
+
+4. **Add an auto-restart button** (`Process.Start(Application.ResourceAssembly.Location)` + `Application.Current.Shutdown()`) so recovery is one click.
+
+5. **Do not implement undo**: restart achieves equivalent recovery at a fraction of the cost.
+
+---
 
 ### How to Test
 
 1. Open a `.tdb` or `.ddb` file on a OneDrive or network share.
 2. In the Template Editor, drag a control to reorder it while OneDrive is actively syncing — confirm the dialog appears instead of a crash.
 3. Repeat with the spreadsheet column reorder.
-4. Simulate a `CANTOPEN` failure for the remaining `FileDatabaseUpdate.cs` sites (e.g. briefly make the file read-only while tagging) — confirm the error is surfaced to the user rather than silently dropped.
+4. Simulate a `CANTOPEN` failure for the remaining `FileDatabaseUpdate.cs` sites (e.g. briefly make the file read-only while tagging) — confirm the error dialog appears and that restarting returns to a consistent pre-failure state.
+5. Confirm the retry logic handles a brief lock (< 1 second) transparently without showing any dialog.
 
 *Analysis updated June 2026.*

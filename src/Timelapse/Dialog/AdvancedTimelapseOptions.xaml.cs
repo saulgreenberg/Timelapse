@@ -59,6 +59,7 @@ namespace Timelapse.Dialog
 
             CheckBoxCSVInsertSpaceBeforeDates.IsChecked = this.timelapseState.CSVInsertSpaceBeforeDates;
             CheckBoxCSVIncludeFolderColumn.IsChecked = this.timelapseState.CSVIncludeFolderColumn;
+            CheckBoxSaveCSVAsAscii.IsChecked = this.timelapseState.CSVUseASCIIEncoding;
 
             // Throttles
             ImageRendersPerSecond.Minimum = ThrottleValues.DesiredMaximumImageRendersPerSecondLowerBound;
@@ -160,6 +161,7 @@ namespace Timelapse.Dialog
             RadioButtonCSVLocalDateTimeColumnWithoutT.IsChecked = true;
             CheckBoxCSVInsertSpaceBeforeDates.IsChecked = true;
             CheckBoxCSVIncludeFolderColumn.IsChecked = true;
+            CheckBoxSaveCSVAsAscii.IsChecked = false;
             SetCSVOptions();
         }
 
@@ -200,6 +202,7 @@ namespace Timelapse.Dialog
             }
             timelapseState.CSVInsertSpaceBeforeDates = CheckBoxCSVInsertSpaceBeforeDates.IsChecked == true;
             timelapseState.CSVIncludeFolderColumn = CheckBoxCSVIncludeFolderColumn.IsChecked == true;
+            timelapseState.CSVUseASCIIEncoding = CheckBoxSaveCSVAsAscii.IsChecked == true;
         }
         #endregion
 

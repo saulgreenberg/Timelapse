@@ -5,10 +5,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
-using Timelapse.Dialog;
 using Timelapse.ControlsDataEntry;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
@@ -312,7 +313,9 @@ namespace TimelapseTemplateEditor.Controls
                     // This then rebuilds everything depending on the order of those controls
                     if (!Globals.RootEditor.TemplateDoUpdateControlOrder())
                     {
-                        Dialogs.CouldNotSaveControlOrderDialog(Window.GetWindow(this));
+                        string message = "ControlsPanel_DragDrop: Timelapse could not save the new control order to your template file.";
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, message);
+                        Environment.Exit(1);
                     }
                     Globals.TemplateDataGridControl.DoLayoutUpdated(true);
                 }

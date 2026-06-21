@@ -115,7 +115,7 @@ namespace Timelapse
             // where those files convert the Timelapse data into the exact CamtrapDP specs
             // Export the data package
             string dataPackageFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPDataPackageJsonFilename);
-            List<string> datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, dataPackageFilePath);
+            List<string> datapackageMessages = await CamtrapDPExportFiles.ExportCamtrapDPDataPackageToJsonFile(GlobalReferences.MainWindow.DataHandler.FileDatabase, State.CSVUseASCIIEncoding, dataPackageFilePath);
             if (null == datapackageMessages)
             {
                 // Something went wrong.
@@ -131,7 +131,7 @@ namespace Timelapse
             // Export the deployment csv file
             string deploymentFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPDeploymentCSVFilename);
 
-            List<string> deploymentMessages = await CamtrapDPExportFiles.ExportCamtrapDPDeploymentToCsv(DataHandler.FileDatabase, deploymentFilePath);
+            List<string> deploymentMessages = await CamtrapDPExportFiles.ExportCamtrapDPDeploymentToCsv(DataHandler.FileDatabase, deploymentFilePath, State.CSVUseASCIIEncoding);
             if (null == deploymentMessages)
             {
                 Dialogs.MenuFileExportFailedForUnknownReasonDialog(GlobalReferences.MainWindow, deploymentFilePath);
@@ -150,7 +150,7 @@ namespace Timelapse
             string observationsFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPObservationsCSVFilename);
 
             BusyCancelIndicator.IsBusy = true;
-            List<string> mediaObservationsMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(DataHandler.FileDatabase, DataEntryControls, mediaFilePath, observationsFilePath);
+            List<string> mediaObservationsMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(DataHandler.FileDatabase, DataEntryControls, mediaFilePath, observationsFilePath, State.CSVUseASCIIEncoding);
             BusyCancelIndicator.IsBusy = false;
             if (null == mediaObservationsMessages)
             {

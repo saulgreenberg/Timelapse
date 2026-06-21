@@ -49,9 +49,10 @@ namespace Timelapse
         {
             //if (this.DataHandler?.FileDatabase != null)
             //{
-                Dialog.TestSomeCodeDialog dialog = new Dialog.TestSomeCodeDialog(this);
-                dialog.ShowDialog();
-           // }
+                //Dialog.TestSomeCodeDialog dialog = new Dialog.TestSomeCodeDialog(this);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, false, "Test message");
+                System.Environment.Exit(1);
+                // }
         }
 
         #endregion
@@ -424,7 +425,7 @@ namespace Timelapse
                 // Show the Busy indicator, with cancellation enabled
                 BusyCancelIndicator.Reset(true);
                 bool success = await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, selectedCSVFilePath,
-                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName,
+                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, State.CSVUseASCIIEncoding,DataHandler.FileDatabase.ImageSet.RootFolderName,
                         GlobalReferences.CancelTokenSource.Token);
                 bool wasCancelled = GlobalReferences.CancelTokenSource.IsCancellationRequested;
                 BusyCancelIndicator.Reset(false);
@@ -674,8 +675,8 @@ namespace Timelapse
                 // Show the Busy indicator, with cancellation enabled
                 BusyCancelIndicator.Reset(true);
                 bool success = await CsvReaderWriter.ExportToCsv(DataHandler.FileDatabase, DataEntryControls, imageFilePath,
-                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, DataHandler.FileDatabase.ImageSet.RootFolderName,
-                        GlobalReferences.CancelTokenSource.Token);
+                        State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVIncludeFolderColumn, State.CSVUseASCIIEncoding,DataHandler.FileDatabase.ImageSet.RootFolderName,
+                       GlobalReferences.CancelTokenSource.Token);
                 bool wasCancelled = GlobalReferences.CancelTokenSource.IsCancellationRequested;
                 BusyCancelIndicator.Reset(false);
                 if (!success)
@@ -698,7 +699,7 @@ namespace Timelapse
             {
                 // Show the Busy indicator
                 BusyCancelIndicator.IsBusy = true;
-                if (false == await CsvReaderWriter.ExportMetadataToCsv(DataHandler.FileDatabase, csvExportFolder, State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates))
+                if (false == await CsvReaderWriter.ExportMetadataToCsv(DataHandler.FileDatabase, csvExportFolder, State.CSVDateTimeOptions, State.CSVInsertSpaceBeforeDates, State.CSVUseASCIIEncoding))
                 {
                     // Hide the Busy indicator
                     BusyCancelIndicator.IsBusy = false;

@@ -59,7 +59,7 @@ namespace Timelapse.Standards
         // If any of the required fields (according to the CamtrapDP specification) are missing, generate a list of text messages
         // that lists the missing required fields in a form appropriate to put into a dialog box.
         // If something goes wrong, return null
-        public static async Task<List<string>> ExportCamtrapDPDataPackageToJsonFile(FileDatabase database, string dataPackageFilePath)
+        public static async Task<List<string>> ExportCamtrapDPDataPackageToJsonFile(FileDatabase database, bool csvUseASCIIEncoding, string dataPackageFilePath)
         {
             CamtrapDPDataPackage datapackage = new();
             resources resourceDeployment = new();
@@ -305,7 +305,7 @@ namespace Timelapse.Standards
                     }
 
                     // Write the datapackage file
-                    using (StreamWriter fileWriter = new(dataPackageFilePath, false))
+                    using (StreamWriter fileWriter = new(dataPackageFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8))
                     {
                         StringBuilder dataPackageAsJson = new();
                         settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
@@ -447,7 +447,7 @@ namespace Timelapse.Standards
         /// I should integrate everything, but this is just easier to do.
         /// Export all the database data associated with the selected view to the .csv file indicated in the file path
         /// </summary>
-        public static async Task<List<string>> ExportCamtrapDPDeploymentToCsv(FileDatabase database, string deploymentFilePath)
+        public static async Task<List<string>> ExportCamtrapDPDeploymentToCsv(FileDatabase database, string deploymentFilePath, bool csvUseASCIIEncoding)
         {
             return await Task.Run(() =>
             {
@@ -465,7 +465,7 @@ namespace Timelapse.Standards
                     // in a certain order (yup, brain-dead).
                     Dictionary<string, string> dataLabelsAndTypes = database.MetadataGetDataLabels(level);
 
-                    using StreamWriter fileWriter = new(deploymentFilePath, false);
+                    using StreamWriter fileWriter = new(deploymentFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
                     // Write the header as defined by the data labels in the template file.
                     // If the data label is an empty string, we use the label instead.
                     // The append sequence results in a trailing comma which is retained when writing the line.
@@ -582,7 +582,7 @@ namespace Timelapse.Standards
         /// I should integrate everything, but this is just easier to do.
         /// Export all the database data associated with the selected view to the .csv file indicated in the file path
         /// </summary>
-        public static async Task<List<string>> ExportCamtrapDPMediaObservationsToCsv(FileDatabase database, DataEntryControls controls, string mediaFilePath, string observationsFilePath)
+        public static async Task<List<string>> ExportCamtrapDPMediaObservationsToCsv(FileDatabase database, DataEntryControls controls, string mediaFilePath, string observationsFilePath, bool csvUseASCIIEncoding)
         {
             Progress<ProgressBarArguments> progressHandler = new(value =>
             {
@@ -599,8 +599,8 @@ namespace Timelapse.Standards
                     List<string> problems = [];
 
                     // We split the data fields into two files
-                    using StreamWriter mediaFileWriter = new(mediaFilePath, false);
-                    using StreamWriter observationsFileWriter = new(observationsFilePath, false);
+                    using StreamWriter mediaFileWriter = new(mediaFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
+                    using StreamWriter observationsFileWriter = new(observationsFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
                     // Get all data labels
                     // Note that we preserve the order as the miniforge frictionless validate function expects the csv file to have columns in a specific order
                     List<string> dataLabels = [.. database.GetDataLabelsFromControlsByIDCreationOrder()];
