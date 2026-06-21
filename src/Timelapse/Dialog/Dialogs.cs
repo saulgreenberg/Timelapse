@@ -4365,6 +4365,11 @@ namespace Timelapse.Dialog
         public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="")
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            if (!owner.Dispatcher.CheckAccess())
+            {
+                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath));
+                return;
+            }
             string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -4391,7 +4396,7 @@ namespace Timelapse.Dialog
             };
             if (false == string.IsNullOrWhiteSpace(message))
             {
-                dialog.Solution += $"Include this informaton: {message}";
+                dialog.Solution += $"Include this information: [e]{message}[/e]";
             }
             // "Restart Timelapse" via ExtraButton — closes the dialog without setting DialogResult (returns null)
             dialog.ExtraButton.Content = "Restart Timelapse";

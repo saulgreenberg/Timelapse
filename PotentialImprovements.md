@@ -22,6 +22,7 @@ Items are ordered lowest-risk / highest-payoff first. Skip or defer any item by 
 | 1 | L-1 | Progressive DataTable population for large databases | High | ⬜ Pending |
 | 2 | V-1 | Virtualized thumbnail grid for unbounded file counts | High | 🔄 In Progress |
 | 3 | DB-1 | SQLite write failures silently swallowed at ~33 call sites | Medium | 🔄 Partially Fixed |
+| 4 | DB-2 | SQLite read failures silently swallowed — debug assert only, no user dialog | Low–Medium | ⬜ Pending (after DB-1) |
 
 ---
 
@@ -485,3 +486,64 @@ Append every intended write to a `.journal` file on local disk before attempting
 5. Confirm the retry logic handles a brief lock (< 1 second) transparently without showing any dialog.
 
 *Analysis updated June 2026.*
+
+---
+
+## DB-2 · SQLite Read Failures Silently Swallowed
+
+### Issue
+
+When the database drive is disconnected or otherwise unavailable, SQLite read operations fail but produce only a debug assertion in the Output window — no user-facing dialog is shown and Timelapse continues running in a degraded state. The failure path observed during testing (drive ejected before a timezone date correction):
+
+```
+---- DEBUG ASSERTION FAILED ----
+SQL read failure in GetScalarFromSelect: unable to open database file
+Query:  SELECT COUNT  ( * )  FROM DataTable
+
+   at SQLiteWrapper.GetScalarFromSelect(...)                         line 319
+   at SQLiteWrapper.ScalarGetScalarFromSelectAsInt(...)              line 729
+   at FileDatabase.DoGetCountFromSelect(...)                         line 197
+   at FileDatabase.CountAllFilesMatchingSelectionCondition(...)      line 187
+   at Dialogs.CheckIfPromptNeeded(...)                               line 545
+   at Dialogs.MaybePromptToApplyOperationOnSelectionDialog(...)      line 484
+   at TimelapseWindow.MenuItemDaylightSavingsTimeCorrection_ClickAsync()
+```
+
+`GetScalarFromSelect` returns `null` on failure; `ScalarGetScalarFromSelectAsInt` returns `0`; callers receive a plausible-looking value and continue executing with corrupted state (wrong counts, incorrect file navigation, stale selections) and no indication anything went wrong.
+
+### Risk of Fixing
+
+**Low–Medium.** Read failures cannot corrupt the database itself, so the risk of making things worse is low. The main care required is:
+
+- `GetScalarFromSelect` and the scalar helpers are called from many sites — auditing all callers is necessary before changing the return contract.
+- Showing a shutdown dialog on a read failure is appropriate for most cases (if the drive is gone, writes will also fail), but some read sites may warrant a softer response (retry, or a warning without shutdown).
+- The dispatcher-marshalling fix already in place for `TimelapseNeedsToShutDownDataWriteErrorDialog` means any background-thread read failure will also need the same guard.
+
+### Consequence of Not Fixing
+
+After a drive disconnection, Timelapse silently enters a broken state: selection counts may be wrong, operations that check "how many files are selected" receive `0` and may take incorrect branches (e.g. skipping a confirmation dialog that should appear). The user has no indication that a read failed and may trust results that are incorrect. In the timezone-correction case above, the operation continued and then hit a write failure; but if the write check had not been present, data loss would have occurred based on a false read result.
+
+### Potential Improvement
+
+- `SQLiteWrapper.GetScalarFromSelect` (and related scalar helpers) should return a discriminated result type — either the value, or an indication of failure — rather than silently returning `null`/`0`.
+- On failure, call `TimelapseNeedsToShutDownDataWriteErrorDialog` (with `isDDBfile` set appropriately) since a drive that cannot be read will also refuse writes, making continued operation unsafe.
+- The same dispatcher-marshalling pattern (`owner.Dispatcher.CheckAccess()` / `Dispatcher.Invoke`) already in the write-failure dialog covers background-thread read failure sites without further changes.
+
+### Plan
+
+1. Audit all callers of `GetScalarFromSelect`, `ScalarGetScalarFromSelectAsInt`, `ScalarGetScalarFromSelectAsLong`, and any other scalar-read helpers — identify every site that currently uses the return value as if it were guaranteed valid.
+2. Introduce a `SqlReadResult<T>` wrapper (or reuse a pattern consistent with `SqlOperationResult`) to propagate failure cleanly.
+3. At each call site, check for failure and call `TimelapseNeedsToShutDownDataWriteErrorDialog` (read failure → drive unavailable → shutdown is the safe response).
+4. Consider whether any read sites warrant retry logic (same `CANTOPEN` 5-attempt loop used for writes) before escalating to shutdown.
+
+**Do not begin until DB-1 (all stages) is complete.**
+
+### How to Test
+
+1. Open a `.ddb` file on a removable drive.
+2. Start a timezone date correction (or any operation that triggers a file-count query before its main write).
+3. Eject the drive before the count query fires.
+4. Confirm `TimelapseNeedsToShutDownDataWriteErrorDialog` appears (not a silent assert in the Output window).
+5. Confirm "Restart Timelapse" relaunches with the correct file path argument.
+
+*Added June 2026. Trigger: drive ejected before timezone date correction; `GetScalarFromSelect` returned 0 silently.*
