@@ -9,6 +9,7 @@ using Timelapse.ControlsDataEntry;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Util;
 
 namespace Timelapse.Database
@@ -267,16 +268,16 @@ namespace Timelapse.Database
                 // Wrapping Database.Update in Task.Run serves two purposes:
                 // 1. The await yields to the dispatcher, allowing the message above to render.
                 // 2. The database update itself no longer blocks the UI thread.
-                string methodName = GetCallerName();
-                await Task.Run(() =>
+                SqlOperationResult result = await Task.Run(() =>
                 {
                     CreateBackupIfNeeded();
-                    SqlOperationResult result = Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
-                    if (!result.Success)
-                    {
-                        SqlOperationResult.GenerateExceptionDialog(result, methodName);
-                    }
+                    return Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
                 });
+                if (!result.Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "UpdateFilesCore", this.FilePath);
+                    return;
+                }
 
                 if (bci != null)
                 {

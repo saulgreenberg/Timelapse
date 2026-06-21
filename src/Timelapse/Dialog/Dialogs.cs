@@ -4362,7 +4362,7 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
-        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="")
+        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="")
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
@@ -4393,8 +4393,37 @@ namespace Timelapse.Dialog
             {
                 dialog.Solution += $"Include this informaton: {message}";
             }
+            // "Restart Timelapse" via ExtraButton — closes the dialog without setting DialogResult (returns null)
+            dialog.ExtraButton.Content = "Restart Timelapse";
+            dialog.ExtraButton.Width = double.NaN;
+            dialog.ExtraButton.Padding = new Thickness(10, 0, 10, 0);
+            dialog.ExtraButton.Visibility = Visibility.Visible;
+            dialog.ExtraButton.Click += (_, _) => dialog.Close();
+
+            // Rename OK to "Shutdown without Restarting" — remains the default (Enter key) action
+            dialog.OkButton.Content = "Shutdown without Restarting";
+            dialog.OkButton.Width = double.NaN;
+            dialog.OkButton.Padding = new Thickness(10, 0, 10, 0);
+
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
-            dialog.BuildAndShowDialog();
+            bool? result = dialog.BuildAndShowDialog();
+
+            if (result != true)
+            {
+                // User chose Restart — launch a new instance before shutting down,
+                // passing the current file path so Timelapse reopens where it left off.
+                string processPath = Environment.ProcessPath ?? string.Empty;
+                if (!string.IsNullOrEmpty(processPath))
+                {
+                    var psi = new System.Diagnostics.ProcessStartInfo { FileName = processPath, UseShellExecute = true };
+                    if (!string.IsNullOrEmpty(filePath))
+                    {
+                        psi.ArgumentList.Add(filePath);
+                    }
+                    System.Diagnostics.Process.Start(psi);
+                }
+            }
+            Application.Current.Shutdown();
         }
         #endregion
     }

@@ -58,6 +58,7 @@
                     Click="NoButton_Click"
                     Visibility="Collapsed"/>
             <Button Name="OkButton"
+                    x:FieldModifier="public"
                     Content="OK"
                     Width="80"
                     Height="30"
