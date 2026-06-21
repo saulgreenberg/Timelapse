@@ -21,7 +21,7 @@ Items are ordered lowest-risk / highest-payoff first. Skip or defer any item by 
 |---|----|-------------------|------|--------|
 | 1 | L-1 | Progressive DataTable population for large databases | High | ⬜ Pending |
 | 2 | V-1 | Virtualized thumbnail grid for unbounded file counts | High | 🔄 In Progress |
-| 3 | DB-1 | SQLite write failures silently swallowed at ~33 call sites | Medium | 🔄 Partially Fixed |
+| 3 | DB-1 | SQLite write failures silently swallowed at ~33 call sites | Medium | ✅ Complete |
 | 4 | DB-2 | SQLite read failures silently swallowed — debug assert only, no user dialog | Low–Medium | ⬜ Pending (after DB-1) |
 
 ---
@@ -380,18 +380,21 @@ Both drag-drop/reorder handlers now check the return value and call `Dialogs.Cou
 
 `Warning`-icon dialog explaining the likely OneDrive/network cause and suggesting a retry.
 
-### Remaining Work
+### What Was Completed (Stages 0–6, June 2026)
 
-Approximately **33 additional call sites** across three files still discard the `SqlOperationResult` return value from `Database.Update`, `Database.Insert`, and `Database.Delete`. A `CANTOPEN` (or any other write failure) at any of these sites silently loses data with no user feedback.
+All remaining write sites now check `.Success` and call `TimelapseNeedsToShutDownDataWriteErrorDialog` on failure, with a BUSY/LOCKED retry loop preventing false positives from transient contention, and `[MustUseReturnValue]` catching future omissions at development time.
 
-**Priority order:**
+| Stage | What | File(s) |
+|-------|------|---------|
+| 0 | Added `TimelapseNeedsToShutDownDataWriteErrorDialog` (restart dialog), `SqlOperationResult<T>` generic wrapper | `Dialogs.cs`, `SqlOperationResult.cs` |
+| 1 | Fixed 8 write sites during normal tagging (field edits, bulk time adjustments, markers) | `FileDatabaseUpdate.cs` |
+| 2 | Fixed 7 write sites for file insertions, deletions, and detection-data updates | `FileDatabase.cs` |
+| 3 | Fixed 6 write sites for bounding-box, video, and CSV-template updates | `FileDatabase.cs` |
+| 4 | Fixed 14 write sites across 12 methods for template controls and metadata; `MetadataDeleteLevelFromDatabase` refactored to a single atomic `ExecuteNonQueryWithRollback` covering 5 statements | `CommonDatabase.cs` |
+| 5 | Added BUSY/LOCKED retry loop in `ExecuteNonQueryWithRollbackCore`: 5 attempts, linear backoff (250/500/750/1000/1250 ms); pre-transaction PRAGMAs guarded by `busyAttempt == 0` | `SQLiteWrapper.cs` |
+| 6 | Added `[MustUseReturnValue]` to all 14 public write methods; embedded `MustUseReturnValueAttribute` locally so ReSharper warns without requiring the JetBrains.Annotations NuGet package | `SQLiteWrapper.cs`, `JetBrainsAnnotations.cs` (new) |
 
-| File | Sites | Severity | Notes |
-|------|-------|----------|-------|
-| `FileDatabaseUpdate.cs` | 8 | **Highest** | Runs during normal tagging — silent failure loses annotation data the user just entered |
-| `FileDatabase.cs` | 13 | High | Covers file insertions, deletions, detection data, bounding box updates |
-| `CommonDatabase.cs` | 12 | High | Template control and metadata inserts/updates/deletes |
-| `SQLiteWrapper.cs` | 3 | Low | `IndexDropIfExists`, `IndexCreateIfNotExists` — index failures are survivable |
+**Deferred to DB-2:** 4 unchecked `ExecuteNonQueryWithRollback` calls in `RecognitionSelector.xaml.cs` (lines 419, 422, 437, 449) that create `TEMP TABLE AS SELECT ... FROM <main_db_table>` — these fail due to a read failure on the `.ddb`, not a write failure.
 
 ---
 
@@ -529,21 +532,106 @@ After a drive disconnection, Timelapse silently enters a broken state: selection
 - On failure, call `TimelapseNeedsToShutDownDataWriteErrorDialog` (with `isDDBfile` set appropriately) since a drive that cannot be read will also refuse writes, making continued operation unsafe.
 - The same dispatcher-marshalling pattern (`owner.Dispatcher.CheckAccess()` / `Dispatcher.Invoke`) already in the write-failure dialog covers background-thread read failure sites without further changes.
 
+### Strategy
+
+**Retry-first, then surface.** Rather than treating every read failure as fatal (shutdown), first retry the operation 3–4 times with a short sleep (200 ms) for the error codes most common in removable-drive / network-share scenarios (`CANTOPEN`, `IOERR`). Only if all retries fail is the error reported — via the existing `OnReadError` → `SqlErrorState` pipeline — and surfaced to the user as a non-fatal informational dialog. The user chooses whether to restart or continue. This matches the failure profile: rare, transient, network/drive-ejection events that typically resolve in under a second.
+
+**Existing wiring already in place (`TimelapseWindow.cs` lines 163–164):**
+
+```csharp
+SQLiteWrapper.OnReadError = (context, sqlOperationResult) =>
+    SqlErrorState.TryRecord(sqlOperationResult, context);
+```
+
+`OnReadError` is a plain `Action` property (not a C# event). The subscription above is the one and only subscriber. Do not add a second assignment anywhere — it would silently overwrite this one.
+
 ### Plan
 
-1. Audit all callers of `GetScalarFromSelect`, `ScalarGetScalarFromSelectAsInt`, `ScalarGetScalarFromSelectAsLong`, and any other scalar-read helpers — identify every site that currently uses the return value as if it were guaranteed valid.
-2. Introduce a `SqlReadResult<T>` wrapper (or reuse a pattern consistent with `SqlOperationResult`) to propagate failure cleanly.
-3. At each call site, check for failure and call `TimelapseNeedsToShutDownDataWriteErrorDialog` (read failure → drive unavailable → shutdown is the safe response).
-4. Consider whether any read sites warrant retry logic (same `CANTOPEN` 5-attempt loop used for writes) before escalating to shutdown.
+#### Pre-Stage Bug Fixes (must be done before Stage A)
 
-**Do not begin until DB-1 (all stages) is complete.**
+**Fix 1 — `SchemaIsColumnInTable` passes `null` to `OnReadError`**
+
+`SchemaIsColumnInTable` currently calls `OnReadError(context, null)` when it detects a missing column. This fires the `_errorFired` Interlocked guard (poisoning it) without recording anything in `SqlErrorState`, so no real subsequent read error can ever be reported. Fix: pass a proper `SqlOperationResult.Fail(message, exception)` instead of `null`.
+
+**Fix 2 — `columndefaultdict` null-check crash in load pipeline**
+
+At `TimelapseImageSetLoading.cs` line 272, the result of `SchemaGetColumnsAndDefaultValues` is iterated without a null guard. If that method returns `null` on a read failure, a `NullReferenceException` is thrown instead of a clean error. Fix: add a null check before the iteration and return an appropriate error state.
+
+#### Stage A — Retry Logic for All Seven Read Methods (`SQLiteWrapper.cs`)
+
+Add a 3-attempt retry loop for `SQLiteErrorCode.CantOpen` and `SQLiteErrorCode.IoErr` (200 ms sleep between attempts, same linear-backoff style as Stage 5 of DB-1). On persistent failure (all retries exhausted), call `OnReadError(context, SqlOperationResult.Fail(...))`.
+
+**Methods to update (all 7):**
+
+| Method | Note |
+|--------|------|
+| `GetDataTableFromSelect` | |
+| `GetDataTableFromSelectAsync` | **Non-trivial:** must honour `CancellationToken` between retries — do not `Thread.Sleep` when cancelled; check token before each retry |
+| `GetScalarFromSelect` | |
+| `GetDistinctValuesInColumn` | |
+| `SchemaGetColumns` | |
+| `SchemaGetColumnsAndDefaultValues` | |
+| `SchemaIsColumnInTable` | Also receives the Fix 1 null-result patch |
+
+The existing `_errorFired` Interlocked guard inside each method is preserved; retry happens *before* calling `OnReadError`, so transient locks are resolved transparently without touching the error state.
+
+The 4 temp-table calls in `RecognitionSelector.xaml.cs` (lines 419, 422, 437, 449) are also treated as read failures here (they `SELECT` from the `.ddb` to build a `TEMP TABLE`) and are addressed as part of Stage A.
+
+#### Stage B — Reset Helpers (`SQLiteWrapper.cs` + `SqlOperationResult.cs`)
+
+`_errorFired` (the `int` Interlocked field on `SQLiteWrapper` that gates `OnReadError`) is never reset. After the user acknowledges an error dialog, subsequent reads would still be blocked from reporting new errors. Add a public reset method:
+
+```csharp
+// In SQLiteWrapper:
+public static void ResetReadErrorState()
+{
+    Interlocked.Exchange(ref _errorFired, 0);
+}
+```
+
+Add a combined reset helper (in `SqlOperationResult.cs` or a static helper class) that calls both `SQLiteWrapper.ResetReadErrorState()` and `SqlErrorState.Reset()` together, ensuring the two state variables are always reset as a unit and never left in an inconsistent intermediate state.
+
+#### Stage C — Checkpoints in `TimelapseWindow`
+
+After operations that trigger significant read sequences, check `SqlErrorState.HasError` and show the dialog if set. Confirmed checkpoint locations:
+
+| Checkpoint | Location |
+|-----------|---------|
+| After `FileDatabase.CreateFileDatabase` | Image-set load — catches schema-inspection failures |
+| After `SelectFilesAsync` in `TimelapseFileSelection.cs` | Filter evaluation — catches count/query failures |
+| After CSV / JSON export | Export read pass |
+| After recogniser load / counting | Recognition data reads |
+
+Pattern at each checkpoint:
+```csharp
+if (SqlErrorState.HasError)
+{
+    Dialogs.TimelapseReadErrorNoticeDialog(
+        GlobalReferences.MainWindow,
+        SqlErrorState.SqlOperationResult,
+        SqlErrorState.Context);
+    CombinedResetReadErrorState(); // resets both _errorFired and SqlErrorState
+}
+```
+
+#### Stage D — New `TimelapseReadErrorNoticeDialog` (`Dialogs.cs`)
+
+A non-fatal informational dialog alongside `TimelapseNeedsToShutDownDataWriteErrorDialog`:
+
+- **Icon:** Warning (not Error — read failures cannot corrupt the database)
+- **Message:** The database was temporarily unreachable. Some displayed results may be incomplete or incorrect. Restarting Timelapse is recommended to ensure a consistent state.
+- **Buttons:** OK only — no forced shutdown; user decides whether to restart
+- **Rationale:** The user may be working with local files while a remote share was transiently unavailable; if the share has recovered, continuing may be perfectly safe. Forced shutdown is reserved for write failures where in-memory state has diverged from the database.
 
 ### How to Test
 
 1. Open a `.ddb` file on a removable drive.
-2. Start a timezone date correction (or any operation that triggers a file-count query before its main write).
-3. Eject the drive before the count query fires.
-4. Confirm `TimelapseNeedsToShutDownDataWriteErrorDialog` appears (not a silent assert in the Output window).
-5. Confirm "Restart Timelapse" relaunches with the correct file path argument.
+2. Start a timezone date correction (or any operation that triggers a file-count query).
+3. Eject the drive *after* the first read attempt but *before* the 3 retries exhaust — confirm the retry loop fires (TracePrint messages visible) and the operation completes normally.
+4. Eject the drive and keep it out — confirm all 3 retries fail, `SqlErrorState.HasError` becomes true, and `TimelapseReadErrorNoticeDialog` appears at the next checkpoint.
+5. Confirm the dialog shows the correct context (method name) and error message.
+6. Click OK; confirm the application continues running and the combined reset clears `SqlErrorState`.
+7. Confirm a subsequent read failure after reset is correctly reported (verifies `_errorFired` was reset).
+8. Confirm the 4 `RecognitionSelector` temp-table paths show the dialog rather than silently producing empty recognition results.
 
-*Added June 2026. Trigger: drive ejected before timezone date correction; `GetScalarFromSelect` returned 0 silently.*
+*Added June 2026. Trigger: drive ejected before timezone date correction; `GetScalarFromSelect` returned 0 silently. Plan revised after agent review (June 2026): OnReadError subscription pre-exists; SchemaIsColumnInTable null-arg bug; columndefaultdict null-check crash; 7 affected read methods (not 4); _errorFired never-reset coherence issue; GetDataTableFromSelectAsync retry complexity noted.*

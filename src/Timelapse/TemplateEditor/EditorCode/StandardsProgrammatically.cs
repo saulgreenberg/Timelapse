@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
+using Timelapse.Dialog;
 using TimelapseTemplateEditor.Controls;
 using TimelapseTemplateEditor.ControlsMetadata;
 using TimelapseTemplateEditor.EditorCode;
@@ -69,7 +70,13 @@ namespace TimelapseTemplateEditor
                 infoColumnsTuplesWithWhereList.Add(new(columnTupleList, id++));
             }
             // Now add it to the database
-            Globals.TemplateDatabase.Database.Update(DBTables.MetadataTemplate, infoColumnsTuplesWithWhereList);
+            if (!Globals.TemplateDatabase.Database.Update(DBTables.MetadataTemplate, infoColumnsTuplesWithWhereList).Success)
+            {
+                Mouse.OverrideCursor = null;
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
+                    "The problem occurred in DoCreateMetadataStandardFields (MetadataTemplate update)", Globals.TemplateDatabase.FilePath);
+                return;
+            }
 
             // Refresh the metadata controls based on the new database contents
             Globals.TemplateDatabase.LoadMetadataControlsAndInfoFromTemplateDBSortedByControlOrder();
@@ -102,7 +109,13 @@ namespace TimelapseTemplateEditor
 
                 rowsColumnsTuplesWithWhereList.Add(new(columnTupleList, id++));
             }
-            Globals.TemplateDatabase.Database.Update(DBTables.Template, rowsColumnsTuplesWithWhereList);
+            if (!Globals.TemplateDatabase.Database.Update(DBTables.Template, rowsColumnsTuplesWithWhereList).Success)
+            {
+                Mouse.OverrideCursor = null;
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
+                    "The problem occurred in DoCreateMetadataStandardFields (Template update)", Globals.TemplateDatabase.FilePath);
+                return;
+            }
 
             // Refresh the metadata controls based on the new database contents
             Globals.TemplateDatabase.LoadControlsFromTemplateDBSortedByControlOrder();

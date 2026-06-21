@@ -4,7 +4,9 @@ using System.Data;
 using System.IO;
 using System.Threading.Tasks;
 using Timelapse.Constant;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
+using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Recognition;
 using Timelapse.Util;
@@ -116,7 +118,12 @@ namespace Timelapse.Database
                 }
             }
             // Part 6. We are done.
-            destinationDdb.ExecuteNonQueryWithRollback(query);
+            if (!destinationDdb.ExecuteNonQueryWithRollback(query).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    destinationDdb.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "The problem occurred in CheckoutDatabaseWithRelativePath", destinationDdb.FilePath);
+            }
         }
         #endregion
 

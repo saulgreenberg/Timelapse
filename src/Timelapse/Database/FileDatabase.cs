@@ -636,7 +636,6 @@ namespace Timelapse.Database
                 if (!this.Database.ExecuteNonQueryWithRollback(query).Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath);
-                    return;
                 }
             }
         }
@@ -1133,7 +1132,6 @@ namespace Timelapse.Database
             if (!Database.ExecuteNonQueryWithRollback(insertCommands).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in AddFiles", this.FilePath);
-                return;
             }
         }
 
@@ -1353,7 +1351,6 @@ namespace Timelapse.Database
             if (deleteStatements.Count > 0 && !Database.ExecuteNonQueryWithRollback(deleteStatements).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in DeleteFilesAndMarkers", this.FilePath);
-                return;
             }
         }
         #endregion
@@ -1658,7 +1655,6 @@ namespace Timelapse.Database
             if (!Database.Insert(table, insertionStatements).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertRows", this.FilePath);
-                return;
             }
         }
         #endregion
@@ -1782,7 +1778,6 @@ namespace Timelapse.Database
             if (!Database.Delete(DBTables.Markers, whereClauses).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersRemoveMarkerRow", this.FilePath);
-                return;
             }
         }
         #endregion
@@ -1904,7 +1899,6 @@ namespace Timelapse.Database
             if (!Database.Update(tableName, ctww).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (update)", this.FilePath);
-                return;
             }
         }
 
@@ -1922,7 +1916,6 @@ namespace Timelapse.Database
             if (!Database.UpdateParticularColumnValuesWithNewValues(tableName, DatabaseColumn.FolderDataPath, currentAndNewValuePairs).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataUpdateFolderDataPath", this.FilePath);
-                return;
             }
         }
 
@@ -2131,7 +2124,6 @@ namespace Timelapse.Database
             if (!Database.Insert(DBTables.Detections, detectionInsertionStatements).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetection", this.FilePath);
-                return;
             }
         }
 
@@ -2140,7 +2132,6 @@ namespace Timelapse.Database
             if (!Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetectionsVideo", this.FilePath);
-                return;
             }
         }
 

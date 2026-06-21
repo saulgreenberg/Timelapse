@@ -43,7 +43,6 @@ namespace Timelapse.Database
             if (!this.Database.Update(DBTables.FileData, columnToUpdate).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFile", this.FilePath);
-                return;
             }
         }
 
@@ -69,7 +68,6 @@ namespace Timelapse.Database
                 if (!this.Database.Update(DBTables.FileData, columnToUpdate).Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFileAsync", this.FilePath);
-                    return;
                 }
             }
             finally
@@ -154,7 +152,6 @@ namespace Timelapse.Database
             if (!Database.Update(DBTables.FileData, filesToUpdate).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(List)", this.FilePath);
-                return;
             }
         }
 
@@ -164,7 +161,6 @@ namespace Timelapse.Database
             if (!Database.Update(DBTables.FileData, imagesToUpdateList).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuplesWithWhere)", this.FilePath);
-                return;
             }
         }
 
@@ -173,7 +169,6 @@ namespace Timelapse.Database
             if (!Database.Update(DBTables.FileData, columnToUpdate).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuple)", this.FilePath);
-                return;
             }
         }
 
@@ -319,7 +314,6 @@ namespace Timelapse.Database
             if (!Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID()).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncImageSetToDatabase", this.FilePath);
-                return;
             }
         }
 
@@ -332,7 +326,6 @@ namespace Timelapse.Database
             if (!Database.Update(DBTables.Markers, marker.CreateColumnTuplesWithWhereByID()).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncMarkerToDatabase", this.FilePath);
-                return;
             }
         }
         #endregion
@@ -444,7 +437,6 @@ namespace Timelapse.Database
                 if (!Database.Update(DBTables.FileData, imagesToUpdate).Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateAdjustedFileTimes", this.FilePath);
-                    return;
                 }
             }
         }
@@ -492,7 +484,6 @@ namespace Timelapse.Database
                 if (!Database.Update(DBTables.FileData, imagesToUpdate).Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateExchangeDayAndMonthInFileDates", this.FilePath);
-                    return;
                 }
             }
         }
@@ -540,7 +531,6 @@ namespace Timelapse.Database
             if (!Database.ExecuteNonQueryWithRollback(query).Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateRelativePathByReplacingPrefix", this.FilePath);
-                return;
             }
         }
         #endregion

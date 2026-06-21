@@ -1669,7 +1669,7 @@ namespace Timelapse.Database
             ];
             database.CreateTable(DBTables.TemplateInfo, templateInfoColumns);
 
-            // Add the version number of the current Timelapse program to the templateinfo table 
+            // Add the version number of the current Timelapse program to the templateinfo table
             List<List<ColumnTuple>> templateContents = [];
             List<ColumnTuple> versions =
             [
@@ -1677,7 +1677,12 @@ namespace Timelapse.Database
                 new(DatabaseColumn.BackwardsCompatibility, DatabaseValues.VersionNumberBackwardsCompatible)
             ];
             templateContents.Add(versions);
-            database.Insert(DBTables.TemplateInfo, templateContents);
+            if (!database.Insert(DBTables.TemplateInfo, templateContents).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "The problem occurred in CreateAndPopulateTemplateInfoTable", database.FilePath);
+            }
         }
 
         public string GetTemplateVersionCompatibility()
@@ -1740,7 +1745,12 @@ namespace Timelapse.Database
             {
                 columnTuples.Add(new(Control.Guid, guid));
             }
-            Database.UpsertRow(DBTables.MetadataInfo, primaryKeyTuple, columnTuples);
+            if (!Database.UpsertRow(DBTables.MetadataInfo, primaryKeyTuple, columnTuples).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "The problem occurred in UpsertMetadataInfoTableRow", this.FilePath);
+            }
         }
         #endregion
 
@@ -1845,7 +1855,12 @@ namespace Timelapse.Database
             standardControls.Add(CreateDeleteFlagTuples(++controlOrder, ++spreadsheetOrder, true));
 
             // insert standard controls into the template table
-            database.Insert(DBTables.Template, standardControls);
+            if (!database.Insert(DBTables.Template, standardControls).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "The problem occurred in PopulateTemplateTableWithStandardControls", database.FilePath);
+            }
         }
 
         protected static void AddExportToCSVColumnIfNeeded(SQLiteWrapper database)
@@ -1861,7 +1876,12 @@ namespace Timelapse.Database
 
                 ctww.Columns.Add(new(Control.ExportToCSV, BooleanValue.False));
                 ctww.SetWhere(new ColumnTuple(Control.Type, DatabaseColumn.DeleteFlag));
-                database.Update(DBTables.Template, ctww);
+                if (!database.Update(DBTables.Template, ctww).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "The problem occurred in AddExportToCSVColumnIfNeeded", database.FilePath);
+                }
             }
         }
 
@@ -1882,7 +1902,7 @@ namespace Timelapse.Database
             if (table.Rows.Count == 0)
             {
                 // For some (usually backwards compatabililty reason)
-                // Add a row with the version number of the current Timelapse program to the templateinfo table 
+                // Add a row with the version number of the current Timelapse program to the templateinfo table
                 List<List<ColumnTuple>> templateContents = [];
                 List<ColumnTuple> versions =
                 [
@@ -1890,7 +1910,12 @@ namespace Timelapse.Database
                     new(DatabaseColumn.BackwardsCompatibility, DatabaseValues.VersionNumberBackwardsCompatible)
                 ];
                 templateContents.Add(versions);
-                database.Insert(DBTables.TemplateInfo, templateContents);
+                if (!database.Insert(DBTables.TemplateInfo, templateContents).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "The problem occurred in AddTemplateInfoTableOrRowIfNeeded", database.FilePath);
+                }
             }
         }
 
@@ -1906,7 +1931,12 @@ namespace Timelapse.Database
 
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.Standard, string.Empty));
-                database.Update(DBTables.TemplateInfo, ctww);
+                if (!database.Update(DBTables.TemplateInfo, ctww).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "The problem occurred in AddStandardToTemplateInfoColumnIfNeeded", database.FilePath);
+                }
             }
         }
 
@@ -1922,7 +1952,12 @@ namespace Timelapse.Database
                 // Update the template info table with the current Backwards compatability value
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatibleForTemplates));
-                database.Update(DBTables.TemplateInfo, ctww);
+                if (!database.Update(DBTables.TemplateInfo, ctww).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "The problem occurred in AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded", database.FilePath);
+                }
             }
         }
 
@@ -1938,7 +1973,12 @@ namespace Timelapse.Database
 
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.Standard, string.Empty));
-                database.Update(DBTables.ImageSet, ctww);
+                if (!database.Update(DBTables.ImageSet, ctww).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "The problem occurred in AddStandardToImageSetColumnIfNeeded", database.FilePath);
+                }
             }
         }
 
@@ -1954,7 +1994,12 @@ namespace Timelapse.Database
 
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatible));
-                database.Update(DBTables.ImageSet, ctww);
+                if (!database.Update(DBTables.ImageSet, ctww).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "The problem occurred in AddBackwardsCompatibilityToImageSetColumnIfNeeded", database.FilePath);
+                }
             }
         }
 

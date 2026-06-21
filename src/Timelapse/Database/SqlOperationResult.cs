@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Windows;
-using JetBrains.Annotations;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;
 

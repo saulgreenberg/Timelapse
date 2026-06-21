@@ -416,10 +416,10 @@ namespace Timelapse.Controls
                 this.ShowProgressOrAbortIfCancelled(true, "preparations (initial database tables and indexes");
 
                 string query1 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixCounts(episodeNoteField);
-                Database.Database.ExecuteNonQueryWithRollback(query1);
+                _ = Database.Database.ExecuteNonQueryWithRollback(query1); // DB-2: fails on read error; handled in DB-2 plan
 
                 string query2 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixMap(episodeNoteField);
-                Database.Database.ExecuteNonQueryWithRollback(query2);
+                _ = Database.Database.ExecuteNonQueryWithRollback(query2); // DB-2: fails on read error; handled in DB-2 plan
                 isSessionTmpTablesCreated = true;
 
             }
@@ -434,7 +434,7 @@ namespace Timelapse.Controls
                 // Rebuild the filtered image IDs temp table when the where statement changes
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query3 = SqlForCounting.CreateTempTableAndIndexForFilteredImageIds(where);
-                Database.Database.ExecuteNonQueryWithRollback(query3);
+                _ = Database.Database.ExecuteNonQueryWithRollback(query3); // DB-2: fails on read error; handled in DB-2 plan
             }
 
             if (false == isPerWhereTmpTablesCreated || isWhereChanged || isThresholdChanged)
@@ -446,7 +446,7 @@ namespace Timelapse.Controls
                 // -- ============================================================================
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query4 = SqlForCounting.CreateTempTableAndIndexForEpisodeDetectionFlags(lowerDetectionConfidence, upperDetectionConfidence);
-                Database.Database.ExecuteNonQueryWithRollback(query4);
+                _ = Database.Database.ExecuteNonQueryWithRollback(query4); // DB-2: fails on read error; handled in DB-2 plan
                 isPerWhereTmpTablesCreated = true;
             }
             lastWhereStatement = where;

@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.Dialog;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
@@ -706,7 +707,12 @@ namespace Timelapse.ControlsMetadata
             columnToUpdate.SetWhere(new ColumnTuple(DatabaseColumn.FolderDataPath, control.ParentPanel.SubPath));
 
 
-            FileDatabase.Database.Update(tableName, columnToUpdate);
+            if (!FileDatabase.Database.Update(tableName, columnToUpdate).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    FileDatabase.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "The problem occurred in UpdateMetadataTableAndMetadataDatabase", FileDatabase.FilePath);
+            }
         }
 
         #endregion

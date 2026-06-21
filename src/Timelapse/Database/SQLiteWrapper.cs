@@ -126,9 +126,9 @@ public class SQLiteWrapper
         // ReSharper disable once UnusedMember.Global
         public void IndexDropIfExists(string indexName)
         {
-            // Form: DROP INDEX IF EXISTS indexName 
+            // Form: DROP INDEX IF EXISTS indexName
             string query = Sql.DropIndex + Sql.IfExists + indexName;
-            ExecuteNonQueryWithRollback(query);
+            _ = ExecuteNonQueryWithRollback(query);
         }
 
         // Create a single index named indexName if it doesn't already exist
@@ -141,7 +141,7 @@ public class SQLiteWrapper
             }
             // Form: CREATE INDEX IF NOT EXISTS indexName ON tableName  (column1, column2...);
             string query = Sql.CreateIndex + Sql.IfNotExists + indexName + Sql.On + tableName + Sql.OpenParenthesis + columnNames + Sql.CloseParenthesis;
-            ExecuteNonQueryWithRollback(query);
+            _ = ExecuteNonQueryWithRollback(query);
         }
 
 
@@ -154,7 +154,7 @@ public class SQLiteWrapper
             {
                 queries.Add(Sql.CreateIndex + Sql.IfNotExists + tuple.Item1 + Sql.On + tuple.Item2 + Sql.OpenParenthesis + tuple.Item3 + Sql.CloseParenthesis);
             }
-            ExecuteNonQueryWithRollback(queries);
+            _ = ExecuteNonQueryWithRollback(queries);
         }
         #endregion
 
@@ -997,7 +997,11 @@ public class SQLiteWrapper
                 {
                     // Transient lock — roll back and wait before retrying.
                     // Linear backoff: 250 ms, 500 ms, 750 ms, 1 000 ms (4 retries → 5 attempts max).
-                    try { transaction?.Rollback(); } catch { }
+                    try { transaction?.Rollback(); } 
+                    catch 
+                    { 
+                        // Ignore
+                    }
                     finally { transaction?.Dispose(); }
                     int delayMs = (busyAttempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked (attempt {busyAttempt + 1}/5), retrying in {delayMs} ms…");
