@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
@@ -348,11 +349,13 @@ public class SQLiteWrapper
         // INSERT INTO table_name
         //      colname1, colname12, ... colnameN VALUES
         //      ('value1', 'value2', ... 'valueN');
+        [MustUseReturnValue]
         public SqlOperationResult Insert(string tableName, List<List<ColumnTuple>> insertionStatements)
         {
             return Insert(tableName, insertionStatements, null, string.Empty, 1000);
         }
 
+        [MustUseReturnValue]
         public SqlOperationResult Insert(string tableName, List<List<ColumnTuple>> insertionStatements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
         {     // Check the arguments for null 
             ThrowIf.IsNullArgument(insertionStatements, nameof(insertionStatements));
@@ -400,6 +403,7 @@ public class SQLiteWrapper
         // As required by Sqlite upserts, The OnConflict target (i.e, the whereName) must be a Primary Key (or Unique) in the schema
         // The column names and values to update or insert are provided in the column tuples. 
         // The primaryKeyTuple must be the primary key and its value (which are used to detect conflict, and the indicate Where, and to include as name/value in the insert portion)
+        [MustUseReturnValue]
         public SqlOperationResult UpsertRow(string tableName, ColumnTuple primaryKeyTuple, List<ColumnTuple> columnTuples)
         {
             // Check the arguments for null
@@ -497,6 +501,7 @@ public class SQLiteWrapper
             return ExecuteNonQueryWithRollback(queries);
         }
 
+        [MustUseReturnValue]
         public SqlOperationResult Update(string tableName, List<ColumnTuplesWithWhere> updateQueryList)
         {
             // Check the arguments for null 
@@ -527,6 +532,7 @@ public class SQLiteWrapper
         // colnameN = valueN
         // WHERE
         // <condition> e.g., ID=1;
+        [MustUseReturnValue]
         public SqlOperationResult Update(string tableName, ColumnTuplesWithWhere columnsToUpdate)
         {
             // Check the arguments for null
@@ -538,6 +544,7 @@ public class SQLiteWrapper
 
         // UPDATE table_name SET
         // columnname = value,
+        [MustUseReturnValue]
         public SqlOperationResult Update(string tableName, ColumnTuple columnToUpdate)
         {
             // Check the arguments for null
@@ -567,6 +574,7 @@ public class SQLiteWrapper
         // Crucially, the chunk boundary is based on the number of OR-joined conditions, not the
         // number of IDs — so a single BETWEEN covering 50,000 contiguous IDs still counts as
         // one condition and requires only one query.
+        [MustUseReturnValue]
         public SqlOperationResult Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value)
         {
             if (listOfIDs.Count == 0)
@@ -635,6 +643,7 @@ public class SQLiteWrapper
         /// <summary>delete specific rows from the DB where...</summary>
         /// <param name="tableName">The table from which to delete.</param>
         /// <param name="where">The where clause for the delete.</param>
+        [MustUseReturnValue]
         public SqlOperationResult DeleteRows(string tableName, string where = "")
         {
             // DELETE FROM table_name WHERE where
@@ -653,6 +662,7 @@ public class SQLiteWrapper
         /// </summary>
         /// <param name="tableName">The table from which to delete</param>
         /// <param name="whereClauses">The where clauses for the row to delete (e.g., ID=1 ID=3 etc</param>
+        [MustUseReturnValue]
         public SqlOperationResult Delete(string tableName, List<string> whereClauses)
         {
             // Check the arguments for null
@@ -687,9 +697,10 @@ public class SQLiteWrapper
         }
 
         /// <summary>
-        /// Delete all the rows in each table in the provided list 
+        /// Delete all the rows in each table in the provided list
         /// </summary>
         /// <param name="tables"></param>
+        [MustUseReturnValue]
         public SqlOperationResult DeleteAllRowsInTables(List<string> tables)
         {
             if (tables == null || tables.Count == 0)
@@ -784,6 +795,7 @@ public class SQLiteWrapper
         /// <see cref="SqlOperationResult.Fail"/> carrying the error message, exception, and the
         /// failing SQL statement on failure.
         /// </returns>
+        [MustUseReturnValue]
         public SqlOperationResult ExecuteNonQueryWithRollback(string commandString, int busyTimeoutMs = 0)
         {
             if (string.IsNullOrWhiteSpace(commandString))
@@ -801,6 +813,7 @@ public class SQLiteWrapper
         /// <see cref="SqlOperationResult.Fail"/> carrying the error message, exception, and the
         /// last-executing SQL statement on failure.
         /// </returns>
+        [MustUseReturnValue]
         public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements)
         {
             ThrowIf.IsNullArgument(statements, nameof(statements));
@@ -816,6 +829,7 @@ public class SQLiteWrapper
         /// <see cref="SqlOperationResult.Fail"/> carrying the error message, exception, and the
         /// last-executing SQL statement on failure.
         /// </returns>
+        [MustUseReturnValue]
         public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
         {
             ThrowIf.IsNullArgument(statements, nameof(statements));
@@ -829,6 +843,7 @@ public class SQLiteWrapper
         /// transaction but on the same connection, such as PRAGMA foreign_keys = OFF/ON (which
         /// SQLite silently ignores when issued inside a transaction).
         /// </summary>
+        [MustUseReturnValue]
         public SqlOperationResult ExecuteNonQueryWithRollback(
             List<string> preTransactionStatements,
             List<string> statements,
