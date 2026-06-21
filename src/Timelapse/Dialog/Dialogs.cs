@@ -4396,7 +4396,7 @@ namespace Timelapse.Dialog
             };
             if (false == string.IsNullOrWhiteSpace(message))
             {
-                dialog.Solution += $"Include this information: [e]{message}[/e]";
+                dialog.Solution += $"[li 2] include this information in the email: [e]{message}[/e]";
             }
             // "Restart Timelapse" via ExtraButton — closes the dialog without setting DialogResult (returns null)
             dialog.ExtraButton.Content = "Restart Timelapse";

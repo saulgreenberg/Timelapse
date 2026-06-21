@@ -2128,12 +2128,20 @@ namespace Timelapse.Database
         }
         public void InsertDetection(List<List<ColumnTuple>> detectionInsertionStatements)
         {
-            Database.Insert(DBTables.Detections, detectionInsertionStatements);
+            if (!Database.Insert(DBTables.Detections, detectionInsertionStatements).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetection", this.FilePath);
+                return;
+            }
         }
 
         public void InsertDetectionsVideo(List<List<ColumnTuple>> detectionsVideoInsertionStatements)
         {
-            Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements);
+            if (!Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetectionsVideo", this.FilePath);
+                return;
+            }
         }
 
         // Try to read the recognition data from the Json file into the Recognizer structure,
@@ -2434,7 +2442,11 @@ namespace Timelapse.Database
                             // If the index wasn't created previously, make sure its there as otherwise its painfully slow.
                             IndexCreateForDetectionsIfNeeded();
                             // Delete these detections and classifications
-                            Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
+                            if (!Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500).Success)
+                            {
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in recognizer import (remove unneeded detections)", this.FilePath);
+                                return RecognizerImportResultEnum.Failure;
+                            }
                         }
                         // At this point, we have deleted the detections and classifications from those images that are both in the
                         // db and the json, which means were are ready to replace them. 
@@ -3029,7 +3041,11 @@ namespace Timelapse.Database
             {
                 return false;
             }
-            Database.Update(DBTables.ImageSet, new ColumnTuple(DatabaseColumn.BoundingBoxDisplayThreshold, threshold));
+            if (!Database.Update(DBTables.ImageSet, new ColumnTuple(DatabaseColumn.BoundingBoxDisplayThreshold, threshold)).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in TrySetBoundingBoxDisplayThreshold", this.FilePath);
+                return false;
+            }
             return true;
         }
 
@@ -3331,7 +3347,11 @@ namespace Timelapse.Database
                 ColumnTuplesWithWhere columnTupleWithWhere = new(columnTupleList, new ColumnTuple(Constant.DetectionColumns.DetectionID, detectionID));
                 columnsTuplesWithWhereList.Add(columnTupleWithWhere);
             }
-            Database.Update(DBTables.Detections, columnsTuplesWithWhereList);
+            if (!Database.Update(DBTables.Detections, columnsTuplesWithWhereList).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateOldStyleRecognitionTablesIfNeeded", this.FilePath);
+                return;
+            }
 
             // Versions prior to 2.3.3.0 will not be able to access the classification data as it is being dropped.
             //  as it crashes if the custom select tries to use classifications.
