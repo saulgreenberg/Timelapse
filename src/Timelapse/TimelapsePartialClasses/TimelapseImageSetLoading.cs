@@ -388,6 +388,10 @@ namespace Timelapse
             {
                 if (false == TryBeginImageFolderLoad(RootPathToImages, RootPathToImages, true))
                 {
+                    if (SqlErrorState.HasError)
+                    {
+                        SQLiteWrapper.ResetAllReadErrorState();
+                    }
                     return new(false, fileDatabaseFilePath);
                 }
             }
