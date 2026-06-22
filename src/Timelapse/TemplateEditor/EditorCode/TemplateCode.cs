@@ -132,7 +132,13 @@ namespace TimelapseTemplateEditor
 
             // Update the previews to reflect the added row
             Globals.TemplateSpreadsheet.GenerateSpreadsheet();
-            TemplateDoUpdateControlOrder();
+            if (!TemplateDoUpdateControlOrder())
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
+                    "TemplateDoAddNewRow: Timelapse could not save the new control order to your template file.",
+                    Globals.TemplateDatabase?.FilePath);
+                return;
+            }
 
             // Scroll the last element of the datagrid into view (as we are adding something at the end)
             dataGrid.ScrollIntoViewLastRow();
