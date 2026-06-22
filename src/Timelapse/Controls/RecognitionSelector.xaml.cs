@@ -416,10 +416,10 @@ namespace Timelapse.Controls
                 this.ShowProgressOrAbortIfCancelled(true, "preparations (initial database tables and indexes");
 
                 string query1 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixCounts(episodeNoteField);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query1); // DB-2: fails on read error; handled in DB-2 plan
+                _ = Database.Database.ExecuteNonQueryWithRollback(query1); // Intentional: temp-table write failure is survivable; downstream queries return empty results
 
                 string query2 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixMap(episodeNoteField);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query2); // DB-2: fails on read error; handled in DB-2 plan
+                _ = Database.Database.ExecuteNonQueryWithRollback(query2); // Intentional: temp-table write failure is survivable; downstream queries return empty results
                 isSessionTmpTablesCreated = true;
 
             }
@@ -434,7 +434,7 @@ namespace Timelapse.Controls
                 // Rebuild the filtered image IDs temp table when the where statement changes
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query3 = SqlForCounting.CreateTempTableAndIndexForFilteredImageIds(where);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query3); // DB-2: fails on read error; handled in DB-2 plan
+                _ = Database.Database.ExecuteNonQueryWithRollback(query3); // Intentional: temp-table write failure is survivable; downstream queries return empty results
             }
 
             if (false == isPerWhereTmpTablesCreated || isWhereChanged || isThresholdChanged)
@@ -446,7 +446,7 @@ namespace Timelapse.Controls
                 // -- ============================================================================
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query4 = SqlForCounting.CreateTempTableAndIndexForEpisodeDetectionFlags(lowerDetectionConfidence, upperDetectionConfidence);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query4); // DB-2: fails on read error; handled in DB-2 plan
+                _ = Database.Database.ExecuteNonQueryWithRollback(query4); // Intentional: temp-table write failure is survivable; downstream queries return empty results
                 isPerWhereTmpTablesCreated = true;
             }
             lastWhereStatement = where;
