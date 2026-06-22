@@ -29,6 +29,9 @@ namespace TimelapseTemplateEditor
         // Reference to the main Timelapse window
         public TimelapseWindow TimelapseWindow { get; set; }
 
+        // When set before Show(), Window_Loaded will automatically open this template file
+        public string PendingTemplateFilePath { get; set; }
+
         // Stores the UI state
         public static TimelapseState State => GlobalReferences.TimelapseState;
 
@@ -54,12 +57,12 @@ namespace TimelapseTemplateEditor
             MenuViewShowAllColumns_Click(MenuViewShowAllColumns, null);
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Get the window and its size from its previous location
             // Maybe integrate this call with that?
-            //this.Top = userSettings.EditorWindowPosition.Top; 
-            //this.Left = userSettings.EditorWindowPosition.Left; 
+            //this.Top = userSettings.EditorWindowPosition.Top;
+            //this.Left = userSettings.EditorWindowPosition.Left;
             this.Top = this.TimelapseWindow.Top;
             this.Left = this.TimelapseWindow.Left;
             this.Height = State.TemplateEditorWindowSize.Height;
@@ -86,6 +89,15 @@ namespace TimelapseTemplateEditor
             //        userSettings.SuppressWarningToUpdateDBFilesToSQLPrompt = warning.DontShowAgain;
             //    }
             //};
+
+            if (!string.IsNullOrEmpty(PendingTemplateFilePath))
+            {
+                if (System.IO.File.Exists(PendingTemplateFilePath))
+                {
+                    await TemplateDoOpen(PendingTemplateFilePath).ConfigureAwait(true);
+                }
+                PendingTemplateFilePath = null;
+            }
         }
 
 

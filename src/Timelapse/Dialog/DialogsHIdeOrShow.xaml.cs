@@ -44,7 +44,8 @@ namespace Timelapse.Dialog
             SuppressSelectedPopulateFieldFromMetadataPrompt.IsChecked = state.SuppressSelectedPopulateFieldFromMetadataPrompt;
             SuppressSelectedRereadDatesFromFilesPrompt.IsChecked = state.SuppressSelectedRereadDatesFromFilesPrompt;
             SuppressShortcutDetectedPrompt.IsChecked = state.SuppressShortcutDetectedPrompt;
-           
+            SuppressSwitchBetweenTimelapseAndEditorWarning.IsChecked = state.SuppressSwitchBetweenTimelapseAndEditorWarning;
+
         // this.SuppressWarningToUpdateDBFilesToSQL.IsChecked = this.state.SuppressWarningToUpdateDBFilesToSQLPrompt;
         SuppressOpeningWithOlderTimelapseVersionDialog.IsChecked = state.SuppressOpeningWithOlderTimelapseVersionDialog;
             SuppressPropagateFromLastNonEmptyValuePrompt.IsChecked = state.SuppressPropagateFromLastNonEmptyValuePrompt;
@@ -132,6 +133,12 @@ namespace Timelapse.Dialog
         {
             CheckBox cb = (CheckBox)sender;
             state.SuppressShortcutDetectedPrompt = cb.IsChecked == true;
+        }
+
+        private void SuppressSwitchBetweenTimelapseAndEditorWarning_Click(object sender, RoutedEventArgs _)
+        {
+            CheckBox cb = (CheckBox)sender;
+            state.SuppressSwitchBetweenTimelapseAndEditorWarning = cb.IsChecked == true;
         }
 
         // Unused for now, but keep around in case we need something like this in the future

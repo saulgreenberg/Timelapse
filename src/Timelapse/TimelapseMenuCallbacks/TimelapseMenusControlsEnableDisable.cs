@@ -38,6 +38,7 @@ namespace Timelapse
 
             MenuItemRenameFileDatabaseFile.IsEnabled = filesSelected;
             MenuItemTemplateEditor.IsEnabled = true;
+            MenuItemTemplateEditorOnCurrentFile.IsEnabled = imageSetAvailable;
             MenuFileCloseImageSet.IsEnabled = imageSetAvailable;
             MenuItemImportDetectionData.Visibility = Visibility.Visible;
             MenuItemImportDetectionData.IsEnabled = imageSetAvailable;

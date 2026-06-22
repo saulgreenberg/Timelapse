@@ -46,7 +46,7 @@ namespace Timelapse
             //      if the user switches back to the main Timelapse window
             if (Arguments.IsOpenInTemplateEditor)
             {
-                this.DoSwitchToTheTemplateEditor();
+                this.DoSwitchToTheTemplateEditor(null);
 
                 // If a template was specified, load it into the template editor
                 if (null != this.TimelapseTemplateEditor && false == string.IsNullOrEmpty(Arguments.TdbFile) && File.Exists(Arguments.TdbFile))

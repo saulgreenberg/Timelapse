@@ -55,6 +55,7 @@ namespace Timelapse.State
         public bool SuppressSelectedPopulateFieldFromMetadataPrompt { get; set; }
         public bool SuppressSelectedRereadDatesFromFilesPrompt { get; set; }
         public bool SuppressShortcutDetectedPrompt { get; set; }
+        public bool SuppressSwitchBetweenTimelapseAndEditorWarning { get; set; }
         public bool SuppressWarningToUpdateDBFilesToSQLPrompt { get; set; }
         public Throttles Throttles { get; }
         public bool TabOrderIncludeDateTime { get; set; }
@@ -134,6 +135,7 @@ namespace Timelapse.State
             SuppressSelectedPopulateFieldFromMetadataPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, false);
             SuppressSelectedRereadDatesFromFilesPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, false);
             SuppressShortcutDetectedPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressShortcutDetectedPrompt, false);
+            SuppressSwitchBetweenTimelapseAndEditorWarning = registryKey.GetBoolean(WindowRegistryKeys.SuppressSwitchBetweenTimelapseAndEditorWarning, false);
             SuppressWarningToUpdateDBFilesToSQLPrompt = registryKey.GetBoolean(WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, false);
             TabOrderIncludeDateTime = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDateTime, false);
             TabOrderIncludeDeleteFlag = registryKey.GetBoolean(WindowRegistryKeys.TabOrderIncludeDeleteFlag, false);
@@ -239,6 +241,7 @@ namespace Timelapse.State
             registryKey.Write(WindowRegistryKeys.SuppressSelectedPopulateFieldFromMetadataPrompt, SuppressSelectedPopulateFieldFromMetadataPrompt);
             registryKey.Write(WindowRegistryKeys.SuppressSelectedRereadDatesFromFilesPrompt, SuppressSelectedRereadDatesFromFilesPrompt);
             registryKey.Write(WindowRegistryKeys.SuppressShortcutDetectedPrompt, SuppressShortcutDetectedPrompt);
+            registryKey.Write(WindowRegistryKeys.SuppressSwitchBetweenTimelapseAndEditorWarning, SuppressSwitchBetweenTimelapseAndEditorWarning);
             registryKey.Write(WindowRegistryKeys.SuppressWarningToUpdateDBFilesToSQLPrompt, SuppressWarningToUpdateDBFilesToSQLPrompt);
             registryKey.Write(WindowRegistryKeys.TabOrderIncludeDateTime, TabOrderIncludeDateTime);
             registryKey.Write(WindowRegistryKeys.TabOrderIncludeDeleteFlag, TabOrderIncludeDeleteFlag);

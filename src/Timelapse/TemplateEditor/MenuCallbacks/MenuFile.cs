@@ -24,6 +24,7 @@ namespace TimelapseTemplateEditor
         private void FileMenu_OnSubmenuOpened(object sender, RoutedEventArgs e)
         {
             //MenuSwitchToTimelapse.IsEnabled = this.templateDatabase == null;
+            MenuSwitchToTimelapseOnCurrentFile.IsEnabled = this.templateDatabase != null;
 
             // repopulate the recently opened templates list
             CreateMenuItemsForMenuFileRecentTemplates(this.templateDatabase == null);
@@ -310,7 +311,8 @@ namespace TimelapseTemplateEditor
         {
             if (this.templateDatabase != null)
             {
-                if (Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, false) == false)
+                if (State.SuppressSwitchBetweenTimelapseAndEditorWarning == false &&
+                    Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, false) == false)
                 {
                     return;
                 }
@@ -320,6 +322,24 @@ namespace TimelapseTemplateEditor
             this.Close();
             this.TimelapseWindow.Show();
             this.TimelapseWindow.Activate();
+        }
+
+        private async void MenuSwitchToTimelapseOnCurrentFile_Click(object sender, RoutedEventArgs e)
+        {
+            string templateFilePath = this.templateDatabase?.FilePath;
+            if (State.SuppressSwitchBetweenTimelapseAndEditorWarning == false &&
+                Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, false) == false)
+            {
+                return;
+            }
+            this.closedByMenu = true;
+            this.Close();
+            this.TimelapseWindow.Show();
+            this.TimelapseWindow.Activate();
+            if (!string.IsNullOrEmpty(templateFilePath) && System.IO.File.Exists(templateFilePath))
+            {
+                await this.TimelapseWindow.TryOpenTemplateAsync(templateFilePath);
+            }
         }
 
         // Closes the template and clears various states to allow another template to be created or opened.

@@ -68,17 +68,31 @@ namespace Timelapse
             if (IsFileDatabaseAvailable())
             {
                 // Warn the user that Timelapse will close the current image set before doing the switch
-                if (Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, true) == false)
+                if (State.SuppressSwitchBetweenTimelapseAndEditorWarning == false &&
+                    Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, true) == false)
                 {
                     return;
                 }
                 // Close the current image set
                 CloseImageSet();
             }
-            DoSwitchToTheTemplateEditor();
+            DoSwitchToTheTemplateEditor(null);
         }
 
-        private void DoSwitchToTheTemplateEditor()
+        private void MenuItemSwitchToTheTemplateEditorOnCurrentFile_Click(object sender, RoutedEventArgs e)
+        {
+            // Capture the template path before closing the image set
+            string templateFilePath = templateDatabase?.FilePath;
+            if (State.SuppressSwitchBetweenTimelapseAndEditorWarning == false &&
+                Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, true) == false)
+            {
+                return;
+            }
+            CloseImageSet();
+            DoSwitchToTheTemplateEditor(templateFilePath);
+        }
+
+        private void DoSwitchToTheTemplateEditor(string templateFilePath)
         {
             // Check if Template Editor is already open
             foreach (Window window in Application.Current.Windows)
@@ -95,7 +109,8 @@ namespace Timelapse
             this.TimelapseTemplateEditor = new()
             {
                 Owner = this,
-                TimelapseWindow = this
+                TimelapseWindow = this,
+                PendingTemplateFilePath = templateFilePath
             };
             this.TimelapseTemplateEditor.Show();
             this.Hide();
@@ -134,6 +149,21 @@ namespace Timelapse
                     StatusBar.SetMessage("Aborted. Images were not added to the image set.");
                 }
                 Mouse.OverrideCursor = null;
+            }
+        }
+
+        public async Task TryOpenTemplateAsync(string templatePath)
+        {
+            if (string.IsNullOrEmpty(templatePath) || !System.IO.File.Exists(templatePath))
+            {
+                return;
+            }
+            if (Dialogs.DialogIsFileValid(this, templatePath))
+            {
+                if (false == await DoLoadImages(templatePath))
+                {
+                    StatusBar.SetMessage("Aborted. Images were not added to the image set.");
+                }
             }
         }
 

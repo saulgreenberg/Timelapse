@@ -4271,9 +4271,18 @@ namespace Timelapse.Dialog
                          + $"[li] [b]Okay[/b] to close your {whatToClose} and switch to {whatToOpen}."
                          + "[li]  [b]Cancel[/b] to abort.",
                 Result = $"The {whatToClose} will be closed and then {whatToOpen} will appear.",
-                Hint = $"Switching is safe. You can always switch back later and reopen the {whatToClose}."
+                Hint = $"Switching is safe. You can always switch back later and reopen the {whatToClose}.[br 2]{dontShowMessageAgainInstructions}",
+                DontShowAgain =
+                {
+                    Visibility = Visibility.Visible
+                }
             };
-            return dialog.BuildAndShowDialog();
+            bool? result = dialog.BuildAndShowDialog();
+            if (dialog.DontShowAgain.IsChecked.HasValue)
+            {
+                GlobalReferences.TimelapseState.SuppressSwitchBetweenTimelapseAndEditorWarning = dialog.DontShowAgain.IsChecked.Value;
+            }
+            return result;
         }
         #endregion
 

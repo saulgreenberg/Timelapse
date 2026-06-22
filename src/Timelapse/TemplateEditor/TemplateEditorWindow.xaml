@@ -119,11 +119,20 @@
                 <Separator />
 
                 <!-- Switch to Timelapse -->
-                <MenuItem Name="MenuSwitchToTimelapse" Header="Switch to Timelapse" Click="MenuSwitchToTimelapse_Click" 
+                <MenuItem Name="MenuSwitchToTimelapse" Header="Switch to Timelapse"
                           ToolTip="Switch to Timelapse to load and tag image sets.">
                     <MenuItem.Icon>
                         <Image Source="Icons/Timelapse32.ico" />
                     </MenuItem.Icon>
+                    <MenuItem Name="MenuSwitchToTimelapseWithoutFile"
+                              Header="_Where you select the image set to open"
+                              Click="MenuSwitchToTimelapse_Click"
+                              ToolTip="Switch to Timelapse without opening an image set." />
+                    <MenuItem Name="MenuSwitchToTimelapseOnCurrentFile"
+                              IsEnabled="false"
+                              Header="_Using this template to open the image set"
+                              Click="MenuSwitchToTimelapseOnCurrentFile_Click"
+                              ToolTip="Switch to Timelapse and open the image set for the current template." />
                 </MenuItem>
 
                 <Separator />

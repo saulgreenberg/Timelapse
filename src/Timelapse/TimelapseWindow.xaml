@@ -195,13 +195,21 @@
                     <Separator />
 
                     <!-- Switch to Template Editor -->
-                    <MenuItem Name="MenuItemTemplateEditor" IsEnabled="true" 
-                              Header="Switch to the Template _Editor" 
-                              Click="MenuItemSwitchToTheTemplateEditor_Click" 
+                    <MenuItem Name="MenuItemTemplateEditor" IsEnabled="true"
+                              Header="Switch to the Template _Editor"
                               ToolTip="Switch to the Template Editor to create or modify data templates.">
                         <MenuItem.Icon>
                             <Image Source="TemplateEditor/Icons/TemplateEditor32.ico" />
                         </MenuItem.Icon>
+                        <MenuItem Name="MenuItemTemplateEditorWithoutFile"
+                                  Header="_Where you select the template to open"
+                                  Click="MenuItemSwitchToTheTemplateEditor_Click"
+                                  ToolTip="Open the Template Editor. Then select the template you want via its File menu." />
+                        <MenuItem Name="MenuItemTemplateEditorOnCurrentFile"
+                                  IsEnabled="false"
+                                  Header="_On this image set's template"
+                                  Click="MenuItemSwitchToTheTemplateEditorOnCurrentFile_Click"
+                                  ToolTip="Close the current image set and try to open this image set's template in the Template Editor." />
                     </MenuItem>
 
                     <Separator />

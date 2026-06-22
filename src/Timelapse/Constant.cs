@@ -699,6 +699,7 @@ namespace Timelapse.Constant
         public const string SuppressSelectedPopulateFieldFromMetadataPrompt = "SuppressSelectedPopulateFieldFromMetadataPrompt";
         public const string SuppressSelectedRereadDatesFromFilesPrompt = "SuppressSelectedRereadDatesFromFilesPrompt";
         public const string SuppressShortcutDetectedPrompt = "SuppressShortcutDetectedPrompt";
+        public const string SuppressSwitchBetweenTimelapseAndEditorWarning = "SuppressSwitchBetweenTimelapseAndEditorWarning";
         public const string SuppressWarningToUpdateDBFilesToSQLPrompt = "SuppressWarningToUpdateDBFilesToSQL";
 
         // TabOrderInclude
