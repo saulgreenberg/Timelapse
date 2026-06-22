@@ -167,6 +167,7 @@ namespace Timelapse
                     // Since its failed, try to delete the empty .ddb file as otherwise its existance can be confusing to the user.
                     FilesFolders.TryDeleteFileIfExists(results.Item2);
                 }
+                Mouse.OverrideCursor = null;
                 BusyCancelIndicator.Reset(false);
                 return false;
             }

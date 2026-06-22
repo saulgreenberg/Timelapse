@@ -458,6 +458,7 @@ namespace Timelapse
             {
                 // No images were found in the root folder or subfolders, so there is nothing to do
                 Dialogs.ImageSetLoadingNoImagesOrVideosWereFoundDialog(this, selectedFolderPath);
+                Mouse.OverrideCursor = null;
                 return false;
             }
 

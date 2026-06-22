@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
@@ -71,6 +72,8 @@ namespace Timelapse
             lastControlWithFocus = null;
             QuickPasteWindowTerminate();
             ImageAdjuster?.Hide();
+            // Reset the cursor if needed
+            Mouse.OverrideCursor = null;
         }
         #endregion
 

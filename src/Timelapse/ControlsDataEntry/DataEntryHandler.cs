@@ -561,6 +561,7 @@ namespace Timelapse.ControlsDataEntry
             {
                 // This shouldn't happen, but I did receive an error report ...
                 Dialogs.DataEntryCantCopyAsNullDialog(Application.Current.MainWindow);
+                Mouse.OverrideCursor = null;
                 return;
             }
 

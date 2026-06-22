@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Timelapse;
 using Timelapse.Constant;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Dialog;
 using Timelapse.Enums;

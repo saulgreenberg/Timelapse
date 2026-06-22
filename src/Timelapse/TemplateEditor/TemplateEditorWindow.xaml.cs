@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Timelapse;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -171,7 +172,8 @@ namespace TimelapseTemplateEditor
             MenuFileClose.IsEnabled = templateIsLoaded;
             MenuView.IsEnabled = templateIsLoaded;
 
-
+            // Reset the cursor if needed
+            Mouse.OverrideCursor = null;
 
             // Enable/disable  all the buttons that allow rows to be added
             TemplateUI.RowControls.EditRowDockPanel.IsEnabled = templateIsLoaded;
@@ -184,6 +186,8 @@ namespace TimelapseTemplateEditor
             this.setInitialFolderLevelTabSelection = true;
             TemplatePane.IsActive = templateIsLoaded;
             InstructionPane.IsActive = !templateIsLoaded;
+
+            
         }
         #endregion
 
