@@ -178,35 +178,41 @@ public class SQLiteWrapper
         {
             // Debug.Print("GetDataTableFromSelect: " + query);
             DataTable dataTable = new();
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                // Open the connection
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                using SQLiteCommand command = new(connection);
-                command.CommandText = query;
-                // Debug.Print(query);
-                using SQLiteDataReader reader = command.ExecuteReader();
-                dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                try   { dataTable.Load(reader); }
-                finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
-                return dataTable;
-            }
-            catch (Exception exception)
-            {
+                try
+                {
+                    // Open the connection
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    using SQLiteCommand command = new(connection);
+                    command.CommandText = query;
+                    // Debug.Print(query);
+                    using SQLiteDataReader reader = command.ExecuteReader();
+                    dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
+                    try   { dataTable.Load(reader); }
+                    finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
+                    return dataTable;
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                    && attempt < 3)
+                {
+                    int delayMs = (attempt + 1) * 200;
+                    TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception exception)
+                {
 #if DEBUG
-                Debug.Fail($"SQL read failure in GetDataTableFromSelect: {exception.Message}\nQuery: {query}");
+                    Debug.Fail($"SQL read failure in GetDataTableFromSelect: {exception.Message}\nQuery: {query}");
 #else
-                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("GetDataTableFromSelect", new SqlOperationResult
-                    {
-                        Context="GetDataTableFromSelect",
-                        ErrorMessage="SqlStatementFailure",
-                        FailingStatement=query,
-                        Exception = exception
-                    });
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("GetDataTableFromSelect", SqlOperationResult.Fail(
+                            $"SQL read failure in GetDataTableFromSelect: {exception.Message}", exception, query));
 #endif
-                return dataTable;
+                    return dataTable;
+                }
             }
         }
 
@@ -220,48 +226,55 @@ public class SQLiteWrapper
             return await Task.Run(() =>
             {
                 DataTable dataTable = new();
-                try
+                for (int attempt = 0; ; attempt++)
                 {
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
-                    SQLiteCommand command = new(connection);
                     try
                     {
-                        command.CommandText = query;
-                        // ReSharper disable once AccessToDisposedClosure
-                        using (token.Register(() => command.Cancel()))
+                        using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                        connection.Open();
+                        SQLiteCommand command = new(connection);
+                        try
                         {
-                            using SQLiteDataReader reader = command.ExecuteReader();
-                            dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                            try   { dataTable.Load(reader); }
-                            finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
+                            command.CommandText = query;
+                            // ReSharper disable once AccessToDisposedClosure
+                            using (token.Register(() => command.Cancel()))
+                            {
+                                using SQLiteDataReader reader = command.ExecuteReader();
+                                dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
+                                try   { dataTable.Load(reader); }
+                                finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
+                            }
                         }
-                    }
-                    finally
-                    {
-                        command.Dispose();
-                    }
-                    return dataTable;
-                }
-                catch (Exception) when (token.IsCancellationRequested)
-                {
-                    return dataTable;
-                }
-                catch (Exception exception)
-                {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}\nQuery: {query}");
-#else
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("GetDataTableFromSelectAsync", new SqlOperationResult
+                        finally
                         {
-                            Context = "GetDataTableFromSelectAsync",
-                            ErrorMessage = "SqlStatementFailure",
-                            FailingStatement = query,
-                            Exception = exception
-                        });
+                            command.Dispose();
+                        }
+                        return dataTable;
+                    }
+                    catch (Exception) when (token.IsCancellationRequested)
+                    {
+                        return dataTable;
+                    }
+                    catch (SQLiteException sqliteEx) when (
+                        !token.IsCancellationRequested &&
+                        (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                        && attempt < 3)
+                    {
+                        int delayMs = (attempt + 1) * 200;
+                        TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelectAsync (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                        Thread.Sleep(delayMs);
+                    }
+                    catch (Exception exception)
+                    {
+#if DEBUG
+                        Debug.Fail($"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}\nQuery: {query}");
+#else
+                        if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                            OnReadError?.Invoke("GetDataTableFromSelectAsync", SqlOperationResult.Fail(
+                                $"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}", exception, query));
 #endif
-                    return dataTable;
+                        return dataTable;
+                    }
                 }
             }, token);
         }
@@ -269,40 +282,42 @@ public class SQLiteWrapper
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {
             List<object> distinctValues = [];
-#if !DEBUG
-            string lastQuery = string.Empty;
-#endif
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                using SQLiteCommand command = new(connection);
-                command.CommandText = String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName);
-#if !DEBUG
-                lastQuery = command.CommandText;
-#endif
-                using SQLiteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                try
                 {
-                    distinctValues.Add(reader[columnName]);
-                }
-                return distinctValues;
-            }
-            catch (Exception exception)
-            {
-#if DEBUG
-                Debug.Fail($"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}");
-#else
-                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("GetDistinctValuesInColumn", new SqlOperationResult
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    using SQLiteCommand command = new(connection);
+                    command.CommandText = String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName);
+                    using SQLiteDataReader reader = command.ExecuteReader();
+                    while (reader.Read())
                     {
-                        Context = "GetDistinctValuesInColumn",
-                        ErrorMessage = "SqlStatementFailure",
-                        FailingStatement = lastQuery,
-                        Exception = exception
-                    });
+                        distinctValues.Add(reader[columnName]);
+                    }
+                    return distinctValues;
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                    && attempt < 3)
+                {
+                    int delayMs = (attempt + 1) * 200;
+                    TracePrint.PrintMessage($"Database unavailable in GetDistinctValuesInColumn (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception exception)
+                {
+#if DEBUG
+                    Debug.Fail($"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}");
+#else
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("GetDistinctValuesInColumn", SqlOperationResult.Fail(
+                            $"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}",
+                            exception,
+                            String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName)));
 #endif
-                return distinctValues;
+                    return distinctValues;
+                }
             }
         }
 
@@ -314,32 +329,38 @@ public class SQLiteWrapper
         private object GetScalarFromSelect(string query)
         {
             // Debug.Print("Scalar: " + query);
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                using SQLiteCommand command = new(connection);
-                //#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
-                command.CommandText = query;
-                //Debug.Print("Count: " + query);
-                //#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
-                return command.ExecuteScalar();
-            }
-            catch (Exception exception)
-            {
+                try
+                {
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    using SQLiteCommand command = new(connection);
+                    //#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
+                    command.CommandText = query;
+                    //Debug.Print("Count: " + query);
+                    //#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
+                    return command.ExecuteScalar();
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                    && attempt < 3)
+                {
+                    int delayMs = (attempt + 1) * 200;
+                    TracePrint.PrintMessage($"Database unavailable in GetScalarFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception exception)
+                {
 #if DEBUG
-                Debug.Fail($"SQL read failure in GetScalarFromSelect: {exception.Message}\nQuery: {query}");
+                    Debug.Fail($"SQL read failure in GetScalarFromSelect: {exception.Message}\nQuery: {query}");
 #else
-                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("GetScalarFromSelect", new SqlOperationResult
-                    {
-                        Context = "GetScalarFromSelect",
-                        ErrorMessage = "SqlStatementFailure",
-                        FailingStatement = query,
-                        Exception = exception
-                    });
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("GetScalarFromSelect", SqlOperationResult.Fail(
+                            $"SQL read failure in GetScalarFromSelect: {exception.Message}", exception, query));
 #endif
-                return null;
+                    return null;
+                }
             }
         }
 #endregion
@@ -1235,34 +1256,40 @@ public class SQLiteWrapper
         // Return a List of strings comprising each column in the schema
         public List<string> SchemaGetColumns(string tableName)
         {
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                // Open the connection
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                using SQLiteDataReader reader = GetSchema(connection, tableName);
-                List<string> columnsList = [];
-                while (reader.Read())
+                try
                 {
-                    columnsList.Add(reader[1].ToString());
-                }
-                return columnsList;
-            }
-            catch (Exception exception)
-            {
-#if DEBUG
-                Debug.Fail($"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}");
-#else
-                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("SchemaGetColumns", new SqlOperationResult
+                    // Open the connection
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    using SQLiteDataReader reader = GetSchema(connection, tableName);
+                    List<string> columnsList = [];
+                    while (reader.Read())
                     {
-                        Context = "SchemaGetColumns",
-                        ErrorMessage = "SqlStatementFailure",
-                        FailingStatement = string.Empty,
-                        Exception = exception
-                    });
+                        columnsList.Add(reader[1].ToString());
+                    }
+                    return columnsList;
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                    && attempt < 3)
+                {
+                    int delayMs = (attempt + 1) * 200;
+                    TracePrint.PrintMessage($"Database unavailable in SchemaGetColumns (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception exception)
+                {
+#if DEBUG
+                    Debug.Fail($"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}");
+#else
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("SchemaGetColumns", SqlOperationResult.Fail(
+                            $"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}", exception));
 #endif
-                return null;
+                    return null;
+                }
             }
         }
 
@@ -1270,58 +1297,75 @@ public class SQLiteWrapper
         // Return a dictionary comprising each column in the schema and its default values (if any)
         public Dictionary<string, string> SchemaGetColumnsAndDefaultValues(string tableName)
         {
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                // Open the connection
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                using SQLiteDataReader reader = GetSchema(connection, tableName);
-                Dictionary<string, string> columndefaultsDict = [];
-                while (reader.Read())
+                try
                 {
-                    columndefaultsDict.Add(reader[1].ToString() ?? string.Empty, reader[4].ToString());
-                }
-                return columndefaultsDict;
-            }
-            catch (Exception exception)
-            {
-#if DEBUG
-                Debug.Fail($"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}");
-#else
-                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", new SqlOperationResult
+                    // Open the connection
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    using SQLiteDataReader reader = GetSchema(connection, tableName);
+                    Dictionary<string, string> columndefaultsDict = [];
+                    while (reader.Read())
                     {
-                        Context = "SchemaGetColumnsAndDefaultValues",
-                        ErrorMessage = "SqlStatementFailure",
-                        FailingStatement = string.Empty,
-                        Exception = exception
-                    });
+                        columndefaultsDict.Add(reader[1].ToString() ?? string.Empty, reader[4].ToString());
+                    }
+                    return columndefaultsDict;
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                    && attempt < 3)
+                {
+                    int delayMs = (attempt + 1) * 200;
+                    TracePrint.PrintMessage($"Database unavailable in SchemaGetColumnsAndDefaultValues (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception exception)
+                {
+#if DEBUG
+                    Debug.Fail($"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}");
+#else
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", SqlOperationResult.Fail(
+                            $"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}", exception));
 #endif
-                return null;
+                    return null;
+                }
             }
         }
 
         public bool SchemaIsColumnInTable(string sourceTable, string currentColumnName)
         {
 #pragma warning disable CS0168 // Variable is declared but never used
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
-                return currentColumnNames.Contains(currentColumnName);
-            }
-            catch (Exception exception)
-            {
+                try
+                {
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
+                    return currentColumnNames.Contains(currentColumnName);
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
+                    && attempt < 3)
+                {
+                    int delayMs = (attempt + 1) * 200;
+                    TracePrint.PrintMessage($"Database unavailable in SchemaIsColumnInTable (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception exception)
+                {
 #if DEBUG
-                Debug.Fail($"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}");
+                    Debug.Fail($"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}");
 #else
-                if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("SchemaIsColumnInTable", SqlOperationResult.Fail(
-                        $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}",
-                        exception));
+                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+                        OnReadError?.Invoke("SchemaIsColumnInTable", SqlOperationResult.Fail(
+                            $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}",
+                            exception));
 #endif
-                return false;
+                    return false;
+                }
             }
 #pragma warning restore CS0168 // Variable is declared but never used
         }
