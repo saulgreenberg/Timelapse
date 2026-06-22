@@ -272,8 +272,12 @@ namespace Timelapse
                 BusyCancelIndicator.Reset(false);
                 return;
             }
+            if (SqlErrorState.HasError)
+            {
+                SQLiteWrapper.ResetAllReadErrorState();
+            }
 
-            // 
+            //
             // 5. Reset various recognition settings as needed and refresh the display
             //
             if (result == RecognizerImportResultEnum.Success)

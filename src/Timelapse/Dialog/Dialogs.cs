@@ -4431,6 +4431,41 @@ namespace Timelapse.Dialog
             Application.Current.Shutdown();
         }
         #endregion
+
+        #region TimelapseReadErrorNoticeDialog
+        public static void TimelapseReadErrorNoticeDialog(Window owner, SqlOperationResult result, string context)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            if (!owner.Dispatcher.CheckAccess())
+            {
+                owner.Dispatcher.Invoke(() => TimelapseReadErrorNoticeDialog(owner, result, context));
+                return;
+            }
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Warning: a database read error occurred",
+                Icon = DialogIconType.Warning,
+                Problem = "Timelapse tried to read data from your database, but an error occurred." +
+                          (string.IsNullOrWhiteSpace(context) ? string.Empty : $"[br][b]Operation:[/b] {context}"),
+                Reason = "This can happen when:" +
+                         "[li] a network or OneDrive glitch temporarily blocked access to the file," +
+                         "[li] the database file was temporarily locked by another process," +
+                         "[li] the file is on a removable drive that was briefly disconnected.",
+                Result = "The operation that just completed may have returned incomplete or inaccurate data." +
+                         "[br]No data was modified.",
+                Solution = "[ni] [e]Retry the operation.[/e] Transient errors usually resolve on their own." +
+                           "[ni] If the problem persists, restart Timelapse.",
+            };
+            if (result?.Exception != null)
+            {
+                dialog.Details = $"[b]Error message:[/b] {result.ErrorMessage}" +
+                                 $"[br][b]Exception:[/b] {result.Exception.Message}";
+            }
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+        #endregion
     }
 
 }

@@ -395,6 +395,10 @@ namespace Timelapse
             {
                 await OnFolderLoadingCompleteAsync(false).ConfigureAwait(true);
             }
+            if (SqlErrorState.HasError)
+            {
+                SQLiteWrapper.ResetAllReadErrorState();
+            }
             return new(true, string.Empty);
         }
 

@@ -157,11 +157,17 @@ namespace Timelapse
             // Record SQL read failures in SqlErrorState rather than immediately showing a dialog.
             // Safe to call from any thread (e.g. GetDataTableFromSelectAsync runs on a thread-pool thread).
             // Only the first error is recorded; subsequent calls are ignored so that a cascade of async
-            // operations all failing after a single root cause does not cause multiple dialogs.
-            // Callers at natural task-completion points should check SqlErrorState.HasError and call
-            // SqlOperationResult.GenerateExceptionDialog(SqlErrorState.SqlOperationResult, SqlErrorState.Context).
+            // When a read fails, record the error and show the notice dialog immediately (it is
+            // non-fatal and has an OK button only). The dialog is shown via Dispatcher so it works
+            // whether the error fires on the UI thread or a background thread. Resetting both
+            // _errorFired and SqlErrorState after the dialog closes ensures subsequent errors can
+            // fire again without the gate staying permanently locked.
             SQLiteWrapper.OnReadError = (context, sqlOperationResult) =>
+            {
                 SqlErrorState.TryRecord(sqlOperationResult, context);
+                Dialogs.TimelapseReadErrorNoticeDialog(GlobalReferences.MainWindow, sqlOperationResult, context);
+                SQLiteWrapper.ResetAllReadErrorState();
+            };
 
             // Populate the most recent image set list
             MenuItemRecentImageSets_RefreshItems();

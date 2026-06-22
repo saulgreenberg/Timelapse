@@ -107,6 +107,10 @@ namespace Timelapse
                 await DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
                 //BusyCancelIndicator.EnableForSelection(false);
                 DataHandler.FileDatabase.BindToDataGrid();
+                if (SqlErrorState.HasError)
+                {
+                    SQLiteWrapper.ResetAllReadErrorState();
+                }
             }
             //Mouse.OverrideCursor = null;
 
@@ -126,6 +130,10 @@ namespace Timelapse
                 await DataHandler.FileDatabase.SelectFilesAsync(selection).ConfigureAwait(true);
                 //BusyCancelIndicator.EnableForSelection(false);
                 DataHandler.FileDatabase.BindToDataGrid();
+                if (SqlErrorState.HasError)
+                {
+                    SQLiteWrapper.ResetAllReadErrorState();
+                }
             }
 
             // Show feedback of the status description in both the status bar and the data entry control panel title

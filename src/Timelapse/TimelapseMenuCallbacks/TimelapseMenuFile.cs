@@ -441,6 +441,10 @@ namespace Timelapse
                 Dialogs.MenuFileCantWriteSpreadsheetFileDialog(this, selectedCSVFilePath, exception.GetType().FullName, exception.Message);
                 return;
             }
+            if (SqlErrorState.HasError)
+            {
+                SQLiteWrapper.ResetAllReadErrorState();
+            }
 
             MenuItem mi = (MenuItem)sender;
             if (mi == MenuItemExportAsCsvAndPreview)

@@ -49,14 +49,12 @@ public class SQLiteWrapper
         /// Optional callback invoked when a read method catches an exception.
         /// Parameters: context (method name), failing SQL statement (may be null).
         /// Subscribers can record the failure for later reporting (e.g. via <see cref="Database.SqlErrorState"/>).
-        /// In Debug builds, <c>Debug.Fail</c> fires first; this callback is still invoked afterwards.
+        /// Subscribers can record the failure for later reporting (e.g. via <see cref="Database.SqlErrorState"/>).
         /// </summary>
         public static Action<string, SqlOperationResult> OnReadError { get; set; }
 
         // Ensures only the first SQL read error across all concurrent threads raises the dialog.
-#if !DEBUG
         private static int _errorFired;
-#endif
 
         /// <summary>
         /// Resets the read-error-fired guard and <see cref="SqlErrorState"/> so that new read
@@ -67,9 +65,7 @@ public class SQLiteWrapper
         /// </summary>
         public static void ResetAllReadErrorState()
         {
-#if !DEBUG
             Interlocked.Exchange(ref _errorFired, 0);
-#endif
             SqlErrorState.Reset();
         }
 
@@ -219,13 +215,9 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in GetDataTableFromSelect: {exception.Message}\nQuery: {query}");
-#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetDataTableFromSelect", SqlOperationResult.Fail(
                             $"SQL read failure in GetDataTableFromSelect: {exception.Message}", exception, query));
-#endif
                     return dataTable;
                 }
             }
@@ -281,13 +273,9 @@ public class SQLiteWrapper
                     }
                     catch (Exception exception)
                     {
-#if DEBUG
-                        Debug.Fail($"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}\nQuery: {query}");
-#else
                         if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                             OnReadError?.Invoke("GetDataTableFromSelectAsync", SqlOperationResult.Fail(
                                 $"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}", exception, query));
-#endif
                         return dataTable;
                     }
                 }
@@ -322,15 +310,11 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}");
-#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetDistinctValuesInColumn", SqlOperationResult.Fail(
                             $"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}",
                             exception,
                             String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName)));
-#endif
                     return distinctValues;
                 }
             }
@@ -367,13 +351,9 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in GetScalarFromSelect: {exception.Message}\nQuery: {query}");
-#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetScalarFromSelect", SqlOperationResult.Fail(
                             $"SQL read failure in GetScalarFromSelect: {exception.Message}", exception, query));
-#endif
                     return null;
                 }
             }
@@ -1296,13 +1276,9 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}");
-#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("SchemaGetColumns", SqlOperationResult.Fail(
                             $"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}", exception));
-#endif
                     return null;
                 }
             }
@@ -1337,13 +1313,9 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}");
-#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", SqlOperationResult.Fail(
                             $"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}", exception));
-#endif
                     return null;
                 }
             }
@@ -1371,14 +1343,10 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-#if DEBUG
-                    Debug.Fail($"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}");
-#else
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("SchemaIsColumnInTable", SqlOperationResult.Fail(
                             $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}",
                             exception));
-#endif
                     return false;
                 }
             }
