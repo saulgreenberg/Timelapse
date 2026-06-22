@@ -1317,7 +1317,9 @@ public class SQLiteWrapper
                 Debug.Fail($"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}");
 #else
                 if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                    OnReadError?.Invoke("SchemaIsColumnInTable", null);
+                    OnReadError?.Invoke("SchemaIsColumnInTable", SqlOperationResult.Fail(
+                        $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}",
+                        exception));
 #endif
                 return false;
             }

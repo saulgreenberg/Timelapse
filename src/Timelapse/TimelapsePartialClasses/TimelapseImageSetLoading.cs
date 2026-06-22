@@ -270,14 +270,17 @@ namespace Timelapse
             // The next test is to test and syncronize (if needed) the default values stored in the fileDB table schema to those stored in the template
             // Only invoke this when we know the templateDBs are in sync, and the templateDB matches the FileDB (i.e., same control rows/columns) except for one or more defaults.
             Dictionary<string, string> columndefaultdict = await Task.Run(() => fileDatabase.SchemaGetColumnsAndDefaultValues(DBTables.FileData)).ConfigureAwait(true);
-            char[] quote = ['\''];
-            foreach (KeyValuePair<string, string> pair in columndefaultdict)
+            if (columndefaultdict != null)
             {
-                ControlRow row = templateDatabase.GetControlFromControls(pair.Key);
-                if (row != null && pair.Value.Trim(quote) != row.DefaultValue)
+                char[] quote = ['\''];
+                foreach (KeyValuePair<string, string> pair in columndefaultdict)
                 {
-                    fileDatabase.UpgradeFileDBSchemaDefaultsFromTemplate();
-                    break;
+                    ControlRow row = templateDatabase.GetControlFromControls(pair.Key);
+                    if (row != null && pair.Value.Trim(quote) != row.DefaultValue)
+                    {
+                        fileDatabase.UpgradeFileDBSchemaDefaultsFromTemplate();
+                        break;
+                    }
                 }
             }
 
