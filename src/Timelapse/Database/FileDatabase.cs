@@ -397,14 +397,24 @@ namespace Timelapse.Database
                     // Image level: Handle deleted image data controls 
                     foreach (string dataLabel in value)
                     {
-                        Database.SchemaDeleteColumn(DBTables.FileData, dataLabel);
+                        if (!Database.SchemaDeleteColumn(DBTables.FileData, dataLabel).Success)
+                        {
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath);
+                            return;
+                        }
 
                         // Delete the markers column associated with this data label (if it exists) from the Markers table
                         // Note that we do this for all column types, even though only counters have an associated entry in the Markers table.
                         // This is because we can't get the type of the data label as it no longer exists in the Template.
                         if (Database.SchemaIsColumnInTable(DBTables.Markers, dataLabel))
                         {
-                            Database.SchemaDeleteColumn(DBTables.Markers, dataLabel);
+                            if (!Database.SchemaDeleteColumn(DBTables.Markers, dataLabel).Success)
+                            {
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                    true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath);
+                                return;
+                            }
                             // Delete any empty rows from the Marker Table
                             string where = string.Empty;
                             foreach (ControlRow controlRow in Controls.Where(x => x.Type == Control.Counter))
@@ -448,7 +458,12 @@ namespace Timelapse.Database
                             // Remove the control from the table
                             foreach (string dataLabel in templateSyncResults.DataLabelsToDeleteByLevel[level])
                             {
-                                Database.SchemaDeleteColumn(tableName, dataLabel);
+                                if (!Database.SchemaDeleteColumn(tableName, dataLabel).Success)
+                                {
+                                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                        true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath);
+                                    return;
+                                }
                             }
                         }
                     }
@@ -473,12 +488,22 @@ namespace Timelapse.Database
                         long id = GetControlIDFromControls(dataLabel);
                         ControlRow control = Controls.Find(id);
                         SchemaColumnDefinition columnDefinition = CreateFileDataColumnDefinition(control);
-                        Database.SchemaAddColumnToEndOfTable(DBTables.FileData, columnDefinition);
+                        if (!Database.SchemaAddColumnToEndOfTable(DBTables.FileData, columnDefinition).Success)
+                        {
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath);
+                            return;
+                        }
 
                         if (control.Type == Control.Counter)
                         {
                             SchemaColumnDefinition markerColumnDefinition = new(dataLabel, Sql.Text, DatabaseValues.DefaultMarkerValue);
-                            Database.SchemaAddColumnToEndOfTable(DBTables.Markers, markerColumnDefinition);
+                            if (!Database.SchemaAddColumnToEndOfTable(DBTables.Markers, markerColumnDefinition).Success)
+                            {
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                    true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath);
+                                return;
+                            }
                         }
                     }
                 }
@@ -492,9 +517,14 @@ namespace Timelapse.Database
                         // As the table already exists, we just add the column definition
                         MetadataControlRow control = GetControlFromMetadataControls(dataLabel, level);
                         SchemaColumnDefinition columnDefinition = CreateFileDataColumnDefinition(control);
-                        Database.SchemaAddColumnToEndOfTable(
+                        if (!Database.SchemaAddColumnToEndOfTable(
                             MetadataComposeTableNameFromLevel(level),
-                            columnDefinition);
+                            columnDefinition).Success)
+                        {
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath);
+                            return;
+                        }
                     }
                 }
             }
@@ -523,14 +553,24 @@ namespace Timelapse.Database
                     foreach (KeyValuePair<string, string> dataLabelToRename in value)
                     {
                         // Rename the column associated with that data label from the FileData table
-                        Database.SchemaRenameColumn(DBTables.FileData, dataLabelToRename.Key, dataLabelToRename.Value);
+                        if (!Database.SchemaRenameColumn(DBTables.FileData, dataLabelToRename.Key, dataLabelToRename.Value).Success)
+                        {
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath);
+                            return;
+                        }
 
                         // Rename the markers column associated with this data label (if it exists) from the Markers table
                         // Note that we do this for all column types, even though only counters have an associated entry in the Markers table.
                         // This is because its easiest to code, as the function handles attempts to delete a column that isn't there (which also returns false).
                         if (Database.SchemaIsColumnInTable(DBTables.Markers, dataLabelToRename.Key))
                         {
-                            Database.SchemaRenameColumn(DBTables.Markers, dataLabelToRename.Key, dataLabelToRename.Value);
+                            if (!Database.SchemaRenameColumn(DBTables.Markers, dataLabelToRename.Key, dataLabelToRename.Value).Success)
+                            {
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                    true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath);
+                                return;
+                            }
                         }
                     }
                 }
@@ -542,9 +582,14 @@ namespace Timelapse.Database
                     foreach (KeyValuePair<string, string> dataLabelToRename in value1)
                     {
                         // Rename the column associated with that data label from the given Level table
-                        Database.SchemaRenameColumn(
+                        if (!Database.SchemaRenameColumn(
                             MetadataComposeTableNameFromLevel(level),
-                            dataLabelToRename.Key, dataLabelToRename.Value);
+                            dataLabelToRename.Key, dataLabelToRename.Value).Success)
+                        {
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath);
+                            return;
+                        }
                     }
                 }
             }
@@ -783,7 +828,11 @@ namespace Timelapse.Database
             }
 
             // Replace the schema in the File DB table with the schema defined by the column definitions.
-            Database.SchemaAlterTableWithNewColumnDefinitions(DBTables.FileData, columnDefinitions);
+            if (!Database.SchemaAlterTableWithNewColumnDefinitions(DBTables.FileData, columnDefinitions).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    true, "SchemaAlterTableWithNewColumnDefinitions failed in UpgradeFileDBSchemaDefaultsFromTemplate", this.FilePath);
+            }
         }
 
         // Upgrade the database as needed from older to newer formats to preserve backwards compatability 
@@ -3280,19 +3329,31 @@ namespace Timelapse.Database
                 // Add the two column to the detection table if they don't exist
                 if (false == this.Database.SchemaIsColumnInTable(DBTables.Detections, DetectionColumns.Classification))
                 {
-                    // add the Classification  column to the detection table
-                    this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.Classification, Sql.Text));
+                    if (!this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.Classification, Sql.Text)).Success)
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (Classification)", this.FilePath);
+                        return;
+                    }
                 }
                 if (false == this.Database.SchemaIsColumnInTable(DBTables.Detections, Constant.DetectionColumns.ClassificationConf))
                 {
-                    // add the ClassificationConf  column to the detection table
-                    this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.ClassificationConf, Sql.Real));
+                    if (!this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.ClassificationConf, Sql.Real)).Success)
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (ClassificationConf)", this.FilePath);
+                        return;
+                    }
                 }
 
                 if (false == this.Database.SchemaIsColumnInTable(DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Description))
                 {
-                    // add the ClassificationConf  column to the detection table
-                    this.Database.SchemaAddColumnToEndOfTable(DBTables.ClassificationCategories, new(ClassificationCategoriesColumns.Description, Sql.Text, string.Empty));
+                    if (!this.Database.SchemaAddColumnToEndOfTable(DBTables.ClassificationCategories, new(ClassificationCategoriesColumns.Description, Sql.Text, string.Empty)).Success)
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (ClassificationCategories)", this.FilePath);
+                        return;
+                    }
                 }
             }
 

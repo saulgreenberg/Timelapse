@@ -1881,7 +1881,13 @@ namespace Timelapse.Database
             if (false == database.SchemaIsColumnInTable(DBTables.Template, Control.ExportToCSV))
             {
                 SchemaColumnDefinition scd = new(Control.ExportToCSV, Control.Flag, BooleanValue.True);
-                database.SchemaAddColumnToEndOfTable(DBTables.Template, scd);
+                if (!database.SchemaAddColumnToEndOfTable(DBTables.Template, scd).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaAddColumnToEndOfTable failed in AddExportToCSVColumnIfNeeded", database.FilePath);
+                    return;
+                }
                 ColumnTuplesWithWhere ctww = new();
 
                 ctww.Columns.Add(new(Control.ExportToCSV, BooleanValue.False));
@@ -1906,7 +1912,13 @@ namespace Timelapse.Database
             if (database.SchemaIsColumnInTable(DBTables.TemplateInfo, "VersionCompatability"))
             {
                 // This error is rare and I am not sure what caused it, but the column should be called VersionCompatabily (a typo kept for backwards compatability)
-                database.SchemaRenameColumn(DBTables.TemplateInfo, "VersionCompatability", Constant.DatabaseColumn.VersionCompatibility);
+                if (!database.SchemaRenameColumn(DBTables.TemplateInfo, "VersionCompatability", Constant.DatabaseColumn.VersionCompatibility).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaRenameColumn failed in AddTemplateInfoTableOrRowIfNeeded", database.FilePath);
+                    return;
+                }
             }
             DataTable table = database.GetDataTableFromSelect(Sql.SelectStarFrom + DBTables.TemplateInfo);
             if (table.Rows.Count == 0)
@@ -1937,7 +1949,13 @@ namespace Timelapse.Database
             if (false == database.SchemaIsColumnInTable(DBTables.TemplateInfo, DatabaseColumn.Standard))
             {
                 SchemaColumnDefinition scd = new(DatabaseColumn.Standard, Sql.Text, string.Empty);
-                database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd);
+                if (!database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaAddColumnToEndOfTable failed in AddStandardToTemplateInfoColumnIfNeeded", database.FilePath);
+                    return;
+                }
 
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.Standard, string.Empty));
@@ -1958,7 +1976,13 @@ namespace Timelapse.Database
             if (false == database.SchemaIsColumnInTable(DBTables.TemplateInfo, DatabaseColumn.BackwardsCompatibility))
             {
                 SchemaColumnDefinition scd = new(DatabaseColumn.BackwardsCompatibility, Sql.Text, string.Empty);
-                database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd);
+                if (!database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaAddColumnToEndOfTable failed in AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded", database.FilePath);
+                    return;
+                }
                 // Update the template info table with the current Backwards compatability value
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatibleForTemplates));
@@ -1979,7 +2003,13 @@ namespace Timelapse.Database
             if (false == database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.Standard))
             {
                 SchemaColumnDefinition scd = new(DatabaseColumn.Standard, Sql.Text, string.Empty);
-                database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd);
+                if (!database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaAddColumnToEndOfTable failed in AddStandardToImageSetColumnIfNeeded", database.FilePath);
+                    return;
+                }
 
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.Standard, string.Empty));
@@ -2000,7 +2030,13 @@ namespace Timelapse.Database
             if (false == database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.BackwardsCompatibility))
             {
                 SchemaColumnDefinition scd = new(DatabaseColumn.BackwardsCompatibility, Sql.Text, string.Empty);
-                database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd);
+                if (!database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaAddColumnToEndOfTable failed in AddBackwardsCompatibilityToImageSetColumnIfNeeded", database.FilePath);
+                    return;
+                }
 
                 ColumnTuplesWithWhere ctww = new();
                 ctww.Columns.Add(new(DatabaseColumn.BackwardsCompatibility, Constant.DatabaseValues.VersionNumberBackwardsCompatible));

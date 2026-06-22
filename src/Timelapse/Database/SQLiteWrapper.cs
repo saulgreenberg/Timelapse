@@ -1221,25 +1221,45 @@ public class SQLiteWrapper
             }
         }
 
+        [MustUseReturnValue]
         public SqlOperationResult SchemaAlterTableWithNewColumnDefinitions(string sourceTable, List<SchemaColumnDefinition> columnDefinitions)
         {
             // A GUID suffix guarantees uniqueness regardless of the user's schema.
             string destTable = $"_TempTable_{Guid.NewGuid():N}";
             try
             {
-                // Create an empty table with the schema based on columnDefinitions
-                SqlOperationResult createResult = CreateTable(destTable, columnDefinitions);
-                if (!createResult.Success) return createResult;
-
                 using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                 connection.Open();
 
-                // copy the contents from the source table to the destination table
-                CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
+                // Build the CREATE TABLE SQL inline so all steps share the same connection and transaction.
+                // (Calling the public CreateTable() would open a second connection, excluding that step from the transaction.)
+                string createSql = $"{Sql.CreateTable} {destTable} {Sql.OpenParenthesis} {Environment.NewLine}";
+                foreach (SchemaColumnDefinition column in columnDefinitions)
+                    createSql += $"{column} {Sql.Comma}{Environment.NewLine}";
+                createSql = createSql.Remove(createSql.Length - Sql.Comma.Length - Environment.NewLine.Length);
+                createSql += $"{Sql.CloseParenthesis} {Sql.Semicolon}";
 
-                // delete the source table, and rename the destination table so it is the same as the source table
-                DropTable(connection, sourceTable);
-                SchemaRenameTable(connection, destTable, sourceTable);
+                using SQLiteTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    using (SQLiteCommand createCmd = new(createSql, connection))
+                        createCmd.ExecuteNonQuery();
+
+                    // copy the contents from the source table to the destination table
+                    CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
+
+                    // delete the source table, and rename the destination table so it is the same as the source table
+                    DropTable(connection, sourceTable);
+                    SchemaRenameTable(connection, destTable, sourceTable);
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+
                 return SqlOperationResult.Ok();
             }
             catch (Exception exception)
@@ -1356,6 +1376,7 @@ public class SQLiteWrapper
 
         // This method will create a column in a table of type TEXT, where it is added to its end
         // It assumes that the value, if not empty, should be treated as the default value for that column
+        [MustUseReturnValue]
         public SqlOperationResult SchemaAddColumnToEndOfTable(string tableName, SchemaColumnDefinition columnDefinition)
         {
             // Check the arguments for null
@@ -1430,6 +1451,7 @@ public class SQLiteWrapper
             }
         }
 
+        [MustUseReturnValue]
         public SqlOperationResult SchemaDeleteColumn(string sourceTable, string columnName)
         {
             // Check the arguments for null
@@ -1457,19 +1479,30 @@ public class SQLiteWrapper
                 // Guarantees that the table name is unique
                 string destTable = $"{sourceTable}_NEW_{Guid.NewGuid():N}";
                 string sql = Sql.CreateTable + destTable + Sql.OpenParenthesis + newSchema + Sql.CloseParenthesis;
-                using (SQLiteCommand command = new(sql, connection))
+
+                using SQLiteTransaction transaction = connection.BeginTransaction();
+                try
                 {
-                    command.ExecuteNonQuery();
+                    using (SQLiteCommand command = new(sql, connection))
+                        command.ExecuteNonQuery();
+
+                    // Copy the old table's contents to the new table
+                    CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
+
+                    // Now drop the source table and rename the destination table to that of the source table
+                    DropTable(connection, sourceTable);
+
+                    // Rename the table
+                    SchemaRenameTable(connection, destTable, sourceTable);
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
 
-                // Copy the old table's contents to the new table
-                CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
-
-                // Now drop the source table and rename the destination table to that of the source table
-                DropTable(connection, sourceTable);
-
-                // Rename the table
-                SchemaRenameTable(connection, destTable, sourceTable);
                 return SqlOperationResult.Ok();
             }
             catch (Exception exception)
@@ -1480,6 +1513,7 @@ public class SQLiteWrapper
         }
 
         // Rename a column in a table. This is just a simpler form of SchemaAlterColumn
+        [MustUseReturnValue]
         public SqlOperationResult SchemaRenameColumn(string sourceTable, string currentColumnName, string newColumnName)
         {
             Dictionary<SchemaAttributesEnum, string> attributes = new()
@@ -1491,7 +1525,8 @@ public class SQLiteWrapper
 
         // Alter the column schema
         // New attributes are given in the attributes dictionary, where the key indicates the schema field (e.g., Column name, type, NotNull, and Default) and the value is the new value for that field
-        // If a field is not specified, jsut keep the old value.  
+        // If a field is not specified, jsut keep the old value.
+        [MustUseReturnValue]
         public SqlOperationResult SchemaAlterColumn(string sourceTable, string currentColumnName, Dictionary<SchemaAttributesEnum, string> attributes)
         {
             // Pre-condition: empty column name is a programming error, not a runtime SQL failure
@@ -1529,19 +1564,30 @@ public class SQLiteWrapper
                 // Guarantees that the table name is unique
                 string destTable = $"{sourceTable}_NEW_{Guid.NewGuid():N}";
                 string sql = Sql.CreateTable + destTable + Sql.OpenParenthesis + newSchema + Sql.CloseParenthesis;
-                using (SQLiteCommand command = new(sql, connection))
+
+                using SQLiteTransaction transaction = connection.BeginTransaction();
+                try
                 {
-                    command.ExecuteNonQuery();
+                    using (SQLiteCommand command = new(sql, connection))
+                        command.ExecuteNonQuery();
+
+                    // Copy the old table's contents to the new table
+                    CopyAllValuesBetweenTables(connection, sourceTable, destTable, sourceTable, destTable);
+
+                    // Now drop the source table and rename the destination table to that of the source table
+                    DropTable(connection, sourceTable);
+
+                    // Rename the table
+                    SchemaRenameTable(connection, destTable, sourceTable);
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
 
-                // Copy the old table's contents to the new table
-                CopyAllValuesBetweenTables(connection, sourceTable, destTable, sourceTable, destTable);
-
-                // Now drop the source table and rename the destination table to that of the source table
-                DropTable(connection, sourceTable);
-
-                // Rename the table
-                SchemaRenameTable(connection, destTable, sourceTable);
                 return SqlOperationResult.Ok();
             }
             catch (Exception exception)
