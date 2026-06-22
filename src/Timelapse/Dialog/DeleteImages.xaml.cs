@@ -400,8 +400,8 @@ namespace Timelapse.Dialog
                     // drop images
                     fileDatabase.DeleteFilesAndMarkers(imageIDsToDropFromDatabase);
 
-                    // Vacuum the database to reclaim the space used by the deleted rows
-                    fileDatabase.Database.Vacuum();
+                    // Vacuum the database to reclaim the space used by the deleted rows; failure is survivable (space not reclaimed)
+                    _ = fileDatabase.Database.Vacuum();
                 }
                 else
                 {

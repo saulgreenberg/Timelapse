@@ -334,15 +334,30 @@ namespace Timelapse.Database
             bool isDatabaseRecreated = false;
             if (templateSyncResults.SyncRequiredAsDataLabelsDiffer)
             {
-                // DataLabels between the TemplateTable in the .tdb and .ddb database differ. 
-                // Update the .ddb Template table by dropping the .ddb template tables and replacing it with the ones in the .tdb table. 
-                Database.DropTable(DBTables.Template);
+                // DataLabels between the TemplateTable in the .tdb and .ddb database differ.
+                // Update the .ddb Template table by dropping the .ddb template tables and replacing it with the ones in the .tdb table.
+                if (!Database.DropTable(DBTables.Template).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (Template)", this.FilePath);
+                    return;
+                }
                 isDatabaseRecreated = true;
             }
             if (templateSyncResults.SyncRequiredAsFolderLevelsDiffer && false == templateSyncResults.InfoHierarchyIncompatibleDifferences)
             {
-                Database.DropTable(DBTables.MetadataTemplate);
-                Database.DropTable(DBTables.MetadataInfo);
+                if (!Database.DropTable(DBTables.MetadataTemplate).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate)", this.FilePath);
+                    return;
+                }
+                if (!Database.DropTable(DBTables.MetadataInfo).Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataInfo)", this.FilePath);
+                    return;
+                }
                 isDatabaseRecreated = true;
 
             }
@@ -450,7 +465,12 @@ namespace Timelapse.Database
                         if (columnsInTable - deleteCount == 2)
                         {
                             // Drop this level's table as there are no longer any controls defined within it
-                            Database.DropTable(tableName);
+                            if (!Database.DropTable(tableName).Success)
+                            {
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                                    true, "DropTable failed in OnExistingDatabaseOpenedAsync (level table)", this.FilePath);
+                                return;
+                            }
                             countOfLevelTablesDeleted++;
                         }
                         else
@@ -2836,11 +2856,12 @@ namespace Timelapse.Database
         {
             if (Database.TableExists(Constant.DBTables.Detections) && false == Database.TableHasContent(Constant.DBTables.Detections))
             {
-                Database.DropTable(Constant.DBTables.DetectionCategories);
-                Database.DropTable(Constant.DBTables.Detections);
-                Database.DropTable(Constant.DBTables.DetectionsVideo);
-                Database.DropTable(Constant.DBTables.ClassificationCategories);
-                Database.DropTable(Constant.DBTables.Classifications);
+                // Empty detection tables — drop failures leave orphan empty tables, which is harmless
+                _ = Database.DropTable(Constant.DBTables.DetectionCategories);
+                _ = Database.DropTable(Constant.DBTables.Detections);
+                _ = Database.DropTable(Constant.DBTables.DetectionsVideo);
+                _ = Database.DropTable(Constant.DBTables.ClassificationCategories);
+                _ = Database.DropTable(Constant.DBTables.Classifications);
             }
             detectionExists = false;
         }
@@ -3367,7 +3388,8 @@ namespace Timelapse.Database
             if (false == this.Database.TableHasContent(DBTables.Classifications))
             {
                 // Just delete the classifications table as it has no content, which means there is nothing to update
-                this.Database.DropTable(DBTables.Classifications);
+                // Drop failure leaves an empty orphan table, which is harmless
+                _ = this.Database.DropTable(DBTables.Classifications);
                 return;
             }
 
@@ -3408,8 +3430,9 @@ namespace Timelapse.Database
             // Versions prior to 2.3.3.0 will not be able to access the classification data as it is being dropped.
             //  as it crashes if the custom select tries to use classifications.
             // This is why we don't allow versions at or after 2.3.3.0 to open earlier databases.
-            this.Database.DropTable(DBTables.Classifications);
-            this.Database.Vacuum();
+            // Drop/Vacuum failures here are survivable: Classifications is now redundant, and Vacuum is space-reclaim only
+            _ = this.Database.DropTable(DBTables.Classifications);
+            _ = this.Database.Vacuum();
         }
         #endregion
 

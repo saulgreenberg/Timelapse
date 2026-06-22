@@ -64,7 +64,8 @@ namespace Timelapse.Database
             }
 
             // VACUUM is forbidden inside a transaction and opens its own connection internally.
-            database.Vacuum();
+            // Failure is survivable — the database just retains its pre-vacuum size.
+            _ = database.Vacuum();
         }
 
         public static Task ResetIDsAndVacuumAsync(SQLiteWrapper database)
