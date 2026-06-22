@@ -58,6 +58,21 @@ public class SQLiteWrapper
         private static int _errorFired;
 #endif
 
+        /// <summary>
+        /// Resets the read-error-fired guard and <see cref="SqlErrorState"/> so that new read
+        /// errors can be reported after a previous error has been acknowledged and handled.
+        /// Always call this instead of <see cref="SqlErrorState.Reset"/> alone — the two fields
+        /// must be reset together or a future read error may fire <see cref="OnReadError"/> while
+        /// <see cref="SqlErrorState"/> still holds stale data from a prior error.
+        /// </summary>
+        public static void ResetAllReadErrorState()
+        {
+#if !DEBUG
+            Interlocked.Exchange(ref _errorFired, 0);
+#endif
+            SqlErrorState.Reset();
+        }
+
         #region Constructor
         /// <summary>
         /// Constructor: Create a database file if it does not exist, and then create a connection string to that file
