@@ -455,6 +455,7 @@ public class SQLiteWrapper
         // Set all rows in a given table's column to a single value
         //  Form, e.g., to set all column values to foobar:
         //  -- Update tableName Set columnName = 'foobar';
+        [MustUseReturnValue]
         public SqlOperationResult SetColumnToACommonValue(string tableName, string columnName, string value)
         {
             string query = Sql.Update + tableName + Sql.Set + columnName + Sql.Equal + Sql.Quote(value);

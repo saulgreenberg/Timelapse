@@ -22,7 +22,7 @@ Items are ordered lowest-risk / highest-payoff first. Skip or defer any item by 
 | 1 | L-1 | Progressive DataTable population for large databases | High | ⬜ Pending |
 | 2 | V-1 | Virtualized thumbnail grid for unbounded file counts | High | 🔄 In Progress |
 | 3 | DB-1 | SQLite write failures silently swallowed at ~33 call sites | Medium | ✅ Complete |
-| 4 | DB-2 | SQLite read failures silently swallowed — debug assert only, no user dialog | Low–Medium | ⬜ Pending (after DB-1) |
+| 4 | DB-2 | SQLite read failures silently swallowed — debug assert only, no user dialog | Low–Medium | ✅ Complete |
 
 ---
 

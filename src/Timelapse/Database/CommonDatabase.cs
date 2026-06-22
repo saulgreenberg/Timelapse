@@ -1701,7 +1701,12 @@ namespace Timelapse.Database
 
         public void SetTemplateVersionCompatibility(string versionNumber)
         {
-            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.VersionCompatibility, versionNumber);
+            if (!Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.VersionCompatibility, versionNumber).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "SetColumnToACommonValue failed in SetTemplateVersionCompatibility", this.FilePath);
+            }
         }
 
         // Return the current standard (if any) stored in the TemplateInfo table 
@@ -1721,7 +1726,12 @@ namespace Timelapse.Database
 
         public void SetTemplateStandard(string standard)
         {
-            Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.Standard, standard);
+            if (!Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.Standard, standard).Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                    "SetColumnToACommonValue failed in SetTemplateStandard", this.FilePath);
+            }
         }
 
 
