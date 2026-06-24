@@ -1435,6 +1435,80 @@ namespace Timelapse.Database
         {
             return Database.SchemaGetColumns(tableName);
         }
+
+        // Returns DataLabels defined in the TemplateTable that are missing as columns in the FileData table.
+        public List<string> GetDataLabelsMissingFromFileDataTable()
+        {
+            Dictionary<string, string> actualColumns = SchemaGetColumnsAndDefaultValues(DBTables.FileData);
+            if (actualColumns == null) return [];
+            List<string> expectedLabels = GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
+            return expectedLabels.Where(label => !actualColumns.ContainsKey(label)).ToList();
+        }
+
+        // Returns column names in the FileData table that have no matching DataLabel in the TemplateTable.
+        public List<string> GetExtraColumnsInFileDataTable()
+        {
+            Dictionary<string, string> actualColumns = SchemaGetColumnsAndDefaultValues(DBTables.FileData);
+            if (actualColumns == null) return [];
+            HashSet<string> expectedSet = [..GetDataLabelsExceptIDInSpreadsheetOrderFromControls(), DatabaseColumn.ID];
+            return actualColumns.Keys.Where(col => !expectedSet.Contains(col)).ToList();
+        }
+
+        // Adds a column to FileData (and Markers for Counters) for each label in missingLabels.
+        // Returns true if all additions succeeded.
+        public bool TryRepairMissingFileDataColumns(List<string> missingLabels)
+        {
+            foreach (string dataLabel in missingLabels)
+            {
+                ControlRow control = GetControlFromControls(dataLabel);
+                if (control == null) continue;
+                if (!Database.SchemaAddColumnToEndOfTable(DBTables.FileData, CreateFileDataColumnDefinition(control)).Success)
+                    return false;
+                if (control.Type == Control.Counter)
+                {
+                    SchemaColumnDefinition markerCol = new(dataLabel, Sql.Text, DatabaseValues.DefaultMarkerValue);
+                    if (!Database.SchemaAddColumnToEndOfTable(DBTables.Markers, markerCol).Success)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        // Deletes each column in extraColumns from FileData, and from Markers if the column exists there.
+        // Returns true if all deletions succeeded.
+        public bool TryRepairExtraFileDataColumns(List<string> extraColumns)
+        {
+            List<string> markerColumns = Database.SchemaGetColumns(DBTables.Markers) ?? [];
+            foreach (string col in extraColumns)
+            {
+                if (!Database.SchemaDeleteColumn(DBTables.FileData, col).Success)
+                    return false;
+                if (markerColumns.Contains(col))
+                {
+                    if (!Database.SchemaDeleteColumn(DBTables.Markers, col).Success)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        // Renames each column in FileData from OldName to NewName, and likewise in Markers if the column exists there.
+        // Returns true if all renames succeeded.
+        public bool TryRepairRenamedFileDataColumns(List<(string OldName, string NewName)> renames)
+        {
+            List<string> markerColumns = Database.SchemaGetColumns(DBTables.Markers) ?? [];
+            foreach ((string oldName, string newName) in renames)
+            {
+                if (!Database.SchemaRenameColumn(DBTables.FileData, oldName, newName).Success)
+                    return false;
+                if (markerColumns.Contains(oldName))
+                {
+                    if (!Database.SchemaRenameColumn(DBTables.Markers, oldName, newName).Success)
+                        return false;
+                }
+            }
+            return true;
+        }
         #endregion
 
         #region Counts entries with the given relative path

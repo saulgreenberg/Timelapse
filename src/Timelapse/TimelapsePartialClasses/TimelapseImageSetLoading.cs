@@ -284,6 +284,56 @@ namespace Timelapse
                 }
             }
 
+            // Check: the FileData table schema must match the TemplateTable controls.
+            // Missing columns crash on display; extra columns are orphans from a different template.
+            // Note: this check is done after the template synchronization, so that any missing columns are added to the FileData table before we check for missing columns.
+            //       It does not catch the rare case when datatable has (e.g.) a flag column ColumnX, but the template redefines ColumnX as (say) an integer. This
+            //       will just set ColumnX to an integer, but with the orginal true/false values. We could add additional safeguards for this, but as its extremely rare...
+            List<string> missingColumns = fileDatabase.GetDataLabelsMissingFromFileDataTable();
+            List<string> extraColumns = fileDatabase.GetExtraColumnsInFileDataTable();
+            if (missingColumns.Count > 0 || extraColumns.Count > 0)
+            {
+                Mouse.OverrideCursor = null;
+                DatabaseSchemaMismatchResult mismatch =
+                    Dialogs.DatabaseColumnsMissingDialog(this, missingColumns, extraColumns, fileDatabase);
+
+                if (mismatch.AbortLoad)
+                    return new(false, string.Empty);
+
+                if (mismatch.UserChoseRepair)
+                {
+                    ToastNotifier.ShowInformationByCursor("Database backup in progress...");
+                    FileBackup.TryCreateBackup(fileDatabase.FilePath);
+
+                    // Apply renames first, before adds, to avoid transient name conflicts.
+                    if (mismatch.ColumnsToRename.Count > 0 &&
+                        !fileDatabase.TryRepairRenamedFileDataColumns(mismatch.ColumnsToRename))
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, true,
+                            "TryRepairRenamedFileDataColumns failed in TryOpenTemplateAndBeginLoadFoldersAsync",
+                            fileDatabase.FilePath);
+                        return new(false, string.Empty);
+                    }
+                    if (mismatch.ColumnsToDelete.Count > 0 &&
+                        !fileDatabase.TryRepairExtraFileDataColumns(mismatch.ColumnsToDelete))
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, true,
+                            "TryRepairExtraFileDataColumns failed in TryOpenTemplateAndBeginLoadFoldersAsync",
+                            fileDatabase.FilePath);
+                        return new(false, string.Empty);
+                    }
+                    if (mismatch.LabelsToAdd.Count > 0 &&
+                        !fileDatabase.TryRepairMissingFileDataColumns(mismatch.LabelsToAdd))
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, true,
+                            "TryRepairMissingFileDataColumns failed in TryOpenTemplateAndBeginLoadFoldersAsync",
+                            fileDatabase.FilePath);
+                        return new(false, string.Empty);
+                    }
+                }
+                // else: "Continue loading" — extra-only columns ignored, safe to proceed.
+            }
+
             // Check: if there are any missing folders as specified by the relative paths, ask the user to try to locate those folders.
             int missingFoldersCount = await Task.Run(() => GetMissingFolders(fileDatabase).Count).ConfigureAwait(true);
             if (missingFoldersCount > 0)

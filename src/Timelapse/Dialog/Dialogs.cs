@@ -1085,6 +1085,22 @@ namespace Timelapse.Dialog
 
         #endregion
 
+        #region FileData columns missing from / extra in database
+
+        // Shows the schema-mismatch dialog and returns a result describing what the user chose to repair.
+        // missingDataLabels: DataLabels in TemplateTable absent from the FileData table.
+        // extraColumns:      Columns in FileData with no matching DataLabel in TemplateTable.
+        public static DatabaseSchemaMismatchResult DatabaseColumnsMissingDialog(
+            Window owner, List<string> missingDataLabels, List<string> extraColumns, FileDatabase fileDatabase)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new DatabaseSchemaMismatchDialog(owner, missingDataLabels, extraColumns, fileDatabase);
+            dialog.ShowDialog();
+            return dialog.Result ?? new DatabaseSchemaMismatchResult { UserChoseRepair = false };
+        }
+
+        #endregion
+
         #region Not a Timelapse File
 
         public static void FileNotATimelapseFile(Window owner, string templateDatabasePath)
