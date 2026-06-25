@@ -54,7 +54,7 @@ namespace Timelapse.ControlsDataEntry
         // Delegate to core for other basic key handling, e.g. to ignore non-ctl arrow keys which would otherwise tab
         private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
-            core.HandleNavigationKeys(keyEvent, true);
+            FlagControlCore.HandleNavigationKeys(keyEvent, true);
         }
         #endregion
 
@@ -155,7 +155,7 @@ namespace Timelapse.ControlsDataEntry
                 PopupPreview = CreatePopupPreview(ContentControl, padding, width, horizontalOffset);
             }
             // Convert the true/false to a checkmark or none, then show the Popup
-            bool check = value.ToLower() == BooleanValue.True;
+            bool check = value.Equals(BooleanValue.True, System.StringComparison.CurrentCultureIgnoreCase);
             ShowPopupPreview(check);
         }
         protected void ShowPopupPreview(bool value)
@@ -165,10 +165,7 @@ namespace Timelapse.ControlsDataEntry
             popupText.IsChecked = value;
             PopupPreview.IsOpen = true;
             Border cbborder = (Border)popupText.Template.FindName("checkBoxBorder", popupText);
-            if (cbborder != null)
-            {
-                cbborder.Background = Constant.Control.QuickPasteFieldHighlightBrush;
-            }
+            cbborder?.Background = Constant.Control.QuickPasteFieldHighlightBrush;
         }
 
         public override void HidePreviewControlValue()

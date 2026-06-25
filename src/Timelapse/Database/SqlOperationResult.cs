@@ -398,7 +398,9 @@ namespace Timelapse.Database
         /// <see cref="SqlOperationResult.Exception"/> is set as the inner exception so that
         /// the full SQLite error is preserved in the exception chain.
         /// </param>
+#pragma warning disable IDE0290 // Use primary constructor
         public SqlOperationException(string message, SqlOperationResult result)
+#pragma warning restore IDE0290 // Use primary constructor
             : base(message, result.Exception)
         {
             Result = result;

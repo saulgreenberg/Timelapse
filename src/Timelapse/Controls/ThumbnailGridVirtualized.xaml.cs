@@ -75,7 +75,7 @@ namespace Timelapse.Controls
         private int anchorIndex = -1;
         private BackgroundWorker backgroundWorker;
         // Bitmap cache — keyed by FileTable index; cleared when cell dimensions change (zoom/reset)
-        private readonly Dictionary<int, BitmapSource> bitmapCache = new();
+        private readonly Dictionary<int, BitmapSource> bitmapCache = [];
         private readonly Queue<int> cacheInsertionOrder = new();
         private const int BitmapCacheMaxSize = 500;
         // Mouse / drag tracking
@@ -120,8 +120,7 @@ namespace Timelapse.Controls
             track.DecreaseRepeatButton.PreviewMouseLeftButtonUp += (_, _) => { trackScrollHoldStart = DateTime.MinValue; SnapToRowBoundary(); };
             track.IncreaseRepeatButton.Click += (_, _) => DoTrackScroll(+1);
             track.DecreaseRepeatButton.Click += (_, _) => DoTrackScroll(-1);
-            if (track.Thumb != null)
-                track.Thumb.DragCompleted += ScrollThumb_DragCompleted;
+            track.Thumb?.DragCompleted += ScrollThumb_DragCompleted;
 
             // Replace the arrow (line) buttons with single-row scrolling, matching track behaviour.
             // Walk the visual tree instead of relying on template part names (which vary by WPF theme).
@@ -389,7 +388,7 @@ namespace Timelapse.Controls
                 RelayoutForAnchor(fileIndex);
         }
 
-        public List<int> GetSelected() => selectedIndices.ToList();
+        public List<int> GetSelected() => [.. selectedIndices];
 
         public int SelectedCount() => selectedIndices.Count;
 
@@ -697,9 +696,7 @@ namespace Timelapse.Controls
             CancelUpdate();
 
             // Snapshot visible cells for the worker — safe to iterate off-thread
-            List<ThumbnailInCell> cellsToLoad = pool
-                .Where(c => c.Visibility == Visibility.Visible && c.ImageRow != null)
-                .ToList();
+            List<ThumbnailInCell> cellsToLoad = [.. pool.Where(c => c.Visibility == Visibility.Visible && c.ImageRow != null)];
 
             if (cellsToLoad.Count == 0) return;
 

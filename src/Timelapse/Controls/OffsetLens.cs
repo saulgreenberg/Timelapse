@@ -33,11 +33,8 @@ namespace Timelapse.Controls
             set
             {
                 Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-                if (magHandleAdorner != null)
-                {
-                    // check condition - why would the maghandleadorner be null if this is not null?
-                    magHandleAdorner.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-                }
+                // check condition - why would the maghandleadorner be null if this is not null?
+                magHandleAdorner?.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 

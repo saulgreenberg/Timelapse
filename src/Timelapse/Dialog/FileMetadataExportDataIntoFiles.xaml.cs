@@ -800,10 +800,10 @@ namespace Timelapse.Dialog
                 }
 
                 // Start ExifTool if not already started
-                MetadataGrid.ExifToolManager.StartIfNotAlreadyStarted();
+                Controls.FileMetadataGrid.ExifToolManager.StartIfNotAlreadyStarted();
 
                 // Fetch metadata using ExifTool directly (don't set viewModel.FilePath to avoid triggering auto-refresh)
-                Dictionary<string, DataStructures.ImageMetadata> allMetadata = MetadataGrid.ExifToolManager.FetchExifFrom(filePath);
+                Dictionary<string, DataStructures.ImageMetadata> allMetadata = Controls.FileMetadataGrid.ExifToolManager.FetchExifFrom(filePath);
 
                 // Filter to only include XMP-TimelapseData entries
                 var filteredMetadata = new System.Collections.ObjectModel.ObservableCollection<Controls.FileMetadataGrid.DataContents>();

@@ -582,7 +582,7 @@ namespace Timelapse.Standards
         /// I should integrate everything, but this is just easier to do.
         /// Export all the database data associated with the selected view to the .csv file indicated in the file path
         /// </summary>
-        public static async Task<List<string>> ExportCamtrapDPMediaObservationsToCsv(FileDatabase database, DataEntryControls controls, string mediaFilePath, string observationsFilePath, bool csvUseASCIIEncoding)
+        public static async Task<List<string>> ExportCamtrapDPMediaObservationsToCsv(FileDatabase database, string mediaFilePath, string observationsFilePath, bool csvUseASCIIEncoding)
         {
             Progress<ProgressBarArguments> progressHandler = new(value =>
             {

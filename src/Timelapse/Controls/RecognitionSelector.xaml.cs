@@ -931,9 +931,7 @@ namespace Timelapse.Controls
                 // The selection was done by the user, so clear the taxon node text so the Taxon tree does not show a preselected item 
                 this.RecognitionSelections.SelectedTaxonNode = string.Empty;
             }
-            List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
-                .Select(cc => cc.Category)
-                .ToList();
+            List<string> classificationCategoryLabels = [.. DataGridClassifications.SelectedItems.OfType<CategoryCount>().Select(cc => cc.Category)];
 
             if (classificationCategoryLabels.Count > 0)
             {
@@ -1120,9 +1118,7 @@ namespace Timelapse.Controls
             }
 
             // Get the current Classification selection, if any
-            List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
-                .Select(cc => cc.Category)
-                .ToList();
+            List<string> classificationCategoryLabels = [.. DataGridClassifications.SelectedItems.OfType<CategoryCount>().Select(cc => cc.Category)];
 
             // Compose the argument and send the event
             RecognitionSelectionChangedEventArgs e = new(detectionCategoryLabel, classificationCategoryLabels, refreshRecognitionCountsRequired,
@@ -1277,7 +1273,7 @@ namespace Timelapse.Controls
             {
                 // The description is expected to be in the form of "GUID;term;term;term;term;term;commonName", where term can be empty (but ';' still present)
                 string descriptionWithoutGuid = description[(description.IndexOf(';') + 1)..];
-                string descriptionWithoutCommonName = descriptionWithoutGuid.Remove(descriptionWithoutGuid.LastIndexOf(';')).TrimEnd(';');
+                string descriptionWithoutCommonName = descriptionWithoutGuid[..descriptionWithoutGuid.LastIndexOf(';')].TrimEnd(';');
 
                 // Ignore empty tooltips
                 row.ToolTip = string.IsNullOrEmpty(descriptionWithoutCommonName)
@@ -1327,7 +1323,7 @@ namespace Timelapse.Controls
 
         }
 
-        private void DataGridEnableState(DataGrid dataGrid, bool enableState, bool mouseState, bool updateCursorToMatchState)
+        private static void DataGridEnableState(DataGrid dataGrid, bool enableState, bool mouseState, bool updateCursorToMatchState)
         {
             if (updateCursorToMatchState)
             {

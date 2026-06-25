@@ -178,12 +178,11 @@ namespace Timelapse
             BusyCancelIndicator.CancelButtonText = "Processing...";
             BusyCancelIndicator.UseStaticProgressBar = true;
             var renderTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            EventHandler renderingHandler = null;
-            renderingHandler = (_, _) =>
+            void renderingHandler(object sender, EventArgs e)
             {
                 CompositionTarget.Rendering -= renderingHandler;
                 renderTcs.TrySetResult(true);
-            };
+            }
             CompositionTarget.Rendering += renderingHandler;
             await renderTcs.Task;
             

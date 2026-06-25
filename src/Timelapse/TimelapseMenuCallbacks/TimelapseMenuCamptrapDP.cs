@@ -150,7 +150,7 @@ namespace Timelapse
             string observationsFilePath = Path.Combine(camTrapDPFolder, File.CamtrapDPObservationsCSVFilename);
 
             BusyCancelIndicator.IsBusy = true;
-            List<string> mediaObservationsMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(DataHandler.FileDatabase, DataEntryControls, mediaFilePath, observationsFilePath, State.CSVUseASCIIEncoding);
+            List<string> mediaObservationsMessages = await CamtrapDPExportFiles.ExportCamtrapDPMediaObservationsToCsv(DataHandler.FileDatabase, mediaFilePath, observationsFilePath, State.CSVUseASCIIEncoding);
             BusyCancelIndicator.IsBusy = false;
             if (null == mediaObservationsMessages)
             {

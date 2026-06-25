@@ -238,7 +238,7 @@ namespace Timelapse.Controls
             if (this.ImageRow.IsVideo)
             {
                 // Its a video. Get the Transform Group to apply to the bounding boxes
-                if (false == this.OkayToDrawAndResetInitialVideoFrameIfNeeded(this.ImageRow, boundingBoxes))
+                if (false == OkayToDrawAndResetInitialVideoFrameIfNeeded(this.ImageRow, boundingBoxes))
                 {
                     // For some reason, its not ok to display or draw the initial video frame because some information (such as frame rate) is missing
                     // So we just reset the bounding box to appear over the first (0th) frame. 
@@ -290,7 +290,7 @@ namespace Timelapse.Controls
         // Only invoke this if the ImageRow is a video
         // Essentially, it checks various parameters, including whether the the desired frame is within the time frame of the video.
         // If things fail, it changes the BoundingBox's initial frame to 0, otherwise leaves it untouched.
-        private bool OkayToDrawAndResetInitialVideoFrameIfNeeded(ImageRow imageRow, BoundingBoxes bBoxes)
+        private static bool OkayToDrawAndResetInitialVideoFrameIfNeeded(ImageRow imageRow, BoundingBoxes bBoxes)
         {
             if (GlobalReferences.MainWindow?.DataHandler == null) return false;
             float? actualDuration = null;

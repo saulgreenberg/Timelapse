@@ -18,7 +18,7 @@ namespace Timelapse.Controls
     // - Cancellation tokens (and disposes of them afterwards) are include
     // - CloseButtonIsEnabled(bool enable): the window's close button can be enabled or disabled
     //#pragma warning disable CA1001 // Types that own disposable fields should be disposable. Reason: Handled in Closed event
-    public class BusyableDialogWindow : Window
+    public partial class BusyableDialogWindow : Window
     //#pragma warning restore CA1001 // Types that own disposable fields should be disposableReason: Handled in Closed event
     {
         #region Cancellation Token
@@ -30,12 +30,13 @@ namespace Timelapse.Controls
 
         #region Variables for Close Button
         // Allows us to access the close button on the window
-        [DllImport("user32.dll")]
-        static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
-        [DllImport("user32.dll")]
+        [LibraryImport("user32.dll")]
+        private static partial IntPtr GetSystemMenu(IntPtr hWnd, [MarshalAs(UnmanagedType.Bool)] bool bRevert);
 
         // These are used by the close button when it is enabled / disablwed
-        static extern bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
         private const uint MF_BYCOMMAND = 0x00000000;
         private const uint MF_GRAYED = 0x00000001;
         private const uint MF_ENABLED = 0x00000000;

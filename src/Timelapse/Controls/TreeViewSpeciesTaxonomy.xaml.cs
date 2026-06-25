@@ -116,7 +116,7 @@ namespace Timelapse.Controls
         }
 
         // Public entry point: always expands from the root.
-        private void SetExpansionToDepth(ItemCollection items, int maxDepth)
+        private static void SetExpansionToDepth(ItemCollection items, int maxDepth)
         {
             SetExpansionToDepthRecursive(items, depth: 0, maxDepth);
         }
@@ -309,7 +309,7 @@ namespace Timelapse.Controls
         /// </summary>
         private static bool IsClickOnExpander(DependencyObject source)
         {
-            while (source != null && !(source is TreeViewItem))
+            while (source != null && source is not TreeViewItem)
             {
                 if (source is ToggleButton)
                     return true;
@@ -324,7 +324,7 @@ namespace Timelapse.Controls
         /// </summary>
         private static TreeViewItem GetTreeViewItemUnderMouse(DependencyObject source)
         {
-            while (source != null && !(source is TreeViewItem))
+            while (source != null && source is not TreeViewItem)
                 source = StepUp(source);
             return source as TreeViewItem;
         }

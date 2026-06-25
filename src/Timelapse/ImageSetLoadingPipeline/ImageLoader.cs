@@ -92,7 +92,7 @@ namespace Timelapse.ImageSetLoadingPipeline
             });
         }
 
-        private string HelperGetFileMediaType(string fileName)
+        private static string HelperGetFileMediaType(string fileName)
         {
             string extension = System.IO.Path.GetExtension(fileName);
             string fileMediaType;

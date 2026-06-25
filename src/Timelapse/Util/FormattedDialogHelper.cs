@@ -84,10 +84,7 @@ namespace Timelapse.Util
         /// </summary>
         public static void SetupStaticReferenceResolver(FormattedMessageContent messageContent)
         {
-            if (messageContent != null)
-            {
-                messageContent.StaticReferenceResolver = ResolveStaticReference;
-            }
+            messageContent?.StaticReferenceResolver = ResolveStaticReference;
         }
     }
 }

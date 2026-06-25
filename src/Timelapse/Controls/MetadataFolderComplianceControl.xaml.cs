@@ -252,7 +252,7 @@ namespace Timelapse.Controls
 
         // Record whether or not a treeviewitem (as denoted by its complete path) in a dictionary
         // We will use this to set the expanded state when the tree view item is rebuilt
-        public void RecordIsExpandedStateInDict(TreeViewItem parentItem, string path, Dictionary<string, bool> dictIsExpandedState)
+        public static void RecordIsExpandedStateInDict(TreeViewItem parentItem, string path, Dictionary<string, bool> dictIsExpandedState)
         {
             // first time through, so use "" instead of "Root Folder"
             string newpath = dictIsExpandedState.Count == 0
@@ -316,7 +316,7 @@ namespace Timelapse.Controls
                 tvi!.IsExpanded = true; // always expand the root node
             }
         }
-        private void ExpandTreeView(TreeViewItem item, bool expandTheTreeViewItem)
+        private static void ExpandTreeView(TreeViewItem item, bool expandTheTreeViewItem)
         {
             // item.IsExpanded = expandTheTreeViewItem;
             // Start recursion on all subnodes.
@@ -491,7 +491,7 @@ namespace Timelapse.Controls
             return grid;
         }
 
-        private TextBlock GetTextBlockFromTreeViewItem(TreeViewItem tvi)
+        private static TextBlock GetTextBlockFromTreeViewItem(TreeViewItem tvi)
         {
             // If the folder doesn't exists, flash the node and don't start the editing operation
             StackPanel sp = (StackPanel)tvi.Header;
@@ -507,7 +507,7 @@ namespace Timelapse.Controls
         #endregion
 
         #region Path manipulations
-        private string GetParent(string path)
+        private static string GetParent(string path)
         {
             string parentPath = string.Empty;
             int index = path.LastIndexOf(Path.DirectorySeparatorChar);

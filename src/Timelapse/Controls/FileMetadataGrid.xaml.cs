@@ -52,7 +52,7 @@ namespace Timelapse.Controls
                 : MetadataToolEnum.ExifTool;
 
         // A handle to the ExifTool Manager
-        public ExifToolManager ExifToolManager => GlobalReferences.TimelapseState?.ExifToolManager;
+        public static ExifToolManager ExifToolManager => GlobalReferences.TimelapseState?.ExifToolManager;
 
         // A dictionary derived from the Note fields, where the key is a data field's DataLabel and its value is the Label
         // And empty slot is included
@@ -142,7 +142,7 @@ namespace Timelapse.Controls
                 {
                     tagList.Add(item.MetadataTag);
                 }
-                return tagList.ToArray();
+                return [.. tagList];
             }
         }
 
@@ -160,7 +160,7 @@ namespace Timelapse.Controls
             InitializeComponent();
 
             // Initializations...
-            metadataDictionary = new Dictionary<string, ImageMetadata>();
+            metadataDictionary = [];
             DictDataLabel_Label = [];
         }
 
@@ -701,12 +701,12 @@ namespace Timelapse.Controls
                         // Remove the root path from the beginning if it matches
                         if (FilePath.StartsWith(RootPath, StringComparison.OrdinalIgnoreCase))
                         {
-                            pathToDisplay = FilePath.Substring(RootPath.Length);
+                            pathToDisplay = FilePath[RootPath.Length..];
                             // Remove leading path separator if present
                             if (pathToDisplay.StartsWith(Path.DirectorySeparatorChar.ToString()) ||
                                 pathToDisplay.StartsWith(Path.AltDirectorySeparatorChar.ToString()))
                             {
-                                pathToDisplay = pathToDisplay.Substring(1);
+                                pathToDisplay = pathToDisplay[1..];
                             }
                         }
                     }

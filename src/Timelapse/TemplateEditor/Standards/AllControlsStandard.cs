@@ -10,7 +10,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #region The Alias specification associated with each level
 
-        public static Dictionary<int, string> Aliases = new()
+        public static readonly Dictionary<int, string> Aliases = new()
         {
             { 1, "Project" },
             { 2, "Station" },
@@ -19,7 +19,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #endregion
 
-        public static List<StandardsRow> FolderMetadataRows =
+        public static readonly List<StandardsRow> FolderMetadataRows =
         [
             #region Level 1: Project
 
@@ -171,7 +171,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #region All controls Image Set:Image template as a Row List
 
-        public static List<StandardsRow> ImageTemplateRows =
+        public static readonly List<StandardsRow> ImageTemplateRows =
         [
             new(
                 Control.Note, 1, "a note", "iNote", "img_note",

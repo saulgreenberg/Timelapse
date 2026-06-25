@@ -454,10 +454,10 @@ namespace Timelapse.Database
                 }
 
                 else if (false == templateSyncResults.InfoHierarchyIncompatibleDifferences
-                         && templateSyncResults.DataLabelsToDeleteByLevel.ContainsKey(level))
+                         && templateSyncResults.DataLabelsToDeleteByLevel.TryGetValue(level, out var value1))
                 {
                     // Metadata level: Handle deleted metadata controls by level
-                    int deleteCount = templateSyncResults.DataLabelsToDeleteByLevel[level].Count;
+                    int deleteCount = value1.Count;
                     if (deleteCount > 0)
                     {
                         string tableName = MetadataComposeTableNameFromLevel(level);
@@ -1442,7 +1442,7 @@ namespace Timelapse.Database
             Dictionary<string, string> actualColumns = SchemaGetColumnsAndDefaultValues(DBTables.FileData);
             if (actualColumns == null) return [];
             List<string> expectedLabels = GetDataLabelsExceptIDInSpreadsheetOrderFromControls();
-            return expectedLabels.Where(label => !actualColumns.ContainsKey(label)).ToList();
+            return [.. expectedLabels.Where(label => !actualColumns.ContainsKey(label))];
         }
 
         // Returns column names in the FileData table that have no matching DataLabel in the TemplateTable.
@@ -1451,7 +1451,7 @@ namespace Timelapse.Database
             Dictionary<string, string> actualColumns = SchemaGetColumnsAndDefaultValues(DBTables.FileData);
             if (actualColumns == null) return [];
             HashSet<string> expectedSet = [..GetDataLabelsExceptIDInSpreadsheetOrderFromControls(), DatabaseColumn.ID];
-            return actualColumns.Keys.Where(col => !expectedSet.Contains(col)).ToList();
+            return [.. actualColumns.Keys.Where(col => !expectedSet.Contains(col))];
         }
 
         // Adds a column to FileData (and Markers for Counters) for each label in missingLabels.

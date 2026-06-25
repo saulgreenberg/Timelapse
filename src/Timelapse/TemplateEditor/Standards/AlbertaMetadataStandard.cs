@@ -12,10 +12,10 @@ namespace TimelapseTemplateEditor.Standards
         // - a list of common species (used by particular rows), 
 
         // Name of this standard
-        public static string Standard = Timelapse.Constant.Standards.AlbertaMetadataStandard;
+        public static readonly string Standard = Timelapse.Constant.Standards.AlbertaMetadataStandard;
 
         #region The Alias specification associated with each level
-        public static Dictionary<int, string> Aliases = new()
+        public static readonly Dictionary<int, string> Aliases = new()
         {
             {1, "Project"},
             {2, "Study Area"},
@@ -27,7 +27,7 @@ namespace TimelapseTemplateEditor.Standards
         #endregion
 
         #region List of common species
-        public static List<string> SpeciesCommonList =
+        public static readonly List<string> SpeciesCommonList =
         [
             "ACADIAN FLYCATCHER",
             "ALDER FLYCATCHER",
@@ -991,7 +991,7 @@ namespace TimelapseTemplateEditor.Standards
         #endregion
 
         #region Alberta Standard: Folder Metadata as a Row List
-        public static List<StandardsRow> FolderMetadataRows =
+        public static readonly List<StandardsRow> FolderMetadataRows =
         [
             #region Level 1: Project
             new(
@@ -1297,7 +1297,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #region Alberta Standard: Image template as a Row List
 
-        public static List<StandardsRow> ImageTemplateRows =
+        public static readonly List<StandardsRow> ImageTemplateRows =
         [
             new(
                 Control.AlphaNumeric, 1, "", "Image Name", "img_id",

@@ -241,7 +241,7 @@ namespace Timelapse.SearchingAndSorting
                     else
                     {
                         // The search term is querying for a non-empty value.
-                        Debug.Assert(searchTerm.DatabaseValue!.Contains("\"") == false,
+                        Debug.Assert(searchTerm.DatabaseValue!.Contains('"') == false,
                             $"Search term '{searchTerm.DatabaseValue}' contains quotation marks and could be used for SQL injection.");
                         if (dataLabel == DatabaseColumn.RelativePath ||
                             dataLabel == DBTables.FileData + "." + DatabaseColumn.RelativePath)
@@ -309,17 +309,12 @@ namespace Timelapse.SearchingAndSorting
                 // First, and only if there terms have already been added to  the query, we need to add the appropriate operator
                 if (!string.IsNullOrEmpty(where))
                 {
-                    switch (termCombiningOperator)
+                    where += termCombiningOperator switch
                     {
-                        case CustomSelectionOperatorEnum.And:
-                            where += Sql.And;
-                            break;
-                        case CustomSelectionOperatorEnum.Or:
-                            where += Sql.Or;
-                            break;
-                        default:
-                            throw new NotSupportedException($"Unhandled logical operator {termCombiningOperator}.");
-                    }
+                        CustomSelectionOperatorEnum.And => Sql.And,
+                        CustomSelectionOperatorEnum.Or => Sql.Or,
+                        _ => throw new NotSupportedException($"Unhandled logical operator {termCombiningOperator}."),
+                    };
                 }
                 // Now we add the actual search terms
                 where += whereForTerm;

@@ -46,7 +46,7 @@ namespace Timelapse.Database
                     using StreamWriter fileWriter = new(filePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
                     // Get all data labels except those excluded from export (via a false ExportToCSV field)
                     List<string> dataLabelsToExport =
-                        database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls().Except(database.GetDataLabelsToExcludeFromExport()).ToList();
+                        [.. database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls().Except(database.GetDataLabelsToExcludeFromExport())];
 
                     // Write the header as defined by the data labels in the template file (skipping the ones we don't use)
                     // If the data label is an empty string, we use the label instead.
@@ -479,7 +479,7 @@ namespace Timelapse.Database
                 int part = 1;
 
                 // PART 1. Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
-                CSVReadingResult result = CSVHelpers.TryReadingCSVFile(filePath, out List<List<string>> parsedFile, importErrors, progress, token, 10000, $"Part {part}/4: Reading the CSV file", true, true);
+                CSVReadingResult result = CSVHelpers.TryReadingCSVFile(filePath, out List<List<string>> parsedFile, importErrors, progress, 10000, $"Part {part}/4: Reading the CSV file", true, true, token);
                 
                 // Cancel if requested 
                 if (token.IsCancellationRequested || result == CSVReadingResult.Cancelled)
@@ -504,7 +504,7 @@ namespace Timelapse.Database
                     return (CSVReadingResult.Cancelled, importErrors);
                 }
                 // Now that we have a parsed file, get its headers, which we will use as DataLabels
-                List<string> dataLabelsFromCSV = parsedFile[0].Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+                List<string> dataLabelsFromCSV = [.. parsedFile[0].Where(s => !string.IsNullOrWhiteSpace(s)).Distinct()];
 
                 // Part 2b. Abort if required CSV column are missing or there is a problem matching the CSV file headers against the DB headers.
                 if (false == VerifyCSVHeaders(fileDatabase, dataLabelsFromCSV, importErrors))
@@ -519,7 +519,7 @@ namespace Timelapse.Database
                 }
 
                 // Part 2c: Create a List of all data rows, where each row is a dictionary containing the header and that row's valued for the header
-                List<Dictionary<string, string>> rowDictionaryList = CSVHelpers.GetAllDataRows(dataLabelsFromCSV, parsedFile, progress, token, 10000, $"Part {part}c/4: Preparing CSV data", true, true);
+                List<Dictionary<string, string>> rowDictionaryList = CSVHelpers.GetAllDataRows(dataLabelsFromCSV, parsedFile, progress, 10000, $"Part {part}c/4: Preparing CSV data", true, true, token);
                 // Cancel if requested 
                 if (token.IsCancellationRequested)
                 {
@@ -530,7 +530,7 @@ namespace Timelapse.Database
                 // Part 3. For every row, validate each column's data against its type. Abort if the type does not match
                 // Todo: This does a check for DateTime, which we repeat again later. We could convert the datetime into the expected database format
                 // as part of the validation, which would save us from having to do the conversion again later when we write to the database.
-                if (false == VerifyDataInColumns(fileDatabase, dataLabelsFromCSV, rowDictionaryList, importErrors, progress, token, 10000, $"Part {++part}/4: Validating CSV data for correctness", true, true))
+                if (false == VerifyDataInColumns(fileDatabase, dataLabelsFromCSV, rowDictionaryList, importErrors, progress, 10000, $"Part {++part}/4: Validating CSV data for correctness", true, true, token))
                 {
                     return (CSVReadingResult.AbortedAsDataErrors, importErrors);
                 }
@@ -543,7 +543,7 @@ namespace Timelapse.Database
                 List<string> databaseDuplicates = fileDatabase.GetDistinctRelativePathFileCombinationsDuplicates();
 
                 // Sort the rowDictionaryList so that duplicates in the CSV file (with the same relative path / File name) are in order, one after the other.
-                List<Dictionary<string, string>> sortedRowDictionaryList = rowDictionaryList.OrderBy(dict => dict["RelativePath"]).ThenBy(dict => dict["File"]).ToList();
+                List<Dictionary<string, string>> sortedRowDictionaryList = [.. rowDictionaryList.OrderBy(dict => dict["RelativePath"]).ThenBy(dict => dict["File"])];
                 int sortedRowDictionaryListCount = sortedRowDictionaryList.Count;
 
                 // Create the data structure for the query
@@ -790,9 +790,9 @@ namespace Timelapse.Database
                     // Add to the query only if there are columns to add!
                     if (imageToUpdate.Columns.Count > 0)
                     {
-                        if (rowDict.ContainsKey(DatabaseColumn.RelativePath) && !string.IsNullOrWhiteSpace(rowDict[DatabaseColumn.RelativePath]))
+                        if (rowDict.TryGetValue(DatabaseColumn.RelativePath, out var value) && !string.IsNullOrWhiteSpace(value))
                         {
-                            imageToUpdate.SetWhere(rowDict[DatabaseColumn.RelativePath], rowDict[DatabaseColumn.File]);
+                            imageToUpdate.SetWhere(value, rowDict[DatabaseColumn.File]);
                         }
                         else
                         {
@@ -847,7 +847,7 @@ namespace Timelapse.Database
             dataLabelsFromDB.Add(ControlDeprecated.ImageQuality);
 
             // Get the data labels from the csv file
-            List<string> dataLabelsInHeaderButNotFileDatabase = dataLabelsFromCSV.Except(dataLabelsFromDB).ToList();
+            List<string> dataLabelsInHeaderButNotFileDatabase = [.. dataLabelsFromCSV.Except(dataLabelsFromDB)];
 
             // Abort if the File and Relative Path columns are missing from the CSV file 
             // While the CSV data labels can be a subset of the DB data labels,
@@ -892,7 +892,7 @@ namespace Timelapse.Database
 
         // Validate Data columns against data type. Return false if any of the types don't match
         private static bool VerifyDataInColumns(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<Dictionary<string, string>> rowDictionaryList,
-            List<string> importErrors, IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
+            List<string> importErrors, IProgress<ProgressBarArguments> progress, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate, CancellationToken token)
         {
             //bool abort = false;
             CultureInfo provider = CultureInfo.InvariantCulture;
@@ -1020,7 +1020,7 @@ namespace Timelapse.Database
                                 if (false == string.IsNullOrWhiteSpace(content))
                                 {
                                     Choices choices = Choices.ChoicesFromJson(controlRow.List);
-                                    List<string> contentList = content.Split(',').ToList();
+                                    List<string> contentList = [.. content.Split(',')];
                                     //contentList.RemoveAt(0);
                                     foreach (string item in contentList)
                                     {

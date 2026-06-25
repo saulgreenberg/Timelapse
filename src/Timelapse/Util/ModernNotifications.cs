@@ -14,7 +14,7 @@ namespace Timelapse.Util
     /// Modern notification system using native Windows-style notifications
     /// Replaces the old ToastNotifications library
     /// </summary>
-    public class ModernNotifier(Window owner)
+    public partial class ModernNotifier(Window owner)
     {
         private Popup _currentPopup;
 
@@ -278,55 +278,40 @@ namespace Timelapse.Util
 
         }
 
-        private Brush GetBackgroundColor(NotificationType type)
+        private static SolidColorBrush GetBackgroundColor(NotificationType type)
         {
-            switch (type)
+            return type switch
             {
-                case NotificationType.Information:
-                    return new SolidColorBrush(Color.FromRgb(217, 237, 247)); // Light blue
-                case NotificationType.Success:
-                    return new SolidColorBrush(Color.FromRgb(223, 240, 216)); // Light green
-                case NotificationType.Warning:
-                    return new SolidColorBrush(Color.FromRgb(252, 248, 227)); // Light yellow
-                case NotificationType.Error:
-                    return new SolidColorBrush(Color.FromRgb(248, 215, 218)); // Light red
-                default:
-                    return new SolidColorBrush(Color.FromRgb(248, 249, 250)); // Light gray
-            }
+                NotificationType.Information => new SolidColorBrush(Color.FromRgb(217, 237, 247)),// Light blue
+                NotificationType.Success => new SolidColorBrush(Color.FromRgb(223, 240, 216)),// Light green
+                NotificationType.Warning => new SolidColorBrush(Color.FromRgb(252, 248, 227)),// Light yellow
+                NotificationType.Error => new SolidColorBrush(Color.FromRgb(248, 215, 218)),// Light red
+                _ => new SolidColorBrush(Color.FromRgb(248, 249, 250)),// Light gray
+            };
         }
 
-        private Brush GetBorderColor(NotificationType type)
+        private static SolidColorBrush GetBorderColor(NotificationType type)
         {
-            switch (type)
+            return type switch
             {
-                case NotificationType.Information:
-                    return new SolidColorBrush(Color.FromRgb(174, 213, 129)); // Blue
-                case NotificationType.Success:
-                    return new SolidColorBrush(Color.FromRgb(155, 204, 145)); // Green
-                case NotificationType.Warning:
-                    return new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Yellow
-                case NotificationType.Error:
-                    return new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Red
-                default:
-                    return new SolidColorBrush(Color.FromRgb(108, 117, 125)); // Gray
-            }
+                NotificationType.Information => new SolidColorBrush(Color.FromRgb(174, 213, 129)),// Blue
+                NotificationType.Success => new SolidColorBrush(Color.FromRgb(155, 204, 145)),// Green
+                NotificationType.Warning => new SolidColorBrush(Color.FromRgb(255, 193, 7)),// Yellow
+                NotificationType.Error => new SolidColorBrush(Color.FromRgb(220, 53, 69)),// Red
+                _ => new SolidColorBrush(Color.FromRgb(108, 117, 125)),// Gray
+            };
         }
 
-        private Brush GetForegroundColor(NotificationType type)
+        private static SolidColorBrush GetForegroundColor(NotificationType type)
         {
-            switch (type)
+            return type switch
             {
-                case NotificationType.Information:
-                    return new SolidColorBrush(Color.FromRgb(13, 110, 180)); // Dark blue
-                case NotificationType.Success:
-                    return new SolidColorBrush(Color.FromRgb(25, 135, 84)); // Dark green
-                case NotificationType.Warning:
-                    return new SolidColorBrush(Color.FromRgb(102, 77, 3)); // Dark yellow
-                case NotificationType.Error:
-                    return new SolidColorBrush(Color.FromRgb(114, 28, 36)); // Dark red
-                default:
-                    return new SolidColorBrush(Color.FromRgb(33, 37, 41)); // Dark gray
-            }
+                NotificationType.Information => new SolidColorBrush(Color.FromRgb(13, 110, 180)),// Dark blue
+                NotificationType.Success => new SolidColorBrush(Color.FromRgb(25, 135, 84)),// Dark green
+                NotificationType.Warning => new SolidColorBrush(Color.FromRgb(102, 77, 3)),// Dark yellow
+                NotificationType.Error => new SolidColorBrush(Color.FromRgb(114, 28, 36)),// Dark red
+                _ => new SolidColorBrush(Color.FromRgb(33, 37, 41)),// Dark gray
+            };
         }
 
         private Point GetCursorPosRelativeToOwner()
@@ -335,8 +320,9 @@ namespace Timelapse.Util
             return owner.PointFromScreen(new Point(p.X, p.Y));
         }
 
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out NativePoint pt);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetCursorPos(out NativePoint pt);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct NativePoint { public int X, Y; }
