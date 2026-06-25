@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -23,7 +22,7 @@ namespace Timelapse.Dialog
         public List<(string OldName, string NewName)> ColumnsToRename { get; init; } = [];
     }
 
-    public partial class DatabaseSchemaMismatchDialog : Window
+    public partial class DatabaseSchemaMismatchDialog
     {
         public DatabaseSchemaMismatchResult Result { get; private set; }
 
@@ -327,7 +326,7 @@ namespace Timelapse.Dialog
             if (sender is not ComboBox activeCb) return;
 
             // Mutual exclusion: clear any other combobox that holds the same selection
-            if (activeCb.SelectedItem is ComboBoxItem selectedCbi && selectedCbi.Tag is string selectedLabel)
+            if (activeCb.SelectedItem is ComboBoxItem { Tag: string selectedLabel })
             {
                 foreach (ComboBox cb in _allComboBoxes)
                 {
@@ -343,7 +342,7 @@ namespace Timelapse.Dialog
             HashSet<string> renamedTargets = [];
             foreach (ComboBox cb in _allComboBoxes)
             {
-                if (cb.IsEnabled && cb.SelectedItem is ComboBoxItem cbi && cbi.Tag is string label)
+                if (cb.IsEnabled && cb.SelectedItem is ComboBoxItem { Tag: string label })
                     renamedTargets.Add(label);
             }
 
@@ -379,13 +378,13 @@ namespace Timelapse.Dialog
 
             foreach ((int _, string col, RadioButton _, RadioButton rbRen, ComboBox cb, TextBlock _) in _extraRows)
             {
-                if (rbRen is { IsChecked: true } && cb?.SelectedItem is ComboBoxItem cbi && cbi.Tag is string target)
+                if (rbRen is { IsChecked: true } && cb?.SelectedItem is ComboBoxItem { Tag: string target })
                     toRename.Add((col, target));
                 else
                     toDelete.Add(col);
             }
 
-            HashSet<string> renamedTargets = toRename.Select(r => r.Item2).ToHashSet();
+            HashSet<string> renamedTargets = [.. toRename.Select(r => r.Item2)];
             foreach ((int _, string label) in _missingRows)
             {
                 if (!renamedTargets.Contains(label))

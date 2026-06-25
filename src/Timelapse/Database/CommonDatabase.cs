@@ -927,7 +927,7 @@ namespace Timelapse.Database
                     $"column '{orderColumnName}' is not a control order column.  Only '{Control.ControlOrder}' and '{Control.SpreadsheetOrder}' are order columns.");
             }
 
-            List<long> uniqueOrderValues = newOrderByDataLabel.Values.Distinct().ToList();
+            List<long> uniqueOrderValues = [.. newOrderByDataLabel.Values.Distinct()];
             if (uniqueOrderValues.Count != newOrderByDataLabel.Count)
             {
                 throw new ArgumentException(
@@ -1110,7 +1110,7 @@ namespace Timelapse.Database
                 return metadataControlsByLevel;
             }
             // Get the levels 
-            List<int> levels = metadataControlsAll.AsEnumerable().Select(s => s.Level).Distinct().ToList();
+            List<int> levels = [.. metadataControlsAll.AsEnumerable().Select(s => s.Level).Distinct()];
 
             // Create a new dictionary of metadatacontrols for each level, perhaps repacing the old one
             foreach (int level in levels)
@@ -1273,10 +1273,9 @@ namespace Timelapse.Database
             if (justInsertedRow.Rows.Count > 0)
             {
                 MetadataControlsAll.AddRow(justInsertedRow.Rows[0]);
-                if (MetadataControlsByLevel.ContainsKey(level))
+                if (MetadataControlsByLevel.TryGetValue(level, out var value1))
                 {
-                    // Since we already have a table at that level, we just add the row
-                    MetadataControlsByLevel[level].AddRow(justInsertedRow.Rows[0]);
+                    value1.AddRow(justInsertedRow.Rows[0]);
                     return UpdateStateEnum.Modified;
                 }
 
@@ -1443,7 +1442,7 @@ namespace Timelapse.Database
                     $"column '{orderColumnName}' is not a control order column.  Only '{Control.ControlOrder}' and '{Control.SpreadsheetOrder}' are order columns.");
             }
 
-            List<long> uniqueOrderValues = newOrderByDataLabel.Values.Distinct().ToList();
+            List<long> uniqueOrderValues = [.. newOrderByDataLabel.Values.Distinct()];
             if (uniqueOrderValues.Count != newOrderByDataLabel.Count)
             {
                 throw new ArgumentException(

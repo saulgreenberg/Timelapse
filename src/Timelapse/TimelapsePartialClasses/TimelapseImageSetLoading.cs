@@ -342,7 +342,7 @@ namespace Timelapse
             }
 
             // Set the window's title to include the file name
-            Title = Defaults.MainWindowBaseTitle + " (" + Path.GetFileName(fileDatabase.FilePath) + ")";
+            Title = Defaults.MainWindowBaseTitle + " (" + fileDatabase.FilePath + ")";
 
             // Generate and render the data entry, regardless of whether there are actually any files in the files database.
             DataHandler = new(fileDatabase);
