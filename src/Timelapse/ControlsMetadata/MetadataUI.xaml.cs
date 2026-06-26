@@ -37,7 +37,7 @@ namespace Timelapse.ControlsMetadata
         #endregion
 
         #region Private variables
-        private FileDatabase FileDatabase => GlobalReferences.MainWindow?.DataHandler?.FileDatabase;
+        private static FileDatabase FileDatabase => GlobalReferences.MainWindow?.DataHandler?.FileDatabase;
         #endregion
 
         #region Constructor

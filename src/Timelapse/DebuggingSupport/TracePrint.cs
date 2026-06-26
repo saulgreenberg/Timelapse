@@ -117,8 +117,7 @@ namespace Timelapse.DebuggingSupport
             Debug.Print(GetMethodNameStack(message, level));
         }
         #endregion
-
-
+        
         #region Private (Internal) methods
         [MethodImpl(MethodImplOptions.NoInlining)]
         // Return the order and number of calls on a method, i.e., to illustrate the method calling stack.

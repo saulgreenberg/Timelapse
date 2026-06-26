@@ -115,9 +115,16 @@ namespace Timelapse
                         }
                     }
 
-                    BoundingBox box = new((string)detectionRow[DetectionColumns.BBox], confidence, frameNumber, (string)detectionRow[DetectionColumns.Category],
-                        detectionCategoryLabel, classifications);
-                    bboxes.Boxes.Add(box);
+                    try
+                    {
+                        BoundingBox box = new((string)detectionRow[DetectionColumns.BBox], confidence, frameNumber, (string)detectionRow[DetectionColumns.Category],
+                            detectionCategoryLabel, classifications);
+                        bboxes.Boxes.Add(box);
+                    }
+                    catch (FormatException)
+                    {
+                        // Malformed coordinates — already logged in BoundingBox constructor; skip this entry
+                    }
                 }
 
                 if (initialFrameOnly)
@@ -205,8 +212,15 @@ namespace Timelapse
                         }
                     }
 
-                    BoundingBox box = new((string)detectionRow[DetectionColumns.BBox], confidence, frameNumber, (string)detectionRow[DetectionColumns.Category], detectionCategoryLabel, classifications);
-                    bboxes.Boxes.Add(box);
+                    try
+                    {
+                        BoundingBox box = new((string)detectionRow[DetectionColumns.BBox], confidence, frameNumber, (string)detectionRow[DetectionColumns.Category], detectionCategoryLabel, classifications);
+                        bboxes.Boxes.Add(box);
+                    }
+                    catch (FormatException)
+                    {
+                        // Malformed coordinates — already logged in BoundingBox constructor; skip this entry
+                    }
                 }
             }
             return bboxes;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,7 @@ using Timelapse.DataTables;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Extensions;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
 using Control = Timelapse.Constant.Control;
@@ -63,6 +65,8 @@ namespace TimelapseTemplateEditor
                 Dialogs.TemplatePathTooLongDialog(this, templateFilePath);
                 return;
             }
+
+            AppLog.Initialize(Path.GetDirectoryName(templateFilePath));
 
             // Initialize the data grid from the template
             if (false == await TemplateInitializeFromDBFileAsync(templateFilePath).ConfigureAwait(true))

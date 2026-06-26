@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using Timelapse.Constant;
 using Timelapse.Database;
@@ -97,6 +98,10 @@ namespace Timelapse.QuickPaste
             ThrowIf.IsNullArgument(quickPasteEntries, nameof(quickPasteEntries));
 
             int index = quickPasteEntries.FindIndex(a => a.Equals(quickPasteEntry));
+            if (index < 0)
+            {
+                return quickPasteEntries;
+            }
             quickPasteEntries.RemoveAt(index);
             int newIndex = moveUp
                 ? index - 1
@@ -124,6 +129,7 @@ namespace Timelapse.QuickPaste
             {
                 // this should not happen
                 TracePrint.StackTrace(1);
+                AppLog.Warning("fileDatabase is null — this should not happen.");
                 return quickPasteEntries;
                 // Not sure if the above return is effective. We could do the following instead
                 // throw new ArgumentNullException(nameof(fileDatabase));
@@ -133,8 +139,9 @@ namespace Timelapse.QuickPaste
             {
                 quickPasteEntries = JsonConvert.DeserializeObject<List<QuickPasteEntry>>(quickpasteAsJSON);
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Warning("Failed to deserialize quick paste entries from JSON. Possible cause: stored JSON is malformed or in an unrecognized format.", ex);
                 return [];
             }
 

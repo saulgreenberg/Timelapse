@@ -47,12 +47,18 @@ namespace Timelapse
 
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            //if (this.DataHandler?.FileDatabase != null)
-            //{
-                //Dialog.TestSomeCodeDialog dialog = new Dialog.TestSomeCodeDialog(this);
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, false, "Test message");
-                System.Environment.Exit(1);
-                // }
+            // AppLog examples — open a database first so Initialize has been called
+            AppLog.Warning("This is a test warning");
+            AppLog.Error("This is a test error");
+
+            try
+            {
+                _ = int.Parse("not a number");
+            }
+            catch (Exception ex)
+            {
+                AppLog.Error("Failed to parse integer", ex);
+            }
         }
 
         #endregion
@@ -169,6 +175,8 @@ namespace Timelapse
 
         private async Task<bool> DoLoadImages(string templateDatabasePath)
         {
+            AppLog.Initialize(Path.GetDirectoryName(templateDatabasePath));
+
             // Set up busy indicators. Note that this was not originally showing the busy indicator,
             // but the messy code below now does that albeit without animating the progress bar
             Mouse.OverrideCursor = Cursors.Wait;

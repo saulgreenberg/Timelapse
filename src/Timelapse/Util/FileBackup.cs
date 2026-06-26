@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
 using File = Timelapse.Constant.File;
 
@@ -29,8 +30,9 @@ namespace Timelapse.Util
                 }
                 return backupFiles;
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Warning("This is a non-critical warning, where creating a backup file was skipped. Failed to enumerate backup files. Possible causes: permissions error, or folder disappeared between creation and use.", ex);
                 return null;
             }
         }
@@ -43,16 +45,17 @@ namespace Timelapse.Util
                 FileInfo mostRecentBackupFile = null;
                 if (backupFolder != null)
                 {
-                    mostRecentBackupFile = GetBackupFiles(backupFolder, sourceFilePath, false).MaxBy(file => file.LastWriteTime);
-                }
+                    mostRecentBackupFile = GetBackupFiles(backupFolder, sourceFilePath, false)?.MaxBy(file => file.LastWriteTime);
+                }   
                 if (backupFolder != null && mostRecentBackupFile != null)
                 {
                     return mostRecentBackupFile.LastWriteTime;
                 }
                 return DateTime.MinValue;
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Warning("This is a non-critical warning, where retrieving the most recent backup was skipped. Possible causes: permissions error or path too long.", ex);
                 return DateTime.MinValue;
             }
         }
@@ -61,8 +64,7 @@ namespace Timelapse.Util
         {
             if (IsCondition.IsPathLengthTooLong(sourceFilePath, FilePathTypeEnum.Backup))
             {
-                // Don't bother if we are approaching the critical file path max length 
-                // This also stops creation of a backup folder if it doesn't exist
+                AppLog.Warning("This is a non-critical warning, where creating a backup file was skipped. File path is approaching the critical max length, so the backup folder will not be created.");
                 return null;
             }
 
@@ -70,7 +72,7 @@ namespace Timelapse.Util
             if (sourceFolderPath == null)
             {
                 // If the path consists of a root directory, such as "c:\", null is returned.
-                // This shouldn't happen
+                AppLog.Warning("This is a non-critical warning, where creating a backup file was skipped. Could not determine the source folder path — this should not happen, as it only occurs if the path is a root directory such as 'c:\\'.");
                 return null;
             }
 
@@ -81,8 +83,9 @@ namespace Timelapse.Util
                 {
                     backupFolder.Create();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    AppLog.Warning("This is a non-critical warning, where creating a backup file was skipped. Failed to create backup folder. Possible cause: permissions error on the parent directory.", ex);
                     return null;
                 }
             }
@@ -150,7 +153,7 @@ namespace Timelapse.Util
             {
                 if (System.IO.File.Exists(destinationFilePath) && new FileInfo(destinationFilePath).Attributes.HasFlag(FileAttributes.ReadOnly))
                 {
-                    // Can't overwrite it...
+                    AppLog.Warning("This is a non-critical warning, where creating a backup file was skipped. The destination backup file is read-only and cannot be overwritten.");
                     return false;
                 }
                 if (moveInsteadOfCopy)
@@ -163,11 +166,10 @@ namespace Timelapse.Util
                     System.IO.File.Copy(sourceFilePath, destinationFilePath, true);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Old code: We just don't create the backup now. While we previously threw an exception, we now test and warn the user earlier on in the code that a backup can't be made 
-                // Debug.Print("Did not back up" + destinationFilePath);
-                // throw new PathTooLongException("Backup failure: Could not create backups as the file path is too long", e);
+                // Old code: We just don't create the backup now. While we previously threw an exception, we now test and warn the user earlier on in the code that a backup can't be made
+                AppLog.Warning("This is a non-critical warning, where creating a backup file was skipped. Failed to copy or move the source file to the backup destination. Possible cause: path too long, or permissions error.", ex);
                 return false;
             }
 

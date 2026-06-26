@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using Timelapse.Constant;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Images
@@ -45,6 +46,11 @@ namespace Timelapse.Images
             // Data should always be using decimal places, so use invariant culture.
             // float[] coords = Array.ConvertAll(coordinates.Split(','), float.Parse);  // This crashed before when the culture used a comma for the decimal
             float[] coords = Array.ConvertAll(coordinates.Split(','), s => float.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture));
+            if (coords.Length < 4)
+            {
+                AppLog.Warning($"Malformed bounding box coordinates — expected 4 values but got {coords.Length}: '{coordinates}'. This entry will be skipped.");
+                throw new FormatException($"Bounding box coordinates must have 4 values, got {coords.Length}: '{coordinates}'");
+            }
             this.SetValues(coords[0], coords[1], coords[2], coords[3], confidence, frameNumber, detectionCategory, detectionLabel, classifications);
         }
         #endregion

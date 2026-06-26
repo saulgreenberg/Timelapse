@@ -4387,15 +4387,20 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
-        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="")
+        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="", Exception ex=null)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             if (!owner.Dispatcher.CheckAccess())
             {
-                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath));
+                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath, ex));
                 return;
             }
             string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
+            string logMessage = $"Timelapse is shutting down due to a write error on the {typeOfFile}.";
+            if (!string.IsNullOrEmpty(filePath)) logMessage += $" File: '{filePath}'.";
+            if (!string.IsNullOrEmpty(message)) logMessage += $" {message}.";
+            if (ex != null) AppLog.Error(logMessage, ex);
+            else AppLog.Error(logMessage);
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,

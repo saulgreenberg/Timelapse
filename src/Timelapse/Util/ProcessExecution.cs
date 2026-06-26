@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Media;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Util
 {
@@ -18,6 +19,7 @@ namespace Timelapse.Util
         {
             if (processStartInfo == null)
             {
+                AppLog.Warning("processStartInfo is null — this should not happen.");
                 return false;
             }
 
@@ -27,9 +29,10 @@ namespace Timelapse.Util
             {
                 process.Start();
             }
-            catch
+            catch (Exception ex)
             {
-                // Error. A noop so we catch it cleanly but still leave the dialog running
+                // A noop so we catch it cleanly but still leave the dialog running
+                AppLog.Warning($"Failed to start process '{processStartInfo.FileName}'. Possible causes: executable not found, invalid path, or permissions error.", ex);
                 SystemSounds.Beep.Play();
                 return false;
             }
@@ -43,6 +46,7 @@ namespace Timelapse.Util
         {
             if (uri == null)
             {
+                AppLog.Warning("uri is null — this should not happen.");
                 return false;
             }
             ProcessStartInfo processStartInfo = new(uri.AbsoluteUri)
@@ -59,7 +63,7 @@ namespace Timelapse.Util
         {
             if (File.Exists(filePath) == false)
             {
-                // Don't even try to start the process if the file doesn't exist.
+                AppLog.Warning($"Cannot start process — file does not exist: '{filePath}'.");
                 return false;
             }
             ProcessStartInfo processStartInfo = new()
@@ -85,7 +89,15 @@ namespace Timelapse.Util
                     Arguments = cmd
                 }
             };
-            return process.Start();
+            try
+            {
+                return process.Start();
+            }
+            catch (Exception ex)
+            {
+                AppLog.Warning($"Failed to run command '{cmd}'. Possible causes: cmd.exe not found, or permissions error.", ex);
+                return false;
+            }
         }
 
         #endregion
@@ -98,7 +110,7 @@ namespace Timelapse.Util
         {
             if (Directory.Exists(folderPath) == false)
             {
-                // Don't even try to start the process if the file doesn't exist.
+                AppLog.Warning($"Cannot open File Explorer — folder does not exist: '{folderPath}'.");
                 return false;
             }
             ProcessStartInfo processStartInfo = new()
@@ -116,7 +128,7 @@ namespace Timelapse.Util
         {
             if (File.Exists(filePath) == false)
             {
-                // Don't even try to start the process if the file doesn't exist.
+                AppLog.Warning($"Cannot open File Explorer — file does not exist: '{filePath}'.");
                 return false;
             }
 
